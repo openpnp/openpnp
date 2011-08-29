@@ -11,7 +11,9 @@ Library called JOGL that includes at least:
 	jogl.all.jar
 	nativewindow.all.jar
 	newt.all.jar
-	
+
+JOGL binaries can be found at http://jogamp.org/deployment/webstart/archive/
+
 The main class to start the program is org.openpnp.app.Main.
 
 To run the simulator and see things happen, load btpd-v4.xml from the config 
