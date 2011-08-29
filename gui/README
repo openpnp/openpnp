@@ -1,0 +1,19 @@
+There is an Eclipse project in this directory that should get you most
+of the way started.
+
+If you do not use Eclipse, the project is pretty straight forward to 
+import into your IDE of choice. Include the jars in lib as dependencies.
+
+You will need JOGL ( http://jogamp.org/jogl/www/ ) on your classpath to
+compile and run the project. If you are using Eclipse, define a User
+Library called JOGL that includes at least:
+	glugen-rt.jar
+	jogl.all.jar
+	nativewindow.all.jar
+	newt.all.jar
+	
+The main class to start the program is org.openpnp.app.Main.
+
+To run the simulator and see things happen, load btpd-v4.xml from the config 
+directory.
+

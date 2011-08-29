@@ -96,7 +96,7 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 		stopJobAction.setEnabled(false);
 		
 		try {
-			configuration = new Configuration("/Users/jason/Projects/openpnp/trunk/gui/config");
+			configuration = new Configuration("config");
 		}
 		catch (Exception e) {
 			throw new Error(e);
