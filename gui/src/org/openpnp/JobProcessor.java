@@ -1,0 +1,478 @@
+package org.openpnp;
+
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.openpnp.Job.JobBoard;
+import org.openpnp.Part.FeederLocation;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.util.LengthUtil;
+import org.openpnp.util.Utils2D;
+import org.w3c.dom.Document;
+
+//TODO don't forget the whole damn thing is mirrored
+public class JobProcessor implements Runnable {
+	public enum JobState {
+		Stopped,
+		Running,
+		Paused,
+		Finished,
+		Failed,
+	}
+	
+	public enum JobError {
+		MachineHomingError,
+		MachineMovementError,
+		MachineRejectedJobError,
+		FeederError,
+		HeadError,
+		PickError,
+		PlaceError,
+	}
+	
+	public enum PickRetryAction {
+		RetryWithFeed,
+		RetryWithoutFeed,
+		SkipAndContinue,
+	}
+	
+	private Configuration configuration;
+	private Job job;
+	private Set<JobProcessorListener> listeners = new HashSet<JobProcessorListener>();
+	private JobProcessorDelegate delegate = new DefaultJobProcessorDelegate();
+	private JobState state;
+	private Thread thread;
+	private Object runLock = new Object();
+	
+	public JobProcessor(Configuration configuration) {
+		this.configuration = configuration;
+	}
+	
+	public void setDelegate(JobProcessorDelegate delegate) {
+		this.delegate = delegate;
+	}
+	
+	public void addListener(JobProcessorListener listener) {
+		listeners.add(listener);
+	}
+	
+	public void removeListener(JobProcessorListener listener) {
+		listeners.remove(listener);
+	}
+	
+	public Job getJob() {
+		return job;
+	}
+	
+	public JobState getState() {
+		return state;
+	}
+	
+	/**
+	 * Load a new Job into the processor and prepare it for running. This
+	 * immediately stops and unloads any running Job and load in the new Job.
+	 * @param job
+	 */
+	public void load(File file) throws Exception {
+		Document document = Configuration.loadDocument(new FileInputStream(file));
+		Job job = new Job();
+		job.parse(document.getDocumentElement(), configuration);
+		load(job);
+	}
+	
+	public void load(Job job) {
+		stop();
+		this.job = job;
+		
+		try {
+			// TODO This is really only for the SimulatorDriver and it should maybe be
+			// made more private. Another option would be to allow the Machine
+			// to be a listener on the JobProcessor.
+			configuration.getMachine().prepareJob(configuration, job);
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineRejectedJobError, e.getMessage());
+		}
+
+		fireJobLoaded();
+	}
+	
+	/**
+	 * Start the Job. The Job must be in the Stopped state.
+	 */
+	public void start() throws Exception {
+		if (state != JobState.Stopped) {
+			throw new Exception("Invalid state. Cannot start new job while state is " + state);
+		}
+		if (thread != null && thread.isAlive()) {
+			throw new Exception("Previous Job has not yet finished.");
+		}
+		thread = new Thread(this);
+		thread.start();
+	}
+	
+	/**
+	 * Pause a running Job. The Job will stop running at the next opportunity and retain
+	 * it's state so that it can be resumed. 
+	 */
+	public void pause() {
+		state = JobState.Paused;
+		fireJobStateChanged();
+	}
+	
+	/**
+	 * Resume a running Job. The Job will resume from where it was paused.
+	 */
+	public void resume() {
+		state = JobState.Running;
+		fireJobStateChanged();
+		synchronized (runLock) {
+			runLock.notifyAll();
+		}
+	}
+	
+	/**
+	 * Stop a running Job. The Job will stop immediately and will reset to it's 
+	 * freshly loaded state. All state about parts already placed will be lost.
+	 */
+	public void stop() {
+		state = JobState.Stopped;
+		fireJobStateChanged();
+		synchronized (runLock) {
+			runLock.notifyAll();
+		}
+	}
+	
+	public void run() {
+		state = JobState.Running;
+		fireJobStateChanged();
+		
+		Machine machine = configuration.getMachine();
+
+		if (!shouldJobProcessingContinue()) {
+			return;
+		}
+
+		try {
+			machine.home();
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
+		}
+
+		/*
+		 * Vision: After the Head.pick() operation is when we might do some
+		 * vision work. We can use bottom vision, or maybe even top, to
+		 * determine how well we picked the part and then adjust internally the
+		 * offset we are holding it at.
+		 * 
+		 * Optimizations: Build a hit list up front of all the movements that
+		 * have to be made along with substitution options such as different
+		 * feeders and heads for parts, then sort the whole mess by distance and
+		 * determine the best route.
+		 * 
+		 * How do we handle Heads working in tandem? Need multiple threads, or
+		 * async Head operations.
+		 */
+		for (JobBoard jobBoard : job.getBoards()) {
+			Board board = jobBoard.getBoard();
+			fireBoardProcessingStarted(jobBoard);
+			for (Placement placement : board.getPlacements()) {
+				firePartProcessingStarted(jobBoard, placement);
+				Part part = placement.getPart();
+
+				// Get a list of Feeders that can source the part
+				List<FeederLocation> candidateFeeders = part
+						.getFeederLocations();
+				if (candidateFeeders.size() == 0) {
+					fireJobEncounteredError(JobError.FeederError, "No candidate Feeders found for Part " + part.getReference());
+				}
+				List<FeederLocation> feeders = new ArrayList<FeederLocation>();
+				for (FeederLocation feeder : candidateFeeders) {
+					if (feeder.getFeeder().available()) {
+						feeders.add(feeder);
+					}
+				}
+				if (feeders.size() < 1) {
+					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getReference());
+				}
+
+				// TODO Loop through this next block checking Feeders against
+				// Heads until one works.
+
+				// Determine which feeder to pick the part from. This can be
+				// optimized to handle
+				// distance, capacity, etc.
+				FeederLocation feederLocation = feeders.get(0);
+
+				Feeder feeder = feederLocation.getFeeder();
+
+				// Get the Location of the pick point from the feeder
+				Location pickLocation = feederLocation.getLocation();
+
+				// Convert the Location to the machine's native units if
+				// neccesary
+				pickLocation = LengthUtil.convertLocation(pickLocation, machine
+						.getNativeUnits());
+
+				// Determine where we will place the part
+				Location boardLocation = jobBoard.getLocation();
+				Location placementLocation = placement.getLocation();
+
+				// Convert the locations to machine native units
+				boardLocation = LengthUtil.convertLocation(boardLocation,
+						machine.getNativeUnits());
+				placementLocation = LengthUtil.convertLocation(
+						placementLocation, machine.getNativeUnits());
+
+				// Create the point that represents the final placement location
+				// This is currently in relation to the 0,0 of the board
+				Point2D.Double p = new Point2D.Double(placementLocation.getX(),
+						placementLocation.getY());
+
+				// Rotate and translate the point into the same coordinate space
+				// as the board
+				p = Utils2D.rotateTranslateScalePoint(p, boardLocation
+						.getRotation(), boardLocation.getX(), boardLocation
+						.getY(), 1.0);
+
+				// Update the placementLocation with the transformed point
+				placementLocation.setX(p.getX());
+				placementLocation.setY(p.getY());
+
+				// Update the placementLocation with the board's rotation and
+				// the placement's rotation
+				// This sets the rotation of the part itself when it will be
+				// placed
+				placementLocation
+						.setRotation((placementLocation.getRotation() + boardLocation
+								.getRotation()) % 360.0);
+
+				// Update the placementLocation with the proper Z value. This is
+				// the distance to the top of the board minus
+				// the height of the part.
+				double partHeight = LengthUtil.convertLength(part.getHeight(),
+						part.getHeightUnits(), machine.getNativeUnits());
+				placementLocation.setZ(boardLocation.getZ() - partHeight);
+
+				// At this point the important data is pickLocation along with
+				// it's rotation, which determines
+				// where we will obtain the part and placementLocation and it's
+				// rotation plus board rotation,
+				// which determines where we will place the part
+
+				// Get a list of Heads that can service both the pick and place
+				// operations. This is not
+				// always going to be # of heads because some heads may be
+				// limited in their ability to reach
+				// certain parts of the machine.
+				List<Head> candidateHeads = machine.getHeads();
+				List<Head> heads = new ArrayList<Head>();
+				for (Head candidateHead : candidateHeads) {
+					if (candidateHead.canPickAndPlace(feeder, pickLocation,
+							placementLocation)) {
+						heads.add(candidateHead);
+					}
+				}
+
+				if (heads.size() < 1) {
+					fireJobEncounteredError(JobError.HeadError, "No Head available to service Placement " + placement);
+				}
+
+				// Choose the Head that will service the operation, can be
+				// optimized
+				Head head = heads.get(0);
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+
+				// Move the nozzle to safe Z
+				try {
+					head.moveTo(head.getX(), head.getY(), 0, head.getA());
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				}
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+
+				try {
+					pickLocation = feeder.feed(head, part, pickLocation);
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.FeederError, e.getMessage());
+				}
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+
+				// Move the nozzle to safe Z
+				try {
+					head.moveTo(head.getX(), head.getY(), 0, head.getA());
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				}
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+				
+				// TODO do the movement to the pick location and the actual pick in seperate operations
+
+				// Pick the part
+				try {
+					// TODO design a way for the head/feeder to indicate that the part
+					// failed to pick, use the delegate to notify and potentially retry
+					head.pick(part, feeder, pickLocation);
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.PickError, e.getMessage());
+				}
+				
+				firePartPicked(jobBoard, placement);
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+
+				// Move the nozzle to safe Z
+				try {
+					head.moveTo(head.getX(), head.getY(), 0, head.getA());
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				}
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+
+				// TODO do the movement to the place location and the actual place in seperate operations
+				
+				// Place the part
+				try {
+					head.place(part, placementLocation);
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.PlaceError, e.getMessage());
+				}
+				
+				firePartPlaced(jobBoard, placement);
+			}
+			
+			fireBoardProcessingCompleted(jobBoard);
+		}
+		
+		if (!shouldJobProcessingContinue()) {
+			return;
+		}
+
+		try {
+			machine.home();
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
+		}
+	}
+	
+	/**
+	 * Checks if the Job has been Paused or Stopped. If it has been Paused this method
+	 * blocks until the Job is Resumed. If the Job has been Stopped it returns false and
+	 * the loop should break.
+	 */
+	private boolean shouldJobProcessingContinue() {
+		while (true) {
+			if (state == JobState.Stopped) {
+				return false;
+			}
+			else if (state == JobState.Paused) {
+				synchronized (runLock) {
+					try {
+						runLock.wait();
+					}
+					catch (InterruptedException ie) {
+						throw new Error(ie);
+					}
+				}
+			}
+			else {
+				break;
+			}
+		}
+		return true;
+	}
+	
+	private void fireJobEncounteredError(JobError error, String description) {
+		for (JobProcessorListener listener : listeners) {
+			listener.jobEncounteredError(error, description);
+		}
+	}
+	
+	private void fireJobLoaded() {
+		for (JobProcessorListener listener : listeners) {
+			listener.jobLoaded(job);
+		}
+	}
+	
+	private void fireJobStateChanged() {
+		for (JobProcessorListener listener : listeners) {
+			listener.jobStateChanged(state);
+		}
+	}
+	
+	private void fireBoardProcessingStarted(JobBoard board) {
+		for (JobProcessorListener listener : listeners) {
+			listener.boardProcessingStarted(board);
+		}
+	}
+	
+	private void fireBoardProcessingCompleted(JobBoard board) {
+		for (JobProcessorListener listener : listeners) {
+			listener.boardProcessingCompleted(board);
+		}
+	}
+	
+	private void firePartProcessingStarted(JobBoard board, Placement placement) {
+		for (JobProcessorListener listener : listeners) {
+			listener.partProcessingStarted(board, placement);
+		}
+	}
+	
+	private void firePartPicked(JobBoard board, Placement placement) {
+		for (JobProcessorListener listener : listeners) {
+			listener.partPicked(board, placement);
+		}
+	}
+	
+	private void firePartPlaced(JobBoard board, Placement placement) {
+		for (JobProcessorListener listener : listeners) {
+			listener.partPlaced(board, placement);
+		}
+	}
+	
+	private void firePartProcessingComplete(JobBoard board, Placement placement) {
+		for (JobProcessorListener listener : listeners) {
+			listener.partProcessingCompleted(board, placement);
+		}
+	}
+	
+	class DefaultJobProcessorDelegate implements JobProcessorDelegate {
+		@Override
+		public PickRetryAction partPickFailed(JobBoard board, Part part,
+				Feeder feeder) {
+			return PickRetryAction.SkipAndContinue;
+		}
+	}
+}

@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<Job reference="BTPD-V4" name="BrewTroller PID DIsplay v4">
+	<Boards>
+		<Board reference="BTPDv4">
+			<Outline units="Inches">
+				<Point x="0" y="0"/>
+				<Point x="0" y="2.2"/>
+				<Point x="2.6" y="2.2"/>
+				<Point x="2.6" y="0"/>
+			</Outline>
+			<Placements>
+				<Placement reference="C1" part="C-0805-100NF" bottom="true">
+					<Location units="Inches" x="1.3" y="1.25" rotation="0"/>
+				</Placement>
+				<Placement reference="C2" part="C-0805-1UF" bottom="true">
+					<Location units="Inches" x="0.35" y="0.600" rotation="0"/>
+				</Placement>
+				<Placement reference="C3" part="C-0805-10UF" bottom="true">
+					<Location units="Inches" x="0.35" y="0.500" rotation="0"/>
+				</Placement>
+				<Placement reference="C4" part="C-0805-1UF" bottom="true">
+					<Location units="Inches" x="0.175" y="0.500" rotation="0"/>
+				</Placement>
+				<Placement reference="C5" part="C-0805-10UF" bottom="true">
+					<Location units="Inches" x="0.175" y="0.600" rotation="0"/>
+				</Placement>
+
+				<Placement reference="R1" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="0.65" y="1.45" rotation="270"/>
+				</Placement>
+				<Placement reference="R2" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="0.85" y="1.45" rotation="270"/>
+				</Placement>
+				<Placement reference="R3" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="1.65" y="1.450" rotation="270"/>
+				</Placement>
+				<Placement reference="R4" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="1.85" y="1.450" rotation="270"/>
+				</Placement>
+				<Placement reference="R5" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="0.650" y="0.575" rotation="270"/>
+				</Placement>
+				<Placement reference="R6" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="0.850" y="0.575" rotation="270"/>
+				</Placement>
+				<Placement reference="R7" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="1.65" y="0.575" rotation="270"/>
+				</Placement>
+				<Placement reference="R8" part="R-0805-1K" bottom="true">
+					<Location units="Inches" x="1.85" y="0.575" rotation="270"/>
+				</Placement>
+				<Placement reference="R9" part="R-0805-10K" bottom="true">
+					<Location units="Inches" x="1.3" y="1.825" rotation="0"/>
+				</Placement>
+				<Placement reference="R10" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="0.550" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R11" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="0.750" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R12" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="0.950" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R13" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="1.150" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R14" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="1.450" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R15" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="1.650" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R16" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="1.850" y="1.1" rotation="270"/>
+				</Placement>
+				<Placement reference="R17" part="R-0805-47" bottom="true">
+					<Location units="Inches" x="2.050" y="1.1" rotation="270"/>
+				</Placement>
+				
+				<Placement reference="T1" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="0.700" y="1.650" rotation="0"/>
+				</Placement>
+				<Placement reference="T2" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="0.900" y="1.650" rotation="0"/>
+				</Placement>
+				<Placement reference="T3" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="1.700" y="1.650" rotation="0"/>
+				</Placement>
+				<Placement reference="T4" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="1.900" y="1.650" rotation="0"/>
+				</Placement>
+				<Placement reference="T5" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="0.700" y="0.775" rotation="0"/>
+				</Placement>
+				<Placement reference="T6" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="0.900" y="0.775" rotation="0"/>
+				</Placement>
+				<Placement reference="T7" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="1.700" y="0.775" rotation="0"/>
+				</Placement>
+				<Placement reference="T8" part="MMBT3906-7-F" bottom="true">
+					<Location units="Inches" x="1.900" y="0.775" rotation="0"/>
+				</Placement>
+				
+				
+				<Placement reference="S1" part="PTS525SM10SMTR LFS" bottom="true">
+					<Location units="Inches" x="2.45" y="0.560" rotation="270"/>
+				</Placement>
+				
+				<Placement reference="IC1" part="ATMEGA168A-AU" bottom="true">
+					<Location units="Inches" x="1.3" y="1.550" rotation="0"/>
+				</Placement>
+
+				<Placement reference="IC2" part="ULN2803ADWR" bottom="true">
+					<!--  This location differed from the board because the part's center is wrong. Consider how to fix. -->
+					<Location units="Inches" x="1.3" y="0.675" rotation="270"/>
+				</Placement>
+				
+				<Placement reference="IC3" part="MC78M05CDTRKG" bottom="true">
+					<!--  This location is incorrect due to centering of package, gotta figure out what proper centers are. -->
+					<Location units="Inches" x="0.3" y="0.950" rotation="0"/>
+				</Placement>
+			</Placements>
+		</Board>
+	</Boards>
+	<BoardLocations>
+		<BoardLocation board="BTPDv4" bottom="true">
+			<Location units="Millimeters" x="200" y="100" z="98.6" rotation="0"/>
+		</BoardLocation>
+		<BoardLocation board="BTPDv4" bottom="true">
+			<Location units="Millimeters" x="200" y="250" z="98.6" rotation="45"/>
+		</BoardLocation>
+		<BoardLocation board="BTPDv4" bottom="true">
+			<Location units="Millimeters" x="200" y="400" z="98.6" rotation="90"/>
+		</BoardLocation>
+	</BoardLocations>
+</Job>
