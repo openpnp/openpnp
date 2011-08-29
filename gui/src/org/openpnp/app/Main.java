@@ -25,6 +25,11 @@ import javax.swing.UIManager;
 
 import org.openpnp.gui.MainFrame;
 
+/**
+ * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
+ * @author jason
+ *
+ */
 public class Main {
 	public static void main(String[] args) {
 		System.setProperty("apple.laf.useScreenMenuBar", "true");

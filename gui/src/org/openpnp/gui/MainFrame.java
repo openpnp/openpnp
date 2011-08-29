@@ -190,17 +190,14 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 
 	@Override
 	public void boardProcessingStarted(JobBoard board) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void partPicked(JobBoard board, Placement placement) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void partPlaced(JobBoard board, Placement placement) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -210,7 +207,6 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 
 	@Override
 	public void partProcessingStarted(JobBoard board, Placement placement) {
-		// TODO Auto-generated method stub
 	}
 	
 	private void createUi() {
