@@ -5,6 +5,5 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-simple-1.6.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JOGL"/>
-	<classpathentry kind="lib" path="lib/rxtx-2.2pre2-bins/RXTXcomm.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
