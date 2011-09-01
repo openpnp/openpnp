@@ -23,7 +23,6 @@ package org.openpnp.spi;
 
 import org.openpnp.Location;
 import org.openpnp.Part;
-import org.openpnp.machine.generic.GenericHead;
 
 
 

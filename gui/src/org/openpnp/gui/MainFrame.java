@@ -22,7 +22,6 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -42,25 +41,23 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Board;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
+import org.openpnp.Job.JobBoard;
 import org.openpnp.JobProcessor;
+import org.openpnp.JobProcessor.JobError;
+import org.openpnp.JobProcessor.JobState;
+import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.Placement;
-import org.openpnp.Job.JobBoard;
-import org.openpnp.JobProcessor.JobError;
-import org.openpnp.JobProcessor.JobState;
-import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.gui.components.BoardView;
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 

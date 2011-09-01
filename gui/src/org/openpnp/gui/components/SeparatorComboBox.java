@@ -31,7 +31,6 @@ import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JSeparator;
 import javax.swing.ListCellRenderer;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 /**
  *  Class that allows you to add a JSeparator to the ComboBoxModel.
@@ -41,6 +40,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
  *  If you attempt to select the separator with the mouse, the selection
  *  will be ignored and the drop down will remain open.
  */
+@SuppressWarnings("serial")
 public class SeparatorComboBox extends JComboBox implements KeyListener
 {
 	//  Track key presses and releases

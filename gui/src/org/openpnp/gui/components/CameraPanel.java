@@ -26,8 +26,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +35,11 @@ import javax.swing.JPanel;
 
 import org.openpnp.spi.Camera;
 
+/**
+ * Shows a a 3x3 grid of 9 cameras or a blown up image from a single camera. 
+ * @author jason
+ * TODO add a way to identify a particular camera in grid view; maybe tooltip
+ */
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
 	private static int maximumFps = 10;

@@ -15,13 +15,13 @@ import javax.swing.JPanel;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
+import org.openpnp.Job.JobBoard;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Outline;
 import org.openpnp.Part;
-import org.openpnp.Placement;
-import org.openpnp.Job.JobBoard;
 import org.openpnp.Part.FeederLocation;
+import org.openpnp.Placement;
 import org.openpnp.machine.generic.GenericDriver;
 import org.openpnp.machine.generic.GenericHead;
 import org.openpnp.util.LengthUtil;

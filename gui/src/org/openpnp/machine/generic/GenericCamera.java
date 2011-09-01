@@ -25,6 +25,12 @@ import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.spi.Camera;
 
+/**
+ * An extension of Camera that adds a prepareJob call. This is is used by the SimulatorCamera
+ * so that it can build the model of what it will show.
+ * @author jason
+ *
+ */
 public interface GenericCamera extends Camera {
 	public void prepareJob(Configuration configuration, Job job) throws Exception;
 }

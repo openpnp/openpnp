@@ -22,12 +22,9 @@
 package org.openpnp;
 
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z

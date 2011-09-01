@@ -27,6 +27,11 @@ import java.util.Set;
 
 import org.openpnp.CameraListener;
 
+/**
+ * Provides listener support for Camera subclasses.
+ * @author jason
+ *
+ */
 public abstract class AbstractCamera implements Camera {
 	protected Set<ListenerEntry> listeners = new HashSet<ListenerEntry>();
 	protected String name;
