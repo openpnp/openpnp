@@ -5,9 +5,12 @@
 			<Driver class="org.openpnp.machine.generic.driver.GrblDriver">
 				<Configuration>
 					<Port name="/dev/tty.usbserial-A9007LmZ" baud="9600" />
-					<Settings>
-						<Setting name="$1" value="0" />
-					</Settings>
+						<Settings>
+							<Setting name="$0" value="56.338" />
+							<Setting name="$1" value="56.338" />
+							<Setting name="$2" value="56.338" />
+							<Setting name="$3" value="10" />
+						</Settings>
 				</Configuration>
 			</Driver>
 			<Axes>

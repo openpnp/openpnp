@@ -1,0 +1,2 @@
+#!/usr/bin/ruby
+require 'script/stream'

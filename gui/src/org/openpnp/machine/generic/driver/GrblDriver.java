@@ -35,9 +35,24 @@ import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.Part;
 import org.openpnp.machine.generic.GenericDriver;
+import org.openpnp.machine.generic.GenericFeeder;
 import org.openpnp.machine.generic.GenericHead;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+/**
+<pre>
+	<Configuration>
+		<Port name="/dev/tty.usbserial-A9007LmZ" baud="9600" />
+		<Settings>
+			<Setting name="$0" value="56.338" />
+			<Setting name="$1" value="56.338" />
+			<Setting name="$2" value="56.338" />
+			<Setting name="$3" value="10" />
+		</Settings>
+	</Configuration>
+</pre>
+ */
 public class GrblDriver implements GenericDriver, Runnable {
 	private double x, y, z, c;
 
@@ -48,9 +63,10 @@ public class GrblDriver implements GenericDriver, Runnable {
 	private OutputStream output;
 	private Thread readerThread;
 	private boolean disconnectRequested;
-	private boolean connecting;
 	private Object commandLock = new Object();
 	private String lastResponse;
+	private boolean connected;
+	private boolean configured;
 
 	@Override
 	public void configure(Node n) throws Exception {
@@ -60,6 +76,14 @@ public class GrblDriver implements GenericDriver, Runnable {
 		
 		String portName = Configuration.getAttribute(portNode, "name");
 		int portBaud = Integer.parseInt(Configuration.getAttribute(portNode, "baud"));
+		
+		NodeList nodes = (NodeList) xpath.evaluate("Settings/Setting", n, XPathConstants.NODESET);
+
+		for (int i = 0; i < nodes.getLength(); i++) {
+			Node settingNode = nodes.item(i);
+			System.out.println(Configuration.getAttribute(settingNode, "name"));
+		}
+		
 
 		connect(portName, portBaud);
 	}
@@ -149,15 +173,15 @@ public class GrblDriver implements GenericDriver, Runnable {
 		input = serialPort.getInputStream();
 		output = serialPort.getOutputStream();
 		
-		connecting = true;
-
 		readerThread = new Thread(this);
 		readerThread.start();
 	}
 
 	public synchronized void disconnect() {
 		disconnectRequested = true;
-		connecting = false;
+		connected = false;
+		configured = false;
+		
 		try {
 			if (readerThread != null && readerThread.isAlive()) {
 				readerThread.join();
@@ -176,9 +200,9 @@ public class GrblDriver implements GenericDriver, Runnable {
 		while (!disconnectRequested) {
 			String line = readLine();
 			System.out.println(line);
-			if (connecting) {
+			if (!connected) {
 				if (line.startsWith("Grbl")) {
-					connecting = false;
+					connected = false;
 					System.out.println("Connect complete");
 				}
 			}
