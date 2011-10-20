@@ -65,7 +65,7 @@
 
 // The number of linear motions that can be in the plan at any give time
 #ifdef __AVR_ATmega328P__
-#define BLOCK_BUFFER_SIZE 20
+#define BLOCK_BUFFER_SIZE 5
 #else
 #define BLOCK_BUFFER_SIZE 5
 #endif

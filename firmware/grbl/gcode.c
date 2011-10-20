@@ -405,6 +405,11 @@ uint8_t gc_execute_line(char *line) {
   // motion control system might still be processing the action and the real tool position
   // in any intermediate location.
   memcpy(gc.position, target, sizeof(double)*3); // gc.position[] = target[];
+  
+  // mc_dwell waits for all commands to complete. This effectively disables the
+  // command queueing
+  mc_dwell(0);
+  
   return(gc.status_code);
 }
 
