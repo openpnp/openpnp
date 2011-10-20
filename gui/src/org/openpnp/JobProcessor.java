@@ -317,7 +317,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getA());
+					head.moveTo(head.getX(), head.getY(), 0, head.getC());
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -340,7 +340,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getA());
+					head.moveTo(head.getX(), head.getY(), 0, head.getC());
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -370,7 +370,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getA());
+					head.moveTo(head.getX(), head.getY(), 0, head.getC());
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -406,6 +406,9 @@ public class JobProcessor implements Runnable {
 		catch (Exception e) {
 			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
 		}
+		
+		state = JobState.Stopped;
+		fireJobStateChanged();
 	}
 	
 	/**

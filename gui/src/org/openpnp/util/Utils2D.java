@@ -27,13 +27,13 @@ import org.openpnp.Outline;
 
 
 public class Utils2D {
-	public static Outline rotateTranslateScaleOutline(Outline outline, double a, double x, double y, double scale) {
+	public static Outline rotateTranslateScaleOutline(Outline outline, double c, double x, double y, double scale) {
 		Outline newOutline = new Outline();
 		newOutline.setUnits(outline.getUnits());
 		for (int i = 0; i < outline.getPoints().size(); i++) {
 			Point2D.Double p = outline.getPoints().get(i);
 			
-			p = rotateTranslateScalePoint(p, a, x, y, scale);
+			p = rotateTranslateScalePoint(p, c, x, y, scale);
 			
 			newOutline.addPoint(p.getX(), p.getY());
 		}
@@ -41,8 +41,8 @@ public class Utils2D {
 		return newOutline;
 	}
 	
-	public static Point2D.Double rotateTranslateScalePoint(Point2D.Double point, double a, double x, double y, double scale) {
-		point = rotatePoint(point, a);
+	public static Point2D.Double rotateTranslateScalePoint(Point2D.Double point, double c, double x, double y, double scale) {
+		point = rotatePoint(point, c);
 		point = translatePoint(point, x, y);
 		point = scalePoint(point, scale);
 		return point;
@@ -52,17 +52,17 @@ public class Utils2D {
 		return new Point2D.Double(point.getX() + x, point.getY() + y);
 	}
 	
-	public static Point2D.Double rotatePoint(Point2D.Double point, double a) {
+	public static Point2D.Double rotatePoint(Point2D.Double point, double c) {
 		double x = point.getX();
 		double y = point.getY();
 		
 		// convert degrees to radians
-		a = a * Math.PI / 180.0;
-		a *= -1;
+		c = c * Math.PI / 180.0;
+		c *= -1;
 		
 		// rotate the points
-		double xn = x * Math.cos(a) - y * Math.sin(a);
-		double yn = x * Math.sin(a) + y * Math.cos(a);
+		double xn = x * Math.cos(c) - y * Math.sin(c);
+		double yn = x * Math.sin(c) + y * Math.cos(c);
 		
 		x = xn;
 		y = yn;

@@ -77,9 +77,9 @@ public class GenericTapeFeeder extends GenericFeeder {
 		// extend the pin
 		head.actuate(GenericHead.ACTUATOR_PIN, true);
 		// insert the pin
-		head.moveTo(head.getX(), head.getY(), pickLocation.getZ(), head.getA());
+		head.moveTo(head.getX(), head.getY(), pickLocation.getZ(), head.getC());
 		// drag the tape
-		head.moveTo(pickLocation.getX() + 2 + 2, pickLocation.getY() - 2, pickLocation.getZ(), head.getA());
+		head.moveTo(pickLocation.getX() + 2 + 2, pickLocation.getY() - 2, pickLocation.getZ(), head.getC());
 		// retract the pin
 		head.actuate(GenericHead.ACTUATOR_PIN, false);
 		

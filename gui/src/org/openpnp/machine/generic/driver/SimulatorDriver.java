@@ -56,8 +56,8 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 	}
 
 	@Override
-	public void moveTo(GenericHead head, double x, double y, double z, double a) throws Exception {
-		panel.moveTo(head, x, y, z, a);
+	public void moveTo(GenericHead head, double x, double y, double z, double c) throws Exception {
+		panel.moveTo(head, x, y, z, c);
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 		private Configuration configuration;
 		private Job job;
 		
-		private double x, y, z, a;
+		private double x, y, z, c;
 		private double mmPerSecond = 250; // 250
 		private int operationDelay = 200;
 		
@@ -113,29 +113,29 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			repaint();
 		}
 		
-		public void moveTo(GenericHead head, double x, double y, double z, double a) {
+		public void moveTo(GenericHead head, double x, double y, double z, double c) {
 			// angles over 360* are silly
-			a = a % 360.0;
+			c = c % 360.0;
 			
 			// if the travel is more than 180* we go the opposite direction
-			if (a > 180) {
-				a = (360 - a) * -1;
+			if (c > 180) {
+				c = (360 - c) * -1;
 			}
 			
 			double x1 = this.x;
 			double y1 = this.y;
 			double z1 = this.z;
-			double a1 = this.a;
+			double c1 = this.c;
 			double x2 = x;
 			double y2 = y;
 			double z2 = z;
-			double a2 = a;
+			double c2 = c;
 			
 			// distances to travel in each axis
 			double vx = x2 - x1;
 			double vy = y2 - y1;
 			double vz = z2 - z1;
-			double va = a2 - a1;
+			double va = c2 - c1;
 			
 			double mag = Math.sqrt(vx*vx + vy*vy);
 
@@ -144,9 +144,9 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			while (distance < mag) {
 				this.x = x1 + (vx / mag * distance);
 				this.y = y1 + (vy / mag * distance);
-				this.a = a1 + (va / mag * distance);
+				this.c = c1 + (va / mag * distance);
 				
-				head.updateCoordinates(this.x, this.y, this.z, this.a);
+				head.updateCoordinates(this.x, this.y, this.z, this.c);
 				
 				repaint();
 				
@@ -162,9 +162,9 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			
 			this.x = x;
 			this.y = y;
-			this.a = a;
+			this.c = c;
 			
-			head.updateCoordinates(this.x, this.y, this.z, this.a);
+			head.updateCoordinates(this.x, this.y, this.z, this.c);
 			
 			repaint();
 
@@ -175,7 +175,7 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			while (distance < mag) {
 				this.z = z1 + (vz / mag * distance);
 
-				head.updateCoordinates(this.x, this.y, this.z, this.a);
+				head.updateCoordinates(this.x, this.y, this.z, this.c);
 
 				repaint();
 				
@@ -191,7 +191,7 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			
 			this.z = z;
 
-			head.updateCoordinates(this.x, this.y, this.z, this.a);
+			head.updateCoordinates(this.x, this.y, this.z, this.c);
 			
 			repaint();
 		}
@@ -238,7 +238,7 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			// draw the current position of the machine in text
 			g.setColor(Color.white);
 			g.drawString(
-				String.format("X %3.3f, Y %3.3f, Z %3.3f, A %3.3f", x, y, z, a), 
+				String.format("X %3.3f, Y %3.3f, Z %3.3f, C %3.3f", x, y, z, c), 
 				10, 
 				20);
 			
@@ -349,18 +349,18 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			chBottom = Utils2D.rotateTranslateScalePoint(chBottom, 0, 0, 0, heightScaleFactor);
 			chCenter = Utils2D.rotateTranslateScalePoint(chCenter, 0, 0, 0, heightScaleFactor);
 			
-			chLeft = Utils2D.rotateTranslateScalePoint(chLeft, a, x, y, scale);
-			chRight = Utils2D.rotateTranslateScalePoint(chRight, a, x, y, scale);
-			chTop = Utils2D.rotateTranslateScalePoint(chTop, a, x, y, scale);
-			chBottom = Utils2D.rotateTranslateScalePoint(chBottom, a, x, y, scale);
-			chCenter = Utils2D.rotateTranslateScalePoint(chCenter, a, x, y, scale);
+			chLeft = Utils2D.rotateTranslateScalePoint(chLeft, c, x, y, scale);
+			chRight = Utils2D.rotateTranslateScalePoint(chRight, c, x, y, scale);
+			chTop = Utils2D.rotateTranslateScalePoint(chTop, c, x, y, scale);
+			chBottom = Utils2D.rotateTranslateScalePoint(chBottom, c, x, y, scale);
+			chCenter = Utils2D.rotateTranslateScalePoint(chCenter, c, x, y, scale);
 			
 			if (pickedPart != null) {
 				// If we have a part on the nozzle we show it's outline while we carry it
 				Outline outline = pickedPart.getPackage().getOutline();
 				outline = LengthUtil.convertOutline(outline, LengthUnit.Millimeters);
 				outline = Utils2D.rotateTranslateScaleOutline(outline, 0, 0, 0, heightScaleFactor);
-				outline = Utils2D.rotateTranslateScaleOutline(outline, a, x, y, scale);
+				outline = Utils2D.rotateTranslateScaleOutline(outline, c, x, y, scale);
 				
 				g.setColor(Color.white);
 				drawOutline(g, outline);
@@ -374,7 +374,7 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			if (pinExtended) {
 				// draw the index pin
 				Point2D.Double pin = new Point2D.Double(-5, 5);
-				pin = Utils2D.rotateTranslateScalePoint(pin, a, x, y, scale);
+				pin = Utils2D.rotateTranslateScalePoint(pin, c, x, y, scale);
 				g.setColor(Color.magenta);
 				g.fillArc((int) pin.getX(), getHeight() - (int) pin.getY(), (int) (3 * heightScaleFactor), (int) (3 * heightScaleFactor), 0, 360);
 			}

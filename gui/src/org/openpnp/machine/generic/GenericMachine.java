@@ -92,7 +92,7 @@ public class GenericMachine implements Machine {
 		GenericHead head = new GenericHead(this);
 		heads.add(head);
 		
-		cameras.add(new SimulatorCamera("Head Tele", 50, 5, 0.022098, 0.021082, 0, 0, -50, 16.0998, 320, 240, head));
+//		cameras.add(new SimulatorCamera("Head Tele", 50, 5, 0.022098, 0.021082, 0, 0, -50, 16.0998, 320, 240, head));
 //		cameras.add(new SimulatorCamera("Head Wide", 50, 5, 0.022098, 0.021082, 0, 0, -100, 45, 640, 480, head));
 //		cameras.add(new SimulatorCamera("Machine Wide", 50, 5, 0.022098, 0.021082, 200, 300, -800, 45, 640, 480, null));
 	}

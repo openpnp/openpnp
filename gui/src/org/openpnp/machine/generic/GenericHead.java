@@ -30,8 +30,8 @@ public class GenericHead implements Head {
 	static final int ACTUATOR_PIN = 0;
 	
 	private final GenericMachine machine;
-	private final double minX, maxX, homeX, minY, maxY, homeY, minZ, maxZ, homeZ, minA, maxA, homeA;
-	double x, y, z, a;
+	private final double minX, maxX, homeX, minY, maxY, homeY, minZ, maxZ, homeZ, minC, maxC, homeC;
+	double x, y, z, c;
 	
 	public GenericHead(GenericMachine machine) {
 		this.machine = machine;
@@ -48,31 +48,31 @@ public class GenericHead implements Head {
 		maxZ = 100;
 		homeZ = 0;
 		
-		minA = 0;
-		maxA = 360;
-		homeA = 0;
+		minC = 0;
+		maxC = 360;
+		homeC = 0;
 	}
 
 	@Override
 	public void home() throws Exception {
-		moveTo(x, y, homeZ, a);
-		moveTo(homeX, homeY, homeZ, homeA);
+		moveTo(x, y, homeZ, c);
+		moveTo(homeX, homeY, homeZ, homeC);
 	}
 
 	@Override
-	public void moveTo(double x, double y, double z, double a) throws Exception {
-		machine.getDriver().moveTo(this, x, y, z, a);
+	public void moveTo(double x, double y, double z, double c) throws Exception {
+		machine.getDriver().moveTo(this, x, y, z, c);
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.a = a;
+		this.c = c;
 	}
 	
-	public void updateCoordinates(double x, double y, double z, double a) {
+	public void updateCoordinates(double x, double y, double z, double c) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.a = a;
+		this.c = c;
 	}
 	
 	@Override
@@ -86,7 +86,7 @@ public class GenericHead implements Head {
 		// move to the pick location
 		moveTo(pickLocation.getX(), pickLocation.getY(), z, pickLocation.getRotation());
 		// lower the nozzle
-		moveTo(x, y, pickLocation.getZ(), a);
+		moveTo(x, y, pickLocation.getZ(), c);
 		
 		// pick the part
 		machine.getDriver().pick(this, part);
@@ -97,7 +97,7 @@ public class GenericHead implements Head {
 		// move to the place location
 		moveTo(placeLocation.getX(), placeLocation.getY(), z, placeLocation.getRotation());
 		// lower the nozzle
-		moveTo(x, y, placeLocation.getZ(), a);
+		moveTo(x, y, placeLocation.getZ(), c);
 		// place the part
 		machine.getDriver().place(this);
 	}
@@ -122,7 +122,7 @@ public class GenericHead implements Head {
 	}
 
 	@Override
-	public double getA() {
-		return a;
+	public double getC() {
+		return c;
 	}
 }

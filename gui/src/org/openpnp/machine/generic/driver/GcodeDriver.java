@@ -31,7 +31,7 @@ import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;
 
 public class GcodeDriver implements GenericDriver {
-	private double x, y, z, a;
+	private double x, y, z, c;
 	
 	@Override
 	public void configure(Node n) {
@@ -53,7 +53,7 @@ public class GcodeDriver implements GenericDriver {
 	}
 
 	@Override
-	public void moveTo(GenericHead head, double x, double y, double z, double a) throws Exception {
+	public void moveTo(GenericHead head, double x, double y, double z, double c) throws Exception {
 		x = LengthUtil.convertLength(x, LengthUnit.Millimeters, LengthUnit.Inches);
 		y = LengthUtil.convertLength(y, LengthUnit.Millimeters, LengthUnit.Inches);
 		z = LengthUtil.convertLength(z, LengthUnit.Millimeters, LengthUnit.Inches);
@@ -69,8 +69,8 @@ public class GcodeDriver implements GenericDriver {
 		if (z != this.z) {
 			sb.append(String.format(" Z%2.4f", z));
 		}
-		if (a != this.a) {
-			sb.append(String.format(" A%2.4f", a));
+		if (c != this.c) {
+			sb.append(String.format(" A%2.4f", c));
 		}
 		if (sb.length() > 0) {
 			System.out.println("G0 " + sb.toString());
@@ -78,7 +78,7 @@ public class GcodeDriver implements GenericDriver {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.a = a;
+		this.c = c;
 	}
 
 	@Override

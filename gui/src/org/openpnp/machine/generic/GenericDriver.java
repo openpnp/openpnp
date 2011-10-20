@@ -51,7 +51,7 @@ public interface GenericDriver {
 	 * @param a
 	 * @throws Exception
 	 */
-	public void moveTo(GenericHead head, double x, double y, double z, double a) throws Exception;
+	public void moveTo(GenericHead head, double x, double y, double z, double c) throws Exception;
 	
 	/**
 	 * Causes the nozzle to apply vacuum and any other operation that it uses for picking

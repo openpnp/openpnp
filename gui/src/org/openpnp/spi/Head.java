@@ -41,7 +41,7 @@ public interface Head {
 	
 	public double getZ();
 	
-	public double getA();
+	public double getC();
 	
 	/**
 	 * Move the Head to the given position. Values are in Machine native units. Heads are not
@@ -51,7 +51,7 @@ public interface Head {
 	 * @param z
 	 * @param a
 	 */
-	void moveTo(double x, double y, double z, double a) throws Exception;
+	void moveTo(double x, double y, double z, double c) throws Exception;
 
 	// TODO change all these methods to take doubles instead of Locations to make it clear that
 	// the units are in machine units

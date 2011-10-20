@@ -2,15 +2,19 @@
 <OpenPnP>
 	<Machine class="org.openpnp.machine.generic.GenericMachine">
 		<Configuration>
-			<Driver class="org.openpnp.machine.generic.driver.SimulatorDriver">
+			<Driver class="org.openpnp.machine.generic.driver.GrblDriver">
 				<Configuration>
+					<Port name="/dev/tty.usbserial-A9007LmZ" baud="9600" />
+					<Settings>
+						<Setting name="$1" value="0" />
+					</Settings>
 				</Configuration>
 			</Driver>
 			<Axes>
 				<Axis reference="X" min="0" max="400" home="0" />
 				<Axis reference="Y" min="0" max="600" home="0" />
 				<Axis reference="Z" min="0" max="100" home="0" />
-				<Axis reference="A" min="0" max="360" home="0" />
+				<Axis reference="C" min="0" max="360" home="0" />
 			</Axes>
 			<Feeders>
 				<Feeder reference="L0" class="org.openpnp.machine.generic.GenericTapeFeeder">
