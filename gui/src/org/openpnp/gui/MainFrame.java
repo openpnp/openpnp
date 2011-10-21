@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -58,6 +59,7 @@ import org.openpnp.Part;
 import org.openpnp.Placement;
 import org.openpnp.gui.components.BoardView;
 import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 
@@ -74,6 +76,7 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 	private JTable boardsTable;
 	private JTable partsTable;
 	private BoardView boardView;
+	private MachineControlsPanel machineControlsPanel;
 	
 	private Configuration configuration;
 	private JobProcessor jobProcessor;
@@ -106,6 +109,8 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 		jobProcessor = new JobProcessor(configuration);
 		jobProcessor.addListener(this);
 		jobProcessor.setDelegate(this);
+		
+		machineControlsPanel.setMachine(configuration.getMachine());
 	}
 	
 	@Override
@@ -210,10 +215,6 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 		setSize(1280, 1024);
 		setTitle("Job");
 		
-		cameraPanel = new CameraPanel();
-		cameraPanel.setBorder(BorderFactory.createTitledBorder("Cameras"));
-		cameraPanel.setPreferredSize(new Dimension(400, 300));
-		
 		partsTable = new JTable(partsTableModel = new PartsTableModel());
 		JScrollPane partsTableScroller = new JScrollPane(partsTable);
 		partsTableScroller.setPreferredSize(new Dimension(1, 300));
@@ -236,9 +237,15 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 		boardView.setBorder(BorderFactory.createTitledBorder("Current Board"));
 		boardView.setPreferredSize(new Dimension(Short.MAX_VALUE, Short.MAX_VALUE));
 
+		cameraPanel = new CameraPanel();
+		cameraPanel.setBorder(BorderFactory.createTitledBorder("Cameras"));
+//		cameraPanel.setPreferredSize(new Dimension(400, 300));
+		cameraPanel.setMinimumSize(new Dimension(400, 300));
+		
 		JPanel jobControls = new JPanel();
 		jobControls.setLayout(new FlowLayout(FlowLayout.LEFT));
 		jobControls.setBorder(BorderFactory.createTitledBorder("Job Control"));
+		jobControls.invalidate();
 		
 		JButton button;
 		button = new JButton(startPauseResumeJobAction);
@@ -249,24 +256,19 @@ public class MainFrame extends JFrame implements JobProcessorListener, JobProces
 		button.setPreferredSize(new Dimension(70, 70));
 		jobControls.add(button);
 		
-//		JLabel jobStatusLabel = new JLabel();
-//		jobStatusLabel.setText("STOPPED");
-//		jobStatusLabel.setOpaque(true);
-//		jobStatusLabel.setBackground(Color.black);
-//		jobStatusLabel.setForeground(Color.red);
-//		jobStatusLabel.setFont(jobStatusLabel.getFont().deriveFont(Font.BOLD, 52));
-//		jobStatusLabel.setBorder(BorderFactory.createLoweredBevelBorder());
-//		jobStatusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		
 		JPanel jobControlsWrapper = new JPanel();
 		jobControlsWrapper.setLayout(new BorderLayout());
 		jobControlsWrapper.add(jobControls, BorderLayout.NORTH);
 		
-		JPanel topLeftBox = new JPanel();
-		topLeftBox.setLayout(new BorderLayout());
-		topLeftBox.add(cameraPanel, BorderLayout.NORTH);
-		topLeftBox.add(jobControlsWrapper, BorderLayout.CENTER);
-
+		machineControlsPanel = new MachineControlsPanel();
+		machineControlsPanel.setBorder(BorderFactory.createTitledBorder("Machine Controls"));
+		
+		Box topLeftBox = Box.createVerticalBox();
+		topLeftBox.setPreferredSize(new Dimension(400, 800));
+		topLeftBox.add(cameraPanel);
+		topLeftBox.add(jobControlsWrapper);
+		topLeftBox.add(machineControlsPanel);
+		
 		JPanel topBox = new JPanel();
 		topBox.setLayout(new BorderLayout());
 		topBox.add(topLeftBox, BorderLayout.WEST);

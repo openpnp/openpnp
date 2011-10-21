@@ -109,13 +109,6 @@ public class GrblDriver implements GenericDriver, Runnable {
 	@Override
 	public void moveTo(GenericHead head, double x, double y, double z, double c)
 			throws Exception {
-//		x = LengthUtil.convertLength(x, LengthUnit.Millimeters,
-//				LengthUnit.Inches);
-//		y = LengthUtil.convertLength(y, LengthUnit.Millimeters,
-//				LengthUnit.Inches);
-//		z = LengthUtil.convertLength(z, LengthUnit.Millimeters,
-//				LengthUnit.Inches);
-
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
 			sb.append(String.format("X%2.2f", x));
@@ -202,7 +195,7 @@ public class GrblDriver implements GenericDriver, Runnable {
 			System.out.println(line);
 			if (!connected) {
 				if (line.startsWith("Grbl")) {
-					connected = false;
+					connected = true;
 					System.out.println("Connect complete");
 				}
 			}

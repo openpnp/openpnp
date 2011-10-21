@@ -27,7 +27,7 @@ import org.openpnp.Part;
 
 /**
  * A Head is a moving toolholder on a Machine. The head has a current position. A Head
- * is the movable object in a Machine. 
+ * is the movable object in a Machine.
  */
 public interface Head {
 	/**
