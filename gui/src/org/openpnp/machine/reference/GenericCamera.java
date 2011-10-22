@@ -19,36 +19,18 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.app;
+package org.openpnp.machine.reference;
 
-import java.awt.EventQueue;
-
-import org.openpnp.gui.MainFrame;
+import org.openpnp.Configuration;
+import org.openpnp.Job;
+import org.openpnp.spi.Camera;
 
 /**
- * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
+ * An extension of Camera that adds a prepareJob call. This is is used by the SimulatorCamera
+ * so that it can build the model of what it will show.
  * @author jason
  *
  */
-public class Main {
-	public static void main(String[] args) {
-		System.setProperty("apple.laf.useScreenMenuBar", "true");
-//		try {
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//		}
-//		catch (Exception e) {
-//			throw new Error(e);
-//		}
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MainFrame frame = new MainFrame();
-					frame.setVisible(true);
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+public interface GenericCamera extends Camera {
+	public void prepareJob(Configuration configuration, Job job) throws Exception;
 }

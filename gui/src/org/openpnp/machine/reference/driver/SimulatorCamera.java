@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.generic.driver;
+package org.openpnp.machine.reference.driver;
 
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -47,7 +47,7 @@ import org.openpnp.Outline;
 import org.openpnp.Part;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.Placement;
-import org.openpnp.machine.generic.GenericCamera;
+import org.openpnp.machine.reference.GenericCamera;
 import org.openpnp.spi.AbstractCamera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;

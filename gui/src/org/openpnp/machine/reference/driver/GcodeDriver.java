@@ -19,14 +19,14 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.generic.driver;
+package org.openpnp.machine.reference.driver;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
 import org.openpnp.Part;
-import org.openpnp.machine.generic.GenericDriver;
-import org.openpnp.machine.generic.GenericHead;
+import org.openpnp.machine.reference.GenericDriver;
+import org.openpnp.machine.reference.GenericHead;
 import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;
 

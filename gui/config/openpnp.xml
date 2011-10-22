@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <OpenPnP>
-	<Machine class="org.openpnp.machine.generic.GenericMachine">
+	<Machine class="org.openpnp.machine.reference.GenericMachine">
 		<Configuration>
-			<Driver class="org.openpnp.machine.generic.driver.GrblDriver">
+			<Driver class="org.openpnp.machine.reference.driver.GrblDriver">
 				<Configuration>
 					<Port name="/dev/tty.usbserial-A9007LmZ" baud="9600" />
 						<Settings>
@@ -20,57 +20,57 @@
 				<Axis reference="C" min="0" max="360" home="0" />
 			</Axes>
 			<Feeders>
-				<Feeder reference="L0" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L0" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="100" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L1" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L1" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="110" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L2" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L2" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="120" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L3" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L3" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="130" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L4" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L4" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="140" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L5" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L5" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="150" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L6" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L6" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="160" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L7" class="org.openpnp.machine.generic.GenericTapeFeeder">
+				<Feeder reference="L7" class="org.openpnp.machine.reference.GenericTapeFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="170" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L8" class="org.openpnp.machine.generic.GenericTrayFeeder">
+				<Feeder reference="L8" class="org.openpnp.machine.reference.GenericTrayFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="180" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L9" class="org.openpnp.machine.generic.GenericTrayFeeder">
+				<Feeder reference="L9" class="org.openpnp.machine.reference.GenericTrayFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="190" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L10" class="org.openpnp.machine.generic.GenericTrayFeeder">
+				<Feeder reference="L10" class="org.openpnp.machine.reference.GenericTrayFeeder">
 					<Configuration>
 						<Location units="Millimeters" x="100" y="200" z="0" rotation="0"/>
 					</Configuration>

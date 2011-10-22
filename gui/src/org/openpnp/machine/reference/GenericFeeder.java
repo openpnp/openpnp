@@ -19,36 +19,26 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.app;
+package org.openpnp.machine.reference;
 
-import java.awt.EventQueue;
-
-import org.openpnp.gui.MainFrame;
+import org.openpnp.spi.Feeder;
+import org.w3c.dom.Node;
 
 /**
- * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
- * @author jason
- *
+ * A common base class for Feeders that the generic machine supports.
+ * Provides support for additional configuration. 
  */
-public class Main {
-	public static void main(String[] args) {
-		System.setProperty("apple.laf.useScreenMenuBar", "true");
-//		try {
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//		}
-//		catch (Exception e) {
-//			throw new Error(e);
-//		}
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MainFrame frame = new MainFrame();
-					frame.setVisible(true);
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+public abstract class GenericFeeder implements Feeder {
+	String reference;
+	
+	public abstract void configure(Node n) throws Exception;
+
+	@Override
+	public String getReference() {
+		return reference;
+	}
+
+	public void setReference(String reference) {
+		this.reference = reference;
 	}
 }

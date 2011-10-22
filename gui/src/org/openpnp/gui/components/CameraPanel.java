@@ -36,32 +36,32 @@ import javax.swing.JPanel;
 import org.openpnp.spi.Camera;
 
 /**
- * Shows a a 3x3 grid of 9 cameras or a blown up image from a single camera. 
- * @author jason
- * TODO add a way to identify a particular camera in grid view; maybe tooltip
+ * Shows a square grid of cameras or a blown up image from a single camera.
+ * 
+ * @author jason TODO add a way to identify a particular camera in grid view;
+ *         maybe tooltip
  */
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
 	private static int maximumFps = 10;
-	
-	private Set<TitledCamera> cameras = new HashSet<TitledCamera>();
-	
+
+	private Set<Camera> cameras = new HashSet<Camera>();
+
 	private JComboBox camerasCombo;
 	private JPanel camerasPanel;
-	
+
 	public CameraPanel() {
 		createUi();
-		
+
 		camerasCombo.setSelectedIndex(1);
 	}
-	
-	public void addCamera(Camera camera, String title) {
-		TitledCamera titledCamera = new TitledCamera(camera, title);
-		cameras.add(titledCamera);
-		camerasCombo.addItem(titledCamera);
+
+	public void addCamera(Camera camera) {
+		cameras.add(camera);
+		camerasCombo.addItem(new CameraWrapper(camera));
 		camerasCombo.setSelectedIndex(camerasCombo.getSelectedIndex());
 	}
-	
+
 	private void createUi() {
 		camerasPanel = new JPanel();
 
@@ -71,11 +71,11 @@ public class CameraPanel extends JPanel {
 		camerasCombo.addItem("Show All");
 
 		setLayout(new BorderLayout());
-		
+
 		add(camerasCombo, BorderLayout.NORTH);
 		add(camerasPanel);
 	}
-	
+
 	class CameraSelectedAction extends AbstractAction {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
@@ -88,14 +88,19 @@ public class CameraPanel extends JPanel {
 			}
 			else if (camerasCombo.getSelectedItem().equals("Show All")) {
 				clearCameras();
-				camerasPanel.setLayout(new GridLayout(0, 3, 1, 1));
-				for (TitledCamera camera : cameras) {
-					CameraView cameraView = new CameraView(maximumFps / cameras.size());
-					cameraView.setCamera(camera.camera);
+				int columns = (int) Math.ceil(Math.sqrt(cameras.size()));
+				if (columns == 0) {
+					columns = 1;
+				}
+				camerasPanel.setLayout(new GridLayout(0, columns, 1, 1));
+				for (Camera camera : cameras) {
+					CameraView cameraView = new CameraView(maximumFps
+							/ cameras.size());
+					cameraView.setCamera(camera);
 					cameraView.setShowCrosshair(false);
 					camerasPanel.add(cameraView);
 				}
-				for (int i = 0; i < 9 - cameras.size(); i++) {
+				for (int i = 0; i < (columns * columns) - cameras.size(); i++) {
 					JPanel panel = new JPanel();
 					panel.setBackground(Color.black);
 					camerasPanel.add(panel);
@@ -105,7 +110,8 @@ public class CameraPanel extends JPanel {
 				clearCameras();
 				camerasPanel.setLayout(new BorderLayout());
 				CameraView cameraView = new CameraView(maximumFps);
-				cameraView.setCamera(((TitledCamera) camerasCombo.getSelectedItem()).camera);
+				cameraView.setCamera(((CameraWrapper) camerasCombo
+						.getSelectedItem()).camera);
 				camerasPanel.add(cameraView);
 			}
 			revalidate();
@@ -122,18 +128,16 @@ public class CameraPanel extends JPanel {
 		}
 	}
 	
-	class TitledCamera {
-		public String title;
-		public Camera camera;
+	class CameraWrapper {
+		private Camera camera;
 		
-		public TitledCamera(Camera camera, String title) {
-			this.title = title;
+		public CameraWrapper(Camera camera) {
 			this.camera = camera;
 		}
 		
 		@Override
 		public String toString() {
-			return title;
+			return camera.getName();
 		}
 	}
 }

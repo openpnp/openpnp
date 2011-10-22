@@ -1,4 +1,4 @@
-package org.openpnp.machine.generic.driver;
+package org.openpnp.machine.reference.driver;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -22,8 +22,8 @@ import org.openpnp.Outline;
 import org.openpnp.Part;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.Placement;
-import org.openpnp.machine.generic.GenericDriver;
-import org.openpnp.machine.generic.GenericHead;
+import org.openpnp.machine.reference.GenericDriver;
+import org.openpnp.machine.reference.GenericHead;
 import org.openpnp.util.LengthUtil;
 import org.openpnp.util.Utils2D;
 import org.w3c.dom.Node;
