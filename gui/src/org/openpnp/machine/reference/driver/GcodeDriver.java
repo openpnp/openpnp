@@ -25,12 +25,12 @@ import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
 import org.openpnp.Part;
-import org.openpnp.machine.reference.GenericDriver;
-import org.openpnp.machine.reference.GenericHead;
+import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;
 
-public class GcodeDriver implements GenericDriver {
+public class GcodeDriver implements ReferenceDriver {
 	private double x, y, z, c;
 	
 	@Override
@@ -44,16 +44,16 @@ public class GcodeDriver implements GenericDriver {
 	}
 
 	@Override
-	public void actuate(GenericHead head, int index, boolean on) throws Exception {
+	public void actuate(ReferenceHead head, int index, boolean on) throws Exception {
 	}
 
 	@Override
-	public void home(GenericHead head) throws Exception {
+	public void home(ReferenceHead head) throws Exception {
 		moveTo(head, 0, 0, 0, 0);
 	}
 
 	@Override
-	public void moveTo(GenericHead head, double x, double y, double z, double c) throws Exception {
+	public void moveTo(ReferenceHead head, double x, double y, double z, double c) throws Exception {
 		x = LengthUtil.convertLength(x, LengthUnit.Millimeters, LengthUnit.Inches);
 		y = LengthUtil.convertLength(y, LengthUnit.Millimeters, LengthUnit.Inches);
 		z = LengthUtil.convertLength(z, LengthUnit.Millimeters, LengthUnit.Inches);
@@ -82,10 +82,10 @@ public class GcodeDriver implements GenericDriver {
 	}
 
 	@Override
-	public void pick(GenericHead head, Part part) throws Exception {
+	public void pick(ReferenceHead head, Part part) throws Exception {
 	}
 
 	@Override
-	public void place(GenericHead head) throws Exception {
+	public void place(ReferenceHead head) throws Exception {
 	}
 }

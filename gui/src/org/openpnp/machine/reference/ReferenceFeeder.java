@@ -25,10 +25,10 @@ import org.openpnp.spi.Feeder;
 import org.w3c.dom.Node;
 
 /**
- * A common base class for Feeders that the generic machine supports.
+ * A common base class for Feeders that the reference machine supports.
  * Provides support for additional configuration. 
  */
-public abstract class GenericFeeder implements Feeder {
+public abstract class ReferenceFeeder implements Feeder {
 	String reference;
 	
 	public abstract void configure(Node n) throws Exception;

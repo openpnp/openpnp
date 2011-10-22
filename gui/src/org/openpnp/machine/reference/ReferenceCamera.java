@@ -31,6 +31,6 @@ import org.openpnp.spi.Camera;
  * @author jason
  *
  */
-public interface GenericCamera extends Camera {
+public interface ReferenceCamera extends Camera {
 	public void prepareJob(Configuration configuration, Job job) throws Exception;
 }

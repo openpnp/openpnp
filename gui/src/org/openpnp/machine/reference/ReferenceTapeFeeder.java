@@ -33,13 +33,12 @@ import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;
 
 /**
- * Implemention of Feeder that indexes based on an offset. This allows a tray of parts to be picked from without moving any tape. 
+ * Implemention of Feeder that allows the head to index the current part and then
+ * pick from a pre-specified position.
  */
-public class GenericTrayFeeder extends GenericFeeder {
+public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private Location location;
 	// TODO will need to know the part's orientation, specifications about the tape, etc
-	private int pickCount;
-	private double offset = -10;
 	
 	@Override
 	public void configure(Node n) throws Exception {
@@ -66,20 +65,29 @@ public class GenericTrayFeeder extends GenericFeeder {
 	}
 	
 	public Location feed(Head head_, Part part, Location pickLocation) throws Exception {
-		GenericHead head = (GenericHead) head_;
 		
-		Location l = new Location();
-		l.setX(pickLocation.getX() + (pickCount * offset));
-		l.setY(pickLocation.getY());
-		l.setZ(pickLocation.getZ());
-		l.setRotation(pickLocation.getRotation());
-		l.setUnits(pickLocation.getUnits());
-		pickCount++;
-		return l; 
+		ReferenceHead head = (ReferenceHead) head_;
+		
+		// TODO need to take into consideration the height of the tape, length of pin and that we don't drag anything across
+		// the table
+		
+		// move the head so that the pin is positioned above the feed hole
+		// TODO This rotation should be based on the orientation of the feeder
+		head.moveTo(pickLocation.getX() + 2, pickLocation.getY() - 2, head.getZ(), 0);
+		// extend the pin
+		head.actuate(ReferenceHead.ACTUATOR_PIN, true);
+		// insert the pin
+		head.moveTo(head.getX(), head.getY(), pickLocation.getZ(), head.getC());
+		// drag the tape
+		head.moveTo(pickLocation.getX() + 2 + 2, pickLocation.getY() - 2, pickLocation.getZ(), head.getC());
+		// retract the pin
+		head.actuate(ReferenceHead.ACTUATOR_PIN, false);
+		
+		return pickLocation;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("GenericTapeFeeder reference %s, location %s", reference, location);
+		return String.format("ReferenceTapeFeeder reference %s, location %s", reference, location);
 	}
 }

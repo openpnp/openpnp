@@ -26,14 +26,14 @@ import org.openpnp.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 
-public class GenericHead implements Head {
+public class ReferenceHead implements Head {
 	static final int ACTUATOR_PIN = 0;
 	
-	private final GenericMachine machine;
+	private final ReferenceMachine machine;
 	private final double minX, maxX, homeX, minY, maxY, homeY, minZ, maxZ, homeZ, minC, maxC, homeC;
 	double x, y, z, c;
 	
-	public GenericHead(GenericMachine machine) {
+	public ReferenceHead(ReferenceMachine machine) {
 		this.machine = machine;
 		
 		minX = 0;

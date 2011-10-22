@@ -34,9 +34,9 @@ import javax.xml.xpath.XPathFactory;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.Part;
-import org.openpnp.machine.reference.GenericDriver;
-import org.openpnp.machine.reference.GenericFeeder;
-import org.openpnp.machine.reference.GenericHead;
+import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -53,7 +53,7 @@ import org.w3c.dom.NodeList;
 	</Configuration>
 </pre>
  */
-public class GrblDriver implements GenericDriver, Runnable {
+public class GrblDriver implements ReferenceDriver, Runnable {
 	private double x, y, z, c;
 
 	private CommPortIdentifier commPortId;
@@ -94,7 +94,7 @@ public class GrblDriver implements GenericDriver, Runnable {
 	}
 
 	@Override
-	public void actuate(GenericHead head, int index, boolean on)
+	public void actuate(ReferenceHead head, int index, boolean on)
 			throws Exception {
 		if (index == 0) {
 			sendCommand(on ? "M8" : "M9");
@@ -102,12 +102,12 @@ public class GrblDriver implements GenericDriver, Runnable {
 	}
 
 	@Override
-	public void home(GenericHead head) throws Exception {
+	public void home(ReferenceHead head) throws Exception {
 		moveTo(head, 0, 0, 0, 0);
 	}
 
 	@Override
-	public void moveTo(GenericHead head, double x, double y, double z, double c)
+	public void moveTo(ReferenceHead head, double x, double y, double z, double c)
 			throws Exception {
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
@@ -132,12 +132,12 @@ public class GrblDriver implements GenericDriver, Runnable {
 	}
 
 	@Override
-	public void pick(GenericHead head, Part part) throws Exception {
+	public void pick(ReferenceHead head, Part part) throws Exception {
 		sendCommand("M4");
 	}
 
 	@Override
-	public void place(GenericHead head) throws Exception {
+	public void place(ReferenceHead head) throws Exception {
 		sendCommand("M5");
 	}
 

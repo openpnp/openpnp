@@ -41,13 +41,13 @@ import org.openpnp.spi.Machine;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class GenericMachine implements Machine {
+public class ReferenceMachine implements Machine {
 	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
 	private double minX, minY, maxX, maxY;
-	private ArrayList<GenericHead> heads = new ArrayList<GenericHead>();
-	private Map<String, GenericFeeder> feeders = new HashMap<String, GenericFeeder>();
-	private GenericDriver driver;
-	private ArrayList<GenericCamera> cameras = new ArrayList<GenericCamera>();
+	private ArrayList<ReferenceHead> heads = new ArrayList<ReferenceHead>();
+	private Map<String, ReferenceFeeder> feeders = new HashMap<String, ReferenceFeeder>();
+	private ReferenceDriver driver;
+	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
 	
 	public void configure(Node n) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
@@ -72,7 +72,7 @@ public class GenericMachine implements Machine {
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node feederNode = nodes.item(i);
 			
-			GenericFeeder feeder = (GenericFeeder) Class.forName(Configuration.getAttribute(feederNode, "class")).newInstance();
+			ReferenceFeeder feeder = (ReferenceFeeder) Class.forName(Configuration.getAttribute(feederNode, "class")).newInstance();
 			
 			feeder.setReference(Configuration.getAttribute(feederNode, "reference"));
 			
@@ -85,11 +85,11 @@ public class GenericMachine implements Machine {
 			
 		Node driverNode = (Node) xpath.evaluate("Driver", n, XPathConstants.NODE);
 		
-		driver = (GenericDriver) Class.forName(Configuration.getAttribute(driverNode, "class")).newInstance();
+		driver = (ReferenceDriver) Class.forName(Configuration.getAttribute(driverNode, "class")).newInstance();
 		
 		driver.configure((Node) xpath.evaluate("Configuration", driverNode, XPathConstants.NODE)); 
 		
-		GenericHead head = new GenericHead(this);
+		ReferenceHead head = new ReferenceHead(this);
 		heads.add(head);
 		
 //		cameras.add(new SimulatorCamera("Head Tele", 50, 5, 0.022098, 0.021082, 0, 0, -50, 16.0998, 320, 240, head));
@@ -100,7 +100,7 @@ public class GenericMachine implements Machine {
 	@Override
 	public void prepareJob(Configuration configuration, Job job) throws Exception {
 		driver.prepareJob(configuration, job);
-		for (GenericCamera camera : cameras) {
+		for (ReferenceCamera camera : cameras) {
 			camera.prepareJob(configuration, job);
 		}
 	}
@@ -158,7 +158,7 @@ public class GenericMachine implements Machine {
 		}
 	}
 	
-	GenericDriver getDriver() {
+	ReferenceDriver getDriver() {
 		return driver;
 	}
 }

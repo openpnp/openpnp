@@ -22,15 +22,15 @@ import org.openpnp.Outline;
 import org.openpnp.Part;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.Placement;
-import org.openpnp.machine.reference.GenericDriver;
-import org.openpnp.machine.reference.GenericHead;
+import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.util.LengthUtil;
 import org.openpnp.util.Utils2D;
 import org.w3c.dom.Node;
 
 
 @SuppressWarnings("serial")
-public class SimulatorDriver extends JFrame implements GenericDriver {
+public class SimulatorDriver extends JFrame implements ReferenceDriver {
 	private SimulatorPanel panel;
 	
 	public SimulatorDriver() throws Exception {
@@ -51,27 +51,27 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 	}
 	
 	@Override
-	public void home(GenericHead head) throws Exception {
+	public void home(ReferenceHead head) throws Exception {
 		panel.moveTo(head, 0, 0, 0, 0);
 	}
 
 	@Override
-	public void moveTo(GenericHead head, double x, double y, double z, double c) throws Exception {
+	public void moveTo(ReferenceHead head, double x, double y, double z, double c) throws Exception {
 		panel.moveTo(head, x, y, z, c);
 	}
 
 	@Override
-	public void pick(GenericHead head, Part part) throws Exception {
+	public void pick(ReferenceHead head, Part part) throws Exception {
 		panel.pick(part);
 	}
 
 	@Override
-	public void place(GenericHead head) throws Exception {
+	public void place(ReferenceHead head) throws Exception {
 		panel.place();
 	}
 
 	@Override
-	public void actuate(GenericHead head, int index, boolean on) throws Exception {
+	public void actuate(ReferenceHead head, int index, boolean on) throws Exception {
 		panel.actuate(index, on);
 	}
 
@@ -113,7 +113,7 @@ public class SimulatorDriver extends JFrame implements GenericDriver {
 			repaint();
 		}
 		
-		public void moveTo(GenericHead head, double x, double y, double z, double c) {
+		public void moveTo(ReferenceHead head, double x, double y, double z, double c) {
 			// angles over 360* are silly
 			c = c % 360.0;
 			

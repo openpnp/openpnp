@@ -47,7 +47,7 @@ import org.openpnp.Outline;
 import org.openpnp.Part;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.Placement;
-import org.openpnp.machine.reference.GenericCamera;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.spi.AbstractCamera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;
@@ -56,7 +56,7 @@ import com.jogamp.opengl.util.awt.Screenshot;
 
 
 @SuppressWarnings("serial")
-public class SimulatorCamera extends AbstractCamera implements Runnable, GLEventListener, GenericCamera {
+public class SimulatorCamera extends AbstractCamera implements Runnable, GLEventListener, ReferenceCamera {
 	private static GLU glu = new GLU();
 	/*
 	 * At about 50mm we had .00087" x .00083" per pixel
