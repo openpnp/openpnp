@@ -39,6 +39,8 @@ import org.openpnp.Part;
  * For instance, if the Feeder is setup to feed 5mm cut tape, the user
  * may run a 0805 resistor in the Feeder for one job and a 0805 capacitor
  * in the same Feeder for a different job.
+ * 
+ * 
  */
 public interface Feeder {
 	/**

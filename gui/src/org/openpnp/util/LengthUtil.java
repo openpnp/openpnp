@@ -27,6 +27,7 @@ import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Outline;
 
+// TODO move these into their respective classes
 public class LengthUtil {
 	public static Location convertLocation(Location l, LengthUnit toUnits) {
 		Location ln = new Location();

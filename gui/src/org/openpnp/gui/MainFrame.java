@@ -22,7 +22,6 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -32,7 +31,6 @@ import java.util.ArrayList;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -61,8 +59,12 @@ import org.openpnp.Part;
 import org.openpnp.Placement;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
-import org.openpnp.gui.support.FakeCamera;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import javax.swing.JButton;
+import java.awt.Dimension;
+import java.awt.Component;
+import javax.swing.Box;
 
 /**
  * The main window of the application. Implements the top level menu, Job run
@@ -97,13 +99,9 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			throw new Error(e);
 		}
 
-		// for (Camera camera : configuration.getMachine().getCameras()) {
-		// cameraPanel.addCamera(camera, camera.getName());
-		// }
-
-		cameraPanel.addCamera(new FakeCamera("Flying Tele"));
-		cameraPanel.addCamera(new FakeCamera("Flying Wide"));
-		cameraPanel.addCamera(new FakeCamera("Bottom Tele"));
+		for (Camera camera : configuration.getMachine().getCameras()) {
+			cameraPanel.addCamera(camera);
+		}
 
 		jobProcessor = new JobProcessor(configuration);
 		jobProcessor.addListener(this);
@@ -295,17 +293,18 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
 		
-		JSplitPane splitPane_1 = new JSplitPane();
-		splitPane_1.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		splitPane_1.setContinuousLayout(true);
-		contentPane.add(splitPane_1, BorderLayout.CENTER);
+		JSplitPane splitPaneTopBottom = new JSplitPane();
+		splitPaneTopBottom.setBorder(null);
+		splitPaneTopBottom.setOrientation(JSplitPane.VERTICAL_SPLIT);
+		splitPaneTopBottom.setContinuousLayout(true);
+		contentPane.add(splitPaneTopBottom, BorderLayout.CENTER);
 		
-		JPanel panel_2 = new JPanel();
-		splitPane_1.setLeftComponent(panel_2);
-		panel_2.setLayout(new BorderLayout(0, 0));
+		JPanel panelTop = new JPanel();
+		splitPaneTopBottom.setLeftComponent(panelTop);
+		panelTop.setLayout(new BorderLayout(0, 0));
 		
 				JPanel panelLeftColumn = new JPanel();
-				panel_2.add(panelLeftColumn, BorderLayout.WEST);
+				panelTop.add(panelLeftColumn, BorderLayout.WEST);
 				FlowLayout flowLayout = (FlowLayout) panelLeftColumn.getLayout();
 				flowLayout.setVgap(0);
 				flowLayout.setHgap(0);
@@ -321,19 +320,19 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 								panel.add(machineControlsPanel);
 								
 										cameraPanel = new CameraPanel();
-										panel_2.add(cameraPanel, BorderLayout.CENTER);
+										panelTop.add(cameraPanel, BorderLayout.CENTER);
 										cameraPanel.setBorder(new TitledBorder(null, "Cameras",
 												TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		
-		JPanel panel_3 = new JPanel();
-		splitPane_1.setRightComponent(panel_3);
-		panel_3.setLayout(new BorderLayout(0, 0));
+		JPanel panelBottom = new JPanel();
+		splitPaneTopBottom.setRightComponent(panelBottom);
+		panelBottom.setLayout(new BorderLayout(0, 0));
 
-		JPanel panel_1 = new JPanel();
-		panel_3.add(panel_1, BorderLayout.CENTER);
-		panel_1.setBorder(new TitledBorder(null, "Job", TitledBorder.LEADING,
+		JPanel panelJob = new JPanel();
+		panelBottom.add(panelJob, BorderLayout.CENTER);
+		panelJob.setBorder(new TitledBorder(null, "Job", TitledBorder.LEADING,
 				TitledBorder.TOP, null, null));
-		panel_1.setLayout(new BorderLayout(0, 0));
+		panelJob.setLayout(new BorderLayout(0, 0));
 
 		partsTable = new JTable(partsTableModel = new PartsTableModel());
 		JScrollPane partsTableScroller = new JScrollPane(partsTable);
@@ -341,21 +340,41 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		boardsTable = new JTable(boardsTableModel = new BoardsTableModel());
 		JScrollPane boardsTableScroller = new JScrollPane(boardsTable);
 
-		JPanel partsTableScrollerWrapper = new JPanel();
-		partsTableScrollerWrapper.setLayout(new BorderLayout());
-		partsTableScrollerWrapper.add(partsTableScroller);
+		JPanel panelRight = new JPanel();
+		panelRight.setLayout(new BorderLayout());
+		panelRight.add(partsTableScroller);
 
-		JPanel boardsTableScrollerWrapper = new JPanel();
-		boardsTableScrollerWrapper.setLayout(new BorderLayout());
-		boardsTableScrollerWrapper.add(boardsTableScroller);
+		JPanel panelLeft = new JPanel();
+		panelLeft.setLayout(new BorderLayout());
+		
+		JPanel panelJobControl = new JPanel();
+		panelLeft.add(panelJobControl, BorderLayout.WEST);
+		panelJobControl.setLayout(new BoxLayout(panelJobControl, BoxLayout.Y_AXIS));
+		
+		JButton btnStart = new JButton("Start");
+		btnStart.setAction(startPauseResumeJobAction);
+		btnStart.setPreferredSize(new Dimension(80, 80));
+		btnStart.setFocusable(false);
+		panelJobControl.add(btnStart);
+		
+		JButton btnStop = new JButton("Stop");
+		btnStop.setAction(stopJobAction);
+		btnStop.setPreferredSize(new Dimension(80, 80));
+		btnStop.setFocusable(false);
+		panelJobControl.add(btnStop);
+		
+		Component glue = Box.createGlue();
+		panelJobControl.add(glue);
+		panelLeft.add(boardsTableScroller);
 
-		JSplitPane splitPane = new JSplitPane();
-		panel_1.add(splitPane);
-		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(250);
-		splitPane.setLeftComponent(boardsTableScrollerWrapper);
-		splitPane.setRightComponent(partsTableScrollerWrapper);
-		splitPane_1.setDividerLocation(600);
+		JSplitPane splitPaneLeftRight = new JSplitPane();
+		splitPaneLeftRight.setBorder(null);
+		panelJob.add(splitPaneLeftRight);
+		splitPaneLeftRight.setContinuousLayout(true);
+		splitPaneLeftRight.setDividerLocation(350);
+		splitPaneLeftRight.setLeftComponent(panelLeft);
+		splitPaneLeftRight.setRightComponent(panelRight);
+		splitPaneTopBottom.setDividerLocation(600);
 
 		startPauseResumeJobAction.setEnabled(false);
 		stopJobAction.setEnabled(false);

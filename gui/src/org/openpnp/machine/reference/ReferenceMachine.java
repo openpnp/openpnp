@@ -33,7 +33,7 @@ import javax.xml.xpath.XPathFactory;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
-import org.openpnp.gui.support.FakeCamera;
+import org.openpnp.machine.reference.driver.SimulatorCamera;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -92,9 +92,9 @@ public class ReferenceMachine implements Machine {
 		ReferenceHead head = new ReferenceHead(this);
 		heads.add(head);
 		
-//		cameras.add(new SimulatorCamera("Head Tele", 50, 5, 0.022098, 0.021082, 0, 0, -50, 16.0998, 320, 240, head));
-//		cameras.add(new SimulatorCamera("Head Wide", 50, 5, 0.022098, 0.021082, 0, 0, -100, 45, 640, 480, head));
-//		cameras.add(new SimulatorCamera("Machine Wide", 50, 5, 0.022098, 0.021082, 200, 300, -800, 45, 640, 480, null));
+		cameras.add(new SimulatorCamera("Head Tele", 50, 5, 0.022098, 0.021082, 0, 0, -50, 16.0998, 320, 240, head));
+		cameras.add(new SimulatorCamera("Head Wide", 50, 5, 0.022098, 0.021082, 0, 0, -100, 45, 640, 480, head));
+		cameras.add(new SimulatorCamera("Machine Wide", 50, 5, 0.022098, 0.021082, 200, 300, -800, 45, 640, 480, null));
 	}
 	
 	@Override

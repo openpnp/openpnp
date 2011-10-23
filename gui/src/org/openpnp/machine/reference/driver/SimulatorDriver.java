@@ -83,8 +83,8 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 		private Job job;
 		
 		private double x, y, z, c;
-		private double mmPerSecond = 250; // 250
-		private int operationDelay = 200;
+		private double mmPerSecond = 25; // 250
+		private int operationDelay = 200; // 200 
 		
 		private double scale = 1.0;
 		private int offsetX, offsetY;
@@ -373,10 +373,10 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 			
 			if (pinExtended) {
 				// draw the index pin
-				Point2D.Double pin = new Point2D.Double(-5, 5);
+				Point2D.Double pin = new Point2D.Double(0, -48);
 				pin = Utils2D.rotateTranslateScalePoint(pin, c, x, y, scale);
 				g.setColor(Color.magenta);
-				g.fillArc((int) pin.getX(), getHeight() - (int) pin.getY(), (int) (3 * heightScaleFactor), (int) (3 * heightScaleFactor), 0, 360);
+				g.fillArc((int) pin.getX(), getHeight() - (int) pin.getY(), (int) (4 * heightScaleFactor), (int) (4 * heightScaleFactor), 0, 360);
 			}
 		}
 		

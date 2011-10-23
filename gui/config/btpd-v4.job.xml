@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Job reference="BTPD-V4" name="BrewTroller PID DIsplay v4">
+<Job reference="BTPD-V4" name="BrewTroller PID Display v4">
 	<Boards>
 		<Board reference="BTPDv4">
 			<Outline units="Inches">
@@ -124,6 +124,7 @@
 		</Board>
 	</Boards>
 	<BoardLocations>
+		<!--  TODO probably need to indicate if we are placing the top or bottom of the board and how it has been inverted. This about that. -->
 		<BoardLocation board="BTPDv4" bottom="true">
 			<Location units="Millimeters" x="200" y="100" z="98.6" rotation="0"/>
 		</BoardLocation>

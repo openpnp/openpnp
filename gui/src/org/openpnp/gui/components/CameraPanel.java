@@ -26,7 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -45,7 +45,7 @@ import org.openpnp.spi.Camera;
 public class CameraPanel extends JPanel {
 	private static int maximumFps = 10;
 
-	private Set<Camera> cameras = new HashSet<Camera>();
+	private Set<Camera> cameras = new LinkedHashSet<Camera>();
 
 	private JComboBox camerasCombo;
 	private JPanel camerasPanel;

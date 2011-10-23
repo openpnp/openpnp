@@ -231,6 +231,7 @@ public class JobProcessor implements Runnable {
 				// Determine which feeder to pick the part from. This can be
 				// optimized to handle
 				// distance, capacity, etc.
+				// For now we just take the first Feeder that can feed the part.
 				FeederLocation feederLocation = feeders.get(0);
 
 				Feeder feeder = feederLocation.getFeeder();
@@ -239,7 +240,7 @@ public class JobProcessor implements Runnable {
 				Location pickLocation = feederLocation.getLocation();
 
 				// Convert the Location to the machine's native units if
-				// neccesary
+				// necessary
 				pickLocation = LengthUtil.convertLocation(pickLocation, machine
 						.getNativeUnits());
 
@@ -254,7 +255,7 @@ public class JobProcessor implements Runnable {
 						placementLocation, machine.getNativeUnits());
 
 				// Create the point that represents the final placement location
-				// This is currently in relation to the 0,0 of the board
+				// TODO This is currently in relation to the 0,0 of the board
 				Point2D.Double p = new Point2D.Double(placementLocation.getX(),
 						placementLocation.getY());
 
@@ -265,6 +266,7 @@ public class JobProcessor implements Runnable {
 						.getY(), 1.0);
 
 				// Update the placementLocation with the transformed point
+				// TODO does this update the Location in memory, trashing it for the next run?
 				placementLocation.setX(p.getX());
 				placementLocation.setY(p.getY());
 
@@ -309,6 +311,7 @@ public class JobProcessor implements Runnable {
 
 				// Choose the Head that will service the operation, can be
 				// optimized
+				// Currently we just take the first available Head
 				Head head = heads.get(0);
 
 				if (!shouldJobProcessingContinue()) {
@@ -327,6 +330,7 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
+				// Request that the Feeder feeds the part
 				try {
 					pickLocation = feeder.feed(head, part, pickLocation);
 				}
@@ -350,8 +354,18 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 				
-				// TODO do the movement to the pick location and the actual pick in seperate operations
+				// Move the nozzle to the pick Location at safe Z
+				try {
+					head.moveTo(pickLocation.getX(), pickLocation.getY(), 0, pickLocation.getRotation());
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				}
 
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+				
 				// Pick the part
 				try {
 					// TODO design a way for the head/feeder to indicate that the part
@@ -380,7 +394,17 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// TODO do the movement to the place location and the actual place in seperate operations
+				// Move the nozzle to the placement Location at safe Z
+				try {
+					head.moveTo(placementLocation.getX(), placementLocation.getY(), 0, placementLocation.getRotation());
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				}
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
 				
 				// Place the part
 				try {
