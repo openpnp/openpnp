@@ -49,6 +49,7 @@ void settings_reset() {
   settings.default_feed_rate = DEFAULT_FEEDRATE;
   settings.default_seek_rate = DEFAULT_RAPID_FEEDRATE;
   settings.acceleration = DEFAULT_ACCELERATION;
+  settings.mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
   settings.invert_mask = DEFAULT_STEPPING_INVERT_MASK;
   settings.max_jerk = DEFAULT_MAX_JERK;
 }
