@@ -75,7 +75,7 @@ static volatile int block_buffer_head;           // Index of the next block to b
 static volatile int block_buffer_tail;           // Index of the block to process now
 
 // The current position of the tool in absolute steps
-static int32_t position[3];   
+static int32_t position[4];   
 
 static uint8_t acceleration_manager_enabled;   // Acceleration management active?
 
@@ -165,7 +165,8 @@ inline double junction_jerk(block_t *before, block_t *after) {
   return(sqrt(
     pow(before->speed_x-after->speed_x, 2)+
     pow(before->speed_y-after->speed_y, 2)+
-    pow(before->speed_z-after->speed_z, 2))
+    pow(before->speed_z-after->speed_z, 2)+
+    pow(before->speed_c-after->speed_c, 2))
   );
 }
 
@@ -335,17 +336,18 @@ inline block_t *plan_get_current_block() {
   return(&block_buffer[block_buffer_tail]);
 }
 
-// Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in 
+// Add a new linear movement to the buffer. steps_x, _y, _z and _c is the absolute position in 
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
-void plan_buffer_line(double x, double y, double z, double feed_rate, int invert_feed_rate) {
+void plan_buffer_line(double x, double y, double z, double c, double feed_rate, int invert_feed_rate) {
   // The target position of the tool in absolute steps
   
   // Calculate target position in absolute steps
-  int32_t target[3];
+  int32_t target[4];
   target[X_AXIS] = lround(x*settings.steps_per_mm[X_AXIS]);
   target[Y_AXIS] = lround(y*settings.steps_per_mm[Y_AXIS]);
   target[Z_AXIS] = lround(z*settings.steps_per_mm[Z_AXIS]);     
+  target[C_AXIS] = lround(z*settings.steps_per_mm[C_AXIS]);     
   
   // Calculate the buffer head after we push this byte
 	int next_buffer_head = (block_buffer_head + 1) % BLOCK_BUFFER_SIZE;	
@@ -358,15 +360,20 @@ void plan_buffer_line(double x, double y, double z, double feed_rate, int invert
   block->steps_x = labs(target[X_AXIS]-position[X_AXIS]);
   block->steps_y = labs(target[Y_AXIS]-position[Y_AXIS]);
   block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
-  block->step_event_count = max(block->steps_x, max(block->steps_y, block->steps_z));
+  block->steps_c = labs(target[C_AXIS]-position[C_AXIS]);
+  block->step_event_count = max(block->steps_x, max(block->steps_y, max(block->steps_z, block->steps_c)));  
   // Bail if this is a zero-length block
   if (block->step_event_count == 0) { return; };
   
   double delta_x_mm = (target[X_AXIS]-position[X_AXIS])/settings.steps_per_mm[X_AXIS];
   double delta_y_mm = (target[Y_AXIS]-position[Y_AXIS])/settings.steps_per_mm[Y_AXIS];
   double delta_z_mm = (target[Z_AXIS]-position[Z_AXIS])/settings.steps_per_mm[Z_AXIS];
-  block->millimeters = sqrt(square(delta_x_mm) + square(delta_y_mm) + square(delta_z_mm));
-	
+  // G: Treat rotational C axis as if linear (in mm). In settings.h, set steps_per_mm[C_AXIS] 
+  //    such that 360.0mm = 1 revolution (360 degrees). In other words, 1mm = 1 degree of rotation.
+  //    The C axis feedrate will then be in units of, "degrees per minute" and the coordinates in 
+  //    angular degrees.
+  double delta_c_mm = (target[C_AXIS]-position[C_AXIS])/settings.steps_per_mm[C_AXIS];
+  block->millimeters = sqrt(square(delta_x_mm) + square(delta_y_mm) + square(delta_z_mm) + square(delta_c_mm));	
   
   uint32_t microseconds;
   if (!invert_feed_rate) {
@@ -379,7 +386,8 @@ void plan_buffer_line(double x, double y, double z, double feed_rate, int invert
   double multiplier = 60.0*1000000.0/microseconds;
   block->speed_x = delta_x_mm * multiplier;
   block->speed_y = delta_y_mm * multiplier;
-  block->speed_z = delta_z_mm * multiplier; 
+  block->speed_z = delta_z_mm * multiplier;
+  block->speed_c = delta_c_mm * multiplier;
   block->nominal_speed = block->millimeters * multiplier;
   block->nominal_rate = ceil(block->step_event_count * multiplier);  
   block->entry_factor = 0.0;
@@ -411,6 +419,7 @@ void plan_buffer_line(double x, double y, double z, double feed_rate, int invert
   if (target[X_AXIS] < position[X_AXIS]) { block->direction_bits |= (1<<X_DIRECTION_BIT); }
   if (target[Y_AXIS] < position[Y_AXIS]) { block->direction_bits |= (1<<Y_DIRECTION_BIT); }
   if (target[Z_AXIS] < position[Z_AXIS]) { block->direction_bits |= (1<<Z_DIRECTION_BIT); }
+  if (target[C_AXIS] < position[C_AXIS]) { block->direction_bits |= (1<<C_DIRECTION_BIT); }
   
   // Move buffer head
   block_buffer_head = next_buffer_head;     

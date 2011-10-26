@@ -34,10 +34,10 @@
 
 
 // Some useful constants
-#define STEP_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
-#define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
+#define STEP_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)|(1<<C_STEP_BIT)) // All step bits
+#define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)|(1<<C_DIRECTION_BIT)) // All direction bits
 #define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
-#define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
+#define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<C_LIMIT_BIT)) // All limit bits
 
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
 #define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND*1000000)/ACCELERATION_TICKS_PER_SECOND)
@@ -53,7 +53,8 @@ static block_t *current_block;  // A pointer to the block currently being traced
 static uint8_t out_bits;        // The next stepping-bits to be output
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
-               counter_z;       
+               counter_z,
+               counter_c;       
 static uint32_t step_events_completed; // The number of step events executed in the current block
 static volatile int busy; // TRUE when SIG_OUTPUT_COMPARE1A is being serviced. Used to avoid retriggering that handler.
 
@@ -133,7 +134,7 @@ SIGNAL(TIMER1_COMPA_vect)
   // TODO: Check if the busy-flag can be eliminated by just disabeling this interrupt while we are in it
   
   if(busy){ return; } // The busy-flag is used to avoid reentering this interrupt
-  // Set the direction pins a cuple of nanoseconds before we step the steppers
+  // Set the direction pins a couple of nanoseconds before we step the steppers
   STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
   // Then pulse the stepping pins
   STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
@@ -157,6 +158,7 @@ SIGNAL(TIMER1_COMPA_vect)
       counter_x = -(current_block->step_event_count >> 1);
       counter_y = counter_x;
       counter_z = counter_x;
+      counter_c = counter_x;
       step_events_completed = 0;
     } else {
       DISABLE_STEPPER_DRIVER_INTERRUPT();
@@ -180,6 +182,11 @@ SIGNAL(TIMER1_COMPA_vect)
       out_bits |= (1<<Z_STEP_BIT);
       counter_z -= current_block->step_event_count;
     }
+    counter_c += current_block->steps_c;
+    if (counter_c > 0) {
+      out_bits |= (1<<C_STEP_BIT);
+      counter_c -= current_block->step_event_count;
+    }    
     // If current block is finished, reset pointer 
     step_events_completed += 1;
     if (step_events_completed >= current_block->step_event_count) {
@@ -215,7 +222,7 @@ SIGNAL(TIMER2_OVF_vect)
 void st_init()
 {
 	// Configure directions of interface pins
-  STEPPING_DDR   |= STEPPING_MASK;
+  STEPPING_DDR |= STEPPING_MASK;
   STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | settings.invert_mask;
   LIMIT_DDR &= ~(LIMIT_MASK);
   STEPPERS_ENABLE_DDR |= 1<<STEPPERS_ENABLE_BIT;

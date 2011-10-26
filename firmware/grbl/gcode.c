@@ -65,7 +65,7 @@ typedef struct {
   uint8_t program_flow;
   int spindle_direction;
   double feed_rate, seek_rate;     /* Millimeters/second */
-  double position[3];              /* Where the interpreter considers the tool to be at this point in the code */
+  double position[4];              /* Where the interpreter considers the tool to be at this point in the code */
   uint8_t tool;
   int16_t spindle_speed;           /* RPM/100 */
   uint8_t plane_axis_0, 
@@ -132,7 +132,7 @@ uint8_t gc_execute_line(char *line) {
   uint8_t absolute_override = FALSE;          /* 1 = absolute motion for this block only {G53} */
   uint8_t next_action = NEXT_ACTION_DEFAULT;  /* The action that will be taken by the parsed line */
   
-  double target[3], offset[3];  
+  double target[4], offset[4];  
   
   double p = 0, r = 0;
   int int_value;
@@ -239,6 +239,13 @@ uint8_t gc_execute_line(char *line) {
         target[letter - 'X'] += unit_converted_value;
       }
       break;
+      case 'C':
+      if (gc.absolute_mode || absolute_override) {
+		target[C_AXIS] = unit_converted_value / 10;
+      } else {
+        target[C_AXIS] += unit_converted_value / 10;
+      }
+      break;      
     }
   }
   
@@ -260,144 +267,12 @@ uint8_t gc_execute_line(char *line) {
     switch (gc.motion_mode) {
       case MOTION_MODE_CANCEL: break;
       case MOTION_MODE_SEEK:
-      mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], gc.seek_rate, FALSE);
+      mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS], gc.seek_rate, FALSE);
       break;
       case MOTION_MODE_LINEAR:
-      mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], 
+      mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS],
         (gc.inverse_feed_rate_mode) ? inverse_feed_rate : gc.feed_rate, gc.inverse_feed_rate_mode);
       break;
-#ifdef __AVR_ATmega328P__
-      case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
-      if (radius_mode) {
-        /* 
-          We need to calculate the center of the circle that has the designated radius and passes
-          through both the current position and the target position. This method calculates the following
-          set of equations where [x,y] is the vector from current to target position, d == magnitude of 
-          that vector, h == hypotenuse of the triangle formed by the radius of the circle, the distance to
-          the center of the travel vector. A vector perpendicular to the travel vector [-y,x] is scaled to the 
-          length of h [-y/d*h, x/d*h] and added to the center of the travel vector [x/2,y/2] to form the new point 
-          [i,j] at [x/2-y/d*h, y/2+x/d*h] which will be the center of our arc.
-          
-          d^2 == x^2 + y^2
-          h^2 == r^2 - (d/2)^2
-          i == x/2 - y/d*h
-          j == y/2 + x/d*h
-          
-                                                               O <- [i,j]
-                                                            -  |
-                                                  r      -     |
-                                                      -        |
-                                                   -           | h
-                                                -              |
-                                  [0,0] ->  C -----------------+--------------- T  <- [x,y]
-                                            | <------ d/2 ---->|
-                    
-          C - Current position
-          T - Target position
-          O - center of circle that pass through both C and T
-          d - distance from C to T
-          r - designated radius
-          h - distance from center of CT to O
-          
-          Expanding the equations:
-
-          d -> sqrt(x^2 + y^2)
-          h -> sqrt(4 * r^2 - x^2 - y^2)/2
-          i -> (x - (y * sqrt(4 * r^2 - x^2 - y^2)) / sqrt(x^2 + y^2)) / 2 
-          j -> (y + (x * sqrt(4 * r^2 - x^2 - y^2)) / sqrt(x^2 + y^2)) / 2
-         
-          Which can be written:
-          
-          i -> (x - (y * sqrt(4 * r^2 - x^2 - y^2))/sqrt(x^2 + y^2))/2
-          j -> (y + (x * sqrt(4 * r^2 - x^2 - y^2))/sqrt(x^2 + y^2))/2
-          
-          Which we for size and speed reasons optimize to:
-
-          h_x2_div_d = sqrt(4 * r^2 - x^2 - y^2)/sqrt(x^2 + y^2)
-          i = (x - (y * h_x2_div_d))/2
-          j = (y + (x * h_x2_div_d))/2
-          
-        */
-        
-        // Calculate the change in position along each selected axis
-        double x = target[gc.plane_axis_0]-gc.position[gc.plane_axis_0];
-        double y = target[gc.plane_axis_1]-gc.position[gc.plane_axis_1];
-        
-        clear_vector(offset);
-        double h_x2_div_d = -sqrt(4 * r*r - x*x - y*y)/hypot(x,y); // == -(h * 2 / d)
-        // If r is smaller than d, the arc is now traversing the complex plane beyond the reach of any
-        // real CNC, and thus - for practical reasons - we will terminate promptly:
-        if(isnan(h_x2_div_d)) { FAIL(GCSTATUS_FLOATING_POINT_ERROR); return(gc.status_code); }
-        // Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
-        if (gc.motion_mode == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d; }
-        
-        /* The counter clockwise circle lies to the left of the target direction. When offset is positive,
-           the left hand circle will be generated - when it is negative the right hand circle is generated.
-           
-           
-                                                         T  <-- Target position
-                                                         
-                                                         ^ 
-              Clockwise circles with this center         |          Clockwise circles with this center will have
-              will have > 180 deg of angular travel      |          < 180 deg of angular travel, which is a good thing!
-                                               \         |          /   
-  center of arc when h_x2_div_d is positive ->  x <----- | -----> x <- center of arc when h_x2_div_d is negative
-                                                         |
-                                                         |
-                                                         
-                                                         C  <-- Current position                                 */
-                
-
-        // Negative R is g-code-alese for "I want a circle with more than 180 degrees of travel" (go figure!), 
-        // even though it is advised against ever generating such circles in a single line of g-code. By 
-        // inverting the sign of h_x2_div_d the center of the circles is placed on the opposite side of the line of
-        // travel and thus we get the unadvisably long arcs as prescribed.
-        if (r < 0) { h_x2_div_d = -h_x2_div_d; }        
-        // Complete the operation by calculating the actual center of the arc
-        offset[gc.plane_axis_0] = (x-(y*h_x2_div_d))/2;
-        offset[gc.plane_axis_1] = (y+(x*h_x2_div_d))/2;
-      } 
-      
-      /*
-         This segment sets up an clockwise or counterclockwise arc from the current position to the target position around 
-         the center designated by the offset vector. All theta-values measured in radians of deviance from the positive 
-         y-axis. 
-
-                            | <- theta == 0
-                          * * *                
-                        *       *                                               
-                      *           *                                             
-                      *     O ----T   <- theta_end (e.g. 90 degrees: theta_end == PI/2)                                          
-                      *   /                                                     
-                        C   <- theta_start (e.g. -145 degrees: theta_start == -PI*(3/4))
-
-      */
-            
-      // calculate the theta (angle) of the current point
-      double theta_start = theta(-offset[gc.plane_axis_0], -offset[gc.plane_axis_1]);
-      // calculate the theta (angle) of the target point
-      double theta_end = theta(target[gc.plane_axis_0] - offset[gc.plane_axis_0] - gc.position[gc.plane_axis_0], 
-         target[gc.plane_axis_1] - offset[gc.plane_axis_1] - gc.position[gc.plane_axis_1]);
-      // ensure that the difference is positive so that we have clockwise travel
-      if (theta_end < theta_start) { theta_end += 2*M_PI; }
-      double angular_travel = theta_end-theta_start;
-      // Invert angular motion if the g-code wanted a counterclockwise arc
-      if (gc.motion_mode == MOTION_MODE_CCW_ARC) {
-        angular_travel = angular_travel-2*M_PI;
-      }
-      // Find the radius
-      double radius = hypot(offset[gc.plane_axis_0], offset[gc.plane_axis_1]);
-      // Calculate the motion along the depth axis of the helix
-      double depth = target[gc.plane_axis_2]-gc.position[gc.plane_axis_2];
-      // Trace the arc
-      mc_arc(theta_start, angular_travel, radius, depth, gc.plane_axis_0, gc.plane_axis_1, gc.plane_axis_2, 
-        (gc.inverse_feed_rate_mode) ? inverse_feed_rate : gc.feed_rate, gc.inverse_feed_rate_mode,
-        gc.position);
-      // Finish off with a line to make sure we arrive exactly where we think we are
-      mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], 
-        (gc.inverse_feed_rate_mode) ? inverse_feed_rate : gc.feed_rate, gc.inverse_feed_rate_mode);
-      break;
-#endif      
     }    
   }
   

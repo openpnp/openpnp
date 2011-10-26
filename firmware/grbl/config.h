@@ -35,15 +35,18 @@
 #define X_STEP_BIT           0
 #define Y_STEP_BIT           1
 #define Z_STEP_BIT           2
+#define C_STEP_BIT           6
 #define X_DIRECTION_BIT      3
 #define Y_DIRECTION_BIT      4
 #define Z_DIRECTION_BIT      5
+#define C_DIRECTION_BIT      7
 
 #define LIMIT_DDR      DDRD
 #define LIMIT_PORT     PORTD
 #define X_LIMIT_BIT          2
 #define Y_LIMIT_BIT          3
 #define Z_LIMIT_BIT          4
+#define C_LIMIT_BIT          5
 
 #define SPINDLE_ENABLE_DDR DDRC
 #define SPINDLE_ENABLE_PORT PORTC

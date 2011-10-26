@@ -30,13 +30,15 @@
 // the source g-code and may never actually be reached if acceleration management is active.
 typedef struct {
   // Fields used by the bresenham algorithm for tracing the line
-  uint32_t steps_x, steps_y, steps_z; // Step count along each axis
+  uint32_t steps_x, steps_y, steps_z, // Step count along each axis
+           steps_c;
   uint8_t  direction_bits;            // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
   int32_t  step_event_count;          // The number of step events required to complete this block
   uint32_t nominal_rate;              // The nominal step rate for this block in step_events/minute
   
   // Fields used by the motion planner to manage acceleration
-  double speed_x, speed_y, speed_z;   // Nominal mm/minute for each axis
+  double speed_x, speed_y, speed_z,   // Nominal mm/minute for each axis
+         speed_c;
   double nominal_speed;               // The nominal speed for this block in mm/min  
   double millimeters;                 // The total travel of this block in mm
   double entry_factor;                // The factor representing the change in speed at the start of this trapezoid.
@@ -58,7 +60,7 @@ void plan_init();
 // Add a new linear movement to the buffer. x, y and z is the signed, absolute target position in 
 // millimaters. Feed rate specifies the speed of the motion. If feed rate is inverted, the feed
 // rate is taken to mean "frequency" and would complete the operation in 1/feed_rate minutes.
-void plan_buffer_line(double x, double y, double z, double feed_rate, int invert_feed_rate);
+void plan_buffer_line(double x, double y, double z, double c, double feed_rate, int invert_feed_rate);
 
 // Called when the current block is no longer needed. Discards the block and makes the memory
 // availible for new blocks.

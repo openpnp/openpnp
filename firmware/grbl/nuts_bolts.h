@@ -28,6 +28,7 @@
 #define X_AXIS 0
 #define Y_AXIS 1
 #define Z_AXIS 2
+#define C_AXIS 3
 
 #define clear_vector(a) memset(a, 0, sizeof(a))
 #define max(a,b) (((a) > (b)) ? (a) : (b))

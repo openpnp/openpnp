@@ -39,33 +39,68 @@ typedef struct {
   double mm_per_arc_segment;
 } settings_v1_t;
 
+
 void settings_reset() {
   settings.steps_per_mm[X_AXIS] = DEFAULT_X_STEPS_PER_MM;
   settings.steps_per_mm[Y_AXIS] = DEFAULT_Y_STEPS_PER_MM;
   settings.steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM;
+  settings.steps_per_mm[C_AXIS] = DEFAULT_C_STEPS_PER_MM;
   settings.pulse_microseconds = DEFAULT_STEP_PULSE_MICROSECONDS;
   settings.default_feed_rate = DEFAULT_FEEDRATE;
   settings.default_seek_rate = DEFAULT_RAPID_FEEDRATE;
   settings.acceleration = DEFAULT_ACCELERATION;
-  settings.mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
   settings.invert_mask = DEFAULT_STEPPING_INVERT_MASK;
   settings.max_jerk = DEFAULT_MAX_JERK;
 }
 
 void settings_dump() {
-  printPgmString(PSTR("$0 = ")); printFloat(settings.steps_per_mm[X_AXIS]);
-  printPgmString(PSTR(" (steps/mm x)\r\n$1 = ")); printFloat(settings.steps_per_mm[Y_AXIS]);
-  printPgmString(PSTR(" (steps/mm y)\r\n$2 = ")); printFloat(settings.steps_per_mm[Z_AXIS]);
-  printPgmString(PSTR(" (steps/mm z)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
-  printPgmString(PSTR(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_feed_rate);
-  printPgmString(PSTR(" (mm/min default feed rate)\r\n$5 = ")); printFloat(settings.default_seek_rate);
-  printPgmString(PSTR(" (mm/min default seek rate)\r\n$6 = ")); printFloat(settings.mm_per_arc_segment);
-  printPgmString(PSTR(" (mm/arc segment)\r\n$7 = ")); printInteger(settings.invert_mask); 
-  printPgmString(PSTR(" (step port invert mask. binary = ")); printIntegerInBase(settings.invert_mask, 2);  
-  printPgmString(PSTR(")\r\n$8 = ")); printFloat(settings.acceleration);
-  printPgmString(PSTR(" (acceleration in mm/sec^2)\r\n$9 = ")); printFloat(settings.max_jerk);
-  printPgmString(PSTR(" (max instant cornering speed change in delta mm/min)"));
-  printPgmString(PSTR("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"));
+  printPgmString(PSTR("$0 = ")); 
+  printFloat(settings.steps_per_mm[X_AXIS]);
+  printPgmString(PSTR(" (steps/mm x)\r\n"));
+  
+  printPgmString(PSTR("$1 = ")); 
+  printFloat(settings.steps_per_mm[Y_AXIS]);
+  printPgmString(PSTR(" (steps/mm y)\r\n"));
+  
+  printPgmString(PSTR("$2 = ")); 
+  printFloat(settings.steps_per_mm[Z_AXIS]);
+  printPgmString(PSTR(" (steps/mm z)\r\n"));
+  
+  printPgmString(PSTR("$3 = ")); 
+  printFloat(settings.steps_per_mm[C_AXIS]);
+  printPgmString(PSTR(" (steps/deg. c)\r\n"));
+    
+  printPgmString(PSTR("$4 = ")); 
+  printInteger(settings.pulse_microseconds);
+  printPgmString(PSTR(" (microseconds step pulse)\r\n"));
+  
+  printPgmString(PSTR("$5 = ")); 
+  printFloat(settings.default_feed_rate);
+  printPgmString(PSTR(" (mm/min default feed rate)\r\n"));
+
+  printPgmString(PSTR("$6 = ")); 
+  printFloat(settings.default_seek_rate);
+  printPgmString(PSTR(" (mm/min default seek rate)\r\n"));
+  
+  printPgmString(PSTR("$7 = ")); 
+  printFloat(settings.mm_per_arc_segment);
+  printPgmString(PSTR(" (mm/arc segment)\r\n"));
+  
+  printPgmString(PSTR("$8 = ")); 
+  printInteger(settings.invert_mask);   
+  printPgmString(PSTR(" (step port invert mask. binary = ")); 
+  printIntegerInBase(settings.invert_mask, 2);  
+  printPgmString(PSTR(")\r\n"));
+  
+  printPgmString(PSTR("$9 = ")); 
+  printFloat(settings.acceleration);
+  printPgmString(PSTR(" (acceleration in mm/sec^2)\r\n"));
+  
+  printPgmString(PSTR("$10 = ")); 
+  printFloat(settings.max_jerk);
+  printPgmString(PSTR(" (max instant cornering speed change in delta mm/min)\r\n"));
+  
+  printPgmString(PSTR("'$x=value' to set parameter or just '$' to dump current settings\r\n"));
 }
 
 void write_settings() {
@@ -82,14 +117,16 @@ int read_settings() {
     if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_t)))) {
       return(FALSE);
     }
-  } else if (version == 1) {
+  } 
+  else if (version == 1) {
     // Migrate from old settings version
     if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_v1_t)))) {
       return(FALSE);
     }
     settings.acceleration = DEFAULT_ACCELERATION;
     settings.max_jerk = DEFAULT_MAX_JERK;
-  } else {      
+  }
+  else {      
     return(FALSE);
   }
   return(TRUE);
@@ -98,15 +135,15 @@ int read_settings() {
 // A helper method to set settings from command line
 void settings_store_setting(int parameter, double value) {
   switch(parameter) {
-    case 0: case 1: case 2:
+    case 0: case 1: case 2: case 3:
     settings.steps_per_mm[parameter] = value; break;
-    case 3: settings.pulse_microseconds = round(value); break;
-    case 4: settings.default_feed_rate = value; break;
-    case 5: settings.default_seek_rate = value; break;
-    case 6: settings.mm_per_arc_segment = value; break;
-    case 7: settings.invert_mask = trunc(value); break;
-    case 8: settings.acceleration = value; break;
-    case 9: settings.max_jerk = fabs(value); break;
+    case 4: settings.pulse_microseconds = round(value); break;
+    case 5: settings.default_feed_rate = value; break;
+    case 6: settings.default_seek_rate = value; break;
+    case 7: settings.mm_per_arc_segment = value; break;
+    case 8: settings.invert_mask = trunc(value); break;
+    case 9: settings.acceleration = value; break;
+    case 10: settings.max_jerk = fabs(value); break;
     default: 
       printPgmString(PSTR("Unknown parameter\r\n"));
       return;
