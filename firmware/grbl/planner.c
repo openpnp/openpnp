@@ -347,7 +347,7 @@ void plan_buffer_line(double x, double y, double z, double c, double feed_rate, 
   target[X_AXIS] = lround(x*settings.steps_per_mm[X_AXIS]);
   target[Y_AXIS] = lround(y*settings.steps_per_mm[Y_AXIS]);
   target[Z_AXIS] = lround(z*settings.steps_per_mm[Z_AXIS]);     
-  target[C_AXIS] = lround(z*settings.steps_per_mm[C_AXIS]);     
+  target[C_AXIS] = lround(c*settings.steps_per_mm[C_AXIS]);     
   
   // Calculate the buffer head after we push this byte
 	int next_buffer_head = (block_buffer_head + 1) % BLOCK_BUFFER_SIZE;	

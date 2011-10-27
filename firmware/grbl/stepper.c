@@ -36,7 +36,7 @@
 // Some useful constants
 #define STEP_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)|(1<<C_STEP_BIT)) // All step bits
 #define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)|(1<<C_DIRECTION_BIT)) // All direction bits
-#define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
+//#define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
 #define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<C_LIMIT_BIT)) // All limit bits
 
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
@@ -51,6 +51,7 @@ static block_t *current_block;  // A pointer to the block currently being traced
 
 // Variables used by The Stepper Driver Interrupt
 static uint8_t out_bits;        // The next stepping-bits to be output
+static uint8_t dir_bits;
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
                counter_z,
@@ -135,7 +136,7 @@ SIGNAL(TIMER1_COMPA_vect)
   
   if(busy){ return; } // The busy-flag is used to avoid reentering this interrupt
   // Set the direction pins a couple of nanoseconds before we step the steppers
-  STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
+  DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | (dir_bits & DIRECTION_MASK);
   // Then pulse the stepping pins
   STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
   // Reset step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
@@ -166,7 +167,8 @@ SIGNAL(TIMER1_COMPA_vect)
   } 
 
   if (current_block != NULL) {
-    out_bits = current_block->direction_bits;
+    dir_bits = current_block->direction_bits;
+    out_bits = 0;
     counter_x += current_block->steps_x;
     if (counter_x > 0) {
       out_bits |= (1<<X_STEP_BIT);
@@ -222,8 +224,9 @@ SIGNAL(TIMER2_OVF_vect)
 void st_init()
 {
 	// Configure directions of interface pins
-  STEPPING_DDR |= STEPPING_MASK;
-  STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | settings.invert_mask;
+  STEPPING_DDR |= STEP_MASK;
+  DIRECTION_DDR |= DIRECTION_MASK;
+  STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | settings.invert_mask;
   LIMIT_DDR &= ~(LIMIT_MASK);
   STEPPERS_ENABLE_DDR |= 1<<STEPPERS_ENABLE_BIT;
   

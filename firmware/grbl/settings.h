@@ -29,7 +29,13 @@
 
 // Version of the EEPROM data. Will be used to migrate existing data from older versions of Grbl
 // when firmware is upgraded. Always stored in byte 0 of eeprom
-#define SETTINGS_VERSION 100
+#define SETTINGS_VERSION 101
+
+#define SETTINGS_PORT_DISABLED 0
+#define SETTINGS_PORT_B 1
+#define SETTINGS_PORT_C 2
+#define SETTINGS_PORT_D 3
+
 
 // Current global settings (persisted in EEPROM from byte 1 onwards)
 typedef struct {
@@ -42,6 +48,31 @@ typedef struct {
   double mm_per_arc_segment;
   double acceleration;
   double max_jerk;
+
+  // Everything below goes with moving all settings from config.h to the
+  // EEPROM settings.
+  uint32_t baud_rate;
+  
+  uint8_t steppers_enable_port;
+  int8_t steppers_enable_bit;
+  
+  uint8_t stepping_port;
+  int8_t step_bits[4];
+  
+  uint8_t direction_port;
+  int8_t direction_bits[4];
+  
+  uint8_t spindle_enable_port;
+  int8_t spindle_enable_bit;
+  
+  uint8_t spindle_direction_port;
+  int8_t spindle_direction_bit;
+  
+  uint8_t flood_coolant_port;
+  int8_t flood_coolant_bit;
+  
+  uint32_t acceleration_ticks_per_second;
+  
 } settings_t;
 extern settings_t settings;
 

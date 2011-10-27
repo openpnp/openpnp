@@ -241,9 +241,9 @@ uint8_t gc_execute_line(char *line) {
       break;
       case 'C':
       if (gc.absolute_mode || absolute_override) {
-		target[C_AXIS] = unit_converted_value / 10;
+		target[C_AXIS] = unit_converted_value;
       } else {
-        target[C_AXIS] += unit_converted_value / 10;
+        target[C_AXIS] += unit_converted_value;
       }
       break;      
     }

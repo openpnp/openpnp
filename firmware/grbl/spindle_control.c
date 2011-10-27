@@ -27,6 +27,7 @@
 void spindle_init()
 {
   SPINDLE_ENABLE_DDR |= 1<<SPINDLE_ENABLE_BIT;
+  SPINDLE_DIRECTION_DDR |= 1<<SPINDLE_DIRECTION_BIT;
 }
 
 void spindle_run(int direction, uint32_t rpm) 
