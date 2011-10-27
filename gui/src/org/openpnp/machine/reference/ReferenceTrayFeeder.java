@@ -37,7 +37,7 @@ import org.w3c.dom.Node;
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
 	private Location location;
-	// TODO will need to know the part's orientation, specifications about the tape, etc
+	// TODO Will need to know the starting position of the component, how many components in X and Y there are and the offsets in X and Y to index the components
 	private int pickCount;
 	private double offset = -10;
 	

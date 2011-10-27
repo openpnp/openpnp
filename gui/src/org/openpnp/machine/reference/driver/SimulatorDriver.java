@@ -83,7 +83,7 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 		private Job job;
 		
 		private double x, y, z, c;
-		private double mmPerSecond = 25; // 250
+		private double mmPerSecond = 250; // 250
 		private int operationDelay = 200; // 200 
 		
 		private double scale = 1.0;

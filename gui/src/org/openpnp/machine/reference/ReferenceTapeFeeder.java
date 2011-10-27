@@ -46,7 +46,6 @@ import org.w3c.dom.Node;
  * Retract ACTUATOR_PIN
  */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
-	// TODO will need to know the part's orientation, specifications about the tape, etc
 	private Location feedStartLocation;
 	private Location feedEndLocation;
 	

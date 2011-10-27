@@ -39,6 +39,8 @@ import org.openpnp.util.Utils2D;
 import org.w3c.dom.Document;
 
 //TODO don't forget the whole damn thing is mirrored
+// TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
+// possible to make things faster.
 public class JobProcessor implements Runnable {
 	public enum JobState {
 		Stopped,
