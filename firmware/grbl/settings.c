@@ -53,33 +53,33 @@ void settings_reset() {
   settings.invert_mask = DEFAULT_STEPPING_INVERT_MASK;
   settings.max_jerk = DEFAULT_MAX_JERK;
   
-  settings.baud_rate = 9600;
+  settings.baud_rate = DEFAULT_BAUD_RATE;
   
-  settings.steppers_enable_port = SETTINGS_PORT_DISABLED;
-  settings.steppers_enable_bit = 0;
+  settings.steppers_enable_port = DEFAULT_STEPPERS_ENABLE_PORT;
+  settings.steppers_enable_bit = DEFAULT_STEPPERS_ENABLE_BIT;
   
-  settings.stepping_port = SETTINGS_PORT_DISABLED;
-  settings.step_bits[X_AXIS] = 0;
-  settings.step_bits[Y_AXIS] = 0;
-  settings.step_bits[Z_AXIS] = 0;
-  settings.step_bits[C_AXIS] = 0;
+  settings.stepping_port = DEFAULT_STEPPING_PORT;
+  settings.step_bits[X_AXIS] = DEFAULT_X_STEP_BIT;
+  settings.step_bits[Y_AXIS] = DEFAULT_Y_STEP_BIT;
+  settings.step_bits[Z_AXIS] = DEFAULT_Z_STEP_BIT;
+  settings.step_bits[C_AXIS] = DEFAULT_C_STEP_BIT;
   
-  settings.direction_port = SETTINGS_PORT_DISABLED;
-  settings.direction_bits[X_AXIS] = 0;
-  settings.direction_bits[Y_AXIS] = 0;
-  settings.direction_bits[Z_AXIS] = 0;
-  settings.direction_bits[C_AXIS] = 0;
+  settings.direction_port = DEFAULT_DIRECTION_PORT;
+  settings.direction_bits[X_AXIS] = DEFAULT_X_DIRECTION_BIT;
+  settings.direction_bits[Y_AXIS] = DEFAULT_Y_DIRECTION_BIT;
+  settings.direction_bits[Z_AXIS] = DEFAULT_Z_DIRECTION_BIT;
+  settings.direction_bits[C_AXIS] = DEFAULT_C_DIRECTION_BIT;
   
-  settings.spindle_enable_port = SETTINGS_PORT_DISABLED;
-  settings.spindle_enable_bit = 0;
+  settings.spindle_enable_port = DEFAULT_SPINDLE_ENABLE_PORT;
+  settings.spindle_enable_bit = DEFAULT_SPINDLE_ENABLE_BIT;
 
-  settings.spindle_direction_port = SETTINGS_PORT_DISABLED;
-  settings.spindle_direction_bit = 0;
+  settings.spindle_direction_port = DEFAULT_SPINDLE_DIRECTION_PORT;
+  settings.spindle_direction_bit = DEFAULT_SPINDLE_DIRECTION_BIT;
 
-  settings.flood_coolant_port = SETTINGS_PORT_DISABLED;
-  settings.flood_coolant_bit = 0;
+  settings.flood_coolant_port = DEFAULT_FLOOD_COOLANT_PORT;
+  settings.flood_coolant_bit = DEFAULT_FLOOD_COOLANT_BIT;
 
-  settings.acceleration_ticks_per_second = 40L;  
+  settings.acceleration_ticks_per_second = DEFAULT_ACCELERATION_TICKS_PER_SECOND;  
 }
 
 void settings_dump() {
@@ -116,98 +116,92 @@ void settings_dump() {
   printPgmString(PSTR(" (mm/arc segment)\r\n"));
   
   printPgmString(PSTR("$8 = ")); 
-  printInteger(settings.invert_mask);   
-  printPgmString(PSTR(" (step port invert mask. binary = ")); 
-  printIntegerInBase(settings.invert_mask, 2);  
-  printPgmString(PSTR(")\r\n"));
-  
-  printPgmString(PSTR("$9 = ")); 
   printFloat(settings.acceleration);
   printPgmString(PSTR(" (acceleration in mm/sec^2)\r\n"));
   
-  printPgmString(PSTR("$10 = ")); 
+  printPgmString(PSTR("$9 = ")); 
   printFloat(settings.max_jerk);
   printPgmString(PSTR(" (max instant cornering speed change in delta mm/min)\r\n"));
   
-  printPgmString(PSTR("$11 = ")); 
+  printPgmString(PSTR("$10 = ")); 
   printInteger(settings.baud_rate);
   printPgmString(PSTR(" (bps baud rate)\r\n"));
   
-  printPgmString(PSTR("$12 = ")); 
+  printPgmString(PSTR("$11 = ")); 
   printInteger(settings.steppers_enable_port);
   printPgmString(PSTR(" (stepper enable PORT/DDR B=1, C=2, D=3)\r\n"));
   
-  printPgmString(PSTR("$13 = ")); 
+  printPgmString(PSTR("$12 = ")); 
   printInteger(settings.steppers_enable_bit);
-  printPgmString(PSTR(" (stepper enable bit #, negative to invert\r\n"));
+  printPgmString(PSTR(" (stepper enable bit #, negative to invert)\r\n"));
   
-  printPgmString(PSTR("$14 = ")); 
+  printPgmString(PSTR("$13 = ")); 
   printInteger(settings.stepping_port);
   printPgmString(PSTR(" (stepping PORT/DDR B=1, C=2, D=3)\r\n"));
   
-  printPgmString(PSTR("$15 = ")); 
+  printPgmString(PSTR("$14 = ")); 
   printInteger(settings.step_bits[0]);
-  printPgmString(PSTR(" (x step bit #, negative to invert behavior\r\n"));
+  printPgmString(PSTR(" (x step bit #, negative to invert behavior)\r\n"));
+  
+  printPgmString(PSTR("$15 = ")); 
+  printInteger(settings.step_bits[1]);
+  printPgmString(PSTR(" (y step bit #, negative to invert behavior)\r\n"));
   
   printPgmString(PSTR("$16 = ")); 
-  printInteger(settings.step_bits[1]);
-  printPgmString(PSTR(" (y step bit #, negative to invert behavior\r\n"));
+  printInteger(settings.step_bits[2]);
+  printPgmString(PSTR(" (z step bit #, negative to invert behavior)\r\n"));
   
   printPgmString(PSTR("$17 = ")); 
-  printInteger(settings.step_bits[2]);
-  printPgmString(PSTR(" (z step bit #, negative to invert behavior\r\n"));
+  printInteger(settings.step_bits[3]);
+  printPgmString(PSTR(" (c step bit #, negative to invert behavior)\r\n"));
   
   printPgmString(PSTR("$18 = ")); 
-  printInteger(settings.step_bits[3]);
-  printPgmString(PSTR(" (c step bit #, negative to invert behavior\r\n"));
-  
-  printPgmString(PSTR("$19 = ")); 
   printInteger(settings.direction_port);
   printPgmString(PSTR(" (direction PORT/DDR B=1, C=2, D=3)\r\n"));
   
-  printPgmString(PSTR("$20 = ")); 
+  printPgmString(PSTR("$19 = ")); 
   printInteger(settings.direction_bits[0]);
-  printPgmString(PSTR(" (x direction bit #, negative to invert behavior\r\n"));
+  printPgmString(PSTR(" (x direction bit #, negative to invert behavior)\r\n"));
+  
+  printPgmString(PSTR("$20 = ")); 
+  printInteger(settings.direction_bits[1]);
+  printPgmString(PSTR(" (y direction bit #, negative to invert behavior)\r\n"));
   
   printPgmString(PSTR("$21 = ")); 
-  printInteger(settings.direction_bits[1]);
-  printPgmString(PSTR(" (y direction bit #, negative to invert behavior\r\n"));
+  printInteger(settings.direction_bits[2]);
+  printPgmString(PSTR(" (z direction bit #, negative to invert behavior)\r\n"));
   
   printPgmString(PSTR("$22 = ")); 
-  printInteger(settings.direction_bits[2]);
-  printPgmString(PSTR(" (z direction bit #, negative to invert behavior\r\n"));
+  printInteger(settings.direction_bits[3]);
+  printPgmString(PSTR(" (c direction bit #, negative to invert behavior)\r\n"));
   
   printPgmString(PSTR("$23 = ")); 
-  printInteger(settings.direction_bits[3]);
-  printPgmString(PSTR(" (c direction bit #, negative to invert behavior\r\n"));
-  
-  printPgmString(PSTR("$24 = ")); 
   printInteger(settings.spindle_enable_port);
   printPgmString(PSTR(" (spindle enable PORT/DDR B=1, C=2, D=3)\r\n"));
   
-  printPgmString(PSTR("$25 = ")); 
+  printPgmString(PSTR("$24 = ")); 
   printInteger(settings.spindle_enable_bit);
-  printPgmString(PSTR(" (spindle enable bit #, negative to invert\r\n"));
+  printPgmString(PSTR(" (spindle enable bit #, negative to invert)\r\n"));
   
-  printPgmString(PSTR("$26 = ")); 
+  printPgmString(PSTR("$25 = ")); 
   printInteger(settings.spindle_direction_port);
   printPgmString(PSTR(" (spindle enable PORT/DDR B=1, C=2, D=3)\r\n"));
   
-  printPgmString(PSTR("$27 = ")); 
+  printPgmString(PSTR("$26 = ")); 
   printInteger(settings.spindle_direction_bit);
-  printPgmString(PSTR(" (spindle enable bit #, negative to invert\r\n"));
+  printPgmString(PSTR(" (spindle enable bit #, negative to invert)\r\n"));
   
-  printPgmString(PSTR("$28 = ")); 
+  printPgmString(PSTR("$27 = ")); 
   printInteger(settings.flood_coolant_port);
   printPgmString(PSTR(" (flood coolant PORT/DDR B=1, C=2, D=3)\r\n"));
   
-  printPgmString(PSTR("$29 = ")); 
+  printPgmString(PSTR("$28 = ")); 
   printInteger(settings.flood_coolant_bit);
-  printPgmString(PSTR(" (flood coolant bit #, negative to invert\r\n"));
+  printPgmString(PSTR(" (flood coolant bit #, negative to invert)\r\n"));
   
-  printPgmString(PSTR("$30 = ")); 
+  printPgmString(PSTR("$29 = ")); 
   printInteger(settings.acceleration_ticks_per_second);
-  printPgmString(PSTR(" (acceleration ticks per second\r\n"));
+  printPgmString(PSTR(" (acceleration ticks per second)\r\n"));
   
   printPgmString(PSTR("'$x=value' to set parameter or just '$' to dump current settings\r\n"));
 }
