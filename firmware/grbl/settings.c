@@ -50,36 +50,7 @@ void settings_reset() {
   settings.default_seek_rate = DEFAULT_RAPID_FEEDRATE;
   settings.acceleration = DEFAULT_ACCELERATION;
   settings.mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
-  settings.invert_mask = DEFAULT_STEPPING_INVERT_MASK;
   settings.max_jerk = DEFAULT_MAX_JERK;
-  
-  settings.baud_rate = DEFAULT_BAUD_RATE;
-  
-  settings.steppers_enable_port = DEFAULT_STEPPERS_ENABLE_PORT;
-  settings.steppers_enable_bit = DEFAULT_STEPPERS_ENABLE_BIT;
-  
-  settings.stepping_port = DEFAULT_STEPPING_PORT;
-  settings.step_bits[X_AXIS] = DEFAULT_X_STEP_BIT;
-  settings.step_bits[Y_AXIS] = DEFAULT_Y_STEP_BIT;
-  settings.step_bits[Z_AXIS] = DEFAULT_Z_STEP_BIT;
-  settings.step_bits[C_AXIS] = DEFAULT_C_STEP_BIT;
-  
-  settings.direction_port = DEFAULT_DIRECTION_PORT;
-  settings.direction_bits[X_AXIS] = DEFAULT_X_DIRECTION_BIT;
-  settings.direction_bits[Y_AXIS] = DEFAULT_Y_DIRECTION_BIT;
-  settings.direction_bits[Z_AXIS] = DEFAULT_Z_DIRECTION_BIT;
-  settings.direction_bits[C_AXIS] = DEFAULT_C_DIRECTION_BIT;
-  
-  settings.spindle_enable_port = DEFAULT_SPINDLE_ENABLE_PORT;
-  settings.spindle_enable_bit = DEFAULT_SPINDLE_ENABLE_BIT;
-
-  settings.spindle_direction_port = DEFAULT_SPINDLE_DIRECTION_PORT;
-  settings.spindle_direction_bit = DEFAULT_SPINDLE_DIRECTION_BIT;
-
-  settings.flood_coolant_port = DEFAULT_FLOOD_COOLANT_PORT;
-  settings.flood_coolant_bit = DEFAULT_FLOOD_COOLANT_BIT;
-
-  settings.acceleration_ticks_per_second = DEFAULT_ACCELERATION_TICKS_PER_SECOND;  
 }
 
 void settings_dump() {
@@ -123,86 +94,6 @@ void settings_dump() {
   printFloat(settings.max_jerk);
   printPgmString(PSTR(" (max instant cornering speed change in delta mm/min)\r\n"));
   
-  printPgmString(PSTR("$10 = ")); 
-  printInteger(settings.baud_rate);
-  printPgmString(PSTR(" (bps baud rate)\r\n"));
-  
-  printPgmString(PSTR("$11 = ")); 
-  printInteger(settings.steppers_enable_port);
-  printPgmString(PSTR(" (stepper enable PORT/DDR B=1, C=2, D=3)\r\n"));
-  
-  printPgmString(PSTR("$12 = ")); 
-  printInteger(settings.steppers_enable_bit);
-  printPgmString(PSTR(" (stepper enable bit #, negative to invert)\r\n"));
-  
-  printPgmString(PSTR("$13 = ")); 
-  printInteger(settings.stepping_port);
-  printPgmString(PSTR(" (stepping PORT/DDR B=1, C=2, D=3)\r\n"));
-  
-  printPgmString(PSTR("$14 = ")); 
-  printInteger(settings.step_bits[0]);
-  printPgmString(PSTR(" (x step bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$15 = ")); 
-  printInteger(settings.step_bits[1]);
-  printPgmString(PSTR(" (y step bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$16 = ")); 
-  printInteger(settings.step_bits[2]);
-  printPgmString(PSTR(" (z step bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$17 = ")); 
-  printInteger(settings.step_bits[3]);
-  printPgmString(PSTR(" (c step bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$18 = ")); 
-  printInteger(settings.direction_port);
-  printPgmString(PSTR(" (direction PORT/DDR B=1, C=2, D=3)\r\n"));
-  
-  printPgmString(PSTR("$19 = ")); 
-  printInteger(settings.direction_bits[0]);
-  printPgmString(PSTR(" (x direction bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$20 = ")); 
-  printInteger(settings.direction_bits[1]);
-  printPgmString(PSTR(" (y direction bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$21 = ")); 
-  printInteger(settings.direction_bits[2]);
-  printPgmString(PSTR(" (z direction bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$22 = ")); 
-  printInteger(settings.direction_bits[3]);
-  printPgmString(PSTR(" (c direction bit #, negative to invert behavior)\r\n"));
-  
-  printPgmString(PSTR("$23 = ")); 
-  printInteger(settings.spindle_enable_port);
-  printPgmString(PSTR(" (spindle enable PORT/DDR B=1, C=2, D=3)\r\n"));
-  
-  printPgmString(PSTR("$24 = ")); 
-  printInteger(settings.spindle_enable_bit);
-  printPgmString(PSTR(" (spindle enable bit #, negative to invert)\r\n"));
-  
-  printPgmString(PSTR("$25 = ")); 
-  printInteger(settings.spindle_direction_port);
-  printPgmString(PSTR(" (spindle enable PORT/DDR B=1, C=2, D=3)\r\n"));
-  
-  printPgmString(PSTR("$26 = ")); 
-  printInteger(settings.spindle_direction_bit);
-  printPgmString(PSTR(" (spindle enable bit #, negative to invert)\r\n"));
-  
-  printPgmString(PSTR("$27 = ")); 
-  printInteger(settings.flood_coolant_port);
-  printPgmString(PSTR(" (flood coolant PORT/DDR B=1, C=2, D=3)\r\n"));
-  
-  printPgmString(PSTR("$28 = ")); 
-  printInteger(settings.flood_coolant_bit);
-  printPgmString(PSTR(" (flood coolant bit #, negative to invert)\r\n"));
-  
-  printPgmString(PSTR("$29 = ")); 
-  printInteger(settings.acceleration_ticks_per_second);
-  printPgmString(PSTR(" (acceleration ticks per second)\r\n"));
-  
   printPgmString(PSTR("'$x=value' to set parameter or just '$' to dump current settings\r\n"));
 }
 
@@ -244,25 +135,8 @@ void settings_store_setting(int parameter, double value) {
     case 5: settings.default_feed_rate = value; break;
     case 6: settings.default_seek_rate = value; break;
     case 7: settings.mm_per_arc_segment = value; break;
-    case 8: settings.invert_mask = trunc(value); break;
-    case 9: settings.acceleration = value; break;
-    case 10: settings.max_jerk = fabs(value); break;
-    case 11: settings.baud_rate = trunc(value); break;
-    case 12: settings.steppers_enable_port = trunc(value); break;
-    case 13: settings.steppers_enable_bit = trunc(value); break;
-    case 14: settings.stepping_port = trunc(value); break;
-    case 15: case 16: case 17: case 18:
-    settings.step_bits[parameter - 15] = trunc(value); break;
-    case 19: settings.direction_port = trunc(value); break;
-    case 20: case 21: case 22: case 23:
-    settings.direction_bits[parameter - 20] = trunc(value); break;
-    case 24: settings.spindle_enable_port = trunc(value); break;
-    case 25: settings.spindle_enable_bit = trunc(value); break;
-    case 26: settings.spindle_direction_port = trunc(value); break;
-    case 27: settings.spindle_direction_bit = trunc(value); break;
-    case 28: settings.flood_coolant_port = trunc(value); break;
-    case 29: settings.flood_coolant_bit = trunc(value); break;
-    case 30: settings.acceleration_ticks_per_second = trunc(value); break;
+    case 8: settings.acceleration = value; break;
+    case 9: settings.max_jerk = fabs(value); break;
     default: 
       printPgmString(PSTR("Unknown parameter\r\n"));
       return;

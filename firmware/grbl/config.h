@@ -50,52 +50,74 @@
   Analog 4      PC4
 */
 
+// TODO INVERT is supported for stepping and direction currently. Still need
+// to implement the rest.
+
 #define STEPPERS_ENABLE_DDR     DDRC
 #define STEPPERS_ENABLE_PORT    PORTC
-#define STEPPERS_ENABLE_BIT         4
+#define STEPPERS_ENABLE_BIT     4
+#define STEPPERS_ENABLE_INVERT  0
 
 // For performance reasons it is neccesary to have all of the
 // step outputs on one port. They cannot be split across
 // multiple ports.
-#define STEPPING_DDR       DDRD
-#define STEPPING_PORT      PORTD
-#define X_STEP_BIT           2
-#define Y_STEP_BIT           3
-#define Z_STEP_BIT           4
-#define C_STEP_BIT           5
+#define STEPPING_DDR        DDRD
+#define STEPPING_PORT       PORTD
+#define X_STEP_BIT          2
+#define Y_STEP_BIT          3
+#define Z_STEP_BIT          4
+#define C_STEP_BIT          5
+
+#define X_STEP_INVERT       0
+#define Y_STEP_INVERT       0
+#define Z_STEP_INVERT       0
+#define C_STEP_INVERT       0
+
 
 // For performance reasons it is neccesary to have all of the
 // direction outputs on one port. They cannot be split across
 // multiple ports.
-#define DIRECTION_DDR      DDRC
-#define DIRECTION_PORT     PORTC
-#define X_DIRECTION_BIT      0
-#define Y_DIRECTION_BIT      1
-#define Z_DIRECTION_BIT      2
-#define C_DIRECTION_BIT      3
+#define DIRECTION_DDR       DDRC
+#define DIRECTION_PORT      PORTC
+#define X_DIRECTION_BIT     0
+#define Y_DIRECTION_BIT     1
+#define Z_DIRECTION_BIT     2
+#define C_DIRECTION_BIT     3
 
+#define X_DIRECTION_INVERT  0
+#define Y_DIRECTION_INVERT  0
+#define Z_DIRECTION_INVERT  0
+#define C_DIRECTION_INVERT  0
 
 // For performance reasons it is neccesary to have all of the
 // limit inputs on one port. They cannot be split across
 // multiple ports.
-#define LIMIT_DDR      DDRB
-#define LIMIT_PORT     PORTB
-#define X_LIMIT_BIT          0
-#define Y_LIMIT_BIT          1
-#define Z_LIMIT_BIT          2
-#define C_LIMIT_BIT          3
+#define LIMIT_DDR           DDRB
+#define LIMIT_PORT          PORTB
+#define X_LIMIT_BIT         0
+#define Y_LIMIT_BIT         1
+#define Z_LIMIT_BIT         2
+#define C_LIMIT_BIT         3
 
-#define SPINDLE_ENABLE_DDR DDRD
-#define SPINDLE_ENABLE_PORT PORTD
-#define SPINDLE_ENABLE_BIT 6
+#define X_LIMIT_INVERT      0
+#define Y_LIMIT_INVERT      0
+#define Z_LIMIT_INVERT      0
+#define C_LIMIT_INVERT      0
 
-#define SPINDLE_DIRECTION_DDR DDRD
-#define SPINDLE_DIRECTION_PORT PORTD
-#define SPINDLE_DIRECTION_BIT 7
+#define SPINDLE_ENABLE_DDR    DDRD
+#define SPINDLE_ENABLE_PORT   PORTD
+#define SPINDLE_ENABLE_BIT    6
+#define SPINDLE_ENABLE_INVERT 0
 
-#define FLOOD_COOLANT_DDR DDRB
-#define FLOOD_COOLANT_PORT PORTB
-#define FLOOD_COOLANT_BIT 4
+#define SPINDLE_DIRECTION_DDR     DDRD
+#define SPINDLE_DIRECTION_PORT    PORTD
+#define SPINDLE_DIRECTION_BIT     7
+#define SPINDLE_DIRECTION_INVERT  0
+
+#define FLOOD_COOLANT_DDR       DDRB
+#define FLOOD_COOLANT_PORT      PORTB
+#define FLOOD_COOLANT_BIT       4
+#define FLOOD_COOLAND_INVERT    0
 
 
 // The temporal resolution of the acceleration management subsystem. Higher number

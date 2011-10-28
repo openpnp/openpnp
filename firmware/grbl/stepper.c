@@ -35,9 +35,11 @@
 
 // Some useful constants
 #define STEP_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)|(1<<C_STEP_BIT)) // All step bits
+#define STEP_INVERT_MASK ((X_STEP_INVERT<<X_STEP_BIT)|(Y_STEP_INVERT<<Y_STEP_BIT)|(Z_STEP_INVERT<<Z_STEP_BIT)|(C_STEP_INVERT<<C_STEP_BIT)) // All step bits
 #define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)|(1<<C_DIRECTION_BIT)) // All direction bits
-//#define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
+#define DIRECTION_INVERT_MASK ((X_DIRECTION_INVERT<<X_DIRECTION_BIT)|(Y_DIRECTION_INVERT<<Y_DIRECTION_BIT)|(Z_DIRECTION_INVERT<<Z_DIRECTION_BIT)|(C_DIRECTION_INVERT<<C_DIRECTION_BIT)) // All direction bits
 #define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<C_LIMIT_BIT)) // All limit bits
+#define LIMIT_INVERT_MASK ((X_LIMIT_INVERT<<X_LIMIT_BIT)|(Y_LIMIT_INVERT<<Y_LIMIT_BIT)|(Z_LIMIT_INVERT<<Z_LIMIT_BIT)|(C_LIMIT_INVERT<<C_LIMIT_BIT)) // All limit bits
 
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
 #define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND*1000000)/ACCELERATION_TICKS_PER_SECOND)
@@ -198,7 +200,8 @@ SIGNAL(TIMER1_COMPA_vect)
   } else {
     out_bits = 0;
   }          
-  out_bits ^= settings.invert_mask;
+  out_bits ^= STEP_INVERT_MASK;
+  dir_bits ^= DIRECTION_INVERT_MASK;
   
   // In average this generates a trapezoid_generator_tick every CYCLES_PER_ACCELERATION_TICK by keeping track
   // of the number of elapsed cycles. The code assumes that step_events occur significantly more often than
@@ -217,7 +220,7 @@ SIGNAL(TIMER1_COMPA_vect)
 SIGNAL(TIMER2_OVF_vect)
 {
   // reset stepping pins (leave the direction pins)
-  STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (settings.invert_mask & STEP_MASK); 
+  STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (STEP_INVERT_MASK & STEP_MASK); 
 }
 
 // Initialize and start the stepper motor subsystem
@@ -226,7 +229,7 @@ void st_init()
 	// Configure directions of interface pins
   STEPPING_DDR |= STEP_MASK;
   DIRECTION_DDR |= DIRECTION_MASK;
-  STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | settings.invert_mask;
+  STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | STEP_INVERT_MASK;
   LIMIT_DDR &= ~(LIMIT_MASK);
   STEPPERS_ENABLE_DDR |= 1<<STEPPERS_ENABLE_BIT;
   
@@ -250,7 +253,7 @@ void st_init()
   trapezoid_tick_cycle_counter = 0;
   
   // set enable pin     
-  STEPPERS_ENABLE_PORT |= 1<<STEPPERS_ENABLE_BIT;
+  STEPPERS_ENABLE_PORT |= (1<<STEPPERS_ENABLE_BIT);
      
   sei();
 }
