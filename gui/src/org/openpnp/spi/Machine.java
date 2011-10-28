@@ -63,30 +63,6 @@ public interface Machine {
 	List<Camera> getCameras();
 	
 	/**
-	 * The minimum X value addressable by any Head in the machine. 
-	 * @return
-	 */
-	double getMinX();
-	
-	/**
-	 * The maximum X value addressable by any Head in the machine. 
-	 * @return
-	 */
-	double getMaxX();
-	
-	/**
-	 * The minimum Y value addressable by any Head in the machine. 
-	 * @return
-	 */
-	double getMinY();
-	
-	/**
-	 * The maximum Y value addressable by any Head in the machine. 
-	 * @return
-	 */
-	double getMaxY();
-	
-	/**
 	 * Commands all Heads to move to their home positions and reset their current positions
 	 * to 0,0,0,0. Depending on the head configuration of the machine the home positions may
 	 * not all be the same but the end result should be that any head commanded to move

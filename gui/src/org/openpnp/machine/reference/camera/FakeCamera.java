@@ -19,19 +19,23 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.support;
+package org.openpnp.machine.reference.camera;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import org.openpnp.spi.AbstractCamera;
 
+/**
+ * An implementation of camera that just draws randomly colored lines. Used for development when no
+ * real camera is available.
+ * @author jason
+ *
+ */
 public class FakeCamera extends AbstractCamera implements Runnable {
 	private Color color;
 	
-	public FakeCamera(String name) {
-		super(name);
+	public FakeCamera() {
 		color = new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
 		new Thread(this).start();
 	}

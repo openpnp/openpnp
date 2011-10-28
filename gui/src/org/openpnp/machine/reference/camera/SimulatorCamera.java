@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference.driver;
+package org.openpnp.machine.reference.camera;
 
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -37,6 +37,9 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.GLU;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
@@ -48,9 +51,10 @@ import org.openpnp.Part;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.Placement;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.spi.AbstractCamera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.jogamp.opengl.util.awt.Screenshot;
 
@@ -87,30 +91,25 @@ public class SimulatorCamera extends AbstractCamera implements Runnable, GLEvent
 	
 	private double fieldOfVision;
 	
-	private Head head;
-	
 	private GLPbuffer buffer;
 	
 	private double x, y, z;
 	
-	public SimulatorCamera(String name,
-			double focalLengthInMm, double focalRangeInMm, 
-			double mmPerPixelX, double mmPerPixelY, 
-			double offsetX, double offsetY, double offsetZ,
-			double fieldOfVision,
-			int width, int height, Head head) {
-		super(name);
-		this.focalLengthInMm = focalLengthInMm;
-		this.focalRangeInMm = focalRangeInMm;
-		this.mmPerPixelX = mmPerPixelX;
-		this.mmPerPixelY = mmPerPixelY;
-		this.offsetX = offsetX;
-		this.offsetY = offsetY;
-		this.offsetZ = offsetZ;
-		this.fieldOfVision = fieldOfVision;
-		this.width = width;
-		this.height = height;
-		this.head = head;
+	public SimulatorCamera() {
+	}
+	
+	@Override
+	public void configure(Node n) throws Exception {
+		this.focalLengthInMm = Double.parseDouble(Configuration.getAttribute(n, "focalLengthInMm"));
+		this.focalRangeInMm = Double.parseDouble(Configuration.getAttribute(n, "focalRangeInMm"));
+		this.mmPerPixelX = Double.parseDouble(Configuration.getAttribute(n, "mmPerPixelX"));
+		this.mmPerPixelY = Double.parseDouble(Configuration.getAttribute(n, "mmPerPixelY"));
+		this.offsetX = Double.parseDouble(Configuration.getAttribute(n, "offsetX"));
+		this.offsetY = Double.parseDouble(Configuration.getAttribute(n, "offsetY"));
+		this.offsetZ = Double.parseDouble(Configuration.getAttribute(n, "offsetZ"));
+		this.fieldOfVision = Double.parseDouble(Configuration.getAttribute(n, "fieldOfVision"));
+		this.width = Integer.parseInt(Configuration.getAttribute(n, "width"));
+		this.height = Integer.parseInt(Configuration.getAttribute(n, "height"));
 		
     	GLProfile glp = GLProfile.getDefault();
     	GLDrawableFactory factory = GLDrawableFactory.getFactory(glp);
@@ -119,7 +118,7 @@ public class SimulatorCamera extends AbstractCamera implements Runnable, GLEvent
 		
 		new Thread(this).start();
 	}
-	
+
 	@Override
 	public void prepareJob(Configuration configuration, Job job)
 			throws Exception {

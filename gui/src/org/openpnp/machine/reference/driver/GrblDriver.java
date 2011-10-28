@@ -35,7 +35,6 @@ import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

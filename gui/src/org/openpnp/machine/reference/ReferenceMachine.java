@@ -22,7 +22,7 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +33,6 @@ import javax.xml.xpath.XPathFactory;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
-import org.openpnp.machine.reference.driver.SimulatorCamera;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -43,58 +42,54 @@ import org.w3c.dom.NodeList;
 
 public class ReferenceMachine implements Machine {
 	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
-	private double minX, minY, maxX, maxY;
-	private ArrayList<ReferenceHead> heads = new ArrayList<ReferenceHead>();
-	private Map<String, ReferenceFeeder> feeders = new HashMap<String, ReferenceFeeder>();
+	private Map<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
+	private Map<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	private ReferenceDriver driver;
 	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
 	
 	public void configure(Node n) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
+		
+		NodeList nodes;
 
-		NodeList nodes = (NodeList) xpath.evaluate("Axes/Axis", n, XPathConstants.NODESET);
-
+		Node driverNode = (Node) xpath.evaluate("Driver", n, XPathConstants.NODE);
+		driver = (ReferenceDriver) Class.forName(Configuration.getAttribute(driverNode, "class")).newInstance();
+		driver.configure((Node) xpath.evaluate("Configuration", driverNode, XPathConstants.NODE)); 
+		
+		nodes = (NodeList) xpath.evaluate("Heads/Head", n, XPathConstants.NODESET);
 		for (int i = 0; i < nodes.getLength(); i++) {
-			Node axisNode = nodes.item(i);
-			
-			if (Configuration.getAttribute(axisNode, "reference").equalsIgnoreCase("x")) {
-				minX = Configuration.getDoubleAttribute(axisNode, "min");
-				maxX = Configuration.getDoubleAttribute(axisNode, "max");
+			Node headNode = nodes.item(i);
+			ReferenceHead head = (ReferenceHead) Class.forName(Configuration.getAttribute(headNode, "class")).newInstance();
+			head.setReference(Configuration.getAttribute(headNode, "reference"));
+			head.setMachine(this);
+			Node configNode = (Node) xpath.evaluate("Configuration", headNode, XPathConstants.NODE);
+			head.configure(configNode);
+			heads.put(head.getReference(), head);
+		}
+		
+		nodes = (NodeList) xpath.evaluate("Cameras/Camera", n, XPathConstants.NODESET);
+		for (int i = 0; i < nodes.getLength(); i++) {
+			Node cameraNode = nodes.item(i);
+			ReferenceCamera camera = (ReferenceCamera) Class.forName(Configuration.getAttribute(cameraNode, "class")).newInstance();
+			camera.setName(Configuration.getAttribute(cameraNode, "name"));
+			String headReference = Configuration.getAttribute(cameraNode, "head");
+			if (headReference != null) {
+				camera.setHead(getHead(headReference));
 			}
-			else if (Configuration.getAttribute(axisNode, "reference").equalsIgnoreCase("y")) {
-				minY = Configuration.getDoubleAttribute(axisNode, "min");
-				maxY = Configuration.getDoubleAttribute(axisNode, "max");
-			}
+			Node configNode = (Node) xpath.evaluate("Configuration", cameraNode, XPathConstants.NODE);
+			camera.configure(configNode);
+			cameras.add(camera);
 		}
 		
 		nodes = (NodeList) xpath.evaluate("Feeders/Feeder", n, XPathConstants.NODESET);
-
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node feederNode = nodes.item(i);
-			
 			ReferenceFeeder feeder = (ReferenceFeeder) Class.forName(Configuration.getAttribute(feederNode, "class")).newInstance();
-			
 			feeder.setReference(Configuration.getAttribute(feederNode, "reference"));
-			
 			Node configNode = (Node) xpath.evaluate("Configuration", feederNode, XPathConstants.NODE);
-			
 			feeder.configure(configNode);
-			
 			feeders.put(feeder.getReference(), feeder);
 		}
-			
-		Node driverNode = (Node) xpath.evaluate("Driver", n, XPathConstants.NODE);
-		
-		driver = (ReferenceDriver) Class.forName(Configuration.getAttribute(driverNode, "class")).newInstance();
-		
-		driver.configure((Node) xpath.evaluate("Configuration", driverNode, XPathConstants.NODE)); 
-		
-		ReferenceHead head = new ReferenceHead(this);
-		heads.add(head);
-		
-		cameras.add(new SimulatorCamera("Head Tele", 50, 5, 0.022098, 0.021082, 0, 0, -50, 16.0998, 320, 240, head));
-		cameras.add(new SimulatorCamera("Head Wide", 50, 5, 0.022098, 0.021082, 0, 0, -100, 45, 640, 480, head));
-		cameras.add(new SimulatorCamera("Machine Wide", 50, 5, 0.022098, 0.021082, 200, 300, -800, 45, 640, 480, null));
 	}
 	
 	@Override
@@ -114,8 +109,12 @@ public class ReferenceMachine implements Machine {
 	public List<Head> getHeads() {
 		// TODO this is really wasteful, gotta be a better way
 		ArrayList<Head> l = new ArrayList<Head>();
-		l.addAll(heads);
+		l.addAll(heads.values());
 		return l;
+	}
+	
+	public ReferenceHead getHead(String reference) {
+		return heads.get(reference);
 	}
 	
 	@Override
@@ -127,33 +126,13 @@ public class ReferenceMachine implements Machine {
 	}
 
 	@Override
-	public double getMaxX() {
-		return maxX;
-	}
-
-	@Override
-	public double getMaxY() {
-		return maxY;
-	}
-
-	@Override
-	public double getMinX() {
-		return minX;
-	}
-
-	@Override
-	public double getMinY() {
-		return minY;
-	}
-
-	@Override
 	public LengthUnit getNativeUnits() {
 		return nativeUnits;
 	}
 	
 	@Override
 	public void home() throws Exception {
-		for (Head head : heads) {
+		for (Head head : heads.values()) {
 			head.home();
 		}
 	}

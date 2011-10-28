@@ -1,5 +1,0 @@
-# Figure out how to handle the mirrored board and get that fixed.
-Added onBottom to Placement and bottom to BoardLocation, need to figure out how the conversions will happen
-# Get the Camera setup and configuration fleshed out.
-# Get the simulator Camera built.
-# Implement some basic Fiducial stuff.

@@ -25,17 +25,18 @@ import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.w3c.dom.Node;
 
 public class ReferenceHead implements Head {
-	static final int ACTUATOR_PIN = 0;
-	
-	private final ReferenceMachine machine;
+	public static final int ACTUATOR_PIN = 0;
+
 	private final double minX, maxX, homeX, minY, maxY, homeY, minZ, maxZ, homeZ, minC, maxC, homeC;
+
+	private ReferenceMachine machine;
+	private String reference;
 	double x, y, z, c;
 	
-	public ReferenceHead(ReferenceMachine machine) {
-		this.machine = machine;
-		
+	public ReferenceHead() {
 		minX = 0;
 		maxX = 400;
 		homeX = 0;
@@ -51,6 +52,23 @@ public class ReferenceHead implements Head {
 		minC = 0;
 		maxC = 360;
 		homeC = 0;
+	}
+	
+	public void configure(Node n) throws Exception {
+		
+	}
+	
+	
+	public void setMachine(ReferenceMachine machine) {
+		this.machine = machine;
+	}
+	
+	public void setReference(String reference) {
+		this.reference = reference;
+	}
+	
+	public String getReference() {
+		return reference;
 	}
 
 	@Override

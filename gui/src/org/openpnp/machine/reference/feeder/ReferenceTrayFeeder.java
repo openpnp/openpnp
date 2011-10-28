@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.feeder;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -28,6 +28,8 @@ import javax.xml.xpath.XPathFactory;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
+import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;

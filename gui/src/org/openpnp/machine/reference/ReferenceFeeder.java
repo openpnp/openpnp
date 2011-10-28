@@ -29,7 +29,7 @@ import org.w3c.dom.Node;
  * Provides support for additional configuration. 
  */
 public abstract class ReferenceFeeder implements Feeder {
-	String reference;
+	protected String reference;
 	
 	public abstract void configure(Node n) throws Exception;
 

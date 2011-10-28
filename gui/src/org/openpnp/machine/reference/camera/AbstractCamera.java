@@ -19,24 +19,48 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.spi;
+package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.openpnp.CameraListener;
+import org.openpnp.Configuration;
+import org.openpnp.Job;
+import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceHead;
+import org.w3c.dom.Node;
 
 /**
  * Provides listener support for Camera subclasses.
  * @author jason
  *
  */
-public abstract class AbstractCamera implements Camera {
+public abstract class AbstractCamera implements ReferenceCamera {
 	protected Set<ListenerEntry> listeners = new HashSet<ListenerEntry>();
 	protected String name;
+	protected ReferenceHead head;
 	
-	public AbstractCamera(String name) {
+	public AbstractCamera() {
+	}
+	
+	@Override
+	public void configure(Node n) throws Exception {
+	}
+
+	@Override
+	public void prepareJob(Configuration configuration, Job job)
+			throws Exception {
+	}
+	
+	@Override
+	public void setHead(ReferenceHead head) {
+		this.head = head;
+	}
+	
+	@Override
+	public void setName(String name) {
 		this.name = name;
 	}
 	
