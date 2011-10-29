@@ -31,12 +31,6 @@
 // when firmware is upgraded. Always stored in byte 0 of eeprom
 #define SETTINGS_VERSION 103
 
-#define SETTINGS_PORT_DISABLED 0
-#define SETTINGS_PORT_B 1
-#define SETTINGS_PORT_C 2
-#define SETTINGS_PORT_D 3
-
-
 // Current global settings (persisted in EEPROM from byte 1 onwards)
 typedef struct {
   double steps_per_mm[4]; // G: x, y, z, c
