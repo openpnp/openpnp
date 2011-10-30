@@ -29,6 +29,7 @@
 #include "settings.h"
 #include "motion_control.h"
 #include "spindle_control.h"
+#include "coolant_control.h"
 #include "errno.h"
 #include "serial_protocol.h"
 
@@ -64,6 +65,7 @@ typedef struct {
   uint8_t absolute_mode;           /* 0 = relative motion, 1 = absolute motion {G90, G91} */
   uint8_t program_flow;
   int spindle_direction;
+  int coolant_flood;
   double feed_rate, seek_rate;     /* Millimeters/second */
   double position[4];              /* Where the interpreter considers the tool to be at this point in the code */
   uint8_t tool;
@@ -197,6 +199,8 @@ uint8_t gc_execute_line(char *line) {
         case 3: gc.spindle_direction = 1; break;
         case 4: gc.spindle_direction = -1; break;
         case 5: gc.spindle_direction = 0; break;
+        case 8: gc.coolant_flood = 1; break;
+        case 9: gc.coolant_flood = 0; break;
         default: FAIL(GCSTATUS_UNSUPPORTED_STATEMENT);
       }            
       break;
@@ -257,6 +261,14 @@ uint8_t gc_execute_line(char *line) {
     spindle_run(gc.spindle_direction, gc.spindle_speed);
   } else {
     spindle_stop();
+  }
+  
+  // Update coolant state
+  if (gc.coolant_flood) {
+  	coolant_flood(TRUE);
+  }
+  else {
+  	coolant_flood(FALSE);
   }
   
   // Perform any physical actions

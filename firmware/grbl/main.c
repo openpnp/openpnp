@@ -42,6 +42,7 @@ int main(void)
   plan_init();      
   st_init();        
   spindle_init();   
+  coolant_init();
   gc_init();        
                     
   for(;;){
