@@ -35,4 +35,8 @@ public interface JobProcessorDelegate {
 	 * @return
 	 */
 	public PickRetryAction partPickFailed(JobBoard board, Part part, Feeder feeder);
+	
+	// TODO put this here instead of in JobProcessor, and consider moving all the 
+	// logic into the GUI to implement stepping
+//	public boolean shouldJobProcessingContinue();
 }

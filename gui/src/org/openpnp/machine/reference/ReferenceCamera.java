@@ -23,19 +23,20 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
+import org.openpnp.Location;
 import org.openpnp.spi.Camera;
 import org.w3c.dom.Node;
 
-/**
- * An extension of Camera that adds a prepareJob call. This is is used by the SimulatorCamera
- * so that it can build the model of what it will show.
- * @author jason
- *
- */
 public interface ReferenceCamera extends Camera {
 	public void setName(String name);
 	
+	public void setLocation(Location location);
+	
 	public void setHead(ReferenceHead head);
+	
+	public void setLooking(Looking looking);
+	
+	public void setUnitsPerPixel(Location unitsPerPixel);
 	
 	public void configure(Node n) throws Exception;
 	

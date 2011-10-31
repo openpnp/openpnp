@@ -52,8 +52,6 @@ import org.openpnp.LengthUnit;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.LengthUtil;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 
 /**
  * Contains controls, DROs and status for the machine.

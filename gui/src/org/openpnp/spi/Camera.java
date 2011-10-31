@@ -24,6 +24,7 @@ package org.openpnp.spi;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.CameraListener;
+import org.openpnp.Location;
 
 /**
  * Represents a Camera attached to the system and allows a caller to retrieve images from it.
@@ -33,7 +34,44 @@ import org.openpnp.CameraListener;
  * the same dimensions and type. 
  */
 public interface Camera {
+	public enum Looking {
+		Down,
+		Up
+	}
+	
+	/**
+	 * Get the name of the Camera as defined by it's configuration.
+	 * @return
+	 */
 	public String getName();
+	
+	/**
+	 * Get the Location of the Camera in relation to either the Head it's attached to
+	 * or the Machine itself.
+	 * @return
+	 */
+	public Location getLocation();
+	
+	/**
+	 * Get the direction the Camera is looking. 
+	 * @return
+	 */
+	public Looking getLooking();
+	
+	/**
+	 * The number of X and Y units per pixel this camera shows when in perfect focus.
+	 * Location isn't a great datatype for this, but it gets the job done.
+	 * @return
+	 */
+	public Location getUnitsPerPixel();
+	
+	/**
+	 * Get the Head the Camera is attached to. If the Camera is stationary this should return
+	 * null.
+	 * @return
+	 */
+	public Head getHead();
+	
 	/**
 	 * Immediately captures an image from the camera and returns it in it's native format.
 	 * @return

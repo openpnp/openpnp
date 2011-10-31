@@ -190,6 +190,10 @@ public class JobProcessor implements Runnable {
 			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
 		}
 
+		if (!shouldJobProcessingContinue()) {
+			return;
+		}
+
 		/*
 		 * Vision: After the Head.pick() operation is when we might do some
 		 * vision work. We can use bottom vision, or maybe even top, to
@@ -268,7 +272,6 @@ public class JobProcessor implements Runnable {
 						.getY(), 1.0);
 
 				// Update the placementLocation with the transformed point
-				// TODO does this update the Location in memory, trashing it for the next run?
 				placementLocation.setX(p.getX());
 				placementLocation.setY(p.getY());
 
@@ -417,6 +420,8 @@ public class JobProcessor implements Runnable {
 				}
 				
 				firePartPlaced(jobBoard, placement);
+				
+				firePartProcessingComplete(jobBoard, placement);
 			}
 			
 			fireBoardProcessingCompleted(jobBoard);

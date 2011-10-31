@@ -22,6 +22,8 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -30,7 +32,9 @@ import java.util.ArrayList;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -61,10 +65,6 @@ import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import javax.swing.JButton;
-import java.awt.Dimension;
-import java.awt.Component;
-import javax.swing.Box;
 
 /**
  * The main window of the application. Implements the top level menu, Job run
@@ -161,6 +161,9 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		else if (state == JobState.Running) {
 			jobProcessor.pause();
 		}
+	}
+	
+	private void stepJob() {
 	}
 
 	private void stopJob() {
@@ -530,6 +533,13 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			startPauseResumeJob();
+		}
+	};
+
+	private Action stepJobAction = new AbstractAction("Step") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			stepJob();
 		}
 	};
 

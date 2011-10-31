@@ -175,6 +175,18 @@ public class Configuration {
 		return Double.valueOf(s);
 	}
 	
+	public static boolean getBooleanAttribute(Node n, String attribute) {
+		return getBooleanAttribute(n, attribute, false);
+	}
+	
+	public static boolean getBooleanAttribute(Node n, String attribute, boolean def) {
+		String s = getAttribute(n, attribute);
+		if (s == null) {
+			return def;
+		}
+		return Boolean.valueOf(s);
+	}
+	
 	public static LengthUnit getLengthUnitAttribute(Node n, String attribute) {
 		return LengthUnit.valueOf(n.getAttributes().getNamedItem(attribute).getNodeValue());
 	}

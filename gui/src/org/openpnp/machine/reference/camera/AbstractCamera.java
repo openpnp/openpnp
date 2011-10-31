@@ -28,12 +28,16 @@ import java.util.Set;
 import org.openpnp.CameraListener;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
+import org.openpnp.Location;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.spi.Head;
 import org.w3c.dom.Node;
 
 /**
- * Provides listener support for Camera subclasses.
+ * Provides listener support for Camera subclasses along with the basic implementation
+ * of the Camera interface.
+ * TODO It's possible that all this stuff should just be in ReferenceCamera.
  * @author jason
  *
  */
@@ -41,6 +45,9 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	protected Set<ListenerEntry> listeners = new HashSet<ListenerEntry>();
 	protected String name;
 	protected ReferenceHead head;
+	protected Location location;
+	protected Looking looking;
+	protected Location unitsPerPixel;
 	
 	public AbstractCamera() {
 	}
@@ -55,10 +62,35 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	}
 	
 	@Override
+	public Location getUnitsPerPixel() {
+		return unitsPerPixel;
+	}
+
+	@Override
+	public void setUnitsPerPixel(Location unitsPerPixel) {
+		this.unitsPerPixel = unitsPerPixel;
+	}
+
+	@Override
+	public Head getHead() {
+		return head;
+	}
+	
+	@Override
 	public void setHead(ReferenceHead head) {
 		this.head = head;
 	}
 	
+	@Override
+	public Looking getLooking() {
+		return looking;
+	}
+
+	@Override
+	public void setLooking(Looking looking) {
+		this.looking = looking;
+	}
+
 	@Override
 	public void setName(String name) {
 		this.name = name;
@@ -69,6 +101,16 @@ public abstract class AbstractCamera implements ReferenceCamera {
 		return name;
 	}
 	
+	@Override
+	public Location getLocation() {
+		return location;
+	}
+
+	@Override
+	public void setLocation(Location location) {
+		this.location = location;
+	}
+
 	@Override
 	public void startContinuousCapture(CameraListener listener, int maximumFps) {
 		listeners.add(new ListenerEntry(listener, maximumFps));

@@ -75,7 +75,6 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 		panel.actuate(index, on);
 	}
 
-	@SuppressWarnings("serial")
 	public class SimulatorPanel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
 		// TODO add multiple head support, just for fun
 		

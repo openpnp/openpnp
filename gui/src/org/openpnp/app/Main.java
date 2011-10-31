@@ -23,6 +23,8 @@ package org.openpnp.app;
 
 import java.awt.EventQueue;
 
+import javax.swing.UIManager;
+
 import org.openpnp.gui.MainFrame;
 
 /**
@@ -33,12 +35,12 @@ import org.openpnp.gui.MainFrame;
 public class Main {
 	public static void main(String[] args) {
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
-//		try {
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//		}
-//		catch (Exception e) {
-//			throw new Error(e);
-//		}
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}
+		catch (Exception e) {
+			throw new Error(e);
+		}
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {

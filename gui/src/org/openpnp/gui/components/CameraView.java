@@ -22,7 +22,6 @@
 package org.openpnp.gui.components;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -45,6 +44,7 @@ public class CameraView extends JComponent implements CameraListener, MouseListe
 	
 	public CameraView(int maximumFps) {
 		this.maximumFps = maximumFps;
+		setBackground(Color.black);
 		setOpaque(true);
 		setShowCrosshair(true);
 		setCrosshairColor(Color.red);
@@ -94,9 +94,31 @@ public class CameraView extends JComponent implements CameraListener, MouseListe
 		int width = getWidth() - ins.left - ins.right;
 		int height = getHeight() - ins.top - ins.bottom;
 		Graphics2D g2d = (Graphics2D) g;
+		g.setColor(getBackground());
+		g2d.fillRect(ins.left, ins.top, width, height);
 		if (lastFrame != null) {
-			// TODO SUPER IMPORTANT, this needs to retain source aspect ratio or it's useless!
-			g2d.drawImage(lastFrame, ins.left, ins.top, width, height, null);
+			double destWidth = width, destHeight = height;
+			double sourceWidth = lastFrame.getWidth(), sourceHeight = lastFrame.getHeight();
+			int scaledWidth, scaledHeight;
+
+			double heightRatio = sourceHeight / destHeight;
+			double widthRatio = sourceWidth / destWidth;
+
+			if (heightRatio > widthRatio) {
+				double aspectRatio = sourceWidth / sourceHeight; 
+				scaledHeight = (int) destHeight;
+				scaledWidth = (int) (scaledHeight * aspectRatio);
+			}
+			else {
+				double aspectRatio = sourceHeight / sourceWidth; 
+				scaledWidth = (int) destWidth;
+				scaledHeight = (int) (scaledWidth * aspectRatio);
+			}
+			
+			int cx = ins.left + (width / 2) - (scaledWidth / 2);
+			int cy = ins.top + (height / 2) - (scaledHeight / 2);
+			
+			g2d.drawImage(lastFrame, cx, cy, scaledWidth, scaledHeight, null);
 		}
 		if (showCrosshair) {
 			g.setColor(crosshairColor);

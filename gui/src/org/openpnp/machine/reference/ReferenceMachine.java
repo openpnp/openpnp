@@ -33,7 +33,9 @@ import javax.xml.xpath.XPathFactory;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
+import org.openpnp.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -56,6 +58,8 @@ public class ReferenceMachine implements Machine {
 		driver = (ReferenceDriver) Class.forName(Configuration.getAttribute(driverNode, "class")).newInstance();
 		driver.configure((Node) xpath.evaluate("Configuration", driverNode, XPathConstants.NODE)); 
 		
+		// TODO consider moving all this class specific configuration into the Reference* class it
+		// belongs to.
 		nodes = (NodeList) xpath.evaluate("Heads/Head", n, XPathConstants.NODESET);
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node headNode = nodes.item(i);
@@ -72,10 +76,25 @@ public class ReferenceMachine implements Machine {
 			Node cameraNode = nodes.item(i);
 			ReferenceCamera camera = (ReferenceCamera) Class.forName(Configuration.getAttribute(cameraNode, "class")).newInstance();
 			camera.setName(Configuration.getAttribute(cameraNode, "name"));
+			
 			String headReference = Configuration.getAttribute(cameraNode, "head");
 			if (headReference != null) {
 				camera.setHead(getHead(headReference));
 			}
+			
+			String looking = Configuration.getAttribute(cameraNode, "looking");
+			camera.setLooking(Looking.valueOf(looking));
+			
+			Node locationNode = (Node) xpath.evaluate("Location", cameraNode, XPathConstants.NODE);
+			Location location = new Location();
+			location.parse(locationNode);
+			camera.setLocation(location);
+			
+			Node unitsPerPixelNode = (Node) xpath.evaluate("UnitsPerPixel", cameraNode, XPathConstants.NODE);
+			Location unitsPerPixel = new Location();
+			unitsPerPixel.parse(unitsPerPixelNode);
+			camera.setUnitsPerPixel(unitsPerPixel);
+			
 			Node configNode = (Node) xpath.evaluate("Configuration", cameraNode, XPathConstants.NODE);
 			camera.configure(configNode);
 			cameras.add(camera);
