@@ -7,12 +7,12 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JOGL"/>
 	<classpathentry kind="lib" path="lib/RXTXcomm.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="openpnp/lib"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="openpnp/lib/native/mac-10.5"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/jVFW.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="openpnp/lib/win32"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="openpnp/lib/native/win32"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
