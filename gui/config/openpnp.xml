@@ -4,7 +4,7 @@
 		<Configuration>
 			<Driver class="org.openpnp.machine.reference.driver.GrblDriver">
 				<Configuration>
-					<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
+					<Port name="COM3" baud="38400" />
 						<Settings>
 						</Settings>
 				</Configuration>
@@ -16,23 +16,21 @@
 			 </Heads>
 			 
 			<Cameras>
-				<!-- 
 				<Camera
 					name="Head Tele"
 					head="H1"
-					class="org.openpnp.machine.reference.camera.VfwCivilCamera"
+					class="org.openpnp.machine.reference.camera.VfwCamera"
 					looking="Down"
 					>
 					<Location units="Millimeters" x="-25" y="-25" z="20" rotation="0" />
 					<UnitsPerPixel units="Millimeters" x="0.071875" y="0.070833" />
 					<Configuration 
-						driver="" 
+						driver="Microsoft WDM Image Capture (Win32)" 
 						showVideoSourceDialog="false" 
 						showVideoFormatDialog="false" 
 						showVideoDisplayDialog="false">
 					</Configuration>
 				</Camera>
-				 -->
 			</Cameras>
 			
 			<Feeders>

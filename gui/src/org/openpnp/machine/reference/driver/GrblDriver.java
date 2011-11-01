@@ -192,18 +192,18 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		while (!disconnectRequested) {
 			String line = readLine();
 			System.out.println(line);
-			if (!connected) {
-				if (line.startsWith("Grbl")) {
-					connected = true;
-					System.out.println("Connect complete");
-				}
-			}
-			else {
+//			if (!connected) {
+//				if (line.startsWith("Grbl")) {
+//					connected = true;
+//					System.out.println("Connect complete");
+//				}
+//			}
+//			else {
 				synchronized (commandLock) {
 					lastResponse = line;
 					commandLock.notify();
 				}
-			}
+//			}
 		}
 	}
 	
