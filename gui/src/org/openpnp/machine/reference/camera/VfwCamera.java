@@ -9,6 +9,19 @@ import org.openpnp.Configuration;
 import org.vonnieda.vfw.CaptureDevice;
 import org.w3c.dom.Node;
 
+/**
+	<pre>
+		<!--
+			Specify driver="" to obtain a list of available drivers on the console. 
+		-->
+		<Configuration 
+			driver="Microsoft WDM Image Capture (Win32)" 
+			showVideoSourceDialog="false" 
+			showVideoFormatDialog="false" 
+			showVideoDisplayDialog="false">
+		</Configuration>
+	</pre>
+ */
 public class VfwCamera extends AbstractCamera implements Runnable {
 	private String driver;
 	private boolean showVideoSourceDialog;

@@ -2,12 +2,20 @@
 <OpenPnP>
 	<Machine class="org.openpnp.machine.reference.ReferenceMachine">
 		<Configuration>
+			<!-- 
 			<Driver class="org.openpnp.machine.reference.driver.GrblDriver">
 				<Configuration>
 					<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
 						<Settings>
+							<Setting name="$0" value="56.338" />
+							<Setting name="$1" value="56.338" />
+							<Setting name="$2" value="56.338" />
+							<Setting name="$3" value="10" />
 						</Settings>
 				</Configuration>
+			</Driver>
+			-->
+			<Driver class="org.openpnp.machine.reference.driver.SimulatorDriver">
 			</Driver>
 			 
 			 <Heads>
@@ -16,23 +24,16 @@
 			 </Heads>
 			 
 			<Cameras>
-				<!-- 
 				<Camera
 					name="Head Tele"
 					head="H1"
-					class="org.openpnp.machine.reference.camera.VfwCivilCamera"
+					class="org.openpnp.machine.reference.camera.LtiCivilCamera"
 					looking="Down"
 					>
 					<Location units="Millimeters" x="-25" y="-25" z="20" rotation="0" />
 					<UnitsPerPixel units="Millimeters" x="0.071875" y="0.070833" />
-					<Configuration 
-						driver="" 
-						showVideoSourceDialog="false" 
-						showVideoFormatDialog="false" 
-						showVideoDisplayDialog="false">
-					</Configuration>
+					<Configuration deviceId="?" />
 				</Camera>
-				 -->
 			</Cameras>
 			
 			<Feeders>

@@ -43,7 +43,7 @@ import org.openpnp.spi.Camera;
  */
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
-	private static int maximumFps = 10;
+	private static int maximumFps = 15;
 
 	private Set<Camera> cameras = new LinkedHashSet<Camera>();
 
@@ -97,7 +97,6 @@ public class CameraPanel extends JPanel {
 					CameraView cameraView = new CameraView(maximumFps
 							/ cameras.size());
 					cameraView.setCamera(camera);
-					cameraView.setShowCrosshair(false);
 					camerasPanel.add(cameraView);
 				}
 				for (int i = 0; i < (columns * columns) - cameras.size(); i++) {

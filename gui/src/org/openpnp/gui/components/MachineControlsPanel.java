@@ -24,14 +24,23 @@ package org.openpnp.gui.components;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Hashtable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -61,9 +70,10 @@ import org.openpnp.util.LengthUtil;
  * Also: Radio buttons to select mm or inch.
  * TODO add a dropdown to select Head
  * TODO think about how commands to the machine should interface with the GUI. The GUI should not lock up while running
- * a command. Should the Machine queue the commands and have a way to check if it's done yet? 
+ * a command. Should the Machine queue the commands and have a way to check if it's done yet?
+ * TODO We may need a MachineManager that synchronizes access to the Machine and provides status about it, along
+ * with offset management. 
  * @author jason
- *
  */
 public class MachineControlsPanel extends JPanel {
 	private Machine machine;
@@ -78,7 +88,7 @@ public class MachineControlsPanel extends JPanel {
 	private JRadioButton rdbtnMm;
 	private JRadioButton rdbtnInch;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
-
+	
 	/**
 	 * Create the panel.
 	 */
@@ -141,10 +151,18 @@ public class MachineControlsPanel extends JPanel {
 		x = LengthUtil.convertLength(x, machine.getNativeUnits(), units);
 		y = LengthUtil.convertLength(y, machine.getNativeUnits(), units);
 		z = LengthUtil.convertLength(z, machine.getNativeUnits(), units);
-		textFieldX.setText(String.format("%1.4f", x));
-		textFieldY.setText(String.format("%1.4f", y));
-		textFieldZ.setText(String.format("%1.4f", z));
-		textFieldC.setText(String.format("%1.4f", c));
+		if (!textFieldX.hasFocus()) {
+			textFieldX.setText(String.format("%1.4f", x));
+		}
+		if (!textFieldY.hasFocus()) {
+			textFieldY.setText(String.format("%1.4f", y));
+		}
+		if (!textFieldZ.hasFocus()) {
+			textFieldZ.setText(String.format("%1.4f", z));
+		}
+		if (!textFieldC.hasFocus()) {
+			textFieldC.setText(String.format("%1.4f", c));
+		}
 	}
 	
 	private double getJogIncrement() {
@@ -228,11 +246,17 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosFirstLine.add(lblX);
 		
 		textFieldX = new JTextField();
+		textFieldX.setFocusTraversalKeysEnabled(false);
+		textFieldX.setSelectionColor(Color.RED);
+		textFieldX.setDisabledTextColor(Color.BLACK);
 		textFieldX.setBackground(new Color(143, 188, 143));
 		textFieldX.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldX.setText("0000.0000");
 		panelDrosFirstLine.add(textFieldX);
 		textFieldX.setColumns(6);
+		textFieldX.addFocusListener(droFocusListener);
+		textFieldX.addActionListener(droActionListener);
+		textFieldX.addMouseListener(droMouseListener);
 		
 		Component horizontalStrut = Box.createHorizontalStrut(15);
 		panelDrosFirstLine.add(horizontalStrut);
@@ -242,11 +266,17 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosFirstLine.add(lblY);
 		
 		textFieldY = new JTextField();
+		textFieldY.setFocusTraversalKeysEnabled(false);
+		textFieldY.setSelectionColor(Color.RED);
+		textFieldY.setDisabledTextColor(Color.BLACK);
 		textFieldY.setBackground(new Color(143, 188, 143));
 		textFieldY.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldY.setText("0000.0000");
 		panelDrosFirstLine.add(textFieldY);
 		textFieldY.setColumns(6);
+		textFieldY.addFocusListener(droFocusListener);
+		textFieldY.addActionListener(droActionListener);
+		textFieldY.addMouseListener(droMouseListener);
 		
 		JPanel panelDrosSecondLine = new JPanel();
 		panelDros.add(panelDrosSecondLine);
@@ -257,10 +287,16 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosSecondLine.add(lblC);
 		
 		textFieldC = new JTextField();
+		textFieldC.setFocusTraversalKeysEnabled(false);
+		textFieldC.setSelectionColor(Color.RED);
+		textFieldC.setDisabledTextColor(Color.BLACK);
 		textFieldC.setBackground(new Color(143, 188, 143));
 		textFieldC.setText("0000.0000");
 		textFieldC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldC.setColumns(6);
+		textFieldC.addFocusListener(droFocusListener);
+		textFieldC.addActionListener(droActionListener);
+		textFieldC.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldC);
 		
 		Component horizontalStrut_1 = Box.createHorizontalStrut(15);
@@ -271,10 +307,16 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosSecondLine.add(lblZ);
 		
 		textFieldZ = new JTextField();
+		textFieldZ.setFocusTraversalKeysEnabled(false);
+		textFieldZ.setSelectionColor(Color.RED);
+		textFieldZ.setDisabledTextColor(Color.BLACK);
 		textFieldZ.setBackground(new Color(143, 188, 143));
 		textFieldZ.setText("0000.0000");
 		textFieldZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldZ.setColumns(6);
+		textFieldZ.addFocusListener(droFocusListener);
+		textFieldZ.addActionListener(droActionListener);
+		textFieldZ.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldZ);
 		
 		JPanel panel_3 = new JPanel();
@@ -383,8 +425,6 @@ public class MachineControlsPanel extends JPanel {
 		
 		JButton btnCMinus = new JButton("C-");
 		btnCMinus.setFocusable(false);
-		btnCMinus.setFocusTraversalPolicyProvider(true);
-		btnCMinus.setFocusTraversalKeysEnabled(false);
 		btnCMinus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				jog(0, 0, 0, -1);
@@ -456,5 +496,89 @@ public class MachineControlsPanel extends JPanel {
 		panel_2.add(btnEstop);
 		btnEstop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
 		btnEstop.setPreferredSize(new Dimension(160, 70));
+		
+		setFocusTraversalPolicy(new FocusPolicy());
+		setFocusTraversalPolicyProvider(true);
 	}
+	
+	class FocusPolicy extends FocusTraversalPolicy {
+
+		@Override
+		public Component getComponentAfter(Container aContainer,
+				Component aComponent) {
+			return sliderIncrements;
+		}
+
+		@Override
+		public Component getComponentBefore(Container aContainer,
+				Component aComponent) {
+			return sliderIncrements;
+		}
+
+		@Override
+		public Component getDefaultComponent(Container aContainer) {
+			return sliderIncrements;
+		}
+
+		@Override
+		public Component getFirstComponent(Container aContainer) {
+			return sliderIncrements;
+		}
+
+		@Override
+		public Component getInitialComponent(Window window) {
+			return sliderIncrements;
+		}
+
+		@Override
+		public Component getLastComponent(Container aContainer) {
+			return sliderIncrements;
+		}
+		
+	}
+	
+	// TODO this insanity needs to be tested for cross platform happiness
+	MouseListener droMouseListener = new MouseAdapter() {
+		private boolean hadFocus;
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			JTextField dro = (JTextField) e.getComponent();
+			hadFocus = dro.hasFocus();
+		}
+		
+		public void mouseClicked(MouseEvent e) {
+			JTextField dro = (JTextField) e.getComponent();
+			if (hadFocus) {
+				dro.transferFocus();
+			}
+		}
+	};
+	
+	ActionListener droActionListener = new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JTextField dro = (JTextField) e.getSource();
+			System.out.println("Set " + dro.getText());
+			sliderIncrements.requestFocusInWindow();
+		}
+	};
+	
+	FocusListener droFocusListener = new FocusAdapter() {
+		@Override
+		public void focusGained(FocusEvent e) {
+			JTextField dro = (JTextField) e.getComponent();
+			dro.setBackground(Color.RED);
+			dro.setSelectionStart(0);
+			dro.setSelectionEnd(dro.getText().length());
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+			JTextField dro = (JTextField) e.getComponent();
+			dro.setBackground(new Color(143, 188, 143));
+			dro.setSelectionEnd(0);
+			dro.setSelectionEnd(0);
+		}
+	};
 }

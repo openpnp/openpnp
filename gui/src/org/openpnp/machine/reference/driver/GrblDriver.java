@@ -42,7 +42,7 @@ import org.w3c.dom.NodeList;
 /**
 <pre>
 	<Configuration>
-		<Port name="/dev/tty.usbserial-A9007LmZ" baud="9600" />
+		<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
 		<Settings>
 			<Setting name="$0" value="56.338" />
 			<Setting name="$1" value="56.338" />
