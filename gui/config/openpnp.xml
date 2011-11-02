@@ -22,7 +22,7 @@
 					class="org.openpnp.machine.reference.camera.LtiCivilCamera"
 					looking="Down"
 					>
-					<Location units="Millimeters" x="-25" y="-25" z="20" rotation="0" />
+					<Location units="Millimeters" x="0" y="-50" z="0" rotation="0" />
 					<UnitsPerPixel units="Millimeters" x="0.071875" y="0.070833" />
 					<Configuration deviceId="?" />
 				</Camera>

@@ -52,6 +52,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -59,6 +60,8 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 
 import org.openpnp.LengthUnit;
+import org.openpnp.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
@@ -89,6 +92,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	private JRadioButton rdbtnMm;
 	private JRadioButton rdbtnInch;
 	private JButton btnStartStop;
+	private JComboBox comboBoxCoordinateSystem;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -105,6 +109,13 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		this.head = machine.getHeads().get(0);
 		setUnits(machine.getNativeUnits());
 		machine.addListener(this);
+		comboBoxCoordinateSystem.removeAllItems();
+		comboBoxCoordinateSystem.addItem("Working");
+		for (Camera camera : machine.getCameras()) {
+			comboBoxCoordinateSystem.addItem(new CameraItem(camera));
+		}
+		comboBoxCoordinateSystem.addItem("Absolute");
+		comboBoxCoordinateSystem.setSelectedIndex(0);
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
 	}
 	
@@ -135,13 +146,32 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	}
 	
 	private void updateDros() {
-		if (machine == null || units == null) {
+		if (machine == null || head == null || units == null) {
 			return;
 		}
-		double x = head.getX();
-		double y = head.getY();
-		double z = head.getZ();
-		double c = head.getC();
+		double x = 0, y = 0, z = 0, c = 0;
+		if (comboBoxCoordinateSystem.getSelectedItem() == null || comboBoxCoordinateSystem.getSelectedItem().equals("Working")) {
+			x = head.getX();
+			y = head.getY();
+			z = head.getZ();
+			c = head.getC();
+		}
+		else if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
+			CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
+			Camera camera = cameraItem.getCamera();
+			Location cameraLocation = camera.getLocation();
+			cameraLocation = LengthUtil.convertLocation(cameraLocation, machine.getNativeUnits());
+			x = head.getX() + cameraLocation.getX();
+			y = head.getY() + cameraLocation.getY();
+			z = head.getZ() + cameraLocation.getZ();
+			c = head.getC() + cameraLocation.getRotation();
+		}
+		else if (comboBoxCoordinateSystem.getSelectedItem().equals("Absolute")) {
+			x = head.getAbsoluteX();
+			y = head.getAbsoluteY();
+			z = head.getAbsoluteZ();
+			c = head.getAbsoluteC();
+		}
 		x = LengthUtil.convertLength(x, machine.getNativeUnits(), units);
 		y = LengthUtil.convertLength(y, machine.getNativeUnits(), units);
 		z = LengthUtil.convertLength(z, machine.getNativeUnits(), units);
@@ -252,12 +282,24 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
-		JPanel panel = new JPanel();
-		add(panel);
-		panel.setLayout(new BorderLayout(0, 0));
+		JPanel panelCoordinateSystem = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panelCoordinateSystem.getLayout();
+		flowLayout.setAlignment(FlowLayout.LEFT);
+		add(panelCoordinateSystem);
+		
+		JLabel lblNewLabel = new JLabel("Coordinate System");
+		panelCoordinateSystem.add(lblNewLabel);
+		
+		comboBoxCoordinateSystem = new JComboBox();
+		comboBoxCoordinateSystem.addActionListener(coordinateSystemSelectedAction);
+		panelCoordinateSystem.add(comboBoxCoordinateSystem);
+		
+		JPanel panelDrosParent = new JPanel();
+		add(panelDrosParent);
+		panelDrosParent.setLayout(new BorderLayout(0, 0));
 		
 		JPanel panel_1 = new JPanel();
-		panel.add(panel_1, BorderLayout.CENTER);
+		panelDrosParent.add(panel_1, BorderLayout.CENTER);
 		
 		JPanel panelDros = new JPanel();
 		panelDros.setBackground(new Color(224, 255, 255));
@@ -346,11 +388,11 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		textFieldZ.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldZ);
 		
-		JPanel panel_3 = new JPanel();
-		add(panel_3);
+		JPanel panelIncrements = new JPanel();
+		add(panelIncrements);
 		
 		sliderIncrements = new JSlider();
-		panel_3.add(sliderIncrements);
+		panelIncrements.add(sliderIncrements);
 		sliderIncrements.setMajorTickSpacing(1);
 		sliderIncrements.setValue(1);
 		sliderIncrements.setSnapToTicks(true);
@@ -360,7 +402,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		sliderIncrements.setMaximum(4);
 		
 		JPanel panelUnits = new JPanel();
-		panel_3.add(panelUnits);
+		panelIncrements.add(panelUnits);
 		
 		rdbtnMm = new JRadioButton("MM");
 		buttonGroup.add(rdbtnMm);
@@ -513,14 +555,14 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnYMinus.gridy = 4;
 		panelControls.add(btnYMinus, gbc_btnYMinus);
 		
-		JPanel panel_2 = new JPanel();
-		add(panel_2);
-		panel_2.setLayout(new BorderLayout(0, 0));
+		JPanel panelStartStop = new JPanel();
+		add(panelStartStop);
+		panelStartStop.setLayout(new BorderLayout(0, 0));
 		
 		btnStartStop = new JButton(startMachineAction);
 		btnStartStop.setFocusable(false);
 		btnStartStop.setForeground(new Color(178, 34, 34));
-		panel_2.add(btnStartStop);
+		panelStartStop.add(btnStartStop);
 		btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
 		btnStartStop.setPreferredSize(new Dimension(160, 70));
 		
@@ -610,6 +652,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
+	// TODO needs to act differently if they are viewing the camera coordinate system
 	ActionListener droActionListener = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -646,6 +689,13 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 			dro.setBackground(new Color(143, 188, 143));
 			dro.setSelectionEnd(0);
 			dro.setSelectionEnd(0);
+			updateDros();
+		}
+	};
+	
+	ActionListener coordinateSystemSelectedAction = new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
 			updateDros();
 		}
 	};

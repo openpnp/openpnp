@@ -70,8 +70,11 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	}
 
 	@Override
+	// TODO should probably turn off the stream if there are no listeners, to save CPU
 	public void onNewImage(CaptureStream captureStream, Image newImage) {
-		broadcastCapture(AWTImageConverter.toBufferedImage(newImage));
+		if (listeners.size() > 0) {
+			broadcastCapture(AWTImageConverter.toBufferedImage(newImage));
+		}
 	}
 
 	@Override

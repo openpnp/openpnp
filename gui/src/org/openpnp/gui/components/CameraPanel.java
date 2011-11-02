@@ -58,7 +58,7 @@ public class CameraPanel extends JPanel {
 
 	public void addCamera(Camera camera) {
 		cameras.add(camera);
-		camerasCombo.addItem(new CameraWrapper(camera));
+		camerasCombo.addItem(new CameraItem(camera));
 		camerasCombo.setSelectedIndex(camerasCombo.getSelectedIndex());
 	}
 
@@ -109,8 +109,8 @@ public class CameraPanel extends JPanel {
 				clearCameras();
 				camerasPanel.setLayout(new BorderLayout());
 				CameraView cameraView = new CameraView(maximumFps);
-				cameraView.setCamera(((CameraWrapper) camerasCombo
-						.getSelectedItem()).camera);
+				cameraView.setCamera(((CameraItem) camerasCombo
+						.getSelectedItem()).getCamera());
 				camerasPanel.add(cameraView);
 			}
 			revalidate();
@@ -124,19 +124,6 @@ public class CameraPanel extends JPanel {
 				}
 			}
 			camerasPanel.removeAll();
-		}
-	}
-	
-	class CameraWrapper {
-		private Camera camera;
-		
-		public CameraWrapper(Camera camera) {
-			this.camera = camera;
-		}
-		
-		@Override
-		public String toString() {
-			return camera.getName();
 		}
 	}
 }
