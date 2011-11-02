@@ -26,6 +26,9 @@ import gnu.io.SerialPort;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -40,17 +43,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
-<pre>
-	<Configuration>
-		<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
-		<Settings>
-			<Setting name="$0" value="56.338" />
-			<Setting name="$1" value="56.338" />
-			<Setting name="$2" value="56.338" />
-			<Setting name="$3" value="10" />
-		</Settings>
-	</Configuration>
-</pre>
+	<pre>
+		<Configuration>
+			<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
+			<Settings>
+				<Setting name="$0" value="56.338" />
+				<Setting name="$1" value="56.338" />
+				<Setting name="$2" value="56.338" />
+				<Setting name="$3" value="10" />
+			</Settings>
+		</Configuration>
+	</pre>
+
+	TODO Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
 	private double x, y, z, c;
@@ -66,6 +71,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	private String lastResponse;
 	private boolean connected;
 	private boolean configured;
+	private ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
 	@Override
 	public void configure(Node n) throws Exception {
@@ -83,7 +89,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			System.out.println(Configuration.getAttribute(settingNode, "name"));
 		}
 		
-
 		connect(portName, portBaud);
 	}
 
@@ -97,9 +102,10 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			throws Exception {
 		if (index == 0) {
 			sendCommand(on ? "M8" : "M9");
+			dwell();
 		}
 	}
-
+	
 	@Override
 	public void home(ReferenceHead head) throws Exception {
 		moveTo(head, 0, 0, 0, 0);
@@ -123,21 +129,29 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		}
 		if (sb.length() > 0) {
 			sendCommand("G1" + sb.toString());
+			dwell();
 		}
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		this.c = c;
 	}
+	
+	@Override
+	public void setEnabled(boolean enabled) throws Exception {
+		sendCommand("$1000=" + (enabled ? "1" : "0"));
+	}
 
 	@Override
 	public void pick(ReferenceHead head, Part part) throws Exception {
 		sendCommand("M4");
+		dwell();
 	}
 
 	@Override
 	public void place(ReferenceHead head) throws Exception {
 		sendCommand("M5");
+		dwell();
 	}
 
 	public synchronized void connect(String portName, int baud)
@@ -164,6 +178,26 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		}
 		input = serialPort.getInputStream();
 		output = serialPort.getOutputStream();
+		
+		// Request the settings and version from the board once per second
+		// until we get it.
+		// TODO we should probably have this try 5 times or so and then bail
+		scheduledExecutor.schedule(new Runnable() {
+			public void run() {
+				if (!connected) {
+					try {
+						sendCommand("$");
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+					scheduledExecutor.schedule(this, 1000, TimeUnit.MILLISECONDS);
+				}
+				else {
+					return;
+				}
+			}
+		}, 1000, TimeUnit.MILLISECONDS);
 		
 		readerThread = new Thread(this);
 		readerThread.start();
@@ -192,21 +226,28 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		while (!disconnectRequested) {
 			String line = readLine();
 			System.out.println(line);
-//			if (!connected) {
-//				if (line.startsWith("Grbl")) {
-//					connected = true;
-//					System.out.println("Connect complete");
-//				}
-//			}
-//			else {
-				synchronized (commandLock) {
-					lastResponse = line;
-					commandLock.notify();
+			if (!connected) {
+				if (line.startsWith("$VERSION = ")) {
+					String[] versionComponents = line.split(" ");
+					connected = true;
+					System.out.println("Connected to OpenPnP/Grbl Version: " + versionComponents[2]);
 				}
-//			}
+			}
+			synchronized (commandLock) {
+				lastResponse = line;
+				commandLock.notify();
+			}
 		}
 	}
-	
+
+	/**
+	 * Causes Grbl to block until all commands are complete.
+	 * @throws Exception
+	 */
+	private void dwell() throws Exception {
+		sendCommand("G4 P0");
+	}
+
 	private void sendCommand(String command) throws Exception {
 		System.out.println(command);
 		output.write(command.getBytes());

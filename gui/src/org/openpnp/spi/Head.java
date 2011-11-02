@@ -28,6 +28,7 @@ import org.openpnp.Part;
 /**
  * A Head is a moving toolholder on a Machine. The head has a current position. A Head
  * is the movable object in a Machine.
+ * Unless otherwise noted, the methods in this class block while performing their operations.
  */
 public interface Head {
 	/**
@@ -35,13 +36,52 @@ public interface Head {
 	 */
 	void home() throws Exception;
 	
+	/**
+	 * Get the X position of the Head, with perception offsets applied.
+	 * @return
+	 */
 	public double getX();
-	
+	/**
+	 * Get the Y position of the Head, with perception offsets applied.
+	 * @return
+	 */
 	public double getY();
-	
+	/**
+	 * Get the Z position of the Head, with perception offsets applied.
+	 * @return
+	 */
 	public double getZ();
-	
+	/**
+	 * Get the C position of the Head, with perception offsets applied.
+	 * @return
+	 */
 	public double getC();
+
+	public void setPerceivedX(double x);
+	public void setPerceivedY(double y);
+	public void setPerceivedZ(double z);
+	public void setPerceivedC(double c);
+	
+	/**
+	 * Get the X position of the Head, without perception offsets applied.
+	 * @return
+	 */
+	public double getAbsoluteX();
+	/**
+	 * Get the Y position of the Head, without perception offsets applied.
+	 * @return
+	 */
+	public double getAbsoluteY();
+	/**
+	 * Get the Z position of the Head, without perception offsets applied.
+	 * @return
+	 */
+	public double getAbsoluteZ();
+	/**
+	 * Get the C position of the Head, without perception offsets applied.
+	 * @return
+	 */
+	public double getAbsoluteC();
 	
 	/**
 	 * Move the Head to the given position. Values are in Machine native units. Heads are not

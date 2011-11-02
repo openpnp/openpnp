@@ -145,7 +145,7 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 				this.y = y1 + (vy / mag * distance);
 				this.c = c1 + (va / mag * distance);
 				
-				head.updateCoordinates(this.x, this.y, this.z, this.c);
+//				head.updateCoordinates(this.x, this.y, this.z, this.c);
 				
 				repaint();
 				
@@ -163,7 +163,7 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 			this.y = y;
 			this.c = c;
 			
-			head.updateCoordinates(this.x, this.y, this.z, this.c);
+//			head.updateCoordinates(this.x, this.y, this.z, this.c);
 			
 			repaint();
 
@@ -174,7 +174,7 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 			while (distance < mag) {
 				this.z = z1 + (vz / mag * distance);
 
-				head.updateCoordinates(this.x, this.y, this.z, this.c);
+//				head.updateCoordinates(this.x, this.y, this.z, this.c);
 
 				repaint();
 				
@@ -190,7 +190,7 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 			
 			this.z = z;
 
-			head.updateCoordinates(this.x, this.y, this.z, this.c);
+//			head.updateCoordinates(this.x, this.y, this.z, this.c);
 			
 			repaint();
 		}

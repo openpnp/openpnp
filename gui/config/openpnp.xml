@@ -9,7 +9,7 @@
 						</Settings>
 				</Configuration>
 			</Driver>
-			
+
 			 <Heads>
 			 	<Head reference="H1" class="org.openpnp.machine.reference.ReferenceHead">
 			 	</Head>

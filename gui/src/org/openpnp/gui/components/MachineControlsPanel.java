@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
@@ -42,10 +43,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Hashtable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -55,11 +57,11 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import org.openpnp.LengthUnit;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.util.LengthUtil;
 
 /**
@@ -69,16 +71,15 @@ import org.openpnp.util.LengthUtil;
  * Status: LEDs for vac and actuators. TODO This part is not machine independant. Need to think about that.
  * Also: Radio buttons to select mm or inch.
  * TODO add a dropdown to select Head
- * TODO think about how commands to the machine should interface with the GUI. The GUI should not lock up while running
- * a command. Should the Machine queue the commands and have a way to check if it's done yet?
  * TODO We may need a MachineManager that synchronizes access to the Machine and provides status about it, along
- * with offset management. 
+ * with offset management.
+ * TODO disable controls when machine is not enabled 
  * @author jason
  */
-public class MachineControlsPanel extends JPanel {
+public class MachineControlsPanel extends JPanel implements MachineListener {
 	private Machine machine;
+	private Head head;
 	private LengthUnit units;
-	private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
 
 	private JTextField textFieldX;
 	private JTextField textFieldY;
@@ -87,30 +88,24 @@ public class MachineControlsPanel extends JPanel {
 	private JSlider sliderIncrements;
 	private JRadioButton rdbtnMm;
 	private JRadioButton rdbtnInch;
+	private JButton btnStartStop;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
+	
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Create the panel.
 	 */
 	public MachineControlsPanel() {
 		createUi();
-		
-		// TODO it would be better if the Machine notified us of updates, then it could provide more timely
-		// updates
-		scheduler.scheduleAtFixedRate(new Runnable() {
-			public void run() {
-				if (!SwingUtilities.isEventDispatchThread()) {
-					SwingUtilities.invokeLater(this);
-					return;
-				}
-				updateDros();
-			}
-		}, 250, 250, TimeUnit.MILLISECONDS);
 	}
 	
 	public void setMachine(Machine machine) {
 		this.machine = machine;
+		this.head = machine.getHeads().get(0);
 		setUnits(machine.getNativeUnits());
+		machine.addListener(this);
+		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
 	}
 	
 	private void setUnits(LengthUnit units) {
@@ -143,7 +138,6 @@ public class MachineControlsPanel extends JPanel {
 		if (machine == null || units == null) {
 			return;
 		}
-		Head head = machine.getHeads().get(0);
 		double x = head.getX();
 		double y = head.getY();
 		double z = head.getZ();
@@ -177,51 +171,84 @@ public class MachineControlsPanel extends JPanel {
 		}
 	}
 	
-	private void jog(int x, int y, int z, int c) {
-		Head head = machine.getHeads().get(0);
-		double xPos = head.getX();
-		double yPos = head.getY();
-		double zPos = head.getZ();
-		double cPos = head.getC();
-		
-		double jogIncrement = LengthUtil.convertLength(getJogIncrement(), units, machine.getNativeUnits());
-		
-		if (x > 0) {
-			xPos += jogIncrement;
-		}
-		else if (x < 0) {
-			xPos -= jogIncrement;
-		}
-		
-		if (y > 0) {
-			yPos += jogIncrement;
-		}
-		else if (y < 0) {
-			yPos -= jogIncrement;
-		}
-		
-		if (z > 0) {
-			zPos += jogIncrement;
-		}
-		else if (z < 0) {
-			zPos -= jogIncrement;
-		}
-		
-		if (c > 0) {
-			cPos += jogIncrement;
-		}
-		else if (c < 0) {
-			cPos -= jogIncrement;
-		}
-		
-		try {
-			head.moveTo(xPos, yPos, zPos, cPos);
-		}
-		catch (Exception e) {
-			// TODO
-		}
+	private void jog(final int x, final int y, final int z, final int c) {
+		executor.execute(new Runnable() {
+			public void run() {
+				try {
+					double xPos = head.getX();
+					double yPos = head.getY();
+					double zPos = head.getZ();
+					double cPos = head.getC();
+					
+					double jogIncrement = LengthUtil.convertLength(getJogIncrement(), units, machine.getNativeUnits());
+					
+					if (x > 0) {
+						xPos += jogIncrement;
+					}
+					else if (x < 0) {
+						xPos -= jogIncrement;
+					}
+					
+					if (y > 0) {
+						yPos += jogIncrement;
+					}
+					else if (y < 0) {
+						yPos -= jogIncrement;
+					}
+					
+					if (z > 0) {
+						zPos += jogIncrement;
+					}
+					else if (z < 0) {
+						zPos -= jogIncrement;
+					}
+					
+					if (c > 0) {
+						cPos += jogIncrement;
+					}
+					else if (c < 0) {
+						cPos -= jogIncrement;
+					}
+					
+					head.moveTo(xPos, yPos, zPos, cPos);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+					// TODO
+				}
+			}
+		});
 	}
 	
+	@Override
+	public void machineHeadActivity(Machine machine, Head head) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				updateDros();
+			}
+		});
+	}
+
+	@Override
+	public void machineStarted(Machine machine) {
+		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+	}
+
+	@Override
+	public void machineStartFailed(Machine machine, String reason) {
+		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+	}
+
+	@Override
+	public void machineStopped(Machine machine, String reason) {
+		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+	}
+
+	@Override
+	public void machineStopFailed(Machine machine, String reason) {
+		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+	}
+
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
@@ -490,12 +517,12 @@ public class MachineControlsPanel extends JPanel {
 		add(panel_2);
 		panel_2.setLayout(new BorderLayout(0, 0));
 		
-		JButton btnEstop = new JButton("E-STOP");
-		btnEstop.setFocusable(false);
-		btnEstop.setForeground(new Color(178, 34, 34));
-		panel_2.add(btnEstop);
-		btnEstop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
-		btnEstop.setPreferredSize(new Dimension(160, 70));
+		btnStartStop = new JButton(startMachineAction);
+		btnStartStop.setFocusable(false);
+		btnStartStop.setForeground(new Color(178, 34, 34));
+		panel_2.add(btnStartStop);
+		btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
+		btnStartStop.setPreferredSize(new Dimension(160, 70));
 		
 		setFocusTraversalPolicy(new FocusPolicy());
 		setFocusTraversalPolicyProvider(true);
@@ -537,6 +564,34 @@ public class MachineControlsPanel extends JPanel {
 		
 	}
 	
+	@SuppressWarnings("serial")
+	private Action stopMachineAction = new AbstractAction("STOP") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			try {
+				machine.stop();
+			}
+			catch (Exception e) {
+				// TODO
+				e.printStackTrace();
+			}
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action startMachineAction = new AbstractAction("START") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			try {
+				machine.start();
+			}
+			catch (Exception e) {
+				// TODO
+				e.printStackTrace();
+			}
+		}
+	};
+	
 	// TODO this insanity needs to be tested for cross platform happiness
 	MouseListener droMouseListener = new MouseAdapter() {
 		private boolean hadFocus;
@@ -559,7 +614,19 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			JTextField dro = (JTextField) e.getSource();
-			System.out.println("Set " + dro.getText());
+			double value = Double.parseDouble(dro.getText());
+			if (dro == textFieldX) {
+				head.setPerceivedX(value);
+			}
+			else if (dro == textFieldY) {
+				head.setPerceivedY(value);
+			}
+			else if (dro == textFieldZ) {
+				head.setPerceivedZ(value);
+			}
+			else if (dro == textFieldC) {
+				head.setPerceivedC(value);
+			}
 			sliderIncrements.requestFocusInWindow();
 		}
 	};
@@ -579,6 +646,7 @@ public class MachineControlsPanel extends JPanel {
 			dro.setBackground(new Color(143, 188, 143));
 			dro.setSelectionEnd(0);
 			dro.setSelectionEnd(0);
+			updateDros();
 		}
 	};
 }

@@ -39,8 +39,6 @@ import org.openpnp.Part;
  * For instance, if the Feeder is setup to feed 5mm cut tape, the user
  * may run a 0805 resistor in the Feeder for one job and a 0805 capacitor
  * in the same Feeder for a different job.
- * 
- * 
  */
 public interface Feeder {
 	/**
@@ -53,6 +51,7 @@ public interface Feeder {
 	 * Returns true if the Feeder is ready and willing to source the Part.
 	 * @return
 	 */
+	// TODO this probably needs to either just go away, or have the Part passed to it
 	boolean available(); 
 	
 	

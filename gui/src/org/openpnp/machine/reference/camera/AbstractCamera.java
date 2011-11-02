@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ import org.w3c.dom.Node;
  *
  */
 public abstract class AbstractCamera implements ReferenceCamera {
-	protected Set<ListenerEntry> listeners = new HashSet<ListenerEntry>();
+	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
 	protected String name;
 	protected ReferenceHead head;
 	protected Location location;

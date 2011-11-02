@@ -78,4 +78,11 @@ public interface ReferenceDriver {
 	 * @throws Exception
 	 */
 	public void actuate(ReferenceHead head, int index, boolean on) throws Exception;
+	
+	/**
+	 * Attempts to enable the Driver, turning on all outputs. 
+	 * @param enabled
+	 * @throws Exception
+	 */
+	public void setEnabled(boolean enabled) throws Exception;
 }

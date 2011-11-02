@@ -32,6 +32,7 @@ import org.w3c.dom.Node;
 /**
  * Machine represents the pick and place machine itself. It provides the information and interface needed to
  * cause the machine to do work. A Machine has one or more Heads.
+ * Unless otherwise noted, the methods in this class block while performing their operations.
  */
 public interface Machine {
 	/**
@@ -78,4 +79,35 @@ public interface Machine {
 	 * @param job
 	 */
 	void prepareJob(Configuration configuration, Job job) throws Exception;
+	
+	/**
+	 * Returns whether the Machine is currently ready for commands. 
+	 */
+	boolean isReady();
+	
+	/**
+	 * Attempts to bring the Machine to a ready state. This would include turning on motor
+	 * drivers, turning on compressors, resetting solenoids, etc. If the Machine is unable to
+	 * become ready for any reason it should throw an Exception explaining the reason. This method
+	 * should block until the Machine is ready.
+	 * After this method is called successfully, isReady() should return true unless the Machine
+	 * encounters some error.
+	 */
+	void start() throws Exception;
+	
+	/**
+	 * Stops the machine and disables it as soon as possible. This may include turning off power to
+	 * motors and stopping compressors. It is expected that the machine may need to be re-homed after
+	 * this is called. 
+	 * If the Machine cannot be stopped for any reason, this method may throw an Exception explaining
+	 * the reason but this should probably only happen in very extreme cases.
+	 * This method should effectively be considered a software emergency stop.
+	 * After this method return, isReady() should return false until start() is successfully
+	 * called again.
+	 */
+	void stop() throws Exception;
+	
+	void addListener(MachineListener listener);
+	
+	void removeListener(MachineListener listener);
 }

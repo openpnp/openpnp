@@ -22,9 +22,12 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -39,6 +42,7 @@ import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -47,7 +51,9 @@ public class ReferenceMachine implements Machine {
 	private Map<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
 	private Map<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	private ReferenceDriver driver;
-	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
+	private List<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
+	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
+	private boolean ready;
 	
 	public void configure(Node n) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
@@ -126,7 +132,6 @@ public class ReferenceMachine implements Machine {
 
 	@Override
 	public List<Head> getHeads() {
-		// TODO this is really wasteful, gotta be a better way
 		ArrayList<Head> l = new ArrayList<Head>();
 		l.addAll(heads.values());
 		return l;
@@ -138,7 +143,6 @@ public class ReferenceMachine implements Machine {
 	
 	@Override
 	public List<Camera> getCameras() {
-		// TODO this is really wasteful, gotta be a better way
 		ArrayList<Camera> l = new ArrayList<Camera>();
 		l.addAll(cameras);
 		return l;
@@ -158,5 +162,76 @@ public class ReferenceMachine implements Machine {
 	
 	ReferenceDriver getDriver() {
 		return driver;
+	}
+
+	@Override
+	public boolean isReady() {
+		return ready;
+	}
+
+	@Override
+	public void start() throws Exception {
+		try {
+			driver.setEnabled(true);
+			ready = true;
+		}
+		catch (Exception e) {
+			fireMachineStartFailed(this, e.getMessage());
+			throw e;
+		}
+		fireMachineStarted(this);
+	}
+
+	@Override
+	public void stop() throws Exception {
+		try {
+			driver.setEnabled(false);
+			ready = false;
+		}
+		catch (Exception e) {
+			fireMachineStopFailed(this, e.getMessage());
+			throw e;
+		}
+		fireMachineStopped(this, "User requested stop.");
+	}
+
+	@Override
+	public void addListener(MachineListener listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(MachineListener listener) {
+		listeners.remove(listener);
+	}
+	
+	void fireMachineHeadActivity(Machine machine, Head head) {
+		for (MachineListener listener : listeners) {
+			listener.machineHeadActivity(machine, head);
+		}
+	}
+	
+	private void fireMachineStarted(Machine machine) {
+		for (MachineListener listener : listeners) {
+			listener.machineStarted(machine);
+		}
+	}
+	
+	private void fireMachineStartFailed(Machine machine, String reason) {
+		for (MachineListener listener : listeners) {
+			listener.machineStartFailed(machine, reason);
+		}
+	}
+	
+	private void fireMachineStopped(Machine machine, String reason) {
+		for (MachineListener listener : listeners) {
+			listener.machineStopped(machine, reason);
+		}
+	}
+	
+	private void fireMachineStopFailed(Machine machine, String reason) {
+		for (MachineListener listener : listeners) {
+			listener.machineStopFailed(machine, reason);
+		}
 	}
 }
