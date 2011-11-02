@@ -29,6 +29,7 @@
 #include <util/delay.h>
 #include "nuts_bolts.h"
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 #include "planner.h"
 #include "wiring_serial.h"
 
@@ -233,6 +234,8 @@ void st_init()
   LIMIT_DDR &= ~(LIMIT_MASK);
   STEPPERS_ENABLE_DDR |= 1<<STEPPERS_ENABLE_BIT;
   
+  st_disable();
+  
 	// waveform generation = 0100 = CTC
 	TCCR1B &= ~(1<<WGM13);
 	TCCR1B |=  (1<<WGM12);
@@ -252,10 +255,22 @@ void st_init()
   DISABLE_STEPPER_DRIVER_INTERRUPT();  
   trapezoid_tick_cycle_counter = 0;
   
-  // set enable pin     
-  STEPPERS_ENABLE_PORT |= (1<<STEPPERS_ENABLE_BIT);
-     
   sei();
+}
+
+void st_enable() {
+  STEPPERS_ENABLE_PORT = (STEPPERS_ENABLE_PORT & ~(1<<STEPPERS_ENABLE_BIT)) | 
+  	((1<<STEPPERS_ENABLE_BIT) ^ (STEPPERS_ENABLE_INVERT<<STEPPERS_ENABLE_BIT));
+}
+
+void st_disable() {
+  STEPPERS_ENABLE_PORT = (STEPPERS_ENABLE_PORT & ~(1<<STEPPERS_ENABLE_BIT)) | 
+  	(STEPPERS_ENABLE_INVERT<<STEPPERS_ENABLE_BIT);
+}
+
+int st_is_enabled() {
+  return !!((STEPPERS_ENABLE_DDR & (1<<STEPPERS_ENABLE_BIT)) && 
+    ((STEPPERS_ENABLE_PORT & (1<<STEPPERS_ENABLE_BIT)) ^ (STEPPERS_ENABLE_INVERT<<STEPPERS_ENABLE_BIT)));
 }
 
 // Block until all buffered steps are executed

@@ -293,10 +293,6 @@ uint8_t gc_execute_line(char *line) {
   // in any intermediate location.
   memcpy(gc.position, target, sizeof(double)*3); // gc.position[] = target[];
   
-  // mc_dwell waits for all commands to complete. This effectively disables the
-  // command queueing
-  mc_dwell(0);
-  
   return(gc.status_code);
 }
 

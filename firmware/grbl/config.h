@@ -56,7 +56,7 @@
 #define STEPPERS_ENABLE_DDR     DDRC
 #define STEPPERS_ENABLE_PORT    PORTC
 #define STEPPERS_ENABLE_BIT     4
-#define STEPPERS_ENABLE_INVERT  0
+#define STEPPERS_ENABLE_INVERT  1
 
 // For performance reasons it is neccesary to have all of the
 // step outputs on one port. They cannot be split across

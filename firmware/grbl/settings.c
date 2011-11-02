@@ -24,6 +24,7 @@
 #include "settings.h"
 #include "eeprom.h"
 #include "wiring_serial.h"
+#include "stepper.h"
 #include <avr/pgmspace.h>
 
 settings_t settings;
@@ -54,6 +55,10 @@ void settings_reset() {
 }
 
 void settings_dump() {
+  printPgmString(PSTR("$VERSION = "));
+  printPgmString(PSTR(GRBL_VERSION));
+  printPgmString(PSTR("\r\n"));
+  
   printPgmString(PSTR("$0 = ")); 
   printFloat(settings.steps_per_mm[X_AXIS]);
   printPgmString(PSTR(" (steps/mm x)\r\n"));
@@ -94,6 +99,10 @@ void settings_dump() {
   printFloat(settings.max_jerk);
   printPgmString(PSTR(" (max instant cornering speed change in delta mm/min)\r\n"));
   
+  printPgmString(PSTR("$1000 = "));
+  printInteger(st_is_enabled());
+  printPgmString(PSTR(" (steppers: 0 = disabled, 1 = enabled)\r\n"));
+	
   printPgmString(PSTR("'$x=value' to set parameter or just '$' to dump current settings\r\n"));
 }
 
@@ -137,6 +146,10 @@ void settings_store_setting(int parameter, double value) {
     case 7: settings.mm_per_arc_segment = value; break;
     case 8: settings.acceleration = value; break;
     case 9: settings.max_jerk = fabs(value); break;
+    case 1000:
+	  if (!!value) st_enable();
+      else st_disable();
+      return;
     default: 
       printPgmString(PSTR("Unknown parameter\r\n"));
       return;
@@ -148,7 +161,8 @@ void settings_store_setting(int parameter, double value) {
 // Initialize the config subsystem
 void settings_init() {
   if(read_settings()) {
-    printPgmString(PSTR("'$' to dump current settings\r\n"));
+    //printPgmString(PSTR("'$' to dump current settings\r\n"));
+	settings_dump();
   } else {
     printPgmString(PSTR("Warning: Failed to read EEPROM settings. Using defaults.\r\n"));
     settings_reset();

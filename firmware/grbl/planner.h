@@ -58,7 +58,7 @@ typedef struct {
 void plan_init();
 
 // Add a new linear movement to the buffer. x, y and z is the signed, absolute target position in 
-// millimaters. Feed rate specifies the speed of the motion. If feed rate is inverted, the feed
+// millimeters. Feed rate specifies the speed of the motion. If feed rate is inverted, the feed
 // rate is taken to mean "frequency" and would complete the operation in 1/feed_rate minutes.
 void plan_buffer_line(double x, double y, double z, double c, double feed_rate, int invert_feed_rate);
 

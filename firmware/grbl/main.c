@@ -24,6 +24,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "spindle_control.h"
+#include "coolant_control.h"
 #include "motion_control.h"
 #include "gcode.h"
 #include "serial_protocol.h"
