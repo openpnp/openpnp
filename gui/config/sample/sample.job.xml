@@ -1,6 +1,44 @@
 <?xml version="1.0"?>
+<!--
+	Job: required
+		Describes a Job for the machine to execute. A Job contains one or more
+		Boards, the locations of where parts should be placed on them and
+		the locations of the boards on the machine. In this way, you can
+		define a board one time and place multiple copies of it at once.
+		
+	Attributes:
+		reference: required
+			
+		name: optional
+		
+	Elements:
+		Boards: required
+		
+		BoardLocations: required
+  -->
 <Job reference="BTPD-V4" name="BrewTroller PID Display v4">
+	<!--
+		Boards: required
+		
+		Attributes:
+			None
+			
+		Elements:
+			Board: required
+	  -->
 	<Boards>
+		<!--
+			Board:
+				Defines all the placements for a single PCB.
+				
+			Attributes:
+				reference: required
+				
+			Elements:
+				Outline: optional
+				
+				Placements: required 
+		  -->
 		<Board reference="BTPDv4">
 			<Outline units="Inches">
 				<Point x="0" y="0"/>

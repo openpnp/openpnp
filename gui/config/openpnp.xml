@@ -16,7 +16,6 @@
 			 </Heads>
 			 
 			<Cameras>
-				<!-- 
 				<Camera
 					name="Head Tele"
 					head="H1"
@@ -27,7 +26,6 @@
 					<UnitsPerPixel units="Millimeters" x="0.071875" y="0.070833" />
 					<Configuration deviceId="?" />
 				</Camera>
-				-->
 			</Cameras>
 			
 			<Feeders>

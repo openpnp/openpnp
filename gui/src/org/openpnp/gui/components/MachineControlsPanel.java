@@ -72,11 +72,9 @@ import org.openpnp.util.LengthUtil;
  * Contains controls, DROs and status for the machine.
  * Controls: C right / left, X + / -, Y + / -, Z + / -, stop, pause, slider for jog increment
  * DROs: X, Y, Z, C
+ * Radio buttons to select mm or inch.
  * Status: LEDs for vac and actuators. TODO This part is not machine independant. Need to think about that.
- * Also: Radio buttons to select mm or inch.
  * TODO add a dropdown to select Head
- * TODO We may need a MachineManager that synchronizes access to the Machine and provides status about it, along
- * with offset management.
  * TODO disable controls when machine is not enabled 
  * @author jason
  */
@@ -111,7 +109,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		setUnits(machine.getNativeUnits());
 		machine.addListener(this);
 		comboBoxCoordinateSystem.removeAllItems();
-		comboBoxCoordinateSystem.addItem("Working");
+		comboBoxCoordinateSystem.addItem("Tool");
 		for (Camera camera : machine.getCameras()) {
 			if (camera.getHead() != null) {
 				comboBoxCoordinateSystem.addItem(new CameraItem(camera));
@@ -153,7 +151,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 			return;
 		}
 		double x = 0, y = 0, z = 0, c = 0;
-		if (comboBoxCoordinateSystem.getSelectedItem() == null || comboBoxCoordinateSystem.getSelectedItem().equals("Working")) {
+		if (comboBoxCoordinateSystem.getSelectedItem() == null || comboBoxCoordinateSystem.getSelectedItem().equals("Tool")) {
 			x = head.getX();
 			y = head.getY();
 			z = head.getZ();
@@ -327,7 +325,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		panelDrosFirstLine.add(textFieldX);
 		textFieldX.setColumns(6);
 		textFieldX.addFocusListener(droFocusListener);
-		textFieldX.addActionListener(droActionListener);
+		textFieldX.setAction(droAction);
 		textFieldX.addMouseListener(droMouseListener);
 		
 		Component horizontalStrut = Box.createHorizontalStrut(15);
@@ -347,7 +345,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		panelDrosFirstLine.add(textFieldY);
 		textFieldY.setColumns(6);
 		textFieldY.addFocusListener(droFocusListener);
-		textFieldY.addActionListener(droActionListener);
+		textFieldY.setAction(droAction);
 		textFieldY.addMouseListener(droMouseListener);
 		
 		JPanel panelDrosSecondLine = new JPanel();
@@ -367,7 +365,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		textFieldC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldC.setColumns(6);
 		textFieldC.addFocusListener(droFocusListener);
-		textFieldC.addActionListener(droActionListener);
+		textFieldC.setAction(droAction);
 		textFieldC.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldC);
 		
@@ -387,7 +385,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		textFieldZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldZ.setColumns(6);
 		textFieldZ.addFocusListener(droFocusListener);
-		textFieldZ.addActionListener(droActionListener);
+		textFieldZ.setAction(droAction);
 		textFieldZ.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldZ);
 		
@@ -637,7 +635,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
-	MouseListener droMouseListener = new MouseAdapter() {
+	private MouseListener droMouseListener = new MouseAdapter() {
 		private boolean hadFocus;
 
 		@Override
@@ -654,7 +652,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
-	ActionListener droActionListener = new ActionListener() {
+	@SuppressWarnings("serial")
+	private Action droAction = new AbstractAction() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			JTextField dro = (JTextField) e.getSource();
@@ -696,7 +695,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
-	FocusListener droFocusListener = new FocusAdapter() {
+	private FocusListener droFocusListener = new FocusAdapter() {
 		@Override
 		public void focusGained(FocusEvent e) {
 			JTextField dro = (JTextField) e.getComponent();
@@ -715,9 +714,15 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
-	ActionListener coordinateSystemSelectedAction = new ActionListener() {
+	private ActionListener coordinateSystemSelectedAction = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (comboBoxCoordinateSystem.getSelectedItem().equals("Absolute")) {
+				droAction.setEnabled(false);
+			}
+			else {
+				droAction.setEnabled(true);
+			}
 			updateDros();
 		}
 	};
