@@ -33,6 +33,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
+import org.openpnp.gui.support.CameraItem;
 import org.openpnp.spi.Camera;
 
 /**

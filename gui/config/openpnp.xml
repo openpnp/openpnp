@@ -2,7 +2,7 @@
 <OpenPnP>
 	<Machine class="org.openpnp.machine.reference.ReferenceMachine">
 		<Configuration>
-			<Driver class="org.openpnp.machine.reference.driver.GrblDriver">
+			<Driver class="org.openpnp.machine.reference.driver.SimulatorDriver">
 				<Configuration>
 					<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
 						<Settings>
@@ -16,6 +16,7 @@
 			 </Heads>
 			 
 			<Cameras>
+				<!-- 
 				<Camera
 					name="Head Tele"
 					head="H1"
@@ -26,6 +27,7 @@
 					<UnitsPerPixel units="Millimeters" x="0.071875" y="0.070833" />
 					<Configuration deviceId="?" />
 				</Camera>
+				-->
 			</Cameras>
 			
 			<Feeders>
@@ -53,10 +55,9 @@
 						<FeedEndLocation units="Millimeters" x="102" y="180" z="50" />
 					</Configuration>
 				</Feeder>
-				<Feeder reference="L4" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
-						<FeedStartLocation units="Millimeters" x="100" y="190" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="190" z="50" />
+				<Feeder reference="L4" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
+					<Configuration trayCountX="4" trayCountY="4">
+						<Offsets units="Millimeters" x="-3" y="-3" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L5" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
@@ -78,18 +79,18 @@
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L8" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration>
-						<Location units="Millimeters" x="100" y="180" z="0" rotation="0"/>
+					<Configuration trayCountX="10" trayCountY="2">
+						<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L9" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration>
-						<Location units="Millimeters" x="100" y="190" z="0" rotation="0"/>
+					<Configuration trayCountX="10" trayCountY="2">
+						<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L10" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration>
-						<Location units="Millimeters" x="100" y="200" z="0" rotation="0"/>
+					<Configuration trayCountX="10" trayCountY="2">
+						<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
 					</Configuration>
 				</Feeder>
 			</Feeders>

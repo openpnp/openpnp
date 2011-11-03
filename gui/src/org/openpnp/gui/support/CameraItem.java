@@ -1,8 +1,8 @@
-package org.openpnp.gui.components;
+package org.openpnp.gui.support;
 
 import org.openpnp.spi.Camera;
 
-class CameraItem {
+public class CameraItem {
 	private Camera camera;
 	
 	public CameraItem(Camera camera) {

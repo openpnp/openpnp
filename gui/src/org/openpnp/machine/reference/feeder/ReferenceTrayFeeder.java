@@ -25,6 +25,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.openpnp.Configuration;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
@@ -35,53 +36,57 @@ import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;
 
 /**
- * Implemention of Feeder that indexes based on an offset. This allows a tray of parts to be picked from without moving any tape. 
+ * Implemention of Feeder that indexes based on an offset. This allows a tray of parts to be picked from without moving any tape.
+ * Can handle trays of arbitrary X and Y count.
+	<pre>
+		<Configuration trayCountX="10" trayCountY="2">
+			<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
+		</Configuration>
+	</pre>
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
-	private Location location;
-	// TODO Will need to know the starting position of the component, how many components in X and Y there are and the offsets in X and Y to index the components
+	private int trayCountX;
+	private int trayCountY;
+	private Location offsets;  
+	
 	private int pickCount;
-	private double offset = -10;
 	
 	@Override
 	public void configure(Node n) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		
-		Node locationNode = (Node) xpath.evaluate("Location", n, XPathConstants.NODE);
+		trayCountX = (int) Configuration.getDoubleAttribute(n, "trayCountX");
+		trayCountY = (int) Configuration.getDoubleAttribute(n, "trayCountY");
+		
+		Node offsetsNode = (Node) xpath.evaluate("Offsets", n, XPathConstants.NODE);
 
-		location = new Location();
-		location.parse(locationNode);
-		location = LengthUtil.convertLocation(location, LengthUnit.Millimeters);
+		offsets = new Location();
+		offsets.parse(offsetsNode);
+		offsets = LengthUtil.convertLocation(offsets, LengthUnit.Millimeters);
 	}
 	
 	@Override
 	public boolean available() {
-		return true;
+		return (pickCount < (trayCountX * trayCountY));
 	}
 
-	public Location getLocation() {
-		return location;
-	}
-
-	public void setLocation(Location location) {
-		this.location = location;
-	}
-	
 	public Location feed(Head head_, Part part, Location pickLocation) throws Exception {
 		ReferenceHead head = (ReferenceHead) head_;
 		
+		int partX = (pickCount / trayCountX);
+		int partY = (pickCount - (partX * trayCountX));
+		
 		Location l = new Location();
-		l.setX(pickLocation.getX() + (pickCount * offset));
-		l.setY(pickLocation.getY());
+		l.setX(pickLocation.getX() + (partX * offsets.getX()));
+		l.setY(pickLocation.getY() + (partY * offsets.getY()));
 		l.setZ(pickLocation.getZ());
 		l.setRotation(pickLocation.getRotation());
 		l.setUnits(pickLocation.getUnits());
+		
+		System.out.println(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f", pickCount, partX, partY, l.getX(), l.getY()));
+		
 		pickCount++;
+		
 		return l; 
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("ReferenceTapeFeeder reference %s, location %s", reference, location);
 	}
 }

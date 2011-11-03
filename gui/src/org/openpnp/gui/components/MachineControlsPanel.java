@@ -61,6 +61,7 @@ import javax.swing.JTextField;
 
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
+import org.openpnp.gui.support.CameraItem;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -112,7 +113,9 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		comboBoxCoordinateSystem.removeAllItems();
 		comboBoxCoordinateSystem.addItem("Working");
 		for (Camera camera : machine.getCameras()) {
-			comboBoxCoordinateSystem.addItem(new CameraItem(camera));
+			if (camera.getHead() != null) {
+				comboBoxCoordinateSystem.addItem(new CameraItem(camera));
+			}
 		}
 		comboBoxCoordinateSystem.addItem("Absolute");
 		comboBoxCoordinateSystem.setSelectedIndex(0);
@@ -634,7 +637,6 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
-	// TODO this insanity needs to be tested for cross platform happiness
 	MouseListener droMouseListener = new MouseAdapter() {
 		private boolean hadFocus;
 
@@ -652,22 +654,42 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 	};
 	
-	// TODO needs to act differently if they are viewing the camera coordinate system
 	ActionListener droActionListener = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			JTextField dro = (JTextField) e.getSource();
 			double value = Double.parseDouble(dro.getText());
+
+			Location cameraLocation = null;
+			if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
+				CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
+				Camera camera = cameraItem.getCamera();
+				cameraLocation = camera.getLocation();
+				cameraLocation = LengthUtil.convertLocation(cameraLocation, machine.getNativeUnits());
+			}
+			
 			if (dro == textFieldX) {
+				if (cameraLocation != null) {
+					value -= cameraLocation.getX();
+				}
 				head.setPerceivedX(value);
 			}
 			else if (dro == textFieldY) {
+				if (cameraLocation != null) {
+					value -= cameraLocation.getY();
+				}
 				head.setPerceivedY(value);
 			}
 			else if (dro == textFieldZ) {
+				if (cameraLocation != null) {
+					value -= cameraLocation.getZ();
+				}
 				head.setPerceivedZ(value);
 			}
 			else if (dro == textFieldC) {
+				if (cameraLocation != null) {
+					value -= cameraLocation.getRotation();
+				}
 				head.setPerceivedC(value);
 			}
 			sliderIncrements.requestFocusInWindow();
