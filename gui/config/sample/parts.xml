@@ -28,11 +28,49 @@
 				Height of the part in physical units.
 			
 			height-units: required
-				Physical units used to define the height of the part. 
+				Physical units used to define the height of the part.
+				
+		Elements:
+			FeederLocations: required
 	  -->
 	<Part reference="C-0805-100NF" package="0805" height="0.030" height-units="Inches">
+		<!--
+			FeederLocations: required
+				Specifies one or more FeederLocation elements.
+				
+			Attributes:
+				None
+			
+			Elements:
+				FeederLocation: required
+		  -->
 		<FeederLocations>
+			<!--
+				FeederLocation: required
+					One location where the part can be picked from.
+					
+				Attributes:
+					feeder: required
+						A reference to a Feeder defined in openpnp.xml.
+						
+				Elements:
+					Location: required
+			  -->
 			<FeederLocation feeder="L0">
+				<!-- 
+					Location: required
+						The location where the part should be picked from the Feeder
+						once the Feeder has finished feeding it. Some feeders will
+						modify this location as they progress through their stock of
+						parts. In that case, this location should be the location
+						of the first part in the Feeder. 
+					
+					Attributes:
+						None
+						
+					Elements:
+						None
+				  -->
 				<Location units="Millimeters" x="100" y="100" z="82" rotation="0"/>
 			</FeederLocation>
 		</FeederLocations>
