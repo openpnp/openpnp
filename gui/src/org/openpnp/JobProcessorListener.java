@@ -56,4 +56,6 @@ public interface JobProcessorListener {
 	public void partProcessingCompleted(JobBoard board, Placement placement);
 	
 	// TODO maybe partProcessingFailed with a reason
+	
+	public void detailedStatusUpdated(String status);
 }

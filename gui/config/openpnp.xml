@@ -23,7 +23,7 @@
 					looking="Down"
 					>
 					<Location units="Millimeters" x="0" y="-50" z="0" rotation="0" />
-					<UnitsPerPixel units="Millimeters" x="0.071875" y="0.070833" />
+					<UnitsPerPixel units="Millimeters" x="0.070898" y="0.066935" />
 					<Configuration deviceId="?" />
 				</Camera>
 			</Cameras>

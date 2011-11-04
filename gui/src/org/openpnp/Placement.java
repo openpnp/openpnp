@@ -25,6 +25,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.openpnp.Board.Side;
 import org.w3c.dom.Node;
 
 
@@ -36,16 +37,13 @@ public class Placement {
 	private String reference;
 	private Part part;
 	private Location location;
-	/**
-	 * True if the Part is on the bottom of the Board. False if it's on the top. 
-	 */
-	private boolean onBottom;
+	private Side side;
 	
 	public void parse(Node n, Configuration c) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 
 		reference = Configuration.getAttribute(n, "reference");
-		onBottom = Boolean.parseBoolean(Configuration.getAttribute(n, "bottom", "false"));
+		side = Side.valueOf(Configuration.getAttribute(n, "side", "Top"));
 		part = c.getPart(Configuration.getAttribute(n, "part"));
 		location = new Location();
 		location.parse((Node) xpath.evaluate("Location", n, XPathConstants.NODE));
@@ -75,16 +73,16 @@ public class Placement {
 		this.part = part;
 	}
 	
-	boolean isOnBottom() {
-		return onBottom;
+	public Side getSide() {
+		return side;
 	}
 
-	void setOnBottom(boolean onBottom) {
-		this.onBottom = onBottom;
+	public void setSide(Side side) {
+		this.side = side;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("reference %s, onBottom %s, part (%s), location (%s)", onBottom, reference, part, location);
+		return String.format("reference %s, onBottom %s, part (%s), location (%s)", side, reference, part, location);
 	}
 }

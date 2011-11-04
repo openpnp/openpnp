@@ -92,6 +92,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	private JRadioButton rdbtnInch;
 	private JButton btnStartStop;
 	private JComboBox comboBoxCoordinateSystem;
+	private JButton btnXMinus, btnXPlus, btnYMinus, btnYPlus, btnZMinus, btnZPlus, btnCMinus, btnCPlus;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -118,6 +119,22 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		comboBoxCoordinateSystem.addItem("Absolute");
 		comboBoxCoordinateSystem.setSelectedIndex(0);
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+		
+		setEnabled(machine.isReady());
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		droAction.setEnabled(enabled);
+		btnXMinus.setEnabled(enabled);
+		btnXPlus.setEnabled(enabled);
+		btnYMinus.setEnabled(enabled);
+		btnYPlus.setEnabled(enabled);
+		btnZMinus.setEnabled(enabled);
+		btnZPlus.setEnabled(enabled);
+		btnCMinus.setEnabled(enabled);
+		btnCPlus.setEnabled(enabled);
 	}
 	
 	private void setUnits(LengthUnit units) {
@@ -430,7 +447,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbl_panelControls.rowHeights = new int[] { 25, 25, 25, 25, 25, 25 };
 		panelControls.setLayout(gbl_panelControls);
 		
-		JButton btnYPlus = new JButton("Y+");
+		btnYPlus = new JButton("Y+");
 		btnYPlus.setFocusable(false);
 		btnYPlus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -445,7 +462,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnYPlus.gridy = 0;
 		panelControls.add(btnYPlus, gbc_btnYPlus);
 		
-		JButton btnZPlus = new JButton("Z+");
+		btnZPlus = new JButton("Z+");
 		btnZPlus.setFocusable(false);
 		btnZPlus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -461,7 +478,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnZPlus.gridy = 0;
 		panelControls.add(btnZPlus, gbc_btnZPlus);
 		
-		JButton btnXMinus = new JButton("X-");
+		btnXMinus = new JButton("X-");
 		btnXMinus.setFocusable(false);
 		btnXMinus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -477,7 +494,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnXMinus.gridy = 2;
 		panelControls.add(btnXMinus, gbc_btnXMinus);
 		
-		JButton btnXPlus = new JButton("X+");
+		btnXPlus = new JButton("X+");
 		btnXPlus.setFocusable(false);
 		btnXPlus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -493,7 +510,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnXPlus.gridy = 2;
 		panelControls.add(btnXPlus, gbc_btnXPlus);
 		
-		JButton btnCMinus = new JButton("C-");
+		btnCMinus = new JButton("C-");
 		btnCMinus.setFocusable(false);
 		btnCMinus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -509,7 +526,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnCMinus.gridy = 1;
 		panelControls.add(btnCMinus, gbc_btnCMinus);
 		
-		JButton btnCPlus = new JButton("C+");
+		btnCPlus = new JButton("C+");
 		btnCPlus.setFocusable(false);
 		btnCPlus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -525,7 +542,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnCPlus.gridy = 1;
 		panelControls.add(btnCPlus, gbc_btnCPlus);
 		
-		JButton btnZMinus = new JButton("Z-");
+		btnZMinus = new JButton("Z-");
 		btnZMinus.setFocusable(false);
 		btnZMinus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -541,7 +558,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnZMinus.gridy = 3;
 		panelControls.add(btnZMinus, gbc_btnZMinus);
 		
-		JButton btnYMinus = new JButton("Y-");
+		btnYMinus = new JButton("Y-");
 		btnYMinus.setFocusable(false);
 		btnYMinus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -613,6 +630,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		public void actionPerformed(ActionEvent arg0) {
 			try {
 				machine.stop();
+				MachineControlsPanel.this.setEnabled(false);
 			}
 			catch (Exception e) {
 				// TODO
@@ -627,6 +645,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		public void actionPerformed(ActionEvent arg0) {
 			try {
 				machine.start();
+				MachineControlsPanel.this.setEnabled(true);
 			}
 			catch (Exception e) {
 				// TODO
@@ -721,7 +740,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 				droAction.setEnabled(false);
 			}
 			else {
-				droAction.setEnabled(true);
+				droAction.setEnabled(MachineControlsPanel.this.isEnabled());
 			}
 			updateDros();
 		}

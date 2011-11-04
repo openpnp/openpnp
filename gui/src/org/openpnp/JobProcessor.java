@@ -46,8 +46,6 @@ public class JobProcessor implements Runnable {
 		Stopped,
 		Running,
 		Paused,
-		Finished,
-		Failed,
 	}
 	
 	public enum JobError {
@@ -73,6 +71,8 @@ public class JobProcessor implements Runnable {
 	private JobState state;
 	private Thread thread;
 	private Object runLock = new Object();
+	
+	private boolean pauseAtNextStep;
 	
 	public JobProcessor(Configuration configuration) {
 		this.configuration = configuration;
@@ -151,6 +151,22 @@ public class JobProcessor implements Runnable {
 	}
 	
 	/**
+	 * Advances the Job one step. If the Job is not currently started this will
+	 * start the Job first.
+	 * @throws Exception
+	 */
+	public void step() throws Exception {
+		if (state == JobState.Stopped) {
+			pauseAtNextStep = true;
+			start();
+		}
+		else {
+			pauseAtNextStep = true;
+			resume();
+		}
+	}
+	
+	/**
 	 * Resume a running Job. The Job will resume from where it was paused.
 	 */
 	public void resume() {
@@ -179,6 +195,8 @@ public class JobProcessor implements Runnable {
 		
 		Machine machine = configuration.getMachine();
 
+		fireDetailedStatusUpdated("Move to home.");		
+		
 		if (!shouldJobProcessingContinue()) {
 			return;
 		}
@@ -189,6 +207,8 @@ public class JobProcessor implements Runnable {
 		catch (Exception e) {
 			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
 		}
+
+		fireDetailedStatusUpdated("Begin job processing.");		
 
 		if (!shouldJobProcessingContinue()) {
 			return;
@@ -319,6 +339,8 @@ public class JobProcessor implements Runnable {
 				// Currently we just take the first available Head
 				Head head = heads.get(0);
 
+				fireDetailedStatusUpdated(String.format("Move to safe Z.", head.getX(), head.getY(), 0, head.getC()));		
+
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
@@ -331,6 +353,8 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
+				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getReference()));
+				
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
@@ -343,6 +367,8 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.FeederError, e.getMessage());
 				}
 
+				fireDetailedStatusUpdated(String.format("Move to safe Z."));
+				
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
@@ -355,6 +381,8 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
+				fireDetailedStatusUpdated(String.format("Move to pick location."));
+
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
@@ -366,6 +394,8 @@ public class JobProcessor implements Runnable {
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
+
+				fireDetailedStatusUpdated(String.format("Request part pick."));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -383,6 +413,8 @@ public class JobProcessor implements Runnable {
 				
 				firePartPicked(jobBoard, placement);
 
+				fireDetailedStatusUpdated(String.format("Move to safe Z."));
+
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
@@ -395,6 +427,8 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
+				fireDetailedStatusUpdated(String.format("Move to placement location."));
+
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
@@ -406,6 +440,8 @@ public class JobProcessor implements Runnable {
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
+
+				fireDetailedStatusUpdated(String.format("Request part place."));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -427,6 +463,8 @@ public class JobProcessor implements Runnable {
 			fireBoardProcessingCompleted(jobBoard);
 		}
 		
+		fireDetailedStatusUpdated(String.format("Move to home."));
+
 		if (!shouldJobProcessingContinue()) {
 			return;
 		}
@@ -448,6 +486,10 @@ public class JobProcessor implements Runnable {
 	 * the loop should break.
 	 */
 	private boolean shouldJobProcessingContinue() {
+		if (pauseAtNextStep) {
+			pauseAtNextStep = false;
+			pause();
+		}
 		while (true) {
 			if (state == JobState.Stopped) {
 				return false;
@@ -520,6 +562,12 @@ public class JobProcessor implements Runnable {
 	private void firePartProcessingComplete(JobBoard board, Placement placement) {
 		for (JobProcessorListener listener : listeners) {
 			listener.partProcessingCompleted(board, placement);
+		}
+	}
+	
+	private void fireDetailedStatusUpdated(String status) {
+		for (JobProcessorListener listener : listeners) {
+			listener.detailedStatusUpdated(status);
 		}
 	}
 	

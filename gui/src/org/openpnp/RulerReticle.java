@@ -5,15 +5,27 @@ import java.awt.Graphics2D;
 
 import org.openpnp.util.LengthUtil;
 
-public class UnitTickReticle implements Reticle {
+public class RulerReticle implements Reticle {
 	private LengthUnit units;
 	private double unitsPerTick;
 	private Color color;
 	
-	public UnitTickReticle(LengthUnit units, double unitsPerTick, Color color) {
-		this.units = units;
-		this.unitsPerTick = unitsPerTick;
+	public RulerReticle(LengthUnit units, double unitsPerTick, Color color) {
+		setUnits(units);
+		setColor(color);
+		setUnitsPerTick(unitsPerTick);
+	}
+	
+	public void setColor(Color color) {
 		this.color = color;
+	}
+	
+	public void setUnits(LengthUnit units) {
+		this.units = units;
+	}
+	
+	public void setUnitsPerTick(double unitsPerTick) {
+		this.unitsPerTick = unitsPerTick;
 	}
 
 	@Override

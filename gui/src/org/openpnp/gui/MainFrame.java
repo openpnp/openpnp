@@ -65,6 +65,8 @@ import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import javax.swing.JLabel;
+import javax.swing.border.BevelBorder;
 
 /**
  * The main window of the application. Implements the top level menu, Job run
@@ -88,6 +90,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	private CameraPanel cameraPanel;
 	private JTable boardsTable;
 	private JTable partsTable;
+	private JLabel lblStatus;
 
 	public MainFrame() {
 		createUi();
@@ -108,6 +111,10 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		jobProcessor.setDelegate(this);
 
 		machineControlsPanel.setMachine(configuration.getMachine());
+		
+		lblStatus = new JLabel("...");
+		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		contentPane.add(lblStatus, BorderLayout.SOUTH);
 	}
 
 	@Override
@@ -117,16 +124,19 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
 			stopJobAction.setEnabled(false);
+			stepJobAction.setEnabled(true);
 		}
 		else if (state == JobState.Running) {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause");
 			stopJobAction.setEnabled(true);
+			stepJobAction.setEnabled(false);
 		}
 		else if (state == JobState.Paused) {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume");
 			stopJobAction.setEnabled(true);
+			stepJobAction.setEnabled(true);
 		}
 	}
 
@@ -164,6 +174,13 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	}
 	
 	private void stepJob() {
+		try {
+			jobProcessor.step();
+		}
+		catch (Exception e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(),
+					"Job Start Error", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private void stopJob() {
@@ -213,6 +230,11 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 
 	@Override
 	public void partProcessingStarted(JobBoard board, Placement placement) {
+	}
+	
+	@Override
+	public void detailedStatusUpdated(String status) {
+		lblStatus.setText(status);
 	}
 
 	private void createUi() {
@@ -287,6 +309,10 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		mntmNewMenuItem.setAction(startPauseResumeJobAction);
 		mnJob.add(mntmNewMenuItem);
 
+		JMenuItem mntmStepJob = new JMenuItem("Step Job");
+		mntmStepJob.setAction(stepJobAction);
+		mnJob.add(mntmStepJob);
+
 		JMenuItem mntmStopJob = new JMenuItem("Stop Job");
 		mntmStopJob.setAction(stopJobAction);
 		mnJob.add(mntmStopJob);
@@ -360,6 +386,11 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		btnStart.setFocusable(false);
 		panelJobControl.add(btnStart);
 		
+		JButton btnStep = new JButton(stepJobAction);
+		btnStep.setPreferredSize(new Dimension(80, 80));
+		btnStep.setFocusable(false);
+		panelJobControl.add(btnStep);
+		
 		JButton btnStop = new JButton("Stop");
 		btnStop.setAction(stopJobAction);
 		btnStop.setPreferredSize(new Dimension(80, 80));
@@ -381,6 +412,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 
 		startPauseResumeJobAction.setEnabled(false);
 		stopJobAction.setEnabled(false);
+		stepJobAction.setEnabled(false);
 	}
 
 	// class PartsTableCellRenderer extends DefaultTableCellRenderer {

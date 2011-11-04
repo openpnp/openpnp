@@ -37,6 +37,10 @@ import org.w3c.dom.NodeList;
  * specify pick and place operations. 
  */
 public class Board {
+	enum Side {
+		Bottom,
+		Top
+	}
 	private String reference;
 	private Outline outline; 
 	private List<Fiducial> fiducials = new ArrayList<Fiducial>();

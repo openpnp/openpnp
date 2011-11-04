@@ -30,6 +30,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.openpnp.Board.Side;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -62,7 +63,7 @@ public class Job {
 			Node boardLocationNode = boardLocationNodes.item(i);
 			JobBoard board = new JobBoard();
 			board.setBoard(boardMap.get(Configuration.getAttribute(boardLocationNode, "board")));
-			board.setBottom(Boolean.parseBoolean(Configuration.getAttribute(boardLocationNode, "bottom", "false")));
+			board.setSide(Side.valueOf(Configuration.getAttribute(boardLocationNode, "side", "Top")));
 			board.setLocation(new Location());
 			board.getLocation().parse((Node) xpath.evaluate("Location", boardLocationNode, XPathConstants.NODE));
 			boards.add(board);
@@ -108,7 +109,7 @@ public class Job {
 	public static class JobBoard {
 		private Location location;
 		private Board board;
-		private boolean bottom;
+		private Side side;
 		
 		public Location getLocation() {
 			return location;
@@ -126,12 +127,12 @@ public class Job {
 			this.board = board;
 		}
 		
-		boolean isBottom() {
-			return bottom;
+		public Side getSide() {
+			return side;
 		}
 
-		void setBottom(boolean bottom) {
-			this.bottom = bottom;
+		public void setSide(Side side) {
+			this.side = side;
 		}
 
 		@Override
