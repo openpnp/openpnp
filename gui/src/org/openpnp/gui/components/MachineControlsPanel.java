@@ -21,6 +21,7 @@
 
 package org.openpnp.gui.components;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -33,16 +34,20 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -58,6 +63,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
@@ -75,7 +81,6 @@ import org.openpnp.util.LengthUtil;
  * Radio buttons to select mm or inch.
  * Status: LEDs for vac and actuators. TODO This part is not machine independant. Need to think about that.
  * TODO add a dropdown to select Head
- * TODO disable controls when machine is not enabled 
  * @author jason
  */
 public class MachineControlsPanel extends JPanel implements MachineListener {
@@ -92,7 +97,6 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	private JRadioButton rdbtnInch;
 	private JButton btnStartStop;
 	private JComboBox comboBoxCoordinateSystem;
-	private JButton btnXMinus, btnXPlus, btnYMinus, btnYPlus, btnZMinus, btnZPlus, btnCMinus, btnCPlus;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -119,6 +123,32 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		comboBoxCoordinateSystem.addItem("Absolute");
 		comboBoxCoordinateSystem.setSelectedIndex(0);
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+
+		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
+		
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), yPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), yMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), xMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), xPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), zPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), zMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0), cMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, 0), cPlusAction);
+		
+		Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
+			@Override
+			protected void dispatchEvent(AWTEvent event) {
+				if (event instanceof KeyEvent) {
+					KeyStroke ks = KeyStroke.getKeyStrokeForEvent((KeyEvent) event);
+					Action action = hotkeyActionMap.get(ks);
+					if (action != null && action.isEnabled()) {
+						action.actionPerformed(null);
+						return;
+					}
+				}
+				super.dispatchEvent(event);
+			}
+		});
 		
 		setEnabled(machine.isReady());
 	}
@@ -127,14 +157,14 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		droAction.setEnabled(enabled);
-		btnXMinus.setEnabled(enabled);
-		btnXPlus.setEnabled(enabled);
-		btnYMinus.setEnabled(enabled);
-		btnYPlus.setEnabled(enabled);
-		btnZMinus.setEnabled(enabled);
-		btnZPlus.setEnabled(enabled);
-		btnCMinus.setEnabled(enabled);
-		btnCPlus.setEnabled(enabled);
+		xPlusAction.setEnabled(enabled);
+		xMinusAction.setEnabled(enabled);
+		yPlusAction.setEnabled(enabled);
+		yMinusAction.setEnabled(enabled);
+		zPlusAction.setEnabled(enabled);
+		zMinusAction.setEnabled(enabled);
+		cPlusAction.setEnabled(enabled);
+		cMinusAction.setEnabled(enabled);
 	}
 	
 	private void setUnits(LengthUnit units) {
@@ -447,13 +477,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbl_panelControls.rowHeights = new int[] { 25, 25, 25, 25, 25, 25 };
 		panelControls.setLayout(gbl_panelControls);
 		
-		btnYPlus = new JButton("Y+");
+		JButton btnYPlus = new JButton(yPlusAction);
 		btnYPlus.setFocusable(false);
-		btnYPlus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(0, 1, 0, 0);
-			}
-		});
 		btnYPlus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnYPlus = new GridBagConstraints();
 		gbc_btnYPlus.gridheight = 2;
@@ -462,13 +487,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnYPlus.gridy = 0;
 		panelControls.add(btnYPlus, gbc_btnYPlus);
 		
-		btnZPlus = new JButton("Z+");
+		JButton btnZPlus = new JButton(zPlusAction);
 		btnZPlus.setFocusable(false);
-		btnZPlus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(0, 0, 1, 0);
-			}
-		});
 		btnZPlus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnZPlus = new GridBagConstraints();
 		gbc_btnZPlus.insets = new Insets(0, 0, 5, 0);
@@ -478,13 +498,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnZPlus.gridy = 0;
 		panelControls.add(btnZPlus, gbc_btnZPlus);
 		
-		btnXMinus = new JButton("X-");
+		JButton btnXMinus = new JButton(xMinusAction);
 		btnXMinus.setFocusable(false);
-		btnXMinus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(-1, 0, 0, 0);
-			}
-		});
 		btnXMinus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnXMinus = new GridBagConstraints();
 		gbc_btnXMinus.insets = new Insets(0, 20, 0, 0);
@@ -494,13 +509,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnXMinus.gridy = 2;
 		panelControls.add(btnXMinus, gbc_btnXMinus);
 		
-		btnXPlus = new JButton("X+");
+		JButton btnXPlus = new JButton(xPlusAction);
 		btnXPlus.setFocusable(false);
-		btnXPlus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(1, 0, 0, 0);
-			}
-		});
 		btnXPlus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnXPlus = new GridBagConstraints();
 		gbc_btnXPlus.insets = new Insets(0, 0, 0, 20);
@@ -510,13 +520,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnXPlus.gridy = 2;
 		panelControls.add(btnXPlus, gbc_btnXPlus);
 		
-		btnCMinus = new JButton("C-");
+		JButton btnCMinus = new JButton(cMinusAction);
 		btnCMinus.setFocusable(false);
-		btnCMinus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(0, 0, 0, -1);
-			}
-		});
 		btnCMinus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnCMinus = new GridBagConstraints();
 		gbc_btnCMinus.insets = new Insets(0, 0, 0, 5);
@@ -526,13 +531,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnCMinus.gridy = 1;
 		panelControls.add(btnCMinus, gbc_btnCMinus);
 		
-		btnCPlus = new JButton("C+");
+		JButton btnCPlus = new JButton(cPlusAction);
 		btnCPlus.setFocusable(false);
-		btnCPlus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(0, 0, 0, 1);
-			}
-		});
 		btnCPlus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnCPlus = new GridBagConstraints();
 		gbc_btnCPlus.insets = new Insets(0, 5, 0, 0);
@@ -542,13 +542,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnCPlus.gridy = 1;
 		panelControls.add(btnCPlus, gbc_btnCPlus);
 		
-		btnZMinus = new JButton("Z-");
+		JButton btnZMinus = new JButton(zMinusAction);
 		btnZMinus.setFocusable(false);
-		btnZMinus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(0, 0, -1, 0);
-			}
-		});
 		btnZMinus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnZMinus = new GridBagConstraints();
 		gbc_btnZMinus.insets = new Insets(5, 0, 0, 0);
@@ -558,13 +553,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnZMinus.gridy = 3;
 		panelControls.add(btnZMinus, gbc_btnZMinus);
 		
-		btnYMinus = new JButton("Y-");
+		JButton btnYMinus = new JButton(yMinusAction);
 		btnYMinus.setFocusable(false);
-		btnYMinus.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				jog(0, -1, 0, 0);
-			}
-		});
 		btnYMinus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnYMinus = new GridBagConstraints();
 		gbc_btnYMinus.gridheight = 2;
@@ -623,6 +613,70 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		}
 		
 	}
+	
+	@SuppressWarnings("serial")
+	private Action yPlusAction = new AbstractAction("Y+") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(0, 1, 0, 0);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action yMinusAction = new AbstractAction("Y-") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(0, -1, 0, 0);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action xPlusAction = new AbstractAction("X+") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(1, 0, 0, 0);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action xMinusAction = new AbstractAction("X-") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(-1, 0, 0, 0);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action zPlusAction = new AbstractAction("Z+") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(0, 0, 1, 0);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action zMinusAction = new AbstractAction("Z-") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(0, 0, -1, 0);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action cPlusAction = new AbstractAction("C+") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(0, 0, 0, 1);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action cMinusAction = new AbstractAction("C-") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			jog(0, 0, 0, -1);
+		}
+	};
 	
 	@SuppressWarnings("serial")
 	private Action stopMachineAction = new AbstractAction("STOP") {

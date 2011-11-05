@@ -36,6 +36,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -44,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
@@ -65,8 +67,6 @@ import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import javax.swing.JLabel;
-import javax.swing.border.BevelBorder;
 
 /**
  * The main window of the application. Implements the top level menu, Job run
@@ -94,7 +94,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 
 	public MainFrame() {
 		createUi();
-
+		
 		try {
 			configuration = new Configuration("config");
 		}
