@@ -56,6 +56,7 @@
 #define STEPPERS_ENABLE_DDR     DDRC
 #define STEPPERS_ENABLE_PORT    PORTC
 #define STEPPERS_ENABLE_BIT     4
+// Set INVERT to 0 for high enable or 1 for low enable
 #define STEPPERS_ENABLE_INVERT  1
 
 // For performance reasons it is neccesary to have all of the
@@ -68,6 +69,7 @@
 #define Z_STEP_BIT          4
 #define C_STEP_BIT          5
 
+// Set INVERT to 0 for pulse high step or 1 for pulse low step
 #define X_STEP_INVERT       0
 #define Y_STEP_INVERT       0
 #define Z_STEP_INVERT       0
@@ -84,6 +86,7 @@
 #define Z_DIRECTION_BIT     2
 #define C_DIRECTION_BIT     3
 
+// Set INVERT to 0 for pulse high direction or 1 for pulse low direction
 #define X_DIRECTION_INVERT  0
 #define Y_DIRECTION_INVERT  0
 #define Z_DIRECTION_INVERT  0

@@ -21,6 +21,7 @@
 #include <avr/io.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
+#include <avr/pgmspace.h>
 #include "planner.h"
 #include "stepper.h"
 #include "spindle_control.h"
@@ -44,8 +45,12 @@ int main(void)
   st_init();        
   spindle_init();   
   coolant_init();
-  gc_init();        
-                    
+  gc_init();
+  
+  // Once everything is initialized, send the standard "ok" to let clients
+  // know it's okay to go ahead
+  printPgmString(PSTR("ok\n\r"));
+  
   for(;;){
     sleep_mode(); // Wait for it ...
     sp_process(); // ... process the serial protocol

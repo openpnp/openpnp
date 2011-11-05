@@ -33,11 +33,13 @@
 #include "errno.h"
 #include "serial_protocol.h"
 
+
 #define MM_PER_INCH (25.4)
 
 #define NEXT_ACTION_DEFAULT 0
 #define NEXT_ACTION_DWELL 1
 #define NEXT_ACTION_GO_HOME 2
+#define NEXT_ACTION_SET_OFFSETS 3
 
 #define MOTION_MODE_SEEK 0 // G0 
 #define MOTION_MODE_LINEAR 1 // G1
@@ -186,6 +188,7 @@ uint8_t gc_execute_line(char *line) {
         case 80: gc.motion_mode = MOTION_MODE_CANCEL; break;
         case 90: gc.absolute_mode = TRUE; break;
         case 91: gc.absolute_mode = FALSE; break;
+        case 92: next_action = NEXT_ACTION_SET_OFFSETS; break;
         case 93: gc.inverse_feed_rate_mode = TRUE; break;
         case 94: gc.inverse_feed_rate_mode = FALSE; break;
         default: FAIL(GCSTATUS_UNSUPPORTED_STATEMENT);
@@ -285,14 +288,17 @@ uint8_t gc_execute_line(char *line) {
       mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS],
         (gc.inverse_feed_rate_mode) ? inverse_feed_rate : gc.feed_rate, gc.inverse_feed_rate_mode);
       break;
-    }    
+    }  
+    case NEXT_ACTION_SET_OFFSETS:
+      mc_set_current(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS]);
+	  break;
   }
   
   // As far as the parser is concerned, the position is now == target. In reality the
   // motion control system might still be processing the action and the real tool position
   // in any intermediate location.
-  memcpy(gc.position, target, sizeof(double)*3); // gc.position[] = target[];
-  
+  memcpy(gc.position, target, sizeof(gc.position)); // gc.position[] = target[];
+
   return(gc.status_code);
 }
 

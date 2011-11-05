@@ -31,6 +31,7 @@
 // NOTE: Although this function structurally belongs in this module, there is nothing to do but
 // to forward the request to the planner. For efficiency the function is implemented with a macro.
 
+#define mc_set_current(x, y, z, c) plan_set_current(x, y, z, c)
 // Dwell for a couple of time units
 void mc_dwell(uint32_t milliseconds);
 

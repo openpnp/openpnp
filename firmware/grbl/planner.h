@@ -62,6 +62,10 @@ void plan_init();
 // rate is taken to mean "frequency" and would complete the operation in 1/feed_rate minutes.
 void plan_buffer_line(double x, double y, double z, double c, double feed_rate, int invert_feed_rate);
 
+// Set the current position as used by the planner. This is used to zero (or otherwise) axes
+// when the caller wants to change the current position of the machine.
+void plan_set_current(double x, double y, double z, double c);
+
 // Called when the current block is no longer needed. Discards the block and makes the memory
 // availible for new blocks.
 inline void plan_discard_current_block();

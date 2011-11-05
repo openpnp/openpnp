@@ -336,6 +336,15 @@ inline block_t *plan_get_current_block() {
   return(&block_buffer[block_buffer_tail]);
 }
 
+void plan_set_current(double x, double y, double z, double c) {
+	st_synchronize();
+    position[X_AXIS] = lround(x*settings.steps_per_mm[X_AXIS]);
+    position[Y_AXIS] = lround(y*settings.steps_per_mm[Y_AXIS]);
+    position[Z_AXIS] = lround(z*settings.steps_per_mm[Z_AXIS]);     
+    position[C_AXIS] = lround(c*settings.steps_per_mm[C_AXIS]);     
+}
+
+
 // Add a new linear movement to the buffer. steps_x, _y, _z and _c is the absolute position in 
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
