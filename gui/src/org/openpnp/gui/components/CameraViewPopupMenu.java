@@ -12,9 +12,9 @@ import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import org.openpnp.CrosshairReticle;
 import org.openpnp.LengthUnit;
-import org.openpnp.RulerReticle;
+import org.openpnp.gui.components.reticle.CrosshairReticle;
+import org.openpnp.gui.components.reticle.RulerReticle;
 
 public class CameraViewPopupMenu extends JPopupMenu {
 	private CameraView cameraView;

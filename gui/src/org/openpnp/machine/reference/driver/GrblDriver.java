@@ -26,9 +26,10 @@ import gnu.io.SerialPort;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -58,6 +59,8 @@ import org.w3c.dom.NodeList;
 	TODO Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
+	private static final double minimumRequiredVersion = 0.71;
+	
 	private double x, y, z, c;
 
 	private CommPortIdentifier commPortId;
@@ -68,10 +71,12 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	private Thread readerThread;
 	private boolean disconnectRequested;
 	private Object commandLock = new Object();
-	private String lastResponse;
+	
 	private boolean connected;
-	private boolean configured;
-	private ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+	private double connectedVersion;
+	
+	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
+	
 
 	@Override
 	public void configure(Node n) throws Exception {
@@ -178,35 +183,69 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		}
 		input = serialPort.getInputStream();
 		output = serialPort.getOutputStream();
+
+		/**
+		 * Connection process notes:
+		 * 
+		 * On some platforms, as soon as we open the serial port it will reset
+		 * Grbl and we'll start getting some data. On others, Grbl may already
+		 * be running and we will get nothing on connect.
+		 */
 		
-		// Request the settings and version from the board once per second
-		// until we get it.
-		// TODO we should probably have this try 5 times or so and then bail
-		scheduledExecutor.schedule(new Runnable() {
-			public void run() {
-				if (!connected) {
-					try {
-						sendCommand("$");
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-					scheduledExecutor.schedule(this, 1000, TimeUnit.MILLISECONDS);
-				}
-				else {
-					return;
-				}
+		List<String> responses;
+		synchronized (commandLock) {
+			// Start the reader thread with the commandLock held. This will
+			// keep the thread from quickly parsing any responses messages
+			// and notifying before we get a change to wait.
+			readerThread = new Thread(this);
+			readerThread.start();
+			// Wait up to 3 seconds for Grbl to say Hi
+			// If we get anything at this point it will have been the settings
+			// dump that is sent after reset.
+			responses = sendCommand(null, 3000);
+		}
+
+		processConnectionResponses(responses);
+
+		for (int i = 0; i < 5 && !connected; i++) {
+			responses = sendCommand("$", 5000);
+			processConnectionResponses(responses);
+		}
+		
+		if (!connected)  {
+			throw new Error(
+				String.format("Unable to receive connection response from Grbl. Check your port and baud rate, and that you are running at least version %f of Grbl", 
+						minimumRequiredVersion));
+		}
+		
+		if (connectedVersion < minimumRequiredVersion) {
+			throw new Error(String.format("This driver requires Grbl version %.2f or higher. You are running version %.2f", minimumRequiredVersion, connectedVersion));
+		}
+		// We are connected to at least the minimum required version now
+		// So perform some setup
+		
+		// Turn off the stepper drivers
+		setEnabled(false);
+		
+		// Reset all axes to 0, in case the firmware was not reset on
+		// connect.
+		sendCommand("G92 X0 Y0 Z0 C0");
+	}
+	
+	private void processConnectionResponses(List<String> responses) {
+		for (String response : responses) {
+			if (response.startsWith("$VERSION = ")) {
+				String[] versionComponents = response.split(" ");
+				connectedVersion = Double.parseDouble(versionComponents[2]);
+				connected = true;
+				System.out.println(String.format("Connected to OpenPnP/Grbl Version: %.2f", connectedVersion));
 			}
-		}, 1000, TimeUnit.MILLISECONDS);
-		
-		readerThread = new Thread(this);
-		readerThread.start();
+		}
 	}
 
 	public synchronized void disconnect() {
 		disconnectRequested = true;
 		connected = false;
-		configured = false;
 		
 		try {
 			if (readerThread != null && readerThread.isAlive()) {
@@ -224,18 +263,14 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 
 	public void run() {
 		while (!disconnectRequested) {
-			String line = readLine();
+			String line = readLine().trim();
 			System.out.println(line);
-			if (!connected) {
-				if (line.startsWith("$VERSION = ")) {
-					String[] versionComponents = line.split(" ");
-					connected = true;
-					System.out.println("Connected to OpenPnP/Grbl Version: " + versionComponents[2]);
+			responseQueue.offer(line);
+			if (line.equals("ok") || line.startsWith("error: ")) {
+				// This is the end of processing for a command
+				synchronized (commandLock) {
+					commandLock.notify();
 				}
-			}
-			synchronized (commandLock) {
-				lastResponse = line;
-				commandLock.notify();
 			}
 		}
 	}
@@ -248,15 +283,35 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		sendCommand("G4 P0");
 	}
 
-	private void sendCommand(String command) throws Exception {
-		System.out.println(command);
-		output.write(command.getBytes());
-		output.write("\r\n".getBytes());
-		String response;
-		synchronized (commandLock) {
-			commandLock.wait();
-			response = lastResponse;
+	private List<String> sendCommand(String command) throws Exception {
+		return sendCommand(command, -1);
+	}
+	
+	private List<String> sendCommand(String command, long timeout) throws Exception {
+		if (command != null) {
+			System.out.println(command);
+			output.write(command.getBytes());
+			output.write("\r\n".getBytes());
 		}
+		synchronized (commandLock) {
+			if (timeout == -1) {
+				commandLock.wait();
+			}
+			else {
+				commandLock.wait(timeout);
+			}
+		}
+		List<String> responses = drainResponseQueue();
+		return responses;
+	}
+	
+	private List<String> drainResponseQueue() {
+		List<String> responses = new ArrayList<String>();
+		String response;
+		while ((response = responseQueue.poll()) != null) {
+			responses.add(response);
+		}
+		return responses;
 	}
 	
 	private String readLine() {

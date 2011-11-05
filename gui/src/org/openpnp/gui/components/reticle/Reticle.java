@@ -19,19 +19,21 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.gui.components.reticle;
 
 import java.awt.Graphics2D;
+
+import org.openpnp.LengthUnit;
 
 
 public interface Reticle {
 	public void draw(
 			Graphics2D g2d, 
-			LengthUnit units,
-			double unitsPerPixelX, 
-			double unitsPerPixelY, 
-			double centerX, 
-			double centerY,
+			LengthUnit cameraUnitsPerPixelUnits,
+			double cameraUnitsPerPixelX, 
+			double cameraUnitsPerPixelY, 
+			double viewPortCenterX, 
+			double viewPortCenterY,
 			int viewPortWidth,
 			int viewPortHeight);
 }

@@ -25,28 +25,22 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
+import java.awt.font.TextLayout;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ButtonGroup;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 
 import org.openpnp.CameraListener;
-import org.openpnp.CrosshairReticle;
-import org.openpnp.LengthUnit;
-import org.openpnp.Reticle;
-import org.openpnp.RulerReticle;
+import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.spi.Camera;
 
 @SuppressWarnings("serial")
@@ -202,12 +196,14 @@ public class CameraView extends JComponent implements CameraListener {
 				double unitsPerPixelX = Math.abs((sourceWidth / differenceX) / sourceWidth);
 				double unitsPerPixelY = Math.abs((sourceHeight / differenceY) / sourceHeight);
 				
-				g.setColor(Color.white);
-				g.drawString("Left mouse drag to set the first mark, right mouse drag to set the second.", ins.left + 10, ins.top + 20);
+				String text = "Left mouse drag to set the first mark.\nRight mouse drag to set the second.";
 				if (unitsPerPixelX != Double.POSITIVE_INFINITY || unitsPerPixelY != Double.POSITIVE_INFINITY) {
-					g.drawString(String.format("unitsPerPixelX: %3.6f", unitsPerPixelX), ins.left + 10, ins.top + 40);
-					g.drawString(String.format("unitsPerPixelY: %3.6f", unitsPerPixelY), ins.left + 10, ins.top + 60);
+					text += "\n";
+					text += String.format("%3.6f %s per pixel X.", unitsPerPixelX, camera.getUnitsPerPixel().getUnits());
+					text += "\n";
+					text += String.format("%3.6f %s per pixel Y.", unitsPerPixelY, camera.getUnitsPerPixel().getUnits());
 				}
+				drawTextOverlay(g2d, ins.left + 10, ins.top + 10, text);
 			}
 			
 		}
@@ -215,6 +211,27 @@ public class CameraView extends JComponent implements CameraListener {
 			g.setColor(Color.red);
 			g.drawLine(ins.left, ins.top, ins.right, ins.bottom);
 			g.drawLine(ins.right, ins.top, ins.left, ins.bottom);
+		}
+	}
+	
+	private void drawTextOverlay(Graphics2D g2d, int topLeftX, int topLeftY, String text) {
+		String[] lines = text.split("\n");
+		List<TextLayout> textLayouts = new ArrayList<TextLayout>();
+		int textWidth = 0, textHeight = 0;
+		for (String line : lines) {
+			TextLayout textLayout = new TextLayout(line, g2d.getFont(), g2d.getFontRenderContext());
+			textWidth = (int) Math.max(textWidth, textLayout.getBounds().getWidth());
+			textHeight += (int) textLayout.getBounds().getHeight();
+			textLayouts.add(textLayout);
+		}
+		g2d.setColor(new Color(0, 0, 0, 0.7f));
+		g2d.fillRoundRect(topLeftX, topLeftY, textWidth + 10, textHeight + 10, 6, 6);
+		g2d.setColor(Color.white);
+		g2d.drawRoundRect(topLeftX, topLeftY, textWidth + 10, textHeight + 10, 6, 6);
+		int yPen = topLeftY + 5;
+		for (TextLayout textLayout : textLayouts) {
+			yPen += textLayout.getBounds().getHeight();
+			textLayout.draw(g2d, topLeftX + 5, yPen);
 		}
 	}
 	

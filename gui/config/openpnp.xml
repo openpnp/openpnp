@@ -2,7 +2,7 @@
 <OpenPnP>
 	<Machine class="org.openpnp.machine.reference.ReferenceMachine">
 		<Configuration>
-			<Driver class="org.openpnp.machine.reference.driver.SimulatorDriver">
+			<Driver class="org.openpnp.machine.reference.driver.GrblDriver">
 				<Configuration>
 					<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
 						<Settings>
