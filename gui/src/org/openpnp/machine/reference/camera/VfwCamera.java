@@ -90,7 +90,6 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 				Thread.sleep(1000 / 30);
 			}
 			catch (Exception e) {
-				
 			}
 		}
 	}

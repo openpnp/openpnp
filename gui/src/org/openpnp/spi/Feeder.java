@@ -45,14 +45,14 @@ public interface Feeder {
 	 * Gets the reference that was set when the Feeder was initialized.
 	 * @return
 	 */
-	String getReference();
+	public String getReference();
 	
 	/**
 	 * Returns true if the Feeder is ready and willing to source the Part.
 	 * @return
 	 */
 	// TODO this probably needs to either just go away, or have the Part passed to it
-	boolean available(); 
+	public boolean available(); 
 	
 	
 	/**

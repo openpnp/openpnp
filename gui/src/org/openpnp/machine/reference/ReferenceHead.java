@@ -80,9 +80,9 @@ public class ReferenceHead implements Head {
 	@Override
 	public void pick(Part part, Feeder feeder, Location pickLocation) throws Exception{
 		// move to the pick location
-		moveTo(pickLocation.getX(), pickLocation.getY(), z, pickLocation.getRotation());
+		moveTo(pickLocation.getX(), pickLocation.getY(), getZ(), pickLocation.getRotation());
 		// lower the nozzle
-		moveTo(x, y, pickLocation.getZ(), c);
+		moveTo(getX(), getY(), pickLocation.getZ(), getC());
 		
 		// pick the part
 		machine.getDriver().pick(this, part);
@@ -92,9 +92,9 @@ public class ReferenceHead implements Head {
 	@Override
 	public void place(Part part, Location placeLocation) throws Exception {
 		// move to the place location
-		moveTo(placeLocation.getX(), placeLocation.getY(), z, placeLocation.getRotation());
+		moveTo(placeLocation.getX(), placeLocation.getY(), getZ(), placeLocation.getRotation());
 		// lower the nozzle
-		moveTo(x, y, placeLocation.getZ(), c);
+		moveTo(getX(), getY(), placeLocation.getZ(), getC());
 		// place the part
 		machine.getDriver().place(this);
 		machine.fireMachineHeadActivity(machine, this);

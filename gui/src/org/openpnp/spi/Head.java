@@ -93,9 +93,6 @@ public interface Head {
 	 */
 	void moveTo(double x, double y, double z, double c) throws Exception;
 
-	// TODO change all these methods to take doubles instead of Locations to make it clear that
-	// the units are in machine units
-	
 	/**
 	 * Queries the Head to determine if it has the ability to pick from the given Feeder
 	 * at the given Location and then move the Part to the destination Location.

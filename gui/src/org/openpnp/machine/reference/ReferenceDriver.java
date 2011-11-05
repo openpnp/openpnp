@@ -56,7 +56,7 @@ public interface ReferenceDriver {
 	/**
 	 * Causes the nozzle to apply vacuum and any other operation that it uses for picking
 	 * up a part that it is resting on.
-	 * @param Part Allows drivers to make accomodations for certain types of Parts.
+	 * @param Part Allows drivers to make accommodations for certain types of Parts.
 	 * @throws Exception
 	 */
 	public void pick(ReferenceHead head, Part part) throws Exception;

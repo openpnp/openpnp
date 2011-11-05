@@ -195,24 +195,24 @@ public class JobProcessor implements Runnable {
 		
 		Machine machine = configuration.getMachine();
 
-		fireDetailedStatusUpdated("Move to home.");		
-		
-		if (!shouldJobProcessingContinue()) {
-			return;
-		}
+//		fireDetailedStatusUpdated("Move to home.");		
+//		
+//		if (!shouldJobProcessingContinue()) {
+//			return;
+//		}
+//
+//		try {
+//			machine.home();
+//		}
+//		catch (Exception e) {
+//			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
+//		}
 
-		try {
-			machine.home();
-		}
-		catch (Exception e) {
-			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
-		}
-
-		fireDetailedStatusUpdated("Begin job processing.");		
-
-		if (!shouldJobProcessingContinue()) {
-			return;
-		}
+//		fireDetailedStatusUpdated("Begin job processing.");		
+//
+//		if (!shouldJobProcessingContinue()) {
+//			return;
+//		}
 
 		/*
 		 * Vision: After the Head.pick() operation is when we might do some
@@ -339,7 +339,7 @@ public class JobProcessor implements Runnable {
 				// Currently we just take the first available Head
 				Head head = heads.get(0);
 
-				fireDetailedStatusUpdated(String.format("Move to safe Z.", head.getX(), head.getY(), 0, head.getC()));		
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));		
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -367,7 +367,7 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.FeederError, e.getMessage());
 				}
 
-				fireDetailedStatusUpdated(String.format("Move to safe Z."));
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));
 				
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -381,7 +381,7 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
-				fireDetailedStatusUpdated(String.format("Move to pick location."));
+				fireDetailedStatusUpdated(String.format("Move to pick location, safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", pickLocation.getX(), pickLocation.getY(), (double) 0, pickLocation.getRotation()));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -395,7 +395,7 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
-				fireDetailedStatusUpdated(String.format("Request part pick."));
+				fireDetailedStatusUpdated(String.format("Request part pick at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", pickLocation.getX(), pickLocation.getY(), pickLocation.getZ(), pickLocation.getRotation()));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -413,7 +413,7 @@ public class JobProcessor implements Runnable {
 				
 				firePartPicked(jobBoard, placement);
 
-				fireDetailedStatusUpdated(String.format("Move to safe Z."));
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -427,7 +427,11 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
-				fireDetailedStatusUpdated(String.format("Move to placement location."));
+				fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", 
+						placementLocation.getX(), 
+						placementLocation.getY(), 
+						(double) 0, 
+						placementLocation.getRotation()));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -441,7 +445,11 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
-				fireDetailedStatusUpdated(String.format("Request part place."));
+				fireDetailedStatusUpdated(String.format("Request part place. at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", 
+						placementLocation.getX(), 
+						placementLocation.getY(), 
+						placementLocation.getZ(), 
+						placementLocation.getRotation()));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -463,18 +471,20 @@ public class JobProcessor implements Runnable {
 			fireBoardProcessingCompleted(jobBoard);
 		}
 		
-		fireDetailedStatusUpdated(String.format("Move to home."));
-
-		if (!shouldJobProcessingContinue()) {
-			return;
-		}
-
-		try {
-			machine.home();
-		}
-		catch (Exception e) {
-			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
-		}
+//		fireDetailedStatusUpdated(String.format("Move to home."));
+//
+//		if (!shouldJobProcessingContinue()) {
+//			return;
+//		}
+//
+//		try {
+//			machine.home();
+//		}
+//		catch (Exception e) {
+//			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
+//		}
+		
+		fireDetailedStatusUpdated("Job complete.");
 		
 		state = JobState.Stopped;
 		fireJobStateChanged();
