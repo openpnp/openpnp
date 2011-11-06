@@ -36,17 +36,19 @@ import org.openpnp.spi.Head;
 import org.w3c.dom.Node;
 
 /**
-	<pre>
-		<Configuration>
-			<SoftLimits
-				units="Millimeters"
-				xMinimum="0" xMaximum="400" 
-				yMinimum="0" yMaximum="600"  
-				zMinimum="0" zMaximum="100"  
-				cMinimum="0" cMaximum="180" 
-			/> 
-		</Configuration>
-	</pre>
+<pre>
+{@code
+<Configuration>
+	<SoftLimits
+		units="Millimeters"
+		xMinimum="0" xMaximum="400" 
+		yMinimum="0" yMaximum="600"  
+		zMinimum="0" zMaximum="100"  
+		cMinimum="0" cMaximum="180" 
+	/> 
+</Configuration>
+}
+</pre>
  */
 public class ReferenceHead implements Head {
 	public static final String PIN_ACTUATOR_NAME = "Pin";

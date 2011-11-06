@@ -55,29 +55,31 @@ import com.jogamp.opengl.util.awt.Screenshot;
 
 
 /**
-	<pre>
-		<Configuration 
-			focalLengthInMm="50" focalRangeInMm="5" 
-			mmPerPixelX="0.022098" mmPerPixelY="0.021082" 
-			offsetX="0" offsetY="0" offsetZ="-50" 
-			fieldOfVision="16.0998" 
-			width="320" height="240">
-		</Configuration>
-		<Configuration 
-			focalLengthInMm="50" focalRangeInMm="5" 
-			mmPerPixelX="0.022098" mmPerPixelY="0.021082" 
-			offsetX="0" offsetY="0" offsetZ="-100" 
-			fieldOfVision="45" 
-			width="640" height="480">
-		</Configuration>
-		<Configuration 
-			focalLengthInMm="50" focalRangeInMm="5" 
-			mmPerPixelX="0.022098" mmPerPixelY="0.021082" 
-			offsetX="200" offsetY="300" offsetZ="-800" 
-			fieldOfVision="45" 
-			width="640" height="480">
-		</Configuration>
-	</pre>
+<pre>
+{@code
+<Configuration 
+	focalLengthInMm="50" focalRangeInMm="5" 
+	mmPerPixelX="0.022098" mmPerPixelY="0.021082" 
+	offsetX="0" offsetY="0" offsetZ="-50" 
+	fieldOfVision="16.0998" 
+	width="320" height="240">
+</Configuration>
+<Configuration 
+	focalLengthInMm="50" focalRangeInMm="5" 
+	mmPerPixelX="0.022098" mmPerPixelY="0.021082" 
+	offsetX="0" offsetY="0" offsetZ="-100" 
+	fieldOfVision="45" 
+	width="640" height="480">
+</Configuration>
+<Configuration 
+	focalLengthInMm="50" focalRangeInMm="5" 
+	mmPerPixelX="0.022098" mmPerPixelY="0.021082" 
+	offsetX="200" offsetY="300" offsetZ="-800" 
+	fieldOfVision="45" 
+	width="640" height="480">
+</Configuration>
+}
+</pre>
  */
 @SuppressWarnings("serial")
 public class SimulatorCamera extends AbstractCamera implements Runnable, GLEventListener, ReferenceCamera {

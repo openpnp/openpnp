@@ -46,13 +46,14 @@ import org.w3c.dom.Node;
  * Move head to FeedEndLocation x, y, z
  * Move head to Safe Z
  * Retract ACTUATOR_PIN
- * 
-	<pre>
-		<Configuration>
-			<FeedStartLocation units="Millimeters" x="100" y="150" z="50" />
-			<FeedEndLocation units="Millimeters" x="102" y="150" z="50" />
-		</Configuration>
-	</pre>
+<pre>
+{@code
+<Configuration>
+	<FeedStartLocation units="Millimeters" x="100" y="150" z="50" />
+	<FeedEndLocation units="Millimeters" x="102" y="150" z="50" />
+</Configuration>
+}
+</pre>
  */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private Location feedStartLocation;

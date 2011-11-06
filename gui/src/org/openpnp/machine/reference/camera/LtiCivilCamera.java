@@ -22,10 +22,14 @@ import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
 
 /**
-	<pre>
-		<!-- Specify deviceId="" to get a list of available devices on the console. -->
-		<Configuration deviceId="?" />
-	</pre>
+<pre>
+{@code
+<!-- 
+	Specify deviceId="" to get a list of available devices on the console. 
+-->
+<Configuration deviceId="?" />
+}
+</pre>
  */
 public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	private CaptureSystemFactory captureSystemFactory;
