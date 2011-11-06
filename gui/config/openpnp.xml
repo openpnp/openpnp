@@ -12,6 +12,15 @@
 
 			 <Heads>
 			 	<Head reference="H1" class="org.openpnp.machine.reference.ReferenceHead">
+			 		<Configuration>
+			 			<SoftLimits
+			 				units="Millimeters"
+			 				xMinimum="0" xMaximum="400" 
+			 				yMinimum="0" yMaximum="600"  
+			 				zMinimum="0" zMaximum="100"  
+			 				cMinimum="0" cMaximum="180" 
+			 			/> 
+			 		</Configuration>
 			 	</Head>
 			 </Heads>
 			 
@@ -24,7 +33,7 @@
 					>
 					<Location units="Millimeters" x="0" y="-50" z="0" rotation="0" />
 					<UnitsPerPixel units="Millimeters" x="0.070898" y="0.066935" />
-					<Configuration deviceId="?" />
+					<Configuration deviceId="?" forceGrayscale="true" />
 				</Camera>
 			</Cameras>
 			

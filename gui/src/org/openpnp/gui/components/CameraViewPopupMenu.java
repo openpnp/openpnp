@@ -1,25 +1,28 @@
 package org.openpnp.gui.components;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.openpnp.LengthUnit;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
+import org.openpnp.gui.components.reticle.FiducialReticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
 
 public class CameraViewPopupMenu extends JPopupMenu {
 	private CameraView cameraView;
-	private JCheckBoxMenuItem calibrationModeCheckMenuItem;
 	private JMenu reticleMenu;
+	private JMenu reticleOptionsMenu;
 	
 	public CameraViewPopupMenu(CameraView cameraView) {
 		this.cameraView = cameraView;
@@ -83,26 +86,430 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		
 		JRadioButtonMenuItem menuItem;
 		
-		menuItem = new JRadioButtonMenuItem(noneReticleAction);
+		menuItem = new JRadioButtonMenuItem(noReticleAction);
 		menuItem.setSelected(true);
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		menuItem = new JRadioButtonMenuItem(crosshairReticleAction);
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
-		menuItem = new JRadioButtonMenuItem(mmRulerReticleAction);
+		menuItem = new JRadioButtonMenuItem(rulerReticleAction);
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
-		menuItem = new JRadioButtonMenuItem(inchRulerReticleAction);
+		menuItem = new JRadioButtonMenuItem(fiducialReticleAction);
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		
 		return menu;
 	}
 	
-	private Action noneReticleAction = new AbstractAction("None") {
+	private JMenu createCrosshairReticleOptionsMenu(final CrosshairReticle reticle) {
+		JMenu menu = new JMenu("Options");
+		
+		ButtonGroup buttonGroup = new ButtonGroup();
+		
+		JRadioButtonMenuItem menuItem;
+		
+		menuItem = new JRadioButtonMenuItem("Red");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.red) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.red);
+			}
+		});
+		menu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Green");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.green) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.green);
+			}
+		});
+		menu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Yellow");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.yellow) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.yellow);
+			}
+		});
+		menu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Blue");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.blue) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.blue);
+			}
+		});
+		menu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("White");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.white) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.white);
+			}
+		});
+		menu.add(menuItem);
+		
+		return menu;
+	}
+	
+	private JMenu createRulerReticleOptionsMenu(final RulerReticle reticle) {
+		JMenu menu = new JMenu("Options");
+		
+		JMenu subMenu;
+		JRadioButtonMenuItem menuItem;
+		ButtonGroup buttonGroup;
+		
+		subMenu = new JMenu("Color");
+		buttonGroup = new ButtonGroup();
+		menuItem = new JRadioButtonMenuItem("Red");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.red) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.red);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Green");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.green) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.green);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Yellow");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.yellow) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.yellow);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Blue");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.blue) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.blue);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("White");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.white) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.white);
+			}
+		});
+		subMenu.add(menuItem);
+		menu.add(subMenu);
+		
+		subMenu = new JMenu("Units");
+		buttonGroup = new ButtonGroup();
+		menuItem = new JRadioButtonMenuItem("Millimeters");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnits() == LengthUnit.Millimeters) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnits(LengthUnit.Millimeters);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Inches");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnits() == LengthUnit.Inches) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnits(LengthUnit.Inches);
+			}
+		});
+		subMenu.add(menuItem);
+		menu.add(subMenu);
+
+		subMenu = new JMenu("Units Per Tick");
+		buttonGroup = new ButtonGroup();
+		menuItem = new JRadioButtonMenuItem("0.1");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnitsPerTick() == 0.1) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnitsPerTick(0.1);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("0.25");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnitsPerTick() == 0.25) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnitsPerTick(0.25);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("0.50");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnitsPerTick() == 0.50) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnitsPerTick(0.50);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("1");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnitsPerTick() == 1) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnitsPerTick(1);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("10");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnitsPerTick() == 10) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnitsPerTick(10);
+			}
+		});
+		subMenu.add(menuItem);
+		menu.add(subMenu);
+		
+		return menu;
+	}
+	
+	private JMenu createFiducialReticleOptionsMenu(final FiducialReticle reticle) {
+		JMenu menu = new JMenu("Options");
+		
+		JMenu subMenu;
+		JRadioButtonMenuItem menuItem;
+		ButtonGroup buttonGroup;
+		
+		subMenu = new JMenu("Color");
+		buttonGroup = new ButtonGroup();
+		menuItem = new JRadioButtonMenuItem("Red");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.red) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.red);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Green");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.green) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.green);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Yellow");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.yellow) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.yellow);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Blue");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.blue) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.blue);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("White");
+		buttonGroup.add(menuItem);
+		if (reticle.getColor() == Color.white) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setColor(Color.white);
+			}
+		});
+		subMenu.add(menuItem);
+		menu.add(subMenu);
+		
+		subMenu = new JMenu("Units");
+		buttonGroup = new ButtonGroup();
+		menuItem = new JRadioButtonMenuItem("Millimeters");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnits() == LengthUnit.Millimeters) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnits(LengthUnit.Millimeters);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Inches");
+		buttonGroup.add(menuItem);
+		if (reticle.getUnits() == LengthUnit.Inches) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setUnits(LengthUnit.Inches);
+			}
+		});
+		subMenu.add(menuItem);
+		menu.add(subMenu);
+
+		subMenu = new JMenu("Shape");
+		buttonGroup = new ButtonGroup();
+		menuItem = new JRadioButtonMenuItem("Circle");
+		buttonGroup.add(menuItem);
+		if (reticle.getShape() == FiducialReticle.Shape.Circle) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setShape(FiducialReticle.Shape.Circle);
+			}
+		});
+		subMenu.add(menuItem);
+		menuItem = new JRadioButtonMenuItem("Square");
+		buttonGroup.add(menuItem);
+		if (reticle.getShape() == FiducialReticle.Shape.Square) {
+			menuItem.setSelected(true);
+		}
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setShape(FiducialReticle.Shape.Square);
+			}
+		});
+		subMenu.add(menuItem);
+		menu.add(subMenu);
+		
+		JCheckBoxMenuItem chkMenuItem = new JCheckBoxMenuItem("Filled");
+		chkMenuItem.setSelected(reticle.isFilled());
+		chkMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				reticle.setFilled(((JCheckBoxMenuItem)e.getSource()).isSelected());
+			}
+		});
+		menu.add(chkMenuItem);
+		
+		JMenuItem inputMenuItem = new JMenuItem("Size");
+		inputMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String result = JOptionPane.showInputDialog(cameraView,
+						String.format("Enter the size in %s", reticle.getUnits().toString().toLowerCase()),
+						reticle.getSize() + "");
+				if (result != null) {
+					reticle.setSize(Double.valueOf(result));
+				}
+			}
+		});
+		menu.add(inputMenuItem);
+		
+		return menu;
+	}
+	
+	private void setReticleOptionsMenu(JMenu menu) {
+		if (reticleOptionsMenu != null) {
+			reticleMenu.remove(reticleMenu.getComponentCount() - 1);
+			reticleMenu.remove(reticleMenu.getComponentCount() - 1);
+		}
+		if (menu != null) {
+			reticleMenu.addSeparator();
+			reticleMenu.add(menu);
+		}
+		reticleOptionsMenu = menu;
+	}
+	
+	private Action noReticleAction = new AbstractAction("None") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			setReticleOptionsMenu(null);
 			cameraView.setReticle(null);
 		}
 	};
@@ -110,21 +517,30 @@ public class CameraViewPopupMenu extends JPopupMenu {
 	private Action crosshairReticleAction = new AbstractAction("Crosshair") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			cameraView.setReticle(new CrosshairReticle(Color.red));
+			CrosshairReticle reticle = new CrosshairReticle();
+			JMenu optionsMenu = createCrosshairReticleOptionsMenu(reticle);
+			setReticleOptionsMenu(optionsMenu);
+			cameraView.setReticle(reticle);
 		}
 	};
 	
-	private Action mmRulerReticleAction = new AbstractAction("Millimeter Ruler") {
+	private Action rulerReticleAction = new AbstractAction("Ruler") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			cameraView.setReticle(new RulerReticle(LengthUnit.Millimeters, 1, Color.red));
+			RulerReticle reticle = new RulerReticle();
+			JMenu optionsMenu = createRulerReticleOptionsMenu(reticle);
+			setReticleOptionsMenu(optionsMenu);
+			cameraView.setReticle(reticle);
 		}
 	};
 	
-	private Action inchRulerReticleAction = new AbstractAction("Inch Ruler") {
+	private Action fiducialReticleAction = new AbstractAction("Fiducial") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			cameraView.setReticle(new RulerReticle(LengthUnit.Inches, 1, Color.red));
+			FiducialReticle reticle = new FiducialReticle();
+			JMenu optionsMenu = createFiducialReticleOptionsMenu(reticle);
+			setReticleOptionsMenu(optionsMenu);
+			cameraView.setReticle(reticle);
 		}
 	};
 	

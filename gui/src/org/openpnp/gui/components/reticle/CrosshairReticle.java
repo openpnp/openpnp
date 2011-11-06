@@ -9,10 +9,14 @@ import org.openpnp.util.LengthUtil;
 public class CrosshairReticle implements Reticle {
 	private Color color;
 	
-	public CrosshairReticle(Color color) {
-		setColor(color);
+	public CrosshairReticle() {
+		this.color = Color.red;
 	}
 	
+	public Color getColor() {
+		return color;
+	}
+
 	public void setColor(Color color) {
 		this.color = color;
 	}

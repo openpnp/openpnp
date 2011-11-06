@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.camera;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
@@ -33,7 +34,11 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	private VideoFormat videoFormat;
 
 	private String deviceId;
+	private boolean forceGrayscale;
+	
 	private int width, height;
+	
+	private BufferedImage grayImage;
 	
 	@Override
 	public void configure(Node n) throws Exception {
@@ -56,6 +61,8 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 			System.exit(1);
 		}
 		
+		forceGrayscale = Configuration.getBooleanAttribute(n, "forceGrayscale");
+		
 		captureStream = captureSystem.openCaptureDeviceStream(deviceId);
 		videoFormat = captureStream.getVideoFormat();
 		width = videoFormat.getWidth();
@@ -73,7 +80,19 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	// TODO should probably turn off the stream if there are no listeners, to save CPU
 	public void onNewImage(CaptureStream captureStream, Image newImage) {
 		if (listeners.size() > 0) {
-			broadcastCapture(AWTImageConverter.toBufferedImage(newImage));
+			BufferedImage bImage = AWTImageConverter.toBufferedImage(newImage);
+			if (forceGrayscale) {
+				if (grayImage == null) {
+					grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+				}
+				Graphics g = grayImage.getGraphics();
+				g.drawImage(bImage, 0, 0, null);  
+				g.dispose();
+				broadcastCapture(grayImage);
+			}
+			else {
+				broadcastCapture(bImage);
+			}
 		}
 	}
 

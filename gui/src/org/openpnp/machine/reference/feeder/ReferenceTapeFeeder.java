@@ -91,7 +91,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		head.moveTo(feedStartLocation.getX(), feedStartLocation.getY(), head.getZ(), head.getC());
 		
 		// extend the pin
-		head.actuate(ReferenceHead.ACTUATOR_PIN, true);
+		head.actuate(ReferenceHead.PIN_ACTUATOR_NAME, true);
 		
 		// insert the pin
 		head.moveTo(head.getX(), head.getY(), feedStartLocation.getZ(), head.getC());
@@ -103,7 +103,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
 		
 		// retract the pin
-		head.actuate(ReferenceHead.ACTUATOR_PIN, false);
+		head.actuate(ReferenceHead.PIN_ACTUATOR_NAME, false);
 		
 		return pickLocation;
 	}

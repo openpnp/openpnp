@@ -21,25 +21,64 @@
 
 package org.openpnp.machine.reference;
 
+import java.util.Collections;
+import java.util.List;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.openpnp.Configuration;
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.w3c.dom.Node;
 
+/**
+	<pre>
+		<Configuration>
+			<SoftLimits
+				units="Millimeters"
+				xMinimum="0" xMaximum="400" 
+				yMinimum="0" yMaximum="600"  
+				zMinimum="0" zMaximum="100"  
+				cMinimum="0" cMaximum="180" 
+			/> 
+		</Configuration>
+	</pre>
+ */
 public class ReferenceHead implements Head {
-	public static final int ACTUATOR_PIN = 0;
-
+	public static final String PIN_ACTUATOR_NAME = "Pin";
+	
 	private ReferenceMachine machine;
 	private String reference;
 	double x, y, z, c;
 	double offsetX, offsetY, offsetZ, offsetC;
+	double 
+		softMinX = Double.NEGATIVE_INFINITY, softMaxX = Double.POSITIVE_INFINITY, 
+		softMinY = Double.NEGATIVE_INFINITY, softMaxY = Double.POSITIVE_INFINITY, 
+		softMinZ = Double.NEGATIVE_INFINITY, softMaxZ = Double.POSITIVE_INFINITY, 
+		softMinC = Double.NEGATIVE_INFINITY, softMaxC = Double.POSITIVE_INFINITY; 
 	
 	public ReferenceHead() {
 	}
 	
 	public void configure(Node n) throws Exception {
+		XPath xpath = XPathFactory.newInstance().newXPath();
 		
+		Node softLimitsNode = (Node) xpath.evaluate("SoftLimits", n, XPathConstants.NODE);
+		
+		if (softLimitsNode != null) {
+			softMinX = Configuration.getDoubleAttribute(softLimitsNode, "xMinimum", Double.NEGATIVE_INFINITY);
+			softMaxX = Configuration.getDoubleAttribute(softLimitsNode, "xMaximum", Double.POSITIVE_INFINITY);
+			softMinY = Configuration.getDoubleAttribute(softLimitsNode, "yMinimum", Double.NEGATIVE_INFINITY);
+			softMaxY = Configuration.getDoubleAttribute(softLimitsNode, "yMaximum", Double.POSITIVE_INFINITY);
+			softMinZ = Configuration.getDoubleAttribute(softLimitsNode, "zMinimum", Double.NEGATIVE_INFINITY);
+			softMaxZ = Configuration.getDoubleAttribute(softLimitsNode, "zMaximum", Double.POSITIVE_INFINITY);
+			softMinC = Configuration.getDoubleAttribute(softLimitsNode, "cMinimum", Double.NEGATIVE_INFINITY);
+			softMaxC = Configuration.getDoubleAttribute(softLimitsNode, "cMaximum", Double.POSITIVE_INFINITY);
+		}
 	}
 	
 	
@@ -63,6 +102,17 @@ public class ReferenceHead implements Head {
 
 	@Override
 	public void moveTo(double x, double y, double z, double c) throws Exception {
+		if (x < softMinX || x > softMaxX ||
+				y < softMinY || y > softMaxY ||
+				z < softMinZ || z > softMaxZ ||
+				c < softMinC || c > softMaxC) {
+			throw new Exception(String.format("Movement to %2.4f, %2.4f, %2.4f, %2.4f would violate soft limits of (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f).", 
+					x, y, z, c,
+					softMinX, softMaxX,
+					softMinY, softMaxY,
+					softMinZ, softMaxZ,
+					softMinC, softMaxC));
+		}
 		machine.getDriver().moveTo(this, x + offsetX, y + offsetY, z + offsetZ, c + offsetC);
 		this.x = x + offsetX;
 		this.y = y + offsetY;
@@ -78,6 +128,12 @@ public class ReferenceHead implements Head {
 	}
 	
 	@Override
+	public void pick() throws Exception {
+		machine.getDriver().pick(this, null);
+		machine.fireMachineHeadActivity(machine, this);
+	}
+
+	@Override
 	public void pick(Part part, Feeder feeder, Location pickLocation) throws Exception{
 		// move to the pick location
 		moveTo(pickLocation.getX(), pickLocation.getY(), getZ(), pickLocation.getRotation());
@@ -86,6 +142,12 @@ public class ReferenceHead implements Head {
 		
 		// pick the part
 		machine.getDriver().pick(this, part);
+		machine.fireMachineHeadActivity(machine, this);
+	}
+
+	@Override
+	public void place() throws Exception {
+		machine.getDriver().place(this);
 		machine.fireMachineHeadActivity(machine, this);
 	}
 
@@ -100,9 +162,20 @@ public class ReferenceHead implements Head {
 		machine.fireMachineHeadActivity(machine, this);
 	}
 	
-	public void actuate(int index, boolean on) throws Exception {
-		machine.getDriver().actuate(this, index, on);
-		machine.fireMachineHeadActivity(machine, this);
+	@Override
+	public List<String> getActuatorNames() {
+		return Collections.singletonList(PIN_ACTUATOR_NAME);
+	}
+
+	@Override
+	public void actuate(String actuator, boolean on) throws Exception {
+		if (actuator.equals(PIN_ACTUATOR_NAME)) {
+			machine.getDriver().actuate(this, 0, on);
+			machine.fireMachineHeadActivity(machine, this);
+		}
+		else {
+			throw new Exception("Unrecognized actuator: " + actuator);
+		}
 	}
 
 	@Override

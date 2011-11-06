@@ -68,6 +68,7 @@ import javax.swing.KeyStroke;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.gui.support.CameraItem;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -291,8 +292,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 					head.moveTo(xPos, yPos, zPos, cPos);
 				}
 				catch (Exception e) {
-					e.printStackTrace();
-					// TODO
+					MessageBoxes.errorBox(MachineControlsPanel.this, "Jog Failed", e.getMessage());
 				}
 			}
 		});
@@ -687,8 +687,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 				MachineControlsPanel.this.setEnabled(false);
 			}
 			catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+				MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", e.getMessage());
 			}
 		}
 	};
@@ -702,8 +701,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 				MachineControlsPanel.this.setEnabled(true);
 			}
 			catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+				MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", e.getMessage());
 			}
 		}
 	};

@@ -40,7 +40,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -65,6 +64,7 @@ import org.openpnp.Part;
 import org.openpnp.Placement;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 
@@ -149,8 +149,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			jobProcessor.load(file);
 		}
 		catch (Exception e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(),
-					"Job Load Error", JOptionPane.ERROR_MESSAGE);
+			MessageBoxes.errorBox(this, "Job Load Error", e.getMessage());
 		}
 	}
 
@@ -161,8 +160,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 				jobProcessor.start();
 			}
 			catch (Exception e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(),
-						"Job Start Error", JOptionPane.ERROR_MESSAGE);
+				MessageBoxes.errorBox(this, "Job Start Error", e.getMessage());
 			}
 		}
 		else if (state == JobState.Paused) {
@@ -178,8 +176,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			jobProcessor.step();
 		}
 		catch (Exception e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(),
-					"Job Start Error", JOptionPane.ERROR_MESSAGE);
+			MessageBoxes.errorBox(this, "Job Start Error", e.getMessage());
 		}
 	}
 
@@ -202,8 +199,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 
 	@Override
 	public void jobEncounteredError(JobError error, String description) {
-		JOptionPane.showMessageDialog(this, description, error.toString(),
-				JOptionPane.ERROR_MESSAGE);
+		MessageBoxes.errorBox(this, error.toString(), description);
 	}
 
 	@Override

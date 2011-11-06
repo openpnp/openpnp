@@ -21,6 +21,8 @@
 
 package org.openpnp.spi;
 
+import java.util.List;
+
 import org.openpnp.Location;
 import org.openpnp.Part;
 
@@ -104,6 +106,14 @@ public interface Head {
 	public boolean canPickAndPlace(Feeder feeder, Location pickLocation, Location placeLocation);
 	
 	/**
+	 * Commands the Head to perform it's pick operation. Generally this just consists
+	 * of turning on the vacuum. This method call is only used by manual user process.
+	 * During Job processing the pick(Part, Feeder, Location) method will be called.
+	 * @throws Exception
+	 */
+	public void pick() throws Exception;
+	
+	/**
 	 * Commands the Head to pick the Part from the Feeder using the given Location. In general,
 	 * this operation should move the nozzle to the specified Location and turn on the
 	 * vacuum. Before this operation is called the Feeder has already been commanded to feed the
@@ -116,6 +126,15 @@ public interface Head {
 	public void pick(Part part, Feeder feeder, Location pickLocation) throws Exception;
 	
 	/**
+	 * Commands the Head to perform it's place operation. Generally this just consists
+	 * of releasing vacuum and may include a puff of air to set the Part. This method
+	 * is only used by manual user process. During Job processing the place(Part, Location)
+	 * method will be used. 
+	 * @throws Exception
+	 */
+	public void place() throws Exception;
+	
+	/**
 	 * Commands the Head to place the given Part at the specified Location. In general,
 	 * this operation should move the nozzle to the specified Location and turn off the
 	 * vacuum.
@@ -124,4 +143,19 @@ public interface Head {
 	 * @throws Exception
 	 */
 	public void place(Part part, Location placeLocation) throws Exception;
+	
+	/**
+	 * Returns a list of named actuators that the user may want to trigger during
+	 * setup tasks. In general, these will not be used during Job processing unless
+	 * the Head implementation makes use of them itself.
+	 * @return
+	 */
+	public List<String> getActuatorNames();
+	
+	/**
+	 * Actuates or deactuates the named actuator. In general, this will not be 
+	 * used during Job processing unless the Head implementation makes use of 
+	 * them itself. 
+	 */
+	public void actuate(String actuator, boolean on) throws Exception;
 }

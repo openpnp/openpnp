@@ -11,22 +11,34 @@ public class RulerReticle implements Reticle {
 	private double unitsPerTick;
 	private Color color;
 	
-	public RulerReticle(LengthUnit units, double unitsPerTick, Color color) {
-		setUnits(units);
-		setColor(color);
-		setUnitsPerTick(unitsPerTick);
+	public RulerReticle() {
+		this.units = LengthUnit.Millimeters;
+		this.unitsPerTick = 1;
+		this.color = Color.red;
 	}
 	
-	public void setColor(Color color) {
-		this.color = color;
+	public LengthUnit getUnits() {
+		return units;
 	}
-	
+
 	public void setUnits(LengthUnit units) {
 		this.units = units;
 	}
-	
+
+	public double getUnitsPerTick() {
+		return unitsPerTick;
+	}
+
 	public void setUnitsPerTick(double unitsPerTick) {
 		this.unitsPerTick = unitsPerTick;
+	}
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
 	}
 
 	@Override
@@ -47,7 +59,6 @@ public class RulerReticle implements Reticle {
 		g2d.drawLine((int) (viewPortCenterX - (viewPortWidth / 2)), (int) viewPortCenterY, (int) (viewPortCenterX + (viewPortWidth / 2)), (int) viewPortCenterY);
 		// draw the vertical splitter
 		g2d.drawLine((int) viewPortCenterX, (int) (viewPortCenterY - (viewPortHeight / 2)), (int) viewPortCenterX, (int) (viewPortCenterY + (viewPortHeight / 2)));
-		// draw the vertical ticks along the horizontal splitter
 		double uppX = LengthUtil.convertLength(cameraUnitsPerPixelX, units, this.units);
 		double uppY = LengthUtil.convertLength(cameraUnitsPerPixelY, units, this.units);
 		double pixelsPerTickX = unitsPerTick / uppX;
