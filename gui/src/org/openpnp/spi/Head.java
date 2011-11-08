@@ -106,9 +106,10 @@ public interface Head {
 	public boolean canPickAndPlace(Feeder feeder, Location pickLocation, Location placeLocation);
 	
 	/**
-	 * Commands the Head to perform it's pick operation. Generally this just consists
-	 * of turning on the vacuum. This method call is only used by manual user process.
-	 * During Job processing the pick(Part, Feeder, Location) method will be called.
+	 * Commands the Head to perform it's pick operation. Generally this just
+	 * consists of turning on the vacuum. This method call is only used by
+	 * manual user process. During Job processing the 
+	 * pick(Part, Feeder, Location) method will be called.
 	 * @throws Exception
 	 */
 	public void pick() throws Exception;

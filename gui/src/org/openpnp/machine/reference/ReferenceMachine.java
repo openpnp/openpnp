@@ -73,7 +73,9 @@ public class ReferenceMachine implements Machine {
 			head.setReference(Configuration.getAttribute(headNode, "reference"));
 			head.setMachine(this);
 			Node configNode = (Node) xpath.evaluate("Configuration", headNode, XPathConstants.NODE);
-			head.configure(configNode);
+			if (configNode != null) {
+				head.configure(configNode);
+			}
 			heads.put(head.getReference(), head);
 		}
 		
@@ -102,7 +104,9 @@ public class ReferenceMachine implements Machine {
 			camera.setUnitsPerPixel(unitsPerPixel);
 			
 			Node configNode = (Node) xpath.evaluate("Configuration", cameraNode, XPathConstants.NODE);
-			camera.configure(configNode);
+			if (configNode != null) {
+				camera.configure(configNode);
+			}
 			cameras.add(camera);
 		}
 		
@@ -112,7 +116,9 @@ public class ReferenceMachine implements Machine {
 			ReferenceFeeder feeder = (ReferenceFeeder) Class.forName(Configuration.getAttribute(feederNode, "class")).newInstance();
 			feeder.setReference(Configuration.getAttribute(feederNode, "reference"));
 			Node configNode = (Node) xpath.evaluate("Configuration", feederNode, XPathConstants.NODE);
-			feeder.configure(configNode);
+			if (configNode != null) {
+				feeder.configure(configNode);
+			}
 			feeders.put(feeder.getReference(), feeder);
 		}
 	}

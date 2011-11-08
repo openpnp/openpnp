@@ -63,6 +63,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 
 import org.openpnp.LengthUnit;
@@ -74,6 +75,10 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.LengthUtil;
+import javax.swing.border.LineBorder;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 
 /**
  * Contains controls, DROs and status for the machine.
@@ -97,6 +102,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	private JRadioButton rdbtnMm;
 	private JRadioButton rdbtnInch;
 	private JButton btnStartStop;
+	private JToggleButton btnPickPlace;
 	private JComboBox comboBoxCoordinateSystem;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
@@ -107,24 +113,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	 */
 	public MachineControlsPanel() {
 		createUi();
-	}
-	
-	public void setMachine(Machine machine) {
-		this.machine = machine;
-		this.head = machine.getHeads().get(0);
-		setUnits(machine.getNativeUnits());
-		machine.addListener(this);
-		comboBoxCoordinateSystem.removeAllItems();
-		comboBoxCoordinateSystem.addItem("Tool");
-		for (Camera camera : machine.getCameras()) {
-			if (camera.getHead() != null) {
-				comboBoxCoordinateSystem.addItem(new CameraItem(camera));
-			}
-		}
-		comboBoxCoordinateSystem.addItem("Absolute");
-		comboBoxCoordinateSystem.setSelectedIndex(0);
-		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
-
+		
 		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
 		
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), yPlusAction);
@@ -150,7 +139,55 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 				super.dispatchEvent(event);
 			}
 		});
+	}
+	
+	public void setMachine(Machine machine) {
+		if (this.machine != null) {
+			machine.removeListener(this);
+		}
+		panelActuators.removeAll();
 		
+		this.machine = machine;
+		this.head = machine.getHeads().get(0);
+		setUnits(machine.getNativeUnits());
+		machine.addListener(this);
+		
+		comboBoxCoordinateSystem.removeAllItems();
+		comboBoxCoordinateSystem.addItem("Tool");
+		for (Camera camera : machine.getCameras()) {
+			if (camera.getHead() != null) {
+				comboBoxCoordinateSystem.addItem(new CameraItem(camera));
+			}
+		}
+		comboBoxCoordinateSystem.addItem("Absolute");
+		comboBoxCoordinateSystem.setSelectedIndex(0);
+		
+		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+
+		for (String actuatorName : head.getActuatorNames()) {
+			final String actuatorName_f = actuatorName;
+			final JToggleButton actuatorButton = new JToggleButton(actuatorName);
+			actuatorButton.setFocusable(false);
+			actuatorButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					final boolean state = actuatorButton.isSelected();
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								head.actuate(actuatorName_f, state);
+							}
+							catch (Exception e) {
+								MessageBoxes.errorBox(MachineControlsPanel.this, "Actuator Command Failed", e.getMessage());
+							}
+						}
+					});
+				}
+			});
+			panelActuators.add(actuatorButton);
+		}
+			
 		setEnabled(machine.isReady());
 	}
 	
@@ -166,6 +203,10 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		zMinusAction.setEnabled(enabled);
 		cPlusAction.setEnabled(enabled);
 		cMinusAction.setEnabled(enabled);
+		pickPlaceAction.setEnabled(enabled);
+		for (Component c : panelActuators.getComponents()) {
+			c.setEnabled(enabled);
+		}
 	}
 	
 	private void setUnits(LengthUnit units) {
@@ -481,6 +522,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnYPlus.setFocusable(false);
 		btnYPlus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnYPlus = new GridBagConstraints();
+		gbc_btnYPlus.insets = new Insets(0, 0, 5, 0);
 		gbc_btnYPlus.gridheight = 2;
 		gbc_btnYPlus.fill = GridBagConstraints.BOTH;
 		gbc_btnYPlus.gridx = 3;
@@ -491,7 +533,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnZPlus.setFocusable(false);
 		btnZPlus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnZPlus = new GridBagConstraints();
-		gbc_btnZPlus.insets = new Insets(0, 0, 5, 0);
+		gbc_btnZPlus.insets = new Insets(0, 5, 5, 0);
 		gbc_btnZPlus.gridheight = 3;
 		gbc_btnZPlus.fill = GridBagConstraints.BOTH;
 		gbc_btnZPlus.gridx = 5;
@@ -502,18 +544,33 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnXMinus.setFocusable(false);
 		btnXMinus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnXMinus = new GridBagConstraints();
-		gbc_btnXMinus.insets = new Insets(0, 20, 0, 0);
+		gbc_btnXMinus.insets = new Insets(0, 0, 5, 5);
 		gbc_btnXMinus.fill = GridBagConstraints.BOTH;
 		gbc_btnXMinus.gridheight = 2;
 		gbc_btnXMinus.gridx = 2;
 		gbc_btnXMinus.gridy = 2;
 		panelControls.add(btnXMinus, gbc_btnXMinus);
 		
+		btnPickPlace = new JToggleButton(pickPlaceAction);
+		btnPickPlace.setFocusable(false);
+		btnPickPlace.setPreferredSize(new Dimension(55, 50));
+		btnPickPlace.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
+		GridBagConstraints gbc_btnPickPlace = new GridBagConstraints();
+		gbc_btnPickPlace.insets = new Insets(0, 0, 5, 0);
+		gbc_btnPickPlace.fill = GridBagConstraints.BOTH;
+		gbc_btnPickPlace.gridheight = 2;
+		gbc_btnPickPlace.gridx = 3;
+		gbc_btnPickPlace.gridy = 2;
+		panelControls.add(btnPickPlace, gbc_btnPickPlace);
+		
 		JButton btnXPlus = new JButton(xPlusAction);
 		btnXPlus.setFocusable(false);
 		btnXPlus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnXPlus = new GridBagConstraints();
-		gbc_btnXPlus.insets = new Insets(0, 0, 0, 20);
+		gbc_btnXPlus.insets = new Insets(0, 5, 5, 0);
 		gbc_btnXPlus.gridheight = 2;
 		gbc_btnXPlus.fill = GridBagConstraints.BOTH;
 		gbc_btnXPlus.gridx = 4;
@@ -535,7 +592,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnCPlus.setFocusable(false);
 		btnCPlus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnCPlus = new GridBagConstraints();
-		gbc_btnCPlus.insets = new Insets(0, 5, 0, 0);
+		gbc_btnCPlus.insets = new Insets(0, 0, 0, 5);
 		gbc_btnCPlus.gridheight = 4;
 		gbc_btnCPlus.fill = GridBagConstraints.BOTH;
 		gbc_btnCPlus.gridx = 1;
@@ -546,7 +603,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnZMinus.setFocusable(false);
 		btnZMinus.setPreferredSize(new Dimension(50, 29));
 		GridBagConstraints gbc_btnZMinus = new GridBagConstraints();
-		gbc_btnZMinus.insets = new Insets(5, 0, 0, 0);
+		gbc_btnZMinus.insets = new Insets(5, 5, 0, 0);
 		gbc_btnZMinus.gridheight = 3;
 		gbc_btnZMinus.fill = GridBagConstraints.BOTH;
 		gbc_btnZMinus.gridx = 5;
@@ -557,11 +614,18 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnYMinus.setFocusable(false);
 		btnYMinus.setPreferredSize(new Dimension(55, 50));
 		GridBagConstraints gbc_btnYMinus = new GridBagConstraints();
+		gbc_btnYMinus.insets = new Insets(5, 0, 0, 0);
 		gbc_btnYMinus.gridheight = 2;
 		gbc_btnYMinus.fill = GridBagConstraints.BOTH;
 		gbc_btnYMinus.gridx = 3;
 		gbc_btnYMinus.gridy = 4;
 		panelControls.add(btnYMinus, gbc_btnYMinus);
+		
+		panelActuators = new JPanel();
+		panelActuators.setBorder(new TitledBorder(null, "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
+		fl_panelActuators.setAlignment(FlowLayout.LEFT);
+		add(panelActuators);
 		
 		JPanel panelStartStop = new JPanel();
 		add(panelStartStop);
@@ -675,6 +739,29 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, 0, -1);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action pickPlaceAction = new AbstractAction("O") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			final boolean state = btnPickPlace.isSelected();
+			executor.submit(new Runnable() {
+				public void run() {
+					try {
+						if (state) {
+							head.pick();
+						}
+						else {
+							head.place();
+						}
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(MachineControlsPanel.this, "Pick/Place Operation Failed", e.getMessage());
+					}
+				}
+			});
 		}
 	};
 	
@@ -797,4 +884,5 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 			updateDros();
 		}
 	};
+	private JPanel panelActuators;
 }

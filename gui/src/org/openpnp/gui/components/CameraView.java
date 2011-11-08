@@ -31,10 +31,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
@@ -42,6 +42,7 @@ import javax.swing.JPopupMenu;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.XmlSerialize;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
@@ -62,15 +63,29 @@ public class CameraView extends JComponent implements CameraListener {
 	private boolean calibrationMode;
 	private int calibrationX1, calibrationY1, calibrationX2, calibrationY2;
 	
-	public CameraView(int maximumFps) {
-		this.maximumFps = maximumFps;
+	public CameraView() {
 		setBackground(Color.black);
 		setOpaque(true);
+		
+		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+		String reticlePref = prefs.get("CameraView.reticle", null);
+		try {
+			Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
+			setReticle(reticle);
+		}
+		catch (Exception e) {
+			System.out.println("Warning: Unable to load Reticle preference, error: " + e.getMessage());
+		}
 		
 		popupMenu = new CameraViewPopupMenu(this);
 		
 		addMouseListener(mouseListener);
 		addMouseMotionListener(mouseMotionListener);
+	}
+	
+	public CameraView(int maximumFps) {
+		this();
+		setMaximumFps(maximumFps);
 	}
 	
 	public void setMaximumFps(int maximumFps) {
@@ -111,6 +126,17 @@ public class CameraView extends JComponent implements CameraListener {
 	
 	public void setReticle(Reticle reticle) {
 		this.reticle = reticle;
+		
+		// TODO: Make more global, this is temporary cause it hurts to use
+		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+		prefs.put("CameraView.reticle", XmlSerialize.serialize(reticle));
+		System.out.println(XmlSerialize.serialize(reticle));
+		try {
+			prefs.flush();
+		}
+		catch (Exception e) {
+			
+		}
 	}
 	
 	public Reticle getReticle() {

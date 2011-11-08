@@ -189,6 +189,7 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
+	// TODO shouldn't all the job errors return instead of continuing?
 	public void run() {
 		state = JobState.Running;
 		fireJobStateChanged();
