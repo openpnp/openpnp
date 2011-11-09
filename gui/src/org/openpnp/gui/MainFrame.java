@@ -404,7 +404,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		splitPaneLeftRight.setDividerLocation(350);
 		splitPaneLeftRight.setLeftComponent(panelLeft);
 		splitPaneLeftRight.setRightComponent(panelRight);
-		splitPaneTopBottom.setDividerLocation(600);
+		splitPaneTopBottom.setDividerLocation(700);
 
 		startPauseResumeJobAction.setEnabled(false);
 		stopJobAction.setEnabled(false);

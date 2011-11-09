@@ -79,6 +79,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.JTabbedPane;
 
 /**
  * Contains controls, DROs and status for the machine.
@@ -207,6 +208,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		for (Component c : panelActuators.getComponents()) {
 			c.setEnabled(enabled);
 		}
+		homeAction.setEnabled(enabled);
 	}
 	
 	private void setUnits(LengthUnit units) {
@@ -621,11 +623,22 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		gbc_btnYMinus.gridy = 4;
 		panelControls.add(btnYMinus, gbc_btnYMinus);
 		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		add(tabbedPane);
+		
+		JPanel panelSpecial = new JPanel();
+		tabbedPane.addTab("Special Commands", null, panelSpecial, null);
+		FlowLayout flowLayout_1 = (FlowLayout) panelSpecial.getLayout();
+		flowLayout_1.setAlignment(FlowLayout.LEFT);
+		
 		panelActuators = new JPanel();
-		panelActuators.setBorder(new TitledBorder(null, "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		tabbedPane.addTab("Actuators", null, panelActuators, null);
 		FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
 		fl_panelActuators.setAlignment(FlowLayout.LEFT);
-		add(panelActuators);
+		
+		JButton btnNewButton = new JButton(homeAction);
+		btnNewButton.setFocusable(false);
+		panelSpecial.add(btnNewButton);
 		
 		JPanel panelStartStop = new JPanel();
 		add(panelStartStop);
@@ -759,6 +772,23 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(MachineControlsPanel.this, "Pick/Place Operation Failed", e.getMessage());
+					}
+				}
+			});
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action homeAction = new AbstractAction("Home") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			executor.submit(new Runnable() {
+				public void run() {
+					try {
+						head.home();
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(MachineControlsPanel.this, "Homing operation failed.", e.getMessage());
 					}
 				}
 			});

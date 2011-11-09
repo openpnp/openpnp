@@ -25,6 +25,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.openpnp.Configuration;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
@@ -48,7 +49,11 @@ import org.w3c.dom.Node;
  * Retract ACTUATOR_PIN
 <pre>
 {@code
-<Configuration>
+<!--
+	feedRate: Feed rate in machine units per minute for movement during the
+		drag operation.
+-->
+<Configuration feedRate="10">
 	<FeedStartLocation units="Millimeters" x="100" y="150" z="50" />
 	<FeedEndLocation units="Millimeters" x="102" y="150" z="50" />
 </Configuration>
@@ -58,10 +63,13 @@ import org.w3c.dom.Node;
 public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private Location feedStartLocation;
 	private Location feedEndLocation;
+	private double feedRate;
 	
 	@Override
 	public void configure(Node n) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
+
+		feedRate = Configuration.getDoubleAttribute(n, "feedRate", 1000);
 		
 		Node feedStartLocationNode = (Node) xpath.evaluate("FeedStartLocation", n, XPathConstants.NODE);
 
@@ -98,7 +106,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		head.moveTo(head.getX(), head.getY(), feedStartLocation.getZ(), head.getC());
 		
 		// drag the tape
-		head.moveTo(feedEndLocation.getX(), feedEndLocation.getY(), feedEndLocation.getZ(), head.getC());
+		head.moveTo(feedEndLocation.getX(), feedEndLocation.getY(), feedEndLocation.getZ(), head.getC(), feedRate);
 		
 		// move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());

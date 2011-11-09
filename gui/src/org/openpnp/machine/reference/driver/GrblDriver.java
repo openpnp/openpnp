@@ -60,7 +60,7 @@ import org.w3c.dom.NodeList;
 	TODO Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
-	private static final double minimumRequiredVersion = 0.71;
+	private static final double minimumRequiredVersion = 0.75;
 	
 	private double x, y, z, c;
 
@@ -113,12 +113,12 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	}
 	
 	@Override
-	public void home(ReferenceHead head) throws Exception {
-		moveTo(head, 0, 0, 0, 0);
+	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
+		moveTo(head, 0, 0, 0, 0, feedRateMmPerMinute);
 	}
-
+	
 	@Override
-	public void moveTo(ReferenceHead head, double x, double y, double z, double c)
+	public void moveTo(ReferenceHead head, double x, double y, double z, double c, double feedRateMmPerMinute)
 			throws Exception {
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
@@ -134,6 +134,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			sb.append(String.format("C%2.2f", c));
 		}
 		if (sb.length() > 0) {
+			sb.append(String.format("F%2.2f", feedRateMmPerMinute));
 			sendCommand("G1" + sb.toString());
 			dwell();
 		}
@@ -145,7 +146,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
-		sendCommand("$1000=" + (enabled ? "1" : "0"));
+		sendCommand("!1=" + (enabled ? "1" : "0"));
 	}
 
 	@Override
@@ -235,11 +236,11 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	private void processConnectionResponses(List<String> responses) {
 		for (String response : responses) {
-			if (response.startsWith("$VERSION = ")) {
+			if (response.startsWith("!0 = ")) {
 				String[] versionComponents = response.split(" ");
 				connectedVersion = Double.parseDouble(versionComponents[2]);
 				connected = true;
-				System.out.println(String.format("Connected to OpenPnP/Grbl Version: %.2f", connectedVersion));
+				System.out.println(String.format("Connected to Grbl Version: %.2f", connectedVersion));
 			}
 		}
 	}
@@ -292,7 +293,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		if (command != null) {
 			System.out.println(command);
 			output.write(command.getBytes());
-			output.write("\r\n".getBytes());
+			output.write("\n".getBytes());
 		}
 		synchronized (commandLock) {
 			if (timeout == -1) {

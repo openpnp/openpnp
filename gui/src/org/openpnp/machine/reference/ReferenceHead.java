@@ -29,16 +29,23 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.openpnp.Configuration;
+import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.openpnp.util.LengthUtil;
 import org.w3c.dom.Node;
 
 /**
 <pre>
 {@code
-<Configuration>
+<!--
+	pickDwellMilliseconds: number of milliseconds to dwell after applying vacuum
+		for a pick operation and before moving off the part.
+	feedRate: Feed rate in machine units per minute for movement operations.
+-->
+<Configuration pickDwellMilliseconds="200" feedRate="15000">
 	<SoftLimits
 		units="Millimeters"
 		xMinimum="0" xMaximum="400" 
@@ -61,13 +68,19 @@ public class ReferenceHead implements Head {
 		softMinX = Double.NEGATIVE_INFINITY, softMaxX = Double.POSITIVE_INFINITY, 
 		softMinY = Double.NEGATIVE_INFINITY, softMaxY = Double.POSITIVE_INFINITY, 
 		softMinZ = Double.NEGATIVE_INFINITY, softMaxZ = Double.POSITIVE_INFINITY, 
-		softMinC = Double.NEGATIVE_INFINITY, softMaxC = Double.POSITIVE_INFINITY; 
+		softMinC = Double.NEGATIVE_INFINITY, softMaxC = Double.POSITIVE_INFINITY;
+	int pickDwellMilliseconds;
+	double feedRate;
 	
 	public ReferenceHead() {
 	}
 	
 	public void configure(Node n) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
+		
+		pickDwellMilliseconds = (int) Configuration.getDoubleAttribute(n, "pickDwellMilliseconds", 200);
+		
+		feedRate = Configuration.getDoubleAttribute(n, "feedRate", 1000);
 		
 		Node softLimitsNode = (Node) xpath.evaluate("SoftLimits", n, XPathConstants.NODE);
 		
@@ -98,12 +111,17 @@ public class ReferenceHead implements Head {
 
 	@Override
 	public void home() throws Exception {
-//		moveTo(x, y, homeZ, c);
-//		moveTo(homeX, homeY, homeZ, homeC);
+		moveTo(getX(), getY(), 0, getC());
+		moveTo(0, 0, 0, 0);
+	}
+	
+	@Override
+	public void moveTo(double x, double y, double z, double c) throws Exception {
+		moveTo(x, y, z, c, feedRate);
 	}
 
 	@Override
-	public void moveTo(double x, double y, double z, double c) throws Exception {
+	public void moveTo(double x, double y, double z, double c, double feedRatePerMinute) throws Exception {
 		if (x < softMinX || x > softMaxX ||
 				y < softMinY || y > softMaxY ||
 				z < softMinZ || z > softMaxZ ||
@@ -115,7 +133,8 @@ public class ReferenceHead implements Head {
 					softMinZ, softMaxZ,
 					softMinC, softMaxC));
 		}
-		machine.getDriver().moveTo(this, x + offsetX, y + offsetY, z + offsetZ, c + offsetC);
+		double feedRateMmPerMinute = LengthUtil.convertLength(feedRatePerMinute, machine.getNativeUnits(), LengthUnit.Millimeters);
+		machine.getDriver().moveTo(this, x + offsetX, y + offsetY, z + offsetZ, c + offsetC, feedRateMmPerMinute);
 		this.x = x + offsetX;
 		this.y = y + offsetY;
 		this.z = z + offsetZ;
@@ -145,6 +164,7 @@ public class ReferenceHead implements Head {
 		// pick the part
 		machine.getDriver().pick(this, part);
 		machine.fireMachineHeadActivity(machine, this);
+		Thread.sleep(pickDwellMilliseconds);
 	}
 
 	@Override

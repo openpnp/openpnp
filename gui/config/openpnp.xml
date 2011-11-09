@@ -12,13 +12,13 @@
 
 			 <Heads>
 			 	<Head reference="H1" class="org.openpnp.machine.reference.ReferenceHead">
-			 		<Configuration>
+			 		<Configuration pickDwellMilliseconds="200" feedRate="15000">
 			 			<SoftLimits
 			 				units="Millimeters"
 			 				xMinimum="0" xMaximum="400" 
 			 				yMinimum="0" yMaximum="600"  
 			 				zMinimum="0" zMaximum="100"  
-			 				cMinimum="0" cMaximum="180" 
+			 				cMinimum="0" cMaximum="360" 
 			 			/> 
 			 		</Configuration>
 			 	</Head>
@@ -39,25 +39,25 @@
 			
 			<Feeders>
 				<Feeder reference="L0" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="150" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="150" z="50" />
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L1" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="160" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="160" z="50" />
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L2" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="170" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="170" z="50" />
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L3" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="180" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="180" z="50" />
 					</Configuration>
@@ -68,19 +68,19 @@
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L5" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="200" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="200" z="50" />
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L6" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="210" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="210" z="50" />
 					</Configuration>
 				</Feeder>
 				<Feeder reference="L7" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration>
+					<Configuration feedRate="1000">
 						<FeedStartLocation units="Millimeters" x="100" y="220" z="50" />
 						<FeedEndLocation units="Millimeters" x="102" y="220" z="50" />
 					</Configuration>

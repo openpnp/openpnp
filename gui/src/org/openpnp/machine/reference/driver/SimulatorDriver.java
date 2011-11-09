@@ -72,12 +72,14 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 	}
 	
 	@Override
-	public void home(ReferenceHead head) throws Exception {
-		panel.moveTo(head, 0, 0, 0, 0);
+	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
+		moveTo(head, 0, 0, 0, 0, feedRateMmPerMinute);
 	}
 
 	@Override
-	public void moveTo(ReferenceHead head, double x, double y, double z, double c) throws Exception {
+	public void moveTo(ReferenceHead head, double x, double y, double z, double c, double feedRateMmPerMinute) throws Exception {
+		double feedRateMmPerSecond = feedRateMmPerMinute * 60;
+		panel.mmPerSecond = feedRateMmPerSecond;
 		panel.moveTo(head, x, y, z, c);
 	}
 
@@ -95,7 +97,7 @@ public class SimulatorDriver extends JFrame implements ReferenceDriver {
 	public void actuate(ReferenceHead head, int index, boolean on) throws Exception {
 		panel.actuate(index, on);
 	}
-
+	
 	public class SimulatorPanel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
 		// TODO add multiple head support, just for fun
 		

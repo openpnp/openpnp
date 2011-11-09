@@ -96,6 +96,17 @@ public interface Head {
 	void moveTo(double x, double y, double z, double c) throws Exception;
 
 	/**
+	 * Move the Head to the given position. Values are in Machine native units. Heads are not
+	 * required to make the movement in any particular order.
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param a
+	 * @param feedRatePerMinute
+	 */
+	void moveTo(double x, double y, double z, double c, double feedRatePerMinute) throws Exception;
+
+	/**
 	 * Queries the Head to determine if it has the ability to pick from the given Feeder
 	 * at the given Location and then move the Part to the destination Location.
 	 * @param feeder

@@ -41,17 +41,18 @@ public interface ReferenceDriver {
 	 * should be at 0,0,0,0. 
 	 * @throws Exception
 	 */
-	public void home(ReferenceHead head) throws Exception;
+	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception;
 	
 	/**
-	 * Move the nozzle to the specified location and rotation at full speed.
+	 * Move the nozzle to the specified location and rotation at the specified speed in
+	 * mm per minute.
 	 * @param x
 	 * @param y
 	 * @param z
 	 * @param a
 	 * @throws Exception
 	 */
-	public void moveTo(ReferenceHead head, double x, double y, double z, double c) throws Exception;
+	public void moveTo(ReferenceHead head, double x, double y, double z, double c, double feedRateMmPerMinute) throws Exception;
 	
 	/**
 	 * Causes the nozzle to apply vacuum and any other operation that it uses for picking
