@@ -67,6 +67,9 @@ import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 
 /**
  * The main window of the application. Implements the top level menu, Job run
@@ -74,7 +77,7 @@ import org.openpnp.spi.Feeder;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame implements JobProcessorListener,
-		JobProcessorDelegate {
+		JobProcessorDelegate, MachineListener {
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
@@ -109,17 +112,19 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		jobProcessor = new JobProcessor(configuration);
 		jobProcessor.addListener(this);
 		jobProcessor.setDelegate(this);
+		configuration.getMachine().addListener(this);
 
 		machineControlsPanel.setMachine(configuration.getMachine());
 		
-		lblStatus = new JLabel("...");
-		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		contentPane.add(lblStatus, BorderLayout.SOUTH);
+		updateJobControls();
 	}
-
-	@Override
-	public void jobStateChanged(JobState state) {
-		Job job = jobProcessor.getJob();
+	
+	/**
+	 * Updates the Job controls based on the Job state and the Machine's
+	 * readiness.
+	 */
+	private void updateJobControls() {
+		JobState state = jobProcessor.getState();
 		if (state == JobState.Stopped) {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
@@ -138,6 +143,19 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			stopJobAction.setEnabled(true);
 			stepJobAction.setEnabled(true);
 		}
+
+		// We allow the above to run first so that all state is represented correctly
+		// even if the machine is disabled.
+		if (!configuration.getMachine().isReady()) {
+			startPauseResumeJobAction.setEnabled(false);
+			stopJobAction.setEnabled(false);
+			stepJobAction.setEnabled(false);
+		}
+	}
+
+	@Override
+	public void jobStateChanged(JobState state) {
+		updateJobControls();
 	}
 
 	private void openJob() {
@@ -188,7 +206,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	public void jobLoaded(Job job) {
 		partsTableModel.setJob(jobProcessor.getJob());
 		boardsTableModel.setJob(jobProcessor.getJob());
-		startPauseResumeJobAction.setEnabled(true);
+		updateJobControls();
 	}
 
 	@Override
@@ -204,7 +222,6 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 
 	@Override
 	public void boardProcessingCompleted(JobBoard board) {
-		// boardsComplete++;
 	}
 
 	@Override
@@ -231,6 +248,29 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	@Override
 	public void detailedStatusUpdated(String status) {
 		lblStatus.setText(status);
+	}
+	
+	@Override
+	public void machineHeadActivity(Machine machine, Head head) {
+	}
+
+	@Override
+	public void machineStarted(Machine machine) {
+		updateJobControls();
+	}
+
+	@Override
+	public void machineStartFailed(Machine machine, String reason) {
+	}
+
+	@Override
+	public void machineStopped(Machine machine, String reason) {
+		updateJobControls();
+		jobProcessor.stop();
+	}
+
+	@Override
+	public void machineStopFailed(Machine machine, String reason) {
 	}
 
 	private void createUi() {
@@ -405,10 +445,10 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		splitPaneLeftRight.setLeftComponent(panelLeft);
 		splitPaneLeftRight.setRightComponent(panelRight);
 		splitPaneTopBottom.setDividerLocation(700);
-
-		startPauseResumeJobAction.setEnabled(false);
-		stopJobAction.setEnabled(false);
-		stepJobAction.setEnabled(false);
+		
+		lblStatus = new JLabel("...");
+		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		contentPane.add(lblStatus, BorderLayout.SOUTH);
 	}
 
 	// class PartsTableCellRenderer extends DefaultTableCellRenderer {
