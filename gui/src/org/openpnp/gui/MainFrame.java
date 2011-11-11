@@ -54,7 +54,7 @@ import org.openpnp.spi.MachineListener;
  * and Job setup.
  */
 @SuppressWarnings("serial")
-public class MainFrame extends MainFrameUI implements JobProcessorListener,
+public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		JobProcessorDelegate, MachineListener {
 	/*
 	 * TODO define accelerators and mnemonics

@@ -49,7 +49,7 @@ import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 
 @SuppressWarnings("serial")
-public abstract class MainFrameUI extends JFrame {
+public abstract class MainFrameUi extends JFrame {
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
@@ -62,7 +62,7 @@ public abstract class MainFrameUI extends JFrame {
 	protected JTable partsTable;
 	protected JLabel lblStatus;
 
-	public MainFrameUI() {
+	public MainFrameUi() {
 		createUi();
 	}
 	
