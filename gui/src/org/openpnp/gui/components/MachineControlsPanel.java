@@ -103,6 +103,9 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	private JComboBox comboBoxCoordinateSystem;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
+	private Color startColor = Color.green;
+	private Color stopColor = new Color(178, 34, 34);
+	
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
@@ -163,6 +166,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		comboBoxCoordinateSystem.setSelectedIndex(0);
 		
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
 
 		for (String actuatorName : head.getActuatorNames()) {
 			final String actuatorName_f = actuatorName;
@@ -187,7 +191,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 			});
 			panelActuators.add(actuatorButton);
 		}
-			
+		
 		setEnabled(machine.isReady());
 	}
 	
@@ -352,21 +356,25 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	@Override
 	public void machineStarted(Machine machine) {
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
 	}
 
 	@Override
 	public void machineStartFailed(Machine machine, String reason) {
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
 	}
 
 	@Override
 	public void machineStopped(Machine machine, String reason) {
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
 	}
 
 	@Override
 	public void machineStopFailed(Machine machine, String reason) {
 		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
 	}
 
 	private void createUi() {
@@ -645,7 +653,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		
 		btnStartStop = new JButton(startMachineAction);
 		btnStartStop.setFocusable(false);
-		btnStartStop.setForeground(new Color(178, 34, 34));
+		btnStartStop.setForeground(startColor);
 		panelStartStop.add(btnStartStop);
 		btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
 		btnStartStop.setPreferredSize(new Dimension(160, 70));
@@ -783,6 +791,20 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 				public void run() {
 					try {
 						head.home();
+						
+						if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
+							CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
+							Camera camera = cameraItem.getCamera();
+							Location cameraLocation = camera.getLocation();
+							cameraLocation = LengthUtil.convertLocation(cameraLocation, machine.getNativeUnits());
+							double x = head.getX() - cameraLocation.getX();
+							double y = head.getY() - cameraLocation.getY();
+							double z = head.getZ() - cameraLocation.getZ();
+							double c = head.getC() - cameraLocation.getRotation();
+							
+							head.moveTo(x, y, z, c);
+						}
+						
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(MachineControlsPanel.this, "Homing operation failed.", e.getMessage());
