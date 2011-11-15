@@ -62,6 +62,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
@@ -75,11 +76,6 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.LengthUtil;
-import javax.swing.border.LineBorder;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.JTabbedPane;
 
 /**
  * Contains controls, DROs and status for the machine.
@@ -115,6 +111,9 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	public MachineControlsPanel() {
 		createUi();
 		
+		// Add global hotkeys for the arrow keys
+		// TODO: Make sure that multiple instances of this class don't screw this up. Probably
+		// needs to be a separate, static class.
 		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
 		
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), yPlusAction);
@@ -144,7 +143,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	
 	public void setMachine(Machine machine) {
 		if (this.machine != null) {
-			machine.removeListener(this);
+			this.machine.removeListener(this);
 		}
 		panelActuators.removeAll();
 		
@@ -651,12 +650,11 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
 		btnStartStop.setPreferredSize(new Dimension(160, 70));
 		
-		setFocusTraversalPolicy(new FocusPolicy());
+		setFocusTraversalPolicy(focusPolicy);
 		setFocusTraversalPolicyProvider(true);
 	}
 	
-	class FocusPolicy extends FocusTraversalPolicy {
-
+	private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
 		@Override
 		public Component getComponentAfter(Container aContainer,
 				Component aComponent) {
@@ -688,8 +686,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		public Component getLastComponent(Container aContainer) {
 			return sliderIncrements;
 		}
-		
-	}
+	};
 	
 	@SuppressWarnings("serial")
 	private Action yPlusAction = new AbstractAction("Y+") {

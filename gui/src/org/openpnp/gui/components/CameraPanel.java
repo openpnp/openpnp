@@ -62,7 +62,7 @@ public class CameraPanel extends JPanel {
 		camerasCombo.addItem(new CameraItem(camera));
 		camerasCombo.setSelectedIndex(camerasCombo.getSelectedIndex());
 	}
-
+	
 	private void createUi() {
 		camerasPanel = new JPanel();
 

@@ -12,7 +12,7 @@
 
 			 <Heads>
 			 	<Head reference="H1" class="org.openpnp.machine.reference.ReferenceHead">
-			 		<Configuration pickDwellMilliseconds="200" feedRate="15000">
+			 		<Configuration pickDwellMilliseconds="200" feedRate="9000">
 			 			<SoftLimits
 			 				units="Millimeters"
 			 				xMinimum="0" xMaximum="400" 
