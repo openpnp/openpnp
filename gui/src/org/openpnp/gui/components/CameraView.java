@@ -43,9 +43,13 @@ import org.openpnp.CameraListener;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.XmlSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
+	private final static Logger logger = LoggerFactory.getLogger(CameraView.class);
+	
 	private Camera camera;
 	private BufferedImage lastFrame;
 	private int maximumFps;
@@ -74,7 +78,7 @@ public class CameraView extends JComponent implements CameraListener {
 			setReticle(reticle);
 		}
 		catch (Exception e) {
-			System.out.println("Warning: Unable to load Reticle preference, error: " + e.getMessage());
+			logger.warn("Warning: Unable to load Reticle preference", e);
 		}
 		
 		popupMenu = new CameraViewPopupMenu(this);
@@ -130,7 +134,6 @@ public class CameraView extends JComponent implements CameraListener {
 		// TODO: Make more global, this is temporary cause it hurts to use
 		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
 		prefs.put("CameraView.reticle", XmlSerialize.serialize(reticle));
-		System.out.println(XmlSerialize.serialize(reticle));
 		try {
 			prefs.flush();
 		}

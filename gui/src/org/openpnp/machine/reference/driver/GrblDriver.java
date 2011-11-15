@@ -40,6 +40,8 @@ import org.openpnp.Job;
 import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -60,6 +62,7 @@ import org.w3c.dom.NodeList;
 	TODO Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
+	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
 	private static final double minimumRequiredVersion = 0.75;
 	
 	private double x, y, z, c;
@@ -92,7 +95,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node settingNode = nodes.item(i);
-			System.out.println(Configuration.getAttribute(settingNode, "name"));
 		}
 		
 		connect(portName, portBaud);
@@ -240,7 +242,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 				String[] versionComponents = response.split(" ");
 				connectedVersion = Double.parseDouble(versionComponents[2]);
 				connected = true;
-				System.out.println(String.format("Connected to Grbl Version: %.2f", connectedVersion));
+				logger.debug(String.format("Connected to Grbl Version: %.2f", connectedVersion));
 			}
 		}
 	}
@@ -255,7 +257,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.error("disconnect()", e);
 		}
 		if (serialPort != null) {
 			serialPort.close();
@@ -263,10 +265,32 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		disconnectRequested = false;
 	}
 
+	private List<String> sendCommand(String command) throws Exception {
+		return sendCommand(command, -1);
+	}
+	
+	private List<String> sendCommand(String command, long timeout) throws Exception {
+		if (command != null) {
+			logger.debug(command);
+			output.write(command.getBytes());
+			output.write("\n".getBytes());
+		}
+		synchronized (commandLock) {
+			if (timeout == -1) {
+				commandLock.wait();
+			}
+			else {
+				commandLock.wait(timeout);
+			}
+		}
+		List<String> responses = drainResponseQueue();
+		return responses;
+	}
+	
 	public void run() {
 		while (!disconnectRequested) {
 			String line = readLine().trim();
-			System.out.println(line);
+			logger.debug(line);
 			responseQueue.offer(line);
 			if (line.equals("ok") || line.startsWith("error: ")) {
 				// This is the end of processing for a command
@@ -285,28 +309,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		sendCommand("G4 P0");
 	}
 
-	private List<String> sendCommand(String command) throws Exception {
-		return sendCommand(command, -1);
-	}
-	
-	private List<String> sendCommand(String command, long timeout) throws Exception {
-		if (command != null) {
-			System.out.println(command);
-			output.write(command.getBytes());
-			output.write("\n".getBytes());
-		}
-		synchronized (commandLock) {
-			if (timeout == -1) {
-				commandLock.wait();
-			}
-			else {
-				commandLock.wait(timeout);
-			}
-		}
-		List<String> responses = drainResponseQueue();
-		return responses;
-	}
-	
 	private List<String> drainResponseQueue() {
 		List<String> responses = new ArrayList<String>();
 		String response;
@@ -335,7 +337,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.error("readLine()", e);
 		}
 		return null;
 	}
@@ -349,7 +351,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			return ch;
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.error("readChar()", e);
 			return -1;
 		}
 	}
