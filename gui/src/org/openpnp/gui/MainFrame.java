@@ -22,12 +22,11 @@
 package org.openpnp.gui;
 
 import java.awt.FileDialog;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 
 import javax.swing.AbstractAction;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTable;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
@@ -40,9 +39,8 @@ import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.Part;
 import org.openpnp.Placement;
-import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -56,6 +54,7 @@ import org.openpnp.spi.MachineListener;
 @SuppressWarnings("serial")
 public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		JobProcessorDelegate, MachineListener {
+
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
@@ -69,20 +68,30 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	public MainFrame() {
 		super();
 		
+		// Get handlers for quit and close in place
+		registerForMacOSXEvents();
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				quit();
+			}
+		});
+		
+
 		try {
 			configuration = new Configuration("config");
 		}
 		catch (Exception e) {
 			throw new Error(e);
 		}
-
+		
 		for (Camera camera : configuration.getMachine().getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
-		
+
 		boardsTableModel = new BoardsTableModel();
 		partsTableModel = new PartsTableModel();
-		
+
 		boardsTable.setModel(boardsTableModel);
 		partsTable.setModel(partsTableModel);
 
@@ -92,10 +101,46 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		configuration.getMachine().addListener(this);
 
 		machineControlsPanel.setMachine(configuration.getMachine());
-		
+
 		updateJobControls();
 	}
+
+	public void registerForMacOSXEvents() {
+		if ((System.getProperty("os.name").toLowerCase().startsWith("mac os x"))) {
+			try {
+				// Generate and register the OSXAdapter, passing it a hash of
+				// all the methods we wish to
+				// use as delegates for various
+				// com.apple.eawt.ApplicationListener methods
+				OSXAdapter.setQuitHandler(this,
+						getClass().getDeclaredMethod("quit", (Class[]) null));
+//				OSXAdapter.setAboutHandler(this,
+//						getClass().getDeclaredMethod("about", (Class[]) null));
+//				OSXAdapter.setPreferencesHandler(this, getClass()
+//						.getDeclaredMethod("preferences", (Class[]) null));
+//				OSXAdapter.setFileHandler(
+//						this,
+//						getClass().getDeclaredMethod("loadImageFile",
+//								new Class[] { String.class }));
+			}
+			catch (Exception e) {
+				System.err.println("Error while loading the OSXAdapter:");
+				e.printStackTrace();
+			}
+		}
+	}
 	
+	public boolean quit() {
+		// Attempt to stop the machine on quit
+		try {
+			configuration.getMachine().stop();
+		}
+		catch (Exception e) {
+		}
+		System.exit(0);
+		return true;
+	}
+
 	/**
 	 * Updates the Job controls based on the Job state and the Machine's
 	 * readiness.
@@ -121,7 +166,8 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 			stepJobAction.setEnabled(true);
 		}
 
-		// We allow the above to run first so that all state is represented correctly
+		// We allow the above to run first so that all state is represented
+		// correctly
 		// even if the machine is disabled.
 		if (!configuration.getMachine().isReady()) {
 			startPauseResumeJobAction.setEnabled(false);
@@ -167,7 +213,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 			jobProcessor.pause();
 		}
 	}
-	
+
 	@Override
 	protected void stepJob() {
 		try {
@@ -225,12 +271,12 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	@Override
 	public void partProcessingStarted(JobBoard board, Placement placement) {
 	}
-	
+
 	@Override
 	public void detailedStatusUpdated(String status) {
 		lblStatus.setText(status);
 	}
-	
+
 	@Override
 	public void machineHeadActivity(Machine machine, Head head) {
 	}

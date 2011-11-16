@@ -26,6 +26,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -78,7 +81,6 @@ public abstract class MainFrameUi extends JFrame {
 	protected abstract void stopJob();
 	
 	private void createUi() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1280, 1024);
 
 		JMenuBar menuBar = new JMenuBar();
@@ -254,7 +256,7 @@ public abstract class MainFrameUi extends JFrame {
 		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		contentPane.add(lblStatus, BorderLayout.SOUTH);
 	}
-
+	
 	protected Action stopJobAction = new AbstractAction("Stop") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
