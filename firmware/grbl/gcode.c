@@ -288,7 +288,8 @@ uint8_t gc_execute_line(char *line) {
       mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS],
         (gc.inverse_feed_rate_mode) ? inverse_feed_rate : gc.feed_rate, gc.inverse_feed_rate_mode);
       break;
-    }  
+    }
+    break;
     case NEXT_ACTION_SET_OFFSETS:
       mc_set_current(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS]);
 	  break;
