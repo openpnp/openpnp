@@ -47,6 +47,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
+import java.awt.CardLayout;
 
 @SuppressWarnings("serial")
 public abstract class MainFrameUi extends JFrame {
@@ -61,6 +62,8 @@ public abstract class MainFrameUi extends JFrame {
 	protected JTable boardsTable;
 	protected JTable partsTable;
 	protected JLabel lblStatus;
+	protected JPanel panelBottom;
+	protected CardLayout panelBottomCardLayout;
 
 	public MainFrameUi() {
 		createUi();
@@ -190,12 +193,12 @@ public abstract class MainFrameUi extends JFrame {
 										cameraPanel.setBorder(new TitledBorder(null, "Cameras",
 												TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		
-		JPanel panelBottom = new JPanel();
+		panelBottom = new JPanel();
 		splitPaneTopBottom.setRightComponent(panelBottom);
-		panelBottom.setLayout(new BorderLayout(0, 0));
+		panelBottom.setLayout(panelBottomCardLayout = new CardLayout(0, 0));
 
 		JPanel panelJob = new JPanel();
-		panelBottom.add(panelJob, BorderLayout.CENTER);
+		panelBottom.add(panelJob, "Job");
 		panelJob.setBorder(new TitledBorder(null, "Job", TitledBorder.LEADING,
 				TitledBorder.TOP, null, null));
 		panelJob.setLayout(new BorderLayout(0, 0));
