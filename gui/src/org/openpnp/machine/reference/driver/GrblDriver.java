@@ -270,12 +270,12 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	}
 	
 	private List<String> sendCommand(String command, long timeout) throws Exception {
-		if (command != null) {
-			logger.debug(command);
-			output.write(command.getBytes());
-			output.write("\n".getBytes());
-		}
 		synchronized (commandLock) {
+			if (command != null) {
+				logger.debug(command);
+				output.write(command.getBytes());
+				output.write("\n".getBytes());
+			}
 			if (timeout == -1) {
 				commandLock.wait();
 			}
