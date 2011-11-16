@@ -148,7 +148,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
-		sendCommand("!1=" + (enabled ? "1" : "0"));
+		sendCommand("$1000=" + (enabled ? "1" : "0"));
 	}
 
 	@Override
@@ -238,7 +238,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	private void processConnectionResponses(List<String> responses) {
 		for (String response : responses) {
-			if (response.startsWith("!0 = ")) {
+			if (response.startsWith("$VERSION = ")) {
 				String[] versionComponents = response.split(" ");
 				connectedVersion = Double.parseDouble(versionComponents[2]);
 				connected = true;
