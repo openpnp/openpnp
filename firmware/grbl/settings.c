@@ -161,8 +161,7 @@ void settings_store_setting(int parameter, double value) {
 // Initialize the config subsystem
 void settings_init() {
   if(read_settings()) {
-    //printPgmString(PSTR("'$' to dump current settings\r\n"));
-	settings_dump();
+    printPgmString(PSTR("'$' to dump current settings\r\n"));
   } else {
     printPgmString(PSTR("Warning: Failed to read EEPROM settings. Using defaults.\r\n"));
     settings_reset();
