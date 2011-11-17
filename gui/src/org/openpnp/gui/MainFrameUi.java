@@ -22,13 +22,11 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -44,13 +42,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
-import java.awt.CardLayout;
 
 @SuppressWarnings("serial")
 public abstract class MainFrameUi extends JFrame {
@@ -79,6 +77,8 @@ public abstract class MainFrameUi extends JFrame {
 	protected abstract void stepJob();
 
 	protected abstract void stopJob();
+	
+	protected abstract void orientBoard();
 	
 	private void createUi() {
 		setBounds(100, 100, 1280, 1024);
@@ -210,6 +210,8 @@ public abstract class MainFrameUi extends JFrame {
 
 		boardsTable = new JTable();
 		JScrollPane boardsTableScroller = new JScrollPane(boardsTable);
+		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
 
 		JPanel panelRight = new JPanel();
 		panelRight.setLayout(new BorderLayout());
@@ -330,6 +332,7 @@ public abstract class MainFrameUi extends JFrame {
 	protected Action orientBoardAction = new AbstractAction("Set Board Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			orientBoard();
 		}
 	};
 

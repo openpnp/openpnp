@@ -21,12 +21,15 @@
 
 package org.openpnp.gui;
 
+import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
@@ -46,6 +49,8 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.Wizard;
+import org.openpnp.spi.WizardContainer;
 
 /**
  * The main window of the application. Implements the top level menu, Job run
@@ -53,7 +58,7 @@ import org.openpnp.spi.MachineListener;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends MainFrameUi implements JobProcessorListener,
-		JobProcessorDelegate, MachineListener {
+		JobProcessorDelegate, MachineListener, WizardContainer {
 
 	/*
 	 * TODO define accelerators and mnemonics
@@ -179,6 +184,38 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	@Override
 	public void jobStateChanged(JobState state) {
 		updateJobControls();
+	}
+	
+	@Override
+	protected void orientBoard() {
+		// Get the currently selected board
+		int selectedRow = boardsTable.getSelectedRow();
+		JobBoard board = jobProcessor.getJob().getBoards().get(selectedRow);
+		Wizard wizard = new OrientBoardWizard(board, configuration);
+		startWizard(wizard);
+	}
+	
+	private void startWizard(Wizard wizard) {
+		// TODO: If there is already a wizard running, take care of that
+		
+		// Configure the wizard
+		wizard.setWizardContainer(this);
+		
+		// Create a titled panel to hold the wizard
+		JPanel panel = new JPanel();
+		panel.setBorder(BorderFactory.createTitledBorder("Wizard: " + wizard.getWizardName()));
+		panel.setLayout(new BorderLayout());
+		panel.add(wizard.getWizardPanel());
+		panelBottom.add(panel, "Wizard");
+		panelBottomCardLayout.show(panelBottom, "Wizard");
+	}
+	
+	public void wizardCompleted(Wizard wizard) {
+		
+	}
+	
+	public void wizardCancelled(Wizard wizard) {
+		
 	}
 
 	@Override
