@@ -1,28 +1,26 @@
 package org.openpnp.gui;
 
-import javax.swing.JButton;
-import javax.swing.JPanel;
-
-import org.openpnp.Configuration;
-import org.openpnp.Job.JobBoard;
-import org.openpnp.spi.Wizard;
-import org.openpnp.spi.WizardContainer;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import javax.swing.UIManager;
-import java.awt.CardLayout;
-import javax.swing.JLabel;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
+
+import org.openpnp.BoardLocation;
+import org.openpnp.Configuration;
+import org.openpnp.spi.Wizard;
+import org.openpnp.spi.WizardContainer;
 
 @SuppressWarnings("serial")
 public class OrientBoardWizard extends JPanel implements Wizard {
 	private WizardContainer wizardContainer;
 	
-	public OrientBoardWizard(JobBoard board, Configuration configuration) {
+	public OrientBoardWizard(BoardLocation board, Configuration configuration) {
 		setLayout(new BorderLayout(0, 0));
 		
 		JPanel panel = new JPanel();

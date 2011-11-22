@@ -190,7 +190,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	protected void orientBoard() {
 		// Get the currently selected board
 		int selectedRow = boardsTable.getSelectedRow();
-		JobBoard board = jobProcessor.getJob().getBoards().get(selectedRow);
+		BoardLocation board = jobProcessor.getJob().getBoards().get(selectedRow);
 		Wizard wizard = new OrientBoardWizard(board, configuration);
 		startWizard(wizard);
 	}
