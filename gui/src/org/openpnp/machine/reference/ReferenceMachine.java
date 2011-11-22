@@ -26,102 +26,41 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
-import org.openpnp.Location;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 public class ReferenceMachine implements Machine {
+	@XStreamOmitField
 	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
-	private Map<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
-	private Map<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
-	private ReferenceDriver driver;
-	private List<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
-	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
-	private boolean ready;
 	
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		
-		NodeList nodes;
-
-		Node driverNode = (Node) xpath.evaluate("Driver", n, XPathConstants.NODE);
-		driver = (ReferenceDriver) Class.forName(Configuration.getAttribute(driverNode, "class")).newInstance();
-		driver.configure((Node) xpath.evaluate("Configuration", driverNode, XPathConstants.NODE)); 
-		
-		// TODO consider moving all this class specific configuration into the Reference* class it
-		// belongs to.
-		nodes = (NodeList) xpath.evaluate("Heads/Head", n, XPathConstants.NODESET);
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node headNode = nodes.item(i);
-			ReferenceHead head = (ReferenceHead) Class.forName(Configuration.getAttribute(headNode, "class")).newInstance();
-			head.setReference(Configuration.getAttribute(headNode, "reference"));
-			head.setMachine(this);
-			Node configNode = (Node) xpath.evaluate("Configuration", headNode, XPathConstants.NODE);
-			if (configNode != null) {
-				head.configure(configNode);
-			}
-			heads.put(head.getReference(), head);
-		}
-		
-		nodes = (NodeList) xpath.evaluate("Cameras/Camera", n, XPathConstants.NODESET);
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node cameraNode = nodes.item(i);
-			ReferenceCamera camera = (ReferenceCamera) Class.forName(Configuration.getAttribute(cameraNode, "class")).newInstance();
-			camera.setName(Configuration.getAttribute(cameraNode, "name"));
-			
-			String headReference = Configuration.getAttribute(cameraNode, "head");
-			if (headReference != null) {
-				camera.setHead(getHead(headReference));
-			}
-			
-			String looking = Configuration.getAttribute(cameraNode, "looking");
-			camera.setLooking(Looking.valueOf(looking));
-			
-			Node locationNode = (Node) xpath.evaluate("Location", cameraNode, XPathConstants.NODE);
-			Location location = new Location();
-			location.parse(locationNode);
-			camera.setLocation(location);
-			
-			Node unitsPerPixelNode = (Node) xpath.evaluate("UnitsPerPixel", cameraNode, XPathConstants.NODE);
-			Location unitsPerPixel = new Location();
-			unitsPerPixel.parse(unitsPerPixelNode);
-			camera.setUnitsPerPixel(unitsPerPixel);
-			
-			Node configNode = (Node) xpath.evaluate("Configuration", cameraNode, XPathConstants.NODE);
-			if (configNode != null) {
-				camera.configure(configNode);
-			}
-			cameras.add(camera);
-		}
-		
-		nodes = (NodeList) xpath.evaluate("Feeders/Feeder", n, XPathConstants.NODESET);
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node feederNode = nodes.item(i);
-			ReferenceFeeder feeder = (ReferenceFeeder) Class.forName(Configuration.getAttribute(feederNode, "class")).newInstance();
-			feeder.setReference(Configuration.getAttribute(feederNode, "reference"));
-			Node configNode = (Node) xpath.evaluate("Configuration", feederNode, XPathConstants.NODE);
-			if (configNode != null) {
-				feeder.configure(configNode);
-			}
-			feeders.put(feeder.getReference(), feeder);
-		}
-	}
+	@XStreamAlias(value="Driver")
+	private ReferenceDriver driver;
+	@XStreamImplicit(itemFieldName="Head", keyFieldName="id")
+	private LinkedHashMap<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
+	@XStreamImplicit(itemFieldName="Camera")
+	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
+	@XStreamImplicit(itemFieldName="Feeder", keyFieldName="id")
+	private LinkedHashMap<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
+	
+	@XStreamOmitField
+	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
+	@XStreamOmitField
+	private boolean enabled;
+	
+	@XStreamOmitField
+	private boolean started;
 	
 	@Override
 	public void prepareJob(Configuration configuration, Job job) throws Exception {
@@ -171,34 +110,52 @@ public class ReferenceMachine implements Machine {
 	}
 
 	@Override
-	public boolean isReady() {
-		return ready;
+	public boolean isEnabled() {
+		return enabled;
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) throws Exception {
+		if (enabled) {
+			try {
+				driver.setEnabled(true);
+				enabled = true;
+			}
+			catch (Exception e) {
+				fireMachineEnableFailed(this, e.getMessage());
+				throw e;
+			}
+			fireMachineEnabled(this);
+		}
+		else {
+			try {
+				driver.setEnabled(false);
+				enabled = false;
+			}
+			catch (Exception e) {
+				fireMachineDisableFailed(this, e.getMessage());
+				throw e;
+			}
+			fireMachineDisabled(this, "User requested stop.");
+		}
 	}
 
 	@Override
 	public void start() throws Exception {
-		try {
-			driver.setEnabled(true);
-			ready = true;
+		if (started) {
+			throw new Error("Machine already started");
 		}
-		catch (Exception e) {
-			fireMachineStartFailed(this, e.getMessage());
-			throw e;
+		driver.start(this);
+		for (ReferenceHead head : heads.values()) {
+			head.setMachine(this);
 		}
-		fireMachineStarted(this);
-	}
-
-	@Override
-	public void stop() throws Exception {
-		try {
-			driver.setEnabled(false);
-			ready = false;
+		for (ReferenceCamera camera : cameras) {
+			camera.start(this);
 		}
-		catch (Exception e) {
-			fireMachineStopFailed(this, e.getMessage());
-			throw e;
+		for (ReferenceFeeder feeder : feeders.values()) {
+			feeder.start(this);
 		}
-		fireMachineStopped(this, "User requested stop.");
+		started = true;
 	}
 
 	@Override
@@ -217,27 +174,27 @@ public class ReferenceMachine implements Machine {
 		}
 	}
 	
-	private void fireMachineStarted(Machine machine) {
+	private void fireMachineEnabled(Machine machine) {
 		for (MachineListener listener : listeners) {
-			listener.machineStarted(machine);
+			listener.machineEnabled(machine);
 		}
 	}
 	
-	private void fireMachineStartFailed(Machine machine, String reason) {
+	private void fireMachineEnableFailed(Machine machine, String reason) {
 		for (MachineListener listener : listeners) {
-			listener.machineStartFailed(machine, reason);
+			listener.machineEnableFailed(machine, reason);
 		}
 	}
 	
-	private void fireMachineStopped(Machine machine, String reason) {
+	private void fireMachineDisabled(Machine machine, String reason) {
 		for (MachineListener listener : listeners) {
-			listener.machineStopped(machine, reason);
+			listener.machineDisabled(machine, reason);
 		}
 	}
 	
-	private void fireMachineStopFailed(Machine machine, String reason) {
+	private void fireMachineDisableFailed(Machine machine, String reason) {
 		for (MachineListener listener : listeners) {
-			listener.machineStopFailed(machine, reason);
+			listener.machineDisableFailed(machine, reason);
 		}
 	}
 }

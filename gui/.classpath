@@ -21,5 +21,6 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.6.4.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.6.4.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="lib/xstream-1.4.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

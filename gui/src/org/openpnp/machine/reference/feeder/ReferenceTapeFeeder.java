@@ -21,19 +21,14 @@
 
 package org.openpnp.machine.reference.feeder;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.openpnp.Configuration;
-import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
-import org.openpnp.util.LengthUtil;
-import org.w3c.dom.Node;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
 /**
  * Implemention of Feeder that allows the head to index the current part and then
@@ -61,31 +56,16 @@ import org.w3c.dom.Node;
 </pre>
  */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
+	@XStreamAlias("FeedStartLocation")
 	private Location feedStartLocation;
+	@XStreamAlias("FeedEndLocation")
 	private Location feedEndLocation;
+	@XStreamAlias(value="feed-rate")
+	@XStreamAsAttribute
 	private double feedRate;
 	
 	@Override
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		feedRate = Configuration.getDoubleAttribute(n, "feedRate", 1000);
-		
-		Node feedStartLocationNode = (Node) xpath.evaluate("FeedStartLocation", n, XPathConstants.NODE);
-
-		feedStartLocation = new Location();
-		feedStartLocation.parse(feedStartLocationNode);
-		feedStartLocation = LengthUtil.convertLocation(feedStartLocation, LengthUnit.Millimeters);
-		
-		Node feedEndLocationNode = (Node) xpath.evaluate("FeedEndLocation", n, XPathConstants.NODE);
-
-		feedEndLocation = new Location();
-		feedEndLocation.parse(feedEndLocationNode);
-		feedEndLocation = LengthUtil.convertLocation(feedEndLocation, LengthUnit.Millimeters);
-	}
-	
-	@Override
-	public boolean available() {
+	public boolean canFeedForHead(Part part, Head head) {
 		return true;
 	}
 
@@ -119,6 +99,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	
 	@Override
 	public String toString() {
-		return String.format("ReferenceTapeFeeder reference %s", reference);
+		return String.format("ReferenceTapeFeeder id %s", id);
 	}
 }

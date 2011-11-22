@@ -25,7 +25,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import org.openpnp.LengthUnit;
-import org.openpnp.util.LengthUtil;
 
 public class CrosshairReticle implements Reticle {
 	private Color color;

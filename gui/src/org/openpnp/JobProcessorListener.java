@@ -21,7 +21,6 @@
 
 package org.openpnp;
 
-import org.openpnp.Job.JobBoard;
 import org.openpnp.JobProcessor.JobError;
 import org.openpnp.JobProcessor.JobState;
 
@@ -43,17 +42,17 @@ public interface JobProcessorListener {
 	
 	public void jobEncounteredError(JobError error, String description);
 	
-	public void boardProcessingStarted(JobBoard board);
+	public void boardProcessingStarted(BoardLocation board);
 	
-	public void boardProcessingCompleted(JobBoard board);
+	public void boardProcessingCompleted(BoardLocation board);
 	
-	public void partProcessingStarted(JobBoard board, Placement placement);
+	public void partProcessingStarted(BoardLocation board, Placement placement);
 	
-	public void partPicked(JobBoard board, Placement placement);
+	public void partPicked(BoardLocation board, Placement placement);
 	
-	public void partPlaced(JobBoard board, Placement placement);
+	public void partPlaced(BoardLocation board, Placement placement);
 	
-	public void partProcessingCompleted(JobBoard board, Placement placement);
+	public void partProcessingCompleted(BoardLocation board, Placement placement);
 	
 	// TODO maybe partProcessingFailed with a reason
 	

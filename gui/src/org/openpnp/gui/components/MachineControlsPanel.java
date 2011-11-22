@@ -82,7 +82,6 @@ import org.openpnp.util.LengthUtil;
  * Controls: C right / left, X + / -, Y + / -, Z + / -, stop, pause, slider for jog increment
  * DROs: X, Y, Z, C
  * Radio buttons to select mm or inch.
- * Status: LEDs for vac and actuators. TODO This part is not machine independant. Need to think about that.
  * TODO add a dropdown to select Head
  * @author jason
  */
@@ -165,8 +164,8 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		comboBoxCoordinateSystem.addItem("Absolute");
 		comboBoxCoordinateSystem.setSelectedIndex(0);
 		
-		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
+		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 
 		for (String actuatorName : head.getActuatorNames()) {
 			final String actuatorName_f = actuatorName;
@@ -192,7 +191,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 			panelActuators.add(actuatorButton);
 		}
 		
-		setEnabled(machine.isReady());
+		setEnabled(machine.isEnabled());
 	}
 	
 	@Override
@@ -354,27 +353,27 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	}
 
 	@Override
-	public void machineStarted(Machine machine) {
-		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
+	public void machineEnabled(Machine machine) {
+		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 	}
 
 	@Override
-	public void machineStartFailed(Machine machine, String reason) {
-		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
+	public void machineEnableFailed(Machine machine, String reason) {
+		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 	}
 
 	@Override
-	public void machineStopped(Machine machine, String reason) {
-		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
+	public void machineDisabled(Machine machine, String reason) {
+		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 	}
 
 	@Override
-	public void machineStopFailed(Machine machine, String reason) {
-		btnStartStop.setAction(machine.isReady() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isReady() ? stopColor : startColor);
+	public void machineDisableFailed(Machine machine, String reason) {
+		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 	}
 
 	private void createUi() {
@@ -819,7 +818,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			try {
-				machine.stop();
+				machine.setEnabled(false);
 				MachineControlsPanel.this.setEnabled(false);
 			}
 			catch (Exception e) {
@@ -833,7 +832,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			try {
-				machine.start();
+				machine.setEnabled(true);
 				MachineControlsPanel.this.setEnabled(true);
 			}
 			catch (Exception e) {

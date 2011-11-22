@@ -31,19 +31,18 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -62,42 +61,44 @@ import org.w3c.dom.NodeList;
 	TODO Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
+	@XStreamOmitField
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
+	@XStreamOmitField
 	private static final double minimumRequiredVersion = 0.75;
 	
-	private double x, y, z, c;
-
-	private CommPortIdentifier commPortId;
-	private SerialPort serialPort;
+	@XStreamAsAttribute
+	@XStreamAlias(value="port-name")
+	private String portName;
+	@XStreamAsAttribute
 	private int baud;
+	
+	
+	@XStreamOmitField
+	private double x, y, z, c;
+	@XStreamOmitField
+	private CommPortIdentifier commPortId;
+	@XStreamOmitField
+	private SerialPort serialPort;
+	@XStreamOmitField
 	private InputStream input;
+	@XStreamOmitField
 	private OutputStream output;
+	@XStreamOmitField
 	private Thread readerThread;
+	@XStreamOmitField
 	private boolean disconnectRequested;
+	@XStreamOmitField
 	private Object commandLock = new Object();
-	
+	@XStreamOmitField
 	private boolean connected;
+	@XStreamOmitField
 	private double connectedVersion;
-	
+	@XStreamOmitField
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
-
 	@Override
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		Node portNode = (Node) xpath.evaluate("Port", n, XPathConstants.NODE);
-		
-		String portName = Configuration.getAttribute(portNode, "name");
-		int portBaud = Integer.parseInt(Configuration.getAttribute(portNode, "baud"));
-		
-		NodeList nodes = (NodeList) xpath.evaluate("Settings/Setting", n, XPathConstants.NODESET);
-
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node settingNode = nodes.item(i);
-		}
-		
-		connect(portName, portBaud);
+	public void start(ReferenceMachine machine) throws Exception {
+		connect(portName, baud);
 	}
 
 	@Override

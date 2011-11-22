@@ -1,106 +1,88 @@
 <?xml version="1.0"?>
 <OpenPnP>
 	<Machine class="org.openpnp.machine.reference.ReferenceMachine">
-		<Configuration>
-			<Driver class="org.openpnp.machine.reference.driver.GrblDriver">
-				<Configuration>
-					<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
-						<Settings>
-						</Settings>
-				</Configuration>
-			</Driver>
-
-			 <Heads>
-			 	<Head reference="H1" class="org.openpnp.machine.reference.ReferenceHead">
-			 		<Configuration pickDwellMilliseconds="200" feedRate="9000">
-			 			<SoftLimits
-			 				units="Millimeters"
-			 				xMinimum="0" xMaximum="400" 
-			 				yMinimum="0" yMaximum="600"  
-			 				zMinimum="0" zMaximum="100"  
-			 				cMinimum="0" cMaximum="360" 
-			 			/> 
-			 		</Configuration>
-			 	</Head>
-			 </Heads>
-			 
-			<Cameras>
-				<Camera
-					name="Head Tele"
-					head="H1"
-					class="org.openpnp.machine.reference.camera.LtiCivilCamera"
-					looking="Down"
-					>
-					<Location units="Millimeters" x="0" y="-50" z="0" rotation="0" />
-					<UnitsPerPixel units="Millimeters" x="0.070898" y="0.066935" />
-					<Configuration deviceId="?" forceGrayscale="true" />
-				</Camera>
-			</Cameras>
-			
-			<Feeders>
-				<Feeder reference="L0" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="150" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="150" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L1" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="160" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="160" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L2" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="170" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="170" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L3" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="180" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="180" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L4" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration trayCountX="4" trayCountY="4">
-						<Offsets units="Millimeters" x="-3" y="-3" z="0" rotation="0"/>
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L5" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="200" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="200" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L6" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="210" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="210" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L7" class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder">
-					<Configuration feedRate="1000">
-						<FeedStartLocation units="Millimeters" x="100" y="220" z="50" />
-						<FeedEndLocation units="Millimeters" x="102" y="220" z="50" />
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L8" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration trayCountX="10" trayCountY="2">
-						<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L9" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration trayCountX="10" trayCountY="2">
-						<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
-					</Configuration>
-				</Feeder>
-				<Feeder reference="L10" class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder">
-					<Configuration trayCountX="10" trayCountY="2">
-						<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
-					</Configuration>
-				</Feeder>
-			</Feeders>
-		</Configuration>
+		<Driver class="org.openpnp.machine.reference.driver.GrblDriver"
+			port-name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
+		<Head id="H1" pick-dwell-milliseconds="200" feed-rate="9000.0">
+			<SoftLimits min-x="0.0" max-x="400.0" min-y="0.0" max-y="600.0"
+				min-z="0.0" max-z="100.0" min-c="0.0" max-c="360.0" />
+		</Head>
+		<Camera class="org.openpnp.machine.reference.camera.LtiCivilCamera"
+			name="Head Tele" looking="Down" head="H1" device-id="?"
+			force-grayscale="true">
+			<Location units="Millimeters" x="0.0" y="-50.0" z="0.0"
+				rotation="0.0" />
+			<UnitsPerPixel units="Millimeters" x="0.070898" y="0.066935"
+				z="0.0" rotation="0.0" />
+		</Camera>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L0" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="150.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="150.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L1" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="160.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="160.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L2" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="170.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="170.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L3" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="180.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="180.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder"
+			id="L4" tray-count-x="4" tray-count-y="4">
+			<Offsets units="Millimeters" x="-3.0" y="-3.0" z="0.0"
+				rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L5" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="200.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="200.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L6" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="210.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="210.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder"
+			id="L7" feed-rate="1000.0">
+			<FeedStartLocation units="Millimeters" x="100.0" y="220.0"
+				z="50.0" rotation="0.0" />
+			<FeedEndLocation units="Millimeters" x="102.0" y="220.0"
+				z="50.0" rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder"
+			id="L8" tray-count-x="10" tray-count-y="2">
+			<Offsets units="Millimeters" x="10.0" y="10.0" z="0.0"
+				rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder"
+			id="L9" tray-count-x="10" tray-count-y="2">
+			<Offsets units="Millimeters" x="10.0" y="10.0" z="0.0"
+				rotation="0.0" />
+		</Feeder>
+		<Feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder"
+			id="L10" tray-count-x="10" tray-count-y="2">
+			<Offsets units="Millimeters" x="10.0" y="10.0" z="0.0"
+				rotation="0.0" />
+		</Feeder>
 	</Machine>
 </OpenPnP>

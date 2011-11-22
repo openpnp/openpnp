@@ -26,7 +26,8 @@ import java.util.List;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
-import org.w3c.dom.Node;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 
 /**
@@ -34,14 +35,8 @@ import org.w3c.dom.Node;
  * cause the machine to do work. A Machine has one or more Heads.
  * Unless otherwise noted, the methods in this class block while performing their operations.
  */
+@XStreamAlias(value="Machine")
 public interface Machine {
-	/**
-	 * Allows the Machine to read additional configuration information.
-	 * @param config
-	 * @throws Exception
-	 */
-	void configure(Node config) throws Exception ;
-	
 	/**
 	 * The units used to describe the machine's measurements.
 	 * @return
@@ -71,6 +66,7 @@ public interface Machine {
 	 */
 	void home() throws Exception;
 	
+	// TODO: probably remove
 	/**
 	 * Called by the service layer right before a Job is run. 
 	 * Gives the machine an opportunity to do anything it needs to do to prepare to run
@@ -83,7 +79,7 @@ public interface Machine {
 	/**
 	 * Returns whether the Machine is currently ready for commands. 
 	 */
-	boolean isReady();
+	boolean isEnabled();
 	
 	/**
 	 * Attempts to bring the Machine to a ready state. This would include turning on motor
@@ -93,8 +89,6 @@ public interface Machine {
 	 * After this method is called successfully, isReady() should return true unless the Machine
 	 * encounters some error.
 	 */
-	void start() throws Exception;
-	
 	/**
 	 * Stops the machine and disables it as soon as possible. This may include turning off power to
 	 * motors and stopping compressors. It is expected that the machine may need to be re-homed after
@@ -105,7 +99,9 @@ public interface Machine {
 	 * After this method return, isReady() should return false until start() is successfully
 	 * called again.
 	 */
-	void stop() throws Exception;
+	public void setEnabled(boolean enabled) throws Exception;
+	
+	void start() throws Exception;
 	
 	void addListener(MachineListener listener);
 	

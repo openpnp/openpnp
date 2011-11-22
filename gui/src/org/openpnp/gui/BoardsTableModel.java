@@ -2,9 +2,9 @@ package org.openpnp.gui;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.BoardLocation;
 import org.openpnp.Job;
 import org.openpnp.Location;
-import org.openpnp.Job.JobBoard;
 
 class BoardsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "#", "Board", "X Pos.",
@@ -33,7 +33,7 @@ class BoardsTableModel extends AbstractTableModel {
 	}
 
 	public Object getValueAt(int row, int col) {
-		JobBoard board = job.getBoards().get(row);
+		BoardLocation board = job.getBoards().get(row);
 		Location loc = board.getLocation();
 		switch (col) {
 		case 0:

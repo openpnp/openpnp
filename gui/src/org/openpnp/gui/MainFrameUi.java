@@ -22,13 +22,11 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -50,7 +48,6 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
-import java.awt.CardLayout;
 
 @SuppressWarnings("serial")
 public abstract class MainFrameUi extends JFrame {
