@@ -21,19 +21,15 @@
 
 package org.openpnp.machine.reference.feeder;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.openpnp.Configuration;
-import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
-import org.openpnp.util.LengthUtil;
-import org.w3c.dom.Node;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
  * Implemention of Feeder that indexes based on an offset. This allows a tray of parts to be picked from without moving any tape.
@@ -47,28 +43,20 @@ import org.w3c.dom.Node;
 </pre>
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
+	@XStreamAsAttribute
+	@XStreamAlias(value="tray-count-x")
 	private int trayCountX;
+	@XStreamAsAttribute
+	@XStreamAlias(value="tray-count-y")
 	private int trayCountY;
+	@XStreamAlias(value="Offsets")
 	private Location offsets;  
 	
+	@XStreamOmitField
 	private int pickCount;
 	
 	@Override
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		
-		trayCountX = (int) Configuration.getDoubleAttribute(n, "trayCountX");
-		trayCountY = (int) Configuration.getDoubleAttribute(n, "trayCountY");
-		
-		Node offsetsNode = (Node) xpath.evaluate("Offsets", n, XPathConstants.NODE);
-
-		offsets = new Location();
-		offsets.parse(offsetsNode);
-		offsets = LengthUtil.convertLocation(offsets, LengthUnit.Millimeters);
-	}
-	
-	@Override
-	public boolean available() {
+	public boolean canFeedForHead(Part part, Head head) {
 		return (pickCount < (trayCountX * trayCountY));
 	}
 

@@ -42,17 +42,17 @@ import org.openpnp.Part;
  */
 public interface Feeder {
 	/**
-	 * Gets the reference that was set when the Feeder was initialized.
+	 * Gets the id that was set when the Feeder was initialized.
 	 * @return
 	 */
-	public String getReference();
+	public String getId();
 	
 	/**
-	 * Returns true if the Feeder is ready and willing to source the Part.
+	 * Returns true if the Feeder is ready and willing to source the Part for
+	 * the given Head.
 	 * @return
 	 */
-	// TODO this probably needs to either just go away, or have the Part passed to it
-	public boolean available(); 
+	public boolean canFeedForHead(Part part, Head head); 
 	
 	
 	/**

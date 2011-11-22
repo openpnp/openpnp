@@ -29,11 +29,11 @@ package org.openpnp.spi;
 public interface MachineListener {
 	void machineHeadActivity(Machine machine, Head head);
 	
-	void machineStarted(Machine machine);
+	void machineEnabled(Machine machine);
 	
-	void machineStartFailed(Machine machine, String reason);
+	void machineEnableFailed(Machine machine, String reason);
 	
-	void machineStopped(Machine machine, String reason);
+	void machineDisabled(Machine machine, String reason);
 	
-	void machineStopFailed(Machine machine, String reason);
+	void machineDisableFailed(Machine machine, String reason);
 }

@@ -25,11 +25,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-
-import org.openpnp.Configuration;
-import org.w3c.dom.Node;
+import org.openpnp.machine.reference.ReferenceMachine;
 
 import com.lti.civil.CaptureDeviceInfo;
 import com.lti.civil.CaptureException;
@@ -41,6 +37,9 @@ import com.lti.civil.DefaultCaptureSystemFactorySingleton;
 import com.lti.civil.Image;
 import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -53,23 +52,31 @@ import com.lti.civil.awt.AWTImageConverter;
 </pre>
  */
 public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
+	@XStreamOmitField
 	private CaptureSystemFactory captureSystemFactory;
+	@XStreamOmitField
 	private CaptureSystem captureSystem;
+	@XStreamOmitField
 	private CaptureStream captureStream;
+	@XStreamOmitField
 	private VideoFormat videoFormat;
 
+	@XStreamAsAttribute
+	@XStreamAlias(value="device-id")
 	private String deviceId;
+	@XStreamAsAttribute
+	@XStreamAlias(value="force-grayscale")
 	private boolean forceGrayscale;
 	
+	@XStreamOmitField
 	private int width, height;
 	
+	@XStreamOmitField
 	private BufferedImage grayImage;
 	
 	@Override
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		
-		deviceId = Configuration.getAttribute(n, "deviceId");
+	public void start(ReferenceMachine machine) throws Exception {
+		super.start(machine);
 		
 		captureSystemFactory = DefaultCaptureSystemFactorySingleton.instance();
 		captureSystem = captureSystemFactory.createCaptureSystem();
@@ -83,10 +90,10 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 			}
 			System.out.println();
 			System.out.println("Please specify one of the available deviceIds in the deviceId attribute of the Configuration for this Camera.");
+			// TODO: change to throw Exception so we can show in a dialog
 			System.exit(1);
 		}
 		
-		forceGrayscale = Configuration.getBooleanAttribute(n, "forceGrayscale");
 		
 		captureStream = captureSystem.openCaptureDeviceStream(deviceId);
 		videoFormat = captureStream.getVideoFormat();

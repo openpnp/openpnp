@@ -22,23 +22,27 @@
 package org.openpnp.machine.reference;
 
 import org.openpnp.spi.Feeder;
-import org.w3c.dom.Node;
+
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
 /**
  * A common base class for Feeders that the reference machine supports.
  * Provides support for additional configuration. 
  */
 public abstract class ReferenceFeeder implements Feeder {
-	protected String reference;
+	@XStreamAsAttribute
+	protected String id;
 	
-	public abstract void configure(Node n) throws Exception;
-
-	@Override
-	public String getReference() {
-		return reference;
+	public void start(ReferenceMachine machine) throws Exception {
+		
 	}
 
-	public void setReference(String reference) {
-		this.reference = reference;
+	@Override
+	public String getId() {
+		return id;
+	}
+
+	public void setReference(String id) {
+		this.id = id;
 	}
 }

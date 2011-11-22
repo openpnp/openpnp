@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.Job.JobBoard;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -223,7 +222,7 @@ public class JobProcessor implements Runnable {
 		 * How do we handle Heads working in tandem? Need multiple threads, or
 		 * async Head operations.
 		 */
-		for (JobBoard jobBoard : job.getBoards()) {
+		for (BoardLocation jobBoard : job.getBoards()) {
 			Board board = jobBoard.getBoard();
 			fireBoardProcessingStarted(jobBoard);
 			for (Placement placement : board.getPlacements()) {
@@ -238,7 +237,8 @@ public class JobProcessor implements Runnable {
 				}
 				List<FeederLocation> feeders = new ArrayList<FeederLocation>();
 				for (FeederLocation feeder : candidateFeeders) {
-					if (feeder.getFeeder().available()) {
+					// TODO: currently passing null till we determine if we'll pass head or change this system
+					if (feeder.getFeeder().canFeedForHead(part, null)) {
 						feeders.add(feeder);
 					}
 				}
@@ -348,7 +348,7 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 				}
 
-				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getReference()));
+				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getId()));
 				
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -534,37 +534,37 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	private void fireBoardProcessingStarted(JobBoard board) {
+	private void fireBoardProcessingStarted(BoardLocation board) {
 		for (JobProcessorListener listener : listeners) {
 			listener.boardProcessingStarted(board);
 		}
 	}
 	
-	private void fireBoardProcessingCompleted(JobBoard board) {
+	private void fireBoardProcessingCompleted(BoardLocation board) {
 		for (JobProcessorListener listener : listeners) {
 			listener.boardProcessingCompleted(board);
 		}
 	}
 	
-	private void firePartProcessingStarted(JobBoard board, Placement placement) {
+	private void firePartProcessingStarted(BoardLocation board, Placement placement) {
 		for (JobProcessorListener listener : listeners) {
 			listener.partProcessingStarted(board, placement);
 		}
 	}
 	
-	private void firePartPicked(JobBoard board, Placement placement) {
+	private void firePartPicked(BoardLocation board, Placement placement) {
 		for (JobProcessorListener listener : listeners) {
 			listener.partPicked(board, placement);
 		}
 	}
 	
-	private void firePartPlaced(JobBoard board, Placement placement) {
+	private void firePartPlaced(BoardLocation board, Placement placement) {
 		for (JobProcessorListener listener : listeners) {
 			listener.partPlaced(board, placement);
 		}
 	}
 	
-	private void firePartProcessingComplete(JobBoard board, Placement placement) {
+	private void firePartProcessingComplete(BoardLocation board, Placement placement) {
 		for (JobProcessorListener listener : listeners) {
 			listener.partProcessingCompleted(board, placement);
 		}
@@ -578,7 +578,7 @@ public class JobProcessor implements Runnable {
 	
 	class DefaultJobProcessorDelegate implements JobProcessorDelegate {
 		@Override
-		public PickRetryAction partPickFailed(JobBoard board, Part part,
+		public PickRetryAction partPickFailed(BoardLocation board, Part part,
 				Feeder feeder) {
 			return PickRetryAction.SkipAndContinue;
 		}

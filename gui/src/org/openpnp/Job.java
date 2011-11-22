@@ -40,7 +40,7 @@ import org.w3c.dom.NodeList;
 public class Job {
 	private String reference;
 	private String name;
-	private List<JobBoard> boards = new ArrayList<JobBoard>();
+	private List<BoardLocation> boards = new ArrayList<BoardLocation>();
 	
 	public void parse(Node n, Configuration c) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
@@ -61,7 +61,7 @@ public class Job {
 		NodeList boardLocationNodes = (NodeList) xpath.evaluate("BoardLocations/BoardLocation", n, XPathConstants.NODESET);
 		for (int i = 0; i < boardLocationNodes.getLength(); i++) {
 			Node boardLocationNode = boardLocationNodes.item(i);
-			JobBoard board = new JobBoard();
+			BoardLocation board = new BoardLocation();
 			board.setBoard(boardMap.get(Configuration.getAttribute(boardLocationNode, "board")));
 			board.setSide(Side.valueOf(Configuration.getAttribute(boardLocationNode, "side", "Top")));
 			board.setLocation(new Location());
@@ -86,11 +86,11 @@ public class Job {
 		this.name = name;
 	}
 
-	public List<JobBoard> getBoards() {
+	public List<BoardLocation> getBoards() {
 		return boards;
 	}
 	
-	public void setBoards(List<JobBoard> boards) {
+	public void setBoards(List<BoardLocation> boards) {
 		this.boards = boards;
 	}
 	
@@ -104,40 +104,5 @@ public class Job {
 			}
 		}
 		return String.format("reference %s, name %s, boards (%s)", reference, name, sb.toString());
-	}
-	
-	public static class JobBoard {
-		private Location location;
-		private Board board;
-		private Side side;
-		
-		public Location getLocation() {
-			return location;
-		}
-
-		public void setLocation(Location location) {
-			this.location = location;
-		}
-
-		public Board getBoard() {
-			return board;
-		}
-		
-		public void setBoard(Board board) {
-			this.board = board;
-		}
-		
-		public Side getSide() {
-			return side;
-		}
-
-		public void setSide(Side side) {
-			this.side = side;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("board (%s), location (%s)", board, location);
-		}
 	}	
 }

@@ -23,9 +23,7 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.Configuration;
 import org.openpnp.Job;
-import org.openpnp.Location;
 import org.openpnp.spi.Camera;
-import org.w3c.dom.Node;
 
 /**
 <pre>
@@ -64,17 +62,8 @@ import org.w3c.dom.Node;
 </pre>
 */
 public interface ReferenceCamera extends Camera {
-	public void setName(String name);
-	
-	public void setLocation(Location location);
-	
-	public void setHead(ReferenceHead head);
-	
-	public void setLooking(Looking looking);
-	
-	public void setUnitsPerPixel(Location unitsPerPixel);
-	
-	public void configure(Node n) throws Exception;
-	
+	// TODO: probably remove
 	public void prepareJob(Configuration configuration, Job job) throws Exception;
+	
+	public void start(ReferenceMachine machine) throws Exception;
 }

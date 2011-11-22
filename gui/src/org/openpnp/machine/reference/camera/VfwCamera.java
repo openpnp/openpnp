@@ -23,12 +23,12 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-
-import org.openpnp.Configuration;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.vonnieda.vfw.CaptureDevice;
-import org.w3c.dom.Node;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -46,22 +46,26 @@ import org.w3c.dom.Node;
 </pre>
  */
 public class VfwCamera extends AbstractCamera implements Runnable {
+	@XStreamAsAttribute
 	private String driver;
+	@XStreamAsAttribute
+	@XStreamAlias(value="show-video-source-dialog")
 	private boolean showVideoSourceDialog;
+	@XStreamAsAttribute
+	@XStreamAlias(value="show-video-format-dialog")
 	private boolean showVideoFormatDialog;
+	@XStreamAsAttribute
+	@XStreamAlias(value="show-video-display-dialog")
 	private boolean showVideoDisplayDialog;
 	
+	@XStreamOmitField
 	private CaptureDevice captureDevice;
+	@XStreamAsAttribute
 	private int width, height;
 	
-	@Override
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		
-		driver = Configuration.getAttribute(n, "driver");
-		
+	public void start(ReferenceMachine machine) throws Exception {
+		super.start(machine);
 		if (driver == null || driver.trim().length() == 0) {
-			// TODO make this a dialog
 			System.out.println("No driver specified for VfwCamera [" + getName() + "]. Available drivers are:");
 			System.out.println();
 			for (String s : CaptureDevice.getCaptureDrivers()) {
@@ -69,12 +73,9 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 			}
 			System.out.println();
 			System.out.println("Please specify one of the available drivers in the driver attribute of the Configuration for this Camera.");
+			// TODO: change to throw exceptino so we can show in a dialog
 			System.exit(1);
 		}
-		
-		showVideoSourceDialog = Configuration.getBooleanAttribute(n, "showVideoSourceDialog");
-		showVideoFormatDialog = Configuration.getBooleanAttribute(n, "showVideoFormatDialog");
-		showVideoDisplayDialog = Configuration.getBooleanAttribute(n, "showVideoDisplayDialog");
 		
 		new Thread(this).start();
 	}

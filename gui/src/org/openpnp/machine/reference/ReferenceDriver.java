@@ -24,7 +24,6 @@ package org.openpnp.machine.reference;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.Part;
-import org.w3c.dom.Node;
 
 /**
  * Defines the interface for a simple driver that the ReferenceMachine can drive.
@@ -32,7 +31,7 @@ import org.w3c.dom.Node;
  * or throw an error.
  */
 public interface ReferenceDriver {
-	public void configure(Node n) throws Exception;
+	public void start(ReferenceMachine machine) throws Exception;
 	
 	public void prepareJob(Configuration configuration, Job job) throws Exception;
 	

@@ -31,9 +31,9 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
+import org.openpnp.BoardLocation;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
-import org.openpnp.Job.JobBoard;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessor.JobError;
 import org.openpnp.JobProcessor.JobState;
@@ -138,7 +138,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	public boolean quit() {
 		// Attempt to stop the machine on quit
 		try {
-			configuration.getMachine().stop();
+			configuration.getMachine().setEnabled(false);
 		}
 		catch (Exception e) {
 		}
@@ -174,7 +174,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		// We allow the above to run first so that all state is represented
 		// correctly
 		// even if the machine is disabled.
-		if (!configuration.getMachine().isReady()) {
+		if (!configuration.getMachine().isEnabled()) {
 			startPauseResumeJobAction.setEnabled(false);
 			stopJobAction.setEnabled(false);
 			stepJobAction.setEnabled(false);
@@ -274,7 +274,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	}
 
 	@Override
-	public PickRetryAction partPickFailed(JobBoard board, Part part,
+	public PickRetryAction partPickFailed(BoardLocation board, Part part,
 			Feeder feeder) {
 		return PickRetryAction.SkipAndContinue;
 	}
@@ -285,28 +285,28 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	}
 
 	@Override
-	public void boardProcessingCompleted(JobBoard board) {
+	public void boardProcessingCompleted(BoardLocation board) {
 	}
 
 	@Override
-	public void boardProcessingStarted(JobBoard board) {
+	public void boardProcessingStarted(BoardLocation board) {
 	}
 
 	@Override
-	public void partPicked(JobBoard board, Placement placement) {
+	public void partPicked(BoardLocation board, Placement placement) {
 	}
 
 	@Override
-	public void partPlaced(JobBoard board, Placement placement) {
+	public void partPlaced(BoardLocation board, Placement placement) {
 	}
 
 	@Override
-	public void partProcessingCompleted(JobBoard board, Placement placement) {
+	public void partProcessingCompleted(BoardLocation board, Placement placement) {
 		// partsComplete++;
 	}
 
 	@Override
-	public void partProcessingStarted(JobBoard board, Placement placement) {
+	public void partProcessingStarted(BoardLocation board, Placement placement) {
 	}
 
 	@Override
@@ -319,21 +319,21 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	}
 
 	@Override
-	public void machineStarted(Machine machine) {
+	public void machineEnabled(Machine machine) {
 		updateJobControls();
 	}
 
 	@Override
-	public void machineStartFailed(Machine machine, String reason) {
+	public void machineEnableFailed(Machine machine, String reason) {
 	}
 
 	@Override
-	public void machineStopped(Machine machine, String reason) {
+	public void machineDisabled(Machine machine, String reason) {
 		updateJobControls();
 		jobProcessor.stop();
 	}
 
 	@Override
-	public void machineStopFailed(Machine machine, String reason) {
+	public void machineDisableFailed(Machine machine, String reason) {
 	}
 }

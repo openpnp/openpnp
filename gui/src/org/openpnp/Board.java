@@ -37,7 +37,7 @@ import org.w3c.dom.NodeList;
  * specify pick and place operations. 
  */
 public class Board {
-	enum Side {
+	public enum Side {
 		Bottom,
 		Top
 	}

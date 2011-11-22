@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Board;
+import org.openpnp.BoardLocation;
 import org.openpnp.Job;
-import org.openpnp.Job.JobBoard;
 import org.openpnp.Placement;
 
 class PartsTableModel extends AbstractTableModel {
@@ -17,7 +17,7 @@ class PartsTableModel extends AbstractTableModel {
 	public void setJob(Job job) {
 		boardPlacements.clear();
 		int boardNumber = 1;
-		for (JobBoard board : job.getBoards()) {
+		for (BoardLocation board : job.getBoards()) {
 			for (Placement placement : board.getBoard().getPlacements()) {
 				boardPlacements.add(new PartMetaData(boardNumber, board
 						.getBoard(), placement));
@@ -52,7 +52,7 @@ class PartsTableModel extends AbstractTableModel {
 					.getPackage().getReference();
 		case 3:
 			return boardPlacements.get(row).placement.getPart()
-					.getFeederLocations().get(0).getFeeder().getReference();
+					.getFeederLocations().get(0).getFeeder().getId();
 		case 4:
 			return String
 					.format("%2.3f", boardPlacements.get(row).placement

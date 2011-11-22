@@ -21,7 +21,6 @@
 
 package org.openpnp;
 
-import org.openpnp.Job.JobBoard;
 import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.spi.Feeder;
 
@@ -34,5 +33,5 @@ public interface JobProcessorDelegate {
 	 * @param feeder
 	 * @return
 	 */
-	public PickRetryAction partPickFailed(JobBoard board, Part part, Feeder feeder);
+	public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder);
 }

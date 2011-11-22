@@ -24,18 +24,16 @@ package org.openpnp.machine.reference;
 import java.util.Collections;
 import java.util.List;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.openpnp.Configuration;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;
-import org.w3c.dom.Node;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -58,55 +56,37 @@ import org.w3c.dom.Node;
 </pre>
  */
 public class ReferenceHead implements Head {
+	@XStreamOmitField
 	public static final String PIN_ACTUATOR_NAME = "Pin";
 	
+	@XStreamOmitField
 	private ReferenceMachine machine;
-	private String reference;
-	double x, y, z, c;
-	double offsetX, offsetY, offsetZ, offsetC;
-	double 
-		softMinX = Double.NEGATIVE_INFINITY, softMaxX = Double.POSITIVE_INFINITY, 
-		softMinY = Double.NEGATIVE_INFINITY, softMaxY = Double.POSITIVE_INFINITY, 
-		softMinZ = Double.NEGATIVE_INFINITY, softMaxZ = Double.POSITIVE_INFINITY, 
-		softMinC = Double.NEGATIVE_INFINITY, softMaxC = Double.POSITIVE_INFINITY;
-	int pickDwellMilliseconds;
-	double feedRate;
+	@XStreamOmitField
+	private double x, y, z, c;
+	@XStreamOmitField
+	private double offsetX, offsetY, offsetZ, offsetC;
 	
-	public ReferenceHead() {
-	}
-	
-	public void configure(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		
-		pickDwellMilliseconds = (int) Configuration.getDoubleAttribute(n, "pickDwellMilliseconds", 200);
-		
-		feedRate = Configuration.getDoubleAttribute(n, "feedRate", 1000);
-		
-		Node softLimitsNode = (Node) xpath.evaluate("SoftLimits", n, XPathConstants.NODE);
-		
-		if (softLimitsNode != null) {
-			softMinX = Configuration.getDoubleAttribute(softLimitsNode, "xMinimum", Double.NEGATIVE_INFINITY);
-			softMaxX = Configuration.getDoubleAttribute(softLimitsNode, "xMaximum", Double.POSITIVE_INFINITY);
-			softMinY = Configuration.getDoubleAttribute(softLimitsNode, "yMinimum", Double.NEGATIVE_INFINITY);
-			softMaxY = Configuration.getDoubleAttribute(softLimitsNode, "yMaximum", Double.POSITIVE_INFINITY);
-			softMinZ = Configuration.getDoubleAttribute(softLimitsNode, "zMinimum", Double.NEGATIVE_INFINITY);
-			softMaxZ = Configuration.getDoubleAttribute(softLimitsNode, "zMaximum", Double.POSITIVE_INFINITY);
-			softMinC = Configuration.getDoubleAttribute(softLimitsNode, "cMinimum", Double.NEGATIVE_INFINITY);
-			softMaxC = Configuration.getDoubleAttribute(softLimitsNode, "cMaximum", Double.POSITIVE_INFINITY);
-		}
-	}
-	
+	@XStreamAsAttribute
+	private String id;
+	@XStreamAsAttribute
+	@XStreamAlias(value="pick-dwell-milliseconds")
+	private int pickDwellMilliseconds;
+	@XStreamAsAttribute
+	@XStreamAlias(value="feed-rate")
+	private double feedRate;
+	@XStreamAlias(value="SoftLimits")
+	private SoftLimits softLimits = new SoftLimits();
 	
 	public void setMachine(ReferenceMachine machine) {
 		this.machine = machine;
 	}
 	
-	public void setReference(String reference) {
-		this.reference = reference;
+	public void setId(String id) {
+		this.id = id;
 	}
 	
-	public String getReference() {
-		return reference;
+	public String getId() {
+		return id;
 	}
 
 	@Override
@@ -122,16 +102,16 @@ public class ReferenceHead implements Head {
 
 	@Override
 	public void moveTo(double x, double y, double z, double c, double feedRatePerMinute) throws Exception {
-		if (x < softMinX || x > softMaxX ||
-				y < softMinY || y > softMaxY ||
-				z < softMinZ || z > softMaxZ ||
-				c < softMinC || c > softMaxC) {
+		if (x < softLimits.minX || x > softLimits.maxX ||
+				y < softLimits.minY || y > softLimits.maxY ||
+				z < softLimits.minZ || z > softLimits.maxZ ||
+				c < softLimits.minC || c > softLimits.maxC) {
 			throw new Exception(String.format("Movement to %2.4f, %2.4f, %2.4f, %2.4f would violate soft limits of (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f).", 
 					x, y, z, c,
-					softMinX, softMaxX,
-					softMinY, softMaxY,
-					softMinZ, softMaxZ,
-					softMinC, softMaxC));
+					softLimits.minX, softLimits.maxX,
+					softLimits.minY, softLimits.maxY,
+					softLimits.minZ, softLimits.maxZ,
+					softLimits.minC, softLimits.maxC));
 		}
 		double feedRateMmPerMinute = LengthUtil.convertLength(feedRatePerMinute, machine.getNativeUnits(), LengthUnit.Millimeters);
 		machine.getDriver().moveTo(this, x + offsetX, y + offsetY, z + offsetZ, c + offsetC, feedRateMmPerMinute);
@@ -262,5 +242,32 @@ public class ReferenceHead implements Head {
 	@Override
 	public double getAbsoluteC() {
 		return c;
+	}
+	
+	static class SoftLimits {
+		@XStreamAlias(value="min-x")
+		@XStreamAsAttribute
+		private double minX = Double.NEGATIVE_INFINITY;
+		@XStreamAlias(value="max-x")
+		@XStreamAsAttribute
+		private double maxX = Double.POSITIVE_INFINITY; 
+		@XStreamAlias(value="min-y")
+		@XStreamAsAttribute
+		private double minY = Double.NEGATIVE_INFINITY;
+		@XStreamAlias(value="max-y")
+		@XStreamAsAttribute
+		private double maxY = Double.POSITIVE_INFINITY; 
+		@XStreamAlias(value="min-z")
+		@XStreamAsAttribute
+		private double minZ = Double.NEGATIVE_INFINITY;
+		@XStreamAlias(value="max-z")
+		@XStreamAsAttribute
+		private double maxZ = Double.POSITIVE_INFINITY; 
+		@XStreamAlias(value="min-c")
+		@XStreamAsAttribute
+		private double minC = Double.NEGATIVE_INFINITY;
+		@XStreamAlias(value="max-c")
+		@XStreamAsAttribute
+		private double maxC = Double.POSITIVE_INFINITY; 
 	}
 }

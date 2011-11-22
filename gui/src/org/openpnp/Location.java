@@ -26,15 +26,22 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Node;
 
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+
 /**
  * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z
  * axis.
  */
 public class Location {
+	@XStreamAsAttribute
 	private LengthUnit units;
+	@XStreamAsAttribute
 	private double x;
+	@XStreamAsAttribute
 	private double y;
+	@XStreamAsAttribute
 	private double z;
+	@XStreamAsAttribute
 	private double rotation;
 	
 	public void parse(Node n) throws Exception {
