@@ -36,30 +36,25 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
 
 public class ReferenceMachine implements Machine {
-	@XStreamOmitField
 	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
 	
-	@XStreamAlias(value="Driver")
+	@Element
 	private ReferenceDriver driver;
-	@XStreamImplicit(itemFieldName="Head", keyFieldName="id")
+	@ElementMap(attribute=true, entry="head", key="id")
 	private LinkedHashMap<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
-	@XStreamImplicit(itemFieldName="Camera")
+	@ElementList
 	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
-	@XStreamImplicit(itemFieldName="Feeder", keyFieldName="id")
+	@ElementMap(attribute=true, entry="feeder", key="id")
 	private LinkedHashMap<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	
-	@XStreamOmitField
 	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
-	@XStreamOmitField
 	private boolean enabled;
 	
-	@XStreamOmitField
 	private boolean started;
 	
 	@Override

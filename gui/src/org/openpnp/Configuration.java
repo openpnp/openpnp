@@ -36,39 +36,31 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.openpnp.Part.FeederLocation;
-import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.camera.LtiCivilCamera;
-import org.openpnp.machine.reference.camera.VfwCamera;
-import org.openpnp.machine.reference.driver.GrblDriver;
-import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.spi.Machine;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.HyphenStyle;
+import org.simpleframework.xml.stream.Style;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
-import com.thoughtworks.xstream.io.xml.DomDriver;
 
 public class Configuration {
 	private Map<String, PackageDef> packages = new HashMap<String, PackageDef>();
 	private Map<String, Part> parts = new HashMap<String, Part>();
 	private Machine machine;
 	
-	public Configuration(String configurationDirectory) throws Exception {
-		loadMachine(new File(new File(configurationDirectory), "openpnp.xml"));
-		loadPackages(new File(new File(configurationDirectory), "packages.xml"));
-		loadParts(new File(new File(configurationDirectory), "parts.xml"));
+	public Configuration(String configurationDirectoryPath) throws Exception {
+		File configurationDirectory = new File(configurationDirectoryPath);
 		
-		// TODO: move this into the GUI so we can respond to errors with dialogs
-		machine.start();
+		loadMachine(new File(configurationDirectory, "machine.xml"));
+		loadPackages(new File(configurationDirectory, "packages.xml"));
+		loadParts(new File(configurationDirectory, "parts.xml"));
+		
 	}
 	
 	public PackageDef getPackage(String ref) {
@@ -132,24 +124,11 @@ public class Configuration {
 	}
 	
 	private void loadMachine(File file) throws Exception {
-		XStream xstream = new XStream(new PureJavaReflectionProvider(), new DomDriver());
-		xstream.autodetectAnnotations(true);
-		xstream.setMode(XStream.SINGLE_NODE_XPATH_RELATIVE_REFERENCES);
-		xstream.processAnnotations(ReferenceMachine.class);
-		xstream.processAnnotations(ReferenceCamera.class);
-		xstream.processAnnotations(ReferenceFeeder.class);
-		xstream.processAnnotations(ReferenceHead.class);
-		xstream.processAnnotations(ReferenceDriver.class);
-		xstream.processAnnotations(GrblDriver.class);
-		xstream.processAnnotations(LtiCivilCamera.class);
-		xstream.processAnnotations(VfwCamera.class);
-		xstream.processAnnotations(ReferenceTrayFeeder.class);
-		xstream.processAnnotations(ReferenceTapeFeeder.class);
-		xstream.processAnnotations(MachineConfigurationHolder.class);
-		MachineConfigurationHolder holder = (MachineConfigurationHolder) xstream.fromXML(file);
+		Style style = new HyphenStyle();
+		Format format = new Format(style);
+		Serializer serializer = new Persister(format);
+		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
 		machine = holder.machine;
-		
-		System.out.println(xstream.toXML(holder));
 	}
 	
 	private List<FeederLocation> loadFeederLocations(NodeList nodes) throws Exception {
@@ -216,9 +195,9 @@ public class Configuration {
 		return LengthUnit.valueOf(n.getAttributes().getNamedItem(attribute).getNodeValue());
 	}
 	
-	@XStreamAlias(value="OpenPnP")
+	@Root(name="openpnp-machine")
 	public static class MachineConfigurationHolder {
-		@XStreamAlias(value="Machine")
+		@Element
 		private Machine machine;
 	}
 }

@@ -30,10 +30,8 @@ import org.openpnp.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
 <pre>
@@ -56,25 +54,19 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 </pre>
  */
 public class ReferenceHead implements Head {
-	@XStreamOmitField
 	public static final String PIN_ACTUATOR_NAME = "Pin";
 	
-	@XStreamOmitField
 	private ReferenceMachine machine;
-	@XStreamOmitField
 	private double x, y, z, c;
-	@XStreamOmitField
 	private double offsetX, offsetY, offsetZ, offsetC;
 	
-	@XStreamAsAttribute
+	@Attribute
 	private String id;
-	@XStreamAsAttribute
-	@XStreamAlias(value="pick-dwell-milliseconds")
+	@Attribute
 	private int pickDwellMilliseconds;
-	@XStreamAsAttribute
-	@XStreamAlias(value="feed-rate")
+	@Attribute
 	private double feedRate;
-	@XStreamAlias(value="SoftLimits")
+	@Element
 	private SoftLimits softLimits = new SoftLimits();
 	
 	public void setMachine(ReferenceMachine machine) {
@@ -245,29 +237,21 @@ public class ReferenceHead implements Head {
 	}
 	
 	static class SoftLimits {
-		@XStreamAlias(value="min-x")
-		@XStreamAsAttribute
+		@Attribute
 		private double minX = Double.NEGATIVE_INFINITY;
-		@XStreamAlias(value="max-x")
-		@XStreamAsAttribute
+		@Attribute
 		private double maxX = Double.POSITIVE_INFINITY; 
-		@XStreamAlias(value="min-y")
-		@XStreamAsAttribute
+		@Attribute
 		private double minY = Double.NEGATIVE_INFINITY;
-		@XStreamAlias(value="max-y")
-		@XStreamAsAttribute
+		@Attribute
 		private double maxY = Double.POSITIVE_INFINITY; 
-		@XStreamAlias(value="min-z")
-		@XStreamAsAttribute
+		@Attribute
 		private double minZ = Double.NEGATIVE_INFINITY;
-		@XStreamAlias(value="max-z")
-		@XStreamAsAttribute
+		@Attribute
 		private double maxZ = Double.POSITIVE_INFINITY; 
-		@XStreamAlias(value="min-c")
-		@XStreamAsAttribute
+		@Attribute
 		private double minC = Double.NEGATIVE_INFINITY;
-		@XStreamAlias(value="max-c")
-		@XStreamAsAttribute
+		@Attribute
 		private double maxC = Double.POSITIVE_INFINITY; 
 	}
 }

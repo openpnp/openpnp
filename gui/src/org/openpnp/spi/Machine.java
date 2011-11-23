@@ -27,15 +27,12 @@ import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.LengthUnit;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-
 
 /**
  * Machine represents the pick and place machine itself. It provides the information and interface needed to
  * cause the machine to do work. A Machine has one or more Heads.
  * Unless otherwise noted, the methods in this class block while performing their operations.
  */
-@XStreamAlias(value="Machine")
 public interface Machine {
 	/**
 	 * The units used to describe the machine's measurements.

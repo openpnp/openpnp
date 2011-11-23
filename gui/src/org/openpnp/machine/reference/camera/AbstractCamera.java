@@ -34,10 +34,8 @@ import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.spi.Head;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
  * Provides listener support for Camera subclasses along with the basic
@@ -48,24 +46,19 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
  * 
  */
 public abstract class AbstractCamera implements ReferenceCamera {
-	@XStreamAsAttribute
+	@Attribute
 	protected String name;
-	@XStreamAsAttribute
-	@XStreamAlias(value = "Location")
+	@Element
 	protected Location location;
-	@XStreamAsAttribute
-	@XStreamAlias(value = "looking")
+	@Attribute
 	protected Looking looking;
-	@XStreamAlias(value = "UnitsPerPixel")
+	@Element
 	protected Location unitsPerPixel;
-	@XStreamAsAttribute
-	@XStreamAlias(value = "head")
+	@Attribute
 	protected String headId;
 
-	@XStreamOmitField
 	protected ReferenceHead head;
 
-	@XStreamOmitField
 	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
 
 	@Override

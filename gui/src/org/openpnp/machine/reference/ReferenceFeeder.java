@@ -22,15 +22,14 @@
 package org.openpnp.machine.reference;
 
 import org.openpnp.spi.Feeder;
-
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import org.simpleframework.xml.Attribute;
 
 /**
  * A common base class for Feeders that the reference machine supports.
  * Provides support for additional configuration. 
  */
 public abstract class ReferenceFeeder implements Feeder {
-	@XStreamAsAttribute
+	@Attribute
 	protected String id;
 	
 	public void start(ReferenceMachine machine) throws Exception {

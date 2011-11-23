@@ -90,6 +90,14 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 			throw new Error(e);
 		}
 		
+		try {
+			configuration.getMachine().start();
+		}
+		catch (Exception e) {
+			// TODO: message box
+			throw new Error(e);
+		}
+		
 		for (Camera camera : configuration.getMachine().getCameras()) {
 			cameraPanel.addCamera(camera);
 		}

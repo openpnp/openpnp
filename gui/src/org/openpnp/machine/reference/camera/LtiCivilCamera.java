@@ -26,6 +26,7 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.simpleframework.xml.Attribute;
 
 import com.lti.civil.CaptureDeviceInfo;
 import com.lti.civil.CaptureException;
@@ -37,9 +38,6 @@ import com.lti.civil.DefaultCaptureSystemFactorySingleton;
 import com.lti.civil.Image;
 import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -52,26 +50,18 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 </pre>
  */
 public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
-	@XStreamOmitField
 	private CaptureSystemFactory captureSystemFactory;
-	@XStreamOmitField
 	private CaptureSystem captureSystem;
-	@XStreamOmitField
 	private CaptureStream captureStream;
-	@XStreamOmitField
 	private VideoFormat videoFormat;
 
-	@XStreamAsAttribute
-	@XStreamAlias(value="device-id")
+	@Attribute
 	private String deviceId;
-	@XStreamAsAttribute
-	@XStreamAlias(value="force-grayscale")
+	@Attribute
 	private boolean forceGrayscale;
 	
-	@XStreamOmitField
 	private int width, height;
 	
-	@XStreamOmitField
 	private BufferedImage grayImage;
 	
 	@Override

@@ -37,12 +37,9 @@ import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -61,39 +58,25 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 	TODO Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
-	@XStreamOmitField
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
-	@XStreamOmitField
 	private static final double minimumRequiredVersion = 0.75;
 	
-	@XStreamAsAttribute
-	@XStreamAlias(value="port-name")
+	@Attribute
 	private String portName;
-	@XStreamAsAttribute
+	@Attribute
 	private int baud;
 	
 	
-	@XStreamOmitField
 	private double x, y, z, c;
-	@XStreamOmitField
 	private CommPortIdentifier commPortId;
-	@XStreamOmitField
 	private SerialPort serialPort;
-	@XStreamOmitField
 	private InputStream input;
-	@XStreamOmitField
 	private OutputStream output;
-	@XStreamOmitField
 	private Thread readerThread;
-	@XStreamOmitField
 	private boolean disconnectRequested;
-	@XStreamOmitField
 	private Object commandLock = new Object();
-	@XStreamOmitField
 	private boolean connected;
-	@XStreamOmitField
 	private double connectedVersion;
-	@XStreamOmitField
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
 	@Override

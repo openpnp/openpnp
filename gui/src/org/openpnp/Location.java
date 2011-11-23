@@ -24,24 +24,23 @@ package org.openpnp;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
+import org.simpleframework.xml.Attribute;
 import org.w3c.dom.Node;
-
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
 /**
  * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z
  * axis.
  */
 public class Location {
-	@XStreamAsAttribute
+	@Attribute
 	private LengthUnit units;
-	@XStreamAsAttribute
+	@Attribute
 	private double x;
-	@XStreamAsAttribute
+	@Attribute
 	private double y;
-	@XStreamAsAttribute
+	@Attribute
 	private double z;
-	@XStreamAsAttribute
+	@Attribute
 	private double rotation;
 	
 	public void parse(Node n) throws Exception {

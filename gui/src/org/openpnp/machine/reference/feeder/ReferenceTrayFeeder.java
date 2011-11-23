@@ -26,10 +26,8 @@ import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
  * Implemention of Feeder that indexes based on an offset. This allows a tray of parts to be picked from without moving any tape.
@@ -43,16 +41,13 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 </pre>
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
-	@XStreamAsAttribute
-	@XStreamAlias(value="tray-count-x")
+	@Attribute
 	private int trayCountX;
-	@XStreamAsAttribute
-	@XStreamAlias(value="tray-count-y")
+	@Attribute
 	private int trayCountY;
-	@XStreamAlias(value="Offsets")
+	@Element
 	private Location offsets;  
 	
-	@XStreamOmitField
 	private int pickCount;
 	
 	@Override

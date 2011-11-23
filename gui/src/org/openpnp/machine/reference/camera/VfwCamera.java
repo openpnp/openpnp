@@ -24,11 +24,8 @@ package org.openpnp.machine.reference.camera;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
 <pre>
@@ -46,21 +43,16 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 </pre>
  */
 public class VfwCamera extends AbstractCamera implements Runnable {
-	@XStreamAsAttribute
+	@Attribute
 	private String driver;
-	@XStreamAsAttribute
-	@XStreamAlias(value="show-video-source-dialog")
+	@Attribute
 	private boolean showVideoSourceDialog;
-	@XStreamAsAttribute
-	@XStreamAlias(value="show-video-format-dialog")
+	@Attribute
 	private boolean showVideoFormatDialog;
-	@XStreamAsAttribute
-	@XStreamAlias(value="show-video-display-dialog")
+	@Attribute
 	private boolean showVideoDisplayDialog;
 	
-	@XStreamOmitField
 	private CaptureDevice captureDevice;
-	@XStreamAsAttribute
 	private int width, height;
 	
 	public void start(ReferenceMachine machine) throws Exception {

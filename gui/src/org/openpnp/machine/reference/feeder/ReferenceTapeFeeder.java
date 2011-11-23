@@ -26,9 +26,8 @@ import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 /**
  * Implemention of Feeder that allows the head to index the current part and then
@@ -56,12 +55,11 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 </pre>
  */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
-	@XStreamAlias("FeedStartLocation")
+	@Element
 	private Location feedStartLocation;
-	@XStreamAlias("FeedEndLocation")
+	@Element
 	private Location feedEndLocation;
-	@XStreamAlias(value="feed-rate")
-	@XStreamAsAttribute
+	@Attribute
 	private double feedRate;
 	
 	@Override
