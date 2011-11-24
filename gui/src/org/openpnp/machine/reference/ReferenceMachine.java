@@ -114,7 +114,7 @@ public class ReferenceMachine implements Machine {
 		if (enabled) {
 			try {
 				driver.setEnabled(true);
-				enabled = true;
+				this.enabled = true;
 			}
 			catch (Exception e) {
 				fireMachineEnableFailed(this, e.getMessage());
@@ -125,7 +125,7 @@ public class ReferenceMachine implements Machine {
 		else {
 			try {
 				driver.setEnabled(false);
-				enabled = false;
+				this.enabled = false;
 			}
 			catch (Exception e) {
 				fireMachineDisableFailed(this, e.getMessage());

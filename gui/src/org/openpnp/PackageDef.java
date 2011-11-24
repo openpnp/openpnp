@@ -21,18 +21,24 @@
 
 package org.openpnp;
 
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+
 
 public class PackageDef {
-	String reference;
-	String name;
+	@Attribute
+	private String id;
+	@Attribute(required=false)
+	private String name;
+	@Element(required=false)
 	Outline outline;
 	
-	public String getReference() {
-		return reference;
+	public String getId() {
+		return id;
 	}
 	
-	public void setReference(String reference) {
-		this.reference = reference;
+	public void setId(String id) {
+		this.id = id;
 	}
 	
 	public String getName() {
@@ -53,6 +59,6 @@ public class PackageDef {
 	
 	@Override
 	public String toString() {
-		return String.format("ref %s, outline (%s)", reference, outline);
+		return String.format("id %s, outline (%s)", id, outline);
 	}
 }

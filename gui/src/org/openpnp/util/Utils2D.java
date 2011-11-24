@@ -21,9 +21,8 @@
 
 package org.openpnp.util;
 
-import java.awt.geom.Point2D;
-
 import org.openpnp.Outline;
+import org.openpnp.Point;
 
 
 public class Utils2D {
@@ -31,7 +30,7 @@ public class Utils2D {
 		Outline newOutline = new Outline();
 		newOutline.setUnits(outline.getUnits());
 		for (int i = 0; i < outline.getPoints().size(); i++) {
-			Point2D.Double p = outline.getPoints().get(i);
+			Point p = outline.getPoints().get(i);
 			
 			p = rotateTranslateScalePoint(p, c, x, y, scale);
 			
@@ -41,18 +40,18 @@ public class Utils2D {
 		return newOutline;
 	}
 	
-	public static Point2D.Double rotateTranslateScalePoint(Point2D.Double point, double c, double x, double y, double scale) {
+	public static Point rotateTranslateScalePoint(Point point, double c, double x, double y, double scale) {
 		point = rotatePoint(point, c);
 		point = translatePoint(point, x, y);
 		point = scalePoint(point, scale);
 		return point;
 	}
 	
-	public static Point2D.Double translatePoint(Point2D.Double point, double x, double y) {
-		return new Point2D.Double(point.getX() + x, point.getY() + y);
+	public static Point translatePoint(Point point, double x, double y) {
+		return new Point(point.getX() + x, point.getY() + y);
 	}
 	
-	public static Point2D.Double rotatePoint(Point2D.Double point, double c) {
+	public static Point rotatePoint(Point point, double c) {
 		double x = point.getX();
 		double y = point.getY();
 		
@@ -67,10 +66,10 @@ public class Utils2D {
 		x = xn;
 		y = yn;
 		
-		return new Point2D.Double(x, y);
+		return new Point(x, y);
 	}
 	
-	public static Point2D.Double scalePoint(Point2D.Double point, double scale) {
-		return new Point2D.Double(point.getX() * scale, point.getY() * scale);
+	public static Point scalePoint(Point point, double scale) {
+		return new Point(point.getX() * scale, point.getY() * scale);
 	}
 }

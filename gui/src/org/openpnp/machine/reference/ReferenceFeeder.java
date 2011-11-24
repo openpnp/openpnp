@@ -25,7 +25,7 @@ import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 
 /**
- * A common base class for Feeders that the reference machine supports.
+ * A common base class for Feeders that the id machine supports.
  * Provides support for additional configuration. 
  */
 public abstract class ReferenceFeeder implements Feeder {

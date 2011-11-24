@@ -6,6 +6,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Board;
 import org.openpnp.BoardLocation;
+import org.openpnp.Configuration;
 import org.openpnp.Job;
 import org.openpnp.Placement;
 
@@ -13,8 +14,14 @@ class PartsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Board #", "Part",
 			"Package", "Feeder", "X Pos.", "Y Pos.", "Rotation" };
 	private ArrayList<PartMetaData> boardPlacements = new ArrayList<PartMetaData>();
+	private Configuration configuration;
+	
+	public PartsTableModel(Configuration configuration) {
+		this.configuration = configuration;
+	}
 
 	public void setJob(Job job) {
+		System.out.println(job.toString());
 		boardPlacements.clear();
 		int boardNumber = 1;
 		for (BoardLocation board : job.getBoards()) {
@@ -46,13 +53,13 @@ class PartsTableModel extends AbstractTableModel {
 			return boardPlacements.get(row).boardNumber;
 		case 1:
 			return boardPlacements.get(row).placement.getPart()
-					.getReference();
+					.getId();
 		case 2:
-			return boardPlacements.get(row).placement.getPart()
-					.getPackage().getReference();
+		{
+			return boardPlacements.get(row).placement.getPart().getPackageId();
+		}
 		case 3:
-			return boardPlacements.get(row).placement.getPart()
-					.getFeederLocations().get(0).getFeeder().getId();
+			return boardPlacements.get(row).placement.getPart().getFeederLocations().get(0).getFeederId();
 		case 4:
 			return String
 					.format("%2.3f", boardPlacements.get(row).placement

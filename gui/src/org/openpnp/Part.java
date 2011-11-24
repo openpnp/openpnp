@@ -24,7 +24,9 @@ package org.openpnp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.spi.Feeder;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 
 
 
@@ -34,19 +36,25 @@ import org.openpnp.spi.Feeder;
  * a single part in the real world.
  */
 public class Part {
-	private String reference;
+	@Attribute
+	private String id;
+	@Attribute(required=false)
 	private String name;
-	private PackageDef pkg;
+	@Attribute
+	private String packageId;
+	@Attribute
 	private LengthUnit heightUnits;
+	@Attribute
 	private double height;
-	private List<FeederLocation> feederLocations = new ArrayList<FeederLocation>();;
+	@ElementList
+	private ArrayList<FeederLocation> feederLocations = new ArrayList<FeederLocation>();;
 
-	public String getReference() {
-		return reference;
+	public String getId() {
+		return id;
 	}
 
-	public void setReference(String reference) {
-		this.reference = reference;
+	public void getId(String reference) {
+		this.id = reference;
 	}
 
 	public String getName() {
@@ -55,14 +63,6 @@ public class Part {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-	
-	public PackageDef getPackage() {
-		return pkg;
-	}
-	
-	public void setPackage(PackageDef pkg) {
-		this.pkg = pkg;
 	}
 	
 	public LengthUnit getHeightUnits() {
@@ -85,26 +85,25 @@ public class Part {
 		return feederLocations;
 	}
 
-	public void setFeederLocations(List<FeederLocation> feederLocations) {
+	public void setFeederLocations(ArrayList<FeederLocation> feederLocations) {
 		this.feederLocations = feederLocations;
+	}
+	
+	public String getPackageId() {
+		return packageId;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("ref %s, name %s, heightUnits %s, height %f, package (%s), feederLocations %s", reference, name, heightUnits, height, pkg, feederLocations);
+		return String.format("ref %s, name %s, heightUnits %s, height %f, packageId (%s), feederLocations %s", id, name, heightUnits, height, packageId, feederLocations);
 	}
 	
 	public static class FeederLocation {
-		private Feeder feeder;
+		@Attribute
+		private String feederId;
+		
+		@Element
 		private Location location;
-		
-		public Feeder getFeeder() {
-			return feeder;
-		}
-		
-		public void setFeeder(Feeder feeder) {
-			this.feeder = feeder;
-		}
 		
 		public Location getLocation() {
 			return location;
@@ -114,9 +113,17 @@ public class Part {
 			this.location = location;
 		}
 		
+		public String getFeederId() {
+			return feederId;
+		}
+
+		public void setFeederId(String feederId) {
+			this.feederId = feederId;
+		}
+
 		@Override
 		public String toString() {
-			return String.format("feeder (%s), location (%s)", feeder, location);
+			return String.format("feederId (%s), location (%s)", feederId, location);
 		}
 	}
 }

@@ -47,8 +47,8 @@ public interface Machine {
 	List<Head> getHeads();
 	
 	/**
-	 * Gets the Feeder defined with the specified reference.
-	 * @param reference
+	 * Gets the Feeder defined with the specified id.
+	 * @param id
 	 * @return
 	 */
 	Feeder getFeeder(String reference);

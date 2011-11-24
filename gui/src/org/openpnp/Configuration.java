@@ -22,13 +22,10 @@
 package org.openpnp;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -38,8 +35,10 @@ import javax.xml.xpath.XPathFactory;
 import org.openpnp.Part.FeederLocation;
 import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
@@ -50,8 +49,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class Configuration {
-	private Map<String, PackageDef> packages = new HashMap<String, PackageDef>();
-	private Map<String, Part> parts = new HashMap<String, Part>();
+	private HashMap<String, PackageDef> packages = new HashMap<String, PackageDef>();
+	private HashMap<String, Part> parts = new HashMap<String, Part>();
 	private Machine machine;
 	
 	public Configuration(String configurationDirectoryPath) throws Exception {
@@ -61,6 +60,13 @@ public class Configuration {
 		loadPackages(new File(configurationDirectory, "packages.xml"));
 		loadParts(new File(configurationDirectory, "parts.xml"));
 		
+//		Serializer serializer = createSerializer();
+//		StringWriter writer = new StringWriter();
+//		PartsConfigurationHolder holder = new PartsConfigurationHolder();
+//		holder.parts = new ArrayList<Part>(parts.values());
+//		serializer.write(holder, writer);
+//		System.out.println(writer.toString());
+//		System.exit(0);
 	}
 	
 	public PackageDef getPackage(String ref) {
@@ -80,74 +86,33 @@ public class Configuration {
 	}
 	
 	private void loadPackages(File file) throws Exception {
-        Document document = loadDocument(new FileInputStream(file));
-        
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		NodeList nodes = (NodeList) xpath.evaluate("/Packages/Package", document, XPathConstants.NODESET);
-
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node n = nodes.item(i);
-			PackageDef pkg = new PackageDef();
-
-			pkg.setReference(getAttribute(n, "reference"));
-			pkg.setName(getAttribute(n, "name"));
-			pkg.setOutline(new Outline());
-			pkg.getOutline().parse((Node) xpath.evaluate("Outline", n, XPathConstants.NODE));
-			
-			packages.put(pkg.getReference(), pkg);
+		Serializer serializer = createSerializer();
+		PackagesConfigurationHolder holder = serializer.read(PackagesConfigurationHolder.class, file);
+		for (PackageDef pkg : holder.packages) {
+			packages.put(pkg.getId(), pkg);
 		}
 	}
 	
 	private void loadParts(File file) throws Exception {
-        Document document = loadDocument(new FileInputStream(file));
-        
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		NodeList nodes = (NodeList) xpath.evaluate("/Parts/Part", document, XPathConstants.NODESET);
-
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node n = nodes.item(i);
-			Part part = new Part();
-			
-			part.setReference(getAttribute(n, "reference"));
-			part.setName(getAttribute(n, "name"));
-			part.setHeight(Double.valueOf(n.getAttributes().getNamedItem("height").getNodeValue()));
-			part.setHeightUnits(LengthUnit.valueOf(n.getAttributes().getNamedItem("height-units").getNodeValue()));
-			part.setPackage(getPackage(n.getAttributes().getNamedItem("package").getNodeValue()));
-				
-			parts.put(part.getReference(), part);
-			
-			NodeList feederLocationNodes = (NodeList) xpath.evaluate("FeederLocations/FeederLocation", n, XPathConstants.NODESET);
-			part.setFeederLocations(loadFeederLocations(feederLocationNodes));
+		Serializer serializer = createSerializer();
+		PartsConfigurationHolder holder = serializer.read(PartsConfigurationHolder.class, file);
+		for (Part part : holder.parts) {
+			parts.put(part.getId(), part);
 		}
 	}
 	
 	private void loadMachine(File file) throws Exception {
-		Style style = new HyphenStyle();
-		Format format = new Format(style);
-		Serializer serializer = new Persister(format);
+		Serializer serializer = createSerializer();
 		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
 		machine = holder.machine;
 	}
 	
-	private List<FeederLocation> loadFeederLocations(NodeList nodes) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		
-		List<FeederLocation> feederLocations = new ArrayList<FeederLocation>();
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node n = nodes.item(i);
-			FeederLocation feederLocation = new FeederLocation();
-			
-			feederLocation.setFeeder(machine.getFeeder(Configuration.getAttribute(n, "feeder")));
-			
-			Location location = new Location();
-			location.parse((Node) xpath.evaluate("Location", n, XPathConstants.NODE));
-			feederLocation.setLocation(location);
-			
-			feederLocations.add(feederLocation);
-		}
-		return feederLocations; 
+	private static Serializer createSerializer() {
+		Style style = new HyphenStyle();
+		Format format = new Format(style);
+		AnnotationStrategy strategy = new AnnotationStrategy();
+		Serializer serializer = new Persister(strategy, format);
+		return serializer;
 	}
 	
 	public static Document loadDocument(InputStream in) throws Exception {
@@ -199,5 +164,17 @@ public class Configuration {
 	public static class MachineConfigurationHolder {
 		@Element
 		private Machine machine;
+	}
+	
+	@Root(name="openpnp-packages")
+	public static class PackagesConfigurationHolder {
+		@ElementList(inline=true, entry="package")
+		private ArrayList<PackageDef> packages;
+	}
+	
+	@Root(name="openpnp-parts")
+	public static class PartsConfigurationHolder {
+		@ElementList(inline=true, entry="part")
+		private ArrayList<Part> parts;
 	}
 }

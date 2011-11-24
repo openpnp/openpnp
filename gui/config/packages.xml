@@ -1,51 +1,50 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Packages>
-	<Package reference="0805" name="0805">
-		<Outline units="Inches">
-			<Point x="-0.040" y="-0.025"/>
-			<Point x="-0.040" y="0.025"/>
-			<Point x="0.040" y="0.025"/>
-			<Point x="0.040" y="-0.025"/>
-		</Outline>
-	</Package>
-	<Package reference="SOT-23-3" name="SOT-23-3">
-		<Outline units="Millimeters">
-			<Point x="-1.625" y="-0.70"/>
-			<Point x="-1.625" y="0.70"/>
-			<Point x="1.625" y="0.70"/>
-			<Point x="1.625" y="-0.70"/>
-		</Outline>
-	</Package>
-	<Package reference="SW-TACT-5.25MM">
-		<Outline units="Millimeters">
-			<Point x="-2.625" y="-2.625"/>
-			<Point x="-2.625" y="2.625"/>
-			<Point x="2.625" y="2.625"/>
-			<Point x="2.625" y="-2.625"/>
-		</Outline>
-	</Package>
-	<Package reference="JEDEC-MS-026-ABA" name="32-TQFP 7mm x 7mm">
-		<Outline units="Millimeters">
-			<Point x="-3.5" y="-3.5"/>
-			<Point x="-3.5" y="3.5"/>
-			<Point x="3.5" y="3.5"/>
-			<Point x="3.5" y="-3.5"/>
-		</Outline>
-	</Package>
-	<Package reference="JEDEC-MS-013-AB" name="18 SOIC 0.300in / 7.5mm Wide">
-		<Outline units="Millimeters">
-			<Point x="-5.775" y="-3.75"/>
-			<Point x="-5.775" y="3.75"/>
-			<Point x="5.775" y="3.75"/>
-			<Point x="5.775" y="-3.75"/>
-		</Outline>
-	</Package>
-	<Package reference="TO-252-3" name="TO-252-3, DPak (2 Leads + Tab), SC-63">
-		<Outline units="Inches">
-			<Point x="-0.12875" y="-0.120"/>
-			<Point x="-0.12875" y="0.120"/>
-			<Point x="0.12875" y="0.120"/>
-			<Point x="0.12875" y="-0.120"/>
-		</Outline>
-	</Package>
-</Packages>
+<openpnp-packages>
+   <package id="SW-TACT-5.25MM">
+      <outline units="Millimeters">
+         <point x="-2.625" y="-2.625"/>
+         <point x="-2.625" y="2.625"/>
+         <point x="2.625" y="2.625"/>
+         <point x="2.625" y="-2.625"/>
+      </outline>
+   </package>
+   <package id="JEDEC-MS-013-AB" name="18 SOIC 0.300in / 7.5mm Wide">
+      <outline units="Millimeters">
+         <point x="-5.775" y="-3.75"/>
+         <point x="-5.775" y="3.75"/>
+         <point x="5.775" y="3.75"/>
+         <point x="5.775" y="-3.75"/>
+      </outline>
+   </package>
+   <package id="0805" name="0805">
+      <outline units="Inches">
+         <point x="-0.04" y="-0.025"/>
+         <point x="-0.04" y="0.025"/>
+         <point x="0.04" y="0.025"/>
+         <point x="0.04" y="-0.025"/>
+      </outline>
+   </package>
+   <package id="TO-252-3" name="TO-252-3, DPak (2 Leads + Tab), SC-63">
+      <outline units="Inches">
+         <point x="-0.12875" y="-0.12"/>
+         <point x="-0.12875" y="0.12"/>
+         <point x="0.12875" y="0.12"/>
+         <point x="0.12875" y="-0.12"/>
+      </outline>
+   </package>
+   <package id="JEDEC-MS-026-ABA" name="32-TQFP 7mm x 7mm">
+      <outline units="Millimeters">
+         <point x="-3.5" y="-3.5"/>
+         <point x="-3.5" y="3.5"/>
+         <point x="3.5" y="3.5"/>
+         <point x="3.5" y="-3.5"/>
+      </outline>
+   </package>
+   <package id="SOT-23-3" name="SOT-23-3">
+      <outline units="Millimeters">
+         <point x="-1.625" y="-0.7"/>
+         <point x="-1.625" y="0.7"/>
+         <point x="1.625" y="0.7"/>
+         <point x="1.625" y="-0.7"/>
+      </outline>
+   </package>
+</openpnp-packages>

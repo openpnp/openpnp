@@ -237,7 +237,7 @@
 //			// draw the placements
 //			// TODO figure out a way to show which parts have been placed
 //			// unplaced parts will be a barely visible outline and the placed ones will be white polys
-//			// probably need to create model info in the Job or retain a reference to the JobProcessor 
+//			// probably need to create model info in the Job or retain a id to the JobProcessor 
 //			for (BoardLocation jobBoard : job.getBoards()) {
 //				for (Placement placement : jobBoard.getBoard().getPlacements()) {
 //					Outline o = placement.getPart().getPackage().getOutline();

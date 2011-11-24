@@ -103,6 +103,6 @@ public class Job {
 				sb.append(", ");
 			}
 		}
-		return String.format("reference %s, name %s, boards (%s)", reference, name, sb.toString());
+		return String.format("id %s, name %s, boards (%s)", reference, name, sb.toString());
 	}	
 }

@@ -230,20 +230,21 @@ public class JobProcessor implements Runnable {
 				Part part = placement.getPart();
 
 				// Get a list of Feeders that can source the part
-				List<FeederLocation> candidateFeeders = part
+				List<FeederLocation> candidateFeederLocations = part
 						.getFeederLocations();
-				if (candidateFeeders.size() == 0) {
-					fireJobEncounteredError(JobError.FeederError, "No candidate Feeders found for Part " + part.getReference());
+				if (candidateFeederLocations.size() == 0) {
+					fireJobEncounteredError(JobError.FeederError, "No candidate Feeders found for Part " + part.getId());
 				}
-				List<FeederLocation> feeders = new ArrayList<FeederLocation>();
-				for (FeederLocation feeder : candidateFeeders) {
+				List<FeederLocation> feederLocations = new ArrayList<FeederLocation>();
+				for (FeederLocation feederLocation : candidateFeederLocations) {
 					// TODO: currently passing null till we determine if we'll pass head or change this system
-					if (feeder.getFeeder().canFeedForHead(part, null)) {
-						feeders.add(feeder);
+					Feeder feeder = machine.getFeeder(feederLocation.getFeederId());
+					if (feeder.canFeedForHead(part, null)) {
+						feederLocations.add(feederLocation);
 					}
 				}
-				if (feeders.size() < 1) {
-					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getReference());
+				if (feederLocations.size() < 1) {
+					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
 				}
 
 				// TODO Loop through this next block checking Feeders against
@@ -253,9 +254,9 @@ public class JobProcessor implements Runnable {
 				// optimized to handle
 				// distance, capacity, etc.
 				// For now we just take the first Feeder that can feed the part.
-				FeederLocation feederLocation = feeders.get(0);
+				FeederLocation feederLocation = feederLocations.get(0);
 
-				Feeder feeder = feederLocation.getFeeder();
+				Feeder feeder = machine.getFeeder(feederLocation.getFeederId());
 
 				// Get the Location of the pick point from the feeder
 				Location pickLocation = feederLocation.getLocation();
@@ -277,7 +278,7 @@ public class JobProcessor implements Runnable {
 
 				// Create the point that represents the final placement location
 				// TODO This is currently in relation to the 0,0 of the board
-				Point2D.Double p = new Point2D.Double(placementLocation.getX(),
+				Point p = new Point(placementLocation.getX(),
 						placementLocation.getY());
 
 				// Rotate and translate the point into the same coordinate space

@@ -103,7 +103,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		}
 
 		boardsTableModel = new BoardsTableModel();
-		partsTableModel = new PartsTableModel();
+		partsTableModel = new PartsTableModel(configuration);
 
 		boardsTable.setModel(boardsTableModel);
 		partsTable.setModel(partsTableModel);
@@ -236,6 +236,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 			jobProcessor.load(file);
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			MessageBoxes.errorBox(this, "Job Load Error", e.getMessage());
 		}
 	}

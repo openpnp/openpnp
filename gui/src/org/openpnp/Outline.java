@@ -21,7 +21,6 @@
 
 package org.openpnp;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +28,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.ElementList;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -37,7 +38,9 @@ import org.w3c.dom.NodeList;
  * and can be drawn to a Graphics for display to the user.
  */
 public class Outline {
-	private List<Point2D.Double> points = new ArrayList<Point2D.Double>();
+	@ElementList(inline=true)
+	private List<Point> points = new ArrayList<Point>();
+	@Attribute
 	private LengthUnit units;
 	
 	public void parse(Node n) throws Exception {
@@ -56,7 +59,7 @@ public class Outline {
 	}
 	
 	public void addPoint(double x, double y) {
-		points.add(new Point2D.Double(x, y));
+		points.add(new Point(x, y));
 	}
 	
 	public LengthUnit getUnits() {
@@ -67,7 +70,7 @@ public class Outline {
 		this.units = units;
 	}
 	
-	public List<Point2D.Double> getPoints() {
+	public List<Point> getPoints() {
 		return points;
 	}
 	
@@ -75,11 +78,11 @@ public class Outline {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		
-		for (Point2D.Double point : points) {
-			sb.append(point.getX() + "," + point.getY() + " -> ");
+		for (Point point : points) {
+			sb.append(point.x + "," + point.y + " -> ");
 		}
 		if (points.size() > 0) {
-			sb.append(points.get(0).getX() + "," + points.get(0).getY());
+			sb.append(points.get(0).x + "," + points.get(0).y);
 		}
 		
 		return String.format("units %s, points (%s)", units, sb);

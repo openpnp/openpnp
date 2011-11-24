@@ -21,11 +21,10 @@
 
 package org.openpnp.util;
 
-import java.awt.geom.Point2D;
-
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Outline;
+import org.openpnp.Point;
 
 // TODO move these into their respective classes
 public class LengthUtil {
@@ -43,7 +42,7 @@ public class LengthUtil {
 		Outline newOutline = new Outline();
 		newOutline.setUnits(outline.getUnits());
 		for (int i = 0; i < outline.getPoints().size(); i++) {
-			Point2D.Double p = outline.getPoints().get(i);
+			Point p = outline.getPoints().get(i);
 			
 			p = convertPoint(p, outline.getUnits(), toUnits);
 			
@@ -53,12 +52,12 @@ public class LengthUtil {
 		return newOutline;
 	}
 	
-	public static Point2D.Double convertPoint(Point2D.Double point, LengthUnit fromUnits, LengthUnit toUnits) {
+	public static Point convertPoint(Point point, LengthUnit fromUnits, LengthUnit toUnits) {
 		double x = point.getX();
 		double y = point.getY();
 		x = LengthUtil.convertLength(x, fromUnits, toUnits);
 		y = LengthUtil.convertLength(y, fromUnits, toUnits);
-		return new Point2D.Double(x, y);
+		return new Point(x, y);
 	}
 	
 	public static double convertLength(double length, LengthUnit fromUnits, LengthUnit toUnits) {

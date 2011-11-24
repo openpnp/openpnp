@@ -96,6 +96,6 @@ public class Board {
 	
 	@Override
 	public String toString() {
-		return String.format("reference %s, placements (%s)", reference, placements);
+		return String.format("id %s, placements (%s)", reference, placements);
 	}
 }

@@ -34,7 +34,7 @@ import org.w3c.dom.Node;
  * @author jason
  */
 public class Placement {
-	private String reference;
+	private String id;
 	private Part part;
 	private Location location;
 	private Side side;
@@ -42,7 +42,7 @@ public class Placement {
 	public void parse(Node n, Configuration c) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 
-		reference = Configuration.getAttribute(n, "reference");
+		id = Configuration.getAttribute(n, "reference");
 		side = Side.valueOf(Configuration.getAttribute(n, "side", "Top"));
 		part = c.getPart(Configuration.getAttribute(n, "part"));
 		location = new Location();
@@ -50,11 +50,11 @@ public class Placement {
 	}
 	
 	public String getReference() {
-		return reference;
+		return id;
 	}
 
 	public void setReference(String reference) {
-		this.reference = reference;
+		this.id = reference;
 	}
 
 	public Location getLocation() {
@@ -83,6 +83,6 @@ public class Placement {
 
 	@Override
 	public String toString() {
-		return String.format("reference %s, onBottom %s, part (%s), location (%s)", side, reference, part, location);
+		return String.format("id %s, side %s, part (%s), location (%s)", id, side, part, location);
 	}
 }

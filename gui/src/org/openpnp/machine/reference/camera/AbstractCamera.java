@@ -57,6 +57,7 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	@Attribute
 	protected String headId;
 
+	// TODO: remove
 	protected ReferenceHead head;
 
 	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
