@@ -25,8 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 
 
@@ -41,20 +42,34 @@ public class Part {
 	@Attribute(required=false)
 	private String name;
 	@Attribute
-	private String packageId;
-	@Attribute
 	private LengthUnit heightUnits;
 	@Attribute
 	private double height;
 	@ElementList
-	private ArrayList<FeederLocation> feederLocations = new ArrayList<FeederLocation>();;
+	private ArrayList<FeederLocation> feederLocations = new ArrayList<FeederLocation>();
+	private Package packag;
+	
+	@Attribute
+	private String packageId;
+	
+	@SuppressWarnings("unused")
+	@Commit
+	private void commit() {
+		packag = Configuration.get().getPackage(packageId);
+	}
+	
+	@SuppressWarnings("unused")
+	@Persist
+	private void persist() {
+		packageId = (packag == null ? null : packag.getId());
+	}
 
 	public String getId() {
 		return id;
 	}
 
-	public void getId(String reference) {
-		this.id = reference;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -89,41 +104,16 @@ public class Part {
 		this.feederLocations = feederLocations;
 	}
 	
-	public String getPackageId() {
-		return packageId;
+	public Package getPackage() {
+		return packag;
+	}
+
+	public void setPackage(Package packag) {
+		this.packag = packag;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("ref %s, name %s, heightUnits %s, height %f, packageId (%s), feederLocations %s", id, name, heightUnits, height, packageId, feederLocations);
-	}
-	
-	public static class FeederLocation {
-		@Attribute
-		private String feederId;
-		
-		@Element
-		private Location location;
-		
-		public Location getLocation() {
-			return location;
-		}
-
-		public void setLocation(Location location) {
-			this.location = location;
-		}
-		
-		public String getFeederId() {
-			return feederId;
-		}
-
-		public void setFeederId(String feederId) {
-			this.feederId = feederId;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("feederId (%s), location (%s)", feederId, location);
-		}
+		return String.format("id %s, name %s, heightUnits %s, height %f, packageId (%s), feederLocations %s", id, name, heightUnits, height, packageId, feederLocations);
 	}
 }

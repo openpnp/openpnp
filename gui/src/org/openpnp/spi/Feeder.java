@@ -47,6 +47,8 @@ public interface Feeder {
 	 */
 	public String getId();
 	
+	public boolean isEnabled();
+	
 	/**
 	 * Returns true if the Feeder is ready and willing to source the Part for
 	 * the given Head.

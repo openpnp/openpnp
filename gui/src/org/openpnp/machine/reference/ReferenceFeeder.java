@@ -25,15 +25,21 @@ import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 
 /**
- * A common base class for Feeders that the id machine supports.
- * Provides support for additional configuration. 
+ * A common base class for Feeders that the ReferenceMachine supports.
  */
 public abstract class ReferenceFeeder implements Feeder {
 	@Attribute
 	protected String id;
+	@Attribute(required=false)
+	protected boolean enabled;
 	
-	public void start(ReferenceMachine machine) throws Exception {
+	public void setReferenceMachine(ReferenceMachine machine) {
 		
+	}
+	
+	@Override
+	public boolean isEnabled() {
+		return enabled;
 	}
 
 	@Override
@@ -41,7 +47,11 @@ public abstract class ReferenceFeeder implements Feeder {
 		return id;
 	}
 
-	public void setReference(String id) {
+	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public void start(ReferenceMachine machine) throws Exception {
+		
 	}
 }

@@ -25,59 +25,38 @@ package org.openpnp;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
 /**
- * A Board describes the physical properties of a PCB and has a list of Placements that will be used to
- * specify pick and place operations. 
+ * A Board describes the physical properties of a PCB and has a list of 
+ * Placements that will be used to specify pick and place operations. 
  */
+@Root(name="openpnp-board")
 public class Board {
 	public enum Side {
 		Bottom,
 		Top
 	}
-	private String reference;
-	private Outline outline; 
-	private List<Fiducial> fiducials = new ArrayList<Fiducial>();
-	private List<Placement> placements = new ArrayList<Placement>();
-	
-	public void parse(Node n, Configuration c) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		reference = Configuration.getAttribute(n, "reference");
-		outline = new Outline();
-		outline.parse((Node) xpath.evaluate("Outline", n, XPathConstants.NODE));
-		
-		NodeList placementNodes = (NodeList) xpath.evaluate("Placements/Placement", n, XPathConstants.NODESET);
-		for (int i = 0; i < placementNodes.getLength(); i++) {
-			Node placementNode = placementNodes.item(i);
-			Placement placement = new Placement();
-			placement.parse(placementNode, c);
-			placements.add(placement);
-		}
-	}
+	@Attribute
+	private String name;
+	@Element(required=false)
+	private Outline outline;
+	@ElementList(required=false)
+	private ArrayList<Fiducial> fiducials = new ArrayList<Fiducial>();
+	@ElementList
+	private ArrayList<Placement> placements = new ArrayList<Placement>();
 	
 	public List<Fiducial> getFiducials() {
 		return fiducials;
-	}
-	
-	public void setFiducials(List<Fiducial> fiducials) {
-		this.fiducials = fiducials;
 	}
 	
 	public List<Placement> getPlacements() {
 		return placements;
 	}
 	
-	public void setPlacements(List<Placement> placements) {
-		this.placements = placements;
-	}
-
 	public Outline getOutline() {
 		return outline;
 	}
@@ -86,16 +65,19 @@ public class Board {
 		this.outline = outline;
 	}
 
-	public String getReference() {
-		return reference;
+	public String getName() {
+		return name;
 	}
 
-	public void setReference(String reference) {
-		this.reference = reference;
+	public void setName(String name) {
+		this.name = name;
 	}
-	
-	@Override
-	public String toString() {
-		return String.format("id %s, placements (%s)", reference, placements);
+
+	public void setFiducials(ArrayList<Fiducial> fiducials) {
+		this.fiducials = fiducials;
+	}
+
+	public void setPlacements(ArrayList<Placement> placements) {
+		this.placements = placements;
 	}
 }

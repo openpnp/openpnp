@@ -51,7 +51,7 @@ public interface Machine {
 	 * @param id
 	 * @return
 	 */
-	Feeder getFeeder(String reference);
+	Feeder getFeeder(String id);
 	
 	List<Camera> getCameras();
 	
@@ -62,16 +62,6 @@ public interface Machine {
 	 * to a certain position will end up in the same position.
 	 */
 	void home() throws Exception;
-	
-	// TODO: probably remove
-	/**
-	 * Called by the service layer right before a Job is run. 
-	 * Gives the machine an opportunity to do anything it needs to do to prepare to run
-	 * the Job. 
-	 * @param configuration
-	 * @param job
-	 */
-	void prepareJob(Configuration configuration, Job job) throws Exception;
 	
 	/**
 	 * Returns whether the Machine is currently ready for commands. 
@@ -98,9 +88,9 @@ public interface Machine {
 	 */
 	public void setEnabled(boolean enabled) throws Exception;
 	
-	void start() throws Exception;
-	
 	void addListener(MachineListener listener);
 	
 	void removeListener(MachineListener listener);
+	
+	public void start() throws Exception;
 }

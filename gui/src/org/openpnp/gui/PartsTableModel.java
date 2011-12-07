@@ -11,11 +11,11 @@ import org.openpnp.Job;
 import org.openpnp.Placement;
 
 class PartsTableModel extends AbstractTableModel {
-	private String[] columnNames = new String[] { "Board #", "Part",
-			"Package", "Feeder", "X Pos.", "Y Pos.", "Rotation" };
+	private String[] columnNames = new String[] { "Board #", "Part", "Package",
+			"Feeder", "X Pos.", "Y Pos.", "Rotation" };
 	private ArrayList<PartMetaData> boardPlacements = new ArrayList<PartMetaData>();
 	private Configuration configuration;
-	
+
 	public PartsTableModel(Configuration configuration) {
 		this.configuration = configuration;
 	}
@@ -24,9 +24,9 @@ class PartsTableModel extends AbstractTableModel {
 		System.out.println(job.toString());
 		boardPlacements.clear();
 		int boardNumber = 1;
-		for (BoardLocation board : job.getBoards()) {
-			for (Placement placement : board.getBoard().getPlacements()) {
-				boardPlacements.add(new PartMetaData(boardNumber, board
+		for (BoardLocation boardLocation : job.getBoardLocations()) {
+			for (Placement placement : boardLocation.getBoard().getPlacements()) {
+				boardPlacements.add(new PartMetaData(boardNumber, boardLocation
 						.getBoard(), placement));
 			}
 			boardNumber++;
@@ -52,26 +52,20 @@ class PartsTableModel extends AbstractTableModel {
 		case 0:
 			return boardPlacements.get(row).boardNumber;
 		case 1:
-			return boardPlacements.get(row).placement.getPart()
-					.getId();
+			return boardPlacements.get(row).placement.getPart().getId();
 		case 2:
-		{
-			return boardPlacements.get(row).placement.getPart().getPackageId();
-		}
+			 return boardPlacements.get(row).placement.getPart().getPackage().getId();
 		case 3:
-			return boardPlacements.get(row).placement.getPart().getFeederLocations().get(0).getFeederId();
+			 return boardPlacements.get(row).placement.getPart().getFeederLocations().get(0).getFeeder().getId();
 		case 4:
-			return String
-					.format("%2.3f", boardPlacements.get(row).placement
-							.getLocation().getX());
+			return String.format("%2.3f", boardPlacements.get(row).placement
+					.getLocation().getX());
 		case 5:
-			return String
-					.format("%2.3f", boardPlacements.get(row).placement
-							.getLocation().getY());
+			return String.format("%2.3f", boardPlacements.get(row).placement
+					.getLocation().getY());
 		case 6:
-			return String.format("%2.3f",
-					boardPlacements.get(row).placement.getLocation()
-							.getRotation());
+			return String.format("%2.3f", boardPlacements.get(row).placement
+					.getLocation().getRotation());
 		default:
 			return null;
 		}
@@ -82,8 +76,7 @@ class PartsTableModel extends AbstractTableModel {
 		public Board board;
 		public Placement placement;
 
-		public PartMetaData(int boardNumber, Board board,
-				Placement placement) {
+		public PartMetaData(int boardNumber, Board board, Placement placement) {
 			this.boardNumber = boardNumber;
 			this.board = board;
 			this.placement = placement;

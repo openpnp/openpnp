@@ -65,7 +65,7 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 			}
 			System.out.println();
 			System.out.println("Please specify one of the available drivers in the driver attribute of the Configuration for this Camera.");
-			// TODO: change to throw exceptino so we can show in a dialog
+			// TODO: change to throw exception so we can show in a dialog
 			System.exit(1);
 		}
 		

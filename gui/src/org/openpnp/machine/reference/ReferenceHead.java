@@ -69,16 +69,16 @@ public class ReferenceHead implements Head {
 	@Element
 	private SoftLimits softLimits = new SoftLimits();
 	
-	public void setMachine(ReferenceMachine machine) {
-		this.machine = machine;
-	}
-	
 	public void setId(String id) {
 		this.id = id;
 	}
 	
 	public String getId() {
 		return id;
+	}
+	
+	public void start(ReferenceMachine machine) throws Exception {
+		this.machine = machine;
 	}
 
 	@Override

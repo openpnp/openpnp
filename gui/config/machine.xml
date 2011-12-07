@@ -16,64 +16,64 @@
       </cameras>
       <feeders>
          <feeder id="L0">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="150.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="150.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L1">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L1" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L1" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="160.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="160.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L2">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L2" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L2" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="170.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="170.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L3">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L3" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L3" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="180.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="180.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L4">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L4" tray-count-x="4" tray-count-y="4">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L4" enabled="true" tray-count-x="4" tray-count-y="4">
                <offsets units="Millimeters" x="-3.0" y="-3.0" z="0.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L5">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L5" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L5" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="200.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="200.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L6">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L6" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L6" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="210.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="210.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L7">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L7" feed-rate="1000.0">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L7" enabled="true" feed-rate="1000.0">
                <feed-start-location units="Millimeters" x="100.0" y="220.0" z="50.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="220.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L8">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L8" tray-count-x="10" tray-count-y="2">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L8" enabled="true" tray-count-x="10" tray-count-y="2">
                <offsets units="Millimeters" x="10.0" y="10.0" z="0.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L9">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L9" tray-count-x="10" tray-count-y="2">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L9" enabled="true" tray-count-x="10" tray-count-y="2">
                <offsets units="Millimeters" x="10.0" y="10.0" z="0.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
          <feeder id="L10">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L10" tray-count-x="10" tray-count-y="2">
+            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L10" enabled="true" tray-count-x="10" tray-count-y="2">
                <offsets units="Millimeters" x="10.0" y="10.0" z="0.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>
