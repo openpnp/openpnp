@@ -43,21 +43,6 @@ public class Outline {
 	@Attribute
 	private LengthUnit units;
 	
-	public void parse(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		units = Configuration.getLengthUnitAttribute(n, "units");
-		
-		NodeList pointNodes = (NodeList) xpath.evaluate("Point", n, XPathConstants.NODESET);
-
-		for (int i = 0; i < pointNodes.getLength(); i++) {
-			Node pointNode = pointNodes.item(i);
-			addPoint(
-					Configuration.getDoubleAttribute(pointNode, "x"),
-					Configuration.getDoubleAttribute(pointNode, "y"));
-		}
-	}
-	
 	public void addPoint(double x, double y) {
 		points.add(new Point(x, y));
 	}

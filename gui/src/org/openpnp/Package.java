@@ -25,13 +25,13 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 
-public class PackageDef {
+public class Package {
 	@Attribute
 	private String id;
 	@Attribute(required=false)
 	private String name;
 	@Element(required=false)
-	Outline outline;
+	private Outline outline;
 	
 	public String getId() {
 		return id;

@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openpnp.CameraListener;
-import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.Location;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -36,6 +34,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Persist;
 
 /**
  * Provides listener support for Camera subclasses along with the basic
@@ -54,12 +53,11 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	protected Looking looking;
 	@Element
 	protected Location unitsPerPixel;
-	@Attribute
-	protected String headId;
-
-	// TODO: remove
 	protected ReferenceHead head;
 
+	@Attribute(required=false)
+	protected String headId;
+	
 	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
 
 	@Override
@@ -69,11 +67,12 @@ public abstract class AbstractCamera implements ReferenceCamera {
 		}
 	}
 
-	@Override
-	public void prepareJob(Configuration configuration, Job job)
-			throws Exception {
+	@SuppressWarnings("unused")
+	@Persist
+	private void persist() {
+		headId = (head == null ? null : head.getId());
 	}
-
+	
 	@Override
 	public Location getUnitsPerPixel() {
 		return unitsPerPixel;

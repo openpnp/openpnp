@@ -1,75 +1,75 @@
 <openpnp-parts>
-   <part id="MMBT3906-7-F" package-id="SOT-23-3" height-units="Inches" height="0.03">
+   <part id="MMBT3906-7-F" height-units="Inches" height="0.03" package-id="SOT-23-3">
       <feeder-locations>
          <feeder-location feeder-id="L6">
             <location units="Millimeters" x="100.0" y="160.0" z="87.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="PTS525SM10SMTR LFS" package-id="SW-TACT-5.25MM" height-units="Inches" height="0.03">
+   <part id="PTS525SM10SMTR LFS" height-units="Inches" height="0.03" package-id="SW-TACT-5.25MM">
       <feeder-locations>
          <feeder-location feeder-id="L7">
             <location units="Millimeters" x="100.0" y="170.0" z="83.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="R-0805-1K" package-id="0805" height-units="Inches" height="0.03">
+   <part id="R-0805-1K" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L4">
             <location units="Millimeters" x="100.0" y="140.0" z="85.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="C-0805-10UF" package-id="0805" height-units="Inches" height="0.03">
+   <part id="C-0805-10UF" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L2">
             <location units="Millimeters" x="100.0" y="120.0" z="82.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="C-0805-1UF" package-id="0805" height-units="Inches" height="0.03">
+   <part id="C-0805-1UF" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L1">
             <location units="Millimeters" x="100.0" y="110.0" z="82.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="ATMEGA168A-AU" package-id="JEDEC-MS-026-ABA" height-units="Millimeters" height="1.0">
+   <part id="ATMEGA168A-AU" height-units="Millimeters" height="1.0" package-id="JEDEC-MS-026-ABA">
       <feeder-locations>
          <feeder-location feeder-id="L8">
             <location units="Millimeters" x="100.0" y="180.0" z="80.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="MC78M05CDTRKG" package-id="TO-252-3" height-units="Inches" height="0.086">
+   <part id="MC78M05CDTRKG" height-units="Inches" height="0.086" package-id="TO-252-3">
       <feeder-locations>
          <feeder-location feeder-id="L10">
             <location units="Millimeters" x="100.0" y="200.0" z="76.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="C-0805-100NF" package-id="0805" height-units="Inches" height="0.03">
+   <part id="C-0805-100NF" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L0">
             <location units="Millimeters" x="100.0" y="100.0" z="82.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="R-0805-10K" package-id="0805" height-units="Inches" height="0.03">
+   <part id="R-0805-10K" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L3">
             <location units="Millimeters" x="100.0" y="130.0" z="85.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="R-0805-47" package-id="0805" height-units="Inches" height="0.03">
+   <part id="R-0805-47" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L5">
             <location units="Millimeters" x="100.0" y="150.0" z="85.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="ULN2803ADWR" package-id="JEDEC-MS-013-AB" height-units="Millimeters" height="2.65">
+   <part id="ULN2803ADWR" height-units="Millimeters" height="2.65" package-id="JEDEC-MS-013-AB">
       <feeder-locations>
          <feeder-location feeder-id="L9">
             <location units="Millimeters" x="100.0" y="190.0" z="76.0" rotation="0.0"/>

@@ -21,8 +21,6 @@
 
 package org.openpnp.machine.reference;
 
-import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.Part;
 
 /**
@@ -31,10 +29,6 @@ import org.openpnp.Part;
  * or throw an error.
  */
 public interface ReferenceDriver {
-	public void start(ReferenceMachine machine) throws Exception;
-	
-	public void prepareJob(Configuration configuration, Job job) throws Exception;
-	
 	/**
 	 * Performing the homing operation on the machine. When this call completes the machine
 	 * should be at 0,0,0,0. 
@@ -85,4 +79,6 @@ public interface ReferenceDriver {
 	 * @throws Exception
 	 */
 	public void setEnabled(boolean enabled) throws Exception;
+	
+	public void start(ReferenceMachine machine) throws Exception;
 }

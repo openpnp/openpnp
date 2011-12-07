@@ -29,17 +29,17 @@ class BoardsTableModel extends AbstractTableModel {
 		if (job == null) {
 			return 0;
 		}
-		return job.getBoards().size();
+		return job.getBoardLocations().size();
 	}
 
 	public Object getValueAt(int row, int col) {
-		BoardLocation board = job.getBoards().get(row);
-		Location loc = board.getLocation();
+		BoardLocation boardLocation = job.getBoardLocations().get(row);
+		Location loc = boardLocation.getLocation();
 		switch (col) {
 		case 0:
 			return (row + 1);
 		case 1:
-			return board.getBoard().getReference();
+			return boardLocation.getBoard().getName();
 		case 2:
 			return String.format("%2.3f", loc.getX());
 		case 3:

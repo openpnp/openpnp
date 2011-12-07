@@ -39,7 +39,9 @@ import org.openpnp.spi.MachineListener;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.core.Commit;
 
+// TODO: See if any of the Reference* classes can be done away with and use only the SPI classes.
 public class ReferenceMachine implements Machine {
 	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
 	
@@ -53,21 +55,12 @@ public class ReferenceMachine implements Machine {
 	private LinkedHashMap<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	
 	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
+	private boolean started;
 	private boolean enabled;
 	
-	private boolean started;
-	
 	@Override
-	public void prepareJob(Configuration configuration, Job job) throws Exception {
-		driver.prepareJob(configuration, job);
-		for (ReferenceCamera camera : cameras) {
-			camera.prepareJob(configuration, job);
-		}
-	}
-	
-	@Override
-	public Feeder getFeeder(String reference) {
-		return feeders.get(reference);
+	public Feeder getFeeder(String id) {
+		return feeders.get(id);
 	}
 
 	@Override
@@ -77,8 +70,8 @@ public class ReferenceMachine implements Machine {
 		return l;
 	}
 	
-	public ReferenceHead getHead(String reference) {
-		return heads.get(reference);
+	public ReferenceHead getHead(String id) {
+		return heads.get(id);
 	}
 	
 	@Override
@@ -135,14 +128,13 @@ public class ReferenceMachine implements Machine {
 		}
 	}
 
-	@Override
 	public void start() throws Exception {
 		if (started) {
-			throw new Error("Machine already started");
+			throw new Exception("ReferenceMachine was already started.");
 		}
 		driver.start(this);
 		for (ReferenceHead head : heads.values()) {
-			head.setMachine(this);
+			head.start(this);
 		}
 		for (ReferenceCamera camera : cameras) {
 			camera.start(this);

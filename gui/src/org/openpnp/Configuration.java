@@ -22,17 +22,11 @@
 package org.openpnp;
 
 import java.io.File;
-import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.openpnp.Part.FeederLocation;
 import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -43,38 +37,48 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 public class Configuration {
-	private HashMap<String, PackageDef> packages = new HashMap<String, PackageDef>();
+	private static Configuration instance;
+	
+	private HashMap<String, Package> packages = new HashMap<String, Package>();
 	private HashMap<String, Part> parts = new HashMap<String, Part>();
 	private Machine machine;
+	private HashMap<File, Board> boards = new HashMap<File, Board>();
 	
-	public Configuration(String configurationDirectoryPath) throws Exception {
+	public static Configuration get() {
+		if (instance == null) {
+			instance = new Configuration();
+		}
+		return instance;
+	}
+	
+	private Configuration() {
+		
+	}
+	
+	public void load(String configurationDirectoryPath) throws Exception {
 		File configurationDirectory = new File(configurationDirectoryPath);
 		
 		loadMachine(new File(configurationDirectory, "machine.xml"));
 		loadPackages(new File(configurationDirectory, "packages.xml"));
 		loadParts(new File(configurationDirectory, "parts.xml"));
+	}
+	
+	public void save(String configurationDirectoryPath) throws Exception {
+		File configurationDirectory = new File(configurationDirectoryPath);
 		
-//		Serializer serializer = createSerializer();
-//		StringWriter writer = new StringWriter();
-//		PartsConfigurationHolder holder = new PartsConfigurationHolder();
-//		holder.parts = new ArrayList<Part>(parts.values());
-//		serializer.write(holder, writer);
-//		System.out.println(writer.toString());
-//		System.exit(0);
+		saveMachine(new File(configurationDirectory, "machine.xml"));
+		savePackages(new File(configurationDirectory, "packages.xml"));
+		saveParts(new File(configurationDirectory, "parts.xml"));
 	}
 	
-	public PackageDef getPackage(String ref) {
-		return packages.get(ref);
+	public Package getPackage(String id) {
+		return packages.get(id);
 	}
 	
-	public Part getPart(String ref) {
-		return parts.get(ref);
+	public Part getPart(String id) {
+		return parts.get(id);
 	}
 	
 	public Collection<Part> getParts() {
@@ -85,12 +89,53 @@ public class Configuration {
 		return machine;
 	}
 	
+	public Board getBoard(String filename) throws Exception {
+		File file = new File(filename);
+		file = file.getCanonicalFile();
+		if (boards.containsKey(file)) {
+			System.out.println("loaded " + file.getCanonicalPath() + " from cache");
+			return boards.get(file);
+		}
+		Board board = loadBoard(file);
+		boards.put(file, board);
+		System.out.println("loaded " + file.getCanonicalPath() + " from filesystem");
+		return board;
+	}
+	
+	private void loadMachine(File file) throws Exception {
+		Serializer serializer = createSerializer();
+		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
+		machine = holder.machine;
+	}
+	
+	private void saveMachine(File file) throws Exception {
+		MachineConfigurationHolder holder = new MachineConfigurationHolder();
+		holder.machine = machine;
+		Serializer serializer = createSerializer();
+		serializer.write(holder, file);
+		
+//		StringWriter writer = new StringWriter();
+//		serializer.write(holder, writer);
+//		System.out.println(writer.toString());
+	}
+	
 	private void loadPackages(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		PackagesConfigurationHolder holder = serializer.read(PackagesConfigurationHolder.class, file);
-		for (PackageDef pkg : holder.packages) {
+		for (Package pkg : holder.packages) {
 			packages.put(pkg.getId(), pkg);
 		}
+	}
+	
+	private void savePackages(File file) throws Exception {
+		Serializer serializer = createSerializer();
+		PackagesConfigurationHolder holder = new PackagesConfigurationHolder();
+		holder.packages = new ArrayList<Package>(packages.values());
+		serializer.write(holder, file);
+		
+//		StringWriter writer = new StringWriter();
+//		serializer.write(holder, writer);
+//		System.out.println(writer.toString());
 	}
 	
 	private void loadParts(File file) throws Exception {
@@ -101,63 +146,45 @@ public class Configuration {
 		}
 	}
 	
-	private void loadMachine(File file) throws Exception {
+	private void saveParts(File file) throws Exception {
 		Serializer serializer = createSerializer();
-		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
-		machine = holder.machine;
+		PartsConfigurationHolder holder = new PartsConfigurationHolder();
+		holder.parts = new ArrayList<Part>(parts.values());
+		serializer.write(holder, file);
+
+//		StringWriter writer = new StringWriter();
+//		serializer.write(holder, writer);
+//		System.out.println(writer.toString());
 	}
 	
-	private static Serializer createSerializer() {
+	public Job loadJob(File file) throws Exception {
+		Serializer serializer = createSerializer();
+		Job job = serializer.read(Job.class, file);
+		
+		StringWriter writer = new StringWriter();
+		serializer.write(job, writer);
+		System.out.println(writer.toString());
+		
+		return job;
+	}
+	
+	private Board loadBoard(File file) throws Exception {
+		Serializer serializer = createSerializer();
+		Board board = serializer.read(Board.class, file);
+		
+//		StringWriter writer = new StringWriter();
+//		serializer.write(board, writer);
+//		System.out.println(writer.toString());
+		
+		return board;
+	}
+	
+	public static Serializer createSerializer() {
 		Style style = new HyphenStyle();
 		Format format = new Format(style);
 		AnnotationStrategy strategy = new AnnotationStrategy();
 		Serializer serializer = new Persister(strategy, format);
 		return serializer;
-	}
-	
-	public static Document loadDocument(InputStream in) throws Exception {
-        return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( 
-        		new InputSource(in));
-	}
-	
-	public static String getAttribute(Node n, String attribute) {
-		return getAttribute(n, attribute, null);
-	}
-	
-	public static String getAttribute(Node n, String attribute, String def) {
-		Node node = n.getAttributes().getNamedItem(attribute);
-		if (node == null) {
-			return def;
-		}
-		return node.getNodeValue();
-	}
-	
-	public static double getDoubleAttribute(Node n, String attribute) {
-		return getDoubleAttribute(n, attribute, 0);
-	}
-	
-	public static double getDoubleAttribute(Node n, String attribute, double def) {
-		String s = getAttribute(n, attribute);
-		if (s == null) {
-			return def;
-		}
-		return Double.valueOf(s);
-	}
-	
-	public static boolean getBooleanAttribute(Node n, String attribute) {
-		return getBooleanAttribute(n, attribute, false);
-	}
-	
-	public static boolean getBooleanAttribute(Node n, String attribute, boolean def) {
-		String s = getAttribute(n, attribute);
-		if (s == null) {
-			return def;
-		}
-		return Boolean.valueOf(s);
-	}
-	
-	public static LengthUnit getLengthUnitAttribute(Node n, String attribute) {
-		return LengthUnit.valueOf(n.getAttributes().getNamedItem(attribute).getNodeValue());
 	}
 	
 	@Root(name="openpnp-machine")
@@ -169,7 +196,7 @@ public class Configuration {
 	@Root(name="openpnp-packages")
 	public static class PackagesConfigurationHolder {
 		@ElementList(inline=true, entry="package")
-		private ArrayList<PackageDef> packages;
+		private ArrayList<Package> packages;
 	}
 	
 	@Root(name="openpnp-parts")

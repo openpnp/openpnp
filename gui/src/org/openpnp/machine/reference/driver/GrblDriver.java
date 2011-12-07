@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -82,11 +80,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	@Override
 	public void start(ReferenceMachine machine) throws Exception {
 		connect(portName, baud);
-	}
-
-	@Override
-	public void prepareJob(Configuration configuration, Job job)
-			throws Exception {
 	}
 
 	@Override

@@ -21,8 +21,6 @@
 
 package org.openpnp.machine.reference;
 
-import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.spi.Camera;
 
 /**
@@ -62,8 +60,5 @@ import org.openpnp.spi.Camera;
 </pre>
 */
 public interface ReferenceCamera extends Camera {
-	// TODO: probably remove
-	public void prepareJob(Configuration configuration, Job job) throws Exception;
-	
 	public void start(ReferenceMachine machine) throws Exception;
 }

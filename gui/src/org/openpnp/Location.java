@@ -32,26 +32,16 @@ import org.w3c.dom.Node;
  * axis.
  */
 public class Location {
-	@Attribute
+	@Attribute(required=false)
 	private LengthUnit units;
-	@Attribute
+	@Attribute(required=false)
 	private double x;
-	@Attribute
+	@Attribute(required=false)
 	private double y;
-	@Attribute
+	@Attribute(required=false)
 	private double z;
-	@Attribute
+	@Attribute(required=false)
 	private double rotation;
-	
-	public void parse(Node n) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		units = Configuration.getLengthUnitAttribute(n, "units");
-		x = Configuration.getDoubleAttribute(n, "x", 0);
-		y = Configuration.getDoubleAttribute(n, "y", 0);
-		z = Configuration.getDoubleAttribute(n, "z", 0);
-		rotation = Configuration.getDoubleAttribute(n, "rotation", 0);
-	}
 	
 	public double getX() {
 		return x;

@@ -21,40 +21,56 @@
 
 package org.openpnp;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import org.openpnp.Board.Side;
-import org.w3c.dom.Node;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 
 /**
- * A Placement describes a location on a Board where a Part will be placed, along with information about how to place it. 
+ * A Placement describes a location on a Board where a Part will be placed, 
+ * along with information about how to place it. 
  * @author jason
  */
 public class Placement {
+	@Attribute
 	private String id;
-	private Part part;
+	@Element
 	private Location location;
+	@Attribute
 	private Side side;
+	private Part part;
 	
-	public void parse(Node n, Configuration c) throws Exception {
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		id = Configuration.getAttribute(n, "reference");
-		side = Side.valueOf(Configuration.getAttribute(n, "side", "Top"));
-		part = c.getPart(Configuration.getAttribute(n, "part"));
-		location = new Location();
-		location.parse((Node) xpath.evaluate("Location", n, XPathConstants.NODE));
+	@Attribute
+	private String partId;
+	
+	@SuppressWarnings("unused")
+	@Commit
+	private void commit() {
+		part = Configuration.get().getPart(partId);
 	}
 	
-	public String getReference() {
+	@SuppressWarnings("unused")
+	@Persist
+	private void persist() {
+		partId = (part == null ? null : part.getId());
+	}
+	
+	public Part getPart() {
+		return part;
+	}
+
+	public void setPart(Part part) {
+		this.part = part;
+	}
+
+	public String getId() {
 		return id;
 	}
 
-	public void setReference(String reference) {
-		this.id = reference;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public Location getLocation() {
@@ -65,24 +81,11 @@ public class Placement {
 		this.location = location;
 	}
 
-	public Part getPart() {
-		return part;
-	}
-	
-	public void setPart(Part part) {
-		this.part = part;
-	}
-	
 	public Side getSide() {
 		return side;
 	}
 
 	public void setSide(Side side) {
 		this.side = side;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("id %s, side %s, part (%s), location (%s)", id, side, part, location);
 	}
 }

@@ -21,21 +21,16 @@
 
 package org.openpnp;
 
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.Part.FeederLocation;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.LengthUtil;
 import org.openpnp.util.Utils2D;
-import org.w3c.dom.Document;
 
 //TODO don't forget the whole damn thing is mirrored
 // TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
@@ -97,32 +92,10 @@ public class JobProcessor implements Runnable {
 		return state;
 	}
 	
-	/**
-	 * Load a new Job into the processor and prepare it for running. This
-	 * immediately stops and unloads any running Job and load in the new Job.
-	 * @param job
-	 */
-	public void load(File file) throws Exception {
-		Document document = Configuration.loadDocument(new FileInputStream(file));
-		Job job = new Job();
-		job.parse(document.getDocumentElement(), configuration);
-		load(job);
-	}
-	
 	public void load(Job job) {
 		stop();
 		this.job = job;
 		
-		try {
-			// TODO This is really only for the SimulatorDriver and it should maybe be
-			// made more private. Another option would be to allow the Machine
-			// to be a listener on the JobProcessor.
-			configuration.getMachine().prepareJob(configuration, job);
-		}
-		catch (Exception e) {
-			fireJobEncounteredError(JobError.MachineRejectedJobError, e.getMessage());
-		}
-
 		fireJobLoaded();
 	}
 	
@@ -188,7 +161,8 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	// TODO shouldn't all the job errors return instead of continuing?
+	// TODO: shouldn't all the job errors return instead of continuing?
+	// TODO: remember to add support for Feeder.isEnabled()
 	public void run() {
 		state = JobState.Running;
 		fireJobStateChanged();
@@ -222,7 +196,7 @@ public class JobProcessor implements Runnable {
 		 * How do we handle Heads working in tandem? Need multiple threads, or
 		 * async Head operations.
 		 */
-		for (BoardLocation jobBoard : job.getBoards()) {
+		for (BoardLocation jobBoard : job.getBoardLocations()) {
 			Board board = jobBoard.getBoard();
 			fireBoardProcessingStarted(jobBoard);
 			for (Placement placement : board.getPlacements()) {
@@ -238,7 +212,7 @@ public class JobProcessor implements Runnable {
 				List<FeederLocation> feederLocations = new ArrayList<FeederLocation>();
 				for (FeederLocation feederLocation : candidateFeederLocations) {
 					// TODO: currently passing null till we determine if we'll pass head or change this system
-					Feeder feeder = machine.getFeeder(feederLocation.getFeederId());
+					Feeder feeder = feederLocation.getFeeder();
 					if (feeder.canFeedForHead(part, null)) {
 						feederLocations.add(feederLocation);
 					}
@@ -256,7 +230,7 @@ public class JobProcessor implements Runnable {
 				// For now we just take the first Feeder that can feed the part.
 				FeederLocation feederLocation = feederLocations.get(0);
 
-				Feeder feeder = machine.getFeeder(feederLocation.getFeederId());
+				Feeder feeder = feederLocation.getFeeder();
 
 				// Get the Location of the pick point from the feeder
 				Location pickLocation = feederLocation.getLocation();

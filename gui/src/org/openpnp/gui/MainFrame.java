@@ -65,10 +65,11 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
 	 * Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 	 */
-	private Configuration configuration;
 	private JobProcessor jobProcessor;
 	private BoardsTableModel boardsTableModel;
 	private PartsTableModel partsTableModel;
+	private Configuration configuration;
+	private Machine machine;
 
 	public MainFrame() {
 		super();
@@ -84,21 +85,33 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		
 
 		try {
-			configuration = new Configuration("config");
+			Configuration.get().load("config");
 		}
 		catch (Exception e) {
+			// TODO: dialog
+			throw new Error(e);
+		}
+		
+		configuration = Configuration.get();
+		machine = configuration.getMachine();
+		
+		try {
+			machine.start();
+		}
+		catch (Exception e) {
+			// TODO: dialog
 			throw new Error(e);
 		}
 		
 		try {
-			configuration.getMachine().start();
+			configuration.save("config");
 		}
 		catch (Exception e) {
-			// TODO: message box
+			// TODO: dialog
 			throw new Error(e);
 		}
 		
-		for (Camera camera : configuration.getMachine().getCameras()) {
+		for (Camera camera : machine.getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
 
@@ -111,9 +124,9 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		jobProcessor = new JobProcessor(configuration);
 		jobProcessor.addListener(this);
 		jobProcessor.setDelegate(this);
-		configuration.getMachine().addListener(this);
+		machine.addListener(this);
 
-		machineControlsPanel.setMachine(configuration.getMachine());
+		machineControlsPanel.setMachine(machine);
 
 		updateJobControls();
 	}
@@ -146,7 +159,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	public boolean quit() {
 		// Attempt to stop the machine on quit
 		try {
-			configuration.getMachine().setEnabled(false);
+			machine.setEnabled(false);
 		}
 		catch (Exception e) {
 		}
@@ -182,7 +195,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		// We allow the above to run first so that all state is represented
 		// correctly
 		// even if the machine is disabled.
-		if (!configuration.getMachine().isEnabled()) {
+		if (!machine.isEnabled()) {
 			startPauseResumeJobAction.setEnabled(false);
 			stopJobAction.setEnabled(false);
 			stepJobAction.setEnabled(false);
@@ -198,8 +211,8 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 	protected void orientBoard() {
 		// Get the currently selected board
 		int selectedRow = boardsTable.getSelectedRow();
-		BoardLocation board = jobProcessor.getJob().getBoards().get(selectedRow);
-		Wizard wizard = new OrientBoardWizard(board, configuration);
+		BoardLocation boardLocation = jobProcessor.getJob().getBoardLocations().get(selectedRow);
+		Wizard wizard = new OrientBoardWizard(boardLocation, configuration);
 		startWizard(wizard);
 	}
 	
@@ -233,7 +246,8 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 		try {
 			File file = new File(new File(fileDialog.getDirectory()),
 					fileDialog.getFile());
-			jobProcessor.load(file);
+			Job job = configuration.loadJob(file);
+			jobProcessor.load(job);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

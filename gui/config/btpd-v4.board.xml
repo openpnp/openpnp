@@ -1,0 +1,121 @@
+<openpnp-board name="BTPDv4">
+	<outline units="Inches">
+		<point x="0" y="0"/>
+		<point x="0" y="2.2"/>
+		<point x="2.6" y="2.2"/>
+		<point x="2.6" y="0"/>
+	</outline>
+	<placements>
+		<placement id="C1" part-id="C-0805-100NF" side="Bottom">
+			<location units="Inches" x="1.3" y="1.25" rotation="0"/>
+		</placement>
+		<placement id="C2" part-id="C-0805-1UF" side="Bottom">
+			<location units="Inches" x="0.35" y="0.600" rotation="0"/>
+		</placement>
+		<placement id="C3" part-id="C-0805-10UF" side="Bottom">
+			<location units="Inches" x="0.35" y="0.500" rotation="0"/>
+		</placement>
+		<placement id="C4" part-id="C-0805-1UF" side="Bottom">
+			<location units="Inches" x="0.175" y="0.500" rotation="0"/>
+		</placement>
+		<placement id="C5" part-id="C-0805-10UF" side="Bottom">
+			<location units="Inches" x="0.175" y="0.600" rotation="0"/>
+		</placement>
+
+		<placement id="R1" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="0.65" y="1.45" rotation="270"/>
+		</placement>
+		<placement id="R2" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="0.85" y="1.45" rotation="270"/>
+		</placement>
+		<placement id="R3" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="1.65" y="1.450" rotation="270"/>
+		</placement>
+		<placement id="R4" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="1.85" y="1.450" rotation="270"/>
+		</placement>
+		<placement id="R5" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="0.650" y="0.575" rotation="270"/>
+		</placement>
+		<placement id="R6" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="0.850" y="0.575" rotation="270"/>
+		</placement>
+		<placement id="R7" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="1.65" y="0.575" rotation="270"/>
+		</placement>
+		<placement id="R8" part-id="R-0805-1K" side="Bottom">
+			<location units="Inches" x="1.85" y="0.575" rotation="270"/>
+		</placement>
+		<placement id="R9" part-id="R-0805-10K" side="Bottom">
+			<location units="Inches" x="1.3" y="1.825" rotation="0"/>
+		</placement>
+		<placement id="R10" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="0.550" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R11" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="0.750" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R12" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="0.950" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R13" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="1.150" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R14" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="1.450" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R15" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="1.650" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R16" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="1.850" y="1.1" rotation="270"/>
+		</placement>
+		<placement id="R17" part-id="R-0805-47" side="Bottom">
+			<location units="Inches" x="2.050" y="1.1" rotation="270"/>
+		</placement>
+		
+		<placement id="T1" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="0.700" y="1.650" rotation="0"/>
+		</placement>
+		<placement id="T2" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="0.900" y="1.650" rotation="0"/>
+		</placement>
+		<placement id="T3" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="1.700" y="1.650" rotation="0"/>
+		</placement>
+		<placement id="T4" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="1.900" y="1.650" rotation="0"/>
+		</placement>
+		<placement id="T5" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="0.700" y="0.775" rotation="0"/>
+		</placement>
+		<placement id="T6" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="0.900" y="0.775" rotation="0"/>
+		</placement>
+		<placement id="T7" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="1.700" y="0.775" rotation="0"/>
+		</placement>
+		<placement id="T8" part-id="MMBT3906-7-F" side="Bottom">
+			<location units="Inches" x="1.900" y="0.775" rotation="0"/>
+		</placement>
+		
+		
+		<placement id="S1" part-id="PTS525SM10SMTR LFS" side="Bottom">
+			<location units="Inches" x="2.45" y="0.560" rotation="270"/>
+		</placement>
+		
+		<placement id="IC1" part-id="ATMEGA168A-AU" side="Bottom">
+			<location units="Inches" x="1.3" y="1.550" rotation="0"/>
+		</placement>
+
+		<placement id="IC2" part-id="ULN2803ADWR" side="Bottom">
+			<!--  This location differed from the board because the part's center is wrong. Consider how to fix. -->
+			<location units="Inches" x="1.3" y="0.675" rotation="270"/>
+		</placement>
+		
+		<placement id="IC3" part-id="MC78M05CDTRKG" side="Bottom">
+			<!--  This location is incorrect due to centering of package, gotta figure out what proper centers are. -->
+			<location units="Inches" x="0.3" y="0.950" rotation="0"/>
+		</placement>
+	</placements>
+</openpnp-board>
