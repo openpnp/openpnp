@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Element;
@@ -41,8 +42,8 @@ import org.simpleframework.xml.stream.Style;
 public class Configuration {
 	private static Configuration instance;
 	
-	private HashMap<String, Package> packages = new HashMap<String, Package>();
-	private HashMap<String, Part> parts = new HashMap<String, Part>();
+	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
+	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
 	private Machine machine;
 	private HashMap<File, Board> boards = new HashMap<File, Board>();
 	

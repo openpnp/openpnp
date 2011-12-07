@@ -103,6 +103,7 @@ public class MainFrame extends MainFrameUi implements JobProcessorListener,
 			throw new Error(e);
 		}
 		
+		// TODO: STOPSHIP temporary
 		try {
 			configuration.save("config");
 		}

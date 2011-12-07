@@ -31,20 +31,20 @@
          <point x="0.12875" y="-0.12"/>
       </outline>
    </package>
-   <package id="JEDEC-MS-026-ABA" name="32-TQFP 7mm x 7mm">
-      <outline units="Millimeters">
-         <point x="-3.5" y="-3.5"/>
-         <point x="-3.5" y="3.5"/>
-         <point x="3.5" y="3.5"/>
-         <point x="3.5" y="-3.5"/>
-      </outline>
-   </package>
    <package id="SOT-23-3" name="SOT-23-3">
       <outline units="Millimeters">
          <point x="-1.625" y="-0.7"/>
          <point x="-1.625" y="0.7"/>
          <point x="1.625" y="0.7"/>
          <point x="1.625" y="-0.7"/>
+      </outline>
+   </package>
+   <package id="JEDEC-MS-026-ABA" name="32-TQFP 7mm x 7mm">
+      <outline units="Millimeters">
+         <point x="-3.5" y="-3.5"/>
+         <point x="-3.5" y="3.5"/>
+         <point x="3.5" y="3.5"/>
+         <point x="3.5" y="-3.5"/>
       </outline>
    </package>
 </openpnp-packages>

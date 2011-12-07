@@ -6,17 +6,10 @@
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="PTS525SM10SMTR LFS" height-units="Inches" height="0.03" package-id="SW-TACT-5.25MM">
+   <part id="C-0805-1UF" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
-         <feeder-location feeder-id="L7">
-            <location units="Millimeters" x="100.0" y="170.0" z="83.0" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
-   </part>
-   <part id="R-0805-1K" height-units="Inches" height="0.03" package-id="0805">
-      <feeder-locations>
-         <feeder-location feeder-id="L4">
-            <location units="Millimeters" x="100.0" y="140.0" z="85.0" rotation="0.0"/>
+         <feeder-location feeder-id="L1">
+            <location units="Millimeters" x="100.0" y="110.0" z="82.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
@@ -27,10 +20,17 @@
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="C-0805-1UF" height-units="Inches" height="0.03" package-id="0805">
+   <part id="R-0805-1K" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
-         <feeder-location feeder-id="L1">
-            <location units="Millimeters" x="100.0" y="110.0" z="82.0" rotation="0.0"/>
+         <feeder-location feeder-id="L4">
+            <location units="Millimeters" x="100.0" y="140.0" z="85.0" rotation="0.0"/>
+         </feeder-location>
+      </feeder-locations>
+   </part>
+   <part id="PTS525SM10SMTR LFS" height-units="Inches" height="0.03" package-id="SW-TACT-5.25MM">
+      <feeder-locations>
+         <feeder-location feeder-id="L7">
+            <location units="Millimeters" x="100.0" y="170.0" z="83.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
