@@ -1,4 +1,4 @@
-package org.openpnp.spi;
+package org.openpnp.gui;
 
 import javax.swing.JPanel;
 

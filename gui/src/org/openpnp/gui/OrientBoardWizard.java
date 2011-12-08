@@ -13,8 +13,6 @@ import javax.swing.SwingConstants;
 
 import org.openpnp.BoardLocation;
 import org.openpnp.Configuration;
-import org.openpnp.spi.Wizard;
-import org.openpnp.spi.WizardContainer;
 
 @SuppressWarnings("serial")
 public class OrientBoardWizard extends JPanel implements Wizard {

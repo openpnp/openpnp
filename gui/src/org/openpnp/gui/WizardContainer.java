@@ -1,4 +1,4 @@
-package org.openpnp.spi;
+package org.openpnp.gui;
 
 public interface WizardContainer {
 	public void wizardCompleted(Wizard wizard);

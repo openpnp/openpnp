@@ -7,7 +7,7 @@ import org.openpnp.Job;
 import org.openpnp.Location;
 
 class BoardsTableModel extends AbstractTableModel {
-	private String[] columnNames = new String[] { "#", "Board", "X Pos.",
+	private String[] columnNames = new String[] { "Board", "X Pos.",
 			"Y Pos.", "Rotation" };
 	private Job job;
 
@@ -31,20 +31,18 @@ class BoardsTableModel extends AbstractTableModel {
 		}
 		return job.getBoardLocations().size();
 	}
-
+	
 	public Object getValueAt(int row, int col) {
 		BoardLocation boardLocation = job.getBoardLocations().get(row);
 		Location loc = boardLocation.getLocation();
 		switch (col) {
 		case 0:
-			return (row + 1);
-		case 1:
 			return boardLocation.getBoard().getName();
-		case 2:
+		case 1:
 			return String.format("%2.3f", loc.getX());
-		case 3:
+		case 2:
 			return String.format("%2.3f", loc.getY());
-		case 4:
+		case 3:
 			return String.format("%2.3f", loc.getRotation());
 		default:
 			return null;
