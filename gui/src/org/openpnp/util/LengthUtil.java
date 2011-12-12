@@ -21,6 +21,7 @@
 
 package org.openpnp.util;
 
+import org.openpnp.Length;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.Outline;
@@ -58,6 +59,54 @@ public class LengthUtil {
 		x = LengthUtil.convertLength(x, fromUnits, toUnits);
 		y = LengthUtil.convertLength(y, fromUnits, toUnits);
 		return new Point(x, y);
+	}
+	
+	/**
+	 * Takes a value in the format of a double followed by any number of spaces
+	 * followed by the shortName of a LengthUnit value and returns the value
+	 * as a Length object. Returns null if the value could not be parsed.
+	 * @param v
+	 * @return
+	 */
+	public static Length parseLengthValue(String v) {
+		if (v == null) {
+			return null;
+		}
+		
+		v = v.trim();
+		
+		Length length = new Length(0, null);
+		// find the index of the first character that is not a -, . or digit.
+		int startOfUnits = -1;
+		for (int i = 0; i < v.length(); i++) {
+			char ch = v.charAt(i);
+			if (ch != '-' && ch != '.' && !Character.isDigit(ch)) {
+				startOfUnits = i;
+				break;
+			}
+		}
+		
+		if (startOfUnits != -1) {
+			String unitsString = v.substring(startOfUnits);
+			unitsString = unitsString.trim();
+			for (LengthUnit lengthUnit : LengthUnit.values()) {
+				if (lengthUnit.getShortName().equalsIgnoreCase(unitsString)) {
+					length.setUnits(lengthUnit);
+					break;
+				}
+			}
+		}
+		
+		String valueString = v.substring(0, startOfUnits);
+		try {
+			double value = Double.parseDouble(valueString);
+			length.setValue(value);
+		}
+		catch (Exception e) {
+			return null;
+		}
+		
+		return length;
 	}
 	
 	public static double convertLength(double length, LengthUnit fromUnits, LengthUnit toUnits) {

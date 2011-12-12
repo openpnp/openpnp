@@ -33,6 +33,8 @@ import org.simpleframework.xml.Root;
 public class Job {
 	@ElementList
 	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
+	
+	private boolean dirty;
 
 	public ArrayList<BoardLocation> getBoardLocations() {
 		return boardLocations;
@@ -40,5 +42,13 @@ public class Job {
 
 	public void setBoardLocations(ArrayList<BoardLocation> boardLocations) {
 		this.boardLocations = boardLocations;
+	}
+
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
 	}
 }

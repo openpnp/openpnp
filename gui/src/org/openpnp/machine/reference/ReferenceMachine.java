@@ -82,6 +82,13 @@ public class ReferenceMachine implements Machine {
 	}
 
 	@Override
+	public List<Feeder> getFeeders() {
+		ArrayList<Feeder> l = new ArrayList<Feeder>();
+		l.addAll(feeders.values());
+		return l;
+	}
+
+	@Override
 	public LengthUnit getNativeUnits() {
 		return nativeUnits;
 	}

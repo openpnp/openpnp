@@ -53,6 +53,8 @@ public interface Machine {
 	 */
 	Feeder getFeeder(String id);
 	
+	List<Feeder> getFeeders();
+	
 	List<Camera> getCameras();
 	
 	/**

@@ -46,6 +46,7 @@ public class Configuration {
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
 	private Machine machine;
 	private HashMap<File, Board> boards = new HashMap<File, Board>();
+	private boolean dirty;
 	
 	public static Configuration get() {
 		if (instance == null) {
@@ -58,12 +59,21 @@ public class Configuration {
 		
 	}
 	
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
+
 	public void load(String configurationDirectoryPath) throws Exception {
 		File configurationDirectory = new File(configurationDirectoryPath);
 		
 		loadMachine(new File(configurationDirectory, "machine.xml"));
 		loadPackages(new File(configurationDirectory, "packages.xml"));
 		loadParts(new File(configurationDirectory, "parts.xml"));
+		dirty = false;
 	}
 	
 	public void save(String configurationDirectoryPath) throws Exception {
@@ -72,6 +82,7 @@ public class Configuration {
 		saveMachine(new File(configurationDirectory, "machine.xml"));
 		savePackages(new File(configurationDirectory, "packages.xml"));
 		saveParts(new File(configurationDirectory, "parts.xml"));
+		dirty = false;
 	}
 	
 	public Package getPackage(String id) {
@@ -162,9 +173,9 @@ public class Configuration {
 		Serializer serializer = createSerializer();
 		Job job = serializer.read(Job.class, file);
 		
-		StringWriter writer = new StringWriter();
-		serializer.write(job, writer);
-		System.out.println(writer.toString());
+//		StringWriter writer = new StringWriter();
+//		serializer.write(job, writer);
+//		System.out.println(writer.toString());
 		
 		return job;
 	}

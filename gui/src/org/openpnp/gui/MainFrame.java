@@ -105,6 +105,8 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	private CameraPanel cameraPanel;
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
+	private PartsPanel partsPanel;
+	private FeedersPanel feedersPanel;
 	
 
 	public MainFrame() {
@@ -149,11 +151,11 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		boardsTable.setModel(boardsTableModel);
 		placementsTable.setModel(placementsTableModel);
 		
-		JPanel panelParts = new JPanel();
-		panelBottom.addTab("Parts", null, panelParts, null);
+		partsPanel = new PartsPanel();
+		panelBottom.addTab("Parts", null, partsPanel, null);
 
-		JPanel panelFeeders = new JPanel();
-		panelBottom.addTab("Feeders", null, panelFeeders, null);
+		feedersPanel = new FeedersPanel();
+		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		
 		jobProcessor = new JobProcessor(configuration);
 		jobProcessor.addListener(this);
@@ -161,7 +163,9 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		machine.addListener(this);
 
 		machineControlsPanel.setMachine(machine);
-
+		partsPanel.refresh();
+		feedersPanel.refresh();
+		
 		updateJobControls();
 	}
 
@@ -191,6 +195,16 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	}
 	
 	public boolean quit() {
+		// Save the configuration if it's dirty
+		try {
+			if (Configuration.get().isDirty()) {
+				Configuration.get().save("config");
+				System.out.println("Configuration saved.");
+			}
+		}
+		catch (Exception e) {
+			// TODO: dialog, maybe try to recover
+		}
 		// Attempt to stop the machine on quit
 		try {
 			machine.setEnabled(false);
@@ -528,8 +542,18 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		boardsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				List<Placement> placements = jobProcessor.getJob().getBoardLocations().get(e.getFirstIndex()).getBoard().getPlacements();
-				placementsTableModel.setPlacements(placements);
+				if (e.getValueIsAdjusting()) {
+					return;
+				}
+				int index = boardsTable.getSelectedRow();
+				if (index == -1) {
+					placementsTableModel.setPlacements(null);
+				}
+				else {
+					index = boardsTable.convertRowIndexToModel(index);
+					List<Placement> placements = jobProcessor.getJob().getBoardLocations().get(index).getBoard().getPlacements();
+					placementsTableModel.setPlacements(placements);
+				}
 			}
 		});
 		
@@ -573,7 +597,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		splitPaneLeftRight.setDividerLocation(350);
 		splitPaneLeftRight.setLeftComponent(panelLeft);
 		splitPaneLeftRight.setRightComponent(panelRight);
-		splitPaneTopBottom.setDividerLocation(700);
+		splitPaneTopBottom.setDividerLocation(600);
 		
 		lblStatus = new JLabel(" ");
 		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -632,6 +656,8 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		}
 	};
 
+	// TODO: move all the job editing stuff to the JobPanel and just grab the
+	// actions for the menu items there.
 	private Action addBoardAction = new AbstractAction("Add Board...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

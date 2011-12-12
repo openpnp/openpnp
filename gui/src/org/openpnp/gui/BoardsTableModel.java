@@ -32,6 +32,36 @@ class BoardsTableModel extends AbstractTableModel {
 		return job.getBoardLocations().size();
 	}
 	
+	@Override
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return true;
+	}
+
+	@Override
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		try {
+			BoardLocation boardLocation = job.getBoardLocations().get(rowIndex);
+			if (columnIndex == 0) {
+				boardLocation.getBoard().setName(aValue.toString());
+			}
+			else if (columnIndex == 1) {
+				boardLocation.getLocation().setX(Double.parseDouble(aValue.toString()));
+			}
+			else if (columnIndex == 2) {
+				boardLocation.getLocation().setY(Double.parseDouble(aValue.toString()));
+			}
+			else if (columnIndex == 3) {
+				boardLocation.getLocation().setZ(Double.parseDouble(aValue.toString()));
+			}
+			else if (columnIndex == 4) {
+				boardLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
+			}
+		}
+		catch (Exception e) {
+			// TODO: dialog, bad input
+		}
+	}
+
 	public Object getValueAt(int row, int col) {
 		BoardLocation boardLocation = job.getBoardLocations().get(row);
 		Location loc = boardLocation.getLocation();

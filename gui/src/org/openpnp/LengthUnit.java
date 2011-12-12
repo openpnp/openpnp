@@ -22,9 +22,19 @@
 package org.openpnp;
 
 public enum LengthUnit {
-	Meters,
-	Centimeters,
-	Millimeters,
-	Feet,
-	Inches
+	Meters("m"),
+	Centimeters("cm"),
+	Millimeters("mm"),
+	Feet("'"),
+	Inches("\"");
+	
+	private String shortName;
+	
+	private LengthUnit(String shortName) {
+		this.shortName = shortName;
+	}
+	
+	public String getShortName() {
+		return shortName;
+	}
 }
