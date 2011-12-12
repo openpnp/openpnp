@@ -82,24 +82,17 @@ import org.openpnp.spi.MachineListener;
  * and Job setup.
  */
 @SuppressWarnings("serial")
-public class MainFrame extends JFrame implements JobProcessorListener,
-		JobProcessorDelegate, MachineListener, WizardContainer {
-
-	// TODO: consider moving each tab into it's own class
-	
+// TODO: check out icons at http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
+// TODO: add JobProcessorListener back in to listen for detailedStatusUpdate
+public class MainFrame extends JFrame implements WizardContainer {
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
 	 * Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 	 */
-	private JobProcessor jobProcessor;
-	private BoardsTableModel boardsTableModel;
-	private PlacementsTableModel placementsTableModel;
-	private JTable boardsTable;
-	private JTable placementsTable;
 	private Configuration configuration;
 	private Machine machine;
-	
+
 	private JPanel contentPane;
 	private MachineControlsPanel machineControlsPanel;
 	private CameraPanel cameraPanel;
@@ -107,11 +100,9 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 	private JTabbedPane panelBottom;
 	private PartsPanel partsPanel;
 	private FeedersPanel feedersPanel;
-	
+	private JobPanel jobPanel;
 
 	public MainFrame() {
-		createUi();
-		
 		// Get handlers for quit and close in place
 		registerForMacOSXEvents();
 		addWindowListener(new WindowAdapter() {
@@ -120,7 +111,6 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 				quit();
 			}
 		});
-		
 
 		try {
 			Configuration.get().load("config");
@@ -129,10 +119,12 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			// TODO: dialog
 			throw new Error(e);
 		}
-		
+
 		configuration = Configuration.get();
 		machine = configuration.getMachine();
-		
+
+		createUi();
+
 		try {
 			machine.start();
 		}
@@ -140,33 +132,14 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			// TODO: dialog
 			throw new Error(e);
 		}
-		
+
 		for (Camera camera : machine.getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
 
-		boardsTableModel = new BoardsTableModel();
-		placementsTableModel = new PlacementsTableModel();
-
-		boardsTable.setModel(boardsTableModel);
-		placementsTable.setModel(placementsTableModel);
-		
-		partsPanel = new PartsPanel();
-		panelBottom.addTab("Parts", null, partsPanel, null);
-
-		feedersPanel = new FeedersPanel();
-		panelBottom.addTab("Feeders", null, feedersPanel, null);
-		
-		jobProcessor = new JobProcessor(configuration);
-		jobProcessor.addListener(this);
-		jobProcessor.setDelegate(this);
-		machine.addListener(this);
-
 		machineControlsPanel.setMachine(machine);
 		partsPanel.refresh();
 		feedersPanel.refresh();
-		
-		updateJobControls();
 	}
 
 	public void registerForMacOSXEvents() {
@@ -178,14 +151,14 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 				// com.apple.eawt.ApplicationListener methods
 				OSXAdapter.setQuitHandler(this,
 						getClass().getDeclaredMethod("quit", (Class[]) null));
-//				OSXAdapter.setAboutHandler(this,
-//						getClass().getDeclaredMethod("about", (Class[]) null));
-//				OSXAdapter.setPreferencesHandler(this, getClass()
-//						.getDeclaredMethod("preferences", (Class[]) null));
-//				OSXAdapter.setFileHandler(
-//						this,
-//						getClass().getDeclaredMethod("loadImageFile",
-//								new Class[] { String.class }));
+				// OSXAdapter.setAboutHandler(this,
+				// getClass().getDeclaredMethod("about", (Class[]) null));
+				// OSXAdapter.setPreferencesHandler(this, getClass()
+				// .getDeclaredMethod("preferences", (Class[]) null));
+				// OSXAdapter.setFileHandler(
+				// this,
+				// getClass().getDeclaredMethod("loadImageFile",
+				// new Class[] { String.class }));
 			}
 			catch (Exception e) {
 				System.err.println("Error while loading the OSXAdapter:");
@@ -193,7 +166,7 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 			}
 		}
 	}
-	
+
 	public boolean quit() {
 		// Save the configuration if it's dirty
 		try {
@@ -215,203 +188,37 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		return true;
 	}
 
-	/**
-	 * Updates the Job controls based on the Job state and the Machine's
-	 * readiness.
-	 */
-	private void updateJobControls() {
-		JobState state = jobProcessor.getState();
-		if (state == JobState.Stopped) {
-			startPauseResumeJobAction.setEnabled(true);
-			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
-			stopJobAction.setEnabled(false);
-			stepJobAction.setEnabled(true);
-		}
-		else if (state == JobState.Running) {
-			startPauseResumeJobAction.setEnabled(true);
-			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause");
-			stopJobAction.setEnabled(true);
-			stepJobAction.setEnabled(false);
-		}
-		else if (state == JobState.Paused) {
-			startPauseResumeJobAction.setEnabled(true);
-			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume");
-			stopJobAction.setEnabled(true);
-			stepJobAction.setEnabled(true);
-		}
-
-		// We allow the above to run first so that all state is represented
-		// correctly
-		// even if the machine is disabled.
-		if (!machine.isEnabled()) {
-			startPauseResumeJobAction.setEnabled(false);
-			stopJobAction.setEnabled(false);
-			stepJobAction.setEnabled(false);
-		}
-	}
-
-	@Override
-	public void jobStateChanged(JobState state) {
-		updateJobControls();
-	}
-	
-	private void orientBoard() {
-		// Get the currently selected board
-		int selectedRow = boardsTable.getSelectedRow();
-		BoardLocation boardLocation = jobProcessor.getJob().getBoardLocations().get(selectedRow);
-		Wizard wizard = new OrientBoardWizard(boardLocation, configuration);
-		startWizard(wizard);
-	}
-	
 	private void startWizard(Wizard wizard) {
 		// TODO: If there is already a wizard running, take care of that
-		
+
 		// Configure the wizard
 		wizard.setWizardContainer(this);
-		
+
 		// Create a titled panel to hold the wizard
 		JPanel panel = new JPanel();
-		panel.setBorder(BorderFactory.createTitledBorder("Wizard: " + wizard.getWizardName()));
+		panel.setBorder(BorderFactory.createTitledBorder("Wizard: "
+				+ wizard.getWizardName()));
 		panel.setLayout(new BorderLayout());
 		panel.add(wizard.getWizardPanel());
 		panelBottom.add(panel, "Wizard");
 		// TODO: broken
-//		panelBottomCardLayout.show(panelBottom, "Wizard");
+		// panelBottomCardLayout.show(panelBottom, "Wizard");
 	}
-	
+
 	public void wizardCompleted(Wizard wizard) {
-		
+
 	}
-	
+
 	public void wizardCancelled(Wizard wizard) {
-		
+
 	}
 
-	private void openJob() {
-		FileDialog fileDialog = new FileDialog(MainFrame.this);
-		fileDialog.setFilenameFilter(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".job.xml");
-			}
-		});
-		fileDialog.setVisible(true);
-		try {
-			File file = new File(new File(fileDialog.getDirectory()),
-					fileDialog.getFile());
-			Job job = configuration.loadJob(file);
-			jobProcessor.load(job);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			MessageBoxes.errorBox(this, "Job Load Error", e.getMessage());
-		}
-	}
-
-	private void startPauseResumeJob() {
-		JobState state = jobProcessor.getState();
-		if (state == JobState.Stopped) {
-			try {
-				jobProcessor.start();
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(this, "Job Start Error", e.getMessage());
-			}
-		}
-		else if (state == JobState.Paused) {
-			jobProcessor.resume();
-		}
-		else if (state == JobState.Running) {
-			jobProcessor.pause();
-		}
-	}
-
-	private void stepJob() {
-		try {
-			jobProcessor.step();
-		}
-		catch (Exception e) {
-			MessageBoxes.errorBox(this, "Job Start Error", e.getMessage());
-		}
-	}
-
-	private void stopJob() {
-		jobProcessor.stop();
-	}
-
-	@Override
-	public void jobLoaded(Job job) {
-		placementsTableModel.setPlacements(null);
-		boardsTableModel.setJob(jobProcessor.getJob());
-		updateJobControls();
-	}
-
-	@Override
-	public PickRetryAction partPickFailed(BoardLocation board, Part part,
-			Feeder feeder) {
-		return PickRetryAction.SkipAndContinue;
-	}
-
-	@Override
-	public void jobEncounteredError(JobError error, String description) {
-		MessageBoxes.errorBox(this, error.toString(), description);
-	}
-
-	@Override
-	public void boardProcessingCompleted(BoardLocation board) {
-	}
-
-	@Override
-	public void boardProcessingStarted(BoardLocation board) {
-	}
-
-	@Override
-	public void partPicked(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partPlaced(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partProcessingCompleted(BoardLocation board, Placement placement) {
-		// partsComplete++;
-	}
-
-	@Override
-	public void partProcessingStarted(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void detailedStatusUpdated(String status) {
-		lblStatus.setText(status);
-	}
-
-	@Override
-	public void machineHeadActivity(Machine machine, Head head) {
-	}
-
-	@Override
-	public void machineEnabled(Machine machine) {
-		updateJobControls();
-	}
-
-	@Override
-	public void machineEnableFailed(Machine machine, String reason) {
-	}
-
-	@Override
-	public void machineDisabled(Machine machine, String reason) {
-		updateJobControls();
-		jobProcessor.stop();
-	}
-
-	@Override
-	public void machineDisableFailed(Machine machine, String reason) {
-	}
-	
 	private void createUi() {
 		setBounds(100, 100, 1280, 1024);
+		
+		jobPanel = new JobPanel(this);
+		partsPanel = new PartsPanel();
+		feedersPanel = new FeedersPanel();
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -419,279 +226,81 @@ public class MainFrame extends JFrame implements JobProcessorListener,
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 
-		JMenuItem mntmNew = new JMenuItem("New");
-		mntmNew.setAction(newJobAction);
-		mnFile.add(mntmNew);
-
-		JMenuItem mntmOpen = new JMenuItem("Open");
-		mntmOpen.setAction(openJobAction);
-		mnFile.add(mntmOpen);
-
+		mnFile.add(new JMenuItem(jobPanel.newJobAction));
+		mnFile.add(new JMenuItem(jobPanel.openJobAction));
 		mnFile.addSeparator();
-
-		JMenuItem mntmClose = new JMenuItem("Close");
-		mntmClose.setAction(closeJobAction);
-		mnFile.add(mntmClose);
-
+		mnFile.add(new JMenuItem(jobPanel.closeJobAction));
 		mnFile.addSeparator();
-
-		JMenuItem mntmSave = new JMenuItem("Save");
-		mntmSave.setAction(saveJobAction);
-		mnFile.add(mntmSave);
-
-		JMenuItem mntmSaveAs = new JMenuItem("Save As");
-		mntmSaveAs.setAction(saveJobAsAction);
-		mnFile.add(mntmSaveAs);
+		mnFile.add(new JMenuItem(jobPanel.saveJobAction));
+		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
 
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 
-		JMenuItem mntmAddBoard = new JMenuItem("Add Board");
-		mntmAddBoard.setAction(addBoardAction);
-		mnEdit.add(mntmAddBoard);
-
-		JMenuItem mntmDeleteBoard = new JMenuItem("Delete Board");
-		mntmDeleteBoard.setAction(deleteBoardAction);
-		mnEdit.add(mntmDeleteBoard);
-
-		JMenuItem mntmEnableBoard = new JMenuItem("Enable Board");
-		mntmEnableBoard.setAction(enableDisableBoardAction);
-		mnEdit.add(mntmEnableBoard);
-
+		mnEdit.add(new JMenuItem(jobPanel.addBoardAction));
+		mnEdit.add(new JMenuItem(jobPanel.deleteBoardAction));
+		mnEdit.add(new JMenuItem(jobPanel.enableDisableBoardAction));
 		mnEdit.addSeparator();
-
-		JMenuItem mntmMoveBoardUp = new JMenuItem("Move Board Up");
-		mntmMoveBoardUp.setAction(moveBoardUpAction);
-		mnEdit.add(mntmMoveBoardUp);
-
-		JMenuItem mntmMoveBoardDown = new JMenuItem("Move Board Down");
-		mntmMoveBoardDown.setAction(moveBoardDownAction);
-		mnEdit.add(mntmMoveBoardDown);
-
+		mnEdit.add(new JMenuItem(jobPanel.moveBoardUpAction));
+		mnEdit.add(new JMenuItem(jobPanel.moveBoardDownAction));
 		mnEdit.addSeparator();
-
-		JMenuItem mntmSetBoardLocation = new JMenuItem("Set Board Location");
-		mntmSetBoardLocation.setAction(orientBoardAction);
-		mnEdit.add(mntmSetBoardLocation);
+		mnEdit.add(new JMenuItem(jobPanel.orientBoardAction));
 
 		JMenu mnJob = new JMenu("Job Control");
 		menuBar.add(mnJob);
 
-		JMenuItem mntmNewMenuItem = new JMenuItem("Start Job");
-		mntmNewMenuItem.setAction(startPauseResumeJobAction);
-		mnJob.add(mntmNewMenuItem);
-
-		JMenuItem mntmStepJob = new JMenuItem("Step Job");
-		mntmStepJob.setAction(stepJobAction);
-		mnJob.add(mntmStepJob);
-
-		JMenuItem mntmStopJob = new JMenuItem("Stop Job");
-		mntmStopJob.setAction(stopJobAction);
-		mnJob.add(mntmStopJob);
+		mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
+		mnJob.add(new JMenuItem(jobPanel.stepJobAction));
+		mnJob.add(new JMenuItem(jobPanel.stopJobAction));
 
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
-		
+
 		JSplitPane splitPaneTopBottom = new JSplitPane();
 		splitPaneTopBottom.setBorder(null);
 		splitPaneTopBottom.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		splitPaneTopBottom.setContinuousLayout(true);
 		contentPane.add(splitPaneTopBottom, BorderLayout.CENTER);
-		
+
 		JPanel panelTop = new JPanel();
 		splitPaneTopBottom.setLeftComponent(panelTop);
 		panelTop.setLayout(new BorderLayout(0, 0));
-		
-				JPanel panelLeftColumn = new JPanel();
-				panelTop.add(panelLeftColumn, BorderLayout.WEST);
-				FlowLayout flowLayout = (FlowLayout) panelLeftColumn.getLayout();
-				flowLayout.setVgap(0);
-				flowLayout.setHgap(0);
-				
-						JPanel panel = new JPanel();
-						panelLeftColumn.add(panel);
-						panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-						
-								machineControlsPanel = new MachineControlsPanel();
-								machineControlsPanel.setBorder(new TitledBorder(null,
-										"Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
-										null, null));
-								panel.add(machineControlsPanel);
-								
-										cameraPanel = new CameraPanel();
-										panelTop.add(cameraPanel, BorderLayout.CENTER);
-										cameraPanel.setBorder(new TitledBorder(null, "Cameras",
-												TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		
+
+		JPanel panelLeftColumn = new JPanel();
+		panelTop.add(panelLeftColumn, BorderLayout.WEST);
+		FlowLayout flowLayout = (FlowLayout) panelLeftColumn.getLayout();
+		flowLayout.setVgap(0);
+		flowLayout.setHgap(0);
+
+		JPanel panel = new JPanel();
+		panelLeftColumn.add(panel);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+		machineControlsPanel = new MachineControlsPanel();
+		machineControlsPanel.setBorder(new TitledBorder(null,
+				"Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
+				null, null));
+		panel.add(machineControlsPanel);
+
+		cameraPanel = new CameraPanel();
+		panelTop.add(cameraPanel, BorderLayout.CENTER);
+		cameraPanel.setBorder(new TitledBorder(null, "Cameras",
+				TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
 		panelBottom = new JTabbedPane(JTabbedPane.TOP);
 		splitPaneTopBottom.setRightComponent(panelBottom);
 
-		JPanel panelJob = new JPanel();
-		panelBottom.addTab("Job", panelJob);
-		panelJob.setLayout(new BorderLayout(0, 0));
+		lblStatus = new JLabel(" ");
+		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null,
+				null, null));
+		contentPane.add(lblStatus, BorderLayout.SOUTH);
 
-		placementsTable = new JTable();
-		JScrollPane partsTableScroller = new JScrollPane(placementsTable);
-
-		boardsTable = new JTable();
-		JScrollPane boardsTableScroller = new JScrollPane(boardsTable);
-		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
-		boardsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				int index = boardsTable.getSelectedRow();
-				if (index == -1) {
-					placementsTableModel.setPlacements(null);
-				}
-				else {
-					index = boardsTable.convertRowIndexToModel(index);
-					List<Placement> placements = jobProcessor.getJob().getBoardLocations().get(index).getBoard().getPlacements();
-					placementsTableModel.setPlacements(placements);
-				}
-			}
-		});
-		
-
-		JPanel panelRight = new JPanel();
-		panelRight.setLayout(new BorderLayout());
-		panelRight.add(partsTableScroller);
-
-		JPanel panelLeft = new JPanel();
-		panelLeft.setLayout(new BorderLayout());
-		
-		JPanel panelJobControl = new JPanel();
-		panelLeft.add(panelJobControl, BorderLayout.WEST);
-		panelJobControl.setLayout(new BoxLayout(panelJobControl, BoxLayout.Y_AXIS));
-		
-		JButton btnStart = new JButton("Start");
-		btnStart.setAction(startPauseResumeJobAction);
-		btnStart.setPreferredSize(new Dimension(80, 80));
-		btnStart.setFocusable(false);
-		panelJobControl.add(btnStart);
-		
-		JButton btnStep = new JButton(stepJobAction);
-		btnStep.setPreferredSize(new Dimension(80, 80));
-		btnStep.setFocusable(false);
-		panelJobControl.add(btnStep);
-		
-		JButton btnStop = new JButton("Stop");
-		btnStop.setAction(stopJobAction);
-		btnStop.setPreferredSize(new Dimension(80, 80));
-		btnStop.setFocusable(false);
-		panelJobControl.add(btnStop);
-		
-		Component glue = Box.createGlue();
-		panelJobControl.add(glue);
-		panelLeft.add(boardsTableScroller);
-
-		JSplitPane splitPaneLeftRight = new JSplitPane();
-		splitPaneLeftRight.setBorder(null);
-		panelJob.add(splitPaneLeftRight);
-		splitPaneLeftRight.setContinuousLayout(true);
-		splitPaneLeftRight.setDividerLocation(350);
-		splitPaneLeftRight.setLeftComponent(panelLeft);
-		splitPaneLeftRight.setRightComponent(panelRight);
 		splitPaneTopBottom.setDividerLocation(600);
 		
-		lblStatus = new JLabel(" ");
-		lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		contentPane.add(lblStatus, BorderLayout.SOUTH);
+		panelBottom.addTab("Job", null, jobPanel, null);
+		panelBottom.addTab("Parts", null, partsPanel, null);
+		panelBottom.addTab("Feeders", null, feedersPanel, null);
 	}
-	
-	private Action stopJobAction = new AbstractAction("Stop") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			stopJob();
-		}
-	};
-
-	private Action startPauseResumeJobAction = new AbstractAction("Start") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			startPauseResumeJob();
-		}
-	};
-
-	private Action stepJobAction = new AbstractAction("Step") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			stepJob();
-		}
-	};
-
-	private Action openJobAction = new AbstractAction("Open Job...") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			openJob();
-		}
-	};
-
-	private Action closeJobAction = new AbstractAction("Close Job") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action newJobAction = new AbstractAction("New Job") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action saveJobAction = new AbstractAction("Save Job") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action saveJobAsAction = new AbstractAction("Save Job As...") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	// TODO: move all the job editing stuff to the JobPanel and just grab the
-	// actions for the menu items there.
-	private Action addBoardAction = new AbstractAction("Add Board...") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action moveBoardUpAction = new AbstractAction("Move Board Up") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action moveBoardDownAction = new AbstractAction("Move Board Down") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action orientBoardAction = new AbstractAction("Set Board Location") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			orientBoard();
-		}
-	};
-
-	private Action deleteBoardAction = new AbstractAction("Delete Board") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	private Action enableDisableBoardAction = new AbstractAction("Enable Board") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
 }
