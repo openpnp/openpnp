@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.feeder;
 
 import org.openpnp.Location;
 import org.openpnp.Part;
+import org.openpnp.gui.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
@@ -73,5 +74,42 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 		pickCount++;
 		
 		return l; 
+	}
+	
+	@Override
+	public Wizard getConfigurationWizard() {
+		return new ReferenceTrayFeederConfigurationWizard(this);
+	}
+
+	public int getTrayCountX() {
+		return trayCountX;
+	}
+
+	public void setTrayCountX(int trayCountX) {
+		this.trayCountX = trayCountX;
+	}
+
+	public int getTrayCountY() {
+		return trayCountY;
+	}
+
+	public void setTrayCountY(int trayCountY) {
+		this.trayCountY = trayCountY;
+	}
+
+	public Location getOffsets() {
+		return offsets;
+	}
+
+	public void setOffsets(Location offsets) {
+		this.offsets = offsets;
+	}
+
+	public int getPickCount() {
+		return pickCount;
+	}
+
+	public void setPickCount(int pickCount) {
+		this.pickCount = pickCount;
 	}
 }

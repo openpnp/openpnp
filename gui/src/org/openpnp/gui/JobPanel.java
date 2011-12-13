@@ -89,12 +89,9 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 		toolBar.add(new JButton(stepJobAction));
 		toolBar.add(new JButton(stopJobAction));
 		toolBar.addSeparator();
+		toolBar.add(new JButton(newBoardAction));
 		toolBar.add(new JButton(addBoardAction));
-		toolBar.add(new JButton(deleteBoardAction));
-		toolBar.add(new JButton(enableDisableBoardAction));
-		toolBar.addSeparator();
-		toolBar.add(new JButton(moveBoardUpAction));
-		toolBar.add(new JButton(moveBoardDownAction));
+		toolBar.add(new JButton(removeBoardAction));
 		toolBar.addSeparator();
 		toolBar.add(new JButton(orientBoardAction));
 		
@@ -113,80 +110,23 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 		
 		Configuration.get().getMachine().addListener(this);
 		
-		updateJobControls();
+		updateJobActions();
+	}
+	
+	public JobProcessor getJobProcessor() {
+		return jobProcessor;
 	}
 	
 	@Override
 	public void jobStateChanged(JobState state) {
-		updateJobControls();
-	}
-
-	private void orientBoard() {
-		// Get the currently selected board
-		int selectedRow = boardsTable.getSelectedRow();
-		BoardLocation boardLocation = jobProcessor.getJob().getBoardLocations()
-				.get(selectedRow);
-		Wizard wizard = new OrientBoardWizard(boardLocation, Configuration.get());
-//		startWizard(wizard);
-	}
-	
-	private void openJob() {
-		FileDialog fileDialog = new FileDialog(parent);
-		fileDialog.setFilenameFilter(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".job.xml");
-			}
-		});
-		fileDialog.setVisible(true);
-		try {
-			File file = new File(new File(fileDialog.getDirectory()),
-					fileDialog.getFile());
-			Job job = Configuration.get().loadJob(file);
-			jobProcessor.load(job);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			MessageBoxes.errorBox(this, "Job Load Error", e.getMessage());
-		}
-	}
-
-	private void startPauseResumeJob() {
-		JobState state = jobProcessor.getState();
-		if (state == JobState.Stopped) {
-			try {
-				jobProcessor.start();
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(this, "Job Start Error", e.getMessage());
-			}
-		}
-		else if (state == JobState.Paused) {
-			jobProcessor.resume();
-		}
-		else if (state == JobState.Running) {
-			jobProcessor.pause();
-		}
-	}
-
-	private void stepJob() {
-		try {
-			jobProcessor.step();
-		}
-		catch (Exception e) {
-			MessageBoxes.errorBox(this, "Job Start Error", e.getMessage());
-		}
-	}
-
-	private void stopJob() {
-		jobProcessor.stop();
+		updateJobActions();
 	}
 
 	@Override
 	public void jobLoaded(Job job) {
 		placementsTableModel.setPlacements(null);
 		boardsTableModel.setJob(jobProcessor.getJob());
-		updateJobControls();
+		updateJobActions();
 	}
 
 	@Override
@@ -227,7 +167,6 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 
 	@Override
 	public void detailedStatusUpdated(String status) {
-//		lblStatus.setText(status);
 	}
 
 	@Override
@@ -236,7 +175,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 
 	@Override
 	public void machineEnabled(Machine machine) {
-		updateJobControls();
+		updateJobActions();
 	}
 
 	@Override
@@ -245,7 +184,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 
 	@Override
 	public void machineDisabled(Machine machine, String reason) {
-		updateJobControls();
+		updateJobActions();
 		jobProcessor.stop();
 	}
 
@@ -258,7 +197,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	 * Updates the Job controls based on the Job state and the Machine's
 	 * readiness.
 	 */
-	private void updateJobControls() {
+	private void updateJobActions() {
 		JobState state = jobProcessor.getState();
 		if (state == JobState.Stopped) {
 			startPauseResumeJobAction.setEnabled(true);
@@ -292,7 +231,24 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			openJob();
+			FileDialog fileDialog = new FileDialog(parent);
+			fileDialog.setFilenameFilter(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".job.xml");
+				}
+			});
+			fileDialog.setVisible(true);
+			try {
+				File file = new File(new File(fileDialog.getDirectory()),
+						fileDialog.getFile());
+				Job job = Configuration.get().loadJob(file);
+				jobProcessor.load(job);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				MessageBoxes.errorBox(JobPanel.this, "Job Load Error", e.getMessage());
+			}
 		}
 	};
 
@@ -323,43 +279,93 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action startPauseResumeJobAction = new AbstractAction("Start") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			startPauseResumeJob();
+			JobState state = jobProcessor.getState();
+			if (state == JobState.Stopped) {
+				try {
+					jobProcessor.start();
+				}
+				catch (Exception e) {
+					MessageBoxes.errorBox(JobPanel.this, "Job Start Error", e.getMessage());
+				}
+			}
+			else if (state == JobState.Paused) {
+				jobProcessor.resume();
+			}
+			else if (state == JobState.Running) {
+				jobProcessor.pause();
+			}
 		}
 	};
 
 	public Action stepJobAction = new AbstractAction("Step") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			stepJob();
+			try {
+				jobProcessor.step();
+			}
+			catch (Exception e) {
+				MessageBoxes.errorBox(JobPanel.this, "Job Step Failed", e.getMessage());
+			}
 		}
 	};
 
 	public Action stopJobAction = new AbstractAction("Stop") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			stopJob();
+			jobProcessor.stop();
+		}
+	};
+
+	public Action newBoardAction = new AbstractAction("New Board...") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			FileDialog fileDialog = new FileDialog(parent, "Save New Board As...", FileDialog.SAVE);
+			fileDialog.setFilenameFilter(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".board.xml");
+				}
+			});
+			fileDialog.setVisible(true);
+			try {
+				String filename = fileDialog.getFile();
+				if (!filename.toLowerCase().endsWith(".board.xml")) {
+					filename = filename + ".board.xml";
+				}
+				File file = new File(new File(fileDialog.getDirectory()),
+						filename);
+				System.out.println(file.toString());
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				MessageBoxes.errorBox(JobPanel.this, "Unable to create new board", e.getMessage());
+			}
 		}
 	};
 
 	public Action addBoardAction = new AbstractAction("Add Board...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			FileDialog fileDialog = new FileDialog(parent);
+			fileDialog.setFilenameFilter(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".board.xml");
+				}
+			});
+			fileDialog.setVisible(true);
+			try {
+				File file = new File(new File(fileDialog.getDirectory()),
+						fileDialog.getFile());
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				MessageBoxes.errorBox(JobPanel.this, "Board load failed", e.getMessage());
+			}
 		}
 	};
 
-	public Action deleteBoardAction = new AbstractAction("Delete Board") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	public Action moveBoardUpAction = new AbstractAction("Move Board Up") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
-	public Action moveBoardDownAction = new AbstractAction("Move Board Down") {
+	public Action removeBoardAction = new AbstractAction("Remove Board") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 		}
@@ -368,13 +374,12 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action orientBoardAction = new AbstractAction("Set Board Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			orientBoard();
-		}
-	};
-
-	public Action enableDisableBoardAction = new AbstractAction("Enable Board") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
+			// Get the currently selected board
+			int selectedRow = boardsTable.getSelectedRow();
+			BoardLocation boardLocation = jobProcessor.getJob().getBoardLocations()
+					.get(selectedRow);
+			Wizard wizard = new OrientBoardWizard(boardLocation, Configuration.get());
+//				startWizard(wizard);
 		}
 	};
 }

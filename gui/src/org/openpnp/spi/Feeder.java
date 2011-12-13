@@ -23,6 +23,7 @@ package org.openpnp.spi;
 
 import org.openpnp.Location;
 import org.openpnp.Part;
+import org.openpnp.gui.Wizard;
 
 
 
@@ -68,4 +69,6 @@ public interface Feeder {
 	 * @throws Exception
 	 */
 	public Location feed(Head head, Part part, Location pickLocation) throws Exception;
+	
+	public Wizard getConfigurationWizard();
 }

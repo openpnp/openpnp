@@ -6,9 +6,10 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Configuration;
 import org.openpnp.FeederLocation;
+import org.openpnp.spi.Feeder;
 
 class FeederLocationsTableModel extends AbstractTableModel {
-	private String[] columnNames = new String[] { "X Pos.", "Y Pos.", "Z Pos.", "Rotation" };
+	private String[] columnNames = new String[] { "Feeder", "X Pos.", "Y Pos.", "Z Pos.", "Rotation" };
 	private List<FeederLocation> feederLocations;
 
 	public FeederLocationsTableModel() {
@@ -42,15 +43,23 @@ class FeederLocationsTableModel extends AbstractTableModel {
 		try {
 			FeederLocation feederLocation = feederLocations.get(rowIndex);
 			if (columnIndex == 0) {
+				Feeder feeder = Configuration.get().getMachine().getFeeder(aValue.toString());
+				if (feeder == null) {
+					// TODO: dialog, no feeder
+					return;
+				}
+				feederLocation.setFeeder(feeder);
+			}
+			else if (columnIndex == 1) {
 				feederLocation.getLocation().setX(Double.parseDouble(aValue.toString()));
 			}
-			if (columnIndex == 1) {
+			else if (columnIndex == 2) {
 				feederLocation.getLocation().setY(Double.parseDouble(aValue.toString()));
 			}
-			if (columnIndex == 2) {
+			else if (columnIndex == 3) {
 				feederLocation.getLocation().setZ(Double.parseDouble(aValue.toString()));
 			}
-			if (columnIndex == 3) {
+			else if (columnIndex == 4) {
 				feederLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
 			}
 			Configuration.get().setDirty(true);
@@ -64,12 +73,14 @@ class FeederLocationsTableModel extends AbstractTableModel {
 		FeederLocation feederLocation = feederLocations.get(row);
 		switch (col) {
 		case 0:
-			return String.format("%2.3f", feederLocation.getLocation().getX());
+			return feederLocation.getFeeder().getId();
 		case 1:
-			return String.format("%2.3f", feederLocation.getLocation().getY());
+			return String.format("%2.3f", feederLocation.getLocation().getX());
 		case 2:
-			return String.format("%2.3f", feederLocation.getLocation().getZ());
+			return String.format("%2.3f", feederLocation.getLocation().getY());
 		case 3:
+			return String.format("%2.3f", feederLocation.getLocation().getZ());
+		case 4:
 			return String.format("%2.3f", feederLocation.getLocation().getRotation());
 		default:
 			return null;

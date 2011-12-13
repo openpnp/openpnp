@@ -16,18 +16,6 @@ public class BoardLocation {
 	@Attribute
 	private String boardFile;
 	
-	@SuppressWarnings("unused")
-	@Commit
-	private void commit() throws Exception {
-		board = Configuration.get().getBoard(boardFile);
-	}
-	
-	@SuppressWarnings("unused")
-	@Persist
-	private void persist() {
-//		partId = (part == null ? null : part.getId());
-	}
-
 	public Location getLocation() {
 		return location;
 	}
@@ -50,6 +38,14 @@ public class BoardLocation {
 
 	public void setBoard(Board board) {
 		this.board = board;
+	}
+	
+	String getBoardFile() {
+		return boardFile;
+	}
+	
+	void setBoardFile(String boardFile) {
+		this.boardFile = boardFile;
 	}
 
 	@Override

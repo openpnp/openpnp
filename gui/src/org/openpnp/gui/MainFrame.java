@@ -83,8 +83,7 @@ import org.openpnp.spi.MachineListener;
  */
 @SuppressWarnings("serial")
 // TODO: check out icons at http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
-// TODO: add JobProcessorListener back in to listen for detailedStatusUpdate
-public class MainFrame extends JFrame implements WizardContainer {
+public class MainFrame extends JFrame implements JobProcessorListener {
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
@@ -136,6 +135,8 @@ public class MainFrame extends JFrame implements WizardContainer {
 		for (Camera camera : machine.getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
+		
+		jobPanel.getJobProcessor().addListener(this);
 
 		machineControlsPanel.setMachine(machine);
 		partsPanel.refresh();
@@ -188,31 +189,6 @@ public class MainFrame extends JFrame implements WizardContainer {
 		return true;
 	}
 
-	private void startWizard(Wizard wizard) {
-		// TODO: If there is already a wizard running, take care of that
-
-		// Configure the wizard
-		wizard.setWizardContainer(this);
-
-		// Create a titled panel to hold the wizard
-		JPanel panel = new JPanel();
-		panel.setBorder(BorderFactory.createTitledBorder("Wizard: "
-				+ wizard.getWizardName()));
-		panel.setLayout(new BorderLayout());
-		panel.add(wizard.getWizardPanel());
-		panelBottom.add(panel, "Wizard");
-		// TODO: broken
-		// panelBottomCardLayout.show(panelBottom, "Wizard");
-	}
-
-	public void wizardCompleted(Wizard wizard) {
-
-	}
-
-	public void wizardCancelled(Wizard wizard) {
-
-	}
-
 	private void createUi() {
 		setBounds(100, 100, 1280, 1024);
 		
@@ -237,12 +213,9 @@ public class MainFrame extends JFrame implements WizardContainer {
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 
+		mnEdit.add(new JMenuItem(jobPanel.newBoardAction));
 		mnEdit.add(new JMenuItem(jobPanel.addBoardAction));
-		mnEdit.add(new JMenuItem(jobPanel.deleteBoardAction));
-		mnEdit.add(new JMenuItem(jobPanel.enableDisableBoardAction));
-		mnEdit.addSeparator();
-		mnEdit.add(new JMenuItem(jobPanel.moveBoardUpAction));
-		mnEdit.add(new JMenuItem(jobPanel.moveBoardDownAction));
+		mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
 		mnEdit.addSeparator();
 		mnEdit.add(new JMenuItem(jobPanel.orientBoardAction));
 
@@ -302,5 +275,46 @@ public class MainFrame extends JFrame implements WizardContainer {
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
+	}
+
+	@Override
+	public void jobLoaded(Job job) {
+	}
+
+	@Override
+	public void jobStateChanged(JobState state) {
+	}
+
+	@Override
+	public void jobEncounteredError(JobError error, String description) {
+	}
+
+	@Override
+	public void boardProcessingStarted(BoardLocation board) {
+	}
+
+	@Override
+	public void boardProcessingCompleted(BoardLocation board) {
+	}
+
+	@Override
+	public void partProcessingStarted(BoardLocation board, Placement placement) {
+	}
+
+	@Override
+	public void partPicked(BoardLocation board, Placement placement) {
+	}
+
+	@Override
+	public void partPlaced(BoardLocation board, Placement placement) {
+	}
+
+	@Override
+	public void partProcessingCompleted(BoardLocation board, Placement placement) {
+	}
+
+	@Override
+	public void detailedStatusUpdated(String status) {
+		lblStatus.setText(status);
 	}
 }

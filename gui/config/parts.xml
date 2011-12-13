@@ -1,5 +1,5 @@
 <openpnp-parts>
-   <part id="MMBT3906-7-F" height-units="Inches" height="0.03" package-id="SOT-23-3">
+   <part id="MMBT3906-7-F" name="" height-units="Inches" height="0.03" package-id="SOT-23-3">
       <feeder-locations>
          <feeder-location feeder-id="L6">
             <location units="Millimeters" x="100.0" y="160.0" z="87.0" rotation="0.0"/>
@@ -36,7 +36,7 @@
    </part>
    <part id="ATMEGA168A-AU" height-units="Millimeters" height="1.0" package-id="JEDEC-MS-026-ABA">
       <feeder-locations>
-         <feeder-location feeder-id="L8">
+         <feeder-location feeder-id="L2">
             <location units="Millimeters" x="100.0" y="180.0" z="80.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>

@@ -41,17 +41,42 @@ public class LineBreaker {
 		
 		while (end != BreakIterator.DONE) {
 			String word = target.substring(start, end);
-			lineLength = lineLength + word.length();
+			// if adding the word to the line will make it too long, flush the line
+			lineLength += word.length();
 			if (lineLength >= maxLength) {
 				lines.add(line.toString());
 				line = new StringBuffer();
 				lineLength = word.length();
 			}
-			line.append(word);
+			// if the word is longer than a line, break it up manually
+			if (word.length() >= maxLength) {
+				ArrayList<String> parts = forceBreakLongLine(word, maxLength);
+				lines.addAll(parts);
+			}
+			else {
+				line.append(word);
+			}
 			start = end;
 			end = boundary.next();
 		}
 		
-		return lines.toArray(new String[] {});
+		if (line.length() > 0) {
+			lines.add(line.toString());
+		}
+		
+		String[] ret = lines.toArray(new String[] {});
+		
+		return ret;
+	}
+	
+	public static ArrayList<String> forceBreakLongLine(String s, int maxLength) {
+		ArrayList<String> parts = new ArrayList<String>();
+		int index = 0;
+		while (index <= s.length()) {
+			String part = s.substring(index, Math.min(s.length(), index + maxLength));
+			parts.add(part);
+			index += part.length() + 1;
+		}
+		return parts;
 	}
 }

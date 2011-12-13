@@ -22,9 +22,10 @@
 package org.openpnp;
 
 import java.io.File;
-import java.io.StringWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -94,15 +95,19 @@ public class Configuration {
 	}
 	
 	public Collection<Part> getParts() {
-		return parts.values();
+		return Collections.unmodifiableCollection(parts.values());
+	}
+	
+	public void addPart(Part part) {
+		parts.put(part.getId(), part);
+		dirty = true;
 	}
 	
 	public Machine getMachine() {
 		return machine;
 	}
 	
-	public Board getBoard(String filename) throws Exception {
-		File file = new File(filename);
+	public Board getBoard(File file) throws Exception {
 		file = file.getCanonicalFile();
 		if (boards.containsKey(file)) {
 			System.out.println("loaded " + file.getCanonicalPath() + " from cache");
@@ -173,11 +178,36 @@ public class Configuration {
 		Serializer serializer = createSerializer();
 		Job job = serializer.read(Job.class, file);
 		
+		// Once the Job is loaded we need to resolve any Boards that it
+		// references.
+		for (BoardLocation boardLocation : job.getBoardLocations()) {
+			String boardFilename = boardLocation.getBoardFile();
+			// First see if we can find the board at the given filename
+			// If the filename is not absolute this will be relative
+			// to the working directory
+			File boardFile = new File(boardFilename);
+			if (!boardFile.exists()) {
+				// If that fails, see if we can find it relative to the
+				// directory the job was in
+				boardFile = new File(file.getParentFile(), boardFilename);
+			}
+			if (!boardFile.exists()) {
+				throw new Exception("Board file not found: " + boardFilename);
+			}
+			Board board = getBoard(boardFile);
+			boardLocation.setBoard(board);
+		}
+		
 //		StringWriter writer = new StringWriter();
 //		serializer.write(job, writer);
 //		System.out.println(writer.toString());
 		
 		return job;
+	}
+	
+	private void saveJob(Job job, File file) {
+		Serializer serializer = createSerializer();
+		// Fix the paths to any boards in the Job
 	}
 	
 	private Board loadBoard(File file) throws Exception {

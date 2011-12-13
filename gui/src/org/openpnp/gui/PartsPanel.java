@@ -1,11 +1,14 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -21,6 +24,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.FeederLocation;
 import org.openpnp.Part;
+import org.openpnp.gui.support.MessageBoxes;
 
 public class PartsPanel extends JPanel {
 
@@ -29,6 +33,7 @@ public class PartsPanel extends JPanel {
 	private TableRowSorter<PartsTableModel> partsTableSorter;
 	private JTextField searchTextField;
 	private JTable partsTable;
+	private JTable feederLocationsTable;
 
 	public PartsPanel() {
 		setLayout(new BorderLayout(0, 0));
@@ -63,7 +68,7 @@ public class PartsPanel extends JPanel {
 		partsTable = new JTable(partsTableModel);
 		partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		JTable feederLocationsTable = new JTable(feederLocationsTableModel);
+		feederLocationsTable = new JTable(feederLocationsTableModel);
 		feederLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		JSplitPane splitPane = new JSplitPane();
@@ -83,6 +88,9 @@ public class PartsPanel extends JPanel {
 					return;
 				}
 				int index = partsTable.getSelectedRow();
+				
+				deletePartAction.setEnabled(index != -1);
+				
 				if (index == -1) {
 					feederLocationsTableModel.setFeederLocations(null);
 				}
@@ -94,6 +102,30 @@ public class PartsPanel extends JPanel {
 				}
 			}
 		});
+		
+		feederLocationsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting()) {
+					return;
+				}
+				int index = feederLocationsTable.getSelectedRow();
+				
+				newFeederLocationAction.setEnabled(index != -1);
+				deleteFeederLocationAction.setEnabled(index != -1);
+			}
+		});
+		
+		
+		deletePartAction.setEnabled(false);
+		newFeederLocationAction.setEnabled(false);
+		deleteFeederLocationAction.setEnabled(false);
+		
+		toolBar.add(newPartAction);
+		toolBar.add(deletePartAction);
+		toolBar.addSeparator();
+		toolBar.add(newFeederLocationAction);
+		toolBar.add(deleteFeederLocationAction);
 	}
 
 	private void search() {
@@ -113,4 +145,29 @@ public class PartsPanel extends JPanel {
 	public void refresh() {
 		partsTableModel.refresh();
 	}
+	
+
+	public Action newPartAction = new AbstractAction("New Part") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
+	public Action deletePartAction = new AbstractAction("Delete Part") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
+	public Action newFeederLocationAction = new AbstractAction("New Feeder Location") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
+	public Action deleteFeederLocationAction = new AbstractAction("Delete Feeder Location") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
 }

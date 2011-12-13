@@ -1,12 +1,12 @@
 <openpnp-job>
    <board-locations>
-      <board-location board-file="config/btpd-v4.board.xml" side="Bottom">
+      <board-location board-file="btpd-v4.board.xml" side="Bottom">
          <location units="Millimeters" x="200.0" y="100.0" z="98.6" rotation="0.0"/>
       </board-location>
-      <board-location board-file="config/btpd-v4.board.xml" side="Bottom">
+      <board-location board-file="btpd-v4.board.xml" side="Bottom">
          <location units="Millimeters" x="200.0" y="250.0" z="98.6" rotation="45.0"/>
       </board-location>
-      <board-location board-file="config/btpd-v4.board.xml" side="Bottom">
+      <board-location board-file="btpd-v4.board.xml" side="Bottom">
          <location units="Millimeters" x="200.0" y="400.0" z="98.6" rotation="90.0"/>
       </board-location>
    </board-locations>

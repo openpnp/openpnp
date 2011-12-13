@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.feeder;
 
 import org.openpnp.Location;
 import org.openpnp.Part;
+import org.openpnp.gui.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
@@ -98,5 +99,34 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	@Override
 	public String toString() {
 		return String.format("ReferenceTapeFeeder id %s", id);
+	}
+
+	@Override
+	public Wizard getConfigurationWizard() {
+		return new ReferenceTapeFeederConfigurationWizard(this);
+	}
+
+	public Location getFeedStartLocation() {
+		return feedStartLocation;
+	}
+
+	public void setFeedStartLocation(Location feedStartLocation) {
+		this.feedStartLocation = feedStartLocation;
+	}
+
+	public Location getFeedEndLocation() {
+		return feedEndLocation;
+	}
+
+	public void setFeedEndLocation(Location feedEndLocation) {
+		this.feedEndLocation = feedEndLocation;
+	}
+
+	public double getFeedRate() {
+		return feedRate;
+	}
+
+	public void setFeedRate(double feedRate) {
+		this.feedRate = feedRate;
 	}
 }
