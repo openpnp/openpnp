@@ -8,7 +8,6 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -23,9 +22,12 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Configuration;
 import org.openpnp.spi.Feeder;
 
 public class FeedersPanel extends JPanel implements WizardContainer {
+	final private Configuration configuration;
+	
 	private JTable table;
 
 	private FeedersTableModel tableModel;
@@ -33,9 +35,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private JTextField searchTextField;
 	JPanel configurationPanel;
 
-	public FeedersPanel() {
+	public FeedersPanel(Configuration configuration) {
+		this.configuration = configuration;
+		
 		setLayout(new BorderLayout(0, 0));
-		tableModel = new FeedersTableModel();
+		tableModel = new FeedersTableModel(configuration);
 
 		JPanel panel = new JPanel();
 		add(panel, BorderLayout.NORTH);
@@ -119,14 +123,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		tableSorter.setRowFilter(rf);
 	}
 
-	public void refresh() {
-		tableModel.refresh();
-	}
-
 	@Override
 	public void wizardCompleted(Wizard wizard) {
-		// TODO Auto-generated method stub
-		
+		configuration.setDirty(true);
 	}
 
 	@Override

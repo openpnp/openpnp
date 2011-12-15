@@ -42,6 +42,7 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.BoardLocation;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
+import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessor.JobError;
 import org.openpnp.JobProcessor.JobState;
 import org.openpnp.JobProcessorListener;
@@ -50,32 +51,35 @@ import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Machine;
 
 /**
  * The main window of the application.
  */
 @SuppressWarnings("serial")
 // TODO: check out icons at http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
-public class MainFrame extends JFrame implements JobProcessorListener {
+public class MainFrame extends JFrame {
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
 	 * Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 	 */
-	private Configuration configuration;
-	private Machine machine;
+	final private Configuration configuration;
+	final private JobProcessor jobProcessor;
+
+	private PartsPanel partsPanel;
+	private FeedersPanel feedersPanel;
+	private JobPanel jobPanel;
 
 	private JPanel contentPane;
 	private MachineControlsPanel machineControlsPanel;
 	private CameraPanel cameraPanel;
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
-	private PartsPanel partsPanel;
-	private FeedersPanel feedersPanel;
-	private JobPanel jobPanel;
 
-	public MainFrame() {
+	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
+		this.configuration = configuration;
+		this.jobProcessor = jobProcessor;
+		
 		// Get handlers for quit and close in place
 		registerForMacOSXEvents();
 		addWindowListener(new WindowAdapter() {
@@ -85,90 +89,11 @@ public class MainFrame extends JFrame implements JobProcessorListener {
 			}
 		});
 
-		try {
-			Configuration.get().load("config");
-		}
-		catch (Exception e) {
-			// TODO: dialog
-			throw new Error(e);
-		}
-
-		configuration = Configuration.get();
-		machine = configuration.getMachine();
-
-		createUi();
-
-		try {
-			machine.start();
-		}
-		catch (Exception e) {
-			// TODO: dialog
-			throw new Error(e);
-		}
-
-		for (Camera camera : machine.getCameras()) {
-			cameraPanel.addCamera(camera);
-		}
-		
-		jobPanel.getJobProcessor().addListener(this);
-
-		machineControlsPanel.setMachine(machine);
-		partsPanel.refresh();
-		feedersPanel.refresh();
-	}
-
-	public void registerForMacOSXEvents() {
-		if ((System.getProperty("os.name").toLowerCase().startsWith("mac os x"))) {
-			try {
-				// Generate and register the OSXAdapter, passing it a hash of
-				// all the methods we wish to
-				// use as delegates for various
-				// com.apple.eawt.ApplicationListener methods
-				OSXAdapter.setQuitHandler(this,
-						getClass().getDeclaredMethod("quit", (Class[]) null));
-				// OSXAdapter.setAboutHandler(this,
-				// getClass().getDeclaredMethod("about", (Class[]) null));
-				// OSXAdapter.setPreferencesHandler(this, getClass()
-				// .getDeclaredMethod("preferences", (Class[]) null));
-				// OSXAdapter.setFileHandler(
-				// this,
-				// getClass().getDeclaredMethod("loadImageFile",
-				// new Class[] { String.class }));
-			}
-			catch (Exception e) {
-				System.err.println("Error while loading the OSXAdapter:");
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public boolean quit() {
-		// Save the configuration if it's dirty
-		try {
-			if (Configuration.get().isDirty()) {
-				Configuration.get().save("config");
-				System.out.println("Configuration saved.");
-			}
-		}
-		catch (Exception e) {
-			// TODO: dialog, maybe try to recover
-		}
-		// Attempt to stop the machine on quit
-		try {
-			machine.setEnabled(false);
-		}
-		catch (Exception e) {
-		}
-		System.exit(0);
-		return true;
-	}
-
-	private void createUi() {
 		setBounds(100, 100, 1280, 1024);
 		
-		jobPanel = new JobPanel(this);
-		partsPanel = new PartsPanel();
-		feedersPanel = new FeedersPanel();
+		jobPanel = new JobPanel(configuration, jobProcessor, this);
+		partsPanel = new PartsPanel(configuration);
+		feedersPanel = new FeedersPanel(configuration);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -225,7 +150,7 @@ public class MainFrame extends JFrame implements JobProcessorListener {
 		panelLeftColumn.add(panel);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		machineControlsPanel = new MachineControlsPanel();
+		machineControlsPanel = new MachineControlsPanel(configuration);
 		machineControlsPanel.setBorder(new TitledBorder(null,
 				"Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
 				null, null));
@@ -249,46 +174,116 @@ public class MainFrame extends JFrame implements JobProcessorListener {
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
+
+		try {
+			configuration.load("config");
+		}
+		catch (Exception e) {
+			// TODO: dialog
+			throw new Error(e);
+		}
+
+		try {
+			configuration.getMachine().start();
+		}
+		catch (Exception e) {
+			// TODO: dialog
+			throw new Error(e);
+		}
+
+		for (Camera camera : configuration.getMachine().getCameras()) {
+			cameraPanel.addCamera(camera);
+		}
+		
+		jobProcessor.addListener(new MainFrameJobProcessorListener());
 	}
 
-	@Override
-	public void jobLoaded(Job job) {
+	public void registerForMacOSXEvents() {
+		if ((System.getProperty("os.name").toLowerCase().startsWith("mac os x"))) {
+			try {
+				// Generate and register the OSXAdapter, passing it a hash of
+				// all the methods we wish to
+				// use as delegates for various
+				// com.apple.eawt.ApplicationListener methods
+				OSXAdapter.setQuitHandler(this,
+						getClass().getDeclaredMethod("quit", (Class[]) null));
+				// OSXAdapter.setAboutHandler(this,
+				// getClass().getDeclaredMethod("about", (Class[]) null));
+				// OSXAdapter.setPreferencesHandler(this, getClass()
+				// .getDeclaredMethod("preferences", (Class[]) null));
+				// OSXAdapter.setFileHandler(
+				// this,
+				// getClass().getDeclaredMethod("loadImageFile",
+				// new Class[] { String.class }));
+			}
+			catch (Exception e) {
+				System.err.println("Error while loading the OSXAdapter:");
+				e.printStackTrace();
+			}
+		}
 	}
 
-	@Override
-	public void jobStateChanged(JobState state) {
+	public boolean quit() {
+		// Save the configuration if it's dirty
+		try {
+			if (configuration.isDirty()) {
+				configuration.save("config");
+				System.out.println("Configuration saved.");
+			}
+		}
+		catch (Exception e) {
+			// TODO: dialog, maybe try to recover
+		}
+		// Attempt to stop the machine on quit
+		try {
+			configuration.getMachine().setEnabled(false);
+		}
+		catch (Exception e) {
+		}
+		System.exit(0);
+		return true;
 	}
 
-	@Override
-	public void jobEncounteredError(JobError error, String description) {
-	}
-
-	@Override
-	public void boardProcessingStarted(BoardLocation board) {
-	}
-
-	@Override
-	public void boardProcessingCompleted(BoardLocation board) {
-	}
-
-	@Override
-	public void partProcessingStarted(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partPicked(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partPlaced(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partProcessingCompleted(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void detailedStatusUpdated(String status) {
-		lblStatus.setText(status);
+	class MainFrameJobProcessorListener implements JobProcessorListener {
+		@Override
+		public void jobLoaded(Job job) {
+		}
+	
+		@Override
+		public void jobStateChanged(JobState state) {
+		}
+	
+		@Override
+		public void jobEncounteredError(JobError error, String description) {
+		}
+	
+		@Override
+		public void boardProcessingStarted(BoardLocation board) {
+		}
+	
+		@Override
+		public void boardProcessingCompleted(BoardLocation board) {
+		}
+	
+		@Override
+		public void partProcessingStarted(BoardLocation board, Placement placement) {
+		}
+	
+		@Override
+		public void partPicked(BoardLocation board, Placement placement) {
+		}
+	
+		@Override
+		public void partPlaced(BoardLocation board, Placement placement) {
+		}
+	
+		@Override
+		public void partProcessingCompleted(BoardLocation board, Placement placement) {
+		}
+	
+		@Override
+		public void detailedStatusUpdated(String status) {
+			lblStatus.setText(status);
+		}
 	}
 }

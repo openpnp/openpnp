@@ -35,7 +35,7 @@ public class Job {
 	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
 	
 	private boolean dirty;
-
+	
 	public ArrayList<BoardLocation> getBoardLocations() {
 		return boardLocations;
 	}

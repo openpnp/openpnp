@@ -23,6 +23,7 @@ package org.openpnp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
@@ -36,7 +37,7 @@ import org.simpleframework.xml.core.Persist;
  * and is placed at a Placement as part of a Job. Parts can be used across many boards and should generally represent
  * a single part in the real world.
  */
-public class Part {
+public class Part implements RequiresConfigurationResolution {
 	@Attribute
 	private String id;
 	@Attribute(required=false)
@@ -52,10 +53,12 @@ public class Part {
 	@Attribute
 	private String packageId;
 	
-	@SuppressWarnings("unused")
-	@Commit
-	private void commit() {
-		packag = Configuration.get().getPackage(packageId);
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		packag = configuration.getPackage(packageId);
+		for (FeederLocation feederLocation : feederLocations) {
+			feederLocation.resolve(configuration);
+		}
 	}
 	
 	@SuppressWarnings("unused")

@@ -67,6 +67,8 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 
+import org.openpnp.Configuration;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.LengthUnit;
 import org.openpnp.Location;
 import org.openpnp.gui.support.CameraItem;
@@ -85,7 +87,7 @@ import org.openpnp.util.LengthUtil;
  * TODO add a dropdown to select Head
  * @author jason
  */
-public class MachineControlsPanel extends JPanel implements MachineListener {
+public class MachineControlsPanel extends JPanel implements MachineListener, ConfigurationListener {
 	private Machine machine;
 	private Head head;
 	private LengthUnit units;
@@ -110,7 +112,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 	/**
 	 * Create the panel.
 	 */
-	public MachineControlsPanel() {
+	public MachineControlsPanel(Configuration configuration) {
 		createUi();
 		
 		// Add global hotkeys for the arrow keys
@@ -141,15 +143,17 @@ public class MachineControlsPanel extends JPanel implements MachineListener {
 				super.dispatchEvent(event);
 			}
 		});
+		
+		configuration.addListener(this);
 	}
 	
-	public void setMachine(Machine machine) {
+	public void configurationLoaded(Configuration configuration) {
 		if (this.machine != null) {
 			this.machine.removeListener(this);
 		}
 		panelActuators.removeAll();
 		
-		this.machine = machine;
+		this.machine = configuration.getMachine();
 		this.head = machine.getHeads().get(0);
 		setUnits(machine.getNativeUnits());
 		machine.addListener(this);

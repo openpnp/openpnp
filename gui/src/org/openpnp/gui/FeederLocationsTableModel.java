@@ -9,10 +9,13 @@ import org.openpnp.FeederLocation;
 import org.openpnp.spi.Feeder;
 
 class FeederLocationsTableModel extends AbstractTableModel {
+	final private Configuration configuration;
+	
 	private String[] columnNames = new String[] { "Feeder", "X Pos.", "Y Pos.", "Z Pos.", "Rotation" };
 	private List<FeederLocation> feederLocations;
 
-	public FeederLocationsTableModel() {
+	public FeederLocationsTableModel(Configuration configuration) {
+		this.configuration = configuration;
 	}
 
 	public void setFeederLocations(List<FeederLocation> feederLocations) {
@@ -43,7 +46,7 @@ class FeederLocationsTableModel extends AbstractTableModel {
 		try {
 			FeederLocation feederLocation = feederLocations.get(rowIndex);
 			if (columnIndex == 0) {
-				Feeder feeder = Configuration.get().getMachine().getFeeder(aValue.toString());
+				Feeder feeder = configuration.getMachine().getFeeder(aValue.toString());
 				if (feeder == null) {
 					// TODO: dialog, no feeder
 					return;
@@ -62,7 +65,7 @@ class FeederLocationsTableModel extends AbstractTableModel {
 			else if (columnIndex == 4) {
 				feederLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
 			}
-			Configuration.get().setDirty(true);
+			configuration.setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input

@@ -22,12 +22,14 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Configuration;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.FeederLocation;
 import org.openpnp.Part;
-import org.openpnp.gui.support.MessageBoxes;
 
 public class PartsPanel extends JPanel {
-
+	final private Configuration configuration;
+	
 	private PartsTableModel partsTableModel;
 	private FeederLocationsTableModel feederLocationsTableModel;
 	private TableRowSorter<PartsTableModel> partsTableSorter;
@@ -35,11 +37,13 @@ public class PartsPanel extends JPanel {
 	private JTable partsTable;
 	private JTable feederLocationsTable;
 
-	public PartsPanel() {
+	public PartsPanel(Configuration configuration) {
+		this.configuration = configuration;
+		
 		setLayout(new BorderLayout(0, 0));
-		partsTableModel = new PartsTableModel();
+		partsTableModel = new PartsTableModel(configuration);
 		partsTableSorter = new TableRowSorter<PartsTableModel>(partsTableModel);
-		feederLocationsTableModel = new FeederLocationsTableModel();
+		feederLocationsTableModel = new FeederLocationsTableModel(configuration);
 
 		JPanel panel_5 = new JPanel();
 		add(panel_5, BorderLayout.NORTH);
@@ -127,7 +131,7 @@ public class PartsPanel extends JPanel {
 		toolBar.add(newFeederLocationAction);
 		toolBar.add(deleteFeederLocationAction);
 	}
-
+	
 	private void search() {
 		RowFilter<PartsTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
@@ -141,11 +145,6 @@ public class PartsPanel extends JPanel {
 		}
 		partsTableSorter.setRowFilter(rf);
 	}
-
-	public void refresh() {
-		partsTableModel.refresh();
-	}
-	
 
 	public Action newPartAction = new AbstractAction("New Part") {
 		@Override

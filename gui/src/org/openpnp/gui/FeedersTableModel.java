@@ -6,20 +6,22 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Configuration;
-import org.openpnp.Length;
-import org.openpnp.Part;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.spi.Feeder;
-import org.openpnp.util.LengthUtil;
 
-class FeedersTableModel extends AbstractTableModel {
+class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {
+	final private Configuration configuration;
+	
 	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };
 	private List<Feeder> feeders;
 
-	public FeedersTableModel() {
+	public FeedersTableModel(Configuration configuration) {
+		this.configuration = configuration;
+		configuration.addListener(this);
 	}
 
-	public void refresh() {
-		feeders = new ArrayList<Feeder>(Configuration.get().getMachine().getFeeders());
+	public void configurationLoaded(Configuration configuration) {
+		feeders = new ArrayList<Feeder>(configuration.getMachine().getFeeders());
 		fireTableDataChanged();
 	}
 

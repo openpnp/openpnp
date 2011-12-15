@@ -6,20 +6,25 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Configuration;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.Length;
 import org.openpnp.Part;
 import org.openpnp.util.LengthUtil;
 
-class PartsTableModel extends AbstractTableModel {
+class PartsTableModel extends AbstractTableModel implements ConfigurationListener {
+	final private Configuration configuration;
+	
 	private String[] columnNames = new String[] { "Id", "Name",
 			"Height", "Package" };
 	private List<Part> parts;
 
-	public PartsTableModel() {
+	public PartsTableModel(Configuration configuration) {
+		this.configuration = configuration;
+		configuration.addListener(this);
 	}
 
-	public void refresh() {
-		parts = new ArrayList<Part>(Configuration.get().getParts());
+	public void configurationLoaded(Configuration configuration) {
+		parts = new ArrayList<Part>(configuration.getParts());
 		fireTableDataChanged();
 	}
 
@@ -66,14 +71,14 @@ class PartsTableModel extends AbstractTableModel {
 				}
 			}
 			else if (columnIndex == 3) {
-				org.openpnp.Package pkg = Configuration.get().getPackage(aValue.toString());
+				org.openpnp.Package pkg = configuration.getPackage(aValue.toString());
 				if (pkg == null) {
 					// TODO: dialog, package not found
 					return;
 				}
 				parts.get(rowIndex).setPackage(pkg);
 			}
-			Configuration.get().setDirty(true);
+			configuration.setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input

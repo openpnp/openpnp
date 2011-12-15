@@ -24,7 +24,6 @@ package org.openpnp;
 import org.openpnp.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 
@@ -33,7 +32,7 @@ import org.simpleframework.xml.core.Persist;
  * along with information about how to place it. 
  * @author jason
  */
-public class Placement {
+public class Placement implements RequiresConfigurationResolution {
 	@Attribute
 	private String id;
 	@Element
@@ -45,10 +44,9 @@ public class Placement {
 	@Attribute
 	private String partId;
 	
-	@SuppressWarnings("unused")
-	@Commit
-	private void commit() {
-		part = Configuration.get().getPart(partId);
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		part = configuration.getPart(partId);
 	}
 	
 	@SuppressWarnings("unused")

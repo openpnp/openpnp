@@ -25,6 +25,8 @@ import java.awt.EventQueue;
 
 import javax.swing.UIManager;
 
+import org.openpnp.Configuration;
+import org.openpnp.JobProcessor;
 import org.openpnp.gui.MainFrame;
 
 /**
@@ -41,10 +43,12 @@ public class Main {
 		catch (Exception e) {
 			throw new Error(e);
 		}
+		final Configuration configuration = new Configuration();
+		final JobProcessor jobProcessor = new JobProcessor(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MainFrame frame = new MainFrame();
+					MainFrame frame = new MainFrame(configuration, jobProcessor);
 					frame.setVisible(true);
 				}
 				catch (Exception e) {

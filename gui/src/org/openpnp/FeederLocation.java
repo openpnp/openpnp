@@ -3,10 +3,9 @@ package org.openpnp;
 import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
-public class FeederLocation {
+public class FeederLocation implements RequiresConfigurationResolution {
 	private Feeder feeder;
 	@Element
 	private Location location;
@@ -14,10 +13,9 @@ public class FeederLocation {
 	@Attribute
 	private String feederId;
 
-	@SuppressWarnings("unused")
-	@Commit
-	private void commit() {
-		feeder = Configuration.get().getMachine().getFeeder(feederId);
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		feeder = configuration.getMachine().getFeeder(feederId);
 	}
 	
 	@SuppressWarnings("unused")

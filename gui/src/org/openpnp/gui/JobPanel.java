@@ -2,6 +2,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -21,6 +22,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.BoardLocation;
 import org.openpnp.Configuration;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.Job;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessor.JobError;
@@ -36,22 +38,23 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 
-// TODO: Move JobProcessor, Configuration and Machine into Main and pass that around for App global stuff
-public class JobPanel extends JPanel implements JobProcessorListener, JobProcessorDelegate, MachineListener {
-	private JobProcessor jobProcessor;
+public class JobPanel extends JPanel implements JobProcessorListener, JobProcessorDelegate, MachineListener, ConfigurationListener {
+	final private Configuration configuration;
+	final private JobProcessor jobProcessor;
+	final private Frame frame;
 	
 	private BoardsTableModel boardsTableModel;
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardsTable;
 	private JTable placementsTable;
 	
-	private MainFrame parent;
-	
-	public JobPanel(MainFrame parent) {
-		this.parent = parent;
+	public JobPanel(Configuration configuration, JobProcessor jobProcessor, Frame frame) {
+		this.configuration = configuration;
+		this.jobProcessor = jobProcessor;
+		this.frame = frame;
 		
 		boardsTableModel = new BoardsTableModel();
-		placementsTableModel = new PlacementsTableModel();
+		placementsTableModel = new PlacementsTableModel(configuration);
 
 		placementsTable = new JTable(placementsTableModel);
 
@@ -70,7 +73,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 				}
 				else {
 					index = boardsTable.convertRowIndexToModel(index);
-					List<Placement> placements = jobProcessor.getJob().getBoardLocations().get(index).getBoard().getPlacements();
+					List<Placement> placements = JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index).getBoard().getPlacements();
 					placementsTableModel.setPlacements(placements);
 				}
 			}
@@ -104,12 +107,14 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 		
 		add(splitPane);
 		
-		jobProcessor = new JobProcessor(Configuration.get());
 		jobProcessor.addListener(this);
 		jobProcessor.setDelegate(this);
-		
-		Configuration.get().getMachine().addListener(this);
-		
+
+		configuration.addListener(this);
+	}
+	
+	public void configurationLoaded(Configuration configuration) {
+		configuration.getMachine().addListener(this);
 		updateJobActions();
 	}
 	
@@ -219,9 +224,8 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 		}
 
 		// We allow the above to run first so that all state is represented
-		// correctly
-		// even if the machine is disabled.
-		if (!Configuration.get().getMachine().isEnabled()) {
+		// correctly even if the machine is disabled.
+		if (!configuration.getMachine().isEnabled()) {
 			startPauseResumeJobAction.setEnabled(false);
 			stopJobAction.setEnabled(false);
 			stepJobAction.setEnabled(false);
@@ -231,7 +235,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			FileDialog fileDialog = new FileDialog(parent);
+			FileDialog fileDialog = new FileDialog(frame);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -242,7 +246,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 			try {
 				File file = new File(new File(fileDialog.getDirectory()),
 						fileDialog.getFile());
-				Job job = Configuration.get().loadJob(file);
+				Job job = configuration.loadJob(file);
 				jobProcessor.load(job);
 			}
 			catch (Exception e) {
@@ -319,7 +323,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action newBoardAction = new AbstractAction("New Board...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			FileDialog fileDialog = new FileDialog(parent, "Save New Board As...", FileDialog.SAVE);
+			FileDialog fileDialog = new FileDialog(frame, "Save New Board As...", FileDialog.SAVE);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -346,7 +350,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action addBoardAction = new AbstractAction("Add Board...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			FileDialog fileDialog = new FileDialog(parent);
+			FileDialog fileDialog = new FileDialog(frame);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -378,7 +382,7 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 			int selectedRow = boardsTable.getSelectedRow();
 			BoardLocation boardLocation = jobProcessor.getJob().getBoardLocations()
 					.get(selectedRow);
-			Wizard wizard = new OrientBoardWizard(boardLocation, Configuration.get());
+			Wizard wizard = new OrientBoardWizard(boardLocation, configuration);
 //				startWizard(wizard);
 		}
 	};

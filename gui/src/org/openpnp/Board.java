@@ -35,7 +35,7 @@ import org.simpleframework.xml.Root;
  * Placements that will be used to specify pick and place operations. 
  */
 @Root(name="openpnp-board")
-public class Board {
+public class Board implements RequiresConfigurationResolution {
 	public enum Side {
 		Bottom,
 		Top
@@ -48,6 +48,13 @@ public class Board {
 	private ArrayList<Fiducial> fiducials = new ArrayList<Fiducial>();
 	@ElementList
 	private ArrayList<Placement> placements = new ArrayList<Placement>();
+	
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		for (Placement placement : placements) {
+			placement.resolve(configuration);
+		}
+	}
 	
 	public List<Fiducial> getFiducials() {
 		return fiducials;

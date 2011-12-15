@@ -9,11 +9,14 @@ import org.openpnp.Part;
 import org.openpnp.Placement;
 
 class PlacementsTableModel extends AbstractTableModel {
+	final Configuration configuration;
+	
 	private String[] columnNames = new String[] { "Part", "Package",
 			"X Pos.", "Y Pos.", "Rotation" };
 	private List<Placement> placements;
 
-	public PlacementsTableModel() {
+	public PlacementsTableModel(Configuration configuration) {
+		this.configuration = configuration;
 	}
 
 	public void setPlacements(List<Placement> placements) {
@@ -47,7 +50,7 @@ class PlacementsTableModel extends AbstractTableModel {
 		try {
 			Placement placement = placements.get(rowIndex);
 			if (columnIndex == 0) {
-				Part part = Configuration.get().getPart(aValue.toString());
+				Part part = configuration.getPart(aValue.toString());
 				if (part == null) {
 					// TODO: dialog, bad part id
 					return;

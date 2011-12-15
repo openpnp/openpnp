@@ -22,12 +22,14 @@
 package org.openpnp;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Element;
@@ -41,24 +43,13 @@ import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
 
 public class Configuration {
-	private static Configuration instance;
-	
 	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
 	private Machine machine;
 	private HashMap<File, Board> boards = new HashMap<File, Board>();
 	private boolean dirty;
+	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
 	
-	public static Configuration get() {
-		if (instance == null) {
-			instance = new Configuration();
-		}
-		return instance;
-	}
-	
-	private Configuration() {
-		
-	}
 	
 	public boolean isDirty() {
 		return dirty;
@@ -68,6 +59,14 @@ public class Configuration {
 		this.dirty = dirty;
 	}
 
+	public void addListener(ConfigurationListener listener) {
+		listeners.add(listener);
+	}
+	
+	public void removeListener(ConfigurationListener listener) {
+		listeners.remove(listener);
+	}
+	
 	public void load(String configurationDirectoryPath) throws Exception {
 		File configurationDirectory = new File(configurationDirectoryPath);
 		
@@ -75,6 +74,9 @@ public class Configuration {
 		loadPackages(new File(configurationDirectory, "packages.xml"));
 		loadParts(new File(configurationDirectory, "parts.xml"));
 		dirty = false;
+		for (ConfigurationListener listener : listeners) {
+			listener.configurationLoaded(this);
+		}
 	}
 	
 	public void save(String configurationDirectoryPath) throws Exception {
@@ -159,6 +161,7 @@ public class Configuration {
 		Serializer serializer = createSerializer();
 		PartsConfigurationHolder holder = serializer.read(PartsConfigurationHolder.class, file);
 		for (Part part : holder.parts) {
+			part.resolve(this);
 			parts.put(part.getId(), part);
 		}
 	}
@@ -213,6 +216,7 @@ public class Configuration {
 	private Board loadBoard(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		Board board = serializer.read(Board.class, file);
+		board.resolve(this);
 		
 //		StringWriter writer = new StringWriter();
 //		serializer.write(board, writer);
@@ -225,7 +229,9 @@ public class Configuration {
 		Style style = new HyphenStyle();
 		Format format = new Format(style);
 		AnnotationStrategy strategy = new AnnotationStrategy();
-		Serializer serializer = new Persister(strategy, format);
+		Map testMap = new HashMap();
+		testMap.put("test", "test");
+		Serializer serializer = new Persister(strategy, testMap, format);
 		return serializer;
 	}
 	
