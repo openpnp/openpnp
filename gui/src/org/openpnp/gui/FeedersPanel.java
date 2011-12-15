@@ -1,11 +1,14 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -15,13 +18,12 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.FeederLocation;
 import org.openpnp.spi.Feeder;
-import javax.swing.border.TitledBorder;
 
 public class FeedersPanel extends JPanel implements WizardContainer {
 	private JTable table;
@@ -42,6 +44,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
+		
+		toolBar.add(newFeederAction);
+		toolBar.add(deleteFeederAction);
+		toolBar.addSeparator();
+		toolBar.add(feedFeederAction);
 
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -127,4 +134,22 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public Action newFeederAction = new AbstractAction("New...") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
+	public Action deleteFeederAction = new AbstractAction("Delete") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
+	public Action feedFeederAction = new AbstractAction("Feed") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
 }

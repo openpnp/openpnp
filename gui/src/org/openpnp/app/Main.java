@@ -22,7 +22,6 @@
 package org.openpnp.app;
 
 import java.awt.EventQueue;
-import java.io.File;
 
 import javax.swing.UIManager;
 

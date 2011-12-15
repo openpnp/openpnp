@@ -22,64 +22,38 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FileDialog;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.BoardLocation;
 import org.openpnp.Configuration;
 import org.openpnp.Job;
-import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessor.JobError;
 import org.openpnp.JobProcessor.JobState;
-import org.openpnp.JobProcessor.PickRetryAction;
-import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
-import org.openpnp.Part;
 import org.openpnp.Placement;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
 
 /**
- * The main window of the application. Implements the top level menu, Job run
- * and Job setup.
+ * The main window of the application.
  */
 @SuppressWarnings("serial")
 // TODO: check out icons at http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
