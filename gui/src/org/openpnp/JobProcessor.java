@@ -375,6 +375,8 @@ public class JobProcessor implements Runnable {
 				try {
 					// TODO design a way for the head/feeder to indicate that the part
 					// failed to pick, use the delegate to notify and potentially retry
+					// We now have the delegate for this, just need to use it and 
+					// implement the logic for it's potential responses
 					head.pick(part, feeder, pickLocation);
 				}
 				catch (Exception e) {

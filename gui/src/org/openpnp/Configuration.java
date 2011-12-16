@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
 import org.openpnp.spi.Machine;
@@ -125,6 +124,9 @@ public class Configuration {
 		Serializer serializer = createSerializer();
 		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
 		machine = holder.machine;
+		if (machine instanceof RequiresConfigurationResolution) {
+			((RequiresConfigurationResolution) machine).resolve(this);
+		}
 	}
 	
 	private void saveMachine(File file) throws Exception {
@@ -229,9 +231,7 @@ public class Configuration {
 		Style style = new HyphenStyle();
 		Format format = new Format(style);
 		AnnotationStrategy strategy = new AnnotationStrategy();
-		Map testMap = new HashMap();
-		testMap.put("test", "test");
-		Serializer serializer = new Persister(strategy, testMap, format);
+		Serializer serializer = new Persister(strategy, format);
 		return serializer;
 	}
 	

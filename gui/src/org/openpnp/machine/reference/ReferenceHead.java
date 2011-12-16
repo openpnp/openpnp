@@ -77,7 +77,7 @@ public class ReferenceHead implements Head {
 		return id;
 	}
 	
-	public void start(ReferenceMachine machine) throws Exception {
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		this.machine = machine;
 	}
 

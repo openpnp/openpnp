@@ -34,11 +34,10 @@ import org.openpnp.Part;
 import org.openpnp.Placement;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 
-public class JobPanel extends JPanel implements JobProcessorListener, JobProcessorDelegate, MachineListener, ConfigurationListener {
+public class JobPanel extends JPanel implements ConfigurationListener {
 	final private Configuration configuration;
 	final private JobProcessor jobProcessor;
 	final private Frame frame;
@@ -107,96 +106,16 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 		
 		add(splitPane);
 		
-		jobProcessor.addListener(this);
-		jobProcessor.setDelegate(this);
+		jobProcessor.addListener(jobProcessorListener);
+		jobProcessor.setDelegate(jobProcessorDelegate);
 
 		configuration.addListener(this);
 	}
 	
 	public void configurationLoaded(Configuration configuration) {
-		configuration.getMachine().addListener(this);
+		configuration.getMachine().addListener(machineListener);
 		updateJobActions();
 	}
-	
-	public JobProcessor getJobProcessor() {
-		return jobProcessor;
-	}
-	
-	@Override
-	public void jobStateChanged(JobState state) {
-		updateJobActions();
-	}
-
-	@Override
-	public void jobLoaded(Job job) {
-		placementsTableModel.setPlacements(null);
-		boardsTableModel.setJob(jobProcessor.getJob());
-		updateJobActions();
-	}
-
-	@Override
-	public PickRetryAction partPickFailed(BoardLocation board, Part part,
-			Feeder feeder) {
-		return PickRetryAction.SkipAndContinue;
-	}
-
-	@Override
-	public void jobEncounteredError(JobError error, String description) {
-		MessageBoxes.errorBox(this, error.toString(), description);
-	}
-
-	@Override
-	public void boardProcessingCompleted(BoardLocation board) {
-	}
-
-	@Override
-	public void boardProcessingStarted(BoardLocation board) {
-	}
-
-	@Override
-	public void partPicked(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partPlaced(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void partProcessingCompleted(BoardLocation board, Placement placement) {
-		// partsComplete++;
-	}
-
-	@Override
-	public void partProcessingStarted(BoardLocation board, Placement placement) {
-	}
-
-	@Override
-	public void detailedStatusUpdated(String status) {
-	}
-
-	@Override
-	public void machineHeadActivity(Machine machine, Head head) {
-	}
-
-	@Override
-	public void machineEnabled(Machine machine) {
-		updateJobActions();
-	}
-
-	@Override
-	public void machineEnableFailed(Machine machine, String reason) {
-	}
-
-	@Override
-	public void machineDisabled(Machine machine, String reason) {
-		updateJobActions();
-		jobProcessor.stop();
-	}
-
-	@Override
-	public void machineDisableFailed(Machine machine, String reason) {
-	}
-
 	
 	/**
 	 * Updates the Job controls based on the Job state and the Machine's
@@ -378,12 +297,46 @@ public class JobPanel extends JPanel implements JobProcessorListener, JobProcess
 	public Action orientBoardAction = new AbstractAction("Set Board Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// Get the currently selected board
-			int selectedRow = boardsTable.getSelectedRow();
-			BoardLocation boardLocation = jobProcessor.getJob().getBoardLocations()
-					.get(selectedRow);
-			Wizard wizard = new OrientBoardWizard(boardLocation, configuration);
-//				startWizard(wizard);
+		}
+	};
+	
+	private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
+		@Override
+		public void jobStateChanged(JobState state) {
+			updateJobActions();
+		}
+
+		@Override
+		public void jobLoaded(Job job) {
+			placementsTableModel.setPlacements(null);
+			boardsTableModel.setJob(jobProcessor.getJob());
+			updateJobActions();
+		}
+
+		@Override
+		public void jobEncounteredError(JobError error, String description) {
+			MessageBoxes.errorBox(JobPanel.this, error.toString(), description);
+		}
+	};
+	
+	private JobProcessorDelegate jobProcessorDelegate = new JobProcessorDelegate() {
+		@Override
+		public PickRetryAction partPickFailed(BoardLocation board, Part part,
+				Feeder feeder) {
+			return PickRetryAction.SkipAndContinue;
+		}
+	};
+	
+	private MachineListener machineListener = new MachineListener.Adapter() {
+		@Override
+		public void machineEnabled(Machine machine) {
+			updateJobActions();
+		}
+
+		@Override
+		public void machineDisabled(Machine machine, String reason) {
+			updateJobActions();
+			jobProcessor.stop();
 		}
 	};
 }

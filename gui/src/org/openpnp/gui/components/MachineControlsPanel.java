@@ -21,7 +21,6 @@
 
 package org.openpnp.gui.components;
 
-import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -34,20 +33,16 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -65,7 +60,6 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.KeyStroke;
 
 import org.openpnp.Configuration;
 import org.openpnp.ConfigurationListener;
@@ -87,7 +81,7 @@ import org.openpnp.util.LengthUtil;
  * TODO add a dropdown to select Head
  * @author jason
  */
-public class MachineControlsPanel extends JPanel implements MachineListener, ConfigurationListener {
+public class MachineControlsPanel extends JPanel {
 	private Machine machine;
 	private Head head;
 	private LengthUnit units;
@@ -103,6 +97,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	private JToggleButton btnPickPlace;
 	private JComboBox comboBoxCoordinateSystem;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
+	private JPanel panelActuators;
 	
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
@@ -115,87 +110,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	public MachineControlsPanel(Configuration configuration) {
 		createUi();
 		
-		// Add global hotkeys for the arrow keys
-		// TODO: Make sure that multiple instances of this class don't screw this up. Probably
-		// needs to be a separate, static class.
-		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
-		
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), yPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), yMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), xMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), xPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), zPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), zMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0), cMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, 0), cPlusAction);
-		
-		Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
-			@Override
-			protected void dispatchEvent(AWTEvent event) {
-				if (event instanceof KeyEvent) {
-					KeyStroke ks = KeyStroke.getKeyStrokeForEvent((KeyEvent) event);
-					Action action = hotkeyActionMap.get(ks);
-					if (action != null && action.isEnabled()) {
-						action.actionPerformed(null);
-						return;
-					}
-				}
-				super.dispatchEvent(event);
-			}
-		});
-		
-		configuration.addListener(this);
-	}
-	
-	public void configurationLoaded(Configuration configuration) {
-		if (this.machine != null) {
-			this.machine.removeListener(this);
-		}
-		panelActuators.removeAll();
-		
-		this.machine = configuration.getMachine();
-		this.head = machine.getHeads().get(0);
-		setUnits(machine.getNativeUnits());
-		machine.addListener(this);
-		
-		comboBoxCoordinateSystem.removeAllItems();
-		comboBoxCoordinateSystem.addItem("Tool");
-		for (Camera camera : machine.getCameras()) {
-			if (camera.getHead() != null) {
-				comboBoxCoordinateSystem.addItem(new CameraItem(camera));
-			}
-		}
-		comboBoxCoordinateSystem.addItem("Absolute");
-		comboBoxCoordinateSystem.setSelectedIndex(0);
-		
-		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
-
-		for (String actuatorName : head.getActuatorNames()) {
-			final String actuatorName_f = actuatorName;
-			final JToggleButton actuatorButton = new JToggleButton(actuatorName);
-			actuatorButton.setFocusable(false);
-			actuatorButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					final boolean state = actuatorButton.isSelected();
-					executor.execute(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								head.actuate(actuatorName_f, state);
-							}
-							catch (Exception e) {
-								MessageBoxes.errorBox(MachineControlsPanel.this, "Actuator Command Failed", e.getMessage());
-							}
-						}
-					});
-				}
-			});
-			panelActuators.add(actuatorButton);
-		}
-		
-		setEnabled(machine.isEnabled());
+		configuration.addListener(configurationListener);
 	}
 	
 	@Override
@@ -243,9 +158,11 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 		updateDros();
 	}
 	
-	private void updateDros() {
+	public Location getDisplayedLocation() {
+		Location location = new Location();
+		
 		if (machine == null || head == null || units == null) {
-			return;
+			return null;
 		}
 		double x = 0, y = 0, z = 0, c = 0;
 		if (comboBoxCoordinateSystem.getSelectedItem() == null || comboBoxCoordinateSystem.getSelectedItem().equals("Tool")) {
@@ -270,20 +187,36 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 			z = head.getAbsoluteZ();
 			c = head.getAbsoluteC();
 		}
-		x = LengthUtil.convertLength(x, machine.getNativeUnits(), units);
-		y = LengthUtil.convertLength(y, machine.getNativeUnits(), units);
-		z = LengthUtil.convertLength(z, machine.getNativeUnits(), units);
+		
+		location.setX(x);
+		location.setY(y);
+		location.setZ(z);
+		location.setRotation(c);
+		location.setUnits(machine.getNativeUnits());
+		
+		location = LengthUtil.convertLocation(location, units);
+		
+		return location;
+	}
+	
+	private void updateDros() {
+		Location location = getDisplayedLocation();
+		
+		if (location == null) {
+			return;
+		}
+		
 		if (!textFieldX.hasFocus()) {
-			textFieldX.setText(String.format("%1.4f", x));
+			textFieldX.setText(String.format("%1.4f", location.getX()));
 		}
 		if (!textFieldY.hasFocus()) {
-			textFieldY.setText(String.format("%1.4f", y));
+			textFieldY.setText(String.format("%1.4f", location.getY()));
 		}
 		if (!textFieldZ.hasFocus()) {
-			textFieldZ.setText(String.format("%1.4f", z));
+			textFieldZ.setText(String.format("%1.4f", location.getZ()));
 		}
 		if (!textFieldC.hasFocus()) {
-			textFieldC.setText(String.format("%1.4f", c));
+			textFieldC.setText(String.format("%1.4f", location.getRotation()));
 		}
 	}
 	
@@ -347,39 +280,6 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 		});
 	}
 	
-	@Override
-	public void machineHeadActivity(Machine machine, Head head) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				updateDros();
-			}
-		});
-	}
-
-	@Override
-	public void machineEnabled(Machine machine) {
-		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
-	}
-
-	@Override
-	public void machineEnableFailed(Machine machine, String reason) {
-		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
-	}
-
-	@Override
-	public void machineDisabled(Machine machine, String reason) {
-		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
-	}
-
-	@Override
-	public void machineDisableFailed(Machine machine, String reason) {
-		btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-		btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
-	}
-
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
@@ -700,7 +600,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action yPlusAction = new AbstractAction("Y+") {
+	public Action yPlusAction = new AbstractAction("Y+") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 1, 0, 0);
@@ -708,7 +608,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action yMinusAction = new AbstractAction("Y-") {
+	public Action yMinusAction = new AbstractAction("Y-") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, -1, 0, 0);
@@ -716,7 +616,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action xPlusAction = new AbstractAction("X+") {
+	public Action xPlusAction = new AbstractAction("X+") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(1, 0, 0, 0);
@@ -724,7 +624,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action xMinusAction = new AbstractAction("X-") {
+	public Action xMinusAction = new AbstractAction("X-") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(-1, 0, 0, 0);
@@ -732,7 +632,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action zPlusAction = new AbstractAction("Z+") {
+	public Action zPlusAction = new AbstractAction("Z+") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, 1, 0);
@@ -740,7 +640,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action zMinusAction = new AbstractAction("Z-") {
+	public Action zMinusAction = new AbstractAction("Z-") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, -1, 0);
@@ -748,7 +648,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action cPlusAction = new AbstractAction("C+") {
+	public Action cPlusAction = new AbstractAction("C+") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, 0, 1);
@@ -756,7 +656,7 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 	};
 	
 	@SuppressWarnings("serial")
-	private Action cMinusAction = new AbstractAction("C-") {
+	public Action cMinusAction = new AbstractAction("C-") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, 0, -1);
@@ -936,5 +836,93 @@ public class MachineControlsPanel extends JPanel implements MachineListener, Con
 			updateDros();
 		}
 	};
-	private JPanel panelActuators;
+	
+	private MachineListener machineListener = new MachineListener.Adapter() {
+		@Override
+		public void machineHeadActivity(Machine machine, Head head) {
+			EventQueue.invokeLater(new Runnable() {
+				public void run() {
+					updateDros();
+				}
+			});
+		}
+
+		@Override
+		public void machineEnabled(Machine machine) {
+			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+		}
+
+		@Override
+		public void machineEnableFailed(Machine machine, String reason) {
+			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+		}
+
+		@Override
+		public void machineDisabled(Machine machine, String reason) {
+			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+		}
+
+		@Override
+		public void machineDisableFailed(Machine machine, String reason) {
+			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+		}
+	};
+	
+	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
+		@Override
+		public void configurationLoaded(Configuration configuration) {
+			if (machine != null) {
+				machine.removeListener(machineListener);
+			}
+			panelActuators.removeAll();
+			
+			machine = configuration.getMachine();
+			head = machine.getHeads().get(0);
+			setUnits(machine.getNativeUnits());
+			machine.addListener(machineListener);
+			
+			comboBoxCoordinateSystem.removeAllItems();
+			comboBoxCoordinateSystem.addItem("Tool");
+			for (Camera camera : machine.getCameras()) {
+				if (camera.getHead() != null) {
+					comboBoxCoordinateSystem.addItem(new CameraItem(camera));
+				}
+			}
+			comboBoxCoordinateSystem.addItem("Absolute");
+			comboBoxCoordinateSystem.setSelectedIndex(0);
+			
+			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
+			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+
+			for (String actuatorName : head.getActuatorNames()) {
+				final String actuatorName_f = actuatorName;
+				final JToggleButton actuatorButton = new JToggleButton(actuatorName);
+				actuatorButton.setFocusable(false);
+				actuatorButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						final boolean state = actuatorButton.isSelected();
+						executor.execute(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									head.actuate(actuatorName_f, state);
+								}
+								catch (Exception e) {
+									MessageBoxes.errorBox(MachineControlsPanel.this, "Actuator Command Failed", e.getMessage());
+								}
+							}
+						});
+					}
+				});
+				panelActuators.add(actuatorButton);
+			}
+			
+			setEnabled(machine.isEnabled());
+		}
+	};
 }

@@ -17,7 +17,7 @@
       <feeders>
          <feeder id="L0">
             <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="1000.0">
-               <feed-start-location units="Millimeters" x="101.1" y="150.0" z="50.0" rotation="0.0"/>
+               <feed-start-location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
                <feed-end-location units="Millimeters" x="102.0" y="150.0" z="50.0" rotation="0.0"/>
             </reference-feeder>
          </feeder>

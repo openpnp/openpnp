@@ -61,7 +61,7 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
 
 	@Override
-	public void start(ReferenceMachine machine) throws Exception {
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		if (head == null) {
 			head = machine.getHead(headId);
 		}

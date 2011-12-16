@@ -28,6 +28,7 @@ import javax.swing.UIManager;
 import org.openpnp.Configuration;
 import org.openpnp.JobProcessor;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.MachineControlsPanel;
 
 /**
  * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
@@ -45,10 +46,11 @@ public class Main {
 		}
 		final Configuration configuration = new Configuration();
 		final JobProcessor jobProcessor = new JobProcessor(configuration);
+		final MachineControlsPanel machineControlsPanel = new MachineControlsPanel(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MainFrame frame = new MainFrame(configuration, jobProcessor);
+					MainFrame frame = new MainFrame(configuration, jobProcessor, machineControlsPanel);
 					frame.setVisible(true);
 				}
 				catch (Exception e) {

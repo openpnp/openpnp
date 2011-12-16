@@ -22,6 +22,10 @@ class FeederLocationsTableModel extends AbstractTableModel {
 		this.feederLocations = feederLocations;
 		fireTableDataChanged();
 	}
+	
+	public FeederLocation getFeederLocation(int index) {
+		return feederLocations.get(index);
+	}
 
 	@Override
 	public String getColumnName(int column) {

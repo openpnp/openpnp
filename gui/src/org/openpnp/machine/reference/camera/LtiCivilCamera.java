@@ -65,8 +65,8 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	private BufferedImage grayImage;
 	
 	@Override
-	public void start(ReferenceMachine machine) throws Exception {
-		super.start(machine);
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
+		super.setReferenceMachine(machine);
 		
 		captureSystemFactory = DefaultCaptureSystemFactorySingleton.instance();
 		captureSystem = captureSystemFactory.createCaptureSystem();

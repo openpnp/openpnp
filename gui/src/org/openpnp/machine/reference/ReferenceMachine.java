@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.LengthUnit;
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -39,10 +39,9 @@ import org.openpnp.spi.MachineListener;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
-import org.simpleframework.xml.core.Commit;
 
 // TODO: See if any of the Reference* classes can be done away with and use only the SPI classes.
-public class ReferenceMachine implements Machine {
+public class ReferenceMachine implements Machine, RequiresConfigurationResolution {
 	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
 	
 	@Element
@@ -55,9 +54,22 @@ public class ReferenceMachine implements Machine {
 	private LinkedHashMap<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	
 	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
-	private boolean started;
 	private boolean enabled;
 	
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		driver.setReferenceMachine(this);
+		for (ReferenceHead head : heads.values()) {
+			head.setReferenceMachine(this);
+		}
+		for (ReferenceCamera camera : cameras) {
+			camera.setReferenceMachine(this);
+		}
+		for (ReferenceFeeder feeder : feeders.values()) {
+			feeder.setReferenceMachine(this);
+		}
+	}
+
 	@Override
 	public Feeder getFeeder(String id) {
 		return feeders.get(id);
@@ -133,23 +145,6 @@ public class ReferenceMachine implements Machine {
 			}
 			fireMachineDisabled(this, "User requested stop.");
 		}
-	}
-
-	public void start() throws Exception {
-		if (started) {
-			throw new Exception("ReferenceMachine was already started.");
-		}
-		driver.start(this);
-		for (ReferenceHead head : heads.values()) {
-			head.start(this);
-		}
-		for (ReferenceCamera camera : cameras) {
-			camera.start(this);
-		}
-		for (ReferenceFeeder feeder : feeders.values()) {
-			feeder.start(this);
-		}
-		started = true;
 	}
 
 	@Override

@@ -21,11 +21,18 @@
 
 package org.openpnp.gui;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,18 +42,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.BoardLocation;
 import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.JobProcessor;
-import org.openpnp.JobProcessor.JobError;
-import org.openpnp.JobProcessor.JobState;
 import org.openpnp.JobProcessorListener;
-import org.openpnp.Placement;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.OSXAdapter;
@@ -65,20 +68,21 @@ public class MainFrame extends JFrame {
 	 */
 	final private Configuration configuration;
 	final private JobProcessor jobProcessor;
+	final private MachineControlsPanel machineControlsPanel;
 
 	private PartsPanel partsPanel;
 	private FeedersPanel feedersPanel;
 	private JobPanel jobPanel;
 
 	private JPanel contentPane;
-	private MachineControlsPanel machineControlsPanel;
 	private CameraPanel cameraPanel;
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
 
-	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
+	public MainFrame(Configuration configuration, JobProcessor jobProcessor, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
 		this.jobProcessor = jobProcessor;
+		this.machineControlsPanel = machineControlsPanel;
 		
 		// Get handlers for quit and close in place
 		registerForMacOSXEvents();
@@ -92,8 +96,8 @@ public class MainFrame extends JFrame {
 		setBounds(100, 100, 1280, 1024);
 		
 		jobPanel = new JobPanel(configuration, jobProcessor, this);
-		partsPanel = new PartsPanel(configuration);
-		feedersPanel = new FeedersPanel(configuration);
+		partsPanel = new PartsPanel(configuration, machineControlsPanel);
+		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -150,11 +154,41 @@ public class MainFrame extends JFrame {
 		panelLeftColumn.add(panel);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		machineControlsPanel = new MachineControlsPanel(configuration);
 		machineControlsPanel.setBorder(new TitledBorder(null,
 				"Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
 				null, null));
+		
 		panel.add(machineControlsPanel);
+		
+		// Add global hotkeys for the arrow keys
+		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
+		
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), machineControlsPanel.yPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), machineControlsPanel.yMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), machineControlsPanel.xMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), machineControlsPanel.xPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), machineControlsPanel.zPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), machineControlsPanel.zMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0), machineControlsPanel.cMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, 0), machineControlsPanel.cPlusAction);
+		
+		// TODO need to restrict this capture somehow, it breaks textfields
+		// and using arrow keys to move through lists.
+		Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
+			@Override
+			protected void dispatchEvent(AWTEvent event) {
+				if (event instanceof KeyEvent) {
+					KeyStroke ks = KeyStroke.getKeyStrokeForEvent((KeyEvent) event);
+					Action action = hotkeyActionMap.get(ks);
+					if (action != null && action.isEnabled()) {
+						action.actionPerformed(null);
+						return;
+					}
+				}
+				super.dispatchEvent(event);
+			}
+		});
+		
 
 		cameraPanel = new CameraPanel();
 		panelTop.add(cameraPanel, BorderLayout.CENTER);
@@ -183,19 +217,11 @@ public class MainFrame extends JFrame {
 			throw new Error(e);
 		}
 
-		try {
-			configuration.getMachine().start();
-		}
-		catch (Exception e) {
-			// TODO: dialog
-			throw new Error(e);
-		}
-
 		for (Camera camera : configuration.getMachine().getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
 		
-		jobProcessor.addListener(new MainFrameJobProcessorListener());
+		jobProcessor.addListener(jobProcessorListener);
 	}
 
 	public void registerForMacOSXEvents() {
@@ -243,47 +269,11 @@ public class MainFrame extends JFrame {
 		System.exit(0);
 		return true;
 	}
-
-	class MainFrameJobProcessorListener implements JobProcessorListener {
-		@Override
-		public void jobLoaded(Job job) {
-		}
 	
-		@Override
-		public void jobStateChanged(JobState state) {
-		}
-	
-		@Override
-		public void jobEncounteredError(JobError error, String description) {
-		}
-	
-		@Override
-		public void boardProcessingStarted(BoardLocation board) {
-		}
-	
-		@Override
-		public void boardProcessingCompleted(BoardLocation board) {
-		}
-	
-		@Override
-		public void partProcessingStarted(BoardLocation board, Placement placement) {
-		}
-	
-		@Override
-		public void partPicked(BoardLocation board, Placement placement) {
-		}
-	
-		@Override
-		public void partPlaced(BoardLocation board, Placement placement) {
-		}
-	
-		@Override
-		public void partProcessingCompleted(BoardLocation board, Placement placement) {
-		}
-	
+	private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
 		@Override
 		public void detailedStatusUpdated(String status) {
 			lblStatus.setText(status);
 		}
-	}
+	};
 }

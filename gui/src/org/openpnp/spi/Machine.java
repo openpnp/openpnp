@@ -23,8 +23,6 @@ package org.openpnp.spi;
 
 import java.util.List;
 
-import org.openpnp.Configuration;
-import org.openpnp.Job;
 import org.openpnp.LengthUnit;
 
 
@@ -93,6 +91,4 @@ public interface Machine {
 	void addListener(MachineListener listener);
 	
 	void removeListener(MachineListener listener);
-	
-	public void start() throws Exception;
 }

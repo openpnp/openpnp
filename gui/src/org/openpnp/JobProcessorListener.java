@@ -57,4 +57,49 @@ public interface JobProcessorListener {
 	// TODO maybe partProcessingFailed with a reason
 	
 	public void detailedStatusUpdated(String status);
+	
+	static public class Adapter implements JobProcessorListener {
+
+		@Override
+		public void jobLoaded(Job job) {
+		}
+
+		@Override
+		public void jobStateChanged(JobState state) {
+		}
+
+		@Override
+		public void jobEncounteredError(JobError error, String description) {
+		}
+
+		@Override
+		public void boardProcessingStarted(BoardLocation board) {
+		}
+
+		@Override
+		public void boardProcessingCompleted(BoardLocation board) {
+		}
+
+		@Override
+		public void partProcessingStarted(BoardLocation board,
+				Placement placement) {
+		}
+
+		@Override
+		public void partPicked(BoardLocation board, Placement placement) {
+		}
+
+		@Override
+		public void partPlaced(BoardLocation board, Placement placement) {
+		}
+
+		@Override
+		public void partProcessingCompleted(BoardLocation board,
+				Placement placement) {
+		}
+
+		@Override
+		public void detailedStatusUpdated(String status) {
+		}
+	}
 }

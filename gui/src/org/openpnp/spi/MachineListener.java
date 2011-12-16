@@ -36,4 +36,27 @@ public interface MachineListener {
 	void machineDisabled(Machine machine, String reason);
 	
 	void machineDisableFailed(Machine machine, String reason);
+	
+	static public class Adapter implements MachineListener {
+
+		@Override
+		public void machineHeadActivity(Machine machine, Head head) {
+		}
+
+		@Override
+		public void machineEnabled(Machine machine) {
+		}
+
+		@Override
+		public void machineEnableFailed(Machine machine, String reason) {
+		}
+
+		@Override
+		public void machineDisabled(Machine machine, String reason) {
+		}
+
+		@Override
+		public void machineDisableFailed(Machine machine, String reason) {
+		}
+	}
 }

@@ -55,8 +55,8 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 	private CaptureDevice captureDevice;
 	private int width, height;
 	
-	public void start(ReferenceMachine machine) throws Exception {
-		super.start(machine);
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
+		super.setReferenceMachine(machine);
 		if (driver == null || driver.trim().length() == 0) {
 			System.out.println("No driver specified for VfwCamera [" + getName() + "]. Available drivers are:");
 			System.out.println();

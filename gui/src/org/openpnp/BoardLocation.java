@@ -3,8 +3,6 @@ package org.openpnp;
 import org.openpnp.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 
 public class BoardLocation {
 	@Element

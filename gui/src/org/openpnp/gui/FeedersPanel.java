@@ -23,10 +23,12 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Configuration;
+import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.spi.Feeder;
 
 public class FeedersPanel extends JPanel implements WizardContainer {
-	final private Configuration configuration;
+	private final Configuration configuration;
+	private final MachineControlsPanel machineControlsPanel;
 	
 	private JTable table;
 
@@ -35,8 +37,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private JTextField searchTextField;
 	JPanel configurationPanel;
 
-	public FeedersPanel(Configuration configuration) {
+	public FeedersPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
+		this.machineControlsPanel = machineControlsPanel;
 		
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new FeedersTableModel(configuration);
@@ -130,10 +133,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	@Override
 	public void wizardCancelled(Wizard wizard) {
-		// TODO Auto-generated method stub
-		
 	}
 	
+	@Override
+	public Configuration getConfiguration() {
+		return configuration;
+	}
+
+	@Override
+	public MachineControlsPanel getMachineControlsPanel() {
+		return machineControlsPanel;
+	}
+
 	public Action newFeederAction = new AbstractAction("New...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

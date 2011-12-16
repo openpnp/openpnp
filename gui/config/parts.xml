@@ -2,7 +2,7 @@
    <part id="MMBT3906-7-F" name="" height-units="Inches" height="0.03" package-id="SOT-23-3">
       <feeder-locations>
          <feeder-location feeder-id="L6">
-            <location units="Millimeters" x="100.0" y="160.0" z="87.0" rotation="0.0"/>
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
@@ -62,7 +62,7 @@
          </feeder-location>
       </feeder-locations>
    </part>
-   <part id="R-0805-47" height-units="Inches" height="0.03" package-id="0805">
+   <part id="R-0805-47" name="" height-units="Inches" height="0.03" package-id="0805">
       <feeder-locations>
          <feeder-location feeder-id="L5">
             <location units="Millimeters" x="100.0" y="150.0" z="85.0" rotation="0.0"/>

@@ -23,12 +23,15 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Configuration;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.FeederLocation;
+import org.openpnp.Location;
 import org.openpnp.Part;
+import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.util.LengthUtil;
 
 public class PartsPanel extends JPanel {
 	final private Configuration configuration;
+	final private MachineControlsPanel machineControlsPanel;
 	
 	private PartsTableModel partsTableModel;
 	private FeederLocationsTableModel feederLocationsTableModel;
@@ -37,8 +40,9 @@ public class PartsPanel extends JPanel {
 	private JTable partsTable;
 	private JTable feederLocationsTable;
 
-	public PartsPanel(Configuration configuration) {
+	public PartsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
+		this.machineControlsPanel = machineControlsPanel;
 		
 		setLayout(new BorderLayout(0, 0));
 		partsTableModel = new PartsTableModel(configuration);
@@ -94,6 +98,7 @@ public class PartsPanel extends JPanel {
 				int index = partsTable.getSelectedRow();
 				
 				deletePartAction.setEnabled(index != -1);
+				newFeederLocationAction.setEnabled(index != -1);
 				
 				if (index == -1) {
 					feederLocationsTableModel.setFeederLocations(null);
@@ -115,8 +120,8 @@ public class PartsPanel extends JPanel {
 				}
 				int index = feederLocationsTable.getSelectedRow();
 				
-				newFeederLocationAction.setEnabled(index != -1);
 				deleteFeederLocationAction.setEnabled(index != -1);
+				setFeederLocationLocationAction.setEnabled(index != -1);				
 			}
 		});
 		
@@ -124,12 +129,15 @@ public class PartsPanel extends JPanel {
 		deletePartAction.setEnabled(false);
 		newFeederLocationAction.setEnabled(false);
 		deleteFeederLocationAction.setEnabled(false);
+		setFeederLocationLocationAction.setEnabled(false);
 		
 		toolBar.add(newPartAction);
 		toolBar.add(deletePartAction);
 		toolBar.addSeparator();
 		toolBar.add(newFeederLocationAction);
 		toolBar.add(deleteFeederLocationAction);
+		toolBar.addSeparator();
+		toolBar.add(setFeederLocationLocationAction);
 	}
 	
 	private void search() {
@@ -167,6 +175,22 @@ public class PartsPanel extends JPanel {
 	public Action deleteFeederLocationAction = new AbstractAction("Delete Feeder Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
+	public Action setFeederLocationLocationAction = new AbstractAction("Set Feeder Location") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			Location location = machineControlsPanel.getDisplayedLocation();
+			
+			int index = feederLocationsTable.getSelectedRow();
+			index = feederLocationsTable.convertRowIndexToModel(index);
+			FeederLocation feederLocation = feederLocationsTableModel.getFeederLocation(index);
+
+			feederLocation.setLocation(location);
+			
+			feederLocationsTableModel.fireTableRowsUpdated(index, index);
+			configuration.setDirty(true);
 		}
 	};
 }

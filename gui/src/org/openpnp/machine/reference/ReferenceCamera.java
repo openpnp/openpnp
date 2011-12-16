@@ -60,5 +60,5 @@ import org.openpnp.spi.Camera;
 </pre>
 */
 public interface ReferenceCamera extends Camera {
-	public void start(ReferenceMachine machine) throws Exception;
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception;
 }

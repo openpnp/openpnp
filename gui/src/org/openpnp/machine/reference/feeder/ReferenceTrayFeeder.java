@@ -21,29 +21,17 @@
 
 package org.openpnp.machine.reference.feeder;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
 
 import org.openpnp.Location;
 import org.openpnp.Part;
 import org.openpnp.gui.Wizard;
-import org.openpnp.gui.WizardContainer;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.RowSpec;
 
 /**
  * Implemention of Feeder that indexes based on an offset. This allows a tray of
@@ -98,7 +86,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return new ConfigurationWizard();
+		return new ReferenceTrayFeederConfigurationWizard(this);
 	}
 
 	public int getTrayCountX() {
@@ -131,137 +119,6 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
 	public void setPickCount(int pickCount) {
 		this.pickCount = pickCount;
-	}
-
-	public class ConfigurationWizard extends JPanel implements Wizard {
-		private WizardContainer wizardContainer;
-		
-		private JTextField offsetsX;
-		private JTextField offsetsY;
-		private JTextField offsetsZ;
-		private JTextField trayCountX;
-		private JTextField trayCountY;
-
-		public ConfigurationWizard() {
-			setLayout(new FormLayout(new ColumnSpec[] {
-					FormFactory.RELATED_GAP_COLSPEC,
-					FormFactory.DEFAULT_COLSPEC,
-					FormFactory.RELATED_GAP_COLSPEC,
-					ColumnSpec.decode("default:grow"),
-					FormFactory.RELATED_GAP_COLSPEC,
-					ColumnSpec.decode("default:grow"),
-					FormFactory.RELATED_GAP_COLSPEC,
-					ColumnSpec.decode("default:grow"), }, new RowSpec[] {
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC,
-					FormFactory.RELATED_GAP_ROWSPEC,
-					FormFactory.DEFAULT_ROWSPEC, }));
-
-			JLabel lblX = new JLabel("X");
-			add(lblX, "4, 2");
-
-			JLabel lblY = new JLabel("Y");
-			add(lblY, "6, 2");
-
-			JLabel lblZ = new JLabel("Z");
-			add(lblZ, "8, 2");
-
-			JLabel lblFeedStartLocation = new JLabel("Offsets");
-			add(lblFeedStartLocation, "2, 4, right, default");
-
-			offsetsX = new JTextField();
-			add(offsetsX, "4, 4, fill, default");
-			offsetsX.setColumns(10);
-
-			offsetsY = new JTextField();
-			add(offsetsY, "6, 4, fill, default");
-			offsetsY.setColumns(10);
-
-			offsetsZ = new JTextField();
-			add(offsetsZ, "8, 4, fill, default");
-			offsetsZ.setColumns(10);
-
-			JLabel lblTrayCount = new JLabel("Tray Count");
-			add(lblTrayCount, "2, 6, right, default");
-
-			trayCountX = new JTextField();
-			add(trayCountX, "4, 6, fill, default");
-			trayCountX.setColumns(10);
-
-			trayCountY = new JTextField();
-			add(trayCountY, "6, 6, fill, default");
-			trayCountY.setColumns(10);
-
-			JSeparator separator = new JSeparator();
-			add(separator, "2, 8, 7, 1");
-
-			JButton btnSave = new JButton("Save");
-			btnSave.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					getOffsets().setX(
-									Double.parseDouble(offsetsX.getText()));
-					getOffsets().setY(
-									Double.parseDouble(offsetsY.getText()));
-					getOffsets().setZ(
-									Double.parseDouble(offsetsZ.getText()));
-
-					setTrayCountX(Integer.parseInt(trayCountX
-									.getText()));
-					setTrayCountY(Integer.parseInt(trayCountY
-									.getText()));
-
-					wizardContainer.wizardCompleted(ConfigurationWizard.this);
-				}
-			});
-			add(btnSave, "8, 26");
-
-			offsetsX.setText(String.format("%2.3f", getOffsets().getX()));
-			offsetsY.setText(String.format("%2.3f", getOffsets().getY()));
-			offsetsZ.setText(String.format("%2.3f", getOffsets().getZ()));
-
-			trayCountX.setText(String.format("%d", getTrayCountX()));
-			trayCountY.setText(String.format("%d", getTrayCountY()));
-		}
-
-		@Override
-		public void setWizardContainer(WizardContainer wizardContainer) {
-			this.wizardContainer = wizardContainer;
-		}
-
-		@Override
-		public JPanel getWizardPanel() {
-			return this;
-		}
-
-		@Override
-		public String getWizardName() {
-			// TODO Auto-generated method stub
-			return null;
-		}
 	}
 
 }

@@ -23,11 +23,9 @@ package org.openpnp;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 

@@ -78,7 +78,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
 	@Override
-	public void start(ReferenceMachine machine) throws Exception {
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		connect(portName, baud);
 	}
 

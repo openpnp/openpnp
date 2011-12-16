@@ -24,14 +24,8 @@ package org.openpnp;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * An Outline is a polygon shape with attached units that can be used for bounds checking
