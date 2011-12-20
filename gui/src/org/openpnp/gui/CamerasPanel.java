@@ -24,25 +24,25 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Configuration;
 import org.openpnp.gui.components.MachineControlsPanel;
-import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Camera;
 
-public class FeedersPanel extends JPanel implements WizardContainer {
+public class CamerasPanel extends JPanel implements WizardContainer {
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
 	
 	private JTable table;
 
-	private FeedersTableModel tableModel;
-	private TableRowSorter<FeedersTableModel> tableSorter;
+	private CamerasTableModel tableModel;
+	private TableRowSorter<CamerasTableModel> tableSorter;
 	private JTextField searchTextField;
 	JPanel configurationPanel;
 
-	public FeedersPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
+	public CamerasPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
 		this.machineControlsPanel = machineControlsPanel;
 		
 		setLayout(new BorderLayout(0, 0));
-		tableModel = new FeedersTableModel(configuration);
+		tableModel = new CamerasTableModel(configuration);
 
 		JPanel panel = new JPanel();
 		add(panel, BorderLayout.NORTH);
@@ -52,8 +52,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
 		
-		toolBar.add(feedFeederAction);
-
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
 
@@ -70,7 +68,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
 		table = new JTable(tableModel);
-		tableSorter = new TableRowSorter<FeedersTableModel>(tableModel);
+		tableSorter = new TableRowSorter<CamerasTableModel>(tableModel);
 		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
@@ -93,29 +91,25 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				}
 				int index = table.getSelectedRow();
 				
-				feedFeederAction.setEnabled(index != -1);
-				
 				configurationPanel.removeAll();
 				if (index != -1) {
 					index = table.convertRowIndexToModel(index);
-					Feeder feeder = tableModel.getFeeder(index);
-					Wizard wizard = feeder.getConfigurationWizard();
-					if (wizard != null) {
-						wizard.setWizardContainer(FeedersPanel.this);
-						JPanel panel = wizard.getWizardPanel();
-						configurationPanel.add(panel);
-					}
+					Camera camera = tableModel.getCamera(index);
+//					Wizard wizard = camera.getConfigurationWizard();
+//					if (wizard != null) {
+//						wizard.setWizardContainer(CamerasPanel.this);
+//						JPanel panel = wizard.getWizardPanel();
+//						configurationPanel.add(panel);
+//					}
 				}
 				revalidate();
 				repaint();
 			}
 		});
-		
-		feedFeederAction.setEnabled(false);
 	}
 
 	private void search() {
-		RowFilter<FeedersTableModel, Object> rf = null;
+		RowFilter<CamerasTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
 		try {
 			rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
@@ -145,10 +139,4 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	public MachineControlsPanel getMachineControlsPanel() {
 		return machineControlsPanel;
 	}
-
-	public Action feedFeederAction = new AbstractAction("Feed") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
 }

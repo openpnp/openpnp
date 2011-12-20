@@ -73,6 +73,8 @@ public class MainFrame extends JFrame {
 	private PartsPanel partsPanel;
 	private FeedersPanel feedersPanel;
 	private JobPanel jobPanel;
+	private MachinePanel machinePanel;
+	private CamerasPanel camerasPanel;
 
 	private JPanel contentPane;
 	private CameraPanel cameraPanel;
@@ -95,9 +97,11 @@ public class MainFrame extends JFrame {
 
 		setBounds(100, 100, 1280, 1024);
 		
+		machinePanel = new MachinePanel(configuration);
 		jobPanel = new JobPanel(configuration, jobProcessor, this);
 		partsPanel = new PartsPanel(configuration, machineControlsPanel);
 		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
+		camerasPanel = new CamerasPanel(configuration, machineControlsPanel);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -206,8 +210,10 @@ public class MainFrame extends JFrame {
 		splitPaneTopBottom.setDividerLocation(600);
 		
 		panelBottom.addTab("Job", null, jobPanel, null);
+		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
+		panelBottom.addTab("Cameras", null, camerasPanel, null);
 
 		try {
 			configuration.load("config");

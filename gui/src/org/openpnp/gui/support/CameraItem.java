@@ -36,6 +36,6 @@ public class CameraItem {
 	
 	@Override
 	public String toString() {
-		return camera.getName();
+		return "Camera: " + camera.getName();
 	}
 }
