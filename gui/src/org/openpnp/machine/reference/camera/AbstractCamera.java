@@ -27,10 +27,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openpnp.CameraListener;
-import org.openpnp.Location;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

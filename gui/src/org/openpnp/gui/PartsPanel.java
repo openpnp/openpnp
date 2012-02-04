@@ -22,11 +22,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.Configuration;
-import org.openpnp.FeederLocation;
-import org.openpnp.Location;
-import org.openpnp.Part;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.FeederLocation;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.util.LengthUtil;
 
 public class PartsPanel extends JPanel {

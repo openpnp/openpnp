@@ -4,9 +4,9 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Configuration;
-import org.openpnp.Part;
-import org.openpnp.Placement;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 
 class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;

@@ -19,36 +19,46 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
-import java.util.ArrayList;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Root;
 
-/**
- * A Job specifies a list of one or more Boards to populate along with their locations on the table. 
- */
-@Root(name="openpnp-job")
-public class Job {
-	@ElementList
-	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
+public class Package {
+	@Attribute
+	private String id;
+	@Attribute(required=false)
+	private String name;
+	@Element(required=false)
+	private Outline outline;
 	
-	private boolean dirty;
+	public String getId() {
+		return id;
+	}
 	
-	public ArrayList<BoardLocation> getBoardLocations() {
-		return boardLocations;
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public void setBoardLocations(ArrayList<BoardLocation> boardLocations) {
-		this.boardLocations = boardLocations;
+	public Outline getOutline() {
+		return outline;
 	}
 
-	public boolean isDirty() {
-		return dirty;
+	public void setOutline(Outline outline) {
+		this.outline = outline;
 	}
-
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
+	
+	@Override
+	public String toString() {
+		return String.format("id %s, outline (%s)", id, outline);
 	}
 }

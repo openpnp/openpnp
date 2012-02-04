@@ -47,12 +47,12 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.Configuration;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
 /**

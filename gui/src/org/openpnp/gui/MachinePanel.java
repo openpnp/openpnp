@@ -2,7 +2,7 @@ package org.openpnp.gui;
 
 import javax.swing.JPanel;
 
-import org.openpnp.Configuration;
+import org.openpnp.model.Configuration;
 
 public class MachinePanel extends JPanel {
 	private final Configuration configuration;

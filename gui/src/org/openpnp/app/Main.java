@@ -25,10 +25,10 @@ import java.awt.EventQueue;
 
 import javax.swing.UIManager;
 
-import org.openpnp.Configuration;
 import org.openpnp.JobProcessor;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.model.Configuration;
 
 /**
  * Start with -Xdock:name=OpenPnP on Mac to make it prettier.

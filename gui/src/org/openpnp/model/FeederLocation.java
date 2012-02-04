@@ -1,5 +1,6 @@
-package org.openpnp;
+package org.openpnp.model;
 
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

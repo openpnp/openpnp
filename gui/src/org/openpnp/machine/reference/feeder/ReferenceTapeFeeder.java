@@ -23,11 +23,11 @@ package org.openpnp.machine.reference.feeder;
 
 
 
-import org.openpnp.Location;
-import org.openpnp.Part;
 import org.openpnp.gui.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

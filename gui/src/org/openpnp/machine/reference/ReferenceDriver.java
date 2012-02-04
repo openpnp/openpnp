@@ -21,7 +21,7 @@
 
 package org.openpnp.machine.reference;
 
-import org.openpnp.Part;
+import org.openpnp.model.Part;
 
 /**
  * Defines the interface for a simple driver that the ReferenceMachine can drive.

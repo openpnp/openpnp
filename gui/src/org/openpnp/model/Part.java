@@ -19,11 +19,13 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.LengthUnit;
+import org.openpnp.RequiresConfigurationResolution;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Persist;

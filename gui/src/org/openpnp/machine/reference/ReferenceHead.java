@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.LengthUnit;
-import org.openpnp.Location;
-import org.openpnp.Part;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.util.LengthUtil;

@@ -5,10 +5,10 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Configuration;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Length;
-import org.openpnp.Part;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.util.LengthUtil;
 
 class PartsTableModel extends AbstractTableModel implements ConfigurationListener {
@@ -71,7 +71,7 @@ class PartsTableModel extends AbstractTableModel implements ConfigurationListene
 				}
 			}
 			else if (columnIndex == 3) {
-				org.openpnp.Package pkg = configuration.getPackage(aValue.toString());
+				org.openpnp.model.Package pkg = configuration.getPackage(aValue.toString());
 				if (pkg == null) {
 					// TODO: dialog, package not found
 					return;

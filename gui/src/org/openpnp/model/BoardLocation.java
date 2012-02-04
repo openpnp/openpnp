@@ -1,6 +1,6 @@
-package org.openpnp;
+package org.openpnp.model;
 
-import org.openpnp.Board.Side;
+import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 

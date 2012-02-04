@@ -2,9 +2,9 @@ package org.openpnp.gui;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.BoardLocation;
-import org.openpnp.Job;
-import org.openpnp.Location;
+import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Job;
+import org.openpnp.model.Location;
 
 class BoardsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Board", "X Pos.",

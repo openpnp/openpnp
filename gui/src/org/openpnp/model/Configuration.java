@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,6 +30,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import org.openpnp.ConfigurationListener;
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;

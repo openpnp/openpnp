@@ -1,4 +1,4 @@
-package org.openpnp;
+package org.openpnp.model;
 
 import org.simpleframework.xml.Attribute;
 

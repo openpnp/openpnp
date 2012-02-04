@@ -28,9 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.Configuration;
 import org.openpnp.LengthUnit;
 import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;

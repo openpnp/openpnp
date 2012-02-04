@@ -1,7 +1,7 @@
 package org.openpnp.gui;
 
-import org.openpnp.Configuration;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.model.Configuration;
 
 public interface WizardContainer {
 	public void wizardCompleted(Wizard wizard);

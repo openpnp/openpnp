@@ -24,7 +24,7 @@ package org.openpnp.spi;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.CameraListener;
-import org.openpnp.Location;
+import org.openpnp.model.Location;
 
 /**
  * Represents a Camera attached to the system and allows a caller to retrieve images from it.

@@ -1,5 +1,7 @@
 package org.openpnp;
 
+import org.openpnp.model.Configuration;
+
 public interface ConfigurationListener {
 	public void configurationLoaded(Configuration configuration);
 	

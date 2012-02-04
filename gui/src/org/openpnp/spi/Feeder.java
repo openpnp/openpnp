@@ -21,9 +21,9 @@
 
 package org.openpnp.spi;
 
-import org.openpnp.Location;
-import org.openpnp.Part;
 import org.openpnp.gui.Wizard;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 
 
 

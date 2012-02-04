@@ -31,10 +31,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.openpnp.Part;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Part;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

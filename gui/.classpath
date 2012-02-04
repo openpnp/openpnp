@@ -23,5 +23,6 @@
 	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="lib" path="lib/simple-xml-2.6.2.jar"/>
 	<classpathentry kind="lib" path="lib/forms-1.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/beansbinding-1.2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

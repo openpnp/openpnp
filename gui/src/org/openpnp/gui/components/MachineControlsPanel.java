@@ -61,12 +61,12 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
-import org.openpnp.Configuration;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.LengthUnit;
-import org.openpnp.Location;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;

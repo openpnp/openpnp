@@ -4,8 +4,8 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Configuration;
-import org.openpnp.FeederLocation;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.FeederLocation;
 import org.openpnp.spi.Feeder;
 
 class FeederLocationsTableModel extends AbstractTableModel {

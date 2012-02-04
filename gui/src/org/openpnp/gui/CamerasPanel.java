@@ -22,8 +22,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.Configuration;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
 public class CamerasPanel extends JPanel implements WizardContainer {

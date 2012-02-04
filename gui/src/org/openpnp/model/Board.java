@@ -20,11 +20,13 @@
  */
 
 
-package org.openpnp;
+package org.openpnp.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.openpnp.RequiresConfigurationResolution;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -35,7 +37,7 @@ import org.simpleframework.xml.Root;
  * Placements that will be used to specify pick and place operations. 
  */
 @Root(name="openpnp-board")
-public class Board implements RequiresConfigurationResolution {
+public class Board extends AbstractModelObject implements RequiresConfigurationResolution {
 	public enum Side {
 		Bottom,
 		Top
@@ -57,11 +59,26 @@ public class Board implements RequiresConfigurationResolution {
 	}
 	
 	public List<Fiducial> getFiducials() {
-		return fiducials;
+		return Collections.unmodifiableList(fiducials);
+	}
+	
+	
+	public void addFiducial(Fiducial fiducial) {
+		ArrayList<Fiducial> oldValue = fiducials;
+		fiducials = new ArrayList<Fiducial>(fiducials);
+		fiducials.add(fiducial);
+		firePropertyChange("fiducials", oldValue, fiducials);
+	}
+	
+	public void removeFiducial(Fiducial fiducial) {
+		ArrayList<Fiducial> oldValue = fiducials;
+		fiducials = new ArrayList<Fiducial>(fiducials);
+		fiducials.remove(fiducial);
+		firePropertyChange("fiducials", oldValue, fiducials);
 	}
 	
 	public List<Placement> getPlacements() {
-		return placements;
+		return Collections.unmodifiableList(placements);
 	}
 	
 	public Outline getOutline() {
@@ -69,7 +86,9 @@ public class Board implements RequiresConfigurationResolution {
 	}
 
 	public void setOutline(Outline outline) {
+		Outline oldValue = this.outline;
 		this.outline = outline;
+		firePropertyChange("outline", oldValue, this.outline);
 	}
 
 	public String getName() {
@@ -77,14 +96,8 @@ public class Board implements RequiresConfigurationResolution {
 	}
 
 	public void setName(String name) {
+		String oldValue = this.name;
 		this.name = name;
-	}
-
-	public void setFiducials(ArrayList<Fiducial> fiducials) {
-		this.fiducials = fiducials;
-	}
-
-	public void setPlacements(ArrayList<Placement> placements) {
-		this.placements = placements;
+		firePropertyChange("name", oldValue, this.name);
 	}
 }

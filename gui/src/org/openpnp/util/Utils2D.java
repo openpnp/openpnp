@@ -21,8 +21,8 @@
 
 package org.openpnp.util;
 
-import org.openpnp.Outline;
-import org.openpnp.Point;
+import org.openpnp.model.Outline;
+import org.openpnp.model.Point;
 
 
 public class Utils2D {

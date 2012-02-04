@@ -23,8 +23,8 @@ package org.openpnp.spi;
 
 import java.util.List;
 
-import org.openpnp.Location;
-import org.openpnp.Part;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 
 
 /**

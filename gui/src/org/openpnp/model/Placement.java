@@ -19,9 +19,10 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
-import org.openpnp.Board.Side;
+import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;

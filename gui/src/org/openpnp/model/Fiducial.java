@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
 /**
  * A Fiducial is an identifying mark on a Board that can be used to identify the offset and rotation of the board

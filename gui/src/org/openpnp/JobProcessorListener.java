@@ -23,6 +23,9 @@ package org.openpnp;
 
 import org.openpnp.JobProcessor.JobError;
 import org.openpnp.JobProcessor.JobState;
+import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Job;
+import org.openpnp.model.Placement;
 
 /**
  * Allows an interested listener to receive events as the JobProcessor does it's work. Methods in

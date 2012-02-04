@@ -19,56 +19,27 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.openpnp.LengthUnit;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.ElementList;
 
 /**
- * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z
- * axis.
+ * An Outline is a polygon shape with attached units that can be used for bounds checking
+ * and can be drawn to a Graphics for display to the user.
  */
-public class Location {
-	@Attribute(required=false)
+public class Outline {
+	@ElementList(inline=true)
+	private List<Point> points = new ArrayList<Point>();
+	@Attribute
 	private LengthUnit units;
-	@Attribute(required=false)
-	private double x;
-	@Attribute(required=false)
-	private double y;
-	@Attribute(required=false)
-	private double z;
-	@Attribute(required=false)
-	private double rotation;
 	
-	public double getX() {
-		return x;
-	}
-	
-	public void setX(double x) {
-		this.x = x;
-	}
-	
-	public double getY() {
-		return y;
-	}
-	
-	public void setY(double y) {
-		this.y = y;
-	}
-	
-	public double getZ() {
-		return z;
-	}
-
-	public void setZ(double z) {
-		this.z = z;
-	}
-
-	public double getRotation() {
-		return rotation;
-	}
-
-	public void setRotation(double rotation) {
-		this.rotation = rotation;
+	public void addPoint(double x, double y) {
+		points.add(new Point(x, y));
 	}
 	
 	public LengthUnit getUnits() {
@@ -78,9 +49,22 @@ public class Location {
 	public void setUnits(LengthUnit units) {
 		this.units = units;
 	}
-
+	
+	public List<Point> getPoints() {
+		return points;
+	}
+	
 	@Override
 	public String toString() {
-		return String.format("units %s, x %f, y %f, z %f, rotation %f", units, x, y, z, rotation);
+		StringBuffer sb = new StringBuffer();
+		
+		for (Point point : points) {
+			sb.append(point.x + "," + point.y + " -> ");
+		}
+		if (points.size() > 0) {
+			sb.append(points.get(0).x + "," + points.get(0).y);
+		}
+		
+		return String.format("units %s, points (%s)", units, sb);
 	}
 }

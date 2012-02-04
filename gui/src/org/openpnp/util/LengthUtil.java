@@ -23,9 +23,9 @@ package org.openpnp.util;
 
 import org.openpnp.Length;
 import org.openpnp.LengthUnit;
-import org.openpnp.Location;
-import org.openpnp.Outline;
-import org.openpnp.Point;
+import org.openpnp.model.Location;
+import org.openpnp.model.Outline;
+import org.openpnp.model.Point;
 
 // TODO move these into their respective classes
 public class LengthUtil {

@@ -26,6 +26,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openpnp.model.Board;
+import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.FeederLocation;
+import org.openpnp.model.Job;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
