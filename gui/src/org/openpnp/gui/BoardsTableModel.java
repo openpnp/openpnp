@@ -8,7 +8,7 @@ import org.openpnp.model.Location;
 
 class BoardsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Board", "X Pos.",
-			"Y Pos.", "Rotation" };
+			"Y Pos.", "Z Pos.", "Rotation" };
 	private Job job;
 
 	public void setJob(Job job) {
@@ -73,6 +73,8 @@ class BoardsTableModel extends AbstractTableModel {
 		case 2:
 			return String.format("%2.3f", loc.getY());
 		case 3:
+			return String.format("%2.3f", loc.getZ());
+		case 4:
 			return String.format("%2.3f", loc.getRotation());
 		default:
 			return null;
