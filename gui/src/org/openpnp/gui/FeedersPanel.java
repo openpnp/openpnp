@@ -8,6 +8,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -17,7 +18,6 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
@@ -78,9 +78,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		add(splitPane, BorderLayout.CENTER);
 		
 		configurationPanel = new JPanel();
-		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		
+		JPanel panel_2 = new JPanel(new BorderLayout());
+		panel_2.setBorder(BorderFactory.createTitledBorder("Configuration"));
+		panel_2.add(new JScrollPane(configurationPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
+		
 		splitPane.setLeftComponent(new JScrollPane(table));
-		splitPane.setRightComponent(configurationPanel);
+		splitPane.setRightComponent(panel_2);
 		configurationPanel.setLayout(new BorderLayout(0, 0));
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
