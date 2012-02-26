@@ -96,6 +96,7 @@ public class MainFrame extends JFrame {
 		});
 
 		setBounds(100, 100, 1280, 1024);
+//		setBounds(100, 100, 1024, 768);
 		
 		machinePanel = new MachinePanel(configuration);
 		jobPanel = new JobPanel(configuration, jobProcessor, this);
@@ -265,12 +266,14 @@ public class MainFrame extends JFrame {
 		}
 		catch (Exception e) {
 			// TODO: dialog, maybe try to recover
+			e.printStackTrace();
 		}
 		// Attempt to stop the machine on quit
 		try {
 			configuration.getMachine().setEnabled(false);
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 		}
 		System.exit(0);
 		return true;

@@ -4,8 +4,12 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Part;
+import org.simpleframework.xml.Attribute;
 
 public class NullDriver implements ReferenceDriver {
+	
+	@Attribute(required=false)
+	private String nullDriver;
 
 	@Override
 	public void home(ReferenceHead head, double feedRateMmPerMinute)

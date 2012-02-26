@@ -3,10 +3,6 @@ package org.openpnp.model;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-/**
- * @author lobas_av
- * 
- */
 public abstract class AbstractModelObject {
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
 			this);

@@ -33,26 +33,6 @@ import org.openpnp.util.LengthUtil;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-/**
-<pre>
-{@code
-<!--
-	pickDwellMilliseconds: number of milliseconds to dwell after applying vacuum
-		for a pick operation and before moving off the part.
-	feedRate: Feed rate in machine units per minute for movement operations.
--->
-<Configuration pickDwellMilliseconds="200" feedRate="15000">
-	<SoftLimits
-		units="Millimeters"
-		xMinimum="0" xMaximum="400" 
-		yMinimum="0" yMaximum="600"  
-		zMinimum="0" zMaximum="100"  
-		cMinimum="0" cMaximum="180" 
-	/> 
-</Configuration>
-}
-</pre>
- */
 public class ReferenceHead implements Head {
 	public static final String PIN_ACTUATOR_NAME = "Pin";
 	
@@ -64,6 +44,8 @@ public class ReferenceHead implements Head {
 	private String id;
 	@Attribute
 	private int pickDwellMilliseconds;
+	@Attribute(required=false)
+	private int placeDwellMilliseconds;
 	@Attribute
 	private double feedRate;
 	@Element
@@ -143,6 +125,7 @@ public class ReferenceHead implements Head {
 	public void place() throws Exception {
 		machine.getDriver().place(this);
 		machine.fireMachineHeadActivity(machine, this);
+		Thread.sleep(placeDwellMilliseconds);
 	}
 
 	@Override

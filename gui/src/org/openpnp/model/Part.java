@@ -37,7 +37,7 @@ import org.simpleframework.xml.core.Persist;
  * and is placed at a Placement as part of a Job. Parts can be used across many boards and should generally represent
  * a single part in the real world.
  */
-public class Part implements RequiresConfigurationResolution {
+public class Part extends AbstractModelObject implements RequiresConfigurationResolution {
 	@Attribute
 	private String id;
 	@Attribute(required=false)
@@ -72,7 +72,9 @@ public class Part implements RequiresConfigurationResolution {
 	}
 
 	public void setId(String id) {
+		Object oldValue = this.id;
 		this.id = id;
+		firePropertyChange("id", oldValue, id);
 	}
 
 	public String getName() {
@@ -80,7 +82,9 @@ public class Part implements RequiresConfigurationResolution {
 	}
 
 	public void setName(String name) {
+		Object oldValue = this.name;
 		this.name = name;
+		firePropertyChange("name", oldValue, name);
 	}
 	
 	public LengthUnit getHeightUnits() {
@@ -88,7 +92,9 @@ public class Part implements RequiresConfigurationResolution {
 	}
 
 	public void setHeightUnits(LengthUnit heightUnits) {
+		Object oldValue = this.heightUnits;
 		this.heightUnits = heightUnits;
+		firePropertyChange("heightUnits", oldValue, heightUnits);
 	}
 
 	public double getHeight() {
@@ -96,7 +102,9 @@ public class Part implements RequiresConfigurationResolution {
 	}
 
 	public void setHeight(double height) {
+		Object oldValue = this.height;
 		this.height = height;
+		firePropertyChange("height", oldValue, height);
 	}
 	
 	public List<FeederLocation> getFeederLocations() {
