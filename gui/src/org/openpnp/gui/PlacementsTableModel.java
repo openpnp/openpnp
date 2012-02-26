@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -13,14 +14,14 @@ class PlacementsTableModel extends AbstractTableModel {
 	
 	private String[] columnNames = new String[] { "Part", "Package",
 			"X Pos.", "Y Pos.", "Rotation" };
-	private List<Placement> placements;
+	private Board board;
 
 	public PlacementsTableModel(Configuration configuration) {
 		this.configuration = configuration;
 	}
 
-	public void setPlacements(List<Placement> placements) {
-		this.placements = placements;
+	public void setBoard(Board board) {
+		this.board = board;
 		fireTableDataChanged();
 	}
 
@@ -34,7 +35,7 @@ class PlacementsTableModel extends AbstractTableModel {
 	}
 
 	public int getRowCount() {
-		return (placements == null) ? 0 : placements.size();
+		return (board == null) ? 0 : board.getPlacements().size();
 	}
 	
 	@Override
@@ -48,7 +49,7 @@ class PlacementsTableModel extends AbstractTableModel {
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
-			Placement placement = placements.get(rowIndex);
+			Placement placement = board.getPlacements().get(rowIndex);
 			if (columnIndex == 0) {
 				Part part = configuration.getPart(aValue.toString());
 				if (part == null) {
@@ -73,12 +74,12 @@ class PlacementsTableModel extends AbstractTableModel {
 	}
 
 	public Object getValueAt(int row, int col) {
-		Placement placement = placements.get(row);
+		Placement placement = board.getPlacements().get(row);
 		switch (col) {
 		case 0:
-			return placement.getPart().getId();
+			return placement.getPart() == null ? "" : placement.getPart().getId();
 		case 1:
-			 return placement.getPart().getPackage().getId();
+			 return placement.getPart() == null ? "" : placement.getPart().getPackage().getId();
 		case 2:
 			return String.format("%2.3f", placement.getLocation().getX());
 		case 3:

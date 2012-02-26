@@ -136,10 +136,6 @@ public class Configuration {
 		holder.machine = machine;
 		Serializer serializer = createSerializer();
 		serializer.write(holder, file);
-		
-//		StringWriter writer = new StringWriter();
-//		serializer.write(holder, writer);
-//		System.out.println(writer.toString());
 	}
 	
 	private void loadPackages(File file) throws Exception {
@@ -155,10 +151,6 @@ public class Configuration {
 		PackagesConfigurationHolder holder = new PackagesConfigurationHolder();
 		holder.packages = new ArrayList<Package>(packages.values());
 		serializer.write(holder, file);
-		
-//		StringWriter writer = new StringWriter();
-//		serializer.write(holder, writer);
-//		System.out.println(writer.toString());
 	}
 	
 	private void loadParts(File file) throws Exception {
@@ -175,15 +167,12 @@ public class Configuration {
 		PartsConfigurationHolder holder = new PartsConfigurationHolder();
 		holder.parts = new ArrayList<Part>(parts.values());
 		serializer.write(holder, file);
-
-//		StringWriter writer = new StringWriter();
-//		serializer.write(holder, writer);
-//		System.out.println(writer.toString());
 	}
 	
 	public Job loadJob(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		Job job = serializer.read(Job.class, file);
+		job.setFile(file);
 		
 		// Once the Job is loaded we need to resolve any Boards that it
 		// references.
@@ -205,10 +194,6 @@ public class Configuration {
 			boardLocation.setBoard(board);
 		}
 		
-//		StringWriter writer = new StringWriter();
-//		serializer.write(job, writer);
-//		System.out.println(writer.toString());
-		
 		return job;
 	}
 	
@@ -221,11 +206,7 @@ public class Configuration {
 		Serializer serializer = createSerializer();
 		Board board = serializer.read(Board.class, file);
 		board.resolve(this);
-		
-//		StringWriter writer = new StringWriter();
-//		serializer.write(board, writer);
-//		System.out.println(writer.toString());
-		
+		board.setFile(file);
 		return board;
 	}
 	

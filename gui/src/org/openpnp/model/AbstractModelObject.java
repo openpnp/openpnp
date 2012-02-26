@@ -31,4 +31,34 @@ public abstract class AbstractModelObject {
 		propertyChangeSupport.firePropertyChange(propertyName, oldValue,
 				newValue);
 	}
+
+	protected void fireIndexedPropertyChange(String propertyName, int index,
+			boolean oldValue, boolean newValue) {
+		propertyChangeSupport.fireIndexedPropertyChange(propertyName, index,
+				oldValue, newValue);
+	}
+
+	protected void fireIndexedPropertyChange(String propertyName, int index,
+			int oldValue, int newValue) {
+		propertyChangeSupport.fireIndexedPropertyChange(propertyName, index,
+				oldValue, newValue);
+	}
+
+	protected void fireIndexedPropertyChange(String propertyName, int index,
+			Object oldValue, Object newValue) {
+		propertyChangeSupport.fireIndexedPropertyChange(propertyName, index,
+				oldValue, newValue);
+	}
+
+	protected void firePropertyChange(String propertyName, boolean oldValue,
+			boolean newValue) {
+		propertyChangeSupport.firePropertyChange(propertyName, oldValue,
+				newValue);
+	}
+
+	protected void firePropertyChange(String propertyName, int oldValue,
+			int newValue) {
+		propertyChangeSupport.firePropertyChange(propertyName, oldValue,
+				newValue);
+	}
 }

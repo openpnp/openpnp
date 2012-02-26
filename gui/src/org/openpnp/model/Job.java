@@ -21,34 +21,49 @@
 
 package org.openpnp.model;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 /**
- * A Job specifies a list of one or more Boards to populate along with their locations on the table. 
+ * A Job specifies a list of one or more BoardLocations. 
  */
 @Root(name="openpnp-job")
-public class Job {
+public class Job extends AbstractModelObject {
 	@ElementList
 	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
 	
-	private boolean dirty;
+	private transient File file;
 	
-	public ArrayList<BoardLocation> getBoardLocations() {
-		return boardLocations;
+	public List<BoardLocation> getBoardLocations() {
+		return Collections.unmodifiableList(boardLocations);
 	}
 
-	public void setBoardLocations(ArrayList<BoardLocation> boardLocations) {
-		this.boardLocations = boardLocations;
+	public void addBoardLocation(BoardLocation boardLocation) {
+		Object oldValue = boardLocations;
+		boardLocations = new ArrayList<BoardLocation>(boardLocations);
+		boardLocations.add(boardLocation);
+		firePropertyChange("boardLocations", oldValue, boardLocations);
+	}
+	
+	public void removeBoardLocation(BoardLocation boardLocation) {
+		Object oldValue = boardLocations;
+		boardLocations = new ArrayList<BoardLocation>(boardLocations);
+		boardLocations.remove(boardLocation);
+		firePropertyChange("boardLocations", oldValue, boardLocations);
 	}
 
-	public boolean isDirty() {
-		return dirty;
+	public File getFile() {
+		return file;
 	}
 
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
+	public void setFile(File file) {
+		Object oldValue = this.file;
+		this.file = file;
+		firePropertyChange("file", oldValue, file);
 	}
 }

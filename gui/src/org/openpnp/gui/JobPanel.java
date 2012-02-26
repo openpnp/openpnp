@@ -6,7 +6,6 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -27,7 +26,10 @@ import org.openpnp.JobProcessor.JobState;
 import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
+import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -41,21 +43,49 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	final private Configuration configuration;
 	final private JobProcessor jobProcessor;
 	final private Frame frame;
+	final private MachineControlsPanel machineControlsPanel;
 	
 	private BoardsTableModel boardsTableModel;
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardsTable;
 	private JTable placementsTable;
 	
-	public JobPanel(Configuration configuration, JobProcessor jobProcessor, Frame frame) {
+	private ActionGroup boardLocationSelectionActionGroup;
+	private ActionGroup placementSelectionActionGroup;
+	
+	public JobPanel(Configuration configuration, 
+			JobProcessor jobProcessor, 
+			Frame frame, 
+			MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
 		this.jobProcessor = jobProcessor;
 		this.frame = frame;
+		this.machineControlsPanel = machineControlsPanel;
+		
+		boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction, 
+				orientBoardAction,
+				newPlacementAction);
+		boardLocationSelectionActionGroup.setEnabled(false);
+		
+		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
+				orientPlacementAction);
+		placementSelectionActionGroup.setEnabled(false);
 		
 		boardsTableModel = new BoardsTableModel();
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		placementsTable = new JTable(placementsTableModel);
+		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting()) {
+					return;
+				}
+				placementSelectionActionGroup.setEnabled(getSelectedPlacement() != null);
+			}
+		});
 
 		boardsTable = new JTable(boardsTableModel);
 		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -66,14 +96,13 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				int index = boardsTable.getSelectedRow();
-				if (index == -1) {
-					placementsTableModel.setPlacements(null);
+				BoardLocation boardLocation = getSelectedBoardLocation();
+				boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
+				if (boardLocation == null) {
+					placementsTableModel.setBoard(null);
 				}
 				else {
-					index = boardsTable.convertRowIndexToModel(index);
-					List<Placement> placements = JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index).getBoard().getPlacements();
-					placementsTableModel.setPlacements(placements);
+					placementsTableModel.setBoard(boardLocation.getBoard());
 				}
 			}
 		});
@@ -96,6 +125,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		toolBar.add(new JButton(removeBoardAction));
 		toolBar.addSeparator();
 		toolBar.add(new JButton(orientBoardAction));
+		toolBar.addSeparator();
+		toolBar.add(new JButton(newPlacementAction));
+		toolBar.add(new JButton(removePlacementAction));
+		toolBar.addSeparator();
+		toolBar.add(new JButton(orientPlacementAction));
 		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setBorder(null);
@@ -112,9 +146,40 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		configuration.addListener(this);
 	}
 	
+	public BoardLocation getSelectedBoardLocation() {
+		int index = boardsTable.getSelectedRow();
+		if (index == -1) {
+			return null;
+		}
+		else {
+			index = boardsTable.convertRowIndexToModel(index);
+			return JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
+		}
+	}
+	
+	public Placement getSelectedPlacement() {
+		if (getSelectedBoardLocation() == null) {
+			return null;
+		}
+		int index = placementsTable.getSelectedRow();
+		if (index == -1) {
+			return null;
+		}
+		else {
+			index = placementsTable.convertRowIndexToModel(index);
+			return getSelectedBoardLocation().getBoard().getPlacements().get(index);
+		}
+	}
+	
 	public void configurationLoaded(Configuration configuration) {
 		configuration.getMachine().addListener(machineListener);
 		updateJobActions();
+		
+		// Create an empty Job if one is not loaded
+		if (jobProcessor.getJob() == null) {
+			Job job = new Job();
+			jobProcessor.load(job);
+		}
 	}
 	
 	/**
@@ -252,6 +317,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			fileDialog.setVisible(true);
 			try {
 				String filename = fileDialog.getFile();
+				if (filename == null) {
+					return;
+				}
 				if (!filename.toLowerCase().endsWith(".board.xml")) {
 					filename = filename + ".board.xml";
 				}
@@ -278,8 +346,17 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			});
 			fileDialog.setVisible(true);
 			try {
+				if (fileDialog.getFile() == null) {
+					return;
+				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						fileDialog.getFile());
+			
+				Board board = configuration.getBoard(file);
+				BoardLocation boardLocation = new BoardLocation(board);
+				boardLocation.getLocation().setUnits(configuration.getMachine().getNativeUnits());
+				jobProcessor.getJob().addBoardLocation(boardLocation);
+				boardsTableModel.fireTableDataChanged();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -291,12 +368,50 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action removeBoardAction = new AbstractAction("Remove Board") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			int index = boardsTable.getSelectedRow();
+			if (index != -1) {
+				index = boardsTable.convertRowIndexToModel(index);
+				BoardLocation boardLocation = JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
+				JobPanel.this.jobProcessor.getJob().removeBoardLocation(boardLocation);
+				boardsTableModel.fireTableDataChanged();
+			}
 		}
 	};
 
 	public Action orientBoardAction = new AbstractAction("Set Board Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			getSelectedBoardLocation().setLocation(machineControlsPanel.getDisplayedLocation());
+			boardsTableModel.fireTableDataChanged();
+		}
+	};
+	
+	public Action newPlacementAction = new AbstractAction("New Placement") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			BoardLocation boardLocation = getSelectedBoardLocation();
+			Placement placement = new Placement();
+			placement.getLocation().setUnits(configuration.getMachine().getNativeUnits());
+			boardLocation.getBoard().addPlacement(placement);
+			placementsTableModel.fireTableDataChanged();
+		}
+	};
+	
+	public Action removePlacementAction = new AbstractAction("Remove Placement") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			BoardLocation boardLocation = getSelectedBoardLocation();
+			Placement placement = getSelectedPlacement();
+			boardLocation.getBoard().removePlacement(placement);
+			placementsTableModel.fireTableDataChanged();
+		}
+	};
+	
+	public Action orientPlacementAction = new AbstractAction("Set Placement Location") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			getSelectedPlacement().setLocation(machineControlsPanel.getDisplayedLocation());
+			placementsTableModel.fireTableDataChanged();
 		}
 	};
 	
@@ -308,7 +423,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void jobLoaded(Job job) {
-			placementsTableModel.setPlacements(null);
+			placementsTableModel.setBoard(null);
 			boardsTableModel.setJob(jobProcessor.getJob());
 			updateJobActions();
 		}

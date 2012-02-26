@@ -22,6 +22,7 @@
 
 package org.openpnp.model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +51,8 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	private ArrayList<Fiducial> fiducials = new ArrayList<Fiducial>();
 	@ElementList
 	private ArrayList<Placement> placements = new ArrayList<Placement>();
+	
+	private transient File file;
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
@@ -81,6 +84,20 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		return Collections.unmodifiableList(placements);
 	}
 	
+	public void addPlacement(Placement placement) {
+		Object oldValue = placements;
+		placements = new ArrayList<Placement>(placements);
+		placements.add(placement);
+		firePropertyChange("placements", oldValue, placements);
+	}
+	
+	public void removePlacement(Placement placement) {
+		Object oldValue = placements;
+		placements = new ArrayList<Placement>(placements);
+		placements.remove(placement);
+		firePropertyChange("placements", oldValue, placements);
+	}
+	
 	public Outline getOutline() {
 		return outline;
 	}
@@ -96,8 +113,18 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	}
 
 	public void setName(String name) {
-		String oldValue = this.name;
+		Object oldValue = this.name;
 		this.name = name;
 		firePropertyChange("name", oldValue, this.name);
+	}
+	
+	public File getFile() {
+		return file;
+	}
+	
+	public void setFile(File file) {
+		Object oldValue = this.file;
+		this.file = file;
+		firePropertyChange("file", oldValue, file);
 	}
 }

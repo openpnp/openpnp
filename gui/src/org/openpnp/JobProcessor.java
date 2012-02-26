@@ -101,6 +101,8 @@ public class JobProcessor implements Runnable {
 		return state;
 	}
 	
+	// TODO: Change this, and most of the other properties on here to bound
+	// properties.
 	public void load(Job job) {
 		stop();
 		this.job = job;

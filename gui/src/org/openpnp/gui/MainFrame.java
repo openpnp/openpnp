@@ -99,7 +99,7 @@ public class MainFrame extends JFrame {
 //		setBounds(100, 100, 1024, 768);
 		
 		machinePanel = new MachinePanel(configuration);
-		jobPanel = new JobPanel(configuration, jobProcessor, this);
+		jobPanel = new JobPanel(configuration, jobProcessor, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, machineControlsPanel);
 		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
 		camerasPanel = new CamerasPanel(configuration, machineControlsPanel);

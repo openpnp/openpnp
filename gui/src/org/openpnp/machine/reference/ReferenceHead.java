@@ -125,7 +125,6 @@ public class ReferenceHead implements Head {
 	public void place() throws Exception {
 		machine.getDriver().place(this);
 		machine.fireMachineHeadActivity(machine, this);
-		Thread.sleep(placeDwellMilliseconds);
 	}
 
 	@Override
@@ -137,6 +136,7 @@ public class ReferenceHead implements Head {
 		// place the part
 		machine.getDriver().place(this);
 		machine.fireMachineHeadActivity(machine, this);
+		Thread.sleep(placeDwellMilliseconds);
 	}
 	
 	@Override

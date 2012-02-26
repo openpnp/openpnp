@@ -22,6 +22,7 @@
 package org.openpnp.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.LengthUnit;
@@ -108,11 +109,21 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	}
 	
 	public List<FeederLocation> getFeederLocations() {
-		return feederLocations;
+		return Collections.unmodifiableList(feederLocations);
 	}
-
-	public void setFeederLocations(ArrayList<FeederLocation> feederLocations) {
-		this.feederLocations = feederLocations;
+	
+	public void addFeederLocation(FeederLocation feederLocation) {
+		Object oldValue = feederLocations;
+		feederLocations = new ArrayList<FeederLocation>(feederLocations);
+		feederLocations.add(feederLocation);
+		firePropertyChange("feederLocations", oldValue, feederLocations);
+	}
+	
+	public void removeFeederLocation(FeederLocation feederLocation) {
+		Object oldValue = feederLocations;
+		feederLocations = new ArrayList<FeederLocation>(feederLocations);
+		feederLocations.remove(feederLocation);
+		firePropertyChange("feederLocations", oldValue, feederLocations);
 	}
 	
 	public Package getPackage() {
@@ -120,7 +131,9 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	}
 
 	public void setPackage(Package packag) {
+		Object oldValue = this.packag;
 		this.packag = packag;
+		firePropertyChange("package", oldValue, packag);
 	}
 
 	@Override

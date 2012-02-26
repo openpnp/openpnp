@@ -33,13 +33,13 @@ import org.simpleframework.xml.core.Persist;
  * along with information about how to place it. 
  * @author jason
  */
-public class Placement implements RequiresConfigurationResolution {
+public class Placement extends AbstractModelObject implements RequiresConfigurationResolution {
 	@Attribute
 	private String id;
 	@Element
-	private Location location;
+	private Location location = new Location();
 	@Attribute
-	private Side side;
+	private Side side = Side.Top;
 	private Part part;
 	
 	@Attribute
@@ -61,7 +61,9 @@ public class Placement implements RequiresConfigurationResolution {
 	}
 
 	public void setPart(Part part) {
+		Object oldValue = this.part;
 		this.part = part;
+		firePropertyChange("part", oldValue, part);
 	}
 
 	public String getId() {
@@ -69,7 +71,9 @@ public class Placement implements RequiresConfigurationResolution {
 	}
 
 	public void setId(String id) {
+		Object oldValue = this.id;
 		this.id = id;
+		firePropertyChange("id", oldValue, id);
 	}
 
 	public Location getLocation() {
@@ -77,7 +81,9 @@ public class Placement implements RequiresConfigurationResolution {
 	}
 
 	public void setLocation(Location location) {
+		Object oldValue = this.location;
 		this.location = location;
+		firePropertyChange("location", oldValue, location);
 	}
 
 	public Side getSide() {
@@ -85,6 +91,8 @@ public class Placement implements RequiresConfigurationResolution {
 	}
 
 	public void setSide(Side side) {
+		Object oldValue = this.side;
 		this.side = side;
+		firePropertyChange("side", oldValue, side);
 	}
 }

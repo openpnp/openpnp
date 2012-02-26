@@ -28,7 +28,7 @@ import org.simpleframework.xml.Attribute;
  * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z
  * axis.
  */
-public class Location {
+public class Location extends AbstractModelObject {
 	@Attribute(required=false)
 	private LengthUnit units;
 	@Attribute(required=false)
@@ -45,7 +45,9 @@ public class Location {
 	}
 	
 	public void setX(double x) {
+		double oldValue = this.x;
 		this.x = x;
+		firePropertyChange("x", oldValue, x);
 	}
 	
 	public double getY() {
@@ -53,7 +55,9 @@ public class Location {
 	}
 	
 	public void setY(double y) {
+		double oldValue = this.y;
 		this.y = y;
+		firePropertyChange("y", oldValue, y);
 	}
 	
 	public double getZ() {
@@ -61,7 +65,9 @@ public class Location {
 	}
 
 	public void setZ(double z) {
+		double oldValue = this.z;
 		this.z = z;
+		firePropertyChange("z", oldValue, z);
 	}
 
 	public double getRotation() {
@@ -69,7 +75,9 @@ public class Location {
 	}
 
 	public void setRotation(double rotation) {
+		double oldValue = this.rotation;
 		this.rotation = rotation;
+		firePropertyChange("rotation", oldValue, rotation);
 	}
 	
 	public LengthUnit getUnits() {
@@ -77,7 +85,9 @@ public class Location {
 	}
 
 	public void setUnits(LengthUnit units) {
+		LengthUnit oldValue = this.units;
 		this.units = units;
+		firePropertyChange("units", oldValue, units);
 	}
 
 	@Override
