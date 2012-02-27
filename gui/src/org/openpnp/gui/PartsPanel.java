@@ -200,6 +200,7 @@ public class PartsPanel extends JPanel {
 			FeederLocation feederLocation = new FeederLocation();
 			getSelectedPart().addFeederLocation(feederLocation);
 			feederLocationsTableModel.fireTableDataChanged();
+			configuration.setDirty(true);
 		}
 	};
 	

@@ -206,8 +206,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					"Save " + name + "?", 
 					JOptionPane.YES_NO_CANCEL_OPTION);
 			if (result == JOptionPane.YES_OPTION) {
-				saveJob();
-				return true;
+				return saveJob();
 			}
 			else if (result == JOptionPane.CANCEL_OPTION) {
 				return false;
@@ -216,22 +215,23 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		return true;
 	}
 	
-	private void saveJob() {
+	private boolean saveJob() {
 		if (jobProcessor.getJob().getFile() == null) {
-			saveJobAs();
+			return saveJobAs();
 		}
 		else {
 			try {
 				configuration.saveJob(jobProcessor.getJob(), jobProcessor.getJob().getFile());
+				return true;
 			}
 			catch (Exception e) {
-				e.printStackTrace();
-				MessageBoxes.errorBox(JobPanel.this, "Unable to save job.", e.getMessage());
+				MessageBoxes.errorBox(JobPanel.this, "Job Save Error", e.getMessage());
+				return false;
 			}
 		}
 	}
 	
-	private void saveJobAs() {
+	private boolean saveJobAs() {
 		FileDialog fileDialog = new FileDialog(frame, "Save Job As...", FileDialog.SAVE);
 		fileDialog.setFilenameFilter(new FilenameFilter() {
 			@Override
@@ -243,7 +243,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		try {
 			String filename = fileDialog.getFile();
 			if (filename == null) {
-				return;
+				return false;
 			}
 			if (!filename.toLowerCase().endsWith(".job.xml")) {
 				filename = filename + ".job.xml";
@@ -251,10 +251,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			File file = new File(new File(fileDialog.getDirectory()),
 					filename);
 			configuration.saveJob(jobProcessor.getJob(), file);
+			return true;
 		}
 		catch (Exception e) {
-			e.printStackTrace();
-			MessageBoxes.errorBox(JobPanel.this, "Unable to save job.", e.getMessage());
+			MessageBoxes.errorBox(JobPanel.this, "Job Save Error", e.getMessage());
+			return false;
 		}
 	}
 	

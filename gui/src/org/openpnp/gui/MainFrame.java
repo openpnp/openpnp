@@ -51,6 +51,7 @@ import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
@@ -264,12 +265,11 @@ public class MainFrame extends JFrame {
 		try {
 			if (configuration.isDirty()) {
 				configuration.save("config");
-				System.out.println("Configuration saved.");
 			}
 		}
 		catch (Exception e) {
-			// TODO: dialog, maybe try to recover
-			e.printStackTrace();
+			MessageBoxes.errorBox(MainFrame.this, "Configuration Save Error", e.getMessage());
+			return false;
 		}
 		if (!boardsPanel.checkForModifications()) {
 			return false;

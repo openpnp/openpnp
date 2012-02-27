@@ -93,10 +93,16 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	public Package getPackage(String id) {
+		if (id == null) {
+			return null;
+		}
 		return packages.get(id.toUpperCase());
 	}
 	
 	public Part getPart(String id) {
+		if (id == null) {
+			return null;
+		}
 		return parts.get(id.toUpperCase());
 	}
 	

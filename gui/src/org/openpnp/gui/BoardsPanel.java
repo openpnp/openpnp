@@ -131,8 +131,8 @@ public class BoardsPanel extends JPanel {
 						configuration.saveBoard(board);
 					}
 					catch (Exception e) {
-						e.printStackTrace();
-						MessageBoxes.errorBox(BoardsPanel.this, "Unable to save board", e.getMessage());
+						MessageBoxes.errorBox(BoardsPanel.this, "Board Save Error", e.getMessage());
+						return false;
 					}
 				}
 				else if (result == JOptionPane.CANCEL_OPTION) {
