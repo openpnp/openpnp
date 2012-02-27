@@ -93,7 +93,7 @@ public class ResourceUtils {
     }
 
 
-    static class PathResolutionException extends RuntimeException {
+    public static class PathResolutionException extends RuntimeException {
         PathResolutionException(String msg) {
             super(msg);
         }

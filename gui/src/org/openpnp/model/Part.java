@@ -31,8 +31,6 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Persist;
 
-
-
 /**
  * A Part is a single part that can be picked and placed. It has a graphical outline, is retrieved from one or more Feeders
  * and is placed at a Placement as part of a Job. Parts can be used across many boards and should generally represent

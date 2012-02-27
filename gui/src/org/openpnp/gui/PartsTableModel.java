@@ -54,6 +54,9 @@ class PartsTableModel extends AbstractTableModel implements ConfigurationListene
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
 			if (columnIndex == 0) {
+				if (aValue == null || aValue.toString().trim().length() == 0) {
+					return;
+				}
 				parts.get(rowIndex).setId(aValue.toString());
 			}
 			else if (columnIndex == 1) {

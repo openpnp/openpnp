@@ -21,6 +21,8 @@
 
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,6 +35,7 @@ import java.util.Set;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.ResourceUtils;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -103,6 +106,7 @@ public class Configuration {
 	
 	public void addPart(Part part) {
 		parts.put(part.getId().toUpperCase(), part);
+		part.addPropertyChangeListener("id", partIdPcl);
 		dirty = true;
 	}
 	
@@ -111,6 +115,12 @@ public class Configuration {
 	}
 	
 	public Board getBoard(File file) throws Exception {
+		if (!file.exists()) {
+			Board board = new Board(file);
+			board.setName(file.getName());
+			Serializer serializer = createSerializer();
+			serializer.write(board, file);
+		}
 		file = file.getCanonicalFile();
 		if (boards.containsKey(file)) {
 			System.out.println("loaded " + file.getCanonicalPath() + " from cache");
@@ -158,7 +168,7 @@ public class Configuration {
 		PartsConfigurationHolder holder = serializer.read(PartsConfigurationHolder.class, file);
 		for (Part part : holder.parts) {
 			part.resolve(this);
-			parts.put(part.getId().toUpperCase(), part);
+			addPart(part);
 		}
 	}
 	
@@ -199,9 +209,34 @@ public class Configuration {
 		return job;
 	}
 	
-	private void saveJob(Job job, File file) {
+	public void saveJob(Job job, File file) throws Exception {
 		Serializer serializer = createSerializer();
+		Set<Board> boards = new HashSet<Board>();
 		// Fix the paths to any boards in the Job
+		for (BoardLocation boardLocation : job.getBoardLocations()) {
+			Board board = boardLocation.getBoard();
+			boards.add(board);
+			try {
+				String relativePath = ResourceUtils.getRelativePath(
+						board.getFile().getAbsolutePath(), 
+						file.getAbsolutePath(), 
+						File.separator);
+				System.out.println("Relative path is " + relativePath);
+				boardLocation.setBoardFile(relativePath);
+			}
+			catch (ResourceUtils.PathResolutionException ex) {
+				System.out.println("Unable to find relative path for board, using absolute");
+				boardLocation.setBoardFile(board.getFile().getAbsolutePath());
+			}
+		}
+		// Save boards first
+		for (Board board : boards) {
+			serializer.write(board, board.getFile());
+		}
+		// Save the job
+		serializer.write(job, file);
+		job.setFile(file);
+		job.setDirty(false);
 	}
 	
 	private Board loadBoard(File file) throws Exception {
@@ -219,6 +254,15 @@ public class Configuration {
 		Serializer serializer = new Persister(strategy, format);
 		return serializer;
 	}
+	
+	private PropertyChangeListener partIdPcl = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			Part part = (Part) evt.getSource();
+			parts.remove(part);
+			parts.put(part.getId().toUpperCase(), part);
+		}
+	};
 	
 	@Root(name="openpnp-machine")
 	public static class MachineConfigurationHolder {

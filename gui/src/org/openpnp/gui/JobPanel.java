@@ -89,6 +89,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				placementSelectionActionGroup.setEnabled(getSelectedPlacement() != null);
 			}
 		});
+		
+//		JComboBox partsComboBox = new JComboBox(new String[] { "R-0805-10K", "R-0805-1K", "R-0805-100K" });
+//		placementsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(partsComboBox));
 
 		boardsTable = new JTable(boardsTableModel);
 		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -185,9 +188,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	}
 	
-	private boolean checkIfJobNeedsSaving() {
+	public boolean checkIfJobNeedsSaving() {
 		if (jobProcessor.getJob().isDirty()) {
-			int result = JOptionPane.showConfirmDialog(frame, "Job has been modified. Would you like to save first?", "Save Job?", JOptionPane.YES_NO_CANCEL_OPTION);
+			int result = JOptionPane.showConfirmDialog(frame, "Job has been modified. Would you like to save it?", "Save Job?", JOptionPane.YES_NO_CANCEL_OPTION);
 			if (result == JOptionPane.YES_OPTION) {
 				saveJob();
 				return true;
@@ -200,11 +203,45 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	}
 	
 	private void saveJob() {
-		
+		if (jobProcessor.getJob().getFile() == null) {
+			saveJobAs();
+		}
+		else {
+			try {
+				configuration.saveJob(jobProcessor.getJob(), jobProcessor.getJob().getFile());
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				MessageBoxes.errorBox(JobPanel.this, "Unable to save job.", e.getMessage());
+			}
+		}
 	}
 	
 	private void saveJobAs() {
-		
+		FileDialog fileDialog = new FileDialog(frame, "Save Job As...", FileDialog.SAVE);
+		fileDialog.setFilenameFilter(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.toLowerCase().endsWith(".job.xml");
+			}
+		});
+		fileDialog.setVisible(true);
+		try {
+			String filename = fileDialog.getFile();
+			if (filename == null) {
+				return;
+			}
+			if (!filename.toLowerCase().endsWith(".job.xml")) {
+				filename = filename + ".job.xml";
+			}
+			File file = new File(new File(fileDialog.getDirectory()),
+					filename);
+			configuration.saveJob(jobProcessor.getJob(), file);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			MessageBoxes.errorBox(JobPanel.this, "Unable to save job.", e.getMessage());
+		}
 	}
 	
 	/**
@@ -289,12 +326,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action saveJobAction = new AbstractAction("Save Job") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			saveJob();
 		}
 	};
 
 	public Action saveJobAsAction = new AbstractAction("Save Job As...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			saveJobAs();
 		}
 	};
 
@@ -359,7 +398,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						filename);
-				System.out.println(file.toString());
+				
+				Board board = configuration.getBoard(file);
+				BoardLocation boardLocation = new BoardLocation(board);
+				boardLocation.getLocation().setUnits(configuration.getMachine().getNativeUnits());
+				jobProcessor.getJob().addBoardLocation(boardLocation);
+				boardsTableModel.fireTableDataChanged();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -424,7 +468,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			BoardLocation boardLocation = getSelectedBoardLocation();
-			Placement placement = new Placement();
+			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new placement.");
+			if (id == null) {
+				return;
+			}
+			Placement placement = new Placement(id);
 			placement.getLocation().setUnits(configuration.getMachine().getNativeUnits());
 			boardLocation.getBoard().addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();

@@ -1,7 +1,7 @@
 <openpnp-parts>
    <part id="MMBT3906-7-F" name="" height-units="Inches" height="0.03" package-id="SOT-23-3">
       <feeder-locations>
-         <feeder-location feeder-id="L6">
+         <feeder-location feeder-id="L0">
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>

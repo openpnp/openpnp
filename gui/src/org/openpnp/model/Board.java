@@ -57,6 +57,15 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	
 	private transient File file;
 	
+	private Board() {
+		
+	}
+	
+	public Board(File file) {
+		this();
+		setFile(file);
+	}
+	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		for (Placement placement : placements) {
@@ -138,7 +147,7 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		return file;
 	}
 	
-	public void setFile(File file) {
+	void setFile(File file) {
 		Object oldValue = this.file;
 		this.file = file;
 		firePropertyChange("file", oldValue, file);

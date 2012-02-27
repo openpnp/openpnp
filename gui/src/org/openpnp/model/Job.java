@@ -36,7 +36,7 @@ import org.simpleframework.xml.core.Commit;
  * A Job specifies a list of one or more BoardLocations. 
  */
 @Root(name="openpnp-job")
-public class Job extends AbstractModelObject {
+public class Job extends AbstractModelObject implements PropertyChangeListener {
 	@ElementList
 	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
 	
@@ -44,13 +44,13 @@ public class Job extends AbstractModelObject {
 	private transient boolean dirty;
 	
 	public Job() {
-		addPropertyChangeListener(dirtynessListener);
+		addPropertyChangeListener(this);
 	}
 	
 	@Commit
 	private void commit() {
 		for (BoardLocation boardLocation : boardLocations) {
-			boardLocation.addPropertyChangeListener(dirtynessListener);
+			boardLocation.addPropertyChangeListener(this);
 		}
 	}
 	
@@ -63,7 +63,7 @@ public class Job extends AbstractModelObject {
 		boardLocations = new ArrayList<BoardLocation>(boardLocations);
 		boardLocations.add(boardLocation);
 		firePropertyChange("boardLocations", oldValue, boardLocations);
-		boardLocation.addPropertyChangeListener(dirtynessListener);
+		boardLocation.addPropertyChangeListener(this);
 	}
 	
 	public void removeBoardLocation(BoardLocation boardLocation) {
@@ -71,7 +71,7 @@ public class Job extends AbstractModelObject {
 		boardLocations = new ArrayList<BoardLocation>(boardLocations);
 		boardLocations.remove(boardLocation);
 		firePropertyChange("boardLocations", oldValue, boardLocations);
-		boardLocation.removePropertyChangeListener(dirtynessListener);
+		boardLocation.removePropertyChangeListener(this);
 	}
 
 	public File getFile() {
@@ -94,12 +94,9 @@ public class Job extends AbstractModelObject {
 		firePropertyChange("dirty", oldValue, dirty);
 	}
 	
-	private PropertyChangeListener dirtynessListener = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getSource() != Job.this || !evt.getPropertyName().equals("dirty")) {
-				setDirty(true);
-			}
+	public void propertyChange(PropertyChangeEvent evt) {
+		if (evt.getSource() != Job.this || !evt.getPropertyName().equals("dirty")) {
+			setDirty(true);
 		}
-	};
+	}
 }

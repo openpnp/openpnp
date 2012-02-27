@@ -49,8 +49,13 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	@Attribute
 	private String partId;
 	
-	public Placement() {
+	private Placement() {
 		setLocation(new Location());
+	}
+	
+	public Placement(String id) {
+		this();
+		setId(id);
 	}
 	
 	@Override
@@ -77,12 +82,6 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 		Part oldValue = this.part;
 		this.part = part;
 		firePropertyChange("part", oldValue, part);
-		if (oldValue != null) {
-			oldValue.removePropertyChangeListener(this);
-		}
-		if (part != null) {
-			part.addPropertyChangeListener(this);
-		}
 	}
 
 	public String getId() {

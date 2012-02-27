@@ -86,6 +86,8 @@ public class MainFrame extends JFrame {
 		this.jobProcessor = jobProcessor;
 		this.machineControlsPanel = machineControlsPanel;
 		
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		
 		// Get handlers for quit and close in place
 		registerForMacOSXEvents();
 		addWindowListener(new WindowAdapter() {
@@ -265,6 +267,9 @@ public class MainFrame extends JFrame {
 		catch (Exception e) {
 			// TODO: dialog, maybe try to recover
 			e.printStackTrace();
+		}
+		if (!jobPanel.checkIfJobNeedsSaving()) {
+			return false;
 		}
 		// Attempt to stop the machine on quit
 		try {

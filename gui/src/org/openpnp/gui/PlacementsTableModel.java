@@ -1,7 +1,5 @@
 package org.openpnp.gui;
 
-import java.util.List;
-
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.model.Board;
@@ -12,7 +10,7 @@ import org.openpnp.model.Placement;
 class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Part", "Package",
+	private String[] columnNames = new String[] { "Id", "Part", 
 			"X Pos.", "Y Pos.", "Rotation" };
 	private Board board;
 
@@ -40,9 +38,6 @@ class PlacementsTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		if (columnIndex == 1) {
-			return false;
-		}
 		return true;
 	}
 
@@ -51,6 +46,12 @@ class PlacementsTableModel extends AbstractTableModel {
 		try {
 			Placement placement = board.getPlacements().get(rowIndex);
 			if (columnIndex == 0) {
+				if (aValue == null || aValue.toString().trim().length() == 0) {
+					return;
+				}
+				placement.setId(aValue.toString());
+			}
+			else if (columnIndex == 1) {
 				Part part = configuration.getPart(aValue.toString());
 				if (part == null) {
 					// TODO: dialog, bad part id
@@ -77,9 +78,9 @@ class PlacementsTableModel extends AbstractTableModel {
 		Placement placement = board.getPlacements().get(row);
 		switch (col) {
 		case 0:
-			return placement.getPart() == null ? "" : placement.getPart().getId();
+			 return placement.getId();
 		case 1:
-			 return placement.getPart() == null ? "" : placement.getPart().getPackage().getId();
+			return placement.getPart() == null ? "" : placement.getPart().getId();
 		case 2:
 			return String.format("%2.3f", placement.getLocation().getX());
 		case 3:
