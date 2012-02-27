@@ -48,11 +48,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	final private Frame frame;
 	final private MachineControlsPanel machineControlsPanel;
 	
-	private BoardsTableModel boardsTableModel;
+	final private static String UNTITLED = "Untitled";
+	
+	private BoardLocationsTableModel boardLocationsTableModel;
 	private PlacementsTableModel placementsTableModel;
-	private JTable boardsTable;
+	private JTable boardLocationsTable;
 	private JTable placementsTable;
 	
+	private ActionGroup jobSaveActionGroup;
 	private ActionGroup boardLocationSelectionActionGroup;
 	private ActionGroup placementSelectionActionGroup;
 	
@@ -65,6 +68,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		this.frame = frame;
 		this.machineControlsPanel = machineControlsPanel;
 		
+		jobSaveActionGroup = new ActionGroup(saveJobAction, saveJobAsAction);
+		jobSaveActionGroup.setEnabled(false);
+		
 		boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction, 
 				orientBoardAction,
 				newPlacementAction);
@@ -74,7 +80,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				orientPlacementAction);
 		placementSelectionActionGroup.setEnabled(false);
 		
-		boardsTableModel = new BoardsTableModel();
+		boardLocationsTableModel = new BoardLocationsTableModel();
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		placementsTable = new JTable(placementsTableModel);
@@ -93,10 +99,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 //		JComboBox partsComboBox = new JComboBox(new String[] { "R-0805-10K", "R-0805-1K", "R-0805-100K" });
 //		placementsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(partsComboBox));
 
-		boardsTable = new JTable(boardsTableModel);
-		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		boardLocationsTable = new JTable(boardLocationsTableModel);
+		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		boardsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		boardLocationsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting()) {
@@ -141,7 +147,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		splitPane.setBorder(null);
 		splitPane.setContinuousLayout(true);
 		splitPane.setDividerLocation(350);
-		splitPane.setLeftComponent(new JScrollPane(boardsTable));
+		splitPane.setLeftComponent(new JScrollPane(boardLocationsTable));
 		splitPane.setRightComponent(new JScrollPane(placementsTable));
 		
 		add(splitPane);
@@ -153,12 +159,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	}
 	
 	public BoardLocation getSelectedBoardLocation() {
-		int index = boardsTable.getSelectedRow();
+		int index = boardLocationsTable.getSelectedRow();
 		if (index == -1) {
 			return null;
 		}
 		else {
-			index = boardsTable.convertRowIndexToModel(index);
+			index = boardLocationsTable.convertRowIndexToModel(index);
 			return JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
 		}
 	}
@@ -188,9 +194,17 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	}
 	
-	public boolean checkIfJobNeedsSaving() {
+	public boolean checkForModifications() {
 		if (jobProcessor.getJob().isDirty()) {
-			int result = JOptionPane.showConfirmDialog(frame, "Job has been modified. Would you like to save it?", "Save Job?", JOptionPane.YES_NO_CANCEL_OPTION);
+			Job job = jobProcessor.getJob();
+			String name = (job.getFile() == null ? UNTITLED : job.getFile().getName());
+			int result = JOptionPane.showConfirmDialog(
+					frame,
+					"Do you want to save your changes to " + name + "?" +
+					"\n" +
+					"If you don't save, your changes will be lost.",
+					"Save " + name + "?", 
+					JOptionPane.YES_NO_CANCEL_OPTION);
 			if (result == JOptionPane.YES_OPTION) {
 				saveJob();
 				return true;
@@ -282,14 +296,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		Job job = jobProcessor.getJob();
 		String title = String.format("OpenPnP - %s%s",
 				job.isDirty() ? "*" : "",
-				(job.getFile() == null ? "Untitled" : job.getFile().getName()));
+				(job.getFile() == null ? UNTITLED : job.getFile().getName()));
 		frame.setTitle(title);
 	}
 	
 	public Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if (!checkIfJobNeedsSaving()) {
+			if (!checkForModifications()) {
 				return;
 			}
 			FileDialog fileDialog = new FileDialog(frame);
@@ -316,7 +330,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action newJobAction = new AbstractAction("New Job") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if (!checkIfJobNeedsSaving()) {
+			if (!checkForModifications()) {
 				return;
 			}
 			jobProcessor.load(new Job());
@@ -403,7 +417,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				BoardLocation boardLocation = new BoardLocation(board);
 				boardLocation.getLocation().setUnits(configuration.getMachine().getNativeUnits());
 				jobProcessor.getJob().addBoardLocation(boardLocation);
-				boardsTableModel.fireTableDataChanged();
+				boardLocationsTableModel.fireTableDataChanged();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -434,7 +448,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				BoardLocation boardLocation = new BoardLocation(board);
 				boardLocation.getLocation().setUnits(configuration.getMachine().getNativeUnits());
 				jobProcessor.getJob().addBoardLocation(boardLocation);
-				boardsTableModel.fireTableDataChanged();
+				boardLocationsTableModel.fireTableDataChanged();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -446,12 +460,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action removeBoardAction = new AbstractAction("Remove Board") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			int index = boardsTable.getSelectedRow();
+			int index = boardLocationsTable.getSelectedRow();
 			if (index != -1) {
-				index = boardsTable.convertRowIndexToModel(index);
+				index = boardLocationsTable.convertRowIndexToModel(index);
 				BoardLocation boardLocation = JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
 				JobPanel.this.jobProcessor.getJob().removeBoardLocation(boardLocation);
-				boardsTableModel.fireTableDataChanged();
+				boardLocationsTableModel.fireTableDataChanged();
 			}
 		}
 	};
@@ -460,7 +474,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			getSelectedBoardLocation().setLocation(machineControlsPanel.getDisplayedLocation());
-			boardsTableModel.fireTableDataChanged();
+			boardLocationsTableModel.fireTableDataChanged();
 		}
 	};
 	
@@ -492,6 +506,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action orientPlacementAction = new AbstractAction("Set Placement Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			// TODO: This needs to be changed to be relative to the Board's position.
 			getSelectedPlacement().setLocation(machineControlsPanel.getDisplayedLocation());
 			placementsTableModel.fireTableDataChanged();
 		}
@@ -506,7 +521,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void jobLoaded(Job job) {
 			placementsTableModel.setBoard(null);
-			boardsTableModel.setJob(jobProcessor.getJob());
+			boardLocationsTableModel.setJob(jobProcessor.getJob());
 			job.addPropertyChangeListener("dirty", titlePropertyChangeListener);
 			job.addPropertyChangeListener("file", titlePropertyChangeListener);
 			updateTitle();
@@ -544,6 +559,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			updateTitle();
+			jobSaveActionGroup.setEnabled(jobProcessor.getJob().isDirty());
 		}
 	};
 }

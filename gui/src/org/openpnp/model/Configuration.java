@@ -27,9 +27,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.openpnp.ConfigurationListener;
@@ -46,11 +46,11 @@ import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
 
-public class Configuration {
+public class Configuration extends AbstractModelObject {
 	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
 	private Machine machine;
-	private HashMap<File, Board> boards = new HashMap<File, Board>();
+	private LinkedHashMap<File, Board> boards = new LinkedHashMap<File, Board>();
 	private boolean dirty;
 	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
 	
@@ -110,6 +110,10 @@ public class Configuration {
 		dirty = true;
 	}
 	
+	public List<Board> getBoards() {
+		return Collections.unmodifiableList(new ArrayList<Board>(boards.values()));
+	}
+	
 	public Machine getMachine() {
 		return machine;
 	}
@@ -123,12 +127,11 @@ public class Configuration {
 		}
 		file = file.getCanonicalFile();
 		if (boards.containsKey(file)) {
-			System.out.println("loaded " + file.getCanonicalPath() + " from cache");
 			return boards.get(file);
 		}
 		Board board = loadBoard(file);
 		boards.put(file, board);
-		System.out.println("loaded " + file.getCanonicalPath() + " from filesystem");
+		firePropertyChange("boards", null, boards);
 		return board;
 	}
 	
@@ -221,17 +224,11 @@ public class Configuration {
 						board.getFile().getAbsolutePath(), 
 						file.getAbsolutePath(), 
 						File.separator);
-				System.out.println("Relative path is " + relativePath);
 				boardLocation.setBoardFile(relativePath);
 			}
 			catch (ResourceUtils.PathResolutionException ex) {
-				System.out.println("Unable to find relative path for board, using absolute");
 				boardLocation.setBoardFile(board.getFile().getAbsolutePath());
 			}
-		}
-		// Save boards first
-		for (Board board : boards) {
-			serializer.write(board, board.getFile());
 		}
 		// Save the job
 		serializer.write(job, file);
@@ -239,11 +236,18 @@ public class Configuration {
 		job.setDirty(false);
 	}
 	
+	public void saveBoard(Board board) throws Exception {
+		Serializer serializer = createSerializer();
+		serializer.write(board, board.getFile());
+		board.setDirty(false);
+	}
+	
 	private Board loadBoard(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		Board board = serializer.read(Board.class, file);
 		board.resolve(this);
 		board.setFile(file);
+		board.setDirty(false);
 		return board;
 	}
 	

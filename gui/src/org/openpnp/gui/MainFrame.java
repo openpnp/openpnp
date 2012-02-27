@@ -75,6 +75,7 @@ public class MainFrame extends JFrame {
 	private JobPanel jobPanel;
 	private MachinePanel machinePanel;
 	private CamerasPanel camerasPanel;
+	private BoardsPanel boardsPanel;
 
 	private JPanel contentPane;
 	private CameraPanel cameraPanel;
@@ -105,6 +106,7 @@ public class MainFrame extends JFrame {
 		partsPanel = new PartsPanel(configuration, machineControlsPanel);
 		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
 		camerasPanel = new CamerasPanel(configuration, machineControlsPanel);
+		boardsPanel = new BoardsPanel(configuration, this, machineControlsPanel);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -211,10 +213,11 @@ public class MainFrame extends JFrame {
 		splitPaneTopBottom.setDividerLocation(600);
 		
 		panelBottom.addTab("Job", null, jobPanel, null);
-		panelBottom.addTab("Machine", null, machinePanel, null);
+		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
+		panelBottom.addTab("Machine", null, machinePanel, null);
 
 		try {
 			configuration.load("config");
@@ -268,7 +271,10 @@ public class MainFrame extends JFrame {
 			// TODO: dialog, maybe try to recover
 			e.printStackTrace();
 		}
-		if (!jobPanel.checkIfJobNeedsSaving()) {
+		if (!boardsPanel.checkForModifications()) {
+			return false;
+		}
+		if (!jobPanel.checkForModifications()) {
 			return false;
 		}
 		// Attempt to stop the machine on quit

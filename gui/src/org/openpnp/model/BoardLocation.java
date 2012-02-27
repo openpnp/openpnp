@@ -67,12 +67,6 @@ public class BoardLocation extends AbstractModelObject implements PropertyChange
 		Board oldValue = this.board;
 		this.board = board;
 		firePropertyChange("board", oldValue, board);
-		if (oldValue != null) {
-			board.removePropertyChangeListener(this);
-		}
-		if (board != null) {
-			board.addPropertyChangeListener(this);
-		}
 	}
 	
 	String getBoardFile() {

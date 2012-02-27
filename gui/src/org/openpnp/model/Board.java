@@ -56,9 +56,10 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	private ArrayList<Placement> placements = new ArrayList<Placement>();
 	
 	private transient File file;
+	private transient boolean dirty;
 	
 	private Board() {
-		
+		addPropertyChangeListener(this);
 	}
 	
 	public Board(File file) {
@@ -130,7 +131,7 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	public void setOutline(Outline outline) {
 		Outline oldValue = this.outline;
 		this.outline = outline;
-		firePropertyChange("outline", oldValue, this.outline);
+		firePropertyChange("outline", oldValue, outline);
 	}
 
 	public String getName() {
@@ -140,7 +141,7 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	public void setName(String name) {
 		Object oldValue = this.name;
 		this.name = name;
-		firePropertyChange("name", oldValue, this.name);
+		firePropertyChange("name", oldValue, name);
 	}
 	
 	public File getFile() {
@@ -152,9 +153,20 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		this.file = file;
 		firePropertyChange("file", oldValue, file);
 	}
-
-	@Override
+	
+	public boolean isDirty() {
+		return dirty;
+	}
+	
+	public void setDirty(boolean dirty) {
+		boolean oldValue = this.dirty;
+		this.dirty = dirty;
+		firePropertyChange("dirty", oldValue, dirty);
+	}
+	
 	public void propertyChange(PropertyChangeEvent evt) {
-		propertyChangeSupport.firePropertyChange(evt);
+		if (evt.getSource() != Board.this || !evt.getPropertyName().equals("dirty")) {
+			setDirty(true);
+		}
 	}
 }

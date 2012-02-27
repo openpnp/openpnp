@@ -1,21 +1,27 @@
 package org.openpnp.gui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.List;
+
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Job;
-import org.openpnp.model.Location;
+import org.openpnp.model.Board;
+import org.openpnp.model.Configuration;
 
-class BoardsTableModel extends AbstractTableModel {
-	private String[] columnNames = new String[] { "Board", "X Pos.",
-			"Y Pos.", "Z Pos.", "Rotation" };
-	private Job job;
+class BoardsTableModel extends AbstractTableModel implements PropertyChangeListener {
+	private String[] columnNames = new String[] { "Board", "Path" };
 
-	public void setJob(Job job) {
-		this.job = job;
-		fireTableDataChanged();
+	private final Configuration configuration;
+	
+	private List<Board> boards; 
+	
+	public BoardsTableModel(Configuration configuration) {
+		this.configuration = configuration;
+		boards = configuration.getBoards();
+		configuration.addPropertyChangeListener("boards", this);
 	}
-
+	
 	@Override
 	public String getColumnName(int column) {
 		return columnNames[column];
@@ -26,35 +32,23 @@ class BoardsTableModel extends AbstractTableModel {
 	}
 
 	public int getRowCount() {
-		if (job == null) {
-			return 0;
-		}
-		return job.getBoardLocations().size();
+		return boards.size();
 	}
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		if (columnIndex == 1) {
+			return false;
+		}
 		return true;
 	}
 	
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
-			BoardLocation boardLocation = job.getBoardLocations().get(rowIndex);
+			Board board = boards.get(rowIndex);
 			if (columnIndex == 0) {
-				boardLocation.getBoard().setName(aValue.toString());
-			}
-			else if (columnIndex == 1) {
-				boardLocation.getLocation().setX(Double.parseDouble(aValue.toString()));
-			}
-			else if (columnIndex == 2) {
-				boardLocation.getLocation().setY(Double.parseDouble(aValue.toString()));
-			}
-			else if (columnIndex == 3) {
-				boardLocation.getLocation().setZ(Double.parseDouble(aValue.toString()));
-			}
-			else if (columnIndex == 4) {
-				boardLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
+				board.setName(aValue.toString());
 			}
 		}
 		catch (Exception e) {
@@ -63,21 +57,20 @@ class BoardsTableModel extends AbstractTableModel {
 	}
 
 	public Object getValueAt(int row, int col) {
-		BoardLocation boardLocation = job.getBoardLocations().get(row);
-		Location loc = boardLocation.getLocation();
+		Board board = boards.get(row);
 		switch (col) {
 		case 0:
-			return boardLocation.getBoard().getName();
+			return board.getName();
 		case 1:
-			return String.format("%2.3f", loc.getX());
-		case 2:
-			return String.format("%2.3f", loc.getY());
-		case 3:
-			return String.format("%2.3f", loc.getZ());
-		case 4:
-			return String.format("%2.3f", loc.getRotation());
+			return board.getFile().getPath();
 		default:
 			return null;
 		}
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		boards = configuration.getBoards();
+		fireTableDataChanged();
 	}
 }
