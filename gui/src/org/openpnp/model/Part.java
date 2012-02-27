@@ -56,7 +56,7 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		packag = configuration.getPackage(packageId);
+		setPackage(configuration.getPackage(packageId));
 		for (FeederLocation feederLocation : feederLocations) {
 			feederLocation.resolve(configuration);
 		}

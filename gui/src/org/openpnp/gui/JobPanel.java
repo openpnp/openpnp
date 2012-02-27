@@ -4,12 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -182,6 +185,28 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	}
 	
+	private boolean checkIfJobNeedsSaving() {
+		if (jobProcessor.getJob().isDirty()) {
+			int result = JOptionPane.showConfirmDialog(frame, "Job has been modified. Would you like to save first?", "Save Job?", JOptionPane.YES_NO_CANCEL_OPTION);
+			if (result == JOptionPane.YES_OPTION) {
+				saveJob();
+				return true;
+			}
+			else if (result == JOptionPane.CANCEL_OPTION) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private void saveJob() {
+		
+	}
+	
+	private void saveJobAs() {
+		
+	}
+	
 	/**
 	 * Updates the Job controls based on the Job state and the Machine's
 	 * readiness.
@@ -216,9 +241,20 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	}
 	
+	private void updateTitle() {
+		Job job = jobProcessor.getJob();
+		String title = String.format("OpenPnP - %s%s",
+				job.isDirty() ? "*" : "",
+				(job.getFile() == null ? "Untitled" : job.getFile().getName()));
+		frame.setTitle(title);
+	}
+	
 	public Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (!checkIfJobNeedsSaving()) {
+				return;
+			}
 			FileDialog fileDialog = new FileDialog(frame);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
@@ -240,15 +276,13 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action closeJobAction = new AbstractAction("Close Job") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-		}
-	};
-
 	public Action newJobAction = new AbstractAction("New Job") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (!checkIfJobNeedsSaving()) {
+				return;
+			}
+			jobProcessor.load(new Job());
 		}
 	};
 
@@ -425,6 +459,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		public void jobLoaded(Job job) {
 			placementsTableModel.setBoard(null);
 			boardsTableModel.setJob(jobProcessor.getJob());
+			job.addPropertyChangeListener("dirty", titlePropertyChangeListener);
+			job.addPropertyChangeListener("file", titlePropertyChangeListener);
+			updateTitle();
 			updateJobActions();
 		}
 
@@ -452,6 +489,13 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		public void machineDisabled(Machine machine, String reason) {
 			updateJobActions();
 			jobProcessor.stop();
+		}
+	};
+	
+	private PropertyChangeListener titlePropertyChangeListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			updateTitle();
 		}
 	};
 }

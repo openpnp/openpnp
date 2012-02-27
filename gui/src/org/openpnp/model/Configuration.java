@@ -90,11 +90,11 @@ public class Configuration {
 	}
 	
 	public Package getPackage(String id) {
-		return packages.get(id);
+		return packages.get(id.toUpperCase());
 	}
 	
 	public Part getPart(String id) {
-		return parts.get(id);
+		return parts.get(id.toUpperCase());
 	}
 	
 	public Collection<Part> getParts() {
@@ -102,7 +102,7 @@ public class Configuration {
 	}
 	
 	public void addPart(Part part) {
-		parts.put(part.getId(), part);
+		parts.put(part.getId().toUpperCase(), part);
 		dirty = true;
 	}
 	
@@ -142,7 +142,7 @@ public class Configuration {
 		Serializer serializer = createSerializer();
 		PackagesConfigurationHolder holder = serializer.read(PackagesConfigurationHolder.class, file);
 		for (Package pkg : holder.packages) {
-			packages.put(pkg.getId(), pkg);
+			packages.put(pkg.getId().toUpperCase(), pkg);
 		}
 	}
 	
@@ -158,7 +158,7 @@ public class Configuration {
 		PartsConfigurationHolder holder = serializer.read(PartsConfigurationHolder.class, file);
 		for (Part part : holder.parts) {
 			part.resolve(this);
-			parts.put(part.getId(), part);
+			parts.put(part.getId().toUpperCase(), part);
 		}
 	}
 	
@@ -193,6 +193,8 @@ public class Configuration {
 			Board board = getBoard(boardFile);
 			boardLocation.setBoard(board);
 		}
+		
+		job.setDirty(false);
 		
 		return job;
 	}

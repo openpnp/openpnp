@@ -22,6 +22,8 @@
 
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,13 +34,14 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 /**
  * A Board describes the physical properties of a PCB and has a list of 
  * Placements that will be used to specify pick and place operations. 
  */
 @Root(name="openpnp-board")
-public class Board extends AbstractModelObject implements RequiresConfigurationResolution {
+public class Board extends AbstractModelObject implements RequiresConfigurationResolution, PropertyChangeListener {
 	public enum Side {
 		Bottom,
 		Top
@@ -58,6 +61,13 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	public void resolve(Configuration configuration) throws Exception {
 		for (Placement placement : placements) {
 			placement.resolve(configuration);
+		}
+	}
+	
+	@Commit
+	private void commit() {
+		for (Placement placement : placements) {
+			placement.addPropertyChangeListener(this);
 		}
 	}
 	
@@ -89,6 +99,9 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		placements = new ArrayList<Placement>(placements);
 		placements.add(placement);
 		firePropertyChange("placements", oldValue, placements);
+		if (placement != null) {
+			placement.addPropertyChangeListener(this); 
+		}
 	}
 	
 	public void removePlacement(Placement placement) {
@@ -96,6 +109,9 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		placements = new ArrayList<Placement>(placements);
 		placements.remove(placement);
 		firePropertyChange("placements", oldValue, placements);
+		if (placement != null) {
+			placement.removePropertyChangeListener(this);
+		}
 	}
 	
 	public Outline getOutline() {
@@ -126,5 +142,10 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		Object oldValue = this.file;
 		this.file = file;
 		firePropertyChange("file", oldValue, file);
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		propertyChangeSupport.firePropertyChange(evt);
 	}
 }

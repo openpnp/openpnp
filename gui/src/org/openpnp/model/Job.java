@@ -21,6 +21,8 @@
 
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import java.util.List;
 
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 /**
  * A Job specifies a list of one or more BoardLocations. 
@@ -38,6 +41,18 @@ public class Job extends AbstractModelObject {
 	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
 	
 	private transient File file;
+	private transient boolean dirty;
+	
+	public Job() {
+		addPropertyChangeListener(dirtynessListener);
+	}
+	
+	@Commit
+	private void commit() {
+		for (BoardLocation boardLocation : boardLocations) {
+			boardLocation.addPropertyChangeListener(dirtynessListener);
+		}
+	}
 	
 	public List<BoardLocation> getBoardLocations() {
 		return Collections.unmodifiableList(boardLocations);
@@ -48,6 +63,7 @@ public class Job extends AbstractModelObject {
 		boardLocations = new ArrayList<BoardLocation>(boardLocations);
 		boardLocations.add(boardLocation);
 		firePropertyChange("boardLocations", oldValue, boardLocations);
+		boardLocation.addPropertyChangeListener(dirtynessListener);
 	}
 	
 	public void removeBoardLocation(BoardLocation boardLocation) {
@@ -55,6 +71,7 @@ public class Job extends AbstractModelObject {
 		boardLocations = new ArrayList<BoardLocation>(boardLocations);
 		boardLocations.remove(boardLocation);
 		firePropertyChange("boardLocations", oldValue, boardLocations);
+		boardLocation.removePropertyChangeListener(dirtynessListener);
 	}
 
 	public File getFile() {
@@ -66,4 +83,23 @@ public class Job extends AbstractModelObject {
 		this.file = file;
 		firePropertyChange("file", oldValue, file);
 	}
+	
+	public boolean isDirty() {
+		return dirty;
+	}
+	
+	public void setDirty(boolean dirty) {
+		boolean oldValue = this.dirty;
+		this.dirty = dirty;
+		firePropertyChange("dirty", oldValue, dirty);
+	}
+	
+	private PropertyChangeListener dirtynessListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getSource() != Job.this || !evt.getPropertyName().equals("dirty")) {
+				setDirty(true);
+			}
+		}
+	};
 }

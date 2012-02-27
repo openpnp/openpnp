@@ -21,6 +21,9 @@
 
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import org.openpnp.LengthUnit;
 import org.simpleframework.xml.Attribute;
 

@@ -1,12 +1,16 @@
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
-public class BoardLocation extends AbstractModelObject {
+public class BoardLocation extends AbstractModelObject implements PropertyChangeListener {
 	@Element
-	private Location location = new Location();
+	private Location location;
 	@Attribute
 	private Side side = Side.Top;
 	private Board board;
@@ -15,10 +19,17 @@ public class BoardLocation extends AbstractModelObject {
 	private String boardFile;
 	
 	BoardLocation() {
-		
+		setLocation(new Location());
 	}
 	
 	public BoardLocation(Board board) {
+		this();
+		setBoard(board);
+	}
+	
+	@Commit
+	private void commit() {
+		setLocation(location);
 		setBoard(board);
 	}
 	
@@ -27,9 +38,15 @@ public class BoardLocation extends AbstractModelObject {
 	}
 
 	public void setLocation(Location location) {
-		Object oldValue = this.location;
+		Location oldValue = this.location;
 		this.location = location;
 		firePropertyChange("location", oldValue, location);
+		if (oldValue != null) {
+			oldValue.removePropertyChangeListener(this);
+		}
+		if (location != null) {
+			location.addPropertyChangeListener(this);
+		}
 	}
 
 	public Side getSide() {
@@ -47,9 +64,15 @@ public class BoardLocation extends AbstractModelObject {
 	}
 
 	public void setBoard(Board board) {
-		Object oldValue = this.board;
+		Board oldValue = this.board;
 		this.board = board;
 		firePropertyChange("board", oldValue, board);
+		if (oldValue != null) {
+			board.removePropertyChangeListener(this);
+		}
+		if (board != null) {
+			board.addPropertyChangeListener(this);
+		}
 	}
 	
 	String getBoardFile() {
@@ -58,6 +81,11 @@ public class BoardLocation extends AbstractModelObject {
 	
 	void setBoardFile(String boardFile) {
 		this.boardFile = boardFile;
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		propertyChangeSupport.firePropertyChange(evt);
 	}
 
 	@Override

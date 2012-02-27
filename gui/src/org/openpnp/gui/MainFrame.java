@@ -113,8 +113,6 @@ public class MainFrame extends JFrame {
 		mnFile.add(new JMenuItem(jobPanel.newJobAction));
 		mnFile.add(new JMenuItem(jobPanel.openJobAction));
 		mnFile.addSeparator();
-		mnFile.add(new JMenuItem(jobPanel.closeJobAction));
-		mnFile.addSeparator();
 		mnFile.add(new JMenuItem(jobPanel.saveJobAction));
 		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
 

@@ -21,10 +21,14 @@
 
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 
@@ -33,11 +37,11 @@ import org.simpleframework.xml.core.Persist;
  * along with information about how to place it. 
  * @author jason
  */
-public class Placement extends AbstractModelObject implements RequiresConfigurationResolution {
+public class Placement extends AbstractModelObject implements RequiresConfigurationResolution, PropertyChangeListener {
 	@Attribute
 	private String id;
 	@Element
-	private Location location = new Location();
+	private Location location;
 	@Attribute
 	private Side side = Side.Top;
 	private Part part;
@@ -45,9 +49,13 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	@Attribute
 	private String partId;
 	
+	public Placement() {
+		setLocation(new Location());
+	}
+	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		part = configuration.getPart(partId);
+		setPart(configuration.getPart(partId));
 	}
 	
 	@SuppressWarnings("unused")
@@ -56,14 +64,25 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 		partId = (part == null ? null : part.getId());
 	}
 	
+	@Commit
+	private void commit() {
+		setLocation(location);
+	}
+	
 	public Part getPart() {
 		return part;
 	}
 
 	public void setPart(Part part) {
-		Object oldValue = this.part;
+		Part oldValue = this.part;
 		this.part = part;
 		firePropertyChange("part", oldValue, part);
+		if (oldValue != null) {
+			oldValue.removePropertyChangeListener(this);
+		}
+		if (part != null) {
+			part.addPropertyChangeListener(this);
+		}
 	}
 
 	public String getId() {
@@ -81,9 +100,15 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	}
 
 	public void setLocation(Location location) {
-		Object oldValue = this.location;
+		Location oldValue = this.location;
 		this.location = location;
 		firePropertyChange("location", oldValue, location);
+		if (oldValue != null) {
+			oldValue.removePropertyChangeListener(this);
+		}
+		if (location != null) {
+			location.addPropertyChangeListener(this);
+		}
 	}
 
 	public Side getSide() {
@@ -94,5 +119,10 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 		Object oldValue = this.side;
 		this.side = side;
 		firePropertyChange("side", oldValue, side);
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		propertyChangeSupport.firePropertyChange(evt);
 	}
 }
