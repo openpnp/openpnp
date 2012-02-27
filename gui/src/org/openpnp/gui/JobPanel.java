@@ -482,6 +482,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			BoardLocation boardLocation = getSelectedBoardLocation();
+			// TODO: Make sure it's unique.
 			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new placement.");
 			if (id == null) {
 				return;

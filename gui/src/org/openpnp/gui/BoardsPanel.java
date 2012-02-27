@@ -230,6 +230,7 @@ public class BoardsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Board board = getSelectedBoard();
+			// TODO: Make sure it's unique
 			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new placement.");
 			if (id == null) {
 				return;

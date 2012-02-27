@@ -13,6 +13,10 @@ public class FeederLocation implements RequiresConfigurationResolution {
 	
 	@Attribute
 	private String feederId;
+	
+	public FeederLocation() {
+		setLocation(new Location());
+	}
 
 	@Override
 	public void resolve(Configuration configuration) throws Exception {

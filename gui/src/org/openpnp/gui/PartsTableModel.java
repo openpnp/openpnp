@@ -1,17 +1,18 @@
 package org.openpnp.gui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.Length;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.util.LengthUtil;
 
-class PartsTableModel extends AbstractTableModel implements ConfigurationListener {
+class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Name",
@@ -20,12 +21,8 @@ class PartsTableModel extends AbstractTableModel implements ConfigurationListene
 
 	public PartsTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		configuration.addListener(this);
-	}
-
-	public void configurationLoaded(Configuration configuration) {
+		configuration.addPropertyChangeListener("parts", this);
 		parts = new ArrayList<Part>(configuration.getParts());
-		fireTableDataChanged();
 	}
 
 	@Override
@@ -89,17 +86,24 @@ class PartsTableModel extends AbstractTableModel implements ConfigurationListene
 	}
 
 	public Object getValueAt(int row, int col) {
+		Part part = parts.get(row);
 		switch (col) {
 		case 0:
-			return parts.get(row).getId();
+			return part.getId();
 		case 1:
-			 return parts.get(row).getName();
+			 return part.getName();
 		case 2:
-			return String.format("%2.3f%s", parts.get(row).getHeight(), parts.get(row).getHeightUnits().getShortName());
+			return String.format("%2.3f%s", part.getHeight(), part.getHeightUnits().getShortName());
 		case 3:
-			 return parts.get(row).getPackage().getId();
+			 return part.getPackage() == null ? null : part.getPackage().getId();
 		default:
 			return null;
 		}
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent arg0) {
+		parts = new ArrayList<Part>(configuration.getParts());
+		fireTableDataChanged();
 	}
 }

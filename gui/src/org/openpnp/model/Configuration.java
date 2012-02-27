@@ -108,6 +108,7 @@ public class Configuration extends AbstractModelObject {
 		parts.put(part.getId().toUpperCase(), part);
 		part.addPropertyChangeListener("id", partIdPcl);
 		dirty = true;
+		firePropertyChange("parts", null, parts);
 	}
 	
 	public List<Board> getBoards() {

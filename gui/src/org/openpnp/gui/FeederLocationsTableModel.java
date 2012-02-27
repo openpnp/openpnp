@@ -1,25 +1,39 @@
 package org.openpnp.gui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 
-class FeederLocationsTableModel extends AbstractTableModel {
+class FeederLocationsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Feeder", "X Pos.", "Y Pos.", "Z Pos.", "Rotation" };
+	private Part part;
 	private List<FeederLocation> feederLocations;
 
 	public FeederLocationsTableModel(Configuration configuration) {
 		this.configuration = configuration;
 	}
 
-	public void setFeederLocations(List<FeederLocation> feederLocations) {
-		this.feederLocations = feederLocations;
+	public void setPart(Part part) {
+		if (this.part != null) {
+			this.part.removePropertyChangeListener("feederLocations", this);
+		}
+		this.part = part;
+		if (part == null) {
+			feederLocations = null;
+		}
+		else {
+			part.addPropertyChangeListener("feederLocations", this);
+			feederLocations = part.getFeederLocations();
+		}
 		fireTableDataChanged();
 	}
 	
@@ -80,7 +94,7 @@ class FeederLocationsTableModel extends AbstractTableModel {
 		FeederLocation feederLocation = feederLocations.get(row);
 		switch (col) {
 		case 0:
-			return feederLocation.getFeeder().getId();
+			return feederLocation.getFeeder() == null ? "" : feederLocation.getFeeder().getId();
 		case 1:
 			return String.format("%2.3f", feederLocation.getLocation().getX());
 		case 2:
@@ -92,5 +106,16 @@ class FeederLocationsTableModel extends AbstractTableModel {
 		default:
 			return null;
 		}
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		if (part == null) {
+			feederLocations = null;
+		}
+		else {
+			feederLocations = part.getFeederLocations();
+		}
+		fireTableDataChanged();
 	}
 }

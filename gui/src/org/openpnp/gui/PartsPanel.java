@@ -1,6 +1,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -10,6 +11,7 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -22,16 +24,18 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.LengthUnit;
 import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.util.LengthUtil;
 
 public class PartsPanel extends JPanel {
 	final private Configuration configuration;
 	final private MachineControlsPanel machineControlsPanel;
+	final private Frame frame;
 	
 	private PartsTableModel partsTableModel;
 	private FeederLocationsTableModel feederLocationsTableModel;
@@ -40,9 +44,10 @@ public class PartsPanel extends JPanel {
 	private JTable partsTable;
 	private JTable feederLocationsTable;
 
-	public PartsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
+	public PartsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel, Frame frame) {
 		this.configuration = configuration;
 		this.machineControlsPanel = machineControlsPanel;
+		this.frame = frame;
 		
 		setLayout(new BorderLayout(0, 0));
 		partsTableModel = new PartsTableModel(configuration);
@@ -95,20 +100,12 @@ public class PartsPanel extends JPanel {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				int index = partsTable.getSelectedRow();
+				Part part = getSelectedPart();
 				
-				deletePartAction.setEnabled(index != -1);
-				newFeederLocationAction.setEnabled(index != -1);
+				deletePartAction.setEnabled(part != null);
+				newFeederLocationAction.setEnabled(part != null);
 				
-				if (index == -1) {
-					feederLocationsTableModel.setFeederLocations(null);
-				}
-				else {
-					index = partsTable.convertRowIndexToModel(index);
-					Part part = partsTableModel.getPart(index);
-					List<FeederLocation> feederLocations = part.getFeederLocations();
-					feederLocationsTableModel.setFeederLocations(feederLocations);
-				}
+				feederLocationsTableModel.setPart(part);
 			}
 		});
 		
@@ -118,10 +115,10 @@ public class PartsPanel extends JPanel {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				int index = feederLocationsTable.getSelectedRow();
+				FeederLocation feederLocation = getSelectedFeederLocation();
 				
-				deleteFeederLocationAction.setEnabled(index != -1);
-				setFeederLocationLocationAction.setEnabled(index != -1);				
+				deleteFeederLocationAction.setEnabled(feederLocation != null);
+				setFeederLocationLocationAction.setEnabled(feederLocation != null);				
 			}
 		});
 		
@@ -138,6 +135,24 @@ public class PartsPanel extends JPanel {
 		toolBar.add(deleteFeederLocationAction);
 		toolBar.addSeparator();
 		toolBar.add(setFeederLocationLocationAction);
+	}
+	
+	private Part getSelectedPart() {
+		int index = partsTable.getSelectedRow();
+		if (index == -1) {
+			return null;
+		}
+		index = partsTable.convertRowIndexToModel(index);
+		return partsTableModel.getPart(index);
+	}
+	
+	private FeederLocation getSelectedFeederLocation() {
+		int index = feederLocationsTable.getSelectedRow();
+		if (index == -1) {
+			return null;
+		}
+		index = feederLocationsTable.convertRowIndexToModel(index);
+		return feederLocationsTableModel.getFeederLocation(index);
 	}
 	
 	private void search() {
@@ -157,6 +172,19 @@ public class PartsPanel extends JPanel {
 	public Action newPartAction = new AbstractAction("New Part") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new part.");
+			if (id == null) {
+				return;
+			}
+			if (configuration.getPart(id) != null) {
+				MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+				return;
+			}
+			Part part = new Part();
+			part.setId(id);
+			part.setHeightUnits(configuration.getMachine().getNativeUnits());
+			configuration.addPart(part);
+			partsTableModel.fireTableDataChanged();
 		}
 	};
 	
@@ -169,6 +197,9 @@ public class PartsPanel extends JPanel {
 	public Action newFeederLocationAction = new AbstractAction("New Feeder Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			FeederLocation feederLocation = new FeederLocation();
+			getSelectedPart().addFeederLocation(feederLocation);
+			feederLocationsTableModel.fireTableDataChanged();
 		}
 	};
 	
