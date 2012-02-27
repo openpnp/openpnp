@@ -9,7 +9,9 @@ import java.io.FilenameFilter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -20,11 +22,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Placement;
 
@@ -57,8 +59,11 @@ public class BoardsPanel extends JPanel {
 		boardsTableModel = new BoardsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
 
+		JComboBox sidesComboBox = new JComboBox(Side.values());
+
 		placementsTable = new JTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
 		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -72,6 +77,7 @@ public class BoardsPanel extends JPanel {
 		
 		boardsTable = new JTable(boardsTableModel);
 		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
 		// TODO: Add a tooltip for the path, see http://docs.oracle.com/javase/tutorial/uiswing/components/table.html#celltooltip
 		
 		boardsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {

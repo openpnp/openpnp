@@ -11,7 +11,9 @@ import java.io.FilenameFilter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -33,6 +35,7 @@ import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -83,9 +86,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		boardLocationsTableModel = new BoardLocationsTableModel();
 		placementsTableModel = new PlacementsTableModel(configuration);
 
+		JComboBox sidesComboBox = new JComboBox(Side.values());
+		
 		placementsTable = new JTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
+		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
+
 		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -96,11 +102,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 		});
 		
-//		JComboBox partsComboBox = new JComboBox(new String[] { "R-0805-10K", "R-0805-1K", "R-0805-100K" });
-//		placementsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(partsComboBox));
-
 		boardLocationsTable = new JTable(boardLocationsTableModel);
 		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		boardLocationsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
 		boardLocationsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
