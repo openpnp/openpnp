@@ -13,7 +13,7 @@ esac
 
 case "$platform" in
 	mac)
-		java -d32 -cp lib/forms-1.3.0.jar:lib/simple-xml-2.6.2.jar:lib/lti-civil.jar:lib/jVFW.jar:lib/slf4j-api-1.6.4.jar:lib/slf4j-log4j12-1.6.4.jar:lib/log4j-1.2.16.jar:lib/RXTXcomm.jar:bin -Djava.library.path=lib/native/mac-universal org.openpnp.app.Main
+		java -d32 -cp lib/beansbinding-1.2.1.jar:lib/commons-io-2.1.jar:lib/forms-1.3.0.jar:lib/simple-xml-2.6.2.jar:lib/lti-civil.jar:lib/jVFW.jar:lib/slf4j-api-1.6.4.jar:lib/slf4j-log4j12-1.6.4.jar:lib/log4j-1.2.16.jar:lib/RXTXcomm.jar:bin -Djava.library.path=lib/native/mac-universal org.openpnp.app.Main
 	;;
 	linux)
 		echo "Not yet supported."
