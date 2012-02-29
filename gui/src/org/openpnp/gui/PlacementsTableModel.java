@@ -12,7 +12,7 @@ class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Part", "Side", 
-			"X Pos.", "Y Pos.", "Rotation" };
+			"X", "Y", "θ" };
 	private Board board;
 
 	public PlacementsTableModel(Configuration configuration) {

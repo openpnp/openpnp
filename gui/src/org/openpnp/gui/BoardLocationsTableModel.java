@@ -8,8 +8,8 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 
 class BoardLocationsTableModel extends AbstractTableModel {
-	private String[] columnNames = new String[] { "Board", "Side", "X Pos.",
-			"Y Pos.", "Z Pos.", "Rotation" };
+	private String[] columnNames = new String[] { "Board", "Side", "X",
+			"Y", "Z", "θ" };
 	private Job job;
 
 	public void setJob(Job job) {

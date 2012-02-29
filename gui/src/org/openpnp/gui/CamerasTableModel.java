@@ -14,7 +14,7 @@ import org.openpnp.spi.Feeder;
 class CamerasTableModel extends AbstractTableModel implements ConfigurationListener {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Name", "Looking", "X Loc.", "Y Loc.", "Z Loc.", "Rotation" };
+	private String[] columnNames = new String[] { "Name", "Looking", "X", "Y", "Z", "θ" };
 	private List<Camera> cameras;
 
 	public CamerasTableModel(Configuration configuration) {

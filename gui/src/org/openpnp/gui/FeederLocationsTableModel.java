@@ -14,7 +14,7 @@ import org.openpnp.spi.Feeder;
 class FeederLocationsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Feeder", "X Pos.", "Y Pos.", "Z Pos.", "Rotation" };
+	private String[] columnNames = new String[] { "Feeder", "X", "Y", "Z", "θ" };
 	private Part part;
 	private List<FeederLocation> feederLocations;
 
