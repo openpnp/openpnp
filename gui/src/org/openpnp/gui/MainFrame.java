@@ -224,8 +224,12 @@ public class MainFrame extends JFrame {
 			configuration.load("config");
 		}
 		catch (Exception e) {
-			// TODO: dialog
-			throw new Error(e);
+			e.printStackTrace();
+			MessageBoxes.errorBox(
+					this, 
+					"Configuration Load Error", 
+					"There was a problem loading the configuration. The reason was:\n\n" + e.getMessage() + "\n\nPlease check your configuration files and try again. The program will now exit.");
+			System.exit(1);
 		}
 
 		for (Camera camera : configuration.getMachine().getCameras()) {
@@ -268,7 +272,10 @@ public class MainFrame extends JFrame {
 			}
 		}
 		catch (Exception e) {
-			MessageBoxes.errorBox(MainFrame.this, "Configuration Save Error", e.getMessage());
+			MessageBoxes.errorBox(
+					MainFrame.this, 
+					"Configuration Save Error",
+					"There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() + "\n\nPlease check your configuration and try again.");
 			return false;
 		}
 		if (!boardsPanel.checkForModifications()) {

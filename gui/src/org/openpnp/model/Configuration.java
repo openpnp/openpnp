@@ -23,6 +23,7 @@ package org.openpnp.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,9 +75,24 @@ public class Configuration extends AbstractModelObject {
 	public void load(String configurationDirectoryPath) throws Exception {
 		File configurationDirectory = new File(configurationDirectoryPath);
 		
-		loadMachine(new File(configurationDirectory, "machine.xml"));
-		loadPackages(new File(configurationDirectory, "packages.xml"));
-		loadParts(new File(configurationDirectory, "parts.xml"));
+		try {
+			loadMachine(new File(configurationDirectory, "machine.xml"));
+		}
+		catch (Exception e) {
+			throw new Exception("Error while reading machine.xml (" + e.getMessage() + ")", e);
+		}
+		try {
+			loadPackages(new File(configurationDirectory, "packages.xml"));
+		}
+		catch (Exception e) {
+			throw new Exception("Error while reading packages.xml (" + e.getMessage() + ")", e);
+		}
+		try {
+			loadParts(new File(configurationDirectory, "parts.xml"));
+		}
+		catch (Exception e) {
+			throw new Exception("Error while reading parts.xml (" + e.getMessage() + ")", e);
+		}
 		dirty = false;
 		for (ConfigurationListener listener : listeners) {
 			listener.configurationLoaded(this);
@@ -86,9 +102,24 @@ public class Configuration extends AbstractModelObject {
 	public void save(String configurationDirectoryPath) throws Exception {
 		File configurationDirectory = new File(configurationDirectoryPath);
 		
-		saveMachine(new File(configurationDirectory, "machine.xml"));
-		savePackages(new File(configurationDirectory, "packages.xml"));
-		saveParts(new File(configurationDirectory, "parts.xml"));
+		try {
+			saveMachine(new File(configurationDirectory, "machine.xml"));
+		}
+		catch (Exception e) {
+			throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
+		}
+		try {
+			savePackages(new File(configurationDirectory, "packages.xml"));
+		}
+		catch (Exception e) {
+			throw new Exception("Error while saving packages.xml (" + e.getMessage() + ")", e);
+		}
+		try {
+			saveParts(new File(configurationDirectory, "parts.xml"));
+		}
+		catch (Exception e) {
+			throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
+		}
 		dirty = false;
 	}
 	
@@ -155,6 +186,7 @@ public class Configuration extends AbstractModelObject {
 		MachineConfigurationHolder holder = new MachineConfigurationHolder();
 		holder.machine = machine;
 		Serializer serializer = createSerializer();
+		serializer.write(holder, new ByteArrayOutputStream());
 		serializer.write(holder, file);
 	}
 	
@@ -170,6 +202,7 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		PackagesConfigurationHolder holder = new PackagesConfigurationHolder();
 		holder.packages = new ArrayList<Package>(packages.values());
+		serializer.write(holder, new ByteArrayOutputStream());
 		serializer.write(holder, file);
 	}
 	
@@ -186,6 +219,7 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		PartsConfigurationHolder holder = new PartsConfigurationHolder();
 		holder.parts = new ArrayList<Part>(parts.values());
+		serializer.write(holder, new ByteArrayOutputStream());
 		serializer.write(holder, file);
 	}
 	
@@ -238,6 +272,7 @@ public class Configuration extends AbstractModelObject {
 			}
 		}
 		// Save the job
+		serializer.write(job, new ByteArrayOutputStream());
 		serializer.write(job, file);
 		job.setFile(file);
 		job.setDirty(false);
@@ -245,6 +280,7 @@ public class Configuration extends AbstractModelObject {
 	
 	public void saveBoard(Board board) throws Exception {
 		Serializer serializer = createSerializer();
+		serializer.write(board, new ByteArrayOutputStream());
 		serializer.write(board, board.getFile());
 		board.setDirty(false);
 	}
