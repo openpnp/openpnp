@@ -6,3 +6,5 @@ rm -f log/*
 zip -x *.git* -x *.svn* -r $FILENAME *
 scp $FILENAME jason@vonnieda.org:openpnp.org/htdocs/downloads/snapshots
 rm $FILENAME
+echo "http://openpnp.org/downloads/snapshots/$FILENAME"
+
