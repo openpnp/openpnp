@@ -6,10 +6,15 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Length;
+import org.openpnp.gui.support.FeederCellValue;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.util.LengthUtil;
 
 class FeederLocationsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
@@ -20,6 +25,7 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 
 	public FeederLocationsTableModel(Configuration configuration) {
 		this.configuration = configuration;
+		FeederCellValue.setConfiguration(configuration);
 	}
 
 	public void setPart(Part part) {
@@ -55,6 +61,17 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 	}
 	
 	@Override
+	public Class<?> getColumnClass(int columnIndex) {
+		if (columnIndex == 0) {
+			return FeederCellValue.class;
+		}
+		else if (columnIndex == 1 || columnIndex == 2 || columnIndex == 3) {
+			return LengthCellValue.class;
+		}
+		return super.getColumnClass(columnIndex);
+	}
+	
+	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		return true;
 	}
@@ -64,21 +81,44 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 		try {
 			FeederLocation feederLocation = feederLocations.get(rowIndex);
 			if (columnIndex == 0) {
-				Feeder feeder = configuration.getMachine().getFeeder(aValue.toString());
-				if (feeder == null) {
-					// TODO: dialog, no feeder
-					return;
-				}
+				Feeder feeder = ((FeederCellValue) aValue).getFeeder();
 				feederLocation.setFeeder(feeder);
 			}
 			else if (columnIndex == 1) {
-				feederLocation.getLocation().setX(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = feederLocation.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setX(length.getValue());
+				feederLocation.setLocation(location);
 			}
 			else if (columnIndex == 2) {
-				feederLocation.getLocation().setY(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = feederLocation.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setY(length.getValue());
+				feederLocation.setLocation(location);
 			}
 			else if (columnIndex == 3) {
-				feederLocation.getLocation().setZ(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = feederLocation.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setZ(length.getValue());
+				feederLocation.setLocation(location);
 			}
 			else if (columnIndex == 4) {
 				feederLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
@@ -92,15 +132,16 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 
 	public Object getValueAt(int row, int col) {
 		FeederLocation feederLocation = feederLocations.get(row);
+		Location loc = feederLocation.getLocation();
 		switch (col) {
 		case 0:
-			return feederLocation.getFeeder() == null ? "" : feederLocation.getFeeder().getId();
+			return new FeederCellValue(feederLocation.getFeeder());
 		case 1:
-			return String.format("%2.3f", feederLocation.getLocation().getX());
+			return new LengthCellValue(loc.getX(), loc.getUnits());
 		case 2:
-			return String.format("%2.3f", feederLocation.getLocation().getY());
+			return new LengthCellValue(loc.getY(), loc.getUnits());
 		case 3:
-			return String.format("%2.3f", feederLocation.getLocation().getZ());
+			return new LengthCellValue(loc.getZ(), loc.getUnits());
 		case 4:
 			return String.format("%2.3f", feederLocation.getLocation().getRotation());
 		default:

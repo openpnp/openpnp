@@ -2,11 +2,16 @@ package org.openpnp.gui;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Length;
+import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.util.LengthUtil;
 
 class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
@@ -17,6 +22,7 @@ class PlacementsTableModel extends AbstractTableModel {
 
 	public PlacementsTableModel(Configuration configuration) {
 		this.configuration = configuration;
+		PartCellValue.setConfiguration(configuration);
 	}
 
 	public void setBoard(Board board) {
@@ -41,6 +47,17 @@ class PlacementsTableModel extends AbstractTableModel {
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		return true;
 	}
+	
+	@Override
+	public Class<?> getColumnClass(int columnIndex) {
+		if (columnIndex == 1) {
+			return PartCellValue.class;
+		}
+		else if (columnIndex == 3 || columnIndex == 4) {
+			return LengthCellValue.class;
+		}
+		return super.getColumnClass(columnIndex);
+	}
 
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
@@ -53,25 +70,34 @@ class PlacementsTableModel extends AbstractTableModel {
 				placement.setId(aValue.toString());
 			}
 			else if (columnIndex == 1) {
-				Part part = configuration.getPart(aValue.toString());
-				if (part == null) {
-					// TODO: dialog, bad part id
-					return;
-				}
-				placement.setPart(part);
+				placement.setPart(((PartCellValue) aValue).getPart());
 			}
 			else if (columnIndex == 2) {
-				Side side = Side.valueOf(aValue.toString());
-				if (side == null) {
-					return;
-				}
-				placement.setSide(side);
+				placement.setSide((Side) aValue);
 			}
 			else if (columnIndex == 3) {
-				placement.getLocation().setX(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = placement.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setX(length.getValue());
+				placement.setLocation(location);
 			}
 			else if (columnIndex == 4) {
-				placement.getLocation().setY(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = placement.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setY(length.getValue());
+				placement.setLocation(location);
 			}
 			else if (columnIndex == 5) {
 				placement.getLocation().setRotation(Double.parseDouble(aValue.toString()));
@@ -84,19 +110,20 @@ class PlacementsTableModel extends AbstractTableModel {
 
 	public Object getValueAt(int row, int col) {
 		Placement placement = board.getPlacements().get(row);
+		Location loc = placement.getLocation();
 		switch (col) {
 		case 0:
 			 return placement.getId();
 		case 1:
-			return placement.getPart() == null ? "" : placement.getPart().getId();
+			return new PartCellValue(placement.getPart());
 		case 2:
 			 return placement.getSide();
 		case 3:
-			return String.format("%2.3f", placement.getLocation().getX());
+			return new LengthCellValue(loc.getX(), loc.getUnits());
 		case 4:
-			return String.format("%2.3f", placement.getLocation().getY());
+			return new LengthCellValue(loc.getY(), loc.getUnits());
 		case 5:
-			return String.format("%2.3f", placement.getLocation().getRotation());
+			return String.format("%2.3f", loc.getRotation());
 		default:
 			return null;
 		}

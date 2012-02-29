@@ -182,7 +182,6 @@ public class PartsPanel extends JPanel {
 			}
 			Part part = new Part();
 			part.setId(id);
-			part.setHeightUnits(configuration.getMachine().getNativeUnits());
 			configuration.addPart(part);
 			partsTableModel.fireTableDataChanged();
 		}

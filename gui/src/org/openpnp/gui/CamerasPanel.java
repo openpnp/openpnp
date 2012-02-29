@@ -1,13 +1,12 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.regex.PatternSyntaxException;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -25,6 +24,7 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.Looking;
 
 public class CamerasPanel extends JPanel implements WizardContainer {
 	private final Configuration configuration;
@@ -67,8 +67,12 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		});
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
+
+		JComboBox lookingComboBox = new JComboBox(Looking.values());
+		
 		table = new JTable(tableModel);
 		tableSorter = new TableRowSorter<CamerasTableModel>(tableModel);
+		table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(lookingComboBox));
 		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);

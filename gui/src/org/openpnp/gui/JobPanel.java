@@ -150,7 +150,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(350);
+		splitPane.setDividerLocation(500);
 		splitPane.setLeftComponent(new JScrollPane(boardLocationsTable));
 		splitPane.setRightComponent(new JScrollPane(placementsTable));
 		
@@ -420,7 +420,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				
 				Board board = configuration.getBoard(file);
 				BoardLocation boardLocation = new BoardLocation(board);
-				boardLocation.getLocation().setUnits(configuration.getMachine().getNativeUnits());
 				jobProcessor.getJob().addBoardLocation(boardLocation);
 				boardLocationsTableModel.fireTableDataChanged();
 			}
@@ -451,7 +450,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			
 				Board board = configuration.getBoard(file);
 				BoardLocation boardLocation = new BoardLocation(board);
-				boardLocation.getLocation().setUnits(configuration.getMachine().getNativeUnits());
 				jobProcessor.getJob().addBoardLocation(boardLocation);
 				boardLocationsTableModel.fireTableDataChanged();
 			}
@@ -487,13 +485,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			BoardLocation boardLocation = getSelectedBoardLocation();
-			// TODO: Make sure it's unique.
 			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new placement.");
 			if (id == null) {
 				return;
 			}
+			// TODO: Make sure it's unique.
 			Placement placement = new Placement(id);
-			placement.getLocation().setUnits(configuration.getMachine().getNativeUnits());
 			boardLocation.getBoard().addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();
 		}

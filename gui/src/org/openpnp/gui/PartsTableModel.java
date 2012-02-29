@@ -8,9 +8,11 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Length;
+import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.PackageCellValue;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
-import org.openpnp.util.LengthUtil;
 
 class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
@@ -21,6 +23,7 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 
 	public PartsTableModel(Configuration configuration) {
 		this.configuration = configuration;
+		PackageCellValue.setConfiguration(configuration);
 		configuration.addPropertyChangeListener("parts", this);
 		parts = new ArrayList<Part>(configuration.getParts());
 	}
@@ -36,6 +39,17 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 
 	public int getRowCount() {
 		return (parts == null) ? 0 : parts.size();
+	}
+	
+	@Override
+	public Class<?> getColumnClass(int columnIndex) {
+		if (columnIndex == 2) {
+			return LengthCellValue.class;
+		}
+		else if (columnIndex == 3) {
+			return PackageCellValue.class;
+		}
+		return super.getColumnClass(columnIndex);
 	}
 	
 	@Override
@@ -58,26 +72,16 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 				part.setId(aValue.toString());
 			}
 			else if (columnIndex == 1) {
-				part.setName(aValue.toString());
+				part.setName((String) aValue);
 			}
 			else if (columnIndex == 2) {
-				Length length = LengthUtil.parseLengthValue(aValue.toString());
-				if (length == null) {
-					// TODO: dialog, unable to parse
-					return;
-				}
+				Length length = ((LengthCellValue) aValue).getLength();
 				part.setHeight(length.getValue());
-				if (length.getUnits() != null) {
-					part.setHeightUnits(length.getUnits());
-				}
+				part.setHeightUnits(length.getUnits());
 			}
 			else if (columnIndex == 3) {
-				org.openpnp.model.Package pkg = configuration.getPackage(aValue.toString());
-				if (pkg == null) {
-					// TODO: dialog, package not found
-					return;
-				}
-				part.setPackage(pkg);
+				Package packag = ((PackageCellValue) aValue).getPackage(); 
+				part.setPackage(packag);
 			}
 			configuration.setDirty(true);
 		}
@@ -94,9 +98,9 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 		case 1:
 			 return part.getName();
 		case 2:
-			return String.format("%2.3f%s", part.getHeight(), part.getHeightUnits().getShortName());
+			return new LengthCellValue(part.getHeight(), part.getHeightUnits());
 		case 3:
-			 return part.getPackage() == null ? null : part.getPackage().getId();
+			 return new PackageCellValue(part.getPackage());
 		default:
 			return null;
 		}

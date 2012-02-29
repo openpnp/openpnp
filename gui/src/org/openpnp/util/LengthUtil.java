@@ -61,6 +61,11 @@ public class LengthUtil {
 		return new Point(x, y);
 	}
 	
+	public static Length parseLengthValue(String v) {
+		return parseLengthValue(v, false);
+	}
+
+	
 	/**
 	 * Takes a value in the format of a double followed by any number of spaces
 	 * followed by the shortName of a LengthUnit value and returns the value
@@ -68,7 +73,7 @@ public class LengthUtil {
 	 * @param v
 	 * @return
 	 */
-	public static Length parseLengthValue(String v) {
+	public static Length parseLengthValue(String v, boolean requireUnits) {
 		if (v == null) {
 			return null;
 		}
@@ -86,7 +91,9 @@ public class LengthUtil {
 			}
 		}
 		
+		String valueString = null;
 		if (startOfUnits != -1) {
+			valueString = v.substring(0, startOfUnits);
 			String unitsString = v.substring(startOfUnits);
 			unitsString = unitsString.trim();
 			for (LengthUnit lengthUnit : LengthUnit.values()) {
@@ -96,8 +103,14 @@ public class LengthUtil {
 				}
 			}
 		}
+		else {
+			valueString = v;
+		}
 		
-		String valueString = v.substring(0, startOfUnits);
+		if (requireUnits && length.getUnits() == null) {
+			return null;
+		}
+		
 		try {
 			double value = Double.parseDouble(valueString);
 			length.setValue(value);
@@ -112,12 +125,6 @@ public class LengthUtil {
 	public static double convertLength(double length, LengthUnit fromUnits, LengthUnit toUnits) {
 		if (fromUnits == toUnits) {
 			return length;
-		}
-		if (fromUnits == null) {
-			throw new Error("convertLength() fromUnits cannot be null");
-		}
-		if (toUnits == null) {
-			throw new Error("convertLength() toUnits cannot be null");
 		}
 		double mm = 0;
 		if (fromUnits == LengthUnit.Millimeters) {
@@ -136,7 +143,7 @@ public class LengthUtil {
 			mm = length * 25.4 * 12;
 		}
 		else {
-			return Double.NaN;
+			throw new Error("convertLength() unrecognized fromUnits " + fromUnits);
 		}
 		
 		if (toUnits == LengthUnit.Millimeters) {
@@ -155,7 +162,16 @@ public class LengthUtil {
 			return mm * (1 / 25.4) * 12;
 		}
 		else {
-			return Double.NaN;
+			throw new Error("convertLength() unrecognized toUnits " + fromUnits);
 		}
+	}
+	
+	public static void main(String[] args) {
+		System.out.println("" + parseLengthValue("2.00?"));
+		System.out.println("" + parseLengthValue("2.00\""));
+		System.out.println("" + parseLengthValue("2.00mm"));
+		System.out.println("" + parseLengthValue("2.00"));
+		System.out.println("" + parseLengthValue("a2.00"));
+		System.out.println("" + parseLengthValue("2.00!"));
 	}
 }

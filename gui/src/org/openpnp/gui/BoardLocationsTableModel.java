@@ -2,10 +2,13 @@ package org.openpnp.gui;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Length;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
+import org.openpnp.util.LengthUtil;
 
 class BoardLocationsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Board", "Side", "X",
@@ -34,6 +37,14 @@ class BoardLocationsTableModel extends AbstractTableModel {
 	}
 	
 	@Override
+	public Class<?> getColumnClass(int columnIndex) {
+		if (columnIndex == 2 || columnIndex == 3 || columnIndex == 4) {
+			return LengthCellValue.class;
+		}
+		return super.getColumnClass(columnIndex);
+	}
+
+	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		return true;
 	}
@@ -43,23 +54,46 @@ class BoardLocationsTableModel extends AbstractTableModel {
 		try {
 			BoardLocation boardLocation = job.getBoardLocations().get(rowIndex);
 			if (columnIndex == 0) {
-				boardLocation.getBoard().setName(aValue.toString());
+				boardLocation.getBoard().setName((String) aValue);
 			}
-			if (columnIndex == 1) {
-				Side side = Side.valueOf(aValue.toString());
-				if (side == null) {
-					return;
-				}
-				boardLocation.setSide(side);
+			else if (columnIndex == 1) {
+				boardLocation.setSide((Side) aValue);
 			}
 			else if (columnIndex == 2) {
-				boardLocation.getLocation().setX(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = boardLocation.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setX(length.getValue());
+				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 3) {
-				boardLocation.getLocation().setY(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = boardLocation.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setY(length.getValue());
+				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 4) {
-				boardLocation.getLocation().setZ(Double.parseDouble(aValue.toString()));
+				Length length = ((LengthCellValue) aValue).getLength();
+				Location location = boardLocation.getLocation();
+				if (location.getUnits() == null) {
+					location.setUnits(length.getUnits());
+				}
+				else {
+					location = LengthUtil.convertLocation(location, length.getUnits());
+				}
+				location.setZ(length.getValue());
+				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 5) {
 				boardLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
@@ -79,11 +113,11 @@ class BoardLocationsTableModel extends AbstractTableModel {
 		case 1:
 			return boardLocation.getSide();
 		case 2:
-			return String.format("%2.3f", loc.getX());
+			return new LengthCellValue(loc.getX(), loc.getUnits());
 		case 3:
-			return String.format("%2.3f", loc.getY());
+			return new LengthCellValue(loc.getY(), loc.getUnits());
 		case 4:
-			return String.format("%2.3f", loc.getZ());
+			return new LengthCellValue(loc.getZ(), loc.getUnits());
 		case 5:
 			return String.format("%2.3f", loc.getRotation());
 		default:

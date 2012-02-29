@@ -82,15 +82,31 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	public Head getHead() {
 		return head;
 	}
+	
+	public void setHead(ReferenceHead head) {
+		this.head = head;
+	}
+	
+	public void setLooking(Looking looking) {
+		this.looking = looking;
+	}
 
 	@Override
 	public Looking getLooking() {
 		return looking;
 	}
-
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	@Override
 	public String getName() {
 		return name;
+	}
+	
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 
 	@Override
