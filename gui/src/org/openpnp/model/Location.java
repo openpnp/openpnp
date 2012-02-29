@@ -21,9 +21,6 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import org.openpnp.LengthUnit;
 import org.simpleframework.xml.Attribute;
 
@@ -32,7 +29,7 @@ import org.simpleframework.xml.Attribute;
  * axis.
  */
 public class Location extends AbstractModelObject {
-	@Attribute(required=false)
+	@Attribute
 	private LengthUnit units;
 	@Attribute(required=false)
 	private double x;
