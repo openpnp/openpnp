@@ -95,14 +95,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				int index = table.getSelectedRow();
 				
-				feedFeederAction.setEnabled(index != -1);
+				Feeder feeder = getSelectedFeeder();
+				
+				feedFeederAction.setEnabled(feeder != null);
 				
 				configurationPanel.removeAll();
-				if (index != -1) {
-					index = table.convertRowIndexToModel(index);
-					Feeder feeder = tableModel.getFeeder(index);
+				if (feeder != null) {
 					Wizard wizard = feeder.getConfigurationWizard();
 					if (wizard != null) {
 						wizard.setWizardContainer(FeedersPanel.this);
@@ -116,6 +115,17 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		});
 		
 		feedFeederAction.setEnabled(false);
+	}
+	
+	private Feeder getSelectedFeeder() {
+		int index = table.getSelectedRow();
+		
+		if (index == -1) {
+			return null;
+		}
+		
+		index = table.convertRowIndexToModel(index);
+		return tableModel.getFeeder(index);
 	}
 
 	private void search() {
@@ -153,6 +163,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	public Action feedFeederAction = new AbstractAction("Feed") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			Feeder feeder = getSelectedFeeder();
 		}
 	};
 }

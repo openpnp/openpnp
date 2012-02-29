@@ -50,14 +50,15 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
+			Part part = parts.get(rowIndex);
 			if (columnIndex == 0) {
 				if (aValue == null || aValue.toString().trim().length() == 0) {
 					return;
 				}
-				parts.get(rowIndex).setId(aValue.toString());
+				part.setId(aValue.toString());
 			}
 			else if (columnIndex == 1) {
-				parts.get(rowIndex).setName(aValue.toString());
+				part.setName(aValue.toString());
 			}
 			else if (columnIndex == 2) {
 				Length length = LengthUtil.parseLengthValue(aValue.toString());
@@ -65,9 +66,9 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 					// TODO: dialog, unable to parse
 					return;
 				}
-				parts.get(rowIndex).setHeight(length.getValue());
+				part.setHeight(length.getValue());
 				if (length.getUnits() != null) {
-					parts.get(rowIndex).setHeightUnits(length.getUnits());
+					part.setHeightUnits(length.getUnits());
 				}
 			}
 			else if (columnIndex == 3) {
@@ -76,7 +77,7 @@ class PartsTableModel extends AbstractTableModel implements PropertyChangeListen
 					// TODO: dialog, package not found
 					return;
 				}
-				parts.get(rowIndex).setPackage(pkg);
+				part.setPackage(pkg);
 			}
 			configuration.setDirty(true);
 		}
