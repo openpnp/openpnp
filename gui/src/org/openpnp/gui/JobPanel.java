@@ -229,7 +229,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				return true;
 			}
 			catch (Exception e) {
-				MessageBoxes.errorBox(JobPanel.this, "Job Save Error", e.getMessage());
+				MessageBoxes.errorBox(frame, "Job Save Error", e.getMessage());
 				return false;
 			}
 		}
@@ -258,7 +258,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			return true;
 		}
 		catch (Exception e) {
-			MessageBoxes.errorBox(JobPanel.this, "Job Save Error", e.getMessage());
+			MessageBoxes.errorBox(frame, "Job Save Error", e.getMessage());
 			return false;
 		}
 	}
@@ -327,7 +327,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(JobPanel.this, "Job Load Error", e.getMessage());
+				MessageBoxes.errorBox(frame, "Job Load Error", e.getMessage());
 			}
 		}
 	};
@@ -365,7 +365,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					jobProcessor.start();
 				}
 				catch (Exception e) {
-					MessageBoxes.errorBox(JobPanel.this, "Job Start Error", e.getMessage());
+					MessageBoxes.errorBox(frame, "Job Start Error", e.getMessage());
 				}
 			}
 			else if (state == JobState.Paused) {
@@ -384,7 +384,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				jobProcessor.step();
 			}
 			catch (Exception e) {
-				MessageBoxes.errorBox(JobPanel.this, "Job Step Failed", e.getMessage());
+				MessageBoxes.errorBox(frame, "Job Step Failed", e.getMessage());
 			}
 		}
 	};
@@ -426,7 +426,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(JobPanel.this, "Unable to create new board", e.getMessage());
+				MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage());
 			}
 		}
 	};
@@ -457,7 +457,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(JobPanel.this, "Board load failed", e.getMessage());
+				MessageBoxes.errorBox(frame, "Board load failed", e.getMessage());
 			}
 		}
 	};
@@ -536,7 +536,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void jobEncounteredError(JobError error, String description) {
-			MessageBoxes.errorBox(JobPanel.this, error.toString(), description);
+			MessageBoxes.errorBox(frame, error.toString(), description + "\n\nThe job will be paused.");
+			// TODO: Implement a way to retry, abort, etc.
+			jobProcessor.pause();
 		}
 	};
 	

@@ -137,7 +137,7 @@ public class BoardsPanel extends JPanel {
 						configuration.saveBoard(board);
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(BoardsPanel.this, "Board Save Error", e.getMessage());
+						MessageBoxes.errorBox(frame, "Board Save Error", e.getMessage());
 						return false;
 					}
 				}
@@ -200,7 +200,7 @@ public class BoardsPanel extends JPanel {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(BoardsPanel.this, "Unable to create new board", e.getMessage());
+				MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage());
 			}
 		}
 	};
@@ -227,7 +227,7 @@ public class BoardsPanel extends JPanel {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(BoardsPanel.this, "Board load failed", e.getMessage());
+				MessageBoxes.errorBox(frame, "Board load failed", e.getMessage());
 			}
 		}
 	};
