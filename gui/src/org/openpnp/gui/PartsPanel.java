@@ -207,6 +207,10 @@ public class PartsPanel extends JPanel {
 	public Action deleteFeederLocationAction = new AbstractAction("Delete Feeder Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			FeederLocation feederLocation = getSelectedFeederLocation();
+			getSelectedPart().removeFeederLocation(feederLocation);
+			feederLocationsTableModel.fireTableDataChanged();
+			configuration.setDirty(true);
 		}
 	};
 	
