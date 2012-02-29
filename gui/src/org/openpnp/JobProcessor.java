@@ -285,11 +285,11 @@ public class JobProcessor implements Runnable {
 								.getRotation()) % 360.0);
 
 				// Update the placementLocation with the proper Z value. This is
-				// the distance to the top of the board minus
-				// the height of the part.
+				// the distance to the top of the board plus the height of 
+				// the part.
 				double partHeight = LengthUtil.convertLength(part.getHeight(),
 						part.getHeightUnits(), machine.getNativeUnits());
-				placementLocation.setZ(boardLocation.getZ() - partHeight);
+				placementLocation.setZ(boardLocation.getZ() + partHeight);
 
 				// At this point the important data is pickLocation along with
 				// it's rotation, which determines
