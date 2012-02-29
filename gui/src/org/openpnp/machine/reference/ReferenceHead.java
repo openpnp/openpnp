@@ -76,6 +76,10 @@ public class ReferenceHead implements Head {
 
 	@Override
 	public void moveTo(double x, double y, double z, double c, double feedRatePerMinute) throws Exception {
+		if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) || Double.isNaN(c)) {
+			throw new Exception(String.format("Movement to %2.4f, %2.4f, %2.4f, %2.4f is invalid. You have bad data somewhere.", 
+					x, y, z, c));
+		}
 		if (x < softLimits.minX || x > softLimits.maxX ||
 				y < softLimits.minY || y > softLimits.maxY ||
 				z < softLimits.minZ || z > softLimits.maxZ ||

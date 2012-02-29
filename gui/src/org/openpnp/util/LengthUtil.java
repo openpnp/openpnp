@@ -113,6 +113,12 @@ public class LengthUtil {
 		if (fromUnits == toUnits) {
 			return length;
 		}
+		if (fromUnits == null) {
+			throw new Error("convertLength() fromUnits cannot be null");
+		}
+		if (toUnits == null) {
+			throw new Error("convertLength() toUnits cannot be null");
+		}
 		double mm = 0;
 		if (fromUnits == LengthUnit.Millimeters) {
 			mm = length;
