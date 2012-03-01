@@ -46,11 +46,10 @@ public class Main {
 		}
 		final Configuration configuration = new Configuration();
 		final JobProcessor jobProcessor = new JobProcessor(configuration);
-		final MachineControlsPanel machineControlsPanel = new MachineControlsPanel(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MainFrame frame = new MainFrame(configuration, jobProcessor, machineControlsPanel);
+					MainFrame frame = new MainFrame(configuration, jobProcessor);
 					frame.setVisible(true);
 				}
 				catch (Exception e) {

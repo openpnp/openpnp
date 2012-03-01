@@ -67,10 +67,9 @@ public class MainFrame extends JFrame {
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
 	 * Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 	 */
-	final private Configuration configuration;
-	final private JobProcessor jobProcessor;
-	final private MachineControlsPanel machineControlsPanel;
+	private final Configuration configuration;
 
+	private MachineControlsPanel machineControlsPanel;
 	private PartsPanel partsPanel;
 	private FeedersPanel feedersPanel;
 	private JobPanel jobPanel;
@@ -83,10 +82,8 @@ public class MainFrame extends JFrame {
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
 
-	public MainFrame(Configuration configuration, JobProcessor jobProcessor, MachineControlsPanel machineControlsPanel) {
+	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
-		this.jobProcessor = jobProcessor;
-		this.machineControlsPanel = machineControlsPanel;
 		
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
@@ -102,6 +99,7 @@ public class MainFrame extends JFrame {
 		setBounds(100, 100, 1280, 1024);
 //		setBounds(100, 100, 1024, 768);
 		
+		machineControlsPanel = new MachineControlsPanel(configuration, this);
 		machinePanel = new MachinePanel(configuration);
 		jobPanel = new JobPanel(configuration, jobProcessor, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, machineControlsPanel, this);
@@ -171,16 +169,17 @@ public class MainFrame extends JFrame {
 		// Add global hotkeys for the arrow keys
 		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
 		
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.yPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.yMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.xMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.xPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.zPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.zMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.cMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.cPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.lowerIncrementAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.raiseIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().yPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().yMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().xMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().xPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().zPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().zMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().cMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().cPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.showHideJogControlsWindowAction);
 		
 		// TODO need to restrict this capture somehow, it breaks textfields
 		// and using arrow keys to move through lists.
