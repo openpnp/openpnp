@@ -664,6 +664,22 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
+	public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			sliderIncrements.setValue(Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			sliderIncrements.setValue(Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
+		}
+	};
+	
+	@SuppressWarnings("serial")
 	private Action pickPlaceAction = new AbstractAction("O") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

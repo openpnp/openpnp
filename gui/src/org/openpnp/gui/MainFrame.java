@@ -171,14 +171,16 @@ public class MainFrame extends JFrame {
 		// Add global hotkeys for the arrow keys
 		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
 		
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), machineControlsPanel.yPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), machineControlsPanel.yMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), machineControlsPanel.xMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), machineControlsPanel.xPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), machineControlsPanel.zPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), machineControlsPanel.zMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0), machineControlsPanel.cMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, 0), machineControlsPanel.cPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.yPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.yMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.xMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.xPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.zPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.zMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.cMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.cPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.lowerIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.raiseIncrementAction);
 		
 		// TODO need to restrict this capture somehow, it breaks textfields
 		// and using arrow keys to move through lists.
