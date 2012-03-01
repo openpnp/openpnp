@@ -33,24 +33,18 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.LengthUnit;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
@@ -71,12 +65,7 @@ public class JogControlsPanel extends JPanel {
 	
 	private Machine machine;
 	private Head head;
-	private LengthUnit units;
-	private JSlider sliderIncrements;
-	private JRadioButton rdbtnMm;
-	private JRadioButton rdbtnInch;
 	private JToggleButton btnPickPlace;
-	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private JPanel panelActuators;
 	
 	// TODO: Move out to main, or get it from the MachineControlsPanel
@@ -111,48 +100,6 @@ public class JogControlsPanel extends JPanel {
 		}
 	}
 	
-	private void setUnits(LengthUnit units) {
-		if (units == LengthUnit.Millimeters) {
-			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
-			incrementsLabels.put(1, new JLabel("0.01"));
-			incrementsLabels.put(2, new JLabel("0.1"));
-			incrementsLabels.put(3, new JLabel("1.0"));
-			incrementsLabels.put(4, new JLabel("10"));
-			sliderIncrements.setLabelTable(incrementsLabels);
-			rdbtnMm.setSelected(true);
-		}
-		else if (units == LengthUnit.Inches) {
-			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
-			incrementsLabels.put(1, new JLabel("0.001"));
-			incrementsLabels.put(2, new JLabel("0.01"));
-			incrementsLabels.put(3, new JLabel("0.1"));
-			incrementsLabels.put(4, new JLabel("1"));
-			sliderIncrements.setLabelTable(incrementsLabels);
-			rdbtnInch.setSelected(true);
-		}
-		else {
-			throw new Error("setUnits() not implemented for " + units);
-		}
-		this.units = units;
-		machineControlsPanel.updateDros();
-	}
-	
-	public LengthUnit getJogUnits() {
-		return units;
-	}
-	
-	public double getJogIncrement() {
-		if (units == LengthUnit.Millimeters) {
-			return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
-		}
-		else if (units == LengthUnit.Inches) {
-			return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
-		}
-		else {
-			throw new Error("getJogIncrement() not implemented for " + units);
-		}
-	}
-	
 	private void jog(final int x, final int y, final int z, final int c) {
 		executor.execute(new Runnable() {
 			public void run() {
@@ -162,7 +109,7 @@ public class JogControlsPanel extends JPanel {
 					double zPos = head.getZ();
 					double cPos = head.getC();
 					
-					double jogIncrement = LengthUtil.convertLength(getJogIncrement(), units, machine.getNativeUnits());
+					double jogIncrement = LengthUtil.convertLength(machineControlsPanel.getJogIncrement(), machineControlsPanel.getJogUnits(), machine.getNativeUnits());
 					
 					if (x > 0) {
 						xPos += jogIncrement;
@@ -203,41 +150,6 @@ public class JogControlsPanel extends JPanel {
 	
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		
-		JPanel panelIncrements = new JPanel();
-		add(panelIncrements);
-		
-		sliderIncrements = new JSlider();
-		panelIncrements.add(sliderIncrements);
-		sliderIncrements.setMajorTickSpacing(1);
-		sliderIncrements.setValue(1);
-		sliderIncrements.setSnapToTicks(true);
-		sliderIncrements.setPaintLabels(true);
-		sliderIncrements.setPaintTicks(true);
-		sliderIncrements.setMinimum(1);
-		sliderIncrements.setMaximum(4);
-		
-		JPanel panelUnits = new JPanel();
-		panelIncrements.add(panelUnits);
-		
-		rdbtnMm = new JRadioButton("MM");
-		buttonGroup.add(rdbtnMm);
-		rdbtnMm.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				setUnits(LengthUnit.Millimeters);
-			}
-		});
-		panelUnits.setLayout(new BoxLayout(panelUnits, BoxLayout.Y_AXIS));
-		panelUnits.add(rdbtnMm);
-		
-		rdbtnInch = new JRadioButton("Inch");
-		buttonGroup.add(rdbtnInch);
-		rdbtnInch.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				setUnits(LengthUnit.Inches);
-			}
-		});
-		panelUnits.add(rdbtnInch);
 		
 		JPanel panelControls = new JPanel();
 		add(panelControls);
@@ -365,8 +277,8 @@ public class JogControlsPanel extends JPanel {
 		btnNewButton.setFocusable(false);
 		panelSpecial.add(btnNewButton);
 		
-		setFocusTraversalPolicy(focusPolicy);
-		setFocusTraversalPolicyProvider(true);
+//		setFocusTraversalPolicy(focusPolicy);
+//		setFocusTraversalPolicyProvider(true);
 	}
 	
 	@SuppressWarnings("serial")
@@ -434,22 +346,6 @@ public class JogControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
-	public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			sliderIncrements.setValue(Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
-		}
-	};
-	
-	@SuppressWarnings("serial")
-	public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			sliderIncrements.setValue(Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
-		}
-	};
-	
-	@SuppressWarnings("serial")
 	public Action pickPlaceAction = new AbstractAction("O") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -472,39 +368,39 @@ public class JogControlsPanel extends JPanel {
 		}
 	};
 	
-	private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
-		@Override
-		public Component getComponentAfter(Container aContainer,
-				Component aComponent) {
-			return sliderIncrements;
-		}
-
-		@Override
-		public Component getComponentBefore(Container aContainer,
-				Component aComponent) {
-			return sliderIncrements;
-		}
-
-		@Override
-		public Component getDefaultComponent(Container aContainer) {
-			return sliderIncrements;
-		}
-
-		@Override
-		public Component getFirstComponent(Container aContainer) {
-			return sliderIncrements;
-		}
-
-		@Override
-		public Component getInitialComponent(Window window) {
-			return sliderIncrements;
-		}
-
-		@Override
-		public Component getLastComponent(Container aContainer) {
-			return sliderIncrements;
-		}
-	};
+//	private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
+//		@Override
+//		public Component getComponentAfter(Container aContainer,
+//				Component aComponent) {
+//			return sliderIncrements;
+//		}
+//
+//		@Override
+//		public Component getComponentBefore(Container aContainer,
+//				Component aComponent) {
+//			return sliderIncrements;
+//		}
+//
+//		@Override
+//		public Component getDefaultComponent(Container aContainer) {
+//			return sliderIncrements;
+//		}
+//
+//		@Override
+//		public Component getFirstComponent(Container aContainer) {
+//			return sliderIncrements;
+//		}
+//
+//		@Override
+//		public Component getInitialComponent(Window window) {
+//			return sliderIncrements;
+//		}
+//
+//		@Override
+//		public Component getLastComponent(Container aContainer) {
+//			return sliderIncrements;
+//		}
+//	};
 	
 	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
@@ -513,7 +409,6 @@ public class JogControlsPanel extends JPanel {
 			
 			machine = configuration.getMachine();
 			head = machine.getHeads().get(0);
-			setUnits(machine.getNativeUnits());
 			
 
 			for (String actuatorName : head.getActuatorNames()) {

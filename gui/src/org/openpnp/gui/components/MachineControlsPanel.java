@@ -39,6 +39,7 @@ import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,15 +47,19 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.LengthUnit;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
@@ -85,7 +90,12 @@ public class MachineControlsPanel extends JPanel {
 	private JTextField textFieldZ;
 	private JButton btnStartStop;
 	private JComboBox comboBoxCoordinateSystem;
+	private JSlider sliderIncrements;
+	private JRadioButton rdbtnMm;
+	private JRadioButton rdbtnInch;
 	
+	private LengthUnit units;
+
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
 	
@@ -116,6 +126,48 @@ public class MachineControlsPanel extends JPanel {
 		return jogControlsPanel;
 	}
 	
+	private void setUnits(LengthUnit units) {
+		if (units == LengthUnit.Millimeters) {
+			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
+			incrementsLabels.put(1, new JLabel("0.01"));
+			incrementsLabels.put(2, new JLabel("0.1"));
+			incrementsLabels.put(3, new JLabel("1.0"));
+			incrementsLabels.put(4, new JLabel("10"));
+			sliderIncrements.setLabelTable(incrementsLabels);
+			rdbtnMm.setSelected(true);
+		}
+		else if (units == LengthUnit.Inches) {
+			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
+			incrementsLabels.put(1, new JLabel("0.001"));
+			incrementsLabels.put(2, new JLabel("0.01"));
+			incrementsLabels.put(3, new JLabel("0.1"));
+			incrementsLabels.put(4, new JLabel("1"));
+			sliderIncrements.setLabelTable(incrementsLabels);
+			rdbtnInch.setSelected(true);
+		}
+		else {
+			throw new Error("setUnits() not implemented for " + units);
+		}
+		this.units = units;
+		updateDros();
+	}
+	
+	public LengthUnit getJogUnits() {
+		return units;
+	}
+	
+	public double getJogIncrement() {
+		if (units == LengthUnit.Millimeters) {
+			return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
+		}
+		else if (units == LengthUnit.Inches) {
+			return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
+		}
+		else {
+			throw new Error("getJogIncrement() not implemented for " + units);
+		}
+	}
+	
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
@@ -127,7 +179,7 @@ public class MachineControlsPanel extends JPanel {
 	public Location getDisplayedLocation() {
 		Location location = new Location();
 		
-		if (machine == null || head == null || jogControlsPanel.getJogUnits() == null) {
+		if (machine == null || head == null || getJogUnits() == null) {
 			return null;
 		}
 		double x = 0, y = 0, z = 0, c = 0;
@@ -160,7 +212,7 @@ public class MachineControlsPanel extends JPanel {
 		location.setRotation(c);
 		location.setUnits(machine.getNativeUnits());
 		
-		location = LengthUtil.convertLocation(location, jogControlsPanel.getJogUnits());
+		location = LengthUtil.convertLocation(location, getJogUnits());
 		
 		return location;
 	}
@@ -188,6 +240,8 @@ public class MachineControlsPanel extends JPanel {
 	
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		
+		ButtonGroup buttonGroup = new ButtonGroup();
 		
 		JPanel panelCoordinateSystem = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panelCoordinateSystem.getLayout();
@@ -294,6 +348,40 @@ public class MachineControlsPanel extends JPanel {
 		textFieldZ.setAction(droAction);
 		textFieldZ.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldZ);
+		
+		JPanel panelIncrements = new JPanel();
+		add(panelIncrements);
+		
+		sliderIncrements = new JSlider();
+		panelIncrements.add(sliderIncrements);
+		sliderIncrements.setMajorTickSpacing(1);
+		sliderIncrements.setValue(1);
+		sliderIncrements.setSnapToTicks(true);
+		sliderIncrements.setPaintLabels(true);
+		sliderIncrements.setPaintTicks(true);
+		sliderIncrements.setMinimum(1);
+		sliderIncrements.setMaximum(4);
+		
+		JPanel panelUnits = new JPanel();
+		panelIncrements.add(panelUnits);
+		rdbtnMm = new JRadioButton("MM");
+		buttonGroup.add(rdbtnMm);
+		rdbtnMm.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setUnits(LengthUnit.Millimeters);
+			}
+		});
+		panelUnits.setLayout(new BoxLayout(panelUnits, BoxLayout.Y_AXIS));
+		panelUnits.add(rdbtnMm);
+		
+		rdbtnInch = new JRadioButton("Inch");
+		buttonGroup.add(rdbtnInch);
+		rdbtnInch.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setUnits(LengthUnit.Inches);
+			}
+		});
+		panelUnits.add(rdbtnInch);
 		
 		JPanel panelStartStop = new JPanel();
 		add(panelStartStop);
@@ -513,6 +601,23 @@ public class MachineControlsPanel extends JPanel {
 		}
 	};
 	
+	@SuppressWarnings("serial")
+	public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			sliderIncrements.setValue(Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			sliderIncrements.setValue(Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
+		}
+	};
+	
+
 	private MachineListener machineListener = new MachineListener.Adapter() {
 		@Override
 		public void machineHeadActivity(Machine machine, Head head) {
@@ -557,6 +662,7 @@ public class MachineControlsPanel extends JPanel {
 			
 			machine = configuration.getMachine();
 			head = machine.getHeads().get(0);
+			setUnits(machine.getNativeUnits());
 			machine.addListener(machineListener);
 			
 			comboBoxCoordinateSystem.removeAllItems();

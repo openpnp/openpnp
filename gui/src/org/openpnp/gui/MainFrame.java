@@ -177,8 +177,8 @@ public class MainFrame extends JFrame {
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().zMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().cMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().cPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.lowerIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.raiseIncrementAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.showHideJogControlsWindowAction);
 		
 		// TODO need to restrict this capture somehow, it breaks textfields
