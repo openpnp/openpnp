@@ -116,7 +116,7 @@ public class MachineControlsPanel extends JPanel {
 		
 		configuration.addListener(configurationListener);
 
-		jogControlsWindow = new JDialog(frame);
+		jogControlsWindow = new JDialog(frame, "Jog Controls");
 		jogControlsWindow.setResizable(false);
 		jogControlsWindow.getContentPane().setLayout(new BorderLayout());
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
