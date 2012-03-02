@@ -1,11 +1,16 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.regex.PatternSyntaxException;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -21,12 +26,14 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.TableScanner;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 
 public class CamerasPanel extends JPanel implements WizardContainer {
+	private final Frame frame;
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
 	
@@ -37,7 +44,8 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	private JTextField searchTextField;
 	JPanel configurationPanel;
 
-	public CamerasPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
+	public CamerasPanel(Frame frame, Configuration configuration, MachineControlsPanel machineControlsPanel) {
+		this.frame = frame;
 		this.configuration = configuration;
 		this.machineControlsPanel = machineControlsPanel;
 		
@@ -51,6 +59,9 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
+		
+		JButton btnNewButton = new JButton(tableScannerAction);
+		toolBar.add(btnNewButton);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -143,4 +154,13 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	public MachineControlsPanel getMachineControlsPanel() {
 		return machineControlsPanel;
 	}
+	
+	private Action tableScannerAction = new AbstractAction("Table Scanner") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			TableScanner tableScanner = new TableScanner(frame, configuration);
+			tableScanner.pack();
+			tableScanner.setVisible(true);
+		}
+	};
 }

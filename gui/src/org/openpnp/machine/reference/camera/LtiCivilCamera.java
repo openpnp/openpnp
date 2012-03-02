@@ -62,7 +62,7 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	
 	private int width, height;
 	
-	private BufferedImage grayImage;
+	private BufferedImage lastImage;
 	
 	@Override
 	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
@@ -89,7 +89,6 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 		videoFormat = captureStream.getVideoFormat();
 		width = videoFormat.getWidth();
 		height = videoFormat.getHeight();
-		System.out.println("Camera " + getName() + " dimensions are " + width + ", " + height);
 		captureStream.setObserver(this);
 		captureStream.start();
 	}
@@ -104,23 +103,20 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 		if (listeners.size() > 0) {
 			BufferedImage bImage = AWTImageConverter.toBufferedImage(newImage);
 			if (forceGrayscale) {
-				if (grayImage == null) {
-					grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-				}
+				BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
 				Graphics g = grayImage.getGraphics();
 				g.drawImage(bImage, 0, 0, null);  
 				g.dispose();
-				broadcastCapture(grayImage);
+				broadcastCapture(lastImage = grayImage);
 			}
 			else {
-				broadcastCapture(bImage);
+				broadcastCapture(lastImage = bImage);
 			}
 		}
 	}
 
 	@Override
 	public BufferedImage capture() {
-		// TODO not implemented
-		throw new Error("LtiCivilCamera.capture() not yet implemented.");
+		return lastImage;
 	}
 }

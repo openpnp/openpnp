@@ -22,6 +22,7 @@
 package org.openpnp.model;
 
 import org.openpnp.LengthUnit;
+import org.openpnp.util.LengthUtil;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -88,6 +89,10 @@ public class Location extends AbstractModelObject {
 		LengthUnit oldValue = this.units;
 		this.units = units;
 		firePropertyChange("units", oldValue, units);
+	}
+	
+	public Location convertToUnits(LengthUnit units) {
+		return LengthUtil.convertLocation(this, units);
 	}
 
 	@Override
