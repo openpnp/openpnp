@@ -16,7 +16,7 @@ import org.simpleframework.xml.core.Commit;
  * located images. This allows you to create a virtual camera that
  * uses multiple existing images to lay out an entire table view. 
  */
-public class ImageCamera extends AbstractCamera implements Runnable {
+public class TableScannerCamera extends AbstractCamera implements Runnable {
 	@ElementList
 	private List<ImageLocation> imageLocations = new ArrayList<ImageLocation>();
 	
