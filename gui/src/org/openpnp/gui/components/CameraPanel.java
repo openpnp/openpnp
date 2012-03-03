@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -33,8 +34,11 @@ import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
+import org.openpnp.CameraListener;
 import org.openpnp.gui.support.CameraItem;
+import org.openpnp.machine.reference.camera.RoboRealmCamera;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.VisionProvider;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
@@ -50,7 +54,7 @@ public class CameraPanel extends JPanel {
 
 	private JComboBox camerasCombo;
 	private JPanel camerasPanel;
-
+	
 	public CameraPanel() {
 		createUi();
 
@@ -76,7 +80,7 @@ public class CameraPanel extends JPanel {
 		add(camerasCombo, BorderLayout.NORTH);
 		add(camerasPanel);
 	}
-
+	
 	class CameraSelectedAction extends AbstractAction {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
@@ -110,8 +114,9 @@ public class CameraPanel extends JPanel {
 				clearCameras();
 				camerasPanel.setLayout(new BorderLayout());
 				CameraView cameraView = new CameraView(maximumFps);
-				cameraView.setCamera(((CameraItem) camerasCombo
-						.getSelectedItem()).getCamera());
+				Camera camera = ((CameraItem) camerasCombo.getSelectedItem()).getCamera();
+				cameraView.setCamera(camera);
+				
 				camerasPanel.add(cameraView);
 			}
 			revalidate();
@@ -121,7 +126,8 @@ public class CameraPanel extends JPanel {
 		private void clearCameras() {
 			for (Component comp : camerasPanel.getComponents()) {
 				if (comp instanceof CameraView) {
-					((CameraView) comp).setCamera(null);
+					CameraView cameraView = (CameraView) comp;
+					cameraView.setCamera(null);
 				}
 			}
 			camerasPanel.removeAll();

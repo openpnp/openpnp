@@ -120,6 +120,10 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 	}
 	
+	public Camera getCamera() {
+		return camera;
+	}
+	
 	public void setCalibrationMode(boolean calibrationMode) {
 		this.calibrationMode = calibrationMode;
 	}
