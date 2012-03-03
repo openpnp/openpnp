@@ -55,6 +55,10 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 	private CaptureDevice captureDevice;
 	private int width, height;
 	
+	private BufferedImage lastImage;
+	
+	private Object captureLock = new Object();
+	
 	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		super.setReferenceMachine(machine);
 		if (driver == null || driver.trim().length() == 0) {
@@ -95,12 +99,13 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 		width = (int) captureDevice.getVideoDimensions().getWidth();
 		height = (int) captureDevice.getVideoDimensions().getHeight();
 		
-		System.out.println("Camera " + getName() + " dimensions are " + width + ", " + height);
-		
 		while (true) {
-			if (listeners.size() > 0) {
-				BufferedImage frame = captureFrame();
-				broadcastCapture(frame);
+			int[] captureData = captureDevice.captureFrame();
+			BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+			image.setRGB(0, 0, width, height, captureData, 0, width);
+			broadcastCapture(lastImage = image);
+			synchronized (captureLock) {
+				captureLock.notify();
 			}
 			try {
 				Thread.sleep(1000 / 30);
@@ -110,15 +115,18 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 		}
 	}
 	
-	private synchronized BufferedImage captureFrame() {
-		int[] frame = captureDevice.captureFrame();
-		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-		bi.setRGB(0, 0, width, height, frame, 0, width);
-		return bi;
-	}
-
 	@Override
 	public BufferedImage capture() {
-		return captureFrame();
+		synchronized (captureLock) {
+			try {
+				captureLock.wait();
+				BufferedImage image = lastImage;
+				return image;
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
 	}
 }

@@ -19,7 +19,7 @@ public class NullDriver implements ReferenceDriver {
 	@Override
 	public void moveTo(ReferenceHead head, double x, double y, double z,
 			double c, double feedRateMmPerMinute) throws Exception {
-		System.out.println(String.format("moveTo(%f, %f, %f, %f, %f)", x, y, z, c, feedRateMmPerMinute));
+//		System.out.println(String.format("moveTo(%f, %f, %f, %f, %f)", x, y, z, c, feedRateMmPerMinute));
 	}
 
 	@Override

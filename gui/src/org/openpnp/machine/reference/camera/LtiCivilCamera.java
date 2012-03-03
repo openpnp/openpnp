@@ -64,6 +64,8 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	
 	private BufferedImage lastImage;
 	
+	private Object captureLock = new Object();
+	
 	@Override
 	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		super.setReferenceMachine(machine);
@@ -98,25 +100,35 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 	}
 
 	@Override
-	// TODO should probably turn off the stream if there are no listeners, to save CPU
 	public void onNewImage(CaptureStream captureStream, Image newImage) {
-		if (listeners.size() > 0) {
-			BufferedImage bImage = AWTImageConverter.toBufferedImage(newImage);
-			if (forceGrayscale) {
-				BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-				Graphics g = grayImage.getGraphics();
-				g.drawImage(bImage, 0, 0, null);  
-				g.dispose();
-				broadcastCapture(lastImage = grayImage);
-			}
-			else {
-				broadcastCapture(lastImage = bImage);
-			}
+		BufferedImage bImage = AWTImageConverter.toBufferedImage(newImage);
+		if (forceGrayscale) {
+			BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+			Graphics g = grayImage.getGraphics();
+			g.drawImage(bImage, 0, 0, null);  
+			g.dispose();
+			broadcastCapture(lastImage = grayImage);
+		}
+		else {
+			broadcastCapture(lastImage = bImage);
+		}
+		synchronized (captureLock) {
+			captureLock.notify();
 		}
 	}
 
 	@Override
 	public BufferedImage capture() {
-		return lastImage;
+		synchronized (captureLock) {
+			try {
+				captureLock.wait();
+				BufferedImage image = lastImage;
+				return image;
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
 	}
 }

@@ -388,7 +388,7 @@ public class MachineControlsPanel extends JPanel {
 		panelStartStop.setLayout(new BorderLayout(0, 0));
 		
 		btnStartStop = new JButton(startMachineAction);
-		btnStartStop.setFocusable(false);
+		btnStartStop.setFocusable(true);
 		btnStartStop.setForeground(startColor);
 		panelStartStop.add(btnStartStop);
 		btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
@@ -516,7 +516,7 @@ public class MachineControlsPanel extends JPanel {
 				}
 				head.setPerceivedC(value);
 			}
-			comboBoxCoordinateSystem.requestFocus();
+			btnStartStop.requestFocus();
 		}
 	};
 	
