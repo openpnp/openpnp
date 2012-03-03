@@ -1,4 +1,4 @@
-package org.openpnp;
+package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -180,39 +180,39 @@ public class TableScanner extends JDialog implements Runnable {
 	}
 	
 	public void run() {
-		Machine machine = configuration.getMachine();
-		Camera camera = ((CameraItem) cmbCameras.getSelectedItem()).getCamera();
-		Head head = camera.getHead();
-		// TODO: Make sure the units are native
-		double startX = Double.parseDouble(txtStartX.getText());
-		double startY = Double.parseDouble(txtStartY.getText());
-		double endX = Double.parseDouble(txtEndX.getText());
-		double endY = Double.parseDouble(txtEndY.getText());
-		// Calculate bounding box
-		double width = Math.abs(endX - startX);
-		double height = Math.abs(endY - startY);
-		// Determine how many images are needed
-		BufferedImage image = camera.capture();
-		// Figure out how many units per image we are getting
-		Location unitsPerPixel = camera.getUnitsPerPixel();
-		unitsPerPixel = unitsPerPixel.convertToUnits(machine.getNativeUnits());
-		double imageWidthInUnits = unitsPerPixel.getX() * image.getWidth();
-		double imageHeightInUnits = unitsPerPixel.getY() * image.getHeight();
-		System.out.println(String.format("Images are %d, %d pixels, %2.3f, %2.3f %s", 
-				image.getWidth(),
-				image.getHeight(),
-				imageWidthInUnits,
-				imageHeightInUnits,
-				unitsPerPixel.getUnits().getShortName()));
-		int widthInImages = (int) (width / (imageWidthInUnits / 2));
-		int heightInImages = (int) (height / (imageHeightInUnits / 2));
-		int totalImages = (widthInImages * heightInImages);
-		System.out.println(String.format("Need to capture %d x %d images for a total of %d", 
-				widthInImages, 
-				heightInImages, 
-				totalImages));
-		// Start loop, checking for cancelled
 		try {
+			Machine machine = configuration.getMachine();
+			Camera camera = ((CameraItem) cmbCameras.getSelectedItem()).getCamera();
+			Head head = camera.getHead();
+			// TODO: Make sure the units are native
+			double startX = Double.parseDouble(txtStartX.getText());
+			double startY = Double.parseDouble(txtStartY.getText());
+			double endX = Double.parseDouble(txtEndX.getText());
+			double endY = Double.parseDouble(txtEndY.getText());
+			// Calculate bounding box
+			double width = Math.abs(endX - startX);
+			double height = Math.abs(endY - startY);
+			// Determine how many images are needed
+			BufferedImage image = camera.capture();
+			// Figure out how many units per image we are getting
+			Location unitsPerPixel = camera.getUnitsPerPixel();
+			unitsPerPixel = unitsPerPixel.convertToUnits(machine.getNativeUnits());
+			double imageWidthInUnits = unitsPerPixel.getX() * image.getWidth();
+			double imageHeightInUnits = unitsPerPixel.getY() * image.getHeight();
+			System.out.println(String.format("Images are %d, %d pixels, %2.3f, %2.3f %s", 
+					image.getWidth(),
+					image.getHeight(),
+					imageWidthInUnits,
+					imageHeightInUnits,
+					unitsPerPixel.getUnits().getShortName()));
+			int widthInImages = (int) (width / (imageWidthInUnits / 2));
+			int heightInImages = (int) (height / (imageHeightInUnits / 2));
+			int totalImages = (widthInImages * heightInImages);
+			System.out.println(String.format("Need to capture %d x %d images for a total of %d", 
+					widthInImages, 
+					heightInImages, 
+					totalImages));
+			// Start loop, checking for cancelled
 			File outputDirectory = new File(txtOutputDirectory.getText());
 			if (!outputDirectory.exists()) {
 				throw new Exception("Output directory does not exist.");
@@ -233,6 +233,17 @@ public class TableScanner extends JDialog implements Runnable {
 						startY + ((imageHeightInUnits / 2) * currentImageY), 
 						head.getZ(), 
 						head.getC());
+				// Give the head and camera 500ms to settle
+				Thread.sleep(500);
+				// We capture two images to make sure that the one we save is
+				// not coming from a previous frame.
+				image = camera.capture();
+				image = camera.capture();
+				File outputFile = new File(outputDirectory,
+						String.format("%2.3f,%2.3f.png", head.getX(), head.getY()));
+				ImageIO.write(image, "png",outputFile);
+				progressBar.setValue(currentImage);
+				currentImage++;
 				currentImageX++;
 				if (currentImageX == widthInImages) {
 					currentImageX = 0;
@@ -241,16 +252,11 @@ public class TableScanner extends JDialog implements Runnable {
 						break;
 					}
 				}
-				image = camera.capture();
-				File outputFile = new File(outputDirectory,
-						String.format("%2.3f,%2.3f.png", head.getX(), head.getY()));
-				ImageIO.write(image, "png",outputFile);
-				currentImage++;
-				progressBar.setValue(currentImage);
 			}
 		}
 		catch (Exception e) {
-			MessageBoxes.errorBox(frame, "Scan Error", "" + e.getMessage());
+			MessageBoxes.errorBox(frame, "Scan Error", e.getMessage());
+			e.printStackTrace();
 		}
 		btnStart.setAction(startAction);
 	}

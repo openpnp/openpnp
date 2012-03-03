@@ -94,6 +94,14 @@ public class Location extends AbstractModelObject {
 	public Location convertToUnits(LengthUnit units) {
 		return LengthUtil.convertLocation(this, units);
 	}
+	
+	public double getLinearDistanceTo(Location location) {
+		return getLinearDistanceTo(location.getX(), location.getY());
+	}
+
+	public double getLinearDistanceTo(double x, double y) {
+		return (Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2)));
+	}
 
 	@Override
 	public String toString() {

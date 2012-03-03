@@ -26,7 +26,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.TableScanner;
 import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
