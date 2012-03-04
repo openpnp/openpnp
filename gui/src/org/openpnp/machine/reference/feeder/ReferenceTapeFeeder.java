@@ -36,7 +36,7 @@ import org.simpleframework.xml.Element;
 /**
  * Implemention of Feeder that allows the head to index the current part and
  * then pick from a pre-specified position. It is intended that the Head is
- * carrying a pin of some type that can be extended past end of the tool to
+ * carrying a pin of some type that can be extended past the end of the tool to
  * index the tape. The steps this Feeder takes to feed a part are as follows:
  * Move head to Safe Z Move head to FeedStartLocation x, y Actuate ACTUATOR_PIN
  * Lower head to FeedStartLocation z Move head to FeedEndLocation x, y, z Move
