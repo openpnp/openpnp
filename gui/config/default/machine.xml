@@ -9,18 +9,10 @@
          </head>
       </heads>
       <cameras>
-         <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele TS" looking="Down" head-id="H1">
+         <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele" looking="Down" head-id="H1">
             <location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
             <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
             <table-scanner-output-directory-path>/Users/jason/Desktop/Scan2</table-scanner-output-directory-path>
-         </reference-camera>
-         <reference-camera class="org.openpnp.machine.reference.camera.LtiCivilCamera" name="Head Tele" looking="Down" head-id="H1" device-id="?" force-grayscale="true">
-            <location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
-            <units-per-pixel units="Millimeters" x="0.070898" y="0.066935" z="0.0" rotation="0.0"/>
-         </reference-camera>
-         <reference-camera class="org.openpnp.machine.reference.camera.RoboRealmCamera" name="Head Tele RR" looking="Down" head-id="H1" host="localhost" port="6060" source-camera-name="Head Tele">
-            <location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
-            <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
          </reference-camera>
       </cameras>
       <feeders>

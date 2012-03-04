@@ -19,10 +19,23 @@ public class RoboRealmCamera extends AbstractCamera implements CameraListener {
 	private RR_API roboRealm = new RR_API();
 	
 	private Camera sourceCamera;
+	
+	@Override
+	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
+		super.setReferenceMachine(machine);
+		for (Camera camera : machine.getCameras()) {
+			if (camera.getName().equals(sourceCameraName)) {
+				sourceCamera = camera;
+			}
+		}
+		roboRealm.connect(host, port);
+		sourceCamera.startContinuousCapture(this, 24);
+	}
 
 	@Override
 	public void frameReceived(BufferedImage image) {
 		try {
+			long t = System.currentTimeMillis();
 			int width = image.getWidth();
 			int height = image.getHeight();
 			int rgbInt[] = new int[width * height];
@@ -35,28 +48,23 @@ public class RoboRealmCamera extends AbstractCamera implements CameraListener {
 				rgbByte[j++] = (byte) ((num >> 8) & 255);
 				rgbByte[j++] = (byte) ((num >> 16) & 255);
 			}
-			roboRealm.setImage(rgbByte, width, height);
-			
-			rgbInt = roboRealm.getImage("processed");
-			image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-			image.setRGB(0, 0, width, height, rgbInt, 0, width);
-			broadcastCapture(image);
+			System.out.println("Enter sync");
+			synchronized (roboRealm) {
+				System.out.println("setImage");
+				roboRealm.setImage(rgbByte, width, height);
+				System.out.println("getImage");
+				rgbInt = roboRealm.getImage(null);
+				System.out.println("Exit sync");
+			}
+			System.out.println("Out of sync");
+			BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+			frame.setRGB(0, 0, width, height, rgbInt, 0, width);
+			System.out.println("Processed in " + (System.currentTimeMillis() - t));
+			broadcastCapture(frame);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
-		super.setReferenceMachine(machine);
-		for (Camera camera : machine.getCameras()) {
-			if (camera.getName().equals(sourceCameraName)) {
-				sourceCamera = camera;
-			}
-		}
-		roboRealm.connect(host, port);
-		sourceCamera.startContinuousCapture(this, 10);
 	}
 
 	@Override

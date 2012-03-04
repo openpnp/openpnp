@@ -73,6 +73,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 
 	public Location feed(Head head_, Part part, Location pickLocation)
 			throws Exception {
+		
+		/*
+		 * TODO: We can optimize the feed process:
+		 * If we are already higher than the Z we will move to to index plus
+		 * the height of the tape, we don't need to Safe Z first.
+		 * There is also probably no reason to Safe Z after extracting the
+		 * pin since if the tool was going to hit it would have already hit.
+		 */
 
 		ReferenceHead head = (ReferenceHead) head_;
 
