@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +22,17 @@ import org.simpleframework.xml.core.Commit;
 
 
 /**
- * An implementation of Camera that returns a viewport into a field of
- * located images. This allows you to create a virtual camera that
- * uses multiple existing images to lay out an entire table view.
+ * An implementation of Camera that renders a viewport into a large map
+ * of tiles. Tiles are PNG files stored with filenames that denote
+ * their position in real space. Ex: 23.456,45.641.png.
  * 
  * TODO: Allow specifying height which will create a larger tile and then
  * scale it down.
  */
 public class TableScannerCamera extends AbstractCamera implements Runnable {
+	/**
+	 * Path to the directory of tile images.
+	 */
 	@Element
 	private String tableScannerOutputDirectoryPath;
 	
@@ -37,26 +41,63 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 	
 	private File tableScannerOutputDirectory;
 	
+	/**
+	 * The last X and Y position that we rendered for. Used to optimize the
+	 * renderer and not generate duplicate frames.
+	 */
 	private double lastX = Double.MIN_VALUE, lastY = Double.MIN_VALUE;
 	
+	/**
+	 * Two dimensional array representing the layout of the entire set of
+	 * tiles.
+	 */
 	private Tile[][] tiles;
+	
+	/**
+	 * List of all of the tiles. Used when searching for closest matches.
+	 */
 	private List<Tile> tileList = new ArrayList<Tile>();
 	
-	private BufferedImage buffer, frame;
+	/**
+	 * Buffered used to render the tiles local to the center point. This buffer
+	 * is tilesWide * imageWidth by tilesHigh * imageHeight in pixels. 
+	 */
+	private BufferedImage buffer;
 	
+	/**
+	 * The last frame rendered.
+	 */
+	private BufferedImage frame;
+	
+	/**
+	 * The last tile that was used to compute the local tile array. Used to
+	 * avoid re-rendering when the head has moved less than a tile since the
+	 * last update.
+	 */
 	private Tile lastCenterTile;
 	
 	private Thread thread;
 	
 	@Commit
-	private void commit() {
+	private void commit() throws Exception {
 		tableScannerOutputDirectory = new File(tableScannerOutputDirectoryPath);
+		if (!tableScannerOutputDirectory.exists()) {
+			throw new Exception("table-scanner-output-directory-path " + tableScannerOutputDirectoryPath + " does not exist.");
+		}
+		buildTiles();
+	}
+	
+	private void buildTiles() {
+		// Load all png files from the directory that look like they match what
+		// we are expecting.
 		File[] files = tableScannerOutputDirectory.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File arg0, String arg1) {
 				return arg1.contains(".") && arg1.contains(",") && arg1.endsWith(".png");
 			}
 		});
+		// Load the first image we found and use it's properties as a template
+		// for the rest of the images.
 		BufferedImage templateImage;
 		try {
 			templateImage = ImageIO.read(files[0]);
@@ -64,9 +105,15 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 		catch (Exception e) {
 			throw new Error(e);
 		}
+		// We build a set of unique X and Y positions that we see so we can
+		// later build a two dimensional array of the riles
 		TreeSet<Double> uniqueX = new TreeSet<Double>();
 		TreeSet<Double> uniqueY = new TreeSet<Double>();
+		// Create a map of the tiles so that we can quickly find them when we
+		// build the array.
 		Map<Tile, Tile> tileMap = new HashMap<Tile, Tile>();
+		// Parse the filenames of the all the files and add their coordinates
+		// to the sets and map.
 		for (File file : files) {
 			Location location = new Location();
 			location.setUnits(LengthUnit.Millimeters);
@@ -81,15 +128,18 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 			tileMap.put(tile, tile);
 			tileList.add(tile);
 		}
+		// Create a two dimensional array to store all the of the tiles
 		tiles = new Tile[uniqueX.size()][uniqueY.size()];
 		
+		// Iterate through all the unique X and Y positions that were found
+		// and add each file to the two dimensional array in the position
+		// where it belongs
 		int x = 0, y = 0;
 		for (Double xPos : uniqueX) {
 			y = 0;
 			for (Double yPos : uniqueY) {
 				Tile tile = tileMap.get(new Tile(xPos, yPos, null));
 				tiles[x][y] = tile;
-//				System.out.println(String.format("Placing %2.3f, %2.3f at %d, %d", xPos, yPos, x, y));
 				tile.setTileX(x);
 				tile.setTileY(y);
 				y++;
@@ -97,11 +147,19 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 			x++;
 		}
 		
+		/*
+		 * Create a buffer that we will render the center tile and it's
+		 * surrounding tiles to. 
+		 */
 		buffer = new BufferedImage(
 				templateImage.getWidth() * tilesWide,
 				templateImage.getHeight() * tilesHigh,
 				BufferedImage.TYPE_INT_ARGB);
 		
+		/*
+		 * Create the buffer that we will render final output to and return
+		 * to clients.
+		 */
 		frame = new BufferedImage(
 				templateImage.getWidth(),
 				templateImage.getHeight(),
@@ -111,87 +169,25 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 	public void run() {
 		while (true) {
 			if (lastX != head.getAbsoluteX() || lastY != head.getAbsoluteY()) {
-				// Find the closest tile to the head
+				// Find the closest tile to the head's current position.
 				Tile closestTile = getClosestTile(head.getAbsoluteX(), head.getAbsoluteY());
 				
-//				System.out.println(String.format("Closest tile to %2.3f, %2.3f is %s", 
-//						head.getX(), 
-//						head.getY(),
-//						closestTile
-//						));
-				
+				// If it has changed we need to render the entire buffer.
 				if (closestTile != lastCenterTile) {
-					
-					// determine where in the map the center tile is
-					int centerTileX = closestTile.getTileX();
-					int centerTileY = closestTile.getTileY();
-
-					Graphics2D g = (Graphics2D) buffer.getGraphics();
-					g.setColor(Color.black);
-					g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
-
-					// render the tiles into the buffer
-					for (int x = 0; x < tilesWide; x++) {
-						for (int y = 0; y < tilesHigh; y++) {
-							int tileX = centerTileX - (2 * (tilesWide / 2)) + (2 * x);
-							int tileY = centerTileY - (2 * (tilesHigh / 2)) + (2 * y);
-							if (tileX >= 0 && tileX < tiles.length && tileY >= 0 && tileY < tiles[tileX].length && tiles[tileX][tileY] != null) {
-								Tile tile = tiles[tileX][tileY];
-								BufferedImage image = tile.getImage();
-							
-								g.drawImage (image, 
-							             image.getWidth() * x,
-							             image.getHeight() * (tilesHigh - y) - image.getHeight(),
-							             image.getWidth() * x + image.getWidth(),
-							             image.getHeight() * (tilesHigh - y),
-							             image.getWidth(),
-							             image.getHeight(),
-							             0,
-							             0,
-							             null);
-							}
-						}
-					}
-					
-					g.dispose();
-					
 					lastCenterTile = closestTile;
+					renderBuffer();
 				}
 				
-				// now the buffer is full, we need to find the portion we
-				// are interested in
+				// Now we render the buffer into the frame.
+				renderFrame();
 				
-				// get the distance from the center tile to the point we
-				// need to render
-				// TODO: Why do these need to be opposite?
-				double unitsDeltaX = head.getAbsoluteX() - closestTile.getX();
-				double unitsDeltaY = closestTile.getY() - head.getAbsoluteY();
-				
-				double deltaX = unitsDeltaX / getUnitsPerPixel().getX();
-				double deltaY = unitsDeltaY / getUnitsPerPixel().getY();
-				
-				double bufferStartX = (tilesWide / 2) * frame.getWidth();
-				double bufferStartY = (tilesHigh / 2) * frame.getHeight();
-				
-				Graphics2D g = (Graphics2D) frame.getGraphics();
-				g.drawImage(
-						buffer, 
-						0, 
-						0, 
-						frame.getWidth(), 
-						frame.getHeight(), 
-						(int) (bufferStartX + deltaX), 
-						(int) (bufferStartY + deltaY),
-						(int) (bufferStartX + frame.getWidth() + deltaX), 
-						(int) (bufferStartY + frame.getHeight() + deltaY),
-						null
-						);
-				
-				
+				// And remember the last position we rendered.
 				lastX = head.getAbsoluteX();
 				lastY = head.getAbsoluteY();
 			}
+			// Finally, broadcast the frame, whether it was regenerated or not.
 			broadcastCapture(frame);
+			// And then we rest.
 			try {
 				Thread.sleep(1000 / 24);
 			}
@@ -199,6 +195,108 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 				
 			}
 		}
+	}
+	
+	private void renderBuffer() {
+		// determine where in the map the center tile is
+		int centerTileX = lastCenterTile.getTileX();
+		int centerTileY = lastCenterTile.getTileY();
+
+		Graphics2D g = (Graphics2D) buffer.getGraphics();
+		g.setColor(Color.black);
+		g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
+		g.setColor(Color.white);
+
+		/*
+		 * Render the tiles into the buffer. Our goal is to render an area that
+		 * is tilesWide x tilesHigh with the center tile in the middle. Any
+		 * locations that fall outside of the tiles array are not rendered and
+		 * as such are left black.
+		 */
+		for (int x = 0; x < tilesWide; x++) {
+			for (int y = 0; y < tilesHigh; y++) {
+				/*
+				 * We multiply everything by two here because the TableScanner
+				 * takes two images per width of the camera. By doing this
+				 * we increase the effective resolution of this image because
+				 * decrease the distance between tiles.
+				 * TODO: This should be made configurable.
+				 */
+				int tileX = centerTileX - (2 * (tilesWide / 2)) + (2 * x);
+				int tileY = centerTileY - (2 * (tilesHigh / 2)) + (2 * y);
+				// If the position is within the array's bounds we'll render it.
+				if (tileX >= 0 && tileX < tiles.length && tileY >= 0 && tileY < tiles[tileX].length && tiles[tileX][tileY] != null) {
+					Tile tile = tiles[tileX][tileY];
+					BufferedImage image = tile.getImage();
+					
+					/*
+					 * The source images are flipped in both dimensions, and
+					 * we're rendering the local array from top to bottom
+					 * instead of bottom to top, so we have to flip the images
+					 * and then render right to left, bottom to top.
+					 */
+					int dx1 = image.getWidth() * x;
+					int dy1 = image.getHeight() * (tilesHigh - y) - image.getHeight();
+					int dx2 = image.getWidth() * x + image.getWidth();
+					int dy2 = image.getHeight() * (tilesHigh - y);
+					
+					int sx1 = image.getWidth();
+					int sy1 = image.getHeight();
+					int sx2 = 0;
+					int sy2 = 0;
+
+					g.drawImage (image,
+							dx1, dy1, dx2, dy2,
+				            sx1, sy1, sx2, sy2,
+				            null);
+				}
+			}
+		}
+		
+		g.dispose();
+	}
+	
+	private void renderFrame() {
+		/*
+		 * Get the distance from the center tile to the point we need to render.
+		 * TODO: Had to invert these from experimentation. Need to figure out
+		 * why and maybe make it configurable. I was too tired to figure it out.
+		 */
+		double unitsDeltaX = head.getAbsoluteX() - lastCenterTile.getX();
+		double unitsDeltaY = lastCenterTile.getY() - head.getAbsoluteY();
+		
+		/*
+		 * Get the distance in pixels from the center tile to the head.
+		 */
+		double deltaX = unitsDeltaX / getUnitsPerPixel().getX();
+		double deltaY = unitsDeltaY / getUnitsPerPixel().getY();
+		
+		/*
+		 * Get the position within the buffer of the top left pixel of the
+		 * frame sized chunk we'll grab.
+		 */
+		double bufferStartX = (buffer.getWidth() / 2) - (frame.getWidth() / 2);
+		double bufferStartY = (buffer.getHeight() / 2) - (frame.getHeight() / 2);
+		
+		/*
+		 * Render the frame sized chunk from the center of the buffer offset
+		 * by the distance of the head from the center tile to the frame
+		 * buffer for final output.
+		 */
+		Graphics2D g = (Graphics2D) frame.getGraphics();
+		g.drawImage(
+				buffer, 
+				0, 
+				0, 
+				frame.getWidth(), 
+				frame.getHeight(), 
+				(int) (bufferStartX + deltaX), 
+				(int) (bufferStartY + deltaY),
+				(int) (bufferStartX + frame.getWidth() + deltaX), 
+				(int) (bufferStartY + frame.getHeight() + deltaY),
+				null
+				);
+		g.dispose();
 	}
 	
 	private Tile getClosestTile(double x, double y) {
@@ -240,7 +338,7 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 		private File file;
 		private double x, y;
 		private int tileX, tileY;
-		private BufferedImage image;
+		private SoftReference<BufferedImage> image;
 		
 		public Tile(double x, double y, File file) {
 			this.x = x;
@@ -249,15 +347,15 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 		}
 		
 		public synchronized BufferedImage getImage() {
-			if (image == null) {
+			if (image == null || image.get() == null) {
 				try {
-					image = ImageIO.read(file);
+					image = new SoftReference<BufferedImage>(ImageIO.read(file));
 				}
 				catch (Exception e) {
-					
+					e.printStackTrace();
 				}
 			}
-			return image;
+			return image.get();
 		}
 		
 		public double getX() {
