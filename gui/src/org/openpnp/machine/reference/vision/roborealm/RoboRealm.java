@@ -6,6 +6,12 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * This class is a wrapper around the primitive RR_API supplied with RoboRealm.
+ * It simplifies many of the functions, performs synchronization and handles
+ * disconnects and automatic reconnects.
+ * TODO: handle disconnect
+ */
 public class RoboRealm {
 	private String host;
 	private int port;
