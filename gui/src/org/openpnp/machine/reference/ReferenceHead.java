@@ -54,7 +54,9 @@ public class ReferenceHead implements Head {
 	private double feedRate;
 	@Element
 	private SoftLimits softLimits = new SoftLimits();
-
+	@Element(required=false)
+	private Homing homing = new Homing();
+	
 	public void setId(String id) {
 		this.id = id;
 	}
@@ -69,15 +71,21 @@ public class ReferenceHead implements Head {
 
 	@Override
 	public void home() throws Exception {
-		// TODO need a way to specify the Z homing height so the camera will be
-		// in focus
-		moveTo(getX(), getY(), 0, getC());
-
+		if (homing.useVision) {
+			homeWithVision();
+		}
+		else {
+			moveTo(getX(), getY(), 0, getC());
+			moveTo(0, 0, 0, 0);
+		}
+	}
+	
+	private void homeWithVision() throws Exception {
 		for (int i = 0; i < 8; i++) {
 			double x = getX();
 			double y = getY();
 			
-			Camera camera = homeWithVision();
+			Camera camera = attemptHomeWithVision();
 			
 			if (x == getX() && y == getY()) {
 				Location cameraOffsets = camera.getLocation().convertToUnits(machine.getNativeUnits());
@@ -89,7 +97,7 @@ public class ReferenceHead implements Head {
 		throw new Exception("Unable to settle after 8 tries. Giving up.");
 	}
 	
-	private Camera homeWithVision() throws Exception {
+	private Camera attemptHomeWithVision() throws Exception {
 		// find the Camera to be used for homing
 		Camera camera = null;
 		for (Camera c : machine.getCameras()) {
@@ -110,7 +118,7 @@ public class ReferenceHead implements Head {
 		 * the dot or we go past the allowable range.
 		 */
 		boolean found = false;
-		double diameter = 3.2;
+		double diameter = homing.homingDotDiameter;
 		double minimumDiameter = diameter;
 		double maximumDiameter = diameter;
 		double minimumAllowableDiameter = diameter - (diameter * 0.10);
@@ -357,5 +365,19 @@ public class ReferenceHead implements Head {
 		private double minC = Double.NEGATIVE_INFINITY;
 		@Attribute
 		private double maxC = Double.POSITIVE_INFINITY;
+	}
+	
+	static class Homing {
+		@Attribute(required=false)
+		private boolean useVision;
+		@Attribute(required=false)
+		private double homingDotDiameter;
+		@Element(required=false)
+		private Location homingDotLocation;
+		
+		public Homing() {
+			homingDotLocation = new Location();
+			homingDotLocation.setUnits(LengthUnit.Millimeters);
+		}
 	}
 }

@@ -181,5 +181,4 @@ public class RoboRealmVisionProvider implements VisionProvider {
 			return String.format(format, maximumRadius, minimumRadius);
 		}
 	}
-
 }
