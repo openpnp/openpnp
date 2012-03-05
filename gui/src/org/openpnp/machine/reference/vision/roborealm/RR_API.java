@@ -666,6 +666,37 @@ public class RR_API {
 		return false;
 	}
 
+	public boolean setParameter(String module, int moduleIndex,
+			String parameter, String value) {
+		String command = "<request><set_parameter><module>%s</module>"
+				+ "<module_number>%d</module_number><name>%s</name>"
+				+ "<value>%s</value></set_parameter></request>";
+
+		if (!connected)
+			return false;
+
+		if ((module == null) || (module.length() == 0))
+			return false;
+		if ((parameter == null) || (parameter.length() == 0))
+			return false;
+		if ((value == null) || (value.length() == 0))
+			return false;
+
+		command = String.format(command, escape(module), moduleIndex,
+				escape(parameter), escape(value));
+
+		if (send(command)) {
+			String buffer;
+			if ((buffer = readMessage()) != null) {
+				if (buffer.equals("<response>ok</response>"))
+					return true;
+			}
+		}
+
+		return false;
+
+	}
+
 	/*
 	 * Saves the specified image in RoboRealm to disk. Note that the filename is
 	 * relative to the machine that is running RoboRealm. The image format must

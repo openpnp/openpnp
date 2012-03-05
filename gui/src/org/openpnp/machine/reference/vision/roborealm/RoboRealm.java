@@ -69,4 +69,10 @@ public class RoboRealm {
 			return map;
 		}
 	}
+	
+	public void setParameter(String module, int moduleIndex, String parameter, String value) {
+		synchronized (api) {
+			api.setParameter(module, moduleIndex, parameter, value);
+		}
+	}
 }

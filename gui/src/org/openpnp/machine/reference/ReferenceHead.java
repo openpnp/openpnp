@@ -92,6 +92,9 @@ public class ReferenceHead implements Head {
 				moveTo(getX() + cameraOffsets.getX(), getY() + cameraOffsets.getY(), getZ(), getC());
 				return;
 			}
+			
+			// Give the head a moment to settle before trying again
+			Thread.sleep(200);
 		}
 		
 		throw new Exception("Unable to settle after 8 tries. Giving up.");

@@ -63,22 +63,24 @@ public class RoboRealmVisionProvider implements VisionProvider {
 			width = image.getWidth();
 			height = image.getHeight();
 
-			boolean executeProgram = false;
-
-			if (circlesProgram.getMinimumRadius() >= (minimumDiameter / 2)
-					|| circlesProgram.getMaximumRadius() <= (maximumDiameter / 2)) {
+			if (lastProgram != circlesProgram) {
 				circlesProgram.setMinimumRadius(minimumDiameter / 2);
 				circlesProgram.setMaximumRadius(maximumDiameter / 2);
-				executeProgram = true;
-			}
-
-			if (lastProgram != circlesProgram) {
+				roboRealm.execute(circlesProgram.toString());
 				lastProgram = circlesProgram;
-				executeProgram = true;
 			}
+			else {
+				if (circlesProgram.getMinimumRadius() != (minimumDiameter / 2)) {
+					circlesProgram.setMinimumRadius(minimumDiameter / 2);
+					roboRealm.setParameter("Circles", 0, "min_radius", ""
+							+ circlesProgram.getMinimumRadius());
+				}
 
-			if (executeProgram) {
-				roboRealm.execute(lastProgram.toString());
+				if (circlesProgram.getMaximumRadius() != (maximumDiameter / 2)) {
+					circlesProgram.setMaximumRadius(maximumDiameter / 2);
+					roboRealm.setParameter("Circles", 0, "max_radius", ""
+							+ circlesProgram.getMaximumRadius());
+				}
 			}
 
 			roboRealm.setImage(image);
