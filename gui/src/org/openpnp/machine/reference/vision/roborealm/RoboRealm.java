@@ -24,7 +24,7 @@ public class RoboRealm {
 		api.connect(host, port);
 	}
 	
-	public void setImage(BufferedImage image) {
+	public boolean setImage(BufferedImage image) {
 		int width = image.getWidth();
 		int height = image.getHeight();
 		int rgbInt[] = new int[width * height];
@@ -38,13 +38,13 @@ public class RoboRealm {
 			rgbByte[j++] = (byte) ((num >> 16) & 255);
 		}
 		synchronized (api) {
-			api.setImage(rgbByte, width, height);
+			return api.setImage(rgbByte, width, height);
 		}
 	}
 	
-	public void execute(String source) {
+	public boolean execute(String source) {
 		synchronized (api) {
-			api.execute(source);
+			return api.execute(source);
 		}
 	}
 	
@@ -70,9 +70,9 @@ public class RoboRealm {
 		}
 	}
 	
-	public void setParameter(String module, int moduleIndex, String parameter, String value) {
+	public boolean setParameter(String module, int moduleIndex, String parameter, String value) {
 		synchronized (api) {
-			api.setParameter(module, moduleIndex, parameter, value);
+			return api.setParameter(module, moduleIndex, parameter, value);
 		}
 	}
 }

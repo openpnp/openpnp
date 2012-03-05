@@ -57,40 +57,61 @@ public class RoboRealmVisionProvider implements VisionProvider {
 			int maximumDiameter) throws Exception {
 		Map<String, String> variables;
 		int width, height;
+		// TODO need error checking on RoboRealm, need to be able to determine
+		// if we didn't find anything or if it's down
 		synchronized (roboRealm) {
-			BufferedImage image = camera.capture();
-
-			width = image.getWidth();
-			height = image.getHeight();
-
+			boolean result;
 			if (lastProgram != circlesProgram) {
 				circlesProgram.setMinimumRadius(minimumDiameter / 2);
 				circlesProgram.setMaximumRadius(maximumDiameter / 2);
-				roboRealm.execute(circlesProgram.toString());
+				result = roboRealm.execute(circlesProgram.toString()); 
+				if (!result) {
+					throw new Exception("Failed to execute program on RoboRealm. Is it running?");
+				}
 				lastProgram = circlesProgram;
 			}
 			else {
 				if (circlesProgram.getMinimumRadius() != (minimumDiameter / 2)) {
 					circlesProgram.setMinimumRadius(minimumDiameter / 2);
-					roboRealm.setParameter("Circles", 0, "min_radius", ""
+					result = roboRealm.setParameter("Circles", 0, "min_radius", ""
 							+ circlesProgram.getMinimumRadius());
+					if (!result) {
+						throw new Exception("Failed to set parameter on RoboRealm. Is it running?");
+					}
 				}
 
 				if (circlesProgram.getMaximumRadius() != (maximumDiameter / 2)) {
 					circlesProgram.setMaximumRadius(maximumDiameter / 2);
-					roboRealm.setParameter("Circles", 0, "max_radius", ""
+					result = roboRealm.setParameter("Circles", 0, "max_radius", ""
 							+ circlesProgram.getMaximumRadius());
+					if (!result) {
+						throw new Exception("Failed to set parameter on RoboRealm. Is it running?");
+					}
 				}
 			}
 
-			roboRealm.setImage(image);
+			BufferedImage image = camera.capture();
+
+			width = image.getWidth();
+			height = image.getHeight();
+			
+			result = roboRealm.setImage(image);
+			if (!result) {
+				throw new Exception("Failed to set image on RoboRealm. Is it running?");
+			}
 
 			variables = roboRealm.getVariables("CIRCLES_COUNT,CIRCLES");
+			if (variables == null) {
+				throw new Exception("Failed to get variables from RoboRealm. Is it running?");
+			}
 		}
-		int circlesCount = Integer.parseInt(variables
-				.get("response.CIRCLES_COUNT"));
+		String circlesCountVar = variables.get("response.CIRCLES_COUNT");
 		String circlesVar = variables.get("response.CIRCLES");
-		if (circlesCount == 0 || circlesVar == null) {
+		if (circlesCountVar == null || circlesVar == null) {
+			return null;
+		}
+		int circlesCount = Integer.parseInt(circlesCountVar);
+		if (circlesCount == 0) {
 			return null;
 		}
 		String[] circlesVarParts = circlesVar.split(",");

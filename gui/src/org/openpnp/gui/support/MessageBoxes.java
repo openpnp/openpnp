@@ -29,12 +29,22 @@ import org.openpnp.util.LineBreaker;
 
 public class MessageBoxes {
 	public static void errorBox(Component parent, String title, Throwable cause) {
-		JOptionPane.showMessageDialog(parent, LineBreaker.formatLines(
-				cause == null ? "" : cause.getMessage(), 60), title,
+		String message = null;
+		if (cause != null) {
+			message = cause.getMessage();
+		}
+		if (message == null) {
+			message = "";
+		}
+		JOptionPane.showMessageDialog(parent,
+				LineBreaker.formatLines(message, 60), title,
 				JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void errorBox(Component parent, String title, String message) {
+		if (message == null) {
+			message = "";
+		}
 		JOptionPane.showMessageDialog(parent,
 				LineBreaker.formatLines(message, 60), title,
 				JOptionPane.ERROR_MESSAGE);

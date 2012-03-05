@@ -577,7 +577,7 @@ public class MachineControlsPanel extends JPanel {
 					}
 					catch (Exception e) {
 						e.printStackTrace();
-						MessageBoxes.errorBox(frame, "Homing operation failed.", e);
+						MessageBoxes.errorBox(frame, "Homing Failed", e);
 					}
 				}
 			});
