@@ -32,8 +32,10 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -47,17 +49,24 @@ import org.simpleframework.xml.core.Persist;
 public abstract class AbstractCamera implements ReferenceCamera {
 	@Attribute
 	protected String name;
+
 	@Element
 	protected Location location;
+	
 	@Attribute
 	protected Looking looking;
+	
 	@Element
 	protected Location unitsPerPixel;
-	protected ReferenceHead head;
-
+	
+	@Element(required=false)
+	protected VisionProvider visionProvider;
+	
 	@Attribute(required=false)
 	protected String headId;
-	
+
+	protected ReferenceHead head;
+
 	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
 
 	@Override
@@ -65,8 +74,11 @@ public abstract class AbstractCamera implements ReferenceCamera {
 		if (head == null) {
 			head = machine.getHead(headId);
 		}
+		if (visionProvider != null) {
+			visionProvider.setCamera(this);
+		}
 	}
-
+	
 	@SuppressWarnings("unused")
 	@Persist
 	private void persist() {
@@ -122,6 +134,11 @@ public abstract class AbstractCamera implements ReferenceCamera {
 	@Override
 	public void stopContinuousCapture(CameraListener listener) {
 		listeners.remove(new ListenerEntry(listener, 0));
+	}
+	
+	@Override
+	public VisionProvider getVisionProvider() {
+		return visionProvider;
 	}
 
 	protected void broadcastCapture(BufferedImage img) {

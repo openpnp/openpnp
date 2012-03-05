@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.components;
+package org.openpnp.gui;
 
 import java.awt.Component;
 import java.awt.Container;

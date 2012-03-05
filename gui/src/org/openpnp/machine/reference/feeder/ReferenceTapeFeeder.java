@@ -23,7 +23,7 @@ package org.openpnp.machine.reference.feeder;
 
 
 
-import org.openpnp.gui.Wizard;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Location;

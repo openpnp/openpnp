@@ -25,7 +25,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.LengthUnit;
-import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;

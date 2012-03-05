@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.components;
+package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -576,7 +576,8 @@ public class MachineControlsPanel extends JPanel {
 						
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Homing operation failed.", e.getMessage());
+						e.printStackTrace();
+						MessageBoxes.errorBox(frame, "Homing operation failed.", e);
 					}
 				}
 			});

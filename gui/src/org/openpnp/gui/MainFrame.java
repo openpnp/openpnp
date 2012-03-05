@@ -50,7 +50,6 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
@@ -134,6 +133,12 @@ public class MainFrame extends JFrame {
 		mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
 		mnJob.add(new JMenuItem(jobPanel.stepJobAction));
 		mnJob.add(new JMenuItem(jobPanel.stopJobAction));
+		
+		JMenu mnCommands = new JMenu("Machine Commands");
+		menuBar.add(mnCommands);
+
+		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
+		
 
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));

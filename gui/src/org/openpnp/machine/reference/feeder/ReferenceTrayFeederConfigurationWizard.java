@@ -10,8 +10,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.openpnp.gui.Wizard;
-import org.openpnp.gui.WizardContainer;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Location;
 import org.openpnp.util.LengthUtil;
 

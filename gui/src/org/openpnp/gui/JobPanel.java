@@ -31,7 +31,6 @@ import org.openpnp.JobProcessor.JobState;
 import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
-import org.openpnp.gui.components.MachineControlsPanel;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;

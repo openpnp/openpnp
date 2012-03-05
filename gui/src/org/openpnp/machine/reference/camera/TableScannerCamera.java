@@ -78,6 +78,8 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 	
 	private Thread thread;
 	
+	private Object captureLock = new Object();
+	
 	@Commit
 	private void commit() throws Exception {
 		tableScannerOutputDirectory = new File(tableScannerOutputDirectoryPath);
@@ -85,6 +87,76 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 			throw new Exception("table-scanner-output-directory-path " + tableScannerOutputDirectoryPath + " does not exist.");
 		}
 		buildTiles();
+	}
+	
+	@Override
+	public void startContinuousCapture(CameraListener listener, int maximumFps) {
+		synchronized (this) {
+			if (thread == null) {
+				thread = new Thread(this);
+				thread.start();
+			}
+		}
+		super.startContinuousCapture(listener, maximumFps);
+	}
+
+	@Override
+	public BufferedImage capture() {
+		synchronized (this) {
+			if (thread == null) {
+				thread = new Thread(this);
+				thread.start();
+			}
+		}
+		synchronized (captureLock) {
+			try {
+				captureLock.wait();
+			}
+			catch (Exception e) {
+				
+			}
+		}
+		return frame;
+	}
+	
+	public void run() {
+		while (true) {
+			if (lastX != head.getAbsoluteX() || lastY != head.getAbsoluteY()) {
+				// Find the closest tile to the head's current position.
+				Tile closestTile = getClosestTile(head.getAbsoluteX(), head.getAbsoluteY());
+				
+				// If it has changed we need to render the entire buffer.
+				if (closestTile != lastCenterTile) {
+					lastCenterTile = closestTile;
+					renderBuffer();
+				}
+				
+				// Now we render the buffer into the frame.
+				renderFrame();
+				
+				// And remember the last position we rendered.
+				lastX = head.getAbsoluteX();
+				lastY = head.getAbsoluteY();
+			}
+			// Finally, broadcast the frame, whether it was regenerated or not.
+			// TODO broadcast a copy, not the one we'll modify next frame
+			broadcastCapture(frame);
+			synchronized (captureLock) {
+				try {
+					captureLock.notify();
+				}
+				catch (Exception e) {
+					
+				}
+			}
+			// And then we rest.
+			try {
+				Thread.sleep(1000 / 24);
+			}
+			catch (Exception e) {
+				
+			}
+		}
 	}
 	
 	private void buildTiles() {
@@ -164,37 +236,6 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 				templateImage.getWidth(),
 				templateImage.getHeight(),
 				BufferedImage.TYPE_INT_ARGB);
-	}
-	
-	public void run() {
-		while (true) {
-			if (lastX != head.getAbsoluteX() || lastY != head.getAbsoluteY()) {
-				// Find the closest tile to the head's current position.
-				Tile closestTile = getClosestTile(head.getAbsoluteX(), head.getAbsoluteY());
-				
-				// If it has changed we need to render the entire buffer.
-				if (closestTile != lastCenterTile) {
-					lastCenterTile = closestTile;
-					renderBuffer();
-				}
-				
-				// Now we render the buffer into the frame.
-				renderFrame();
-				
-				// And remember the last position we rendered.
-				lastX = head.getAbsoluteX();
-				lastY = head.getAbsoluteY();
-			}
-			// Finally, broadcast the frame, whether it was regenerated or not.
-			broadcastCapture(frame);
-			// And then we rest.
-			try {
-				Thread.sleep(1000 / 24);
-			}
-			catch (Exception e) {
-				
-			}
-		}
 	}
 	
 	private void renderBuffer() {
@@ -310,28 +351,6 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 			}
 		}
 		return closestTile;
-	}
-	
-	@Override
-	public void startContinuousCapture(CameraListener listener, int maximumFps) {
-		synchronized (this) {
-			if (thread == null) {
-				thread = new Thread(this);
-				thread.start();
-			}
-		}
-		super.startContinuousCapture(listener, maximumFps);
-	}
-
-	@Override
-	public BufferedImage capture() {
-		synchronized (this) {
-			if (thread == null) {
-				thread = new Thread(this);
-				thread.start();
-			}
-		}
-		return frame;
 	}
 	
 	public static class Tile {

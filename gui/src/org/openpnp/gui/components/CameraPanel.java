@@ -26,7 +26,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -34,11 +33,8 @@ import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.CameraItem;
-import org.openpnp.machine.reference.camera.RoboRealmCamera;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.VisionProvider;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.

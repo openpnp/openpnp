@@ -1,6 +1,6 @@
-package org.openpnp.gui;
+package org.openpnp.gui.support;
 
-import org.openpnp.gui.components.MachineControlsPanel;
+import org.openpnp.gui.MachineControlsPanel;
 import org.openpnp.model.Configuration;
 
 public interface WizardContainer {

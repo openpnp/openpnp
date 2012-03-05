@@ -92,4 +92,6 @@ public interface Camera {
 	 * @param listener
 	 */
 	public void stopContinuousCapture(CameraListener listener);
+	
+	public VisionProvider getVisionProvider();
 }
