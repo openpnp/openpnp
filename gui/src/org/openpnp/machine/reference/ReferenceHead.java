@@ -98,6 +98,8 @@ public class ReferenceHead implements Head {
 	}
 	
 	private Camera attemptHomeWithVision() throws Exception {
+		// TODO: To to the defined dot location before starting search 
+		
 		// find the Camera to be used for homing
 		Camera camera = null;
 		for (Camera c : machine.getCameras()) {
