@@ -83,7 +83,7 @@ public class RoboRealmVisionProvider implements VisionProvider {
 
 			roboRealm.setImage(image);
 
-			variables = roboRealm.getVariables(null);
+			variables = roboRealm.getVariables("CIRCLES_COUNT,CIRCLES");
 		}
 		int circlesCount = Integer.parseInt(variables
 				.get("response.CIRCLES_COUNT"));

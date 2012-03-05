@@ -41,19 +41,6 @@ import org.simpleframework.xml.Element;
  * Move head to Safe Z Move head to FeedStartLocation x, y Actuate ACTUATOR_PIN
  * Lower head to FeedStartLocation z Move head to FeedEndLocation x, y, z Move
  * head to Safe Z Retract ACTUATOR_PIN
- * 
- * <pre>
- * {@code
- * <!--
- * 	feedRate: Feed rate in machine units per minute for movement during the
- * 		drag operation.
- * -->
- * <Configuration feedRate="10">
- * 	<FeedStartLocation units="Millimeters" x="100" y="150" z="50" />
- * 	<FeedEndLocation units="Millimeters" x="102" y="150" z="50" />
- * </Configuration>
- * }
- * </pre>
  */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
 	@Element

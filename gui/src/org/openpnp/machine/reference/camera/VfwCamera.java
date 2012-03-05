@@ -27,21 +27,6 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
 
-/**
-<pre>
-{@code
-<!--
-	Specify driver="" to obtain a list of available drivers on the console. 
--->
-<Configuration 
-	driver="Microsoft WDM Image Capture (Win32)" 
-	showVideoSourceDialog="false" 
-	showVideoFormatDialog="false" 
-	showVideoDisplayDialog="false">
-</Configuration>
-}
-</pre>
- */
 public class VfwCamera extends AbstractCamera implements Runnable {
 	@Attribute
 	private String driver;

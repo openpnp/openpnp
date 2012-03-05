@@ -8,14 +8,14 @@ import java.util.Map.Entry;
 
 /**
  * This class is a wrapper around the primitive RR_API supplied with RoboRealm.
- * It simplifies many of the functions, performs synchronization and handles
+ * It simplifies many of the functions, provides thread safety and handles
  * disconnects and automatic reconnects.
  * TODO: handle disconnect
  */
 public class RoboRealm {
 	private String host;
 	private int port;
-	
+
 	private RR_API api = new RR_API();
 	
 	public RoboRealm(String host, int port) {
@@ -68,9 +68,5 @@ public class RoboRealm {
 			}
 			return map;
 		}
-	}
-	
-	public void getImage(BufferedImage image) {
-		
 	}
 }

@@ -37,14 +37,6 @@ import org.simpleframework.xml.Element;
  * Implemention of Feeder that indexes based on an offset. This allows a tray of
  * parts to be picked from without moving any tape. Can handle trays of
  * arbitrary X and Y count.
- * 
- * <pre>
- * {@code
- * <Configuration trayCountX="10" trayCountY="2">
- * 	<Offsets units="Millimeters" x="10" y="10" z="0" rotation="0"/>
- * </Configuration>
- * }
- * </pre>
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
 	@Attribute

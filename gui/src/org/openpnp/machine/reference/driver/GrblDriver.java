@@ -40,20 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-<pre>
-{@code
-<Configuration>
-	<Port name="/dev/tty.usbserial-A9007LmZ" baud="38400" />
-	<Settings>
-		<Setting name="$0" value="56.338" />
-		<Setting name="$1" value="56.338" />
-		<Setting name="$2" value="56.338" />
-		<Setting name="$3" value="10" />
-	</Settings>
-</Configuration>
-}
-</pre>
-	TODO Consider adding some type of heartbeat to the firmware.  
+ * TODO: Consider adding some type of heartbeat to the firmware.  
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
