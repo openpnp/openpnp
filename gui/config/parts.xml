@@ -1,73 +1,37 @@
 <openpnp-parts>
-   <part id="C-0602-.1uF" name="" height-units="Millimeters" height="0.032" package-id="0603">
+   <part id="C-0602-.1uF" name="" height-units="Inches" height="0.032" package-id="0603">
       <feeder-locations>
          <feeder-location feeder-id="L0">
-            <location units="Millimeters" x="1.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          </feeder-location>
       </feeder-locations>
    </part>
    <part id="RESNET-10K" name="" height-units="Inches" height="-0.0325" package-id="0603-4">
-      <feeder-locations>
-         <feeder-location feeder-id="L2">
-            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="RESNET-1K" name="" height-units="Inches" height="-0.0325" package-id="0603-4">
-      <feeder-locations>
-         <feeder-location feeder-id="L3">
-            <location units="Millimeters" x="40.62" y="102.9" z="-85.2" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="R-0603-1K" name="" height-units="Millimeters" height="2.0" package-id="0603">
-      <feeder-locations>
-         <feeder-location feeder-id="L9">
-            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="R-0603-10K" name="" height-units="Inches" height="-0.033" package-id="0603">
-      <feeder-locations>
-         <feeder-location feeder-id="L9">
-            <location units="Millimeters" x="118.0" y="101.8" z="85.3" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="R-0603-3.3K" name="" height-units="Inches" height="-0.032" package-id="0603">
-      <feeder-locations>
-         <feeder-location feeder-id="L9">
-            <location units="Millimeters" x="118.0" y="101.8" z="85.3" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="R-0603-2K" name="" height-units="Inches" height="-0.033" package-id="0603">
-      <feeder-locations>
-         <feeder-location feeder-id="L9">
-            <location units="Millimeters" x="118.0" y="101.8" z="85.3" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="R-0603-330" name="" height-units="Inches" height="-0.033" package-id="0603">
-      <feeder-locations>
-         <feeder-location feeder-id="L9">
-            <location units="Millimeters" x="118.0" y="101.8" z="85.3" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="C-0603-18pf" name="" height-units="Inches" height="-0.033" package-id="0603">
-      <feeder-locations>
-         <feeder-location feeder-id="L17">
-            <location units="Millimeters" x="118.0" y="101.8" z="85.3" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="FB-1206" name="" height-units="Inches" height="-0.033" package-id="1206">
-      <feeder-locations>
-         <feeder-location feeder-id="L18">
-            <location units="Millimeters" x="118.0" y="101.8" z="85.3" rotation="0.0"/>
-         </feeder-location>
-      </feeder-locations>
+      <feeder-locations/>
    </part>
    <part id="C-w" height-units="Millimeters" height="0.0" package-id="0603">
       <feeder-locations/>

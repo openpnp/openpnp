@@ -41,6 +41,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.PersistenceException;
 import org.simpleframework.xml.core.Validate;
 
 public class ReferenceHead implements Head {
@@ -99,7 +100,7 @@ public class ReferenceHead implements Head {
 
 	@Override
 	public void home() throws Exception {
-		if (homing.useVision) {
+		if (homing.vision != null && homing.vision.enabled) {
 			homeWithVision();
 		}
 		else {
@@ -151,7 +152,7 @@ public class ReferenceHead implements Head {
 		 * the dot or we go past the allowable range.
 		 */
 		boolean found = false;
-		double diameter = homing.homingDotDiameter;
+		double diameter = homing.vision.homingDotDiameter;
 		double minimumDiameter = diameter;
 		double maximumDiameter = diameter;
 		double minimumAllowableDiameter = diameter - (diameter * 0.10);
@@ -396,28 +397,30 @@ public class ReferenceHead implements Head {
 	}
 	
 	static class Homing {
-		@Attribute(required=false)
-		private boolean useVision;
-		@Attribute(required=false)
-		private double homingDotDiameter;
 		@Element(required=false)
-		private Location homingDotLocation;
+		private Vision vision;
 		
-		@Validate
-		private void validate() throws Exception {
-			if (useVision) {
-				if (homingDotDiameter == 0) {
-					throw new Exception("homing-dot-diameter is required if use-vision is set.");
-				}
-				if (homingDotLocation == null) {
-					throw new Exception("homing-dot-location is required if use-vision is set.");
+		static class Vision {
+			@Attribute(required=false)
+			private boolean enabled;
+			
+			@Attribute(required=false)
+			private double homingDotDiameter;
+			@Element(required=false)
+			private Location homingDotLocation;
+			
+			@SuppressWarnings("unused")
+			@Validate
+			private void validate() throws Exception {
+				if (enabled) {
+					if (homingDotDiameter == 0) {
+						throw new PersistenceException("ReferenceHead.Vision: homing-dot-diameter is required if vision is enabled.");
+					}
+					if (homingDotLocation == null) {
+						throw new PersistenceException("ReferenceHead.Vision: homing-dot-location is required if vision is enabled.");
+					}
 				}
 			}
-		}
-		
-		public Homing() {
-			homingDotLocation = new Location();
-			homingDotLocation.setUnits(LengthUnit.Millimeters);
 		}
 	}
 }

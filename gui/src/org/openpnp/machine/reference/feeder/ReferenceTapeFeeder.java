@@ -32,7 +32,6 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.PersistenceException;
 import org.simpleframework.xml.core.Validate;
 
@@ -46,22 +45,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private double feedRate;
 	@Attribute
 	private String actuatorId; 
+	@Element(required=false)
+	private Vision vision;
 	
-	@Attribute(required=false)
-	private boolean useVision;
-	@Attribute(required=false)
-	private double tapeFeedHoleDiameter;
-	
-	@SuppressWarnings("unused")
-	@Validate
-	private void validate() throws Exception {
-		if (useVision) {
-			if (tapeFeedHoleDiameter == 0) {
-				throw new PersistenceException("tape-feed-hole-diameter is required if use-vision is set.");
-			}
-		}
-	}
-
 	@Override
 	public boolean canFeedForHead(Part part, Head head) {
 		return true;
@@ -142,4 +128,21 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		this.feedRate = feedRate;
 	}
 
+	static class Vision {
+		@Attribute(required=false)
+		private boolean enabled;
+		@Attribute(required=false)
+		private double tapeFeedHoleDiameter;
+		
+		@SuppressWarnings("unused")
+		@Validate
+		private void validate() throws Exception {
+			if (enabled) {
+				if (tapeFeedHoleDiameter == 0) {
+					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter is required if vision is enabled.");
+				}
+			}
+		}
+		
+	}
 }
