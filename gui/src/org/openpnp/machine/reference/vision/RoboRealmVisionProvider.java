@@ -4,7 +4,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
+import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.vision.roborealm.RoboRealm;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.VisionProvider;
@@ -17,13 +20,16 @@ import org.simpleframework.xml.core.Commit;
  * to the program and have them each use the source. Since they update
  * different vars it should work. Maybe.
  */
-public class RoboRealmVisionProvider implements VisionProvider {
+public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 	private static Map<String, RoboRealm> roboRealms = new HashMap<String, RoboRealm>();
 
 	@Attribute
 	private String host;
 	@Attribute
 	private int port;
+	
+	@Attribute(required=false)
+	private int autoCaptureFps;
 
 	private Camera camera;
 	private RoboRealm roboRealm;
@@ -31,6 +37,8 @@ public class RoboRealmVisionProvider implements VisionProvider {
 	private CirclesProgram circlesProgram = new CirclesProgram(3, 100);
 
 	private RoboRealmProgram lastProgram;
+	
+	private Executor executor = Executors.newSingleThreadExecutor();
 
 	@Commit
 	private void commit() {
@@ -49,6 +57,9 @@ public class RoboRealmVisionProvider implements VisionProvider {
 			throw new Error("Camera already set!");
 		}
 		this.camera = camera;
+		if (autoCaptureFps != 0) {
+			camera.startContinuousCapture(this, autoCaptureFps);
+		}
 	}
 
 	@Override
@@ -143,6 +154,17 @@ public class RoboRealmVisionProvider implements VisionProvider {
 		}
 		// TODO sort
 		return circles.size() > 0 ? circles.toArray(new Circle[] {}) : null;
+	}
+	
+	@Override
+	public void frameReceived(final BufferedImage img) {
+		executor.execute(new Runnable() {
+			public void run() {
+				synchronized (roboRealm) {
+					roboRealm.setImage(img);
+				}
+			}
+		});
 	}
 
 	private interface RoboRealmProgram {

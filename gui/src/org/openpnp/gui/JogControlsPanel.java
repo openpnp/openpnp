@@ -22,15 +22,12 @@
 package org.openpnp.gui;
 
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.FocusTraversalPolicy;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +44,7 @@ import javax.swing.JToggleButton;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.LengthUtil;
@@ -411,9 +409,9 @@ public class JogControlsPanel extends JPanel {
 			head = machine.getHeads().get(0);
 			
 
-			for (String actuatorName : head.getActuatorNames()) {
-				final String actuatorName_f = actuatorName;
-				final JToggleButton actuatorButton = new JToggleButton(actuatorName);
+			for (Actuator actuator : head.getActuators()) {
+				final Actuator actuator_f = actuator;
+				final JToggleButton actuatorButton = new JToggleButton(actuator_f.getId());
 				actuatorButton.setFocusable(false);
 				actuatorButton.addActionListener(new ActionListener() {
 					@Override
@@ -423,7 +421,7 @@ public class JogControlsPanel extends JPanel {
 							@Override
 							public void run() {
 								try {
-									head.actuate(actuatorName_f, state);
+									actuator_f.actuate(state);
 								}
 								catch (Exception e) {
 									MessageBoxes.errorBox(frame, "Actuator Command Failed", e.getMessage());

@@ -22,6 +22,7 @@ public class RoboRealm {
 		this.host = host;
 		this.port = port;
 		api.connect(host, port);
+		api.setCamera("off");
 	}
 	
 	public boolean setImage(BufferedImage image) {

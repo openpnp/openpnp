@@ -2,178 +2,31 @@
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
       <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
       <heads>
-         <head id="H1">
-            <reference-head id="H1" pick-dwell-milliseconds="0" place-dwell-milliseconds="0" feed-rate="9000.0">
-               <soft-limits min-x="-100.0" max-x="1000.0" min-y="-100.0" max-y="1000.0" min-z="-100.0" max-z="100.0" min-c="0.0" max-c="360.0"/>
-            </reference-head>
-         </head>
+         <reference-head id="H1" pick-dwell-milliseconds="0" place-dwell-milliseconds="0" feed-rate="9000.0">
+            <soft-limits min-x="-100.0" max-x="1000.0" min-y="-100.0" max-y="1000.0" min-z="-100.0" max-z="100.0" min-c="0.0" max-c="360.0"/>
+            <homing use-vision="true" homing-dot-diameter="3.2">
+               <homing-dot-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            </homing>
+            <actuators>
+               <reference-actuator id="PIN" index="0">
+                  <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               </reference-actuator>
+            </actuators>
+         </reference-head>
       </heads>
       <cameras>
-         <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele TS" looking="Down" head-id="H1">
-            <location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
+         <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele" looking="Down" head-id="H1">
+            <location units="Millimeters" x="0.0" y="-5.0" z="0.0" rotation="0.0"/>
             <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
-            <table-scanner-output-directory-path>/Users/jason/Desktop/Scan2</table-scanner-output-directory-path>
-         </reference-camera>
-         <reference-camera class="org.openpnp.machine.reference.camera.LtiCivilCamera" name="Head Tele" looking="Down" head-id="H1" device-id="?" force-grayscale="true">
-            <location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
-            <units-per-pixel units="Millimeters" x="0.070898" y="0.066935" z="0.0" rotation="0.0"/>
-         </reference-camera>
-         <reference-camera class="org.openpnp.machine.reference.camera.RoboRealmCamera" name="Head Tele RR" looking="Down" head-id="H1" host="localhost" port="6060" source-camera-name="Head Tele">
-            <location units="Millimeters" x="0.0" y="-50.0" z="0.0" rotation="0.0"/>
-            <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
+            <vision-provider class="org.openpnp.machine.reference.vision.RoboRealmVisionProvider" host="localhost" port="6060" auto-capture-fps="10"/>
+            <table-scanner-output-directory-path>/Users/jason/Projects/openpnp/openpnp-private/jcdillin-table-scan</table-scanner-output-directory-path>
          </reference-camera>
       </cameras>
       <feeders>
-         <feeder id="L0">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="42.1" y="87.1" z="-66.8" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="42.1" y="92.4" z="-66.8" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L1">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L1" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="38.23" y="-13.0" z="-66.5" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="38.23" y="-8.0" z="-66.5" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L2">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L2" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L3">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L3" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L4">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L4" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L5">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L5" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L6">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L6" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L8">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L8" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L9">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L9" enabled="true" feed-rate="100.0">
-               <feed-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L10">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L10" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L11">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L11" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L12">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L12" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L13">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L13" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L14">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L14" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L15">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L15" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L16">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L16" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L17">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L17" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L18">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L18" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L19">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L19" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L20">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L20" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L21">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L21" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L22">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L22" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L23">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L23" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L24">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L24" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
-         <feeder id="L25">
-            <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L25" enabled="true" feed-rate="200.0">
-               <feed-start-location units="Millimeters" x="67.52" y="87.4" z="-66.9" rotation="0.0"/>
-               <feed-end-location units="Millimeters" x="67.52" y="92.5" z="-66.9" rotation="0.0"/>
-            </reference-feeder>
-         </feeder>
+         <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="200.0">
+            <feed-start-location units="Millimeters" x="42.1" y="87.1" z="-66.8" rotation="0.0"/>
+            <feed-end-location units="Millimeters" x="42.1" y="92.4" z="-66.8" rotation="0.0"/>
+         </reference-feeder>
       </feeders>
    </machine>
 </openpnp-machine>

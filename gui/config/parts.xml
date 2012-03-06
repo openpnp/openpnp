@@ -1,5 +1,5 @@
 <openpnp-parts>
-   <part id="C-0602-.1uF" name="" height-units="Inches" height="0.032" package-id="0603">
+   <part id="C-0602-.1uF" name="" height-units="Millimeters" height="0.032" package-id="0603">
       <feeder-locations>
          <feeder-location feeder-id="L0">
             <location units="Millimeters" x="1.0" y="0.0" z="0.0" rotation="0.0"/>

@@ -24,6 +24,7 @@ package org.openpnp.machine.reference.feeder;
 
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Location;
@@ -41,6 +42,8 @@ import org.simpleframework.xml.Element;
  * Move head to Safe Z Move head to FeedStartLocation x, y Actuate ACTUATOR_PIN
  * Lower head to FeedStartLocation z Move head to FeedEndLocation x, y, z Move
  * head to Safe Z Retract ACTUATOR_PIN
+ * 
+ * TODO: Make actuator name configurable
  */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
 	@Element
@@ -70,6 +73,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		 */
 
 		ReferenceHead head = (ReferenceHead) head_;
+		ReferenceActuator actuator = head.getActuator("PIN");
 
 		// move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
@@ -79,7 +83,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 				head.getZ(), head.getC());
 
 		// extend the pin
-		head.actuate(ReferenceHead.PIN_ACTUATOR_NAME, true);
+		actuator.actuate(true);
 
 		// insert the pin
 		head.moveTo(head.getX(), head.getY(), feedStartLocation.getZ(),
@@ -93,7 +97,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
 
 		// retract the pin
-		head.actuate(ReferenceHead.PIN_ACTUATOR_NAME, false);
+		actuator.actuate(false);
 
 		return pickLocation;
 	}

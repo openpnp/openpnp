@@ -53,7 +53,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	
 	private double x, y, z, c;
-	private CommPortIdentifier commPortId;
 	private SerialPort serialPort;
 	private InputStream input;
 	private OutputStream output;
@@ -139,7 +138,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		if (commPortId.isCurrentlyOwned()) {
 			throw new Exception("Port is in use.");
 		}
-		this.commPortId = commPortId;
 		this.baud = baud;
 		serialPort = (SerialPort) commPortId.open(this.getClass().getName(),
 				2000);

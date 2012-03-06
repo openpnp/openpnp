@@ -22,12 +22,14 @@
 package org.openpnp.machine.reference;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.openpnp.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -36,10 +38,11 @@ import org.openpnp.spi.VisionProvider.Circle;
 import org.openpnp.util.LengthUtil;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 public class ReferenceHead implements Head {
-	public static final String PIN_ACTUATOR_NAME = "Pin";
-
 	private ReferenceMachine machine;
 	private double x, y, z, c;
 	private double offsetX, offsetY, offsetZ, offsetC;
@@ -56,6 +59,23 @@ public class ReferenceHead implements Head {
 	private SoftLimits softLimits = new SoftLimits();
 	@Element(required=false)
 	private Homing homing = new Homing();
+	@ElementList(required=false, name="actuators")
+	private ArrayList<ReferenceActuator> actuatorsList = new ArrayList<ReferenceActuator>();
+	
+	private LinkedHashMap<String, ReferenceActuator> actuators = new LinkedHashMap<String, ReferenceActuator>();
+	
+	@Commit
+	private void commit() {
+		for (ReferenceActuator actuator : actuatorsList) {
+			actuators.put(actuator.getId(), actuator);
+		}
+	}
+	
+	@Persist
+	private void persist() {
+		actuatorsList.clear();
+		actuatorsList.addAll(actuators.values());
+	}
 	
 	public void setId(String id) {
 		this.id = id;
@@ -67,6 +87,13 @@ public class ReferenceHead implements Head {
 
 	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		this.machine = machine;
+		for (ReferenceActuator actuator : actuators.values()) {
+			actuator.setReferenceHead(this);
+		}
+	}
+	
+	public ReferenceMachine getMachine() {
+		return machine;
 	}
 
 	@Override
@@ -274,19 +301,14 @@ public class ReferenceHead implements Head {
 	}
 
 	@Override
-	public List<String> getActuatorNames() {
-		return Collections.singletonList(PIN_ACTUATOR_NAME);
+	public List<Actuator> getActuators() {
+		ArrayList<Actuator> l = new ArrayList<Actuator>();
+		l.addAll(actuators.values());
+		return l;
 	}
-
-	@Override
-	public void actuate(String actuator, boolean on) throws Exception {
-		if (actuator.equals(PIN_ACTUATOR_NAME)) {
-			machine.getDriver().actuate(this, 0, on);
-			machine.fireMachineHeadActivity(machine, this);
-		}
-		else {
-			throw new Exception("Unrecognized actuator: " + actuator);
-		}
+	
+	public ReferenceActuator getActuator(String name) {
+		return actuators.get(name);
 	}
 
 	@Override

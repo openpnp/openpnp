@@ -157,17 +157,8 @@ public interface Head {
 	public void place(Part part, Location placeLocation) throws Exception;
 	
 	/**
-	 * Returns a list of named actuators that the user may want to trigger during
-	 * setup tasks. In general, these will not be used during Job processing unless
-	 * the Head implementation makes use of them itself.
+	 * Get a list of Actuators that are attached to this head.
 	 * @return
 	 */
-	public List<String> getActuatorNames();
-	
-	/**
-	 * Actuates or deactuates the named actuator. In general, this will not be 
-	 * used during Job processing unless the Head implementation makes use of 
-	 * them itself. 
-	 */
-	public void actuate(String actuator, boolean on) throws Exception;
+	public List<Actuator> getActuators();
 }

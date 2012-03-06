@@ -38,7 +38,8 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 // TODO: See if any of the Reference* classes can be done away with and use only the SPI classes.
 public class ReferenceMachine implements Machine, RequiresConfigurationResolution {
@@ -46,15 +47,38 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	
 	@Element
 	private ReferenceDriver driver;
-	@ElementMap(attribute=true, entry="head", key="id")
-	private LinkedHashMap<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
+	@ElementList(name="heads")
+	private ArrayList<ReferenceHead> headsList = new ArrayList<ReferenceHead>();
 	@ElementList
 	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
-	@ElementMap(attribute=true, entry="feeder", key="id")
+	@ElementList(name="feeders")
+	private ArrayList<ReferenceFeeder> feedersList = new ArrayList<ReferenceFeeder>();
+
+	private LinkedHashMap<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
 	private LinkedHashMap<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	
 	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
 	private boolean enabled;
+	
+	@SuppressWarnings("unused")
+	@Commit
+	private void commit() {
+		for (ReferenceHead head : headsList) {
+			heads.put(head.getId(), head);
+		}
+		for (ReferenceFeeder feeder : feedersList) {
+			feeders.put(feeder.getId(), feeder);
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	@Persist
+	private void persist() {
+		headsList.clear();
+		headsList.addAll(heads.values());
+		feedersList.clear();
+		feedersList.addAll(feeders.values());
+	}
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
