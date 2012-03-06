@@ -41,6 +41,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.Validate;
 
 public class ReferenceHead implements Head {
 	private ReferenceMachine machine;
@@ -401,6 +402,18 @@ public class ReferenceHead implements Head {
 		private double homingDotDiameter;
 		@Element(required=false)
 		private Location homingDotLocation;
+		
+		@Validate
+		private void validate() throws Exception {
+			if (useVision) {
+				if (homingDotDiameter == 0) {
+					throw new Exception("homing-dot-diameter is required if use-vision is set.");
+				}
+				if (homingDotLocation == null) {
+					throw new Exception("homing-dot-location is required if use-vision is set.");
+				}
+			}
+		}
 		
 		public Homing() {
 			homingDotLocation = new Location();

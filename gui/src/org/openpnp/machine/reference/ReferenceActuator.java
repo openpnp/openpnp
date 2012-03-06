@@ -5,11 +5,20 @@ import org.openpnp.spi.Actuator;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
+/**
+ * A simple binary Actuator that sends an indexed actuate command to the
+ * driver and has a Location which provides offsets from the Head or Machine. 
+ */
 public class ReferenceActuator implements Actuator {
 	@Attribute
 	private String id;
 	@Attribute
 	private int index;
+	/**
+	 * If the Actuator is attached to a Head, this Location provides the
+	 * offsets from the Head to the Actuator. These offsets are added to
+	 * the Head location to get the Actuator location.
+	 */
 	@Element(required=false)
 	private Location location;
 	

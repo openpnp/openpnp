@@ -79,19 +79,31 @@ public class Configuration extends AbstractModelObject {
 			loadMachine(new File(configurationDirectory, "machine.xml"));
 		}
 		catch (Exception e) {
-			throw new Exception("Error while reading machine.xml (" + e.getMessage() + ")", e);
+			String message = e.getMessage();
+			if (e.getCause() != null && e.getCause().getMessage() != null) {
+				message = e.getCause().getMessage();
+			}
+			throw new Exception("Error while reading machine.xml (" + message + ")", e);
 		}
 		try {
 			loadPackages(new File(configurationDirectory, "packages.xml"));
 		}
 		catch (Exception e) {
-			throw new Exception("Error while reading packages.xml (" + e.getMessage() + ")", e);
+			String message = e.getMessage();
+			if (e.getCause() != null && e.getCause().getMessage() != null) {
+				message = e.getCause().getMessage();
+			}
+			throw new Exception("Error while reading packages.xml (" + message + ")", e);
 		}
 		try {
 			loadParts(new File(configurationDirectory, "parts.xml"));
 		}
 		catch (Exception e) {
-			throw new Exception("Error while reading parts.xml (" + e.getMessage() + ")", e);
+			String message = e.getMessage();
+			if (e.getCause() != null && e.getCause().getMessage() != null) {
+				message = e.getCause().getMessage();
+			}
+			throw new Exception("Error while reading parts.xml (" + message + ")", e);
 		}
 		dirty = false;
 		for (ConfigurationListener listener : listeners) {

@@ -46,8 +46,10 @@ public interface Camera {
 	public String getName();
 	
 	/**
-	 * Get the Location of the Camera in relation to either the Head it's attached to
-	 * or the Machine itself.
+	 * Get the Location of the Camera in relation to either the Head it's
+	 * attached to or the Machine itself. When the Camera is attached to
+	 * a Head this value is considered to be a set of offsets that are
+	 * added to the Head's position to get the Camera's location.
 	 * @return
 	 */
 	public Location getLocation();

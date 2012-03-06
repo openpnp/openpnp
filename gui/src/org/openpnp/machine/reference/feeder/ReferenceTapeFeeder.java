@@ -32,19 +32,11 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.PersistenceException;
+import org.simpleframework.xml.core.Validate;
 
 
-/**
- * Implemention of Feeder that allows the head to index the current part and
- * then pick from a pre-specified position. It is intended that the Head is
- * carrying a pin of some type that can be extended past the end of the tool to
- * index the tape. The steps this Feeder takes to feed a part are as follows:
- * Move head to Safe Z Move head to FeedStartLocation x, y Actuate ACTUATOR_PIN
- * Lower head to FeedStartLocation z Move head to FeedEndLocation x, y, z Move
- * head to Safe Z Retract ACTUATOR_PIN
- * 
- * TODO: Make actuator name configurable
- */
 public class ReferenceTapeFeeder extends ReferenceFeeder {
 	@Element
 	private Location feedStartLocation;
@@ -52,10 +44,24 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private Location feedEndLocation;
 	@Attribute
 	private double feedRate;
+	@Attribute
+	private String actuatorId; 
+	
+	@Attribute(required=false)
+	private boolean useVision;
+	@Attribute(required=false)
+	private double tapeFeedHoleDiameter;
+	
+	@SuppressWarnings("unused")
+	@Validate
+	private void validate() throws Exception {
+		if (useVision) {
+			if (tapeFeedHoleDiameter == 0) {
+				throw new PersistenceException("tape-feed-hole-diameter is required if use-vision is set.");
+			}
+		}
+	}
 
-	/**
-	 * @wbp.parser.entryPoint
-	 */
 	@Override
 	public boolean canFeedForHead(Part part, Head head) {
 		return true;
@@ -73,7 +79,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		 */
 
 		ReferenceHead head = (ReferenceHead) head_;
-		ReferenceActuator actuator = head.getActuator("PIN");
+		ReferenceActuator actuator = head.getActuator(actuatorId);
 
 		// move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
