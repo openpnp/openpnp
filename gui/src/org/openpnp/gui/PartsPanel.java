@@ -24,10 +24,12 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.LengthUnit;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.tablemodel.FeederLocationsTableModel;
+import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 

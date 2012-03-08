@@ -23,7 +23,8 @@ package org.openpnp.spi;
 
 import java.util.List;
 
-import org.openpnp.LengthUnit;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.LengthUnit;
 
 
 /**
@@ -36,24 +37,32 @@ public interface Machine {
 	 * The units used to describe the machine's measurements.
 	 * @return
 	 */
-	LengthUnit getNativeUnits();
+	public LengthUnit getNativeUnits();
 	
 	/**
 	 * Gets all active heads on the machine.
 	 * @return
 	 */
-	List<Head> getHeads();
+	public List<Head> getHeads();
 	
 	/**
 	 * Gets the Feeder defined with the specified id.
 	 * @param id
 	 * @return
 	 */
-	Feeder getFeeder(String id);
+	public Feeder getFeeder(String id);
 	
-	List<Feeder> getFeeders();
+	/**
+	 * Gets a List of Feeders attached to the Machine.
+	 * @return
+	 */
+	public List<Feeder> getFeeders();
 	
-	List<Camera> getCameras();
+	/**
+	 * Gets a List of Cameras attached to the Machine.
+	 * @return
+	 */
+	public List<Camera> getCameras();
 	
 	/**
 	 * Commands all Heads to move to their home positions and reset their current positions
@@ -61,12 +70,12 @@ public interface Machine {
 	 * not all be the same but the end result should be that any head commanded to move
 	 * to a certain position will end up in the same position.
 	 */
-	void home() throws Exception;
+	public void home() throws Exception;
 	
 	/**
 	 * Returns whether the Machine is currently ready for commands. 
 	 */
-	boolean isEnabled();
+	public boolean isEnabled();
 	
 	/**
 	 * Attempts to bring the Machine to a ready state. This would include turning on motor
@@ -88,7 +97,9 @@ public interface Machine {
 	 */
 	public void setEnabled(boolean enabled) throws Exception;
 	
-	void addListener(MachineListener listener);
+	public void addListener(MachineListener listener);
 	
-	void removeListener(MachineListener listener);
+	public void removeListener(MachineListener listener);
+	
+	public Wizard getConfigurationWizard();
 }

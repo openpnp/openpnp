@@ -35,10 +35,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import org.openpnp.LengthUnit;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
+import org.openpnp.model.LengthUnit;
 
 // TODO: For the time being, since setting a property on the reticle doesn't re-save it we are
 // making a redundant call to setReticle on every property update. Fix that somehow.

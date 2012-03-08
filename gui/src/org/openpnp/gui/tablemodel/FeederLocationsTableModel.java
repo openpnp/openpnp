@@ -1,4 +1,4 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -6,17 +6,17 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Length;
 import org.openpnp.gui.support.FeederCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.util.LengthUtil;
 
-class FeederLocationsTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class FeederLocationsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Feeder", "X", "Y", "Z", "θ" };
@@ -91,7 +91,7 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setX(length.getValue());
 				feederLocation.setLocation(location);
@@ -103,7 +103,7 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setY(length.getValue());
 				feederLocation.setLocation(location);
@@ -115,7 +115,7 @@ class FeederLocationsTableModel extends AbstractTableModel implements PropertyCh
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setZ(length.getValue());
 				feederLocation.setLocation(location);

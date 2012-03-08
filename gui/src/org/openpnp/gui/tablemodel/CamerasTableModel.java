@@ -1,4 +1,4 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,16 +6,16 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.Length;
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.machine.reference.camera.AbstractCamera;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.LengthUtil;
 
-class CamerasTableModel extends AbstractTableModel implements ConfigurationListener {
+public class CamerasTableModel extends AbstractTableModel implements ConfigurationListener {
 	final private Configuration configuration;
 	
 	// TODO: add head
@@ -67,7 +67,7 @@ class CamerasTableModel extends AbstractTableModel implements ConfigurationListe
 		try {
 			// TODO: Evil hack until we move the settable properties for Camera
 			// into the Camera interface.
-			AbstractCamera camera = (AbstractCamera) cameras.get(rowIndex);
+			ReferenceCamera camera = (ReferenceCamera) cameras.get(rowIndex);
 			if (columnIndex == 0) {
 				camera.setName((String) aValue);
 			}
@@ -81,7 +81,7 @@ class CamerasTableModel extends AbstractTableModel implements ConfigurationListe
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setX(length.getValue());
 				camera.setLocation(location);
@@ -93,7 +93,7 @@ class CamerasTableModel extends AbstractTableModel implements ConfigurationListe
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setY(length.getValue());
 				camera.setLocation(location);
@@ -105,7 +105,7 @@ class CamerasTableModel extends AbstractTableModel implements ConfigurationListe
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setZ(length.getValue());
 				camera.setLocation(location);

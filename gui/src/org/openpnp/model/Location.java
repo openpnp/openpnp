@@ -21,15 +21,13 @@
 
 package org.openpnp.model;
 
-import org.openpnp.LengthUnit;
-import org.openpnp.util.LengthUtil;
 import org.simpleframework.xml.Attribute;
 
 /**
  * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z
  * axis.
  */
-public class Location extends AbstractModelObject {
+public class Location extends AbstractModelObject implements Cloneable {
 	@Attribute
 	private LengthUnit units;
 	@Attribute(required=false)
@@ -40,6 +38,22 @@ public class Location extends AbstractModelObject {
 	private double z;
 	@Attribute(required=false)
 	private double rotation;
+	
+	public Location() {
+		this(null);
+	}
+	
+	public Location(LengthUnit units) {
+		this(units, 0, 0, 0, 0);
+	}
+	
+	public Location(LengthUnit units, double x, double y, double z, double rotation) {
+		setUnits(units);
+		setX(x);
+		setY(y);
+		setZ(z);
+		setRotation(rotation);
+	}
 	
 	public double getX() {
 		return x;
@@ -92,7 +106,13 @@ public class Location extends AbstractModelObject {
 	}
 	
 	public Location convertToUnits(LengthUnit units) {
-		return LengthUtil.convertLocation(this, units);
+		Location location = new Location();
+		location.setX(new Length(x, this.units).convertToUnits(units).getValue());
+		location.setY(new Length(y, this.units).convertToUnits(units).getValue());
+		location.setZ(new Length(z, this.units).convertToUnits(units).getValue());
+		location.setRotation(rotation);
+		location.setUnits(units);
+		return location;
 	}
 	
 	public double getLinearDistanceTo(Location location) {
@@ -102,9 +122,18 @@ public class Location extends AbstractModelObject {
 	public double getLinearDistanceTo(double x, double y) {
 		return (Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2)));
 	}
-
 	@Override
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units, x, y, z, rotation);
+	}
+	
+	public static void main(String[] args) {
+		Location location = new Location(LengthUnit.Millimeters, 1, 1, 2, 42.24);
+		System.out.println(location);
+		System.out.println(location.convertToUnits(LengthUnit.Millimeters));
+		System.out.println(location.convertToUnits(LengthUnit.Meters));
+		System.out.println(location.convertToUnits(LengthUnit.Centimeters));
+		System.out.println(location.convertToUnits(LengthUnit.Inches));
+		System.out.println(location.convertToUnits(LengthUnit.Feet));
 	}
 }

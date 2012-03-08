@@ -1,5 +1,7 @@
 package org.openpnp.spi;
 
+import org.openpnp.gui.support.Wizard;
+
 /**
  * Provides an interface for implementors of vision systems to implement. A
  * VisionProvider is attached to a Camera in configuration and can be commanded
@@ -13,6 +15,8 @@ public interface VisionProvider {
 	 * @param camera
 	 */
 	public void setCamera(Camera camera);
+	
+	public Wizard getConfigurationWizard();
 
 	// TODO: decide if results are measured from top or bottom left and
 	// standardize on it

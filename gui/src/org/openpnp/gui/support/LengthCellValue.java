@@ -1,8 +1,7 @@
 package org.openpnp.gui.support;
 
-import org.openpnp.Length;
-import org.openpnp.LengthUnit;
-import org.openpnp.util.LengthUtil;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 
 public class LengthCellValue {
 	private Length length;
@@ -12,7 +11,7 @@ public class LengthCellValue {
 	}
 
 	public LengthCellValue(String value) {
-		Length length = LengthUtil.parseLengthValue(value, true);
+		Length length = Length.parse(value, true);
 		if (length == null) {
 			throw new NullPointerException();
 		}

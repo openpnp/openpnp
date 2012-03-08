@@ -21,157 +21,28 @@
 
 package org.openpnp.util;
 
-import org.openpnp.Length;
-import org.openpnp.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Outline;
-import org.openpnp.model.Point;
 
 // TODO move these into their respective classes
 public class LengthUtil {
-	public static Location convertLocation(Location l, LengthUnit toUnits) {
-		Location ln = new Location();
-		ln.setUnits(toUnits);
-		ln.setX(LengthUtil.convertLength(l.getX(), l.getUnits(), toUnits));
-		ln.setY(LengthUtil.convertLength(l.getY(), l.getUnits(), toUnits));
-		ln.setZ(LengthUtil.convertLength(l.getZ(), l.getUnits(), toUnits));
-		ln.setRotation(l.getRotation());
-		return ln;
-	}
-	
-	public static Outline convertOutline(Outline outline, LengthUnit toUnits) {
-		Outline newOutline = new Outline();
-		newOutline.setUnits(outline.getUnits());
-		for (int i = 0; i < outline.getPoints().size(); i++) {
-			Point p = outline.getPoints().get(i);
-			
-			p = convertPoint(p, outline.getUnits(), toUnits);
-			
-			newOutline.addPoint(p.getX(), p.getY());
-		}
-		
-		return newOutline;
-	}
-	
-	public static Point convertPoint(Point point, LengthUnit fromUnits, LengthUnit toUnits) {
-		double x = point.getX();
-		double y = point.getY();
-		x = LengthUtil.convertLength(x, fromUnits, toUnits);
-		y = LengthUtil.convertLength(y, fromUnits, toUnits);
-		return new Point(x, y);
-	}
-	
-	public static Length parseLengthValue(String v) {
-		return parseLengthValue(v, false);
-	}
-
-	
-	/**
-	 * Takes a value in the format of a double followed by any number of spaces
-	 * followed by the shortName of a LengthUnit value and returns the value
-	 * as a Length object. Returns null if the value could not be parsed.
-	 * @param v
-	 * @return
-	 */
-	public static Length parseLengthValue(String v, boolean requireUnits) {
-		if (v == null) {
-			return null;
-		}
-		
-		v = v.trim();
-		
-		Length length = new Length(0, null);
-		// find the index of the first character that is not a -, . or digit.
-		int startOfUnits = -1;
-		for (int i = 0; i < v.length(); i++) {
-			char ch = v.charAt(i);
-			if (ch != '-' && ch != '.' && !Character.isDigit(ch)) {
-				startOfUnits = i;
-				break;
-			}
-		}
-		
-		String valueString = null;
-		if (startOfUnits != -1) {
-			valueString = v.substring(0, startOfUnits);
-			String unitsString = v.substring(startOfUnits);
-			unitsString = unitsString.trim();
-			for (LengthUnit lengthUnit : LengthUnit.values()) {
-				if (lengthUnit.getShortName().equalsIgnoreCase(unitsString)) {
-					length.setUnits(lengthUnit);
-					break;
-				}
-			}
-		}
-		else {
-			valueString = v;
-		}
-		
-		if (requireUnits && length.getUnits() == null) {
-			return null;
-		}
-		
-		try {
-			double value = Double.parseDouble(valueString);
-			length.setValue(value);
-		}
-		catch (Exception e) {
-			return null;
-		}
-		
-		return length;
-	}
-	
-	public static double convertLength(double length, LengthUnit fromUnits, LengthUnit toUnits) {
-		if (fromUnits == toUnits) {
-			return length;
-		}
-		double mm = 0;
-		if (fromUnits == LengthUnit.Millimeters) {
-			mm = length;
-		}
-		else if (fromUnits == LengthUnit.Centimeters) {
-			mm = length * 10;
-		}
-		else if (fromUnits == LengthUnit.Meters) {
-			mm = length * 1000;
-		}
-		else if (fromUnits == LengthUnit.Inches) {
-			mm = length * 25.4;
-		}
-		else if (fromUnits == LengthUnit.Feet) {
-			mm = length * 25.4 * 12;
-		}
-		else {
-			throw new Error("convertLength() unrecognized fromUnits " + fromUnits);
-		}
-		
-		if (toUnits == LengthUnit.Millimeters) {
-			return mm;
-		}
-		else if (toUnits == LengthUnit.Centimeters) {
-			return mm / 10;
-		}
-		else if (toUnits == LengthUnit.Meters) {
-			return mm / 1000;
-		}
-		else if (toUnits == LengthUnit.Inches) {
-			return mm * (1 / 25.4);
-		}
-		else if (toUnits == LengthUnit.Feet) {
-			return mm * (1 / 25.4) * 12;
-		}
-		else {
-			throw new Error("convertLength() unrecognized toUnits " + fromUnits);
-		}
-	}
-	
-	public static void main(String[] args) {
-		System.out.println("" + parseLengthValue("2.00?"));
-		System.out.println("" + parseLengthValue("2.00\""));
-		System.out.println("" + parseLengthValue("2.00mm"));
-		System.out.println("" + parseLengthValue("2.00"));
-		System.out.println("" + parseLengthValue("a2.00"));
-		System.out.println("" + parseLengthValue("2.00!"));
-	}
+//	public static Outline convertOutline(Outline outline, LengthUnit toUnits) {
+//		Outline newOutline = new Outline();
+//		newOutline.setUnits(outline.getUnits());
+//		for (int i = 0; i < outline.getPoints().size(); i++) {
+//			Point p = outline.getPoints().get(i);
+//			
+//			p = convertPoint(p, outline.getUnits(), toUnits);
+//			
+//			newOutline.addPoint(p.getX(), p.getY());
+//		}
+//		
+//		return newOutline;
+//	}
+//	
+//	public static Point convertPoint(Point point, LengthUnit fromUnits, LengthUnit toUnits) {
+//		double x = point.getX();
+//		double y = point.getY();
+//		x = LengthUtil.convertLength(x, fromUnits, toUnits);
+//		y = LengthUtil.convertLength(y, fromUnits, toUnits);
+//		return new Point(x, y);
+//	}
 }

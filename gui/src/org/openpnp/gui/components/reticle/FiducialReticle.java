@@ -24,7 +24,8 @@ package org.openpnp.gui.components.reticle;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import org.openpnp.LengthUnit;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.util.LengthUtil;
 
 public class FiducialReticle implements Reticle {
@@ -105,8 +106,8 @@ public class FiducialReticle implements Reticle {
 		// draw the vertical splitter
 		g2d.drawLine((int) viewPortCenterX, (int) (viewPortCenterY - (viewPortHeight / 2)), (int) viewPortCenterX, (int) (viewPortCenterY + (viewPortHeight / 2)));
 		
-		double pixelsPerUnitX = 1.0 / LengthUtil.convertLength(cameraUnitsPerPixelX, cameraUnitsPerPixelUnits, this.units);
-		double pixelsPerUnitY = 1.0 / LengthUtil.convertLength(cameraUnitsPerPixelY, cameraUnitsPerPixelUnits, this.units);
+		double pixelsPerUnitX = 1.0 / new Length(cameraUnitsPerPixelX, cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
+		double pixelsPerUnitY = 1.0 / new Length(cameraUnitsPerPixelY, cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
 
 		if (shape == Shape.Circle) {
 			int width = (int) (size * pixelsPerUnitX);

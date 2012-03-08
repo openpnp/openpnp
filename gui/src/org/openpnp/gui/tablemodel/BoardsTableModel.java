@@ -1,4 +1,4 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -9,7 +9,7 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 
-class BoardsTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class BoardsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	private String[] columnNames = new String[] { "Board", "Path" };
 
 	private final Configuration configuration;

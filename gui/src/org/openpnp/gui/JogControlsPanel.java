@@ -44,43 +44,43 @@ import javax.swing.JToggleButton;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
-import org.openpnp.util.LengthUtil;
 
 /**
- * Contains controls, DROs and status for the machine.
- * Controls: C right / left, X + / -, Y + / -, Z + / -, stop, pause, slider for jog increment
- * DROs: X, Y, Z, C
- * Radio buttons to select mm or inch.
- * TODO add a dropdown to select Head
+ * Contains controls, DROs and status for the machine. Controls: C right / left,
+ * X + / -, Y + / -, Z + / -, stop, pause, slider for jog increment DROs: X, Y,
+ * Z, C Radio buttons to select mm or inch. TODO add a dropdown to select Head
+ * 
  * @author jason
  */
 public class JogControlsPanel extends JPanel {
 	private final MachineControlsPanel machineControlsPanel;
 	private final Frame frame;
-	
+
 	private Machine machine;
 	private Head head;
 	private JToggleButton btnPickPlace;
 	private JPanel panelActuators;
-	
+
 	// TODO: Move out to main, or get it from the MachineControlsPanel
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
-	
+
 	/**
 	 * Create the panel.
 	 */
-	public JogControlsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel, Frame frame) {
+	public JogControlsPanel(Configuration configuration,
+			MachineControlsPanel machineControlsPanel, Frame frame) {
 		this.machineControlsPanel = machineControlsPanel;
 		this.frame = frame;
-		
+
 		createUi();
-		
+
 		configuration.addListener(configurationListener);
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
@@ -97,7 +97,7 @@ public class JogControlsPanel extends JPanel {
 			c.setEnabled(enabled);
 		}
 	}
-	
+
 	private void jog(final int x, final int y, final int z, final int c) {
 		executor.execute(new Runnable() {
 			public void run() {
@@ -106,37 +106,40 @@ public class JogControlsPanel extends JPanel {
 					double yPos = head.getY();
 					double zPos = head.getZ();
 					double cPos = head.getC();
-					
-					double jogIncrement = LengthUtil.convertLength(machineControlsPanel.getJogIncrement(), machineControlsPanel.getJogUnits(), machine.getNativeUnits());
-					
+
+					double jogIncrement = new Length(machineControlsPanel
+							.getJogIncrement(), machineControlsPanel
+							.getJogUnits()).convertToUnits(
+							machine.getNativeUnits()).getValue();
+
 					if (x > 0) {
 						xPos += jogIncrement;
 					}
 					else if (x < 0) {
 						xPos -= jogIncrement;
 					}
-					
+
 					if (y > 0) {
 						yPos += jogIncrement;
 					}
 					else if (y < 0) {
 						yPos -= jogIncrement;
 					}
-					
+
 					if (z > 0) {
 						zPos += jogIncrement;
 					}
 					else if (z < 0) {
 						zPos -= jogIncrement;
 					}
-					
+
 					if (c > 0) {
 						cPos += jogIncrement;
 					}
 					else if (c < 0) {
 						cPos -= jogIncrement;
 					}
-					
+
 					head.moveTo(xPos, yPos, zPos, cPos);
 				}
 				catch (Exception e) {
@@ -145,16 +148,16 @@ public class JogControlsPanel extends JPanel {
 			}
 		});
 	}
-	
+
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		
+
 		JPanel panelControls = new JPanel();
 		add(panelControls);
 		GridBagLayout gbl_panelControls = new GridBagLayout();
 		gbl_panelControls.rowHeights = new int[] { 25, 25, 25, 25, 25, 25 };
 		panelControls.setLayout(gbl_panelControls);
-		
+
 		JButton btnYPlus = new JButton(yPlusAction);
 		btnYPlus.setFocusable(false);
 		btnYPlus.setPreferredSize(new Dimension(55, 50));
@@ -165,7 +168,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnYPlus.gridx = 3;
 		gbc_btnYPlus.gridy = 0;
 		panelControls.add(btnYPlus, gbc_btnYPlus);
-		
+
 		JButton btnZPlus = new JButton(zPlusAction);
 		btnZPlus.setFocusable(false);
 		btnZPlus.setPreferredSize(new Dimension(50, 29));
@@ -176,7 +179,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnZPlus.gridx = 5;
 		gbc_btnZPlus.gridy = 0;
 		panelControls.add(btnZPlus, gbc_btnZPlus);
-		
+
 		JButton btnXMinus = new JButton(xMinusAction);
 		btnXMinus.setFocusable(false);
 		btnXMinus.setPreferredSize(new Dimension(55, 50));
@@ -187,7 +190,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnXMinus.gridx = 2;
 		gbc_btnXMinus.gridy = 2;
 		panelControls.add(btnXMinus, gbc_btnXMinus);
-		
+
 		btnPickPlace = new JToggleButton(pickPlaceAction);
 		btnPickPlace.setFocusable(false);
 		btnPickPlace.setPreferredSize(new Dimension(55, 50));
@@ -202,7 +205,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnPickPlace.gridx = 3;
 		gbc_btnPickPlace.gridy = 2;
 		panelControls.add(btnPickPlace, gbc_btnPickPlace);
-		
+
 		JButton btnXPlus = new JButton(xPlusAction);
 		btnXPlus.setFocusable(false);
 		btnXPlus.setPreferredSize(new Dimension(55, 50));
@@ -213,7 +216,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnXPlus.gridx = 4;
 		gbc_btnXPlus.gridy = 2;
 		panelControls.add(btnXPlus, gbc_btnXPlus);
-		
+
 		JButton btnCMinus = new JButton(cMinusAction);
 		btnCMinus.setFocusable(false);
 		btnCMinus.setPreferredSize(new Dimension(50, 29));
@@ -224,7 +227,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnCMinus.gridx = 0;
 		gbc_btnCMinus.gridy = 1;
 		panelControls.add(btnCMinus, gbc_btnCMinus);
-		
+
 		JButton btnCPlus = new JButton(cPlusAction);
 		btnCPlus.setFocusable(false);
 		btnCPlus.setPreferredSize(new Dimension(50, 29));
@@ -235,7 +238,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnCPlus.gridx = 1;
 		gbc_btnCPlus.gridy = 1;
 		panelControls.add(btnCPlus, gbc_btnCPlus);
-		
+
 		JButton btnZMinus = new JButton(zMinusAction);
 		btnZMinus.setFocusable(false);
 		btnZMinus.setPreferredSize(new Dimension(50, 29));
@@ -246,7 +249,7 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnZMinus.gridx = 5;
 		gbc_btnZMinus.gridy = 3;
 		panelControls.add(btnZMinus, gbc_btnZMinus);
-		
+
 		JButton btnYMinus = new JButton(yMinusAction);
 		btnYMinus.setFocusable(false);
 		btnYMinus.setPreferredSize(new Dimension(55, 50));
@@ -257,28 +260,28 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnYMinus.gridx = 3;
 		gbc_btnYMinus.gridy = 4;
 		panelControls.add(btnYMinus, gbc_btnYMinus);
-		
+
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		add(tabbedPane);
-		
+
 		JPanel panelSpecial = new JPanel();
 		tabbedPane.addTab("Special Commands", null, panelSpecial, null);
 		FlowLayout flowLayout_1 = (FlowLayout) panelSpecial.getLayout();
 		flowLayout_1.setAlignment(FlowLayout.LEFT);
-		
+
 		panelActuators = new JPanel();
 		tabbedPane.addTab("Actuators", null, panelActuators, null);
 		FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
 		fl_panelActuators.setAlignment(FlowLayout.LEFT);
-		
+
 		JButton btnNewButton = new JButton(machineControlsPanel.homeAction);
 		btnNewButton.setFocusable(false);
 		panelSpecial.add(btnNewButton);
-		
-//		setFocusTraversalPolicy(focusPolicy);
-//		setFocusTraversalPolicyProvider(true);
+
+		// setFocusTraversalPolicy(focusPolicy);
+		// setFocusTraversalPolicyProvider(true);
 	}
-	
+
 	@SuppressWarnings("serial")
 	public Action yPlusAction = new AbstractAction("Y+") {
 		@Override
@@ -286,7 +289,7 @@ public class JogControlsPanel extends JPanel {
 			jog(0, 1, 0, 0);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action yMinusAction = new AbstractAction("Y-") {
 		@Override
@@ -294,7 +297,7 @@ public class JogControlsPanel extends JPanel {
 			jog(0, -1, 0, 0);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action xPlusAction = new AbstractAction("X+") {
 		@Override
@@ -302,7 +305,7 @@ public class JogControlsPanel extends JPanel {
 			jog(1, 0, 0, 0);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action xMinusAction = new AbstractAction("X-") {
 		@Override
@@ -310,7 +313,7 @@ public class JogControlsPanel extends JPanel {
 			jog(-1, 0, 0, 0);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action zPlusAction = new AbstractAction("Z+") {
 		@Override
@@ -318,7 +321,7 @@ public class JogControlsPanel extends JPanel {
 			jog(0, 0, 1, 0);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action zMinusAction = new AbstractAction("Z-") {
 		@Override
@@ -326,7 +329,7 @@ public class JogControlsPanel extends JPanel {
 			jog(0, 0, -1, 0);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action cPlusAction = new AbstractAction("C+") {
 		@Override
@@ -334,7 +337,7 @@ public class JogControlsPanel extends JPanel {
 			jog(0, 0, 0, 1);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action cMinusAction = new AbstractAction("C-") {
 		@Override
@@ -342,7 +345,7 @@ public class JogControlsPanel extends JPanel {
 			jog(0, 0, 0, -1);
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	public Action pickPlaceAction = new AbstractAction("O") {
 		@Override
@@ -359,59 +362,60 @@ public class JogControlsPanel extends JPanel {
 						}
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Pick/Place Operation Failed", e.getMessage());
+						MessageBoxes.errorBox(frame,
+								"Pick/Place Operation Failed", e.getMessage());
 					}
 				}
 			});
 		}
 	};
-	
-//	private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
-//		@Override
-//		public Component getComponentAfter(Container aContainer,
-//				Component aComponent) {
-//			return sliderIncrements;
-//		}
-//
-//		@Override
-//		public Component getComponentBefore(Container aContainer,
-//				Component aComponent) {
-//			return sliderIncrements;
-//		}
-//
-//		@Override
-//		public Component getDefaultComponent(Container aContainer) {
-//			return sliderIncrements;
-//		}
-//
-//		@Override
-//		public Component getFirstComponent(Container aContainer) {
-//			return sliderIncrements;
-//		}
-//
-//		@Override
-//		public Component getInitialComponent(Window window) {
-//			return sliderIncrements;
-//		}
-//
-//		@Override
-//		public Component getLastComponent(Container aContainer) {
-//			return sliderIncrements;
-//		}
-//	};
-	
+
+	// private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
+	// @Override
+	// public Component getComponentAfter(Container aContainer,
+	// Component aComponent) {
+	// return sliderIncrements;
+	// }
+	//
+	// @Override
+	// public Component getComponentBefore(Container aContainer,
+	// Component aComponent) {
+	// return sliderIncrements;
+	// }
+	//
+	// @Override
+	// public Component getDefaultComponent(Container aContainer) {
+	// return sliderIncrements;
+	// }
+	//
+	// @Override
+	// public Component getFirstComponent(Container aContainer) {
+	// return sliderIncrements;
+	// }
+	//
+	// @Override
+	// public Component getInitialComponent(Window window) {
+	// return sliderIncrements;
+	// }
+	//
+	// @Override
+	// public Component getLastComponent(Container aContainer) {
+	// return sliderIncrements;
+	// }
+	// };
+
 	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
 		public void configurationLoaded(Configuration configuration) {
 			panelActuators.removeAll();
-			
+
 			machine = configuration.getMachine();
 			head = machine.getHeads().get(0);
-			
 
 			for (Actuator actuator : head.getActuators()) {
 				final Actuator actuator_f = actuator;
-				final JToggleButton actuatorButton = new JToggleButton(actuator_f.getId());
+				final JToggleButton actuatorButton = new JToggleButton(
+						actuator_f.getId());
 				actuatorButton.setFocusable(false);
 				actuatorButton.addActionListener(new ActionListener() {
 					@Override
@@ -424,7 +428,9 @@ public class JogControlsPanel extends JPanel {
 									actuator_f.actuate(state);
 								}
 								catch (Exception e) {
-									MessageBoxes.errorBox(frame, "Actuator Command Failed", e.getMessage());
+									MessageBoxes.errorBox(frame,
+											"Actuator Command Failed",
+											e.getMessage());
 								}
 							}
 						});
@@ -432,7 +438,7 @@ public class JogControlsPanel extends JPanel {
 				});
 				panelActuators.add(actuatorButton);
 			}
-			
+
 			setEnabled(machineControlsPanel.isEnabled());
 		}
 	};

@@ -24,8 +24,8 @@ package org.openpnp.gui.components.reticle;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import org.openpnp.LengthUnit;
-import org.openpnp.util.LengthUtil;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 
 public class RulerReticle implements Reticle {
 	private LengthUnit units;
@@ -80,8 +80,8 @@ public class RulerReticle implements Reticle {
 		g2d.drawLine((int) (viewPortCenterX - (viewPortWidth / 2)), (int) viewPortCenterY, (int) (viewPortCenterX + (viewPortWidth / 2)), (int) viewPortCenterY);
 		// draw the vertical splitter
 		g2d.drawLine((int) viewPortCenterX, (int) (viewPortCenterY - (viewPortHeight / 2)), (int) viewPortCenterX, (int) (viewPortCenterY + (viewPortHeight / 2)));
-		double uppX = LengthUtil.convertLength(cameraUnitsPerPixelX, units, this.units);
-		double uppY = LengthUtil.convertLength(cameraUnitsPerPixelY, units, this.units);
+		double uppX = new Length(cameraUnitsPerPixelX, units).convertToUnits(this.units).getValue();
+		double uppY = new Length(cameraUnitsPerPixelY, units).convertToUnits(this.units).getValue();
 		double pixelsPerTickX = unitsPerTick / uppX;
 		double pixelsPerTickY = unitsPerTick / uppY;
 		int tickHeight = 10;

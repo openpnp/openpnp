@@ -23,11 +23,13 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
 
-public class VfwCamera extends AbstractCamera implements Runnable {
+public class VfwCamera extends ReferenceCamera implements Runnable {
 	@Attribute
 	private String driver;
 	@Attribute
@@ -113,5 +115,10 @@ public class VfwCamera extends AbstractCamera implements Runnable {
 				return null;
 			}
 		}
+	}
+	
+	@Override
+	public Wizard getConfigurationWizard() {
+		return null;
 	}
 }

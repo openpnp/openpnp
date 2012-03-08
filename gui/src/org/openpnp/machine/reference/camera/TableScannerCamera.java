@@ -15,7 +15,9 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 
 import org.openpnp.CameraListener;
-import org.openpnp.LengthUnit;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -29,7 +31,7 @@ import org.simpleframework.xml.core.Commit;
  * TODO: Allow specifying height which will create a larger tile and then
  * scale it down.
  */
-public class TableScannerCamera extends AbstractCamera implements Runnable {
+public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	/**
 	 * Path to the directory of tile images.
 	 */
@@ -351,6 +353,11 @@ public class TableScannerCamera extends AbstractCamera implements Runnable {
 			}
 		}
 		return closestTile;
+	}
+	
+	@Override
+	public Wizard getConfigurationWizard() {
+		return null;
 	}
 	
 	public static class Tile {

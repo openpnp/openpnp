@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.openpnp.LengthUnit;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
@@ -35,7 +37,6 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.VisionProvider.Circle;
-import org.openpnp.util.LengthUtil;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -59,26 +60,26 @@ public class ReferenceHead implements Head {
 	private double feedRate;
 	@Element
 	private SoftLimits softLimits = new SoftLimits();
-	@Element(required=false)
+	@Element(required = false)
 	private Homing homing = new Homing();
-	@ElementList(required=false, name="actuators")
+	@ElementList(required = false, name = "actuators")
 	private ArrayList<ReferenceActuator> actuatorsList = new ArrayList<ReferenceActuator>();
-	
+
 	private LinkedHashMap<String, ReferenceActuator> actuators = new LinkedHashMap<String, ReferenceActuator>();
-	
+
 	@Commit
 	private void commit() {
 		for (ReferenceActuator actuator : actuatorsList) {
 			actuators.put(actuator.getId(), actuator);
 		}
 	}
-	
+
 	@Persist
 	private void persist() {
 		actuatorsList.clear();
 		actuatorsList.addAll(actuators.values());
 	}
-	
+
 	public void setId(String id) {
 		this.id = id;
 	}
@@ -93,45 +94,53 @@ public class ReferenceHead implements Head {
 			actuator.setReferenceHead(this);
 		}
 	}
-	
+
 	public ReferenceMachine getMachine() {
 		return machine;
 	}
 
 	@Override
 	public void home() throws Exception {
-		if (homing.vision != null && homing.vision.enabled) {
+		// TODO: Perform home switch homing first.
+
+		// Apply the homing location to the current position
+		Location homingLocation = homing.location.convertToUnits(machine
+				.getNativeUnits());
+		setPerceivedX(homingLocation.getX());
+		setPerceivedY(homingLocation.getY());
+		setPerceivedZ(homingLocation.getZ());
+		setPerceivedC(homingLocation.getRotation());
+
+		if (homing.vision.enabled) {
 			homeWithVision();
 		}
-		else {
-			moveTo(getX(), getY(), 0, getC());
-			moveTo(0, 0, 0, 0);
-		}
 	}
-	
+
 	private void homeWithVision() throws Exception {
 		for (int i = 0; i < 8; i++) {
 			double x = getX();
 			double y = getY();
-			
+
 			Camera camera = attemptHomeWithVision();
-			
+
 			if (x == getX() && y == getY()) {
-				Location cameraOffsets = camera.getLocation().convertToUnits(machine.getNativeUnits());
-				moveTo(getX() + cameraOffsets.getX(), getY() + cameraOffsets.getY(), getZ(), getC());
+				Location cameraOffsets = camera.getLocation().convertToUnits(
+						machine.getNativeUnits());
+				moveTo(getX() + cameraOffsets.getX(),
+						getY() + cameraOffsets.getY(), getZ(), getC());
 				return;
 			}
-			
+
 			// Give the head a moment to settle before trying again
 			Thread.sleep(200);
 		}
-		
+
 		throw new Exception("Unable to settle after 8 tries. Giving up.");
 	}
-	
+
 	private Camera attemptHomeWithVision() throws Exception {
-		// TODO: To to the defined dot location before starting search 
-		
+		// TODO: Go to the defined dot location before starting search
+
 		// find the Camera to be used for homing
 		Camera camera = null;
 		for (Camera c : machine.getCameras()) {
@@ -187,34 +196,35 @@ public class ReferenceHead implements Head {
 			// distance from the point of interest. So, we're going to assume
 			// the best matching Circle is first and use that.
 			Circle circle = circles[0];
-			
+
 			// determine the position and diameter of the Circle, in units
 			double circleX = circle.getX() * unitsPerPixel.getX();
 			double circleY = circle.getY() * unitsPerPixel.getY();
 			double circleDiameter = circle.getDiameter() * unitsPerPixel.getX();
-			
+
 			// move the position from the bottom left to the center
 			BufferedImage image = camera.capture();
 			double imageWidthInUnits = image.getWidth() * unitsPerPixel.getX();
-			double imageHeightInUnits = image.getHeight() * unitsPerPixel.getY();
-			
+			double imageHeightInUnits = image.getHeight()
+					* unitsPerPixel.getY();
+
 			circleX -= imageWidthInUnits / 2;
 			circleY -= imageHeightInUnits / 2;
 
 			// get the position of the head
 			double x = getX();
 			double y = getY();
-			
+
 			// apply the offset from the circle
 			x += circleX;
 			y += circleY;
 
 			// and go there
 			moveTo(x, y, getZ(), getC());
-			
+
 			found = true;
 		}
-		
+
 		return camera;
 	}
 
@@ -244,9 +254,9 @@ public class ReferenceHead implements Head {
 							softLimits.minY, softLimits.maxY, softLimits.minZ,
 							softLimits.maxZ, softLimits.minC, softLimits.maxC));
 		}
-		double feedRateMmPerMinute = LengthUtil.convertLength(
-				feedRatePerMinute, machine.getNativeUnits(),
-				LengthUnit.Millimeters);
+		double feedRateMmPerMinute = new Length(feedRatePerMinute,
+				machine.getNativeUnits())
+				.convertToUnits(LengthUnit.Millimeters).getValue();
 		machine.getDriver().moveTo(this, x + offsetX, y + offsetY, z + offsetZ,
 				c + offsetC, feedRateMmPerMinute);
 		this.x = x + offsetX;
@@ -308,7 +318,7 @@ public class ReferenceHead implements Head {
 		l.addAll(actuators.values());
 		return l;
 	}
-	
+
 	public ReferenceActuator getActuator(String name) {
 		return actuators.get(name);
 	}
@@ -377,7 +387,55 @@ public class ReferenceHead implements Head {
 		return c;
 	}
 
-	static class SoftLimits {
+	public int getPickDwellMilliseconds() {
+		return pickDwellMilliseconds;
+	}
+
+	public void setPickDwellMilliseconds(int pickDwellMilliseconds) {
+		this.pickDwellMilliseconds = pickDwellMilliseconds;
+	}
+
+	public int getPlaceDwellMilliseconds() {
+		return placeDwellMilliseconds;
+	}
+
+	public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
+		this.placeDwellMilliseconds = placeDwellMilliseconds;
+	}
+
+	public double getFeedRate() {
+		return feedRate;
+	}
+
+	public void setFeedRate(double feedRate) {
+		this.feedRate = feedRate;
+	}
+
+	public SoftLimits getSoftLimits() {
+		return softLimits;
+	}
+
+	public void setSoftLimits(SoftLimits softLimits) {
+		this.softLimits = softLimits;
+	}
+
+	public Homing getHoming() {
+		return homing;
+	}
+
+	public void setHoming(Homing homing) {
+		this.homing = homing;
+	}
+
+	@Override
+	public Wizard getConfigurationWizard() {
+		return new ReferenceHeadConfigurationWizard(this);
+	}
+
+	/**
+	 * Stores all the values associated with the Head's soft limits.
+	 */
+	public static class SoftLimits implements Cloneable {
 		@Attribute
 		private double minX = Double.NEGATIVE_INFINITY;
 		@Attribute
@@ -394,30 +452,156 @@ public class ReferenceHead implements Head {
 		private double minC = Double.NEGATIVE_INFINITY;
 		@Attribute
 		private double maxC = Double.POSITIVE_INFINITY;
+
+		public double getMinX() {
+			return minX;
+		}
+
+		public void setMinX(double minX) {
+			this.minX = minX;
+		}
+
+		public double getMaxX() {
+			return maxX;
+		}
+
+		public void setMaxX(double maxX) {
+			this.maxX = maxX;
+		}
+
+		public double getMinY() {
+			return minY;
+		}
+
+		public void setMinY(double minY) {
+			this.minY = minY;
+		}
+
+		public double getMaxY() {
+			return maxY;
+		}
+
+		public void setMaxY(double maxY) {
+			this.maxY = maxY;
+		}
+
+		public double getMinZ() {
+			return minZ;
+		}
+
+		public void setMinZ(double minZ) {
+			this.minZ = minZ;
+		}
+
+		public double getMaxZ() {
+			return maxZ;
+		}
+
+		public void setMaxZ(double maxZ) {
+			this.maxZ = maxZ;
+		}
+
+		public double getMinC() {
+			return minC;
+		}
+
+		public void setMinC(double minC) {
+			this.minC = minC;
+		}
+
+		public double getMaxC() {
+			return maxC;
+		}
+
+		public void setMaxC(double maxC) {
+			this.maxC = maxC;
+		}
 	}
-	
-	static class Homing {
-		@Element(required=false)
-		private Vision vision;
-		
-		static class Vision {
-			@Attribute(required=false)
+
+	/**
+	 * Stores configuration information related to how the Head locates it's
+	 * home position.
+	 */
+	public static class Homing implements Cloneable {
+		@Element(required = false)
+		private Vision vision = new Vision();
+		/**
+		 * The position loaded into the Head when the homing operation has
+		 * completed successfully. This is used to offset home from your homing
+		 * switches, if needed. If the process of using your home switches lands
+		 * the Head at 0,0,0,0 then this Location can be 0,0,0,0. But perhaps
+		 * your have your X home switch at the end of it's travel instead of the
+		 * beginning and that is 400mm from where you would like to consider
+		 * home. By using 400,0,0,0 when you home the head it will then think it
+		 * is at 400,0,0,0 and going to 0,0,0,0 will take you to "home".
+		 */
+		@Element(required = false)
+		private Location location = new Location(LengthUnit.Millimeters);
+
+		public Vision getVision() {
+			return vision;
+		}
+
+		public void setVision(Vision vision) {
+			this.vision = vision;
+		}
+
+		public Location getLocation() {
+			return location;
+		}
+
+		public void setLocation(Location location) {
+			this.location = location;
+		}
+
+		/**
+		 * Vision information required for homing.
+		 */
+		public static class Vision implements Cloneable {
+			@Attribute(required = false)
 			private boolean enabled;
-			
-			@Attribute(required=false)
+
+			@Attribute(required = false)
 			private double homingDotDiameter;
-			@Element(required=false)
-			private Location homingDotLocation;
-			
+			@Element(required = false)
+			private Location homingDotLocation = new Location(
+					LengthUnit.Millimeters);
+
+			public boolean isEnabled() {
+				return enabled;
+			}
+
+			public void setEnabled(boolean enabled) {
+				this.enabled = enabled;
+			}
+
+			public double getHomingDotDiameter() {
+				return homingDotDiameter;
+			}
+
+			public void setHomingDotDiameter(double homingDotDiameter) {
+				this.homingDotDiameter = homingDotDiameter;
+			}
+
+			public Location getHomingDotLocation() {
+				return homingDotLocation;
+			}
+
+			public void setHomingDotLocation(Location homingDotLocation) {
+				this.homingDotLocation = homingDotLocation;
+			}
+
 			@SuppressWarnings("unused")
 			@Validate
 			private void validate() throws Exception {
 				if (enabled) {
 					if (homingDotDiameter == 0) {
-						throw new PersistenceException("ReferenceHead.Vision: homing-dot-diameter is required if vision is enabled.");
+						throw new PersistenceException(
+								"ReferenceHead.Vision: homing-dot-diameter is required if vision is enabled.");
 					}
 					if (homingDotLocation == null) {
-						throw new PersistenceException("ReferenceHead.Vision: homing-dot-location is required if vision is enabled.");
+						throw new PersistenceException(
+								"ReferenceHead.Vision: homing-dot-location is required if vision is enabled.");
 					}
 				}
 			}

@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.openpnp.LengthUnit;
 import org.openpnp.RequiresConfigurationResolution;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;

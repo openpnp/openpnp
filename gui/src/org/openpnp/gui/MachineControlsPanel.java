@@ -59,10 +59,10 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.LengthUnit;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -193,7 +193,7 @@ public class MachineControlsPanel extends JPanel {
 			CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
 			Camera camera = cameraItem.getCamera();
 			Location cameraLocation = camera.getLocation();
-			cameraLocation = LengthUtil.convertLocation(cameraLocation, machine.getNativeUnits());
+			cameraLocation = cameraLocation.convertToUnits(machine.getNativeUnits());
 			x = head.getX() + cameraLocation.getX();
 			y = head.getY() + cameraLocation.getY();
 			z = head.getZ() + cameraLocation.getZ();
@@ -212,7 +212,7 @@ public class MachineControlsPanel extends JPanel {
 		location.setRotation(c);
 		location.setUnits(machine.getNativeUnits());
 		
-		location = LengthUtil.convertLocation(location, getJogUnits());
+		location = location.convertToUnits(getJogUnits());
 		
 		return location;
 	}
@@ -489,7 +489,7 @@ public class MachineControlsPanel extends JPanel {
 				CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
 				Camera camera = cameraItem.getCamera();
 				cameraLocation = camera.getLocation();
-				cameraLocation = LengthUtil.convertLocation(cameraLocation, machine.getNativeUnits());
+				cameraLocation = cameraLocation.convertToUnits(machine.getNativeUnits());
 			}
 			
 			if (dro == textFieldX) {
@@ -565,7 +565,7 @@ public class MachineControlsPanel extends JPanel {
 							CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
 							Camera camera = cameraItem.getCamera();
 							Location cameraLocation = camera.getLocation();
-							cameraLocation = LengthUtil.convertLocation(cameraLocation, machine.getNativeUnits());
+							cameraLocation = cameraLocation.convertToUnits(machine.getNativeUnits());
 							double x = head.getX() - cameraLocation.getX();
 							double y = head.getY() - cameraLocation.getY();
 							double z = head.getZ() - cameraLocation.getZ();

@@ -106,7 +106,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		panel.add(feedStartZ, "8, 4, fill, default");
 		feedStartZ.setColumns(10);
 
-		JButton feedStartAutoFill = new JButton("Set");
+		JButton feedStartAutoFill = new JButton("Set to Current");
 		panel.add(feedStartAutoFill, "10, 4");
 
 		JLabel lblFeedEndLocation = new JLabel("Feed End Location");
@@ -124,7 +124,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		panel.add(feedEndZ, "8, 6, fill, default");
 		feedEndZ.setColumns(10);
 
-		JButton feedEndAutoFill = new JButton("Set");
+		JButton feedEndAutoFill = new JButton("Set to Current");
 		panel.add(feedEndAutoFill, "10, 6");
 
 		JSeparator separator = new JSeparator();
@@ -194,7 +194,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		feedStartAutoFill.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Location l = wizardContainer.getMachineControlsPanel().getDisplayedLocation();
-				l = LengthUtil.convertLocation(l, feeder.getFeedStartLocation().getUnits());
+				l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
 				feedStartX.setText(String.format("%2.3f", l.getX()));
 				feedStartY.setText(String.format("%2.3f", l.getY()));
 				feedStartZ.setText(String.format("%2.3f", l.getZ()));
@@ -204,7 +204,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		feedEndAutoFill.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Location l = wizardContainer.getMachineControlsPanel().getDisplayedLocation();
-				l = LengthUtil.convertLocation(l, feeder.getFeedEndLocation().getUnits());
+				l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
 				feedEndX.setText(String.format("%2.3f", l.getX()));
 				feedEndY.setText(String.format("%2.3f", l.getY()));
 				feedEndZ.setText(String.format("%2.3f", l.getZ()));

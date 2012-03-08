@@ -1,19 +1,18 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Length;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.util.LengthUtil;
 
-class PlacementsTableModel extends AbstractTableModel {
+public class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Part", "Side", 
@@ -82,7 +81,7 @@ class PlacementsTableModel extends AbstractTableModel {
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setX(length.getValue());
 				placement.setLocation(location);
@@ -94,7 +93,7 @@ class PlacementsTableModel extends AbstractTableModel {
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setY(length.getValue());
 				placement.setLocation(location);

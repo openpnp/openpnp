@@ -24,7 +24,6 @@ package org.openpnp.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.LengthUnit;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 

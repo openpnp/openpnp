@@ -33,6 +33,8 @@ import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
+import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;

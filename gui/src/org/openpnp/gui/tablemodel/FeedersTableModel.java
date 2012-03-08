@@ -1,4 +1,4 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 
-class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {
+public class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };

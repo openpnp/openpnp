@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.model;
 
 public enum LengthUnit {
 	Meters("m"),

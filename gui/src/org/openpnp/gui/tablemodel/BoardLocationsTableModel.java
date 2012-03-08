@@ -1,16 +1,16 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Length;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.util.LengthUtil;
 
-class BoardLocationsTableModel extends AbstractTableModel {
+public class BoardLocationsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Board", "Side", "X",
 			"Y", "Z", "θ" };
 	private Job job;
@@ -66,7 +66,7 @@ class BoardLocationsTableModel extends AbstractTableModel {
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setX(length.getValue());
 				boardLocation.setLocation(location);
@@ -78,7 +78,7 @@ class BoardLocationsTableModel extends AbstractTableModel {
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setY(length.getValue());
 				boardLocation.setLocation(location);
@@ -90,7 +90,7 @@ class BoardLocationsTableModel extends AbstractTableModel {
 					location.setUnits(length.getUnits());
 				}
 				else {
-					location = LengthUtil.convertLocation(location, length.getUnits());
+					location = location.convertToUnits(length.getUnits());
 				}
 				location.setZ(length.getValue());
 				boardLocation.setLocation(location);

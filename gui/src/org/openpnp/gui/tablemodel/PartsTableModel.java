@@ -1,4 +1,4 @@
-package org.openpnp.gui;
+package org.openpnp.gui.tablemodel;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -7,14 +7,14 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.Length;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PackageCellValue;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 
-class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Name",

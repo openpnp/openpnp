@@ -31,6 +31,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -248,18 +249,15 @@ public class JobProcessor implements Runnable {
 
 				// Convert the Location to the machine's native units if
 				// necessary
-				pickLocation = LengthUtil.convertLocation(pickLocation, machine
-						.getNativeUnits());
+				pickLocation = pickLocation.convertToUnits(machine.getNativeUnits());
 
 				// Determine where we will place the part
 				Location boardLocation = jobBoard.getLocation();
 				Location placementLocation = placement.getLocation();
 
 				// Convert the locations to machine native units
-				boardLocation = LengthUtil.convertLocation(boardLocation,
-						machine.getNativeUnits());
-				placementLocation = LengthUtil.convertLocation(
-						placementLocation, machine.getNativeUnits());
+				boardLocation = boardLocation.convertToUnits(machine.getNativeUnits());
+				placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
 
 				// Create the point that represents the final placement location
 				// TODO This is currently in relation to the 0,0 of the board
@@ -287,8 +285,7 @@ public class JobProcessor implements Runnable {
 				// Update the placementLocation with the proper Z value. This is
 				// the distance to the top of the board plus the height of 
 				// the part.
-				double partHeight = LengthUtil.convertLength(part.getHeight(),
-						part.getHeightUnits(), machine.getNativeUnits());
+				double partHeight = new Length(part.getHeight(), part.getHeightUnits()).convertToUnits(machine.getNativeUnits()).getValue();
 				placementLocation.setZ(boardLocation.getZ() + partHeight);
 
 				// At this point the important data is pickLocation along with

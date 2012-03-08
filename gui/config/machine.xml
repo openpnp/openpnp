@@ -2,12 +2,13 @@
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
       <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
       <heads>
-         <reference-head id="H1" pick-dwell-milliseconds="0" place-dwell-milliseconds="0" feed-rate="9000.0">
-            <soft-limits min-x="-100.0" max-x="1000.0" min-y="-100.0" max-y="1000.0" min-z="-100.0" max-z="100.0" min-c="0.0" max-c="360.0"/>
+         <reference-head id="H1" pick-dwell-milliseconds="1000" place-dwell-milliseconds="1000" feed-rate="9000.0">
+            <soft-limits min-x="-100.0" max-x="1000.0" min-y="-101.0" max-y="1001.0" min-z="-100.0" max-z="100.0" min-c="0.0" max-c="360.0"/>
             <homing>
                <vision enabled="true" homing-dot-diameter="3.2">
-                  <homing-dot-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                  <homing-dot-location units="Millimeters" x="1.0" y="2.0" z="3.0" rotation="0.0"/>
                </vision>
+               <location units="Millimeters" x="400.0" y="600.0" z="1.0" rotation="2.0"/>
             </homing>
             <actuators>
                <reference-actuator id="PIN" index="0">
@@ -18,7 +19,7 @@
       </heads>
       <cameras>
          <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele" looking="Down" head-id="H1">
-            <location units="Millimeters" x="0.0" y="-5.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="0.0" y="-5.0" z="-20.0" rotation="0.0"/>
             <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
             <vision-provider class="org.openpnp.machine.reference.vision.RoboRealmVisionProvider" host="localhost" port="6060" auto-capture-fps="10"/>
             <table-scanner-output-directory-path>/Users/jason/Projects/openpnp/openpnp-private/jcdillin-table-scan</table-scanner-output-directory-path>

@@ -24,6 +24,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 

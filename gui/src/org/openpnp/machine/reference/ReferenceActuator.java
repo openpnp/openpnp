@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.simpleframework.xml.Attribute;
@@ -67,5 +68,10 @@ public class ReferenceActuator implements Actuator {
 	
 	public void setReferenceMachine(ReferenceMachine machine) {
 		this.machine = machine;
+	}
+	
+	@Override
+	public Wizard getConfigurationWizard() {
+		return null;
 	}
 }

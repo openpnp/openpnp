@@ -128,7 +128,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		this.feedRate = feedRate;
 	}
 
-	static class Vision {
+	public static class Vision {
 		@Attribute(required=false)
 		private boolean enabled;
 		@Attribute(required=false)

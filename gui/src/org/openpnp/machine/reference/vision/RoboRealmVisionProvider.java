@@ -8,6 +8,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.openpnp.CameraListener;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.roborealm.RoboRealm;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.VisionProvider;
@@ -165,6 +166,11 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 				}
 			}
 		});
+	}
+	
+	@Override
+	public Wizard getConfigurationWizard() {
+		return null;
 	}
 
 	private interface RoboRealmProgram {

@@ -25,6 +25,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.simpleframework.xml.Attribute;
 
@@ -39,7 +41,7 @@ import com.lti.civil.Image;
 import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
 
-public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
+public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	private CaptureSystemFactory captureSystemFactory;
 	private CaptureSystem captureSystem;
 	private CaptureStream captureStream;
@@ -120,5 +122,10 @@ public class LtiCivilCamera extends AbstractCamera implements CaptureObserver {
 				return null;
 			}
 		}
+	}
+
+	@Override
+	public Wizard getConfigurationWizard() {
+		return null;
 	}
 }

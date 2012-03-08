@@ -23,6 +23,7 @@ package org.openpnp.spi;
 
 import java.util.List;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -161,4 +162,10 @@ public interface Head {
 	 * @return
 	 */
 	public List<Actuator> getActuators();
+	
+	/**
+	 * Get a Wizard that can be used to configure this Head.
+	 * @return
+	 */
+	public Wizard getConfigurationWizard();
 }

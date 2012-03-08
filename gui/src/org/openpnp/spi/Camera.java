@@ -24,14 +24,14 @@ package org.openpnp.spi;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.CameraListener;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
 
 /**
- * Represents a Camera attached to the system and allows a caller to retrieve images from it.
- * This is a simple abstract that is expected to grow as the system's image processing becomes
- * more full featured. A caller can call capture() one time to get the dimensions and details
- * about the returned image. The Camera is expected to return all future images using
- * the same dimensions and type. 
+ * Represents a Camera attached to the system and allows a caller to retrieve
+ * images from it. A caller can call capture() one time to get the dimensions
+ * and details about the returned image. The Camera is expected to return all
+ * future images using the same dimensions and type. 
  */
 public interface Camera {
 	public enum Looking {
@@ -95,5 +95,15 @@ public interface Camera {
 	 */
 	public void stopContinuousCapture(CameraListener listener);
 	
+	/**
+	 * Get the VisionProvider that is attached to this Camera, if any.
+	 * @return
+	 */
 	public VisionProvider getVisionProvider();
+	
+	/**
+	 * Gets a Wizard that can be used to configure the Camera.
+	 * @return null if no Wizard is available.
+	 */
+	public Wizard getConfigurationWizard();
 }
