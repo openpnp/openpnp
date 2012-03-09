@@ -122,6 +122,34 @@ public class Location extends AbstractModelObject implements Cloneable {
 	public double getLinearDistanceTo(double x, double y) {
 		return (Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2)));
 	}
+	
+	public Length getLengthX() {
+		return new Length(x, units);
+	}
+	
+	public void setLengthX(Length length) {
+		setX(length.getValue());
+		setUnits(length.getUnits());
+	}
+	
+	public Length getLengthY() {
+		return new Length(y, units);
+	}
+	
+	public void setLengthY(Length length) {
+		setY(length.getValue());
+		setUnits(length.getUnits());
+	}
+	
+	public Length getLengthZ() {
+		return new Length(z, units);
+	}
+	
+	public void setLengthZ(Length length) {
+		setZ(length.getValue());
+		setUnits(length.getUnits());
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units, x, y, z, rotation);
