@@ -32,7 +32,7 @@
             <vision enabled="true" tape-feed-hole-diameter="1.0"/>
          </reference-feeder>
          <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L1" enabled="true" tray-count-x="1" tray-count-y="1">
-            <offsets units="Millimeters" x="1.0" y="1.0" z="0.0" rotation="0.0"/>
+            <offsets units="Millimeters" x="1.0" y="0.9999999999999999" z="0.0" rotation="0.0"/>
          </reference-feeder>
       </feeders>
    </machine>

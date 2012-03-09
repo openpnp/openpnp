@@ -3,17 +3,26 @@ package org.openpnp.machine.reference.feeder;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import org.jdesktop.beansbinding.AbstractBindingListener;
+import org.jdesktop.beansbinding.Binding;
+import org.jdesktop.beansbinding.BindingListener;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.JBindings;
+import org.openpnp.gui.support.JBindings.WrappedBinding;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
-import org.openpnp.model.Location;
-import org.openpnp.util.LengthUtil;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -30,13 +39,15 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 	private JTextField offsetsZ;
 	private JTextField trayCountX;
 	private JTextField trayCountY;
+	
+	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
 	public ReferenceTrayFeederConfigurationWizard(ReferenceTrayFeeder referenceTrayFeeder) {
 		feeder = referenceTrayFeeder;
 		
-		JPanel panel = new JPanel();
+		JPanel panelFields = new JPanel();
 		
-		panel.setLayout(new FormLayout(new ColumnSpec[] {
+		panelFields.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -78,77 +89,94 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 				FormFactory.DEFAULT_ROWSPEC,}));
 
 		JLabel lblX = new JLabel("X");
-		panel.add(lblX, "4, 2");
+		panelFields.add(lblX, "4, 2");
 
 		JLabel lblY = new JLabel("Y");
-		panel.add(lblY, "6, 2");
+		panelFields.add(lblY, "6, 2");
 
 		JLabel lblZ = new JLabel("Z");
-		panel.add(lblZ, "8, 2");
+		panelFields.add(lblZ, "8, 2");
 
 		JLabel lblFeedStartLocation = new JLabel("Offsets");
-		panel.add(lblFeedStartLocation, "2, 4, right, default");
+		panelFields.add(lblFeedStartLocation, "2, 4, right, default");
 
 		offsetsX = new JTextField();
-		panel.add(offsetsX, "4, 4, fill, default");
+		panelFields.add(offsetsX, "4, 4, fill, default");
 		offsetsX.setColumns(10);
 
 		offsetsY = new JTextField();
-		panel.add(offsetsY, "6, 4, fill, default");
+		panelFields.add(offsetsY, "6, 4, fill, default");
 		offsetsY.setColumns(10);
 
 		offsetsZ = new JTextField();
-		panel.add(offsetsZ, "8, 4, fill, default");
+		panelFields.add(offsetsZ, "8, 4, fill, default");
 		offsetsZ.setColumns(10);
 
 		JLabel lblTrayCount = new JLabel("Tray Count");
-		panel.add(lblTrayCount, "2, 6, right, default");
+		panelFields.add(lblTrayCount, "2, 6, right, default");
 
 		trayCountX = new JTextField();
-		panel.add(trayCountX, "4, 6, fill, default");
+		panelFields.add(trayCountX, "4, 6, fill, default");
 		trayCountX.setColumns(10);
 
 		trayCountY = new JTextField();
-		panel.add(trayCountY, "6, 6, fill, default");
+		panelFields.add(trayCountY, "6, 6, fill, default");
 		trayCountY.setColumns(10);
 
-		JButton btnSave = new JButton("Save");
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				ReferenceTrayFeederConfigurationWizard.this.feeder.getOffsets().setX(
-								Double.parseDouble(offsetsX.getText()));
-				ReferenceTrayFeederConfigurationWizard.this.feeder.getOffsets().setY(
-								Double.parseDouble(offsetsY.getText()));
-				ReferenceTrayFeederConfigurationWizard.this.feeder.getOffsets().setZ(
-								Double.parseDouble(offsetsZ.getText()));
-
-				ReferenceTrayFeederConfigurationWizard.this.feeder.setTrayCountX(Integer.parseInt(trayCountX
-								.getText()));
-				ReferenceTrayFeederConfigurationWizard.this.feeder.setTrayCountY(Integer.parseInt(trayCountY
-								.getText()));
-
-				wizardContainer.wizardCompleted(ReferenceTrayFeederConfigurationWizard.this);
-			}
-		});
+		JButton btnSave = new JButton(saveAction);
 		setLayout(new BorderLayout(0, 0));
 		
-		add(panel, BorderLayout.CENTER);
+		add(new JScrollPane(panelFields), BorderLayout.CENTER);
 		
-		JPanel panel_1 = new JPanel();
-		panel_1.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		JPanel panelActions = new JPanel();
+		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		
-		panel_1.add(btnSave, "8, 26");
+		JButton btnCancel = new JButton(cancelAction);
+		panelActions.add(btnCancel);
 		
-		add(panel_1, BorderLayout.SOUTH);
+		panelActions.add(btnSave, "8, 26");
+		
+		add(panelActions, BorderLayout.SOUTH);
 
-		offsetsX.setText(String.format("%2.3f", feeder.getOffsets().getX()));
-		offsetsY.setText(String.format("%2.3f", feeder.getOffsets().getY()));
-		offsetsZ.setText(String.format("%2.3f", feeder.getOffsets().getZ()));
-
-		trayCountX.setText(String.format("%d", feeder.getTrayCountX()));
-		trayCountY.setText(String.format("%d", feeder.getTrayCountY()));
+		createBindings();
+		loadFromModel();
 	}
-
+	
+	private void createBindings() {
+		LengthConverter lengthConverter = new LengthConverter();
+		IntegerConverter integerConverter = new IntegerConverter("%d");
+		BindingListener listener = new AbstractBindingListener() {
+			@Override
+			public void synced(Binding binding) {
+				saveAction.setEnabled(true);
+				cancelAction.setEnabled(true);
+			}
+		};
+		
+		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthX", offsetsX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthY", offsetsY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthZ", offsetsZ, "text", lengthConverter, listener));
+		
+		wrappedBindings.add(JBindings.bind(feeder, "trayCountX", trayCountX, "text", integerConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "trayCountY", trayCountY, "text", integerConverter, listener));
+	}
+	
+	private void loadFromModel() {
+		for (WrappedBinding wrappedBinding : wrappedBindings) {
+			wrappedBinding.reset();
+		}
+		saveAction.setEnabled(false);
+		cancelAction.setEnabled(false);
+	}
+	
+	private void saveToModel() {
+		for (WrappedBinding wrappedBinding : wrappedBindings) {
+			wrappedBinding.save();
+		}
+		saveAction.setEnabled(false);
+		cancelAction.setEnabled(false);
+	}
+	
 	@Override
 	public void setWizardContainer(WizardContainer wizardContainer) {
 		this.wizardContainer = wizardContainer;
@@ -161,6 +189,22 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 
 	@Override
 	public String getWizardName() {
+		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	private Action saveAction = new AbstractAction("Apply") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			saveToModel();
+			wizardContainer.wizardCompleted(ReferenceTrayFeederConfigurationWizard.this);
+		}
+	};
+	
+	private Action cancelAction = new AbstractAction("Reset") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			loadFromModel();
+		}
+	};
 }
