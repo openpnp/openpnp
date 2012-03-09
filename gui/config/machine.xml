@@ -8,7 +8,7 @@
                <vision enabled="false" homing-dot-diameter="3.2">
                   <homing-dot-location units="Millimeters" x="1.0" y="2.0" z="3.0" rotation="0.0"/>
                </vision>
-               <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               <location units="Millimeters" x="10.0" y="1.9999999999999996" z="3.0" rotation="0.0"/>
             </homing>
             <actuators>
                <reference-actuator id="PIN" index="0">
@@ -27,7 +27,7 @@
       </cameras>
       <feeders>
          <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="200.0" actuator-id="PIN">
-            <feed-start-location units="Millimeters" x="42.1" y="87.1" z="-66.8" rotation="0.0"/>
+            <feed-start-location units="Millimeters" x="42.1" y="87.09999999999998" z="-66.8" rotation="0.0"/>
             <feed-end-location units="Millimeters" x="42.1" y="92.4" z="-66.8" rotation="0.0"/>
             <vision enabled="true" tape-feed-hole-diameter="1.0"/>
          </reference-feeder>

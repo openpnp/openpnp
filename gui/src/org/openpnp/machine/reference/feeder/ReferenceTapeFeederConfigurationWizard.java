@@ -4,17 +4,29 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
+import org.jdesktop.beansbinding.AbstractBindingListener;
+import org.jdesktop.beansbinding.Binding;
+import org.jdesktop.beansbinding.Binding.SyncFailure;
+import org.jdesktop.beansbinding.BindingListener;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.JBindings;
+import org.openpnp.gui.support.JBindings.WrappedBinding;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Location;
-import org.openpnp.util.LengthUtil;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -33,6 +45,11 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private JTextField feedEndY;
 	private JTextField feedEndZ;
 	private JTextField feedRate;
+	private JButton feedStartAutoFill;
+	private JButton feedEndAutoFill;
+	private JButton btnSave;
+	
+	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
 	public ReferenceTapeFeederConfigurationWizard(
 			ReferenceTapeFeeder referenceTapeFeeder) {
@@ -40,9 +57,9 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 
 		setLayout(new BorderLayout());
 
-		JPanel panel = new JPanel();
+		JPanel panelFields = new JPanel();
 
-		panel.setLayout(new FormLayout(
+		panelFields.setLayout(new FormLayout(
 				new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
 						FormFactory.DEFAULT_COLSPEC,
 						FormFactory.RELATED_GAP_COLSPEC,
@@ -83,121 +100,81 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 						FormFactory.DEFAULT_ROWSPEC, }));
 
 		JLabel lblX = new JLabel("X");
-		panel.add(lblX, "4, 2");
+		panelFields.add(lblX, "4, 2");
 
 		JLabel lblY = new JLabel("Y");
-		panel.add(lblY, "6, 2");
+		panelFields.add(lblY, "6, 2");
 
 		JLabel lblZ = new JLabel("Z");
-		panel.add(lblZ, "8, 2");
+		panelFields.add(lblZ, "8, 2");
 
 		JLabel lblFeedStartLocation = new JLabel("Feed Start Location");
-		panel.add(lblFeedStartLocation, "2, 4, right, default");
+		panelFields.add(lblFeedStartLocation, "2, 4, right, default");
 
 		feedStartX = new JTextField();
-		panel.add(feedStartX, "4, 4, fill, default");
+		panelFields.add(feedStartX, "4, 4, fill, default");
 		feedStartX.setColumns(10);
 
 		feedStartY = new JTextField();
-		panel.add(feedStartY, "6, 4, fill, default");
+		panelFields.add(feedStartY, "6, 4, fill, default");
 		feedStartY.setColumns(10);
 
 		feedStartZ = new JTextField();
-		panel.add(feedStartZ, "8, 4, fill, default");
+		panelFields.add(feedStartZ, "8, 4, fill, default");
 		feedStartZ.setColumns(10);
 
-		JButton feedStartAutoFill = new JButton("Set to Current");
-		panel.add(feedStartAutoFill, "10, 4");
+		feedStartAutoFill = new JButton("Set to Current");
+		panelFields.add(feedStartAutoFill, "10, 4");
 
 		JLabel lblFeedEndLocation = new JLabel("Feed End Location");
-		panel.add(lblFeedEndLocation, "2, 6, right, default");
+		panelFields.add(lblFeedEndLocation, "2, 6, right, default");
 
 		feedEndX = new JTextField();
-		panel.add(feedEndX, "4, 6, fill, default");
+		panelFields.add(feedEndX, "4, 6, fill, default");
 		feedEndX.setColumns(10);
 
 		feedEndY = new JTextField();
-		panel.add(feedEndY, "6, 6, fill, default");
+		panelFields.add(feedEndY, "6, 6, fill, default");
 		feedEndY.setColumns(10);
 
 		feedEndZ = new JTextField();
-		panel.add(feedEndZ, "8, 6, fill, default");
+		panelFields.add(feedEndZ, "8, 6, fill, default");
 		feedEndZ.setColumns(10);
 
-		JButton feedEndAutoFill = new JButton("Set to Current");
-		panel.add(feedEndAutoFill, "10, 6");
+		feedEndAutoFill = new JButton("Set to Current");
+		panelFields.add(feedEndAutoFill, "10, 6");
 
 		JSeparator separator = new JSeparator();
-		panel.add(separator, "2, 8, 7, 1");
+		panelFields.add(separator, "2, 8, 7, 1");
 
 		JLabel lblFeedRate = new JLabel("Feed Rate");
-		panel.add(lblFeedRate, "2, 10, right, default");
+		panelFields.add(lblFeedRate, "2, 10, right, default");
 
 		feedRate = new JTextField();
-		panel.add(feedRate, "4, 10, fill, default");
+		panelFields.add(feedRate, "4, 10, fill, default");
 		feedRate.setColumns(10);
 
-		add(panel, BorderLayout.CENTER);
+		JScrollPane scrollPane = new JScrollPane(panelFields);
+		scrollPane.setBorder(null);
+		add(scrollPane, BorderLayout.CENTER);
 
-		feedStartX.setText(String.format("%2.3f", feeder.getFeedStartLocation()
-				.getX()));
-		feedStartY.setText(String.format("%2.3f", feeder.getFeedStartLocation()
-				.getY()));
-		feedStartZ.setText(String.format("%2.3f", feeder.getFeedStartLocation()
-				.getZ()));
+		JPanel panelActions = new JPanel();
+		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		add(panelActions, BorderLayout.SOUTH);
+		
+		btnCancel = new JButton(cancelAction);
+		panelActions.add(btnCancel);
 
-		feedEndX.setText(String.format("%2.3f", feeder.getFeedEndLocation()
-				.getX()));
-		feedEndY.setText(String.format("%2.3f", feeder.getFeedEndLocation()
-				.getY()));
-		feedEndZ.setText(String.format("%2.3f", feeder.getFeedEndLocation()
-				.getZ()));
-
-		feedRate.setText(String.format("%2.3f", feeder.getFeedRate()));
-
-		JPanel panel_1 = new JPanel();
-		panel_1.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panel_1, BorderLayout.SOUTH);
-
-		JButton btnSave = new JButton("Save");
-		panel_1.add(btnSave);
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.getFeedStartLocation().setX(
-								Double.parseDouble(feedStartX.getText()));
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.getFeedStartLocation().setY(
-								Double.parseDouble(feedStartY.getText()));
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.getFeedStartLocation().setZ(
-								Double.parseDouble(feedStartZ.getText()));
-
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.getFeedEndLocation().setX(
-								Double.parseDouble(feedEndX.getText()));
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.getFeedEndLocation().setY(
-								Double.parseDouble(feedEndY.getText()));
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.getFeedEndLocation().setZ(
-								Double.parseDouble(feedEndZ.getText()));
-
-				ReferenceTapeFeederConfigurationWizard.this.feeder
-						.setFeedRate(Double.parseDouble(feedRate.getText()));
-
-				wizardContainer
-						.wizardCompleted(ReferenceTapeFeederConfigurationWizard.this);
-			}
-		});
+		btnSave = new JButton(saveAction);
+		panelActions.add(btnSave);
 		
 		feedStartAutoFill.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Location l = wizardContainer.getMachineControlsPanel().getDisplayedLocation();
 				l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
-				feedStartX.setText(String.format("%2.3f", l.getX()));
-				feedStartY.setText(String.format("%2.3f", l.getY()));
-				feedStartZ.setText(String.format("%2.3f", l.getZ()));
+				feedStartX.setText(l.getLengthX().toString());
+				feedStartY.setText(l.getLengthY().toString());
+				feedStartZ.setText(l.getLengthZ().toString());
 			}
 		});
 		
@@ -205,13 +182,52 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 			public void actionPerformed(ActionEvent arg0) {
 				Location l = wizardContainer.getMachineControlsPanel().getDisplayedLocation();
 				l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
-				feedEndX.setText(String.format("%2.3f", l.getX()));
-				feedEndY.setText(String.format("%2.3f", l.getY()));
-				feedEndZ.setText(String.format("%2.3f", l.getZ()));
+				feedEndX.setText(l.getLengthX().toString());
+				feedEndY.setText(l.getLengthY().toString());
+				feedEndZ.setText(l.getLengthZ().toString());
 			}
 		});
+		
+		createBindings();
+		loadFromModel();
 	}
-
+	
+	private void createBindings() {
+		LengthConverter lengthConverter = new LengthConverter();
+		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
+		BindingListener listener = new AbstractBindingListener() {
+			@Override
+			public void synced(Binding binding) {
+				saveAction.setEnabled(true);
+				cancelAction.setEnabled(true);
+			}
+		};
+		
+		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthX", feedStartX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthY", feedStartY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthZ", feedStartZ, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthX", feedEndX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthY", feedEndY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthZ", feedEndZ, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "feedRate", feedRate, "text", doubleConverter, listener));
+	}
+	
+	private void loadFromModel() {
+		for (WrappedBinding wrappedBinding : wrappedBindings) {
+			wrappedBinding.reset();
+		}
+		saveAction.setEnabled(false);
+		cancelAction.setEnabled(false);
+	}
+	
+	private void saveToModel() {
+		for (WrappedBinding wrappedBinding : wrappedBindings) {
+			wrappedBinding.save();
+		}
+		saveAction.setEnabled(false);
+		cancelAction.setEnabled(false);
+	}
+	
 	@Override
 	public void setWizardContainer(WizardContainer wizardContainer) {
 		this.wizardContainer = wizardContainer;
@@ -224,6 +240,23 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 
 	@Override
 	public String getWizardName() {
+		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	private Action saveAction = new AbstractAction("Apply") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			saveToModel();
+			wizardContainer.wizardCompleted(ReferenceTapeFeederConfigurationWizard.this);
+		}
+	};
+	
+	private Action cancelAction = new AbstractAction("Reset") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			loadFromModel();
+		}
+	};
+	private JButton btnCancel;
 }

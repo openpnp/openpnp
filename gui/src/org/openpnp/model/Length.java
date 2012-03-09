@@ -149,14 +149,4 @@ public class Length {
 			return false;
 		}
 	}
-
-	public static void main(String[] args) {
-		Length length = new Length(1, LengthUnit.Millimeters);
-		System.out.println(length);
-		System.out.println(length.convertToUnits(LengthUnit.Millimeters));
-		System.out.println(length.convertToUnits(LengthUnit.Centimeters));
-		System.out.println(length.convertToUnits(LengthUnit.Inches));
-		System.out.println(length.convertToUnits(LengthUnit.Feet));
-		System.out.println(length.convertToUnits(LengthUnit.Meters));
-	}
 }

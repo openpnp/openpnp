@@ -129,7 +129,14 @@ public class Location extends AbstractModelObject implements Cloneable {
 	
 	public void setLengthX(Length length) {
 		setX(length.getValue());
-		setUnits(length.getUnits());
+		if (length.getUnits() != units) {
+			setY(getLengthY().convertToUnits(length.getUnits()).getValue());
+			setZ(getLengthZ().convertToUnits(length.getUnits()).getValue());
+			setUnits(length.getUnits());
+			firePropertyChange("lengthY", null, getLengthY());
+			firePropertyChange("lengthZ", null, getLengthZ());
+		}
+		firePropertyChange("lengthX", null, getLengthX());
 	}
 	
 	public Length getLengthY() {
@@ -138,7 +145,14 @@ public class Location extends AbstractModelObject implements Cloneable {
 	
 	public void setLengthY(Length length) {
 		setY(length.getValue());
-		setUnits(length.getUnits());
+		if (length.getUnits() != units) {
+			setX(getLengthX().convertToUnits(length.getUnits()).getValue());
+			setZ(getLengthZ().convertToUnits(length.getUnits()).getValue());
+			setUnits(length.getUnits());
+			firePropertyChange("lengthX", null, getLengthX());
+			firePropertyChange("lengthZ", null, getLengthZ());
+		}
+		firePropertyChange("lengthY", null, getLengthY());
 	}
 	
 	public Length getLengthZ() {
@@ -147,21 +161,18 @@ public class Location extends AbstractModelObject implements Cloneable {
 	
 	public void setLengthZ(Length length) {
 		setZ(length.getValue());
-		setUnits(length.getUnits());
+		if (length.getUnits() != units) {
+			setX(getLengthX().convertToUnits(length.getUnits()).getValue());
+			setY(getLengthY().convertToUnits(length.getUnits()).getValue());
+			setUnits(length.getUnits());
+			firePropertyChange("lengthX", null, getLengthX());
+			firePropertyChange("lengthY", null, getLengthY());
+		}
+		firePropertyChange("lengthZ", null, getLengthZ());
 	}
 	
 	@Override
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units, x, y, z, rotation);
-	}
-	
-	public static void main(String[] args) {
-		Location location = new Location(LengthUnit.Millimeters, 1, 1, 2, 42.24);
-		System.out.println(location);
-		System.out.println(location.convertToUnits(LengthUnit.Millimeters));
-		System.out.println(location.convertToUnits(LengthUnit.Meters));
-		System.out.println(location.convertToUnits(LengthUnit.Centimeters));
-		System.out.println(location.convertToUnits(LengthUnit.Inches));
-		System.out.println(location.convertToUnits(LengthUnit.Feet));
 	}
 }

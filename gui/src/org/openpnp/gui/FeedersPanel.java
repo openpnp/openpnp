@@ -80,13 +80,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		add(splitPane, BorderLayout.CENTER);
 		
 		configurationPanel = new JPanel();
-		
-		JPanel panel_2 = new JPanel(new BorderLayout());
-		panel_2.setBorder(BorderFactory.createTitledBorder("Configuration"));
-		panel_2.add(new JScrollPane(configurationPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
+		configurationPanel.setBorder(BorderFactory.createTitledBorder("Configuration"));
 		
 		splitPane.setLeftComponent(new JScrollPane(table));
-		splitPane.setRightComponent(panel_2);
+		splitPane.setRightComponent(configurationPanel);
 		configurationPanel.setLayout(new BorderLayout(0, 0));
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

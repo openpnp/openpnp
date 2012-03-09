@@ -17,26 +17,13 @@ import org.openpnp.model.AbstractModelObject;
 
 /**
  * Provides convenience bindings for JComponents that add value buffering and
- * visual feedback on conversion failure.  
+ * visual feedback on conversion failure. Buffered values have a read-write
+ * binding with the JComponent and a read binding with the source value. The
+ * returned WrappedBinding allows you to save the buffered value to the source
+ * or to reset it from the source.
  * @author Jason von Nieda <jason@vonnieda.org>
  */
 public class JBindings {
-	/**
-	 * Create a binding between a JComponent property and a value. The binding
-	 * becomes buffered in that it will update an internal copy of the value
-	 * until save() is called on the returned WrappedBinding. In addition,
-	 * a built in adapter changes the background color of the component
-	 * whenever conversion fails.
-	 * @param <SS>
-	 * @param <SV>
-	 * @param <TS>
-	 * @param <TV>
-	 * @param source
-	 * @param sourcePropertyName
-	 * @param component
-	 * @param targetPropertyName
-	 * @return
-	 */
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
 			SS source, 
 			String sourcePropertyName, 
@@ -45,23 +32,6 @@ public class JBindings {
 		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, null);
 	}
 	
-	/**
-	 * Create a binding between a JComponent property and a value. The binding
-	 * becomes buffered in that it will update an internal copy of the value
-	 * until save() is called on the returned WrappedBinding. In addition,
-	 * a built in adapter changes the background color of the component
-	 * whenever conversion fails.
-	 * @param <SS>
-	 * @param <SV>
-	 * @param <TS>
-	 * @param <TV>
-	 * @param source
-	 * @param sourcePropertyName
-	 * @param component
-	 * @param targetPropertyName
-	 * @param converter
-	 * @return
-	 */
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
 			SS source, 
 			String sourcePropertyName, 
@@ -71,23 +41,6 @@ public class JBindings {
 		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, null);
 	}
 
-	/**
-	 * Create a binding between a JComponent property and a value. The binding
-	 * becomes buffered in that it will update an internal copy of the value
-	 * until save() is called on the returned WrappedBinding. In addition,
-	 * a built in adapter changes the background color of the component
-	 * whenever conversion fails.
-	 * @param <SS>
-	 * @param <SV>
-	 * @param <TS>
-	 * @param <TV>
-	 * @param source
-	 * @param sourcePropertyName
-	 * @param component
-	 * @param targetPropertyName
-	 * @param converter
-	 * @return
-	 */
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
 			SS source, 
 			String sourcePropertyName, 
@@ -98,23 +51,6 @@ public class JBindings {
 		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, listener);
 	}
 
-	/**
-	 * Create a binding between a JComponent property and a value. The binding
-	 * becomes buffered in that it will update an internal copy of the value
-	 * until save() is called on the returned WrappedBinding. In addition,
-	 * a built in adapter changes the background color of the component
-	 * whenever conversion fails.
-	 * @param <SS>
-	 * @param <SV>
-	 * @param <TS>
-	 * @param <TV>
-	 * @param source
-	 * @param sourcePropertyName
-	 * @param component
-	 * @param targetPropertyName
-	 * @param converter
-	 * @return
-	 */
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
 			SS source, 
 			String sourcePropertyName, 
@@ -141,19 +77,26 @@ public class JBindings {
 			this.wrapper = new Wrapper<SV>(sourceProperty.getValue(source));
 			BeanProperty<Wrapper<SV>, SV> wrapperProperty = BeanProperty.create("value");
 			BeanProperty<TS, TV> targetProperty = BeanProperty.create(targetPropertyName);
-			AutoBinding<Wrapper<SV>, SV, TS, TV> binding = Bindings.createAutoBinding(
+			AutoBinding<Wrapper<SV>, SV, TS, TV> wrappedBinding = Bindings.createAutoBinding(
 					UpdateStrategy.READ_WRITE, 
 					wrapper,
 					wrapperProperty, 
 					component, 
 					targetProperty);
 			if (converter != null) {
-				binding.setConverter(converter);
+				wrappedBinding.setConverter(converter);
 			}
-			binding.addBindingListener(new JComponentBackgroundUpdater(component));
+			wrappedBinding.addBindingListener(new JComponentBackgroundUpdater(component));
 			if (listener != null) {
-				binding.addBindingListener(listener);
+				wrappedBinding.addBindingListener(listener);
 			}
+			wrappedBinding.bind();
+			AutoBinding<SS, SV, Wrapper<SV>, SV> binding = Bindings.createAutoBinding(
+					UpdateStrategy.READ, 
+					source,
+					sourceProperty, 
+					wrapper, 
+					wrapperProperty);
 			binding.bind();
 		}
 		
