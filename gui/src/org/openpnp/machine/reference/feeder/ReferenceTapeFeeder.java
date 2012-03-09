@@ -46,7 +46,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	@Attribute
 	private String actuatorId; 
 	@Element(required=false)
-	private Vision vision;
+	private Vision vision = new Vision();
 	
 	@Override
 	public boolean canFeedForHead(Part part, Head head) {

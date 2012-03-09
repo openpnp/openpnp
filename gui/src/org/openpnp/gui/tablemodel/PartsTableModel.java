@@ -76,8 +76,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 			}
 			else if (columnIndex == 2) {
 				Length length = ((LengthCellValue) aValue).getLength();
-				part.setHeight(length.getValue());
-				part.setHeightUnits(length.getUnits());
+				part.setHeight(length);
 			}
 			else if (columnIndex == 3) {
 				Package packag = ((PackageCellValue) aValue).getPackage(); 
@@ -98,7 +97,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 		case 1:
 			 return part.getName();
 		case 2:
-			return new LengthCellValue(part.getHeight(), part.getHeightUnits());
+			return new LengthCellValue(part.getHeight());
 		case 3:
 			 return new PackageCellValue(part.getPackage());
 		default:

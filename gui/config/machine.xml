@@ -19,7 +19,7 @@
       </heads>
       <cameras>
          <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele" looking="Down" head-id="H1">
-            <location units="Millimeters" x="0.0" y="-5.0" z="-20.0" rotation="0.0"/>
+            <location units="Millimeters" x="0.0" y="-4.999999999999999" z="-19.999999999999996" rotation="0.0"/>
             <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
             <vision-provider class="org.openpnp.machine.reference.vision.RoboRealmVisionProvider" host="localhost" port="6060" auto-capture-fps="10"/>
             <table-scanner-output-directory-path>/Users/jason/Projects/openpnp/openpnp-private/jcdillin-table-scan</table-scanner-output-directory-path>
@@ -30,6 +30,9 @@
             <feed-start-location units="Millimeters" x="42.1" y="87.1" z="-66.8" rotation="0.0"/>
             <feed-end-location units="Millimeters" x="42.1" y="92.4" z="-66.8" rotation="0.0"/>
             <vision enabled="true" tape-feed-hole-diameter="1.0"/>
+         </reference-feeder>
+         <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L1" enabled="true" tray-count-x="1" tray-count-y="1">
+            <offsets units="Millimeters" x="1.0" y="1.0" z="0.0" rotation="0.0"/>
          </reference-feeder>
       </feeders>
    </machine>

@@ -9,6 +9,10 @@ public class LengthCellValue {
 	public LengthCellValue(double value, LengthUnit units) {
 		this.length = new Length(value, units);
 	}
+	
+	public LengthCellValue(Length length) {
+		this.length = length;
+	}
 
 	public LengthCellValue(String value) {
 		Length length = Length.parse(value, true);

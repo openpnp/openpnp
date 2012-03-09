@@ -128,7 +128,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 				panelGeneral.add(textFieldId, "4, 2");
 				textFieldId.setColumns(5);
 				
-				JLabel lblFeedRate = new JLabel("Feed Rate");
+				JLabel lblFeedRate = new JLabel("Feed Rate (mm/sec)");
 				panelGeneral.add(lblFeedRate, "6, 2, right, default");
 				
 				textFieldFeedRate = new JTextField();
@@ -171,10 +171,10 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 						FormFactory.RELATED_GAP_ROWSPEC,
 						FormFactory.DEFAULT_ROWSPEC,}));
 				
-				lblMinimum = new JLabel("Minimum");
+				lblMinimum = new JLabel("Minimum (mm)");
 				panelSoftLimits.add(lblMinimum, "4, 2");
 				
-				lblMacimum = new JLabel("Maximum");
+				lblMacimum = new JLabel("Maximum (mm)");
 				panelSoftLimits.add(lblMacimum, "6, 2");
 				
 				lblX = new JLabel("X");
@@ -339,7 +339,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 				comboBox_1.setModel(new DefaultComboBoxModel(LengthUnit.values()));
 				panelVision.add(comboBox_1, "10, 6, left, default");
 				
-				lblHomingDotDiameter = new JLabel("Homing Dot Diameter");
+				lblHomingDotDiameter = new JLabel("Homing Dot Diameter (mm)");
 				panelVision.add(lblHomingDotDiameter, "2, 8, right, default");
 				
 				textFieldHomingDotDiameter = new JTextField();

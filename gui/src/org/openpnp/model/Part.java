@@ -85,24 +85,21 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 		firePropertyChange("name", oldValue, name);
 	}
 	
-	public LengthUnit getHeightUnits() {
-		return heightUnits;
+	public Length getHeight() {
+		return new Length(height, heightUnits);
 	}
-
-	public void setHeightUnits(LengthUnit heightUnits) {
-		Object oldValue = this.heightUnits;
-		this.heightUnits = heightUnits;
-		firePropertyChange("heightUnits", oldValue, heightUnits);
-	}
-
-	public double getHeight() {
-		return height;
-	}
-
-	public void setHeight(double height) {
-		Object oldValue = this.height;
-		this.height = height;
-		firePropertyChange("height", oldValue, height);
+	
+	public void setHeight(Length height) {
+		Object oldValue = getHeight();
+		if (height == null) {
+			this.height = 0;
+			this.heightUnits = null;
+		}
+		else {
+			this.height = height.getValue();
+			this.heightUnits = height.getUnits();
+		}
+		firePropertyChange("height", oldValue, getHeight());
 	}
 	
 	public List<FeederLocation> getFeederLocations() {

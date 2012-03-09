@@ -285,7 +285,7 @@ public class JobProcessor implements Runnable {
 				// Update the placementLocation with the proper Z value. This is
 				// the distance to the top of the board plus the height of 
 				// the part.
-				double partHeight = new Length(part.getHeight(), part.getHeightUnits()).convertToUnits(machine.getNativeUnits()).getValue();
+				double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
 				placementLocation.setZ(boardLocation.getZ() + partHeight);
 
 				// At this point the important data is pickLocation along with
