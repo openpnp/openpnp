@@ -9,7 +9,9 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -22,6 +24,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
@@ -54,6 +57,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
 		
+		JButton btnNewFeeder = new JButton(newFeederAction);
+		toolBar.add(btnNewFeeder);
+		
+		JButton btnDeleteFeeder = new JButton(deleteFeederAction);
+		toolBar.add(btnDeleteFeeder);
+		
+		toolBar.addSeparator();
 		toolBar.add(feedFeederAction);
 
 		JPanel panel_1 = new JPanel();
@@ -158,6 +168,28 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	public MachineControlsPanel getMachineControlsPanel() {
 		return machineControlsPanel;
 	}
+	
+
+	public Action newFeederAction = new AbstractAction("New Feeder...") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<Feeder>(
+					JOptionPane.getFrameForComponent(FeedersPanel.this), 
+					"Select Feeder...", 
+					"Please select a Feeder implemention from the list below.", 
+					configuration.getMachine().getCompatibleFeederClasses());
+			dialog.setVisible(true);
+			Class<? extends Feeder> feederClass = dialog.getSelectedClass();
+			System.out.println("You picked " + feederClass + " you crazy bastard!");
+		}
+	};
+
+	public Action deleteFeederAction = new AbstractAction("Delete Feeder") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+		}
+	};
+	
 
 	public Action feedFeederAction = new AbstractAction("Feed") {
 		@Override

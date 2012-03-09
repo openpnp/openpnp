@@ -30,6 +30,11 @@ import java.util.Set;
 
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.camera.LtiCivilCamera;
+import org.openpnp.machine.reference.camera.TableScannerCamera;
+import org.openpnp.machine.reference.camera.VfwCamera;
+import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -215,5 +220,22 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	@Override
 	public Wizard getConfigurationWizard() {
 		return null;
+	}
+
+	@Override
+	public List<Class<? extends Feeder>> getCompatibleFeederClasses() {
+		List<Class<? extends Feeder>> l = new ArrayList<Class<? extends Feeder>>();
+		l.add(ReferenceTrayFeeder.class);
+		l.add(ReferenceTapeFeeder.class);
+		return l;
+	}
+
+	@Override
+	public List<Class<? extends Camera>>  getCompatibleCameraClasses() {
+		List<Class<? extends Camera>> l = new ArrayList<Class<? extends Camera>>();
+		l.add(LtiCivilCamera.class);
+		l.add(VfwCamera.class);
+		l.add(TableScannerCamera.class);
+		return l;
 	}
 }

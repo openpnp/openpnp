@@ -102,4 +102,8 @@ public interface Machine {
 	public void removeListener(MachineListener listener);
 	
 	public Wizard getConfigurationWizard();
+	
+	public List<Class<? extends Feeder>> getCompatibleFeederClasses();
+	
+	public List<Class<? extends Camera>> getCompatibleCameraClasses();
 }
