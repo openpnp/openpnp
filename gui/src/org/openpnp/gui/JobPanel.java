@@ -52,7 +52,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	final private Frame frame;
 	final private MachineControlsPanel machineControlsPanel;
 	
-	final private static String UNTITLED = "Untitled";
+	final private static String UNTITLED = "Untitled.job.xml";
 	
 	private BoardLocationsTableModel boardLocationsTableModel;
 	private PlacementsTableModel placementsTableModel;
