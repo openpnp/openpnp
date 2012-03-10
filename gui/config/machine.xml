@@ -29,7 +29,7 @@
          <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="200.0" actuator-id="PIN">
             <feed-start-location units="Millimeters" x="42.1" y="87.09999999999998" z="-66.8" rotation="0.0"/>
             <feed-end-location units="Millimeters" x="42.1" y="92.4" z="-66.8" rotation="0.0"/>
-            <vision enabled="true" tape-feed-hole-diameter="1.0"/>
+            <vision enabled="true" tape-feed-hole-diameter="2.0" tape-feed-hole-diameter-units="Millimeters"/>
          </reference-feeder>
          <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTrayFeeder" id="L1" enabled="true" tray-count-x="1" tray-count-y="1">
             <offsets units="Millimeters" x="1.0" y="0.9999999999999999" z="0.0" rotation="0.0"/>
@@ -40,7 +40,7 @@
          <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="F1" enabled="false" feed-rate="0.0" actuator-id="PIN">
             <feed-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <feed-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            <vision enabled="false" tape-feed-hole-diameter="0.0"/>
+            <vision enabled="false" tape-feed-hole-diameter="0.0" tape-feed-hole-diameter-units="Millimeters"/>
          </reference-feeder>
       </feeders>
    </machine>

@@ -27,6 +27,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -150,6 +151,8 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		private boolean enabled;
 		@Attribute(required=false)
 		private double tapeFeedHoleDiameter;
+		@Attribute(required=false)
+		private LengthUnit tapeFeedHoleDiameterUnits;
 		
 		@SuppressWarnings("unused")
 		@Validate
@@ -158,8 +161,33 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 				if (tapeFeedHoleDiameter == 0) {
 					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter is required if vision is enabled.");
 				}
+				if (tapeFeedHoleDiameterUnits == null) {
+					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter-units is required if vision is enabled.");
+				}
 			}
 		}
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 		
+		public Length getTapeFeedHoleDiameter() {
+			return new Length(tapeFeedHoleDiameter, tapeFeedHoleDiameterUnits);
+		}
+
+		public void setTapeFeedHoleDiameter(Length tapeFeedHoleDiameter) {
+			if (tapeFeedHoleDiameter == null) {
+				this.tapeFeedHoleDiameter = 0;
+				this.tapeFeedHoleDiameterUnits = null;
+			}
+			else {
+				this.tapeFeedHoleDiameter = tapeFeedHoleDiameter.getValue();
+				this.tapeFeedHoleDiameterUnits = tapeFeedHoleDiameter.getUnits();
+			}
+		}
 	}
 }
