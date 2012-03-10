@@ -21,6 +21,10 @@ public class FeedersTableModel extends AbstractTableModel implements Configurati
 	}
 
 	public void configurationLoaded(Configuration configuration) {
+		refresh();
+	}
+	
+	public void refresh() {
 		feeders = new ArrayList<Feeder>(configuration.getMachine().getFeeders());
 		fireTableDataChanged();
 	}

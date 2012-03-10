@@ -238,4 +238,39 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		l.add(TableScannerCamera.class);
 		return l;
 	}
+	
+	@Override
+	public void addFeeder(Feeder feeder) throws Exception {
+		if (! (feeder instanceof ReferenceFeeder)) {
+			throw new Exception("Can't add a Feeder that is not an instance of ReferenceFeeder.");
+		}
+		ReferenceFeeder referenceFeeder = (ReferenceFeeder) feeder;
+		// Create an Id for the feeder.
+		for (int i = 0; i < Integer.MAX_VALUE; i++) {
+			String id = "F" + Integer.toString(i);
+			if (!feeders.containsKey(id)) {
+				referenceFeeder.setId(id);
+				feeders.put(id, referenceFeeder);
+				return;
+			}
+		}
+		throw new Exception("Could not create a new Id for the Feeder.");
+	}
+	
+	@Override
+	public void removeFeeder(Feeder feeder) {
+	}
+
+	@Override
+	public void addCamera(Camera camera) throws Exception {
+		if (! (camera instanceof ReferenceCamera)) {
+			throw new Exception("Can't add a Camera that is not an instance of ReferenceFeeder.");
+		}
+	}
+	
+	@Override
+	public void removeCamera(Camera camera) {
+		// TODO Auto-generated method stub
+		
+	}
 }

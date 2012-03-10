@@ -106,4 +106,12 @@ public interface Machine {
 	public List<Class<? extends Feeder>> getCompatibleFeederClasses();
 	
 	public List<Class<? extends Camera>> getCompatibleCameraClasses();
+	
+	public void addFeeder(Feeder feeder) throws Exception;
+	
+	public void removeFeeder(Feeder feeder);
+	
+	public void addCamera(Camera camera) throws Exception;
+	
+	public void removeCamera(Camera camera);
 }

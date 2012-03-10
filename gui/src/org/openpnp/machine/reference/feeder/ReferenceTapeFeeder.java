@@ -27,6 +27,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
@@ -38,9 +39,9 @@ import org.simpleframework.xml.core.Validate;
 
 public class ReferenceTapeFeeder extends ReferenceFeeder {
 	@Element
-	private Location feedStartLocation;
+	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
 	@Element
-	private Location feedEndLocation;
+	private Location feedEndLocation = new Location(LengthUnit.Millimeters);
 	@Attribute
 	private double feedRate;
 	@Attribute
@@ -126,6 +127,22 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 
 	public void setFeedRate(double feedRate) {
 		this.feedRate = feedRate;
+	}
+	
+	public String getActuatorId() {
+		return actuatorId;
+	}
+
+	public void setActuatorId(String actuatorId) {
+		this.actuatorId = actuatorId;
+	}
+
+	public Vision getVision() {
+		return vision;
+	}
+
+	public void setVision(Vision vision) {
+		this.vision = vision;
 	}
 
 	public static class Vision {

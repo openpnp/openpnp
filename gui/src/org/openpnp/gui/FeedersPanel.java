@@ -25,6 +25,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
@@ -40,7 +42,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private FeedersTableModel tableModel;
 	private TableRowSorter<FeedersTableModel> tableSorter;
 	private JTextField searchTextField;
-	JPanel configurationPanel;
+	private JPanel configurationPanel;
+	
+	private ActionGroup feederSelectedActionGroup; 
 
 	public FeedersPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
@@ -98,6 +102,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
+		feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction);
+		
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -107,7 +113,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				
 				Feeder feeder = getSelectedFeeder();
 				
-				feedFeederAction.setEnabled(feeder != null);
+				feederSelectedActionGroup.setEnabled(feeder != null);
 				
 				configurationPanel.removeAll();
 				if (feeder != null) {
@@ -123,7 +129,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			}
 		});
 		
-		feedFeederAction.setEnabled(false);
+		feederSelectedActionGroup.setEnabled(false);
 	}
 	
 	private Feeder getSelectedFeeder() {
@@ -180,13 +186,28 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					configuration.getMachine().getCompatibleFeederClasses());
 			dialog.setVisible(true);
 			Class<? extends Feeder> feederClass = dialog.getSelectedClass();
-			System.out.println("You picked " + feederClass + " you crazy bastard!");
+			if (feederClass == null) {
+				return;
+			}
+			try {
+				Feeder feeder = feederClass.newInstance();
+				configuration.getMachine().addFeeder(feeder);
+				tableModel.refresh();
+				configuration.setDirty(true);
+			}
+			catch (Exception e) {
+				MessageBoxes.errorBox(
+						JOptionPane.getFrameForComponent(FeedersPanel.this), 
+						"Feeder Error", 
+						e);
+			}
 		}
 	};
 
 	public Action deleteFeederAction = new AbstractAction("Delete Feeder") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			configuration.getMachine().removeFeeder(getSelectedFeeder());
 		}
 	};
 	
@@ -195,6 +216,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Feeder feeder = getSelectedFeeder();
+			MessageBoxes.errorBox(
+					JOptionPane.getFrameForComponent(FeedersPanel.this), 
+					"Feeder Error", 
+					"Feed is not yet implemented. Try again some other time.");
 		}
 	};
 }

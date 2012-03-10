@@ -126,7 +126,9 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		JButton btnSave = new JButton(saveAction);
 		setLayout(new BorderLayout(0, 0));
 		
-		add(new JScrollPane(panelFields), BorderLayout.CENTER);
+		JScrollPane scrollPane = new JScrollPane(panelFields);
+		scrollPane.setBorder(null);
+		add(scrollPane, BorderLayout.CENTER);
 		
 		JPanel panelActions = new JPanel();
 		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));

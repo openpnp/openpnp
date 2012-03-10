@@ -314,6 +314,10 @@ public class Configuration extends AbstractModelObject {
 		return serializer;
 	}
 	
+	/**
+	 * Listens for changes in a Part's Id field and resets it's Id in
+	 * the parts Map if it changes.
+	 */
 	private PropertyChangeListener partIdPcl = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -323,18 +327,27 @@ public class Configuration extends AbstractModelObject {
 		}
 	};
 	
+	/**
+	 * Used to provide a fixed root for the Machine when serializing. 
+	 */
 	@Root(name="openpnp-machine")
 	public static class MachineConfigurationHolder {
 		@Element
 		private Machine machine;
 	}
 	
+	/**
+	 * Used to provide a fixed root for the Packages when serializing. 
+	 */
 	@Root(name="openpnp-packages")
 	public static class PackagesConfigurationHolder {
 		@ElementList(inline=true, entry="package")
 		private ArrayList<Package> packages;
 	}
 	
+	/**
+	 * Used to provide a fixed root for the Parts when serializing. 
+	 */
 	@Root(name="openpnp-parts")
 	public static class PartsConfigurationHolder {
 		@ElementList(inline=true, entry="part")

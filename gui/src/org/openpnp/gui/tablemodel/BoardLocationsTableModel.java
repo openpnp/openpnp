@@ -46,7 +46,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return true;
+		return (columnIndex != 0);
 	}
 	
 	@Override
@@ -58,6 +58,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			}
 			else if (columnIndex == 1) {
 				boardLocation.setSide((Side) aValue);
+				fireTableCellUpdated(rowIndex, columnIndex);
 			}
 			else if (columnIndex == 2) {
 				Length length = ((LengthCellValue) aValue).getLength();

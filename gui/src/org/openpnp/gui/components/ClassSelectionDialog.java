@@ -9,18 +9,21 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultListModel;
+import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
+import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
-import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.ListSelectionModel;
 
 public class ClassSelectionDialog<T> extends JDialog {
 	private Class<? extends T> selectedClass;
@@ -58,7 +61,7 @@ public class ClassSelectionDialog<T> extends JDialog {
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel.add(list, BorderLayout.CENTER);
-		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+//		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		setSize(400, 400);
 		setLocationRelativeTo(parent);
 		
@@ -78,13 +81,19 @@ public class ClassSelectionDialog<T> extends JDialog {
 			}
 		});
 		
+		JRootPane rootPane = getRootPane();
+		KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
+		InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		inputMap.put(stroke, "ESCAPE");
+		rootPane.getActionMap().put("ESCAPE", cancelAction);
+		
 		selectAction.setEnabled(false);
 	}
 	
 	private Action selectAction = new AbstractAction("Accept") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			selectedClass = (Class<? extends T>) list.getSelectedValue();
+			selectedClass = ((ClassListItem<T>) list.getSelectedValue()).getTheClass();
 			setVisible(false);
 		}
 	};
@@ -110,6 +119,10 @@ public class ClassSelectionDialog<T> extends JDialog {
 		@Override
 		public String toString() {
 			return clz.getSimpleName();
+		}
+		
+		public Class<? extends T1> getTheClass() {
+			return clz;
 		}
 	}
 }
