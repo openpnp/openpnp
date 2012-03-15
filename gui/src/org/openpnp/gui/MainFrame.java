@@ -76,6 +76,7 @@ public class MainFrame extends JFrame {
 	private CamerasPanel camerasPanel;
 	private BoardsPanel boardsPanel;
 	private HeadsPanel headsPanel;
+	private ActuatorsPanel actuatorsPanel;
 
 	private JPanel contentPane;
 	private CameraPanel cameraPanel;
@@ -107,6 +108,7 @@ public class MainFrame extends JFrame {
 		camerasPanel = new CamerasPanel(this, configuration, machineControlsPanel);
 		boardsPanel = new BoardsPanel(configuration, this, machineControlsPanel);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
+		actuatorsPanel = new ActuatorsPanel(this, configuration, machineControlsPanel);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -228,6 +230,7 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
+		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
 
 		try {
 			configuration.load("config");

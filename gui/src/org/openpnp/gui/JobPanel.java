@@ -92,6 +92,19 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		placementsTable = new JTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
+		
+//		TableRowSorter<PlacementsTableModel> placementsTableSorter = new TableRowSorter<PlacementsTableModel>(placementsTableModel);
+//		// Filters rows from the Placements table based on which Side the
+//		// selected BoardLocation is set to.
+//		placementsTableSorter.setRowFilter(new RowFilter<PlacementsTableModel, Integer>() {
+//			@Override
+//			public boolean include(
+//					Entry<? extends PlacementsTableModel, ? extends Integer> entry) {
+//				Side side = (Side) entry.getValue(2);
+//				return (side == getSelectedBoardLocation().getSide());
+//			}
+//		});
+//		placementsTable.setRowSorter(placementsTableSorter);
 
 		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -123,6 +136,17 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				}
 			}
 		});
+		
+//		// Add a TableModelListener so that if the BoardLocation's Side is
+//		// changed we can refresh the Placements
+//		boardLocationsTableModel.addTableModelListener(new TableModelListener() {
+//			@Override
+//			public void tableChanged(TableModelEvent e) {
+//				((TableRowSorter) placementsTable.getRowSorter()).sort();
+////				placementsTableModel.fireTableDataChanged();
+//			}
+//		});
+		
 		setLayout(new BorderLayout(0, 0));
 		
 		JPanel panel = new JPanel();

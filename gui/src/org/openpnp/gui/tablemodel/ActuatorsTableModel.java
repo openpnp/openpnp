@@ -7,21 +7,25 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 
-public class HeadsTableModel extends AbstractTableModel implements ConfigurationListener {
-	final private Configuration configuration;
+public class ActuatorsTableModel extends AbstractTableModel implements ConfigurationListener {
 	
-	private String[] columnNames = new String[] { "Id", "Class" };
-	private List<Head> heads;
+	private String[] columnNames = new String[] { "Id", "Class", "Head" };
+	private List<HeadActuator> actuators;
 
-	public HeadsTableModel(Configuration configuration) {
-		this.configuration = configuration;
+	public ActuatorsTableModel(Configuration configuration) {
 		configuration.addListener(this);
 	}
 
 	public void configurationLoaded(Configuration configuration) {
-		heads = new ArrayList<Head>(configuration.getMachine().getHeads());
+		actuators = new ArrayList<HeadActuator>();
+		for (Head head : configuration.getMachine().getHeads()) {
+			for (Actuator actuator : head.getActuators()) {
+				actuators.add(new HeadActuator(head, actuator));
+			}
+		}
 		fireTableDataChanged();
 	}
 
@@ -35,11 +39,11 @@ public class HeadsTableModel extends AbstractTableModel implements Configuration
 	}
 
 	public int getRowCount() {
-		return (heads == null) ? 0 : heads.size();
+		return (actuators == null) ? 0 : actuators.size();
 	}
 	
-	public Head getHead(int index) {
-		return heads.get(index);
+	public Actuator getActuator(int index) {
+		return actuators.get(index).actuator;
 	}
 	
 	@Override
@@ -60,7 +64,7 @@ public class HeadsTableModel extends AbstractTableModel implements Configuration
 //		try {
 //			// TODO: Evil hack until we move the settable properties for Camera
 //			// into the Camera interface.
-//			Head head = (Head) heads.get(rowIndex);
+//			Actuator actuator = (Actuator) actuators.get(rowIndex);
 //			if (columnIndex == 0) {
 //				camera.setName((String) aValue);
 //			}
@@ -114,14 +118,26 @@ public class HeadsTableModel extends AbstractTableModel implements Configuration
 //	}
 	
 	public Object getValueAt(int row, int col) {
-		Head head = heads.get(row);
+		HeadActuator actuator = actuators.get(row);
 		switch (col) {
 		case 0:
-			return head.getId();
+			return actuator.actuator.getId();
 		case 1:
-			return head.getClass().getSimpleName();
+			return actuator.head != null ? actuator.head.getId() : "";
+		case 2:
+			return actuator.actuator.getClass().getSimpleName();
 		default:
 			return null;
+		}
+	}
+	
+	private class HeadActuator {
+		public Head head;
+		public Actuator actuator;
+		
+		public HeadActuator(Head head, Actuator actuator) {
+			this.head = head;
+			this.actuator = actuator;
 		}
 	}
 }

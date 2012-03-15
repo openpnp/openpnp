@@ -72,6 +72,6 @@ public class ReferenceActuator implements Actuator {
 	
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new ReferenceActuatorConfigurationWizard(this);
 	}
 }

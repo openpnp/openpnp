@@ -168,4 +168,6 @@ public interface Head {
 	 * @return
 	 */
 	public Wizard getConfigurationWizard();
+	
+	public String getId();
 }
