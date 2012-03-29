@@ -31,7 +31,6 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
 import org.openpnp.model.Job;
-import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -39,7 +38,6 @@ import org.openpnp.model.Point;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
-import org.openpnp.util.LengthUtil;
 import org.openpnp.util.Utils2D;
 
 //TODO don't forget the whole damn thing is mirrored

@@ -17,7 +17,7 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
- */
+*/
 
 package org.openpnp.app;
 
@@ -26,7 +26,6 @@ import java.awt.EventQueue;
 import javax.swing.UIManager;
 
 import org.openpnp.JobProcessor;
-import org.openpnp.gui.MachineControlsPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 

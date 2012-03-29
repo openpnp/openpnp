@@ -17,26 +17,25 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
-package org.openpnp.util;
+package org.openpnp.gui.support;
 
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import org.openpnp.spi.Actuator;
 
-public class XmlSerialize {
-	public static String serialize(Object o) {
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		XMLEncoder xmlEncoder = new XMLEncoder(bOut);
-		xmlEncoder.writeObject(o);
-		xmlEncoder.close();
-		return bOut.toString();
+public class ActuatorItem {
+	private Actuator actuator;
+	
+	public ActuatorItem(Actuator actuator) {
+		this.actuator = actuator;
 	}
 	
-	public static Object deserialize(String s) {
-		XMLDecoder xmlDecoder = new XMLDecoder(new ByteArrayInputStream(s.getBytes()));
-		return xmlDecoder.readObject();
+	public Actuator getActuator() {
+		return actuator;
+	}
+	
+	@Override
+	public String toString() {
+		return "Actuator: " + actuator.getId();
 	}
 }

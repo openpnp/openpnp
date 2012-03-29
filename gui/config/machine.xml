@@ -5,7 +5,7 @@
          <reference-head id="H1" pick-dwell-milliseconds="1000" place-dwell-milliseconds="1000" feed-rate="9000.0">
             <soft-limits min-x="-100.0" max-x="1000.0" min-y="-101.0" max-y="1001.0" min-z="-100.0" max-z="100.0" min-c="0.0" max-c="360.0"/>
             <homing>
-               <vision enabled="false" homing-dot-diameter="3.2">
+               <vision enabled="true" homing-dot-diameter="3.2">
                   <homing-dot-location units="Millimeters" x="1.0" y="2.0" z="3.0" rotation="0.0"/>
                </vision>
                <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>

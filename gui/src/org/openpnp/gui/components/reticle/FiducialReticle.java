@@ -26,7 +26,6 @@ import java.awt.Graphics2D;
 
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.util.LengthUtil;
 
 public class FiducialReticle implements Reticle {
 	public enum Shape {

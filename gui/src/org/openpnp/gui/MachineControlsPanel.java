@@ -68,7 +68,6 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.util.LengthUtil;
 
 /**
  * Contains controls, DROs and status for the machine.
