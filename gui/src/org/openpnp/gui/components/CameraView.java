@@ -78,7 +78,7 @@ public class CameraView extends JComponent implements CameraListener {
 			setReticle(reticle);
 		}
 		catch (Exception e) {
-			logger.warn("Warning: Unable to load Reticle preference", e);
+			//logger.warn("Warning: Unable to load Reticle preference");
 		}
 		
 		popupMenu = new CameraViewPopupMenu(this);

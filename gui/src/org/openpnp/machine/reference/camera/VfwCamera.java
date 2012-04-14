@@ -114,6 +114,7 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			return;
 		}
 			
 		if (showVideoSourceDialog) {
