@@ -22,6 +22,8 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -30,13 +32,13 @@ import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
 
 public class VfwCamera extends ReferenceCamera implements Runnable {
-	@Attribute
+	@Attribute(required=false)
 	private String driver;
-	@Attribute
+	@Attribute(required=false)
 	private boolean showVideoSourceDialog;
-	@Attribute
+	@Attribute(required=false)
 	private boolean showVideoFormatDialog;
-	@Attribute
+	@Attribute(required=false)
 	private boolean showVideoDisplayDialog;
 	
 	private CaptureDevice captureDevice;
@@ -46,23 +48,66 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 	
 	private Object captureLock = new Object();
 	
+	private Thread captureThread;
+	
 	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		super.setReferenceMachine(machine);
-		if (driver == null || driver.trim().length() == 0) {
-			System.out.println("No driver specified for VfwCamera [" + getName() + "]. Available drivers are:");
-			System.out.println();
-			for (String s : CaptureDevice.getCaptureDrivers()) {
-				System.out.println("\"" + s + "\"");
-			}
-			System.out.println();
-			System.out.println("Please specify one of the available drivers in the driver attribute of the Configuration for this Camera.");
-			// TODO: change to throw exception so we can show in a dialog
-			System.exit(1);
+		if (driver != null && driver.trim().length() != 0) {
+			setDriver(driver);
 		}
-		
-		new Thread(this).start();
+	}
+
+	public String getDriver() {
+		return driver;
+	}
+
+	public void setDriver(String driver) {
+		if (captureThread != null) {
+			captureThread.interrupt();
+			try {
+				captureThread.join();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		this.driver = driver;
+		captureThread = new Thread(this);
+		captureThread.start();
+	}
+
+	public boolean isShowVideoSourceDialog() {
+		return showVideoSourceDialog;
+	}
+
+	public void setShowVideoSourceDialog(boolean showVideoSourceDialog) {
+		this.showVideoSourceDialog = showVideoSourceDialog;
+	}
+
+	public boolean isShowVideoFormatDialog() {
+		return showVideoFormatDialog;
+	}
+
+	public void setShowVideoFormatDialog(boolean showVideoFormatDialog) {
+		this.showVideoFormatDialog = showVideoFormatDialog;
+	}
+
+	public boolean isShowVideoDisplayDialog() {
+		return showVideoDisplayDialog;
+	}
+
+	public void setShowVideoDisplayDialog(boolean showVideoDisplayDialog) {
+		this.showVideoDisplayDialog = showVideoDisplayDialog;
 	}
 	
+	public List<String> getDrivers() {
+		ArrayList<String> drivers = new ArrayList<String>();
+		for (String s : CaptureDevice.getCaptureDrivers()) {
+			drivers.add(s);
+		}
+		return drivers;
+	}
+
 	public void run() {
 		try {
 			captureDevice = CaptureDevice.getCaptureDevice(driver);
@@ -86,7 +131,7 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 		width = (int) captureDevice.getVideoDimensions().getWidth();
 		height = (int) captureDevice.getVideoDimensions().getHeight();
 		
-		while (true) {
+		while (!Thread.interrupted()) {
 			int[] captureData = captureDevice.captureFrame();
 			BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
 			image.setRGB(0, 0, width, height, captureData, 0, width);
@@ -119,6 +164,6 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 	
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new VfwCameraConfigurationWizard(this);
 	}
 }

@@ -32,10 +32,11 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -53,11 +54,9 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
-import javax.swing.JCheckBox;
 
-class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
-	private final LtiCivilCamera camera;
+class VfwCameraConfigurationWizard extends JPanel implements Wizard {
+	private final VfwCamera camera;
 
 	private WizardContainer wizardContainer;
 	private JButton btnSave;
@@ -66,8 +65,8 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
-	public LtiCivilCameraConfigurationWizard(
-			LtiCivilCamera camera) {
+	public VfwCameraConfigurationWizard(
+			VfwCamera camera) {
 		this.camera = camera;
 
 		setLayout(new BorderLayout());
@@ -89,23 +88,33 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		JLabel lblDeviceId = new JLabel("Device ID");
+		JLabel lblDeviceId = new JLabel("Driver");
 		panelGeneral.add(lblDeviceId, "2, 2, right, default");
 		
 		Object[] deviceIds = null;
 		try {
-			deviceIds = camera.getDeviceIds().toArray(new String[] {});
+			deviceIds = camera.getDrivers().toArray(new String[] {});
 		}
 		catch (Exception e) {
 			// TODO:
 		}
-		comboBoxDeviceId = new JComboBox(deviceIds);
-		panelGeneral.add(comboBoxDeviceId, "4, 2, left, default");
+		comboBoxDriver = new JComboBox(deviceIds);
+		panelGeneral.add(comboBoxDriver, "4, 2, left, default");
 		
-		chckbxForceGrayscale = new JCheckBox("Force Grayscale?");
-		panelGeneral.add(chckbxForceGrayscale, "2, 4, 3, 1");
+		chckbxShowVideoSource = new JCheckBox("Show Video Source Dialog?");
+		panelGeneral.add(chckbxShowVideoSource, "2, 4, 3, 1");
+		
+		chckbxShowVideoFormat = new JCheckBox("Show Video Format Dialog?");
+		panelGeneral.add(chckbxShowVideoFormat, "2, 6, 3, 1");
+		
+		chckbxShowVideoDisplay = new JCheckBox("Show Video Display Dialog?");
+		panelGeneral.add(chckbxShowVideoDisplay, "2, 8, 3, 1");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -137,10 +146,14 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 		// The order of the properties is important. We want all the booleans
 		// to be set before we set the driver because setting the driver
 		// applies all the settings.
-		wrappedBindings.add(JBindings.bind(camera, "forceGrayscale",
-				chckbxForceGrayscale, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "deviceId",
-				comboBoxDeviceId, "selectedItem", listener));
+		wrappedBindings.add(JBindings.bind(camera, "showVideoSourceDialog",
+				chckbxShowVideoSource, "selected", listener));
+		wrappedBindings.add(JBindings.bind(camera, "showVideoFormatDialog",
+				chckbxShowVideoFormat, "selected", listener));
+		wrappedBindings.add(JBindings.bind(camera, "showVideoDisplayDialog",
+				chckbxShowVideoDisplay, "selected", listener));
+		wrappedBindings.add(JBindings.bind(camera, "driver",
+				comboBoxDriver, "selectedItem", listener));
 	}
 
 	private void loadFromModel() {
@@ -180,7 +193,7 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 		public void actionPerformed(ActionEvent arg0) {
 			saveToModel();
 			wizardContainer
-					.wizardCompleted(LtiCivilCameraConfigurationWizard.this);
+					.wizardCompleted(VfwCameraConfigurationWizard.this);
 		}
 	};
 
@@ -190,6 +203,8 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
-	private JComboBox comboBoxDeviceId;
-	private JCheckBox chckbxForceGrayscale;
+	private JComboBox comboBoxDriver;
+	private JCheckBox chckbxShowVideoSource;
+	private JCheckBox chckbxShowVideoFormat;
+	private JCheckBox chckbxShowVideoDisplay;
 }
