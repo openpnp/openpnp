@@ -172,6 +172,7 @@ public class MachineControlsPanel extends JPanel {
 		super.setEnabled(enabled);
 		droAction.setEnabled(enabled);
 		homeAction.setEnabled(enabled);
+		goToZeroAction.setEnabled(enabled);
 		jogControlsPanel.setEnabled(enabled);
 	}
 	
@@ -552,6 +553,24 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
+	public Action goToZeroAction = new AbstractAction("Go To Zero") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			executor.submit(new Runnable() {
+				public void run() {
+					try {
+						head.moveTo(0, 0, 0, 0);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+						MessageBoxes.errorBox(frame, "Homing Failed", e);
+					}
+				}
+			});
+		}
+	};
+	
+	@SuppressWarnings("serial")
 	public Action homeAction = new AbstractAction("Home") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -560,6 +579,7 @@ public class MachineControlsPanel extends JPanel {
 					try {
 						head.home();
 						
+						// TODO: I think this is dead code, if we have real homing?
 						if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
 							CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
 							Camera camera = cameraItem.getCamera();

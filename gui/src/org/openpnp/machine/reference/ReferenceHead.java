@@ -49,6 +49,7 @@ public class ReferenceHead implements Head {
 	private ReferenceMachine machine;
 	private double x, y, z, c;
 	private double offsetX, offsetY, offsetZ, offsetC;
+	private boolean softLimitsOverridden;
 
 	@Attribute
 	private String id;
@@ -102,8 +103,10 @@ public class ReferenceHead implements Head {
 	@Override
 	public void home() throws Exception {
 		// TODO: Perform home switch homing first.
+		System.out.println("Perform home switch homing");
 
 		// Apply the homing location to the current position
+		System.out.println("Apply the homing location to the current position");
 		Location homingLocation = homing.location.convertToUnits(machine
 				.getNativeUnits());
 		setPerceivedX(homingLocation.getX());
@@ -112,7 +115,13 @@ public class ReferenceHead implements Head {
 		setPerceivedC(homingLocation.getRotation());
 
 		if (homing.vision.enabled) {
+			System.out.println("Home With Vision");
 			homeWithVision();
+			Location homingDotLocation = homing.vision.homingDotLocation;
+			System.out.println("Set homing dot location");
+			setPerceivedX(homingDotLocation.getX());
+			setPerceivedY(homingDotLocation.getY());
+			setPerceivedZ(homingDotLocation.getZ());
 		}
 	}
 
@@ -121,9 +130,11 @@ public class ReferenceHead implements Head {
 			double x = getX();
 			double y = getY();
 
+			System.out.println("Attempt " + i);
 			Camera camera = attemptHomeWithVision();
 
 			if (x == getX() && y == getY()) {
+				System.out.println("Vision homing complete, move to offsets");
 				Location cameraOffsets = camera.getLocation().convertToUnits(
 						machine.getNativeUnits());
 				moveTo(getX() + cameraOffsets.getX(),
@@ -139,8 +150,6 @@ public class ReferenceHead implements Head {
 	}
 
 	private Camera attemptHomeWithVision() throws Exception {
-		// TODO: Go to the defined dot location before starting search
-
 		// find the Camera to be used for homing
 		Camera camera = null;
 		for (Camera c : machine.getCameras()) {
@@ -152,7 +161,30 @@ public class ReferenceHead implements Head {
 		if (camera == null) {
 			throw new Exception("No homing camera found");
 		}
+		
+		// Get the homing dot location and convert to native units.
+		Location homingDotLocation = homing.getVision().getHomingDotLocation();
+		homingDotLocation = homingDotLocation.convertToUnits(machine.getNativeUnits());
+		double x = homingDotLocation.getX();
+		double y = homingDotLocation.getY();
+		double z = homingDotLocation.getZ();
+		
+		// Apply the camera offsets. We subtract instead of adding because we
+		// want to position the camera over the location versus wanting to know
+		// where the camera is in relation to the location.
+		x -= camera.getLocation().getX();
+		y -= camera.getLocation().getY();
+		z -= camera.getLocation().getZ();
+		
+		// Go to Safe-Z
+		moveTo(getX(), getY(), 0, getC());
 
+		// Position the camera over the homing dot
+		moveTo(x, y, 0, getC());
+		
+		// Move the camera to be in focus over the homing dot
+		moveTo(getX(), getY(), z, getC());
+		
 		VisionProvider vision = camera.getVisionProvider();
 
 		/*
@@ -212,8 +244,8 @@ public class ReferenceHead implements Head {
 			circleY -= imageHeightInUnits / 2;
 
 			// get the position of the head
-			double x = getX();
-			double y = getY();
+			x = getX();
+			y = getY();
 
 			// apply the offset from the circle
 			x += circleX;
@@ -243,10 +275,11 @@ public class ReferenceHead implements Head {
 							"Movement to %2.4f, %2.4f, %2.4f, %2.4f is invalid. You have bad data somewhere.",
 							x, y, z, c));
 		}
-		if (x < softLimits.minX || x > softLimits.maxX || y < softLimits.minY
-				|| y > softLimits.maxY || z < softLimits.minZ
-				|| z > softLimits.maxZ || c < softLimits.minC
-				|| c > softLimits.maxC) {
+		if (!softLimitsOverridden && softLimits.enabled && (
+				x < softLimits.minX || x > softLimits.maxX 
+				|| y < softLimits.minY || y > softLimits.maxY 
+				|| z < softLimits.minZ || z > softLimits.maxZ 
+				|| c < softLimits.minC || c > softLimits.maxC)) {
 			throw new Exception(
 					String.format(
 							"Movement to %2.4f, %2.4f, %2.4f, %2.4f would violate soft limits of (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f).",
@@ -435,7 +468,7 @@ public class ReferenceHead implements Head {
 	/**
 	 * Stores all the values associated with the Head's soft limits.
 	 */
-	public static class SoftLimits implements Cloneable {
+	public static class SoftLimits {
 		@Attribute
 		private double minX = Double.NEGATIVE_INFINITY;
 		@Attribute
@@ -452,6 +485,16 @@ public class ReferenceHead implements Head {
 		private double minC = Double.NEGATIVE_INFINITY;
 		@Attribute
 		private double maxC = Double.POSITIVE_INFINITY;
+		@Attribute(required=false)
+		private boolean enabled;
+		
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 
 		public double getMinX() {
 			return minX;
@@ -522,7 +565,7 @@ public class ReferenceHead implements Head {
 	 * Stores configuration information related to how the Head locates it's
 	 * home position.
 	 */
-	public static class Homing implements Cloneable {
+	public static class Homing {
 		@Element(required = false)
 		private Vision vision = new Vision();
 		/**
@@ -557,7 +600,7 @@ public class ReferenceHead implements Head {
 		/**
 		 * Vision information required for homing.
 		 */
-		public static class Vision implements Cloneable {
+		public static class Vision {
 			@Attribute(required = false)
 			private boolean enabled;
 

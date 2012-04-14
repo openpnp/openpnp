@@ -27,7 +27,7 @@ import org.simpleframework.xml.Attribute;
  * A Location is a 3D point in X, Y, Z space with a rotation component. The rotation is applied about the Z
  * axis.
  */
-public class Location extends AbstractModelObject implements Cloneable {
+public class Location extends AbstractModelObject {
 	@Attribute
 	private LengthUnit units;
 	@Attribute(required=false)

@@ -58,6 +58,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	private final ReferenceHead head;
 	
+	private JCheckBox chckbxSoftLimitsEnabled;
 	private JTextField textFieldFeedRate;
 	private JTextField textFieldId;
 	private JTextField textFieldPickDwell;
@@ -187,56 +188,61 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
+		chckbxSoftLimitsEnabled = new JCheckBox("Soft Limits Enabled?");
+		panelSoftLimits.add(chckbxSoftLimitsEnabled, "2, 2, 5, 1");
+		
 		lblMinimum = new JLabel("Minimum (mm)");
-		panelSoftLimits.add(lblMinimum, "4, 2");
+		panelSoftLimits.add(lblMinimum, "4, 4");
 		
 		lblMacimum = new JLabel("Maximum (mm)");
-		panelSoftLimits.add(lblMacimum, "6, 2");
+		panelSoftLimits.add(lblMacimum, "6, 4");
 		
 		lblX = new JLabel("X");
-		panelSoftLimits.add(lblX, "2, 4, right, default");
+		panelSoftLimits.add(lblX, "2, 6, right, default");
 		
 		textFieldSoftLimitsXMin = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsXMin, "4, 4");
+		panelSoftLimits.add(textFieldSoftLimitsXMin, "4, 6");
 		textFieldSoftLimitsXMin.setColumns(5);
 		
 		textFieldSoftLimitsXMax = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsXMax, "6, 4");
+		panelSoftLimits.add(textFieldSoftLimitsXMax, "6, 6");
 		textFieldSoftLimitsXMax.setColumns(5);
 		
 		lblY = new JLabel("Y");
-		panelSoftLimits.add(lblY, "2, 6, right, default");
+		panelSoftLimits.add(lblY, "2, 8, right, default");
 		
 		textFieldSoftLimitsYMin = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsYMin, "4, 6");
+		panelSoftLimits.add(textFieldSoftLimitsYMin, "4, 8");
 		textFieldSoftLimitsYMin.setColumns(5);
 		
 		textFieldSoftLimitsYMax = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsYMax, "6, 6");
+		panelSoftLimits.add(textFieldSoftLimitsYMax, "6, 8");
 		textFieldSoftLimitsYMax.setColumns(5);
 		
 		lblZ = new JLabel("Z");
-		panelSoftLimits.add(lblZ, "2, 8, right, default");
+		panelSoftLimits.add(lblZ, "2, 10, right, default");
 		
 		textFieldSoftLimitsZMin = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsZMin, "4, 8");
+		panelSoftLimits.add(textFieldSoftLimitsZMin, "4, 10");
 		textFieldSoftLimitsZMin.setColumns(5);
 		
 		textFieldSoftLimitsZMax = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsZMax, "6, 8");
+		panelSoftLimits.add(textFieldSoftLimitsZMax, "6, 10");
 		textFieldSoftLimitsZMax.setColumns(5);
 		
 		lblC = new JLabel("C");
-		panelSoftLimits.add(lblC, "2, 10, right, default");
+		panelSoftLimits.add(lblC, "2, 12, right, default");
 		
 		textFieldSoftLimitsCMin = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsCMin, "4, 10");
+		panelSoftLimits.add(textFieldSoftLimitsCMin, "4, 12");
 		textFieldSoftLimitsCMin.setColumns(5);
 		
 		textFieldSoftLimitsCMax = new JTextField();
-		panelSoftLimits.add(textFieldSoftLimitsCMax, "6, 10");
+		panelSoftLimits.add(textFieldSoftLimitsCMax, "6, 12");
 		textFieldSoftLimitsCMax.setColumns(5);
 		
 		panelHoming = new JPanel();
@@ -274,6 +280,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		panelHoming.add(lblC_1, "10, 2, center, default");
 		
 		lblHomeLocation = new JLabel("Home Location");
+		lblHomeLocation.setToolTipText("Coordinates that will be applied when the machine is homed. This is position you want the DROs to show after homing.");
 		panelHoming.add(lblHomeLocation, "2, 4, right, default");
 		
 		textFieldHomeLocationX = new JTextField();
@@ -329,19 +336,20 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		panelVision.add(lblZ_1, "8, 4, center, default");
 		
 		lblNewLabel_1 = new JLabel("Homing Dot Location");
+		lblNewLabel_1.setToolTipText("The location of the homing dot in relation to the Home Location. When Vision is used for homing, this will be applied to the DROs after Vision Homing completes.");
 		panelVision.add(lblNewLabel_1, "2, 6, right, default");
 		
 		textFieldHomingDotX = new JTextField();
 		panelVision.add(textFieldHomingDotX, "4, 6");
-		textFieldHomingDotX.setColumns(5);
+		textFieldHomingDotX.setColumns(8);
 		
 		textFieldHomingDotY = new JTextField();
 		panelVision.add(textFieldHomingDotY, "6, 6");
-		textFieldHomingDotY.setColumns(5);
+		textFieldHomingDotY.setColumns(8);
 		
 		textFieldHomingDotZ = new JTextField();
 		panelVision.add(textFieldHomingDotZ, "8, 6");
-		textFieldHomingDotZ.setColumns(5);
+		textFieldHomingDotZ.setColumns(8);
 		
 		lblHomingDotDiameter = new JLabel("Homing Dot Diameter (mm)");
 		panelVision.add(lblHomingDotDiameter, "2, 8, right, default");
@@ -383,6 +391,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(head, "pickDwellMilliseconds", textFieldPickDwell, "text", integerConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "placeDwellMilliseconds", textFieldPlaceDwell, "text", integerConverter, listener));
 
+		wrappedBindings.add(JBindings.bind(head, "softLimits.enabled", chckbxSoftLimitsEnabled, "selected", listener));
 		wrappedBindings.add(JBindings.bind(head, "softLimits.minX", textFieldSoftLimitsXMin, "text", doubleConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "softLimits.maxX", textFieldSoftLimitsXMax, "text", doubleConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "softLimits.minY", textFieldSoftLimitsYMin, "text", doubleConverter, listener));

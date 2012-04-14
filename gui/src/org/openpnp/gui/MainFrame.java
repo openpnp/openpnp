@@ -142,6 +142,7 @@ public class MainFrame extends JFrame {
 		menuBar.add(mnCommands);
 
 		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
+		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
 		
 
 		contentPane = new JPanel();
