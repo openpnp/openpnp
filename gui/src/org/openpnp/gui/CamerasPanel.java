@@ -132,13 +132,14 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				if (index != -1) {
 					index = table.convertRowIndexToModel(index);
 					Camera camera = tableModel.getCamera(index);
-//					Wizard wizard = camera.getConfigurationWizard();
-//					if (wizard != null) {
-//						wizard.setWizardContainer(CamerasPanel.this);
-//						JPanel panel = wizard.getWizardPanel();
-//						configurationPanel.add(panel);
-//					}
+					Wizard wizard = camera.getConfigurationWizard();
+					if (wizard != null) {
+						wizard.setWizardContainer(CamerasPanel.this);
+						JPanel panel = wizard.getWizardPanel();
+						configurationPanel.add(panel);
+					}
 				}
+				
 				revalidate();
 				repaint();
 			}

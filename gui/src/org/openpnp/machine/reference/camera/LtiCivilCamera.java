@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
@@ -47,9 +48,9 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	private CaptureStream captureStream;
 	private VideoFormat videoFormat;
 
-	@Attribute
+	@Attribute(required=false)
 	private String deviceId;
-	@Attribute
+	@Attribute(required=false)
 	private boolean forceGrayscale;
 	
 	private int width, height;
@@ -57,7 +58,7 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	private BufferedImage lastImage;
 	
 	private Object captureLock = new Object();
-	
+
 	@Override
 	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
 		super.setReferenceMachine(machine);
@@ -65,26 +66,43 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 		captureSystemFactory = DefaultCaptureSystemFactorySingleton.instance();
 		captureSystem = captureSystemFactory.createCaptureSystem();
 		
-		if (deviceId == null || deviceId.trim().length() == 0) {
-			// TODO make this a dialog
-			System.out.println("No deviceId specified for LtiCivilCamera [" + getName() + "]. Available deviceIds are:");
-			System.out.println();
-			for (CaptureDeviceInfo captureDeviceInfo : (List<CaptureDeviceInfo>) captureSystem.getCaptureDeviceInfoList()) {
-				System.out.println("\"" + captureDeviceInfo.getDeviceID() + "\"");
-			}
-			System.out.println();
-			System.out.println("Please specify one of the available deviceIds in the deviceId attribute of the Configuration for this Camera.");
-			// TODO: change to throw Exception so we can show in a dialog
-			System.exit(1);
+		if (deviceId != null && deviceId.trim().length() != 0) {
+			setDeviceId(deviceId);
 		}
-		
-		
+	}
+	
+	public void setDeviceId(String deviceId) throws Exception {
+		if (captureStream != null) {
+			captureStream.stop();
+			captureStream.dispose();
+		}
 		captureStream = captureSystem.openCaptureDeviceStream(deviceId);
 		videoFormat = captureStream.getVideoFormat();
 		width = videoFormat.getWidth();
 		height = videoFormat.getHeight();
 		captureStream.setObserver(this);
 		captureStream.start();
+		this.deviceId = deviceId;
+	}
+	
+	public String getDeviceId() {
+		return deviceId;
+	}
+
+	public boolean isForceGrayscale() {
+		return forceGrayscale;
+	}
+
+	public void setForceGrayscale(boolean forceGrayscale) {
+		this.forceGrayscale = forceGrayscale;
+	}
+
+	public List<String> getDeviceIds() throws Exception {
+		ArrayList<String> deviceIds = new ArrayList<String>();
+		for (CaptureDeviceInfo captureDeviceInfo : (List<CaptureDeviceInfo>) captureSystem.getCaptureDeviceInfoList()) {
+			deviceIds.add(captureDeviceInfo.getDeviceID());
+		}
+		return deviceIds;
 	}
 	
 	@Override
@@ -118,7 +136,6 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 				return image;
 			}
 			catch (Exception e) {
-				e.printStackTrace();
 				return null;
 			}
 		}
@@ -126,6 +143,6 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new LtiCivilCameraConfigurationWizard(this);
 	}
 }

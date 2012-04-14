@@ -18,19 +18,11 @@
          </reference-head>
       </heads>
       <cameras>
-         <reference-camera class="org.openpnp.machine.reference.camera.LtiCivilCamera" name="Head Tele" looking="Down" head-id="H1">
+         <reference-camera class="org.openpnp.machine.reference.camera.LtiCivilCamera" name="Head Tele" looking="Down" head-id="H1" device-id="?" force-grayscale="false">
             <location units="Millimeters" x="0.0" y="-5.0" z="20.0" rotation="0.0"/>
             <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
             <vision-provider class="org.openpnp.machine.reference.vision.RoboRealmVisionProvider" host="localhost" port="6060" auto-capture-fps="10"/>
          </reference-camera>
-         <!-- 
-         <reference-camera class="org.openpnp.machine.reference.camera.TableScannerCamera" name="Head Tele" looking="Down" head-id="H1">
-            <location units="Millimeters" x="0.0" y="-5.0" z="20.0" rotation="0.0"/>
-            <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
-            <vision-provider class="org.openpnp.machine.reference.vision.RoboRealmVisionProvider" host="localhost" port="6060" auto-capture-fps="10"/>
-            <table-scanner-output-directory-path>/Users/jason/Projects/openpnp/openpnp-private/jcdillin-table-scan</table-scanner-output-directory-path>
-         </reference-camera>
-         -->
       </cameras>
       <feeders>
          <reference-feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="L0" enabled="true" feed-rate="200.0" actuator-id="PIN">
