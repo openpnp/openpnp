@@ -266,6 +266,8 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		if (! (camera instanceof ReferenceCamera)) {
 			throw new Exception("Can't add a Camera that is not an instance of ReferenceFeeder.");
 		}
+		ReferenceCamera referenceCamera = (ReferenceCamera) camera;
+		cameras.add(referenceCamera);
 	}
 	
 	@Override

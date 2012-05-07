@@ -102,8 +102,13 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 	
 	public List<String> getDrivers() {
 		ArrayList<String> drivers = new ArrayList<String>();
-		for (String s : CaptureDevice.getCaptureDrivers()) {
-			drivers.add(s);
+		try {
+			for (String s : CaptureDevice.getCaptureDrivers()) {
+				drivers.add(s);
+			}
+		}
+		catch (UnsatisfiedLinkError e) {
+			
 		}
 		return drivers;
 	}

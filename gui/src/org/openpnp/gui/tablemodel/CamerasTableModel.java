@@ -69,6 +69,10 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 		return cameras.get(index);
 	}
 	
+	public void refresh() {
+		fireTableDataChanged();
+	}
+	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		return true;

@@ -34,6 +34,7 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -47,12 +48,15 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.CamerasTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.Feeder;
 
 public class CamerasPanel extends JPanel implements WizardContainer {
 	private final Frame frame;
@@ -82,8 +86,16 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
 		
-		JButton btnNewButton = new JButton(tableScannerAction);
-		toolBar.add(btnNewButton);
+		JButton btnNewCamera = new JButton(newCameraAction);
+		toolBar.add(btnNewCamera);
+		
+		JButton btnDeleteCamera = new JButton(deleteCameraAction);
+		toolBar.add(btnDeleteCamera);
+		
+		toolBar.addSeparator();
+		
+		JButton btnTableScanner = new JButton(tableScannerAction);
+		toolBar.add(btnTableScanner);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -177,6 +189,42 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	public MachineControlsPanel getMachineControlsPanel() {
 		return machineControlsPanel;
 	}
+	
+	public Action newCameraAction = new AbstractAction("New Camera...") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			ClassSelectionDialog<Camera> dialog = new ClassSelectionDialog<Camera>(
+					JOptionPane.getFrameForComponent(CamerasPanel.this), 
+					"Select Camera...", 
+					"Please select a Camera implemention from the list below.", 
+					configuration.getMachine().getCompatibleCameraClasses());
+			dialog.setVisible(true);
+			Class<? extends Camera> cameraClass = dialog.getSelectedClass();
+			if (cameraClass == null) {
+				return;
+			}
+			try {
+				Camera camera = cameraClass.newInstance();
+				configuration.getMachine().addCamera(camera);
+				tableModel.refresh();
+				configuration.setDirty(true);
+			}
+			catch (Exception e) {
+				MessageBoxes.errorBox(
+						JOptionPane.getFrameForComponent(CamerasPanel.this), 
+						"Camera Error", 
+						e);
+			}
+		}
+	};
+
+	public Action deleteCameraAction = new AbstractAction("Delete Camera") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+//			configuration.getMachine().removeFeeder(getSelectedFeeder());
+		}
+	};
+	
 	
 	private Action tableScannerAction = new AbstractAction("Table Scanner") {
 		@Override

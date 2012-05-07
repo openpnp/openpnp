@@ -18,7 +18,7 @@
          </reference-head>
       </heads>
       <cameras>
-         <reference-camera class="org.openpnp.machine.reference.camera.VfwCamera" name="Head Tele" looking="Down" head-id="H1" driver="Microsoft WDM Image Capture (Win32)" show-video-source-dialog="false" show-video-format-dialog="false" show-video-display-dialog="false">
+         <reference-camera class="org.openpnp.machine.reference.camera.LtiCivilCamera" name="Head Tele" looking="Down" head-id="H1" device-id="?" force-grayscale="false">
             <location units="Millimeters" x="0.0" y="-5.0" z="20.0" rotation="0.0"/>
             <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
             <vision-provider class="org.openpnp.machine.reference.vision.RoboRealmVisionProvider" host="localhost" port="6060" auto-capture-fps="10"/>
