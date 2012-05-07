@@ -1,8 +1,0 @@
-#Wed Mar 14 23:39:55 PDT 2012
-eclipse.preferences.version=1
-encoding//src/org/openpnp/gui/tablemodel/ActuatorsTableModel.java=UTF-8
-encoding//src/org/openpnp/gui/tablemodel/BoardLocationsTableModel.java=UTF-8
-encoding//src/org/openpnp/gui/tablemodel/CamerasTableModel.java=UTF-8
-encoding//src/org/openpnp/gui/tablemodel/FeederLocationsTableModel.java=UTF-8
-encoding//src/org/openpnp/gui/tablemodel/HeadsTableModel.java=UTF-8
-encoding//src/org/openpnp/gui/tablemodel/PlacementsTableModel.java=UTF-8

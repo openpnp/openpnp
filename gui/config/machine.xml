@@ -1,5 +1,6 @@
 <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
+      <!--  <driver class="org.openpnp.machine.reference.driver.GrblDriver" port-name="/dev/tty.PL2303-00101124" baud="9600"/> -->
       <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
       <heads>
          <reference-head id="H1" pick-dwell-milliseconds="1000" place-dwell-milliseconds="1000" feed-rate="9000.0">
