@@ -32,7 +32,7 @@ import org.openpnp.model.Location;
 
 public class BoardLocationsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Board", "Side", "X",
-			"Y", "Z", "Î¸" };
+			"Y", "Z", "¿" };
 	private Job job;
 
 	public void setJob(Job job) {

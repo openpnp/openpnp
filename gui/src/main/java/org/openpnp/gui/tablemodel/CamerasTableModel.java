@@ -39,7 +39,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	final private Configuration configuration;
 	
 	// TODO: add head
-	private String[] columnNames = new String[] { "Name", "Looking", "X", "Y", "Z", "Î¸" };
+	private String[] columnNames = new String[] { "Name", "Looking", "X", "Y", "Z", "¿" };
 	private List<Camera> cameras;
 
 	public CamerasTableModel(Configuration configuration) {

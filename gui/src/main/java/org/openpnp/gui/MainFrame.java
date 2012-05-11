@@ -29,6 +29,7 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -234,7 +235,9 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
 
 		try {
-			configuration.load("config");
+			File configurationDirectory = new File(System.getProperty("user.home"));
+			configurationDirectory = new File(configurationDirectory, ".openpnp");
+			configuration.load(configurationDirectory.getAbsolutePath());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -281,7 +284,9 @@ public class MainFrame extends JFrame {
 		// Save the configuration if it's dirty
 		try {
 			if (configuration.isDirty()) {
-				configuration.save("config");
+				File configurationDirectory = new File(System.getProperty("user.home"));
+				configurationDirectory = new File(configurationDirectory, ".openpnp");
+				configuration.save(configurationDirectory.getAbsolutePath());
 			}
 		}
 		catch (Exception e) {

@@ -55,7 +55,6 @@ public class Configuration extends AbstractModelObject {
 	private boolean dirty;
 	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
 	
-	
 	public boolean isDirty() {
 		return dirty;
 	}
@@ -75,8 +74,16 @@ public class Configuration extends AbstractModelObject {
 	public void load(String configurationDirectoryPath) throws Exception {
 		File configurationDirectory = new File(configurationDirectoryPath);
 		
+		boolean forceSave = false;
+		
 		try {
-			loadMachine(new File(configurationDirectory, "machine.xml"));
+			File file = new File(configurationDirectory, "machine.xml");
+			if (!file.exists()) {
+				System.out.println("No machine.xml found in configuration directory, loading defaults.");
+				file = new File("config/default/machine.xml");
+				forceSave = true;
+			}
+			loadMachine(file);
 		}
 		catch (Exception e) {
 			String message = e.getMessage();
@@ -86,7 +93,13 @@ public class Configuration extends AbstractModelObject {
 			throw new Exception("Error while reading machine.xml (" + message + ")", e);
 		}
 		try {
-			loadPackages(new File(configurationDirectory, "packages.xml"));
+			File file = new File(configurationDirectory, "packages.xml");
+			if (!file.exists()) {
+				System.out.println("No packages.xml found in configuration directory, loading defaults.");
+				file = new File("config/default/packages.xml");
+				forceSave = true;
+			}
+			loadPackages(file);
 		}
 		catch (Exception e) {
 			String message = e.getMessage();
@@ -96,7 +109,13 @@ public class Configuration extends AbstractModelObject {
 			throw new Exception("Error while reading packages.xml (" + message + ")", e);
 		}
 		try {
-			loadParts(new File(configurationDirectory, "parts.xml"));
+			File file = new File(configurationDirectory, "parts.xml");
+			if (!file.exists()) {
+				System.out.println("No parts.xml found in configuration directory, loading defaults.");
+				file = new File("config/default/parts.xml");
+				forceSave = true;
+			}
+			loadParts(file);
 		}
 		catch (Exception e) {
 			String message = e.getMessage();
@@ -104,6 +123,11 @@ public class Configuration extends AbstractModelObject {
 				message = e.getCause().getMessage();
 			}
 			throw new Exception("Error while reading parts.xml (" + message + ")", e);
+		}
+		if (forceSave) {
+			System.out.println("Defaults were loaded. Saving to configuration directory.");
+			configurationDirectory.mkdirs();
+			save(configurationDirectoryPath);
 		}
 		dirty = false;
 		for (ConfigurationListener listener : listeners) {
