@@ -45,6 +45,8 @@ public interface Machine {
 	 */
 	public List<Head> getHeads();
 	
+	public Head getHead(String id);
+	
 	/**
 	 * Gets the Feeder defined with the specified id.
 	 * @param id

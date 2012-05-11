@@ -25,13 +25,14 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
 
-public class VfwCamera extends ReferenceCamera implements Runnable {
+public class VfwCamera extends ReferenceCamera implements Runnable, RequiresConfigurationResolution {
 	@Attribute(required=false)
 	private String driver;
 	@Attribute(required=false)
@@ -50,8 +51,13 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 	
 	private Thread captureThread;
 	
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
-		super.setReferenceMachine(machine);
+	public VfwCamera() {
+		super("VfwCamera");
+	}
+	
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		super.resolve(configuration);
 		if (driver != null && driver.trim().length() != 0) {
 			setDriver(driver);
 		}

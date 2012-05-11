@@ -212,6 +212,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			}
 			try {
 				Feeder feeder = feederClass.newInstance();
+				configuration.resolve(feeder);
 				configuration.getMachine().addFeeder(feeder);
 				tableModel.refresh();
 				configuration.setDirty(true);

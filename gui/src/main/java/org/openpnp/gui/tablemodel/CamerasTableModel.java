@@ -28,7 +28,6 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -48,8 +47,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	}
 
 	public void configurationLoaded(Configuration configuration) {
-		cameras = new ArrayList<Camera>(configuration.getMachine().getCameras());
-		fireTableDataChanged();
+		refresh();
 	}
 
 	@Override
@@ -70,6 +68,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	}
 	
 	public void refresh() {
+		cameras = new ArrayList<Camera>(configuration.getMachine().getCameras());
 		fireTableDataChanged();
 	}
 	
@@ -89,9 +88,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
-			// TODO: Evil hack until we move the settable properties for Camera
-			// into the Camera interface.
-			ReferenceCamera camera = (ReferenceCamera) cameras.get(rowIndex);
+			Camera camera = cameras.get(rowIndex);
 			if (columnIndex == 0) {
 				camera.setName((String) aValue);
 			}

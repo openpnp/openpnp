@@ -88,14 +88,20 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
+		configuration.resolve(driver);
+		// TODO: Remove, use the above only.
 		driver.setReferenceMachine(this);
 		for (ReferenceHead head : heads.values()) {
+			configuration.resolve(head);
+			// TODO: Remove, use the above only.
 			head.setReferenceMachine(this);
 		}
 		for (ReferenceCamera camera : cameras) {
-			camera.setReferenceMachine(this);
+			configuration.resolve(camera);
 		}
 		for (ReferenceFeeder feeder : feeders.values()) {
+			configuration.resolve(feeder);
+			// TODO: Remove, use the above only.
 			feeder.setReferenceMachine(this);
 		}
 	}
@@ -112,6 +118,7 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		return l;
 	}
 	
+	@Override
 	public ReferenceHead getHead(String id) {
 		return heads.get(id);
 	}

@@ -57,12 +57,15 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	 * Path to the directory of tile images.
 	 */
 	@Element
-	private String tableScannerOutputDirectoryPath;
+	private String cacheDirectoryPath;
+	
+	@Element(required=false)
+	private String sourceUri;
 	
 	private int tilesWide = 3;
 	private int tilesHigh = 3;
 	
-	private File tableScannerOutputDirectory;
+	private File cacheDirectory;
 	
 	/**
 	 * The last X and Y position that we rendered for. Used to optimize the
@@ -103,11 +106,15 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	
 	private Object captureLock = new Object();
 	
+	public TableScannerCamera() {
+		super("TableScannerCamera");
+	}
+	
 	@Commit
 	private void commit() throws Exception {
-		tableScannerOutputDirectory = new File(tableScannerOutputDirectoryPath);
-		if (!tableScannerOutputDirectory.exists()) {
-			throw new Exception("table-scanner-output-directory-path " + tableScannerOutputDirectoryPath + " does not exist.");
+		cacheDirectory = new File(cacheDirectoryPath);
+		if (!cacheDirectory.exists()) {
+			throw new Exception("table-scanner-output-directory-path " + cacheDirectoryPath + " does not exist.");
 		}
 		buildTiles();
 	}
@@ -121,6 +128,22 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 			}
 		}
 		super.startContinuousCapture(listener, maximumFps);
+	}
+	
+	public String getCacheDirectoryPath() {
+		return cacheDirectoryPath;
+	}
+
+	public void setCacheDirectoryPath(String cacheDirectoryPath) {
+		this.cacheDirectoryPath = cacheDirectoryPath;
+	}
+
+	public String getSourceUri() {
+		return sourceUri;
+	}
+
+	public void setSourceUri(String sourceUri) {
+		this.sourceUri = sourceUri;
 	}
 
 	@Override
@@ -185,7 +208,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	private void buildTiles() {
 		// Load all png files from the directory that look like they match what
 		// we are expecting.
-		File[] files = tableScannerOutputDirectory.listFiles(new FilenameFilter() {
+		File[] files = cacheDirectory.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File arg0, String arg1) {
 				return arg1.contains(".") && arg1.contains(",") && arg1.endsWith(".png");
@@ -378,7 +401,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new TableScannerCameraConfigurationWizard(this);
 	}
 	
 	public static class Tile {

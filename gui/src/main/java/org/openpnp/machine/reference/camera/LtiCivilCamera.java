@@ -26,9 +26,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 
 import com.lti.civil.CaptureDeviceInfo;
@@ -42,7 +43,7 @@ import com.lti.civil.Image;
 import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
 
-public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
+public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver, RequiresConfigurationResolution {
 	private CaptureSystemFactory captureSystemFactory;
 	private CaptureSystem captureSystem;
 	private CaptureStream captureStream;
@@ -58,10 +59,14 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	private BufferedImage lastImage;
 	
 	private Object captureLock = new Object();
+	
+	public LtiCivilCamera() {
+		super("LtiCivilCamera");
+	}
 
 	@Override
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
-		super.setReferenceMachine(machine);
+	public void resolve(Configuration configuration) throws Exception {
+		super.resolve(configuration);
 		
 		captureSystemFactory = DefaultCaptureSystemFactorySingleton.instance();
 		captureSystem = captureSystemFactory.createCaptureSystem();

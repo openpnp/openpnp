@@ -27,6 +27,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openpnp.CameraListener;
+import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -35,18 +38,18 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
-public abstract class ReferenceCamera implements Camera {
+public abstract class ReferenceCamera implements Camera, RequiresConfigurationResolution {
 	@Attribute
 	protected String name;
 
 	@Element
-	protected Location location;
+	protected Location location = new Location(LengthUnit.Millimeters);
 	
 	@Attribute
-	protected Looking looking;
+	protected Looking looking = Looking.Down;
 	
 	@Element
-	protected Location unitsPerPixel;
+	protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
 	
 	@Element(required=false)
 	protected VisionProvider visionProvider;
@@ -54,13 +57,18 @@ public abstract class ReferenceCamera implements Camera {
 	@Attribute(required=false)
 	protected String headId;
 
-	protected ReferenceHead head;
+	protected Head head;
 
 	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
+	
+	public ReferenceCamera(String name) {
+		setName(name);
+	}
 
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
 		if (head == null) {
-			head = machine.getHead(headId);
+			head = configuration.getMachine().getHead(headId);
 		}
 		if (visionProvider != null) {
 			visionProvider.setCamera(this);
@@ -87,6 +95,7 @@ public abstract class ReferenceCamera implements Camera {
 		this.head = head;
 	}
 	
+	@Override
 	public void setLooking(Looking looking) {
 		this.looking = looking;
 	}
@@ -96,6 +105,7 @@ public abstract class ReferenceCamera implements Camera {
 		return looking;
 	}
 	
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -105,6 +115,7 @@ public abstract class ReferenceCamera implements Camera {
 		return name;
 	}
 	
+	@Override
 	public void setLocation(Location location) {
 		this.location = location;
 	}

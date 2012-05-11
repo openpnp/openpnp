@@ -205,6 +205,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 			}
 			try {
 				Camera camera = cameraClass.newInstance();
+				configuration.resolve(camera);
 				configuration.getMachine().addCamera(camera);
 				tableModel.refresh();
 				configuration.setDirty(true);

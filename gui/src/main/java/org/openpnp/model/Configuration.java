@@ -55,6 +55,18 @@ public class Configuration extends AbstractModelObject {
 	private boolean dirty;
 	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
 	
+	/**
+	 * Calls resolve(this) on the Object if it implements 
+	 * RequiresConfigurationResolution. This is just a helper method to avoid
+	 * making a lot of casts throughout the program.
+	 * @param o
+	 */
+	public void resolve(Object o) throws Exception {
+		if (o instanceof RequiresConfigurationResolution) {
+			((RequiresConfigurationResolution) o).resolve(this);
+		}
+	}
+	
 	public boolean isDirty() {
 		return dirty;
 	}
@@ -246,7 +258,7 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		PartsConfigurationHolder holder = serializer.read(PartsConfigurationHolder.class, file);
 		for (Part part : holder.parts) {
-			part.resolve(this);
+			resolve(part);
 			addPart(part);
 		}
 	}
@@ -324,7 +336,7 @@ public class Configuration extends AbstractModelObject {
 	private Board loadBoard(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		Board board = serializer.read(Board.class, file);
-		board.resolve(this);
+		resolve(board);
 		board.setFile(file);
 		board.setDirty(false);
 		return board;

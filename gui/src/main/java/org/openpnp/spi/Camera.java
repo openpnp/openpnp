@@ -45,6 +45,8 @@ public interface Camera {
 	 */
 	public String getName();
 	
+	public void setName(String name);
+	
 	/**
 	 * Get the Location of the Camera in relation to either the Head it's
 	 * attached to or the Machine itself. When the Camera is attached to
@@ -54,11 +56,15 @@ public interface Camera {
 	 */
 	public Location getLocation();
 	
+	public void setLocation(Location location);
+	
 	/**
 	 * Get the direction the Camera is looking. 
 	 * @return
 	 */
 	public Looking getLooking();
+	
+	public void setLooking(Looking looking);
 	
 	/**
 	 * The number of X and Y units per pixel this camera shows when in perfect focus.
