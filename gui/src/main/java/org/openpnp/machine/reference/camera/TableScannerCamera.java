@@ -114,7 +114,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	private void commit() throws Exception {
 		cacheDirectory = new File(cacheDirectoryPath);
 		if (!cacheDirectory.exists()) {
-			throw new Exception("table-scanner-output-directory-path " + cacheDirectoryPath + " does not exist.");
+			throw new Exception("cache-directory-path " + cacheDirectoryPath + " does not exist.");
 		}
 		buildTiles();
 	}

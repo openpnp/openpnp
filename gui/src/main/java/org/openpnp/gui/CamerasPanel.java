@@ -38,12 +38,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
@@ -56,7 +56,6 @@ import org.openpnp.gui.tablemodel.CamerasTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
-import org.openpnp.spi.Feeder;
 
 public class CamerasPanel extends JPanel implements WizardContainer {
 	private final Frame frame;
@@ -68,7 +67,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	private CamerasTableModel tableModel;
 	private TableRowSorter<CamerasTableModel> tableSorter;
 	private JTextField searchTextField;
-	JPanel configurationPanel;
 
 	public CamerasPanel(Frame frame, Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.frame = frame;
@@ -123,14 +121,20 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		splitPane.setContinuousLayout(true);
 		splitPane.setDividerLocation(0.3);
 		add(splitPane, BorderLayout.CENTER);
-		
-		configurationPanel = new JPanel();
-		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		splitPane.setLeftComponent(new JScrollPane(table));
-		splitPane.setRightComponent(configurationPanel);
-		configurationPanel.setLayout(new BorderLayout(0, 0));
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		splitPane.setRightComponent(tabbedPane);
+		
+		generalConfigPanel = new JPanel();
+		tabbedPane.addTab("General Configuration", null, generalConfigPanel, null);
+		generalConfigPanel.setLayout(new BorderLayout(0, 0));
+		
+		cameraSpecificConfigPanel = new JPanel();
+		tabbedPane.addTab("Camera Specific", null, cameraSpecificConfigPanel, null);
+		cameraSpecificConfigPanel.setLayout(new BorderLayout(0, 0));
 		
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -140,7 +144,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				}
 				int index = table.getSelectedRow();
 				
-				configurationPanel.removeAll();
+				cameraSpecificConfigPanel.removeAll();
 				if (index != -1) {
 					index = table.convertRowIndexToModel(index);
 					Camera camera = tableModel.getCamera(index);
@@ -148,7 +152,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 					if (wizard != null) {
 						wizard.setWizardContainer(CamerasPanel.this);
 						JPanel panel = wizard.getWizardPanel();
-						configurationPanel.add(panel);
+						cameraSpecificConfigPanel.add(panel);
 					}
 				}
 				
@@ -235,4 +239,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 			tableScanner.setVisible(true);
 		}
 	};
+	private JPanel generalConfigPanel;
+	private JPanel cameraSpecificConfigPanel;
 }
