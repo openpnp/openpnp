@@ -21,31 +21,39 @@
 
 package org.openpnp.gui.support;
 
-import org.jdesktop.beansbinding.Converter;
-import org.openpnp.model.Length;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Head;
 
-public class LengthConverter extends Converter<Length, String> {
-	private String forwardFormat;
+public class HeadCellValue {
+	private static Configuration configuration;
+	private Head head;
 	
-	public LengthConverter() {
-		this(null);
+	public static void setConfiguration(Configuration configuration) {
+		HeadCellValue.configuration = configuration;
 	}
 	
-	public LengthConverter(String forwardFormat) {
-		this.forwardFormat = forwardFormat;
+	public HeadCellValue(Head head) {
+		this.head = head;
 	}
 	
-	@Override
-	public String convertForward(Length arg0) {
-		return arg0.toString(forwardFormat);
-	}
-	
-	@Override
-	public Length convertReverse(String arg0) {
-		Length length = Length.parse(arg0, true);
-		if (length == null) {
-			throw new RuntimeException("Unable to parse " + arg0);
+	public HeadCellValue(String value) {
+		Head head = configuration.getMachine().getHead(value);
+		if (head == null) {
+			throw new NullPointerException();
 		}
-		return length;
+		this.head = head;
+	}
+
+	public Head getHead() {
+		return head;
+	}
+
+	public void setHead(Head head) {
+		this.head = head;
+	}
+	
+	@Override
+	public String toString() {
+		return head == null ? "NONE" : head.getId();
 	}
 }

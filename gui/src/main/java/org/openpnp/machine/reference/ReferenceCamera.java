@@ -85,13 +85,19 @@ public abstract class ReferenceCamera implements Camera, RequiresConfigurationRe
 	public Location getUnitsPerPixel() {
 		return unitsPerPixel;
 	}
+	
+	@Override
+	public void setUnitsPerPixel(Location unitsPerPixel) {
+		this.unitsPerPixel = unitsPerPixel;
+	}
 
 	@Override
 	public Head getHead() {
 		return head;
 	}
 	
-	public void setHead(ReferenceHead head) {
+	@Override
+	public void setHead(Head head) {
 		this.head = head;
 	}
 	

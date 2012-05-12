@@ -160,6 +160,20 @@ public class Length {
 		return String.format("%2.3f%s", value, units.getShortName());
 	}
 	
+	/**
+	 * Performs the same function as toString() but allows the caller to specify
+	 * the format String that is used. The format String should contain %f and
+	 * %s in that order for value and units.getShortName().
+	 * @param fmt
+	 * @return
+	 */
+	public String toString(String fmt) {
+		if (fmt == null) {
+			return toString();
+		}
+		return String.format(fmt, value, units.getShortName());
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Length) {

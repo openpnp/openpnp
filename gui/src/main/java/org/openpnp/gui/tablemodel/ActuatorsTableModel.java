@@ -33,7 +33,7 @@ import org.openpnp.spi.Head;
 
 public class ActuatorsTableModel extends AbstractTableModel implements ConfigurationListener {
 	
-	private String[] columnNames = new String[] { "Id", "Class", "Head" };
+	private String[] columnNames = new String[] { "Id", "Head", "Class" };
 	private List<HeadActuator> actuators;
 
 	public ActuatorsTableModel(Configuration configuration) {

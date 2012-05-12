@@ -27,22 +27,22 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.Head;
 
 public class CamerasTableModel extends AbstractTableModel implements ConfigurationListener {
 	final private Configuration configuration;
 	
-	// TODO: add head
-	private String[] columnNames = new String[] { "Name", "Looking", "X", "Y", "Z", "¿" };
+	private String[] columnNames = new String[] { "Name", "Looking", "Head" };
 	private List<Camera> cameras;
 
 	public CamerasTableModel(Configuration configuration) {
 		this.configuration = configuration;
+		HeadCellValue.setConfiguration(configuration);
 		configuration.addListener(this);
 	}
 
@@ -79,8 +79,8 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 2 || columnIndex == 3 || columnIndex == 4) {
-			return LengthCellValue.class;
+		if (columnIndex == 2) {
+			return HeadCellValue.class;
 		}
 		return super.getColumnClass(columnIndex);
 	}
@@ -96,43 +96,8 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 				camera.setLooking((Looking) aValue);
 			}
 			else if (columnIndex == 2) {
-				Length length = ((LengthCellValue) aValue).getLength();
-				Location location = camera.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setX(length.getValue());
-				camera.setLocation(location);
-			}
-			else if (columnIndex == 3) {
-				Length length = ((LengthCellValue) aValue).getLength();
-				Location location = camera.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setY(length.getValue());
-				camera.setLocation(location);
-			}
-			else if (columnIndex == 4) {
-				Length length = ((LengthCellValue) aValue).getLength();
-				Location location = camera.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setZ(length.getValue());
-				camera.setLocation(location);
-			}
-			else if (columnIndex == 5) {
-				camera.getLocation().setRotation(Double.parseDouble(aValue.toString()));
+				Head head = ((HeadCellValue) aValue).getHead();
+				camera.setHead(head);
 			}
 			configuration.setDirty(true);
 		}
@@ -150,13 +115,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 		case 1:
 			return camera.getLooking();
 		case 2:
-			return new LengthCellValue(loc.getX(), loc.getUnits());
-		case 3:
-			return new LengthCellValue(loc.getY(), loc.getUnits());
-		case 4:
-			return new LengthCellValue(loc.getZ(), loc.getUnits());
-		case 5:
-			return String.format("%2.3f", camera.getLocation().getRotation());
+			return new HeadCellValue(camera.getHead());
 			
 		default:
 			return null;

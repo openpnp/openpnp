@@ -285,11 +285,14 @@ public class TableScanner extends JDialog implements Runnable {
 	private Action browseAction = new AbstractAction("Browse") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			JFileChooser fileDialog = new JFileChooser();
+			JFileChooser fileDialog = new JFileChooser(txtOutputDirectory.getText());
 			fileDialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			fileDialog.showSaveDialog(frame);
-			File file = fileDialog.getSelectedFile();
-			txtOutputDirectory.setText(file.getAbsolutePath());
+			if (fileDialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
+				File file = fileDialog.getCurrentDirectory();
+				if (file != null) {
+					txtOutputDirectory.setText(file.getAbsolutePath());
+				}
+			}
 		}
 	};
 	

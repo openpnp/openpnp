@@ -73,12 +73,16 @@ public interface Camera {
 	 */
 	public Location getUnitsPerPixel();
 	
+	public void setUnitsPerPixel(Location unitsPerPixel);
+	
 	/**
 	 * Get the Head the Camera is attached to. If the Camera is stationary this should return
 	 * null.
 	 * @return
 	 */
 	public Head getHead();
+	
+	public void setHead(Head head);
 	
 	/**
 	 * Immediately captures an image from the camera and returns it in it's native format.

@@ -48,7 +48,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
@@ -56,8 +58,9 @@ import org.openpnp.gui.tablemodel.CamerasTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.Head;
 
-public class CamerasPanel extends JPanel implements WizardContainer {
+public class CamerasPanel extends JPanel implements ConfigurationListener, WizardContainer {
 	private final Frame frame;
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
@@ -67,6 +70,8 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	private CamerasTableModel tableModel;
 	private TableRowSorter<CamerasTableModel> tableSorter;
 	private JTextField searchTextField;
+	private JComboBox headsComboBox;
+
 
 	public CamerasPanel(Frame frame, Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.frame = frame;
@@ -112,10 +117,12 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		searchTextField.setColumns(15);
 
 		JComboBox lookingComboBox = new JComboBox(Looking.values());
+		headsComboBox = new JComboBox();
 		
 		table = new JTable(tableModel);
 		tableSorter = new TableRowSorter<CamerasTableModel>(tableModel);
 		table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(lookingComboBox));
+		table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(headsComboBox));
 		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
@@ -144,14 +151,21 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				}
 				int index = table.getSelectedRow();
 				
+				generalConfigPanel.removeAll();
 				cameraSpecificConfigPanel.removeAll();
 				if (index != -1) {
 					index = table.convertRowIndexToModel(index);
 					Camera camera = tableModel.getCamera(index);
-					Wizard wizard = camera.getConfigurationWizard();
-					if (wizard != null) {
-						wizard.setWizardContainer(CamerasPanel.this);
-						JPanel panel = wizard.getWizardPanel();
+					Wizard generalConfigWizard = new CameraConfigurationWizard(camera);
+					if (generalConfigWizard != null) {
+						generalConfigWizard.setWizardContainer(CamerasPanel.this);
+						JPanel panel = generalConfigWizard.getWizardPanel();
+						generalConfigPanel.add(panel);
+					}
+					Wizard cameraSpecificConfigWizard = camera.getConfigurationWizard();
+					if (cameraSpecificConfigWizard != null) {
+						cameraSpecificConfigWizard.setWizardContainer(CamerasPanel.this);
+						JPanel panel = cameraSpecificConfigWizard.getWizardPanel();
 						cameraSpecificConfigPanel.add(panel);
 					}
 				}
@@ -160,6 +174,17 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				repaint();
 			}
 		});
+		
+		configuration.addListener(this);
+	}
+	
+	@Override
+	public void configurationLoaded(Configuration configuration) {
+		headsComboBox.removeAllItems();
+		headsComboBox.addItem(new HeadCellValue((Head) null)); 
+		for (Head head : configuration.getMachine().getHeads()) {
+			headsComboBox.addItem(new HeadCellValue(head));
+		}
 	}
 
 	private void search() {

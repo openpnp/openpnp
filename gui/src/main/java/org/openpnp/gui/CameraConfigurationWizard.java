@@ -19,13 +19,12 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.machine.reference.camera;
+package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +32,10 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -51,25 +48,28 @@ import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JTextField;
 
-class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
-	private final TableScannerCamera camera;
+class CameraConfigurationWizard extends JPanel implements Wizard {
+	private final Camera camera;
 
 	private WizardContainer wizardContainer;
+
+	private JTextField uppX;
+	private JTextField uppY;
 	private JButton btnSave;
 	private JButton btnCancel;
-	private JPanel panelGeneral;
+	private JPanel panelUpp;
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
-	public TableScannerCameraConfigurationWizard(
-			TableScannerCamera camera) {
+	public CameraConfigurationWizard(Camera camera) {
 		this.camera = camera;
 
 		setLayout(new BorderLayout());
@@ -78,15 +78,63 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
 		JScrollPane scrollPane = new JScrollPane(panelFields);
+		
+		panelLocation = new JPanel();
+		panelLocation.setBorder(new TitledBorder(null, "Location / Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panelFields.add(panelLocation);
+		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
+		
+		lblX_1 = new JLabel("X");
+		panelLocation.add(lblX_1, "2, 2");
+		
+		lblY_1 = new JLabel("Y");
+		panelLocation.add(lblY_1, "4, 2");
+		
+		lblZ = new JLabel("Z");
+		panelLocation.add(lblZ, "6, 2");
+		
+		lblRotation = new JLabel("Rotation");
+		panelLocation.add(lblRotation, "8, 2");
+		
+		textFieldLocationX = new JTextField();
+		panelLocation.add(textFieldLocationX, "2, 4");
+		textFieldLocationX.setColumns(6);
+		
+		textFieldLocationY = new JTextField();
+		panelLocation.add(textFieldLocationY, "4, 4");
+		textFieldLocationY.setColumns(6);
+		
+		textFieldLocationZ = new JTextField();
+		panelLocation.add(textFieldLocationZ, "6, 4");
+		textFieldLocationZ.setColumns(6);
+		
+		textFieldLocationC = new JTextField();
+		panelLocation.add(textFieldLocationC, "8, 4");
+		textFieldLocationC.setColumns(6);
 
-		panelGeneral = new JPanel();
-		panelFields.add(panelGeneral);
-		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+		panelUpp = new JPanel();
+		panelFields.add(panelUpp);
+		panelUpp.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Units Per Pixel", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
 				FormFactory.DEFAULT_COLSPEC,},
 			new RowSpec[] {
@@ -94,26 +142,20 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
-		
-		lblCacheDirectory = new JLabel("Cache Directory");
-		panelGeneral.add(lblCacheDirectory, "2, 2, right, default");
-		
-		textFieldCacheDirectory = new JTextField();
-		panelGeneral.add(textFieldCacheDirectory, "4, 2, fill, default");
-		textFieldCacheDirectory.setColumns(10);
-		
-		btnBrowse = new JButton(browseAction);
-		panelGeneral.add(btnBrowse, "6, 2");
-		
-		lblUrl = new JLabel("URL");
-		panelGeneral.add(lblUrl, "2, 4, right, default");
-		
-		textFieldUrl = new JTextField();
-		panelGeneral.add(textFieldUrl, "4, 4, fill, default");
-		textFieldUrl.setColumns(10);
-		
-		btnCheck = new JButton("Check");
-		panelGeneral.add(btnCheck, "6, 4");
+
+		JLabel lblX = new JLabel("X");
+		panelUpp.add(lblX, "2, 2");
+
+		JLabel lblY = new JLabel("Y");
+		panelUpp.add(lblY, "4, 2");
+
+		uppX = new JTextField();
+		panelUpp.add(uppX, "2, 4");
+		uppX.setColumns(12);
+
+		uppY = new JTextField();
+		panelUpp.add(uppY, "4, 4");
+		uppY.setColumns(12);
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -123,7 +165,7 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 
 		btnCancel = new JButton(cancelAction);
 		panelActions.add(btnCancel);
-		
+
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
 
@@ -132,7 +174,7 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
+		LengthConverter lengthConverter = new LengthConverter("%2.3f%s");
 		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
 		BindingListener listener = new AbstractBindingListener() {
 			@Override
@@ -141,12 +183,20 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 				cancelAction.setEnabled(true);
 			}
 		};
+
+		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthX",
+				uppX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthY",
+				uppY, "text", lengthConverter, listener));
 		
-		wrappedBindings.add(JBindings.bind(camera, "cacheDirectoryPath",
-				textFieldCacheDirectory, "text", listener));
-		wrappedBindings.add(JBindings.bind(camera, "sourceUri",
-				textFieldUrl, "text", listener));
-		
+		wrappedBindings.add(JBindings.bind(camera, "location.lengthX",
+				textFieldLocationX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(camera, "location.lengthY",
+				textFieldLocationY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(camera, "location.lengthZ",
+				textFieldLocationZ, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(camera, "location.rotation",
+				textFieldLocationC, "text", doubleConverter, listener));
 	}
 
 	private void loadFromModel() {
@@ -180,28 +230,13 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	private Action browseAction = new AbstractAction("Browse") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			JFileChooser fileDialog = new JFileChooser(textFieldCacheDirectory.getText());
-			fileDialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			if (fileDialog.showSaveDialog(getTopLevelAncestor()) == JFileChooser.APPROVE_OPTION) {
-				File file = fileDialog.getCurrentDirectory();
-				if (file != null) {
-					textFieldCacheDirectory.setText(file.getAbsolutePath());
-				}
-			}
-		}
-	};
 
-	
 	private Action saveAction = new AbstractAction("Apply") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			saveToModel();
 			wizardContainer
-					.wizardCompleted(TableScannerCameraConfigurationWizard.this);
+					.wizardCompleted(CameraConfigurationWizard.this);
 		}
 	};
 
@@ -211,10 +246,13 @@ class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
-	private JLabel lblCacheDirectory;
-	private JTextField textFieldCacheDirectory;
-	private JButton btnBrowse;
-	private JLabel lblUrl;
-	private JTextField textFieldUrl;
-	private JButton btnCheck;
+	private JPanel panelLocation;
+	private JLabel lblX_1;
+	private JLabel lblY_1;
+	private JLabel lblZ;
+	private JLabel lblRotation;
+	private JTextField textFieldLocationX;
+	private JTextField textFieldLocationY;
+	private JTextField textFieldLocationZ;
+	private JTextField textFieldLocationC;
 }
