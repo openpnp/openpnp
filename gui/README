@@ -20,40 +20,15 @@ me know.
 Configuration
 =============
 
-Configuration files are located in the config subdirectory. The following
-files are used:
+Configuration files are created during the first run and are stored in
+$HOME/.openpnp/. 
 
-openpnp.xml		Contains the primary program and machine configuration.
-
-packages.xml	Describes various packages for SMT parts.
-
-parts.xml		Describes parts that the machine can pick and place.
-
-btpd-v4.job.xml	A sample Job file, showing how to configure a Job for
-				processing.
-
+If you run into configuration problems, delete the files in that directory
+and they will be recreated.
 
 Development
 ===========
 
-There is an Eclipse project in this directory that should get you most
-of the way started.
-
-If you do not use Eclipse, the project is pretty straight forward to 
-import into your IDE of choice. Include the jars in lib as dependencies.
-
-You will need JOGL ( http://jogamp.org/jogl/www/ ) on your classpath to
-compile and run the project. If you are using Eclipse, define a User
-Library called JOGL that includes at least:
-	glugen-rt.jar
-	jogl.all.jar
-	nativewindow.all.jar
-	newt.all.jar
-
-JOGL binaries can be found at http://jogamp.org/deployment/webstart/archive/
-
-The main class to start the program is org.openpnp.app.Main.
-
-To run the simulator and see things happen, load btpd-v4.xml from the config 
-directory.
-
+OpenPnP builds with Maven. There is an included pom.xml that should build
+the project and will build a proper Eclipse project using the command
+mvn eclipse:eclipse
