@@ -1,4 +1,4 @@
-javadoc -sourcepath src -subpackages org.openpnp -d doc/javadoc
+javadoc -sourcepath src/main/java -subpackages org.openpnp -d doc/javadoc
 scp -r doc/javadoc/* jason@vonnieda.org:openpnp.org/htdocs/doc/javadoc
 DATE=`date +%F-%H-%M-%S`
 FILENAME="OpenPnP-Snapshot-$DATE.zip"
