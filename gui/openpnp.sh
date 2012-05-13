@@ -16,6 +16,6 @@ case "$platform" in
 		java -d32 -Djava.library.path=lib/native/mac-universal -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 	linux)
-		echo "Not yet supported."
+		java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 esac

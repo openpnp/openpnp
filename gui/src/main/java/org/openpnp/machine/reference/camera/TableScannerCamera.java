@@ -110,6 +110,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		super("TableScannerCamera");
 	}
 	
+	@SuppressWarnings("unused")
 	@Commit
 	private void commit() throws Exception {
 		cacheDirectory = new File(cacheDirectoryPath);
@@ -195,6 +196,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 					
 				}
 			}
+			
 			// And then we rest.
 			try {
 				Thread.sleep(1000 / 24);
