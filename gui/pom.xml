@@ -14,10 +14,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<!-- 
-		mvn install:install-file -DgroupId=com.jgoodies -DartifactId=forms -Dversion=1.3.0 -Dpackaging=jar -Dfile=lib/forms-1.3.0.jar
-		mvn install:install-file -DgroupId=org.lti-civil -DartifactId=lti-civil -Dversion=20070920-1721 -Dpackaging=jar -Dfile=lib/lti-civil.jar 
-	-->
+	<!-- mvn install:install-file -DgroupId=com.jgoodies -DartifactId=forms 
+		-Dversion=1.3.0 -Dpackaging=jar -Dfile=lib/forms-1.3.0.jar mvn install:install-file 
+		-DgroupId=org.lti-civil -DartifactId=lti-civil -Dversion=20070920-1721 -Dpackaging=jar 
+		-Dfile=lib/lti-civil.jar -->
 
 	<dependencies>
 		<dependency>
@@ -119,4 +119,10 @@
 
 		</plugins>
 	</build>
+	<repositories>
+		<repository>
+			<id>openpnp</id>
+			<url>http://openpnp.googlecode.com/git/repo</url>
+		</repository>
+	</repositories>
 </project>
