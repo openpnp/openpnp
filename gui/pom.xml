@@ -4,7 +4,7 @@
 
 	<groupId>org.openpnp</groupId>
 	<artifactId>openpnp-gui</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>0.0.1-alpha-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>openpnp-gui</name>
@@ -13,13 +13,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
-	<!-- 
-		mvn install:install-file -DgroupId=com.jgoodies -DartifactId=forms -Dversion=1.3.0 -Dpackaging=jar -Dfile=lib/forms-1.3.0.jar 
-		mvn install:install-file -DgroupId=org.lti-civil -DartifactId=lti-civil -Dversion=20070920-1721 -Dpackaging=jar -Dfile=lib/lti-civil.jar 
-		mvn install:install-file -DgroupId=org.vonnieda -DartifactId=jvfw -Dversion=0.0.2 -Dpackaging=jar -Dfile=lib/jVFW.jar 
-		mvn install:install-file -DgroupId=org.rxtx -DartifactId=rxtx -Dversion=2.2pre2 -Dpackaging=jar -Dfile=lib/RXTXcomm.jar 
-	-->
 
 	<dependencies>
 		<dependency>
@@ -102,7 +95,7 @@
 						<manifest>
 							<classpathPrefix>lib/</classpathPrefix>
 							<addClasspath>true</addClasspath>
-							<mainClass>org.openpnp.App</mainClass>
+							<mainClass>org.openpnp.app.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
