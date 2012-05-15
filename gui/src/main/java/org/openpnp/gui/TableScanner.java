@@ -49,6 +49,8 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -67,6 +69,8 @@ import com.jgoodies.forms.layout.RowSpec;
  * 
  */
 public class TableScanner extends JDialog implements Runnable {
+	private final static Logger logger = LoggerFactory.getLogger(TableScanner.class);
+	
 	private final Frame frame;
 	private final Configuration configuration;
 	
@@ -220,7 +224,7 @@ public class TableScanner extends JDialog implements Runnable {
 			unitsPerPixel = unitsPerPixel.convertToUnits(machine.getNativeUnits());
 			double imageWidthInUnits = unitsPerPixel.getX() * image.getWidth();
 			double imageHeightInUnits = unitsPerPixel.getY() * image.getHeight();
-			System.out.println(String.format("Images are %d, %d pixels, %2.3f, %2.3f %s", 
+			logger.info(String.format("Images are %d, %d pixels, %2.3f, %2.3f %s", 
 					image.getWidth(),
 					image.getHeight(),
 					imageWidthInUnits,
@@ -229,7 +233,7 @@ public class TableScanner extends JDialog implements Runnable {
 			int widthInImages = (int) (width / (imageWidthInUnits / 2));
 			int heightInImages = (int) (height / (imageHeightInUnits / 2));
 			int totalImages = (widthInImages * heightInImages);
-			System.out.println(String.format("Need to capture %d x %d images for a total of %d", 
+			logger.info(String.format("Need to capture %d x %d images for a total of %d", 
 					widthInImages, 
 					heightInImages, 
 					totalImages));

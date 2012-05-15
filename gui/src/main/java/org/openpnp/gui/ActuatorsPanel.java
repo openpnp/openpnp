@@ -46,8 +46,12 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.ActuatorsTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActuatorsPanel extends JPanel implements WizardContainer {
+	private final static Logger logger = LoggerFactory.getLogger(ActuatorsPanel.class);
+	
 	private final Frame frame;
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
@@ -154,7 +158,7 @@ public class ActuatorsPanel extends JPanel implements WizardContainer {
 					+ searchTextField.getText().trim());
 		}
 		catch (PatternSyntaxException e) {
-			System.out.println(e);
+			logger.warn("Search failed", e);
 			return;
 		}
 		tableSorter.setRowFilter(rf);

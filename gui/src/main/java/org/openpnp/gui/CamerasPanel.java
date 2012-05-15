@@ -60,8 +60,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CamerasPanel extends JPanel implements ConfigurationListener, WizardContainer {
+	private final static Logger logger = LoggerFactory.getLogger(CamerasPanel.class);
+	
 	private final Frame frame;
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
@@ -195,7 +199,7 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 			rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
 		}
 		catch (PatternSyntaxException e) {
-			System.out.println(e);
+			logger.warn("Search failed", e);
 			return;
 		}
 		tableSorter.setRowFilter(rf);

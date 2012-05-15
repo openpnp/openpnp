@@ -32,6 +32,8 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,6 +42,8 @@ import org.simpleframework.xml.Element;
  * arbitrary X and Y count.
  */
 public class ReferenceTrayFeeder extends ReferenceFeeder {
+	private final static Logger logger = LoggerFactory.getLogger(ReferenceTrayFeeder.class);
+	
 	@Attribute
 	private int trayCountX;
 	@Attribute
@@ -68,7 +72,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 		l.setRotation(pickLocation.getRotation());
 		l.setUnits(pickLocation.getUnits());
 
-		System.out.println(String.format(
+		logger.debug(String.format(
 				"Feeding part # %d, x %d, y %d, xPos %f, yPos %f", pickCount,
 				partX, partY, l.getX(), l.getY()));
 

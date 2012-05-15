@@ -46,8 +46,12 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.PersistenceException;
 import org.simpleframework.xml.core.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReferenceHead implements Head, RequiresConfigurationResolution {
+	private final static Logger logger = LoggerFactory.getLogger(ReferenceHead.class);
+	
 	private ReferenceMachine machine;
 	private double x, y, z, c;
 	private double offsetX, offsetY, offsetZ, offsetC;
@@ -103,10 +107,10 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	@Override
 	public void home() throws Exception {
 		// TODO: Perform home switch homing first.
-		System.out.println("Perform home switch homing");
+		logger.debug("Perform home switch homing");
 
 		// Apply the homing location to the current position
-		System.out.println("Apply the homing location to the current position");
+		logger.debug("Apply the homing location to the current position");
 		Location homingLocation = homing.location.convertToUnits(machine
 				.getNativeUnits());
 		setPerceivedX(homingLocation.getX());
@@ -115,10 +119,10 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		setPerceivedC(homingLocation.getRotation());
 
 		if (homing.vision.enabled) {
-			System.out.println("Home With Vision");
+			logger.debug("Home With Vision");
 			homeWithVision();
 			Location homingDotLocation = homing.vision.homingDotLocation;
-			System.out.println("Set homing dot location");
+			logger.debug("Set homing dot location");
 			setPerceivedX(homingDotLocation.getX());
 			setPerceivedY(homingDotLocation.getY());
 			setPerceivedZ(homingDotLocation.getZ());
@@ -130,11 +134,11 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 			double x = getX();
 			double y = getY();
 
-			System.out.println("Attempt " + i);
+			logger.debug("Attempt " + i);
 			Camera camera = attemptHomeWithVision();
 
 			if (x == getX() && y == getY()) {
-				System.out.println("Vision homing complete, move to offsets");
+				logger.debug("Vision homing complete, move to offsets");
 				Location cameraOffsets = camera.getLocation().convertToUnits(
 						machine.getNativeUnits());
 				moveTo(getX() + cameraOffsets.getX(),

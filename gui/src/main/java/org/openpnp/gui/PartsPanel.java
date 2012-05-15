@@ -51,8 +51,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.FeederLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PartsPanel extends JPanel {
+	private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
+	
 	final private Configuration configuration;
 	final private MachineControlsPanel machineControlsPanel;
 	final private Frame frame;
@@ -183,7 +187,7 @@ public class PartsPanel extends JPanel {
 					+ searchTextField.getText().trim());
 		}
 		catch (PatternSyntaxException e) {
-			System.out.println(e);
+			logger.warn("Search failed", e);
 			return;
 		}
 		partsTableSorter.setRowFilter(rf);
