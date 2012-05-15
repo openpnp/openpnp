@@ -33,10 +33,6 @@ public abstract class ReferenceFeeder implements Feeder {
 	@Attribute(required=false)
 	protected boolean enabled;
 	
-	public void setReferenceMachine(ReferenceMachine machine) {
-		
-	}
-	
 	@Override
 	public boolean isEnabled() {
 		return enabled;

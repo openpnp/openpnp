@@ -91,16 +91,12 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		configuration.resolve(driver);
 		for (ReferenceHead head : heads.values()) {
 			configuration.resolve(head);
-			// TODO: Remove, use the above only.
-			head.setReferenceMachine(this);
 		}
 		for (ReferenceCamera camera : cameras) {
 			configuration.resolve(camera);
 		}
 		for (ReferenceFeeder feeder : feeders.values()) {
 			configuration.resolve(feeder);
-			// TODO: Remove, use the above only.
-			feeder.setReferenceMachine(this);
 		}
 	}
 

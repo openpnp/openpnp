@@ -21,7 +21,9 @@
 
 package org.openpnp.machine.reference;
 
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.simpleframework.xml.Attribute;
@@ -31,7 +33,7 @@ import org.simpleframework.xml.Element;
  * A simple binary Actuator that sends an indexed actuate command to the
  * driver and has a Location which provides offsets from the Head or Machine. 
  */
-public class ReferenceActuator implements Actuator {
+public class ReferenceActuator implements Actuator, RequiresConfigurationResolution {
 	@Attribute
 	private String id;
 	@Attribute
@@ -46,6 +48,15 @@ public class ReferenceActuator implements Actuator {
 	
 	private ReferenceMachine machine;
 	private ReferenceHead head;
+	
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		this.machine = (ReferenceMachine) configuration.getMachine();
+	}
+	
+	public void setReferenceHead(ReferenceHead head) {
+		this.head = head;
+	}
 
 	public String getId() {
 		return id;
@@ -74,21 +85,13 @@ public class ReferenceActuator implements Actuator {
 	@Override
 	public void actuate(boolean on) throws Exception {
 		if (head != null) {
-			head.getMachine().getDriver().actuate(head, index, on);
+			machine.getDriver().actuate(head, index, on);
 		}
 		else {
 			machine.getDriver().actuate(head, index, on);
 		}
 		// TODO Build out fireMachineActuatorActivity
 //		machine.fireMachineHeadActivity(machine, this);
-	}
-	
-	public void setReferenceHead(ReferenceHead head) {
-		this.head = head;
-	}
-	
-	public void setReferenceMachine(ReferenceMachine machine) {
-		this.machine = machine;
 	}
 	
 	@Override

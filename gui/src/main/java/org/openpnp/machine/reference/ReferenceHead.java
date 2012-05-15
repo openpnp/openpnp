@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -45,7 +47,7 @@ import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.PersistenceException;
 import org.simpleframework.xml.core.Validate;
 
-public class ReferenceHead implements Head {
+public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	private ReferenceMachine machine;
 	private double x, y, z, c;
 	private double offsetX, offsetY, offsetZ, offsetC;
@@ -80,6 +82,15 @@ public class ReferenceHead implements Head {
 		actuatorsList.clear();
 		actuatorsList.addAll(actuators.values());
 	}
+	
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		this.machine = (ReferenceMachine) configuration.getMachine();
+		for (ReferenceActuator actuator : actuators.values()) {
+			configuration.resolve(actuator);
+			actuator.setReferenceHead(this);
+		}
+	}
 
 	public void setId(String id) {
 		this.id = id;
@@ -87,17 +98,6 @@ public class ReferenceHead implements Head {
 
 	public String getId() {
 		return id;
-	}
-
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
-		this.machine = machine;
-		for (ReferenceActuator actuator : actuators.values()) {
-			actuator.setReferenceHead(this);
-		}
-	}
-
-	public ReferenceMachine getMachine() {
-		return machine;
 	}
 
 	@Override
