@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.gui;
+package org.openpnp.gui.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -48,7 +48,6 @@ import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
-import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -56,7 +55,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-class CameraConfigurationWizard extends JPanel implements Wizard {
+public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private final Camera camera;
 
 	private WizardContainer wizardContainer;
