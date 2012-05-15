@@ -152,7 +152,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		@Attribute(required=false)
 		private double tapeFeedHoleDiameter;
 		@Attribute(required=false)
-		private LengthUnit tapeFeedHoleDiameterUnits;
+		private LengthUnit tapeFeedHoleDiameterUnits = LengthUnit.Millimeters;
 		
 		@SuppressWarnings("unused")
 		@Validate
