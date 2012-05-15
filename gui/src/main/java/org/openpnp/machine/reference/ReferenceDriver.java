@@ -79,6 +79,4 @@ public interface ReferenceDriver {
 	 * @throws Exception
 	 */
 	public void setEnabled(boolean enabled) throws Exception;
-	
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception;
 }

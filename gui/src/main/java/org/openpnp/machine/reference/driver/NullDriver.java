@@ -62,8 +62,4 @@ public class NullDriver implements ReferenceDriver {
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
 	}
-
-	@Override
-	public void setReferenceMachine(ReferenceMachine machine) throws Exception {
-	}
 }

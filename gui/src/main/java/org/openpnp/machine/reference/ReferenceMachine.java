@@ -89,8 +89,6 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		configuration.resolve(driver);
-		// TODO: Remove, use the above only.
-		driver.setReferenceMachine(this);
 		for (ReferenceHead head : heads.values()) {
 			configuration.resolve(head);
 			// TODO: Remove, use the above only.
