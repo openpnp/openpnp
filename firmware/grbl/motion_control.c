@@ -28,12 +28,12 @@
 #include "stepper.h"
 #include "planner.h"
 #include "wiring_serial.h"
-
+#include "delay.h"
 
 void mc_dwell(uint32_t milliseconds) 
 {
   st_synchronize();
-  _delay_ms(milliseconds);
+  delay_ms(milliseconds);
 }
 
 void mc_go_home()
