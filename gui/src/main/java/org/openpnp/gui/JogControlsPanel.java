@@ -277,9 +277,6 @@ public class JogControlsPanel extends JPanel {
 		JButton btnNewButton = new JButton(machineControlsPanel.homeAction);
 		btnNewButton.setFocusable(false);
 		panelSpecial.add(btnNewButton);
-
-		// setFocusTraversalPolicy(focusPolicy);
-		// setFocusTraversalPolicyProvider(true);
 	}
 
 	@SuppressWarnings("serial")
@@ -369,40 +366,6 @@ public class JogControlsPanel extends JPanel {
 			});
 		}
 	};
-
-	// private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
-	// @Override
-	// public Component getComponentAfter(Container aContainer,
-	// Component aComponent) {
-	// return sliderIncrements;
-	// }
-	//
-	// @Override
-	// public Component getComponentBefore(Container aContainer,
-	// Component aComponent) {
-	// return sliderIncrements;
-	// }
-	//
-	// @Override
-	// public Component getDefaultComponent(Container aContainer) {
-	// return sliderIncrements;
-	// }
-	//
-	// @Override
-	// public Component getFirstComponent(Container aContainer) {
-	// return sliderIncrements;
-	// }
-	//
-	// @Override
-	// public Component getInitialComponent(Window window) {
-	// return sliderIncrements;
-	// }
-	//
-	// @Override
-	// public Component getLastComponent(Container aContainer) {
-	// return sliderIncrements;
-	// }
-	// };
 
 	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
