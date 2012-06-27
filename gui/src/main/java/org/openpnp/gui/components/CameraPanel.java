@@ -45,6 +45,8 @@ import org.openpnp.spi.Camera;
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
 	private static int maximumFps = 15;
+	private static final String SHOW_NONE_ITEM = "Show None";
+	private static final String SHOW_ALL_ITEM = "Show All";
 
 	private Set<Camera> cameras = new LinkedHashSet<Camera>();
 
@@ -54,7 +56,7 @@ public class CameraPanel extends JPanel {
 	public CameraPanel() {
 		createUi();
 
-		camerasCombo.setSelectedIndex(1);
+		camerasCombo.setSelectedItem(SHOW_ALL_ITEM);
 	}
 
 	public void addCamera(Camera camera) {
@@ -68,8 +70,8 @@ public class CameraPanel extends JPanel {
 
 		camerasCombo = new JComboBox();
 		camerasCombo.addActionListener(new CameraSelectedAction());
-		camerasCombo.addItem("Show None");
-		camerasCombo.addItem("Show All");
+		camerasCombo.addItem(SHOW_NONE_ITEM);
+		camerasCombo.addItem(SHOW_ALL_ITEM);
 
 		setLayout(new BorderLayout());
 
@@ -80,14 +82,14 @@ public class CameraPanel extends JPanel {
 	class CameraSelectedAction extends AbstractAction {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			if (camerasCombo.getSelectedItem().equals("Show None")) {
+			if (camerasCombo.getSelectedItem().equals(SHOW_NONE_ITEM)) {
 				clearCameras();
 				camerasPanel.setLayout(new BorderLayout());
 				JPanel panel = new JPanel();
 				panel.setBackground(Color.black);
 				camerasPanel.add(panel);
 			}
-			else if (camerasCombo.getSelectedItem().equals("Show All")) {
+			else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM)) {
 				clearCameras();
 				int columns = (int) Math.ceil(Math.sqrt(cameras.size()));
 				if (columns == 0) {
