@@ -37,12 +37,18 @@ public abstract class ReferenceFeeder implements Feeder {
 	public boolean isEnabled() {
 		return enabled;
 	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
 	@Override
 	public String getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(String id) {
 		this.id = id;
 	}

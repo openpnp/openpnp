@@ -48,7 +48,11 @@ public interface Feeder {
 	 */
 	public String getId();
 	
+	public void setId(String id);
+	
 	public boolean isEnabled();
+
+	public void setEnabled(boolean enabled);
 	
 	/**
 	 * Returns true if the Feeder is ready and willing to source the Part for
