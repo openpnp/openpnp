@@ -27,7 +27,12 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.PackageCellValue;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.Package;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 
 public class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {
@@ -65,6 +70,31 @@ public class FeedersTableModel extends AbstractTableModel implements Configurati
 	
 	public Feeder getFeeder(int index) {
 		return feeders.get(index);
+	}
+	
+	@Override
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return columnIndex == 0 || columnIndex == 2;
+	}
+	
+	@Override
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		try {
+			Feeder feeder = feeders.get(rowIndex);
+			if (columnIndex == 0) {
+				if (aValue == null || aValue.toString().trim().length() == 0) {
+					return;
+				}
+				feeder.setId(aValue.toString());
+			}
+			else if (columnIndex == 2) {
+				feeder.setEnabled((Boolean) aValue);
+			}
+			configuration.setDirty(true);
+		}
+		catch (Exception e) {
+			// TODO: dialog, bad input
+		}
 	}
 	
 	@Override
