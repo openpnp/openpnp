@@ -45,11 +45,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.tablemodel.FeederLocationsTableModel;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FeederLocation;
-import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,11 +59,9 @@ public class PartsPanel extends JPanel {
 	final private Frame frame;
 	
 	private PartsTableModel partsTableModel;
-	private FeederLocationsTableModel feederLocationsTableModel;
 	private TableRowSorter<PartsTableModel> partsTableSorter;
 	private JTextField searchTextField;
 	private JTable partsTable;
-	private JTable feederLocationsTable;
 
 	public PartsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel, Frame frame) {
 		this.configuration = configuration;
@@ -76,7 +71,6 @@ public class PartsPanel extends JPanel {
 		setLayout(new BorderLayout(0, 0));
 		partsTableModel = new PartsTableModel(configuration);
 		partsTableSorter = new TableRowSorter<PartsTableModel>(partsTableModel);
-		feederLocationsTableModel = new FeederLocationsTableModel(configuration);
 
 		JPanel panel_5 = new JPanel();
 		add(panel_5, BorderLayout.NORTH);
@@ -105,16 +99,13 @@ public class PartsPanel extends JPanel {
 		partsTable = new JTable(partsTableModel);
 		partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		feederLocationsTable = new JTable(feederLocationsTableModel);
-		feederLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
 		add(splitPane, BorderLayout.CENTER);
 
 		splitPane.setLeftComponent(new JScrollPane(partsTable));
 
-		splitPane.setRightComponent(new JScrollPane(feederLocationsTable));
+		splitPane.setRightComponent(new JScrollPane());
 		
 		partsTable.setRowSorter(partsTableSorter);
 		
@@ -127,38 +118,14 @@ public class PartsPanel extends JPanel {
 				Part part = getSelectedPart();
 				
 				deletePartAction.setEnabled(part != null);
-				newFeederLocationAction.setEnabled(part != null);
-				
-				feederLocationsTableModel.setPart(part);
-			}
-		});
-		
-		feederLocationsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				FeederLocation feederLocation = getSelectedFeederLocation();
-				
-				deleteFeederLocationAction.setEnabled(feederLocation != null);
-				setFeederLocationLocationAction.setEnabled(feederLocation != null);				
 			}
 		});
 		
 		
 		deletePartAction.setEnabled(false);
-		newFeederLocationAction.setEnabled(false);
-		deleteFeederLocationAction.setEnabled(false);
-		setFeederLocationLocationAction.setEnabled(false);
 		
 		toolBar.add(newPartAction);
 		toolBar.add(deletePartAction);
-		toolBar.addSeparator();
-		toolBar.add(newFeederLocationAction);
-		toolBar.add(deleteFeederLocationAction);
-		toolBar.addSeparator();
-		toolBar.add(setFeederLocationLocationAction);
 	}
 	
 	private Part getSelectedPart() {
@@ -168,15 +135,6 @@ public class PartsPanel extends JPanel {
 		}
 		index = partsTable.convertRowIndexToModel(index);
 		return partsTableModel.getPart(index);
-	}
-	
-	private FeederLocation getSelectedFeederLocation() {
-		int index = feederLocationsTable.getSelectedRow();
-		if (index == -1) {
-			return null;
-		}
-		index = feederLocationsTable.convertRowIndexToModel(index);
-		return feederLocationsTableModel.getFeederLocation(index);
 	}
 	
 	private void search() {
@@ -217,39 +175,39 @@ public class PartsPanel extends JPanel {
 		}
 	};
 	
-	public Action newFeederLocationAction = new AbstractAction("New Feeder Location") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			FeederLocation feederLocation = new FeederLocation();
-			getSelectedPart().addFeederLocation(feederLocation);
-			feederLocationsTableModel.fireTableDataChanged();
-			configuration.setDirty(true);
-		}
-	};
-	
-	public Action deleteFeederLocationAction = new AbstractAction("Delete Feeder Location") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			FeederLocation feederLocation = getSelectedFeederLocation();
-			getSelectedPart().removeFeederLocation(feederLocation);
-			feederLocationsTableModel.fireTableDataChanged();
-			configuration.setDirty(true);
-		}
-	};
-	
-	public Action setFeederLocationLocationAction = new AbstractAction("Set Feeder Location") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			Location location = machineControlsPanel.getDisplayedLocation();
-			
-			int index = feederLocationsTable.getSelectedRow();
-			index = feederLocationsTable.convertRowIndexToModel(index);
-			FeederLocation feederLocation = feederLocationsTableModel.getFeederLocation(index);
-
-			feederLocation.setLocation(location);
-			
-			feederLocationsTableModel.fireTableRowsUpdated(index, index);
-			configuration.setDirty(true);
-		}
-	};
+//	public Action newFeederLocationAction = new AbstractAction("New Feeder Location") {
+//		@Override
+//		public void actionPerformed(ActionEvent arg0) {
+//			FeederLocation feederLocation = new FeederLocation();
+//			getSelectedPart().addFeederLocation(feederLocation);
+//			feederLocationsTableModel.fireTableDataChanged();
+//			configuration.setDirty(true);
+//		}
+//	};
+//	
+//	public Action deleteFeederLocationAction = new AbstractAction("Delete Feeder Location") {
+//		@Override
+//		public void actionPerformed(ActionEvent arg0) {
+//			FeederLocation feederLocation = getSelectedFeederLocation();
+//			getSelectedPart().removeFeederLocation(feederLocation);
+//			feederLocationsTableModel.fireTableDataChanged();
+//			configuration.setDirty(true);
+//		}
+//	};
+//	
+//	public Action setFeederLocationLocationAction = new AbstractAction("Set Feeder Location") {
+//		@Override
+//		public void actionPerformed(ActionEvent arg0) {
+//			Location location = machineControlsPanel.getDisplayedLocation();
+//			
+//			int index = feederLocationsTable.getSelectedRow();
+//			index = feederLocationsTable.convertRowIndexToModel(index);
+//			FeederLocation feederLocation = feederLocationsTableModel.getFeederLocation(index);
+//
+//			feederLocation.setLocation(location);
+//			
+//			feederLocationsTableModel.fireTableRowsUpdated(index, index);
+//			configuration.setDirty(true);
+//		}
+//	};
 }

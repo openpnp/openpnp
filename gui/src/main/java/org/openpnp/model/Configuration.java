@@ -94,23 +94,6 @@ public class Configuration extends AbstractModelObject {
 		boolean forceSave = false;
 		
 		try {
-			File file = new File(configurationDirectory, "machine.xml");
-			if (!file.exists()) {
-				logger.info("No machine.xml found in configuration directory, loading defaults.");
-				file = File.createTempFile("machine", "xml");
-				FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/machine.xml"), file);
-				forceSave = true;
-			}
-			loadMachine(file);
-		}
-		catch (Exception e) {
-			String message = e.getMessage();
-			if (e.getCause() != null && e.getCause().getMessage() != null) {
-				message = e.getCause().getMessage();
-			}
-			throw new Exception("Error while reading machine.xml (" + message + ")", e);
-		}
-		try {
 			File file = new File(configurationDirectory, "packages.xml");
 			if (!file.exists()) {
 				logger.info("No packages.xml found in configuration directory, loading defaults.");
@@ -127,6 +110,8 @@ public class Configuration extends AbstractModelObject {
 			}
 			throw new Exception("Error while reading packages.xml (" + message + ")", e);
 		}
+		
+		
 		try {
 			File file = new File(configurationDirectory, "parts.xml");
 			if (!file.exists()) {
@@ -144,6 +129,27 @@ public class Configuration extends AbstractModelObject {
 			}
 			throw new Exception("Error while reading parts.xml (" + message + ")", e);
 		}
+		
+		
+		try {
+			File file = new File(configurationDirectory, "machine.xml");
+			if (!file.exists()) {
+				logger.info("No machine.xml found in configuration directory, loading defaults.");
+				file = File.createTempFile("machine", "xml");
+				FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/machine.xml"), file);
+				forceSave = true;
+			}
+			loadMachine(file);
+		}
+		catch (Exception e) {
+			String message = e.getMessage();
+			if (e.getCause() != null && e.getCause().getMessage() != null) {
+				message = e.getCause().getMessage();
+			}
+			throw new Exception("Error while reading machine.xml (" + message + ")", e);
+		}
+		
+		
 		if (forceSave) {
 			logger.info("Defaults were loaded. Saving to configuration directory.");
 			configurationDirectory.mkdirs();
@@ -233,9 +239,7 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
 		machine = holder.machine;
-		if (machine instanceof RequiresConfigurationResolution) {
-			((RequiresConfigurationResolution) machine).resolve(this);
-		}
+		resolve(machine);
 	}
 	
 	private void saveMachine(File file) throws Exception {

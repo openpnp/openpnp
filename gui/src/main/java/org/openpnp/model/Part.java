@@ -21,13 +21,8 @@
 
 package org.openpnp.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.openpnp.RequiresConfigurationResolution;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -44,8 +39,7 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	private LengthUnit heightUnits;
 	@Attribute
 	private double height;
-	@ElementList
-	private ArrayList<FeederLocation> feederLocations = new ArrayList<FeederLocation>();
+	
 	private Package packag;
 	
 	@Attribute
@@ -54,9 +48,6 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		setPackage(configuration.getPackage(packageId));
-		for (FeederLocation feederLocation : feederLocations) {
-			feederLocation.resolve(configuration);
-		}
 	}
 	
 	@SuppressWarnings("unused")
@@ -102,24 +93,6 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 		firePropertyChange("height", oldValue, getHeight());
 	}
 	
-	public List<FeederLocation> getFeederLocations() {
-		return Collections.unmodifiableList(feederLocations);
-	}
-	
-	public void addFeederLocation(FeederLocation feederLocation) {
-		Object oldValue = feederLocations;
-		feederLocations = new ArrayList<FeederLocation>(feederLocations);
-		feederLocations.add(feederLocation);
-		firePropertyChange("feederLocations", oldValue, feederLocations);
-	}
-	
-	public void removeFeederLocation(FeederLocation feederLocation) {
-		Object oldValue = feederLocations;
-		feederLocations = new ArrayList<FeederLocation>(feederLocations);
-		feederLocations.remove(feederLocation);
-		firePropertyChange("feederLocations", oldValue, feederLocations);
-	}
-	
 	public Package getPackage() {
 		return packag;
 	}
@@ -132,6 +105,6 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 
 	@Override
 	public String toString() {
-		return String.format("id %s, name %s, heightUnits %s, height %f, packageId (%s), feederLocations %s", id, name, heightUnits, height, packageId, feederLocations);
+		return String.format("id %s, name %s, heightUnits %s, height %f, packageId (%s)", id, name, heightUnits, height, packageId);
 	}
 }

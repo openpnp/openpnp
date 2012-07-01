@@ -28,7 +28,6 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -37,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Implemention of Feeder that indexes based on an offset. This allows a tray of
+ * Implementation of Feeder that indexes based on an offset. This allows a tray of
  * parts to be picked from without moving any tape. Can handle trays of
  * arbitrary X and Y count.
  */
@@ -54,11 +53,11 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	private int pickCount;
 
 	@Override
-	public boolean canFeedForHead(Part part, Head head) {
+	public boolean canFeedForHead(Head head) {
 		return (pickCount < (trayCountX * trayCountY));
 	}
 
-	public Location feed(Head head_, Part part, Location pickLocation)
+	public Location feed(Head head_, Location pickLocation)
 			throws Exception {
 		ReferenceHead head = (ReferenceHead) head_;
 

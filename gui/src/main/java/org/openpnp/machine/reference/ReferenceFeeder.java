@@ -21,18 +21,70 @@
 
 package org.openpnp.machine.reference;
 
+import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Persist;
 
 /**
  * A common base class for Feeders that the ReferenceMachine supports.
  */
-public abstract class ReferenceFeeder implements Feeder {
+public abstract class ReferenceFeeder implements Feeder, RequiresConfigurationResolution {
 	@Attribute
 	protected String id;
 	@Attribute(required=false)
 	protected boolean enabled;
+	@Element(required=false)
+	protected Location location = new Location(LengthUnit.Millimeters);
+	@Attribute(required=false)
+	protected String partId;
 	
+	protected Part part;
+
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		setPart(configuration.getPart(partId));
+	}
+	
+	@SuppressWarnings("unused")
+	@Persist
+	private void persist() {
+		partId = (part == null ? null : part.getId());
+	}
+	
+	@Override
+	public Location getLocation() {
+		return location;
+	}
+
+	@Override
+	public void setLocation(Location location) {
+		this.location = location;
+	}
+
+	public String getPartId() {
+		return partId;
+	}
+
+	public void setPartId(String partId) {
+		this.partId = partId;
+	}
+
+	@Override
+	public Part getPart() {
+		return part;
+	}
+
+	@Override
+	public void setPart(Part part) {
+		this.part = part;
+	}
+
 	@Override
 	public boolean isEnabled() {
 		return enabled;

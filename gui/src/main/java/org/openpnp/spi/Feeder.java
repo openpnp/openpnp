@@ -54,12 +54,20 @@ public interface Feeder {
 
 	public void setEnabled(boolean enabled);
 	
+	public Location getLocation();
+	
+	public void setLocation(Location location);
+	
+	public Part getPart();
+	
+	public void setPart(Part part);
+	
 	/**
 	 * Returns true if the Feeder is ready and willing to source the Part for
 	 * the given Head.
 	 * @return
 	 */
-	public boolean canFeedForHead(Part part, Head head); 
+	public boolean canFeedForHead(Head head); 
 	
 	
 	/**
@@ -72,7 +80,7 @@ public interface Feeder {
 	 * @return
 	 * @throws Exception
 	 */
-	public Location feed(Head head, Part part, Location pickLocation) throws Exception;
+	public Location feed(Head head, Location pickLocation) throws Exception;
 	
 	public Wizard getConfigurationWizard();
 }

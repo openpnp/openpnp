@@ -27,12 +27,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.gui.support.PackageCellValue;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.Package;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 
 public class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {

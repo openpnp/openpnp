@@ -29,13 +29,13 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -51,6 +51,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.gui.wizards.FeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 import org.slf4j.Logger;
@@ -67,7 +68,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private FeedersTableModel tableModel;
 	private TableRowSorter<FeedersTableModel> tableSorter;
 	private JTextField searchTextField;
-	private JPanel configurationPanel;
+	private JPanel generalConfigPanel;
+	private JPanel feederSpecificConfigPanel;
 	
 	private ActionGroup feederSelectedActionGroup; 
 
@@ -118,12 +120,19 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		splitPane.setDividerLocation(0.3);
 		add(splitPane, BorderLayout.CENTER);
 		
-		configurationPanel = new JPanel();
-		configurationPanel.setBorder(BorderFactory.createTitledBorder("Configuration"));
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		
+		generalConfigPanel = new JPanel();
+		tabbedPane.addTab("General Configuration", null, generalConfigPanel, null);
+		generalConfigPanel.setLayout(new BorderLayout(0, 0));
+		
+		feederSpecificConfigPanel = new JPanel();
+		tabbedPane.addTab("Feeder Specific", null, feederSpecificConfigPanel, null);
+		feederSpecificConfigPanel.setLayout(new BorderLayout(0, 0));
+		
 		
 		splitPane.setLeftComponent(new JScrollPane(table));
-		splitPane.setRightComponent(configurationPanel);
-		configurationPanel.setLayout(new BorderLayout(0, 0));
+		splitPane.setRightComponent(tabbedPane);
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
@@ -140,13 +149,20 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				
 				feederSelectedActionGroup.setEnabled(feeder != null);
 				
-				configurationPanel.removeAll();
+				generalConfigPanel.removeAll();
+				feederSpecificConfigPanel.removeAll();
 				if (feeder != null) {
+					Wizard generalConfigWizard = new FeederConfigurationWizard(feeder, FeedersPanel.this.configuration);
+					if (generalConfigWizard != null) {
+						generalConfigWizard.setWizardContainer(FeedersPanel.this);
+						JPanel panel = generalConfigWizard.getWizardPanel();
+						generalConfigPanel.add(panel);
+					}
 					Wizard wizard = feeder.getConfigurationWizard();
 					if (wizard != null) {
 						wizard.setWizardContainer(FeedersPanel.this);
 						JPanel panel = wizard.getWizardPanel();
-						configurationPanel.add(panel);
+						feederSpecificConfigPanel.add(panel);
 					}
 				}
 				revalidate();

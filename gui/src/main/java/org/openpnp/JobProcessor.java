@@ -29,7 +29,6 @@ import java.util.Set;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FeederLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -172,7 +171,6 @@ public class JobProcessor implements Runnable {
 	}
 	
 	// TODO: shouldn't all the job errors return instead of continuing?
-	// TODO: remember to add support for Feeder.isEnabled()
 	public void run() {
 		state = JobState.Running;
 		fireJobStateChanged();
@@ -191,7 +189,7 @@ public class JobProcessor implements Runnable {
 		catch (Exception e) {
 			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
 		}
-
+		
 		/*
 		 * Vision: After the Head.pick() operation is when we might do some
 		 * vision work. We can use bottom vision, or maybe even top, to
@@ -214,20 +212,15 @@ public class JobProcessor implements Runnable {
 				Part part = placement.getPart();
 
 				// Get a list of Feeders that can source the part
-				List<FeederLocation> candidateFeederLocations = part
-						.getFeederLocations();
-				if (candidateFeederLocations.size() == 0) {
-					fireJobEncounteredError(JobError.FeederError, "No candidate Feeders found for Part " + part.getId());
-				}
-				List<FeederLocation> feederLocations = new ArrayList<FeederLocation>();
-				for (FeederLocation feederLocation : candidateFeederLocations) {
+				List<Feeder> feeders = new ArrayList<Feeder>();
+				for (Feeder feeder : machine.getFeeders()) {
 					// TODO: currently passing null till we determine if we'll pass head or change this system
-					Feeder feeder = feederLocation.getFeeder();
-					if (feeder.canFeedForHead(part, null)) {
-						feederLocations.add(feederLocation);
+					if (feeder.getPart() == part && feeder.canFeedForHead(null) && feeder.isEnabled()) {
+						feeders.add(feeder);
 					}
 				}
-				if (feederLocations.size() < 1) {
+				
+				if (feeders.size() < 1) {
 					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
 				}
 
@@ -238,12 +231,10 @@ public class JobProcessor implements Runnable {
 				// optimized to handle
 				// distance, capacity, etc.
 				// For now we just take the first Feeder that can feed the part.
-				FeederLocation feederLocation = feederLocations.get(0);
-
-				Feeder feeder = feederLocation.getFeeder();
+				Feeder feeder = feeders.get(0);
 
 				// Get the Location of the pick point from the feeder
-				Location pickLocation = feederLocation.getLocation();
+				Location pickLocation = feeder.getLocation();
 
 				// Convert the Location to the machine's native units if
 				// necessary
@@ -338,7 +329,7 @@ public class JobProcessor implements Runnable {
 
 				// Request that the Feeder feeds the part
 				try {
-					pickLocation = feeder.feed(head, part, pickLocation);
+					pickLocation = feeder.feed(head, pickLocation);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.FeederError, e.getMessage());
