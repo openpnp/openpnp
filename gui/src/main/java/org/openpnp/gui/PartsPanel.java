@@ -99,14 +99,8 @@ public class PartsPanel extends JPanel {
 		partsTable = new JTable(partsTableModel);
 		partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		JSplitPane splitPane = new JSplitPane();
-		splitPane.setContinuousLayout(true);
-		add(splitPane, BorderLayout.CENTER);
+		add(new JScrollPane(partsTable), BorderLayout.CENTER);
 
-		splitPane.setLeftComponent(new JScrollPane(partsTable));
-
-		splitPane.setRightComponent(new JScrollPane());
-		
 		partsTable.setRowSorter(partsTableSorter);
 		
 		partsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -174,40 +168,4 @@ public class PartsPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 		}
 	};
-	
-//	public Action newFeederLocationAction = new AbstractAction("New Feeder Location") {
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			FeederLocation feederLocation = new FeederLocation();
-//			getSelectedPart().addFeederLocation(feederLocation);
-//			feederLocationsTableModel.fireTableDataChanged();
-//			configuration.setDirty(true);
-//		}
-//	};
-//	
-//	public Action deleteFeederLocationAction = new AbstractAction("Delete Feeder Location") {
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			FeederLocation feederLocation = getSelectedFeederLocation();
-//			getSelectedPart().removeFeederLocation(feederLocation);
-//			feederLocationsTableModel.fireTableDataChanged();
-//			configuration.setDirty(true);
-//		}
-//	};
-//	
-//	public Action setFeederLocationLocationAction = new AbstractAction("Set Feeder Location") {
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			Location location = machineControlsPanel.getDisplayedLocation();
-//			
-//			int index = feederLocationsTable.getSelectedRow();
-//			index = feederLocationsTable.convertRowIndexToModel(index);
-//			FeederLocation feederLocation = feederLocationsTableModel.getFeederLocation(index);
-//
-//			feederLocation.setLocation(location);
-//			
-//			feederLocationsTableModel.fireTableRowsUpdated(index, index);
-//			configuration.setDirty(true);
-//		}
-//	};
 }

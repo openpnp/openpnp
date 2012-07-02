@@ -148,22 +148,25 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	public static class Vision {
 		@Attribute(required=false)
 		private boolean enabled;
-		@Attribute(required=false)
-		private double tapeFeedHoleDiameter;
-		@Attribute(required=false)
-		private LengthUnit tapeFeedHoleDiameterUnits = LengthUnit.Millimeters;
+		@Element(required=false)
+		private String snapImagePath;
 		
 		@SuppressWarnings("unused")
 		@Validate
 		private void validate() throws Exception {
 			if (enabled) {
-				if (tapeFeedHoleDiameter == 0) {
-					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter is required if vision is enabled.");
-				}
-				if (tapeFeedHoleDiameterUnits == null) {
-					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter-units is required if vision is enabled.");
-				}
+//				if (tapeFeedHoleDiameter == 0) {
+//					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter is required if vision is enabled.");
+//				}
 			}
+		}
+		
+		public String getSnapImagePath() {
+			return snapImagePath;
+		}
+
+		public void setSnapImagePath(String snapImagePath) {
+			this.snapImagePath = snapImagePath;
 		}
 
 		public boolean isEnabled() {
@@ -172,21 +175,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
-		}
-		
-		public Length getTapeFeedHoleDiameter() {
-			return new Length(tapeFeedHoleDiameter, tapeFeedHoleDiameterUnits);
-		}
-
-		public void setTapeFeedHoleDiameter(Length tapeFeedHoleDiameter) {
-			if (tapeFeedHoleDiameter == null) {
-				this.tapeFeedHoleDiameter = 0;
-				this.tapeFeedHoleDiameterUnits = null;
-			}
-			else {
-				this.tapeFeedHoleDiameter = tapeFeedHoleDiameter.getValue();
-				this.tapeFeedHoleDiameterUnits = tapeFeedHoleDiameter.getUnits();
-			}
 		}
 	}
 }

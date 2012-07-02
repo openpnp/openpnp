@@ -54,6 +54,14 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Dimension;
+import javax.swing.JSeparator;
+import java.awt.Component;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
+import java.awt.Color;
+import javax.swing.border.BevelBorder;
 
 class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private final ReferenceTapeFeeder feeder;
@@ -151,15 +159,15 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 								
 										feedStartX = new JTextField();
 										panelLocations.add(feedStartX, "4, 6");
-										feedStartX.setColumns(5);
+										feedStartX.setColumns(10);
 										
 												feedStartY = new JTextField();
 												panelLocations.add(feedStartY, "6, 6");
-												feedStartY.setColumns(5);
+												feedStartY.setColumns(10);
 												
 														feedStartZ = new JTextField();
 														panelLocations.add(feedStartZ, "8, 6");
-														feedStartZ.setColumns(5);
+														feedStartZ.setColumns(10);
 														
 																feedStartAutoFill = new JButton("Set to Current");
 																panelLocations.add(feedStartAutoFill, "10, 6");
@@ -169,15 +177,15 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 																		
 																				feedEndX = new JTextField();
 																				panelLocations.add(feedEndX, "4, 8");
-																				feedEndX.setColumns(5);
+																				feedEndX.setColumns(10);
 																				
 																						feedEndY = new JTextField();
 																						panelLocations.add(feedEndY, "6, 8");
-																						feedEndY.setColumns(5);
+																						feedEndY.setColumns(10);
 																						
 																								feedEndZ = new JTextField();
 																								panelLocations.add(feedEndZ, "8, 8");
-																								feedEndZ.setColumns(5);
+																								feedEndZ.setColumns(10);
 																								
 																										feedEndAutoFill = new JButton("Set to Current");
 																										panelLocations.add(feedEndAutoFill, "10, 8");
@@ -205,26 +213,47 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		panelVision = new JPanel();
 		panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panelFields.add(panelVision);
-		panelVision.setLayout(new FormLayout(new ColumnSpec[] {
+		panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
+		
+		panelVisionEnabled = new JPanel();
+		FlowLayout fl_panelVisionEnabled = (FlowLayout) panelVisionEnabled.getLayout();
+		fl_panelVisionEnabled.setAlignment(FlowLayout.LEFT);
+		panelVision.add(panelVisionEnabled);
+		
+		chckbxVisionEnabled = new JCheckBox("Vision Enabled?");
+		panelVisionEnabled.add(chckbxVisionEnabled);
+		
+		separator = new JSeparator();
+		panelVision.add(separator);
+		
+		panelImageTemplate = new JPanel();
+		panelVision.add(panelImageTemplate);
+		panelImageTemplate.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
+				FormFactory.DEFAULT_COLSPEC,},
 			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		chckbxVisionEnabled = new JCheckBox("Vision Enabled?");
-		panelVision.add(chckbxVisionEnabled, "2, 2");
+		lblTemplateImage = new JLabel("Template Image");
+		panelImageTemplate.add(lblTemplateImage, "2, 2, center, default");
 		
-		lblTapeFeedHole = new JLabel("Tape Feed Hole Diameter");
-		panelVision.add(lblTapeFeedHole, "2, 4, right, default");
+		label = new JLabel("");
+		label.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		label.setMinimumSize(new Dimension(150, 150));
+		label.setMaximumSize(new Dimension(150, 150));
+		label.setHorizontalAlignment(SwingConstants.CENTER);
+		label.setSize(new Dimension(150, 150));
+		label.setPreferredSize(new Dimension(150, 150));
+		label.setIcon(new ImageIcon("/Users/jason/Desktop/snap.png"));
+		panelImageTemplate.add(label, "2, 4, center, default");
 		
-		textFieldTapeFeedHoleDiameter = new JTextField();
-		panelVision.add(textFieldTapeFeedHoleDiameter, "4, 4");
-		textFieldTapeFeedHoleDiameter.setColumns(5);
+		btnNewTemplateImage = new JButton("New Template Image");
+		panelImageTemplate.add(btnNewTemplateImage, "2, 6");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -262,7 +291,6 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthY", feedEndY, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthZ", feedEndZ, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "vision.enabled", chckbxVisionEnabled, "selected", null, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.tapeFeedHoleDiameter", textFieldTapeFeedHoleDiameter, "text", lengthConverter, listener));
 	}
 	
 	private void loadFromModel() {
@@ -318,6 +346,10 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private JPanel panelVision;
 	private JPanel panelLocations;
 	private JCheckBox chckbxVisionEnabled;
-	private JLabel lblTapeFeedHole;
-	private JTextField textFieldTapeFeedHoleDiameter;
+	private JPanel panelVisionEnabled;
+	private JPanel panelImageTemplate;
+	private JLabel lblTemplateImage;
+	private JLabel label;
+	private JButton btnNewTemplateImage;
+	private JSeparator separator;
 }

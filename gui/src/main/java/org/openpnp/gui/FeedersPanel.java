@@ -53,6 +53,7 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.gui.wizards.FeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +97,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		
 		toolBar.addSeparator();
 		toolBar.add(feedFeederAction);
-
+		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
 
@@ -152,7 +153,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				generalConfigPanel.removeAll();
 				feederSpecificConfigPanel.removeAll();
 				if (feeder != null) {
-					Wizard generalConfigWizard = new FeederConfigurationWizard(feeder, FeedersPanel.this.configuration);
+					Wizard generalConfigWizard = new FeederConfigurationWizard(feeder, 
+							FeedersPanel.this.configuration, 
+							FeedersPanel.this.machineControlsPanel);
 					if (generalConfigWizard != null) {
 						generalConfigWizard.setWizardContainer(FeedersPanel.this);
 						JPanel panel = generalConfigWizard.getWizardPanel();

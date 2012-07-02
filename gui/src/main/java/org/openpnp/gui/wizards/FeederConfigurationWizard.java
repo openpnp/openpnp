@@ -45,15 +45,16 @@ import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.BindingListener;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+import org.openpnp.gui.MachineControlsPanel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartConverter;
-import org.openpnp.gui.support.PartItem;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 
@@ -65,6 +66,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class FeederConfigurationWizard extends JPanel implements Wizard {
 	private final Feeder feeder;
 	private final Configuration configuration;
+	private final MachineControlsPanel machineControlsPanel;
 
 	private WizardContainer wizardContainer;
 	private JButton btnSave;
@@ -83,9 +85,10 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
-	public FeederConfigurationWizard(Feeder feeder, Configuration configuration) {
+	public FeederConfigurationWizard(Feeder feeder, Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.feeder = feeder;
 		this.configuration = configuration;
+		this.machineControlsPanel = machineControlsPanel;
 
 		setLayout(new BorderLayout());
 
@@ -112,10 +115,10 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		}
 		comboBoxPart = new JComboBox(partIds);
 		AutoCompleteDecorator.decorate(comboBoxPart);
-		panelPart.add(comboBoxPart, "2, 2, fill, default");
+		panelPart.add(comboBoxPart, "2, 2, left, default");
 		
 		panelLocation = new JPanel();
-		panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feed Location", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Pickup Location", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelFields.add(panelLocation);
 		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -125,7 +128,9 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),
 				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
@@ -146,19 +151,23 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		
 		textFieldLocationX = new JTextField();
 		panelLocation.add(textFieldLocationX, "2, 4");
-		textFieldLocationX.setColumns(6);
+		textFieldLocationX.setColumns(10);
 		
 		textFieldLocationY = new JTextField();
 		panelLocation.add(textFieldLocationY, "4, 4");
-		textFieldLocationY.setColumns(6);
+		textFieldLocationY.setColumns(10);
 		
 		textFieldLocationZ = new JTextField();
 		panelLocation.add(textFieldLocationZ, "6, 4");
-		textFieldLocationZ.setColumns(6);
+		textFieldLocationZ.setColumns(10);
 		
 		textFieldLocationC = new JTextField();
 		panelLocation.add(textFieldLocationC, "8, 4");
-		textFieldLocationC.setColumns(6);
+		textFieldLocationC.setColumns(10);
+		
+		btnSetFeedLocation = new JButton(setFeederLocationAction);
+		btnSetFeedLocation.setText("Set to Current");
+		panelLocation.add(btnSetFeedLocation, "10, 4");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -247,5 +256,23 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
+	
+	private Action setFeederLocationAction = new AbstractAction("Set") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			Location location = machineControlsPanel.getDisplayedLocation();
+
+			// By setting the properties individually we are able to make sure
+			// that bound components get updated. This is not ideal, but it gets
+			// the job done.
+			feeder.getLocation().setLengthX(location.getLengthX());
+			feeder.getLocation().setLengthY(location.getLengthY());
+			feeder.getLocation().setLengthZ(location.getLengthZ());
+			feeder.getLocation().setRotation(location.getRotation());
+		}
+	};
+	
+	
 	private JComboBox comboBoxPart;
+	private JButton btnSetFeedLocation;
 }
