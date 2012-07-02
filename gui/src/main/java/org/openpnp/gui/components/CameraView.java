@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
+// TODO: need to handle rotation
 public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
@@ -61,7 +62,7 @@ public class CameraView extends JComponent implements CameraListener {
 		NW, N, NE, E, SE, S, SW, W
 	}
 	
-	private enum SelectionRectMode {
+	private enum SelectionRectangleMode {
 		Resizing,
 		Moving,
 		Creating
@@ -74,7 +75,7 @@ public class CameraView extends JComponent implements CameraListener {
 
 	private JPopupMenu popupMenu;
 
-	private int width, height;
+	private int lastWidth, lastHeight;
 	private int scaledWidth, scaledHeight;
 	private double sourceWidth, sourceHeight;
 	private double scaleRatioX, scaleRatioY;
@@ -84,10 +85,11 @@ public class CameraView extends JComponent implements CameraListener {
 	// TODO: See if this can all be moved to a glass pane. 
 	private boolean selectionRectangleEnabled;
 	private Rectangle selectionRectangle;
-	private SelectionRectMode selectionRectangleMode;
+	private SelectionRectangleMode selectionRectangleMode;
 	private HandlePosition selectionRectangleActiveHandle;
 	private float selectionRectangleDashPhase;
 	private int selectionRectangleX, selectionRectangleY;
+	private float selectionRectangleFlashOpacity;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -159,6 +161,39 @@ public class CameraView extends JComponent implements CameraListener {
 
 		}
 	}
+	
+	public BufferedImage getSelectionRectangleImage() {
+		if (selectionRectangle == null || lastFrame == null) {
+			return null;
+		}
+		System.out.println(String.format("%d, %d, %f, %f, %f, %f, %d, %d", scaledWidth, scaledHeight, scaleRatioX, scaleRatioY, sourceWidth, sourceHeight, centerX, centerY));
+		selectionRectangleFlashOpacity = 8.0f;
+		// TODO: Need to figure out how to map the coordinates of the selection
+		// rect to the source image. This doesn't quite work.
+		int x = (int) ((selectionRectangle.getX() + centerX) * scaleRatioX);
+		int y = (int) ((selectionRectangle.getY() + centerY) * scaleRatioY);
+		int width = (int) (selectionRectangle.getWidth() * scaleRatioX);
+		int height = (int) (selectionRectangle.getHeight() * scaleRatioY);
+		System.out.println(String.format("%d, %d, %d, %d", x, y, width, height));
+		BufferedImage image = new BufferedImage(
+				width, 
+				height,
+				BufferedImage.TYPE_INT_ARGB);
+		Graphics g = image.getGraphics();
+		g.drawImage(
+				lastFrame,
+				0, 
+				0, 
+				width, 
+				height,
+				x,
+				y,
+				width,
+				height,
+				null);
+		g.dispose();
+		return image;
+	}
 
 	public Reticle getReticle() {
 		return reticle;
@@ -168,6 +203,44 @@ public class CameraView extends JComponent implements CameraListener {
 	public void frameReceived(BufferedImage img) {
 		lastFrame = img;
 		repaint();
+	}
+	
+	private void calculateImageProperties() {
+		Insets ins = getInsets();
+		int width = getWidth() - ins.left - ins.right;
+		int height = getHeight() - ins.top - ins.bottom;
+		
+		double destWidth = width, destHeight = height;
+		sourceWidth = lastFrame.getWidth();
+		sourceHeight = lastFrame.getHeight();
+
+		double heightRatio = sourceHeight / destHeight;
+		double widthRatio = sourceWidth / destWidth;
+
+		if (heightRatio > widthRatio) {
+			double aspectRatio = sourceWidth / sourceHeight;
+			scaledHeight = (int) destHeight;
+			scaledWidth = (int) (scaledHeight * aspectRatio);
+		}
+		else {
+			double aspectRatio = sourceHeight / sourceWidth;
+			scaledWidth = (int) destWidth;
+			scaledHeight = (int) (scaledWidth * aspectRatio);
+		}
+
+		centerX = ins.left + (width / 2) - (scaledWidth / 2);
+		centerY = ins.top + (height / 2) - (scaledHeight / 2);
+
+		scaleRatioX = sourceWidth / (double) scaledWidth;
+		scaleRatioY = sourceHeight / (double) scaledHeight;
+
+		scaledUnitsPerPixelX = camera.getUnitsPerPixel().getX()
+				* scaleRatioX;
+		scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY()
+				* scaleRatioY;
+		
+		this.lastWidth = width;
+		this.lastHeight = height;
 	}
 
 	@Override
@@ -180,38 +253,9 @@ public class CameraView extends JComponent implements CameraListener {
 		g.setColor(getBackground());
 		g2d.fillRect(ins.left, ins.top, width, height);
 		if (lastFrame != null) {
-			if (this.width != width || this.height != height) {
-				double destWidth = width, destHeight = height;
-				sourceWidth = lastFrame.getWidth();
-				sourceHeight = lastFrame.getHeight();
-
-				double heightRatio = sourceHeight / destHeight;
-				double widthRatio = sourceWidth / destWidth;
-
-				if (heightRatio > widthRatio) {
-					double aspectRatio = sourceWidth / sourceHeight;
-					scaledHeight = (int) destHeight;
-					scaledWidth = (int) (scaledHeight * aspectRatio);
-				}
-				else {
-					double aspectRatio = sourceHeight / sourceWidth;
-					scaledWidth = (int) destWidth;
-					scaledHeight = (int) (scaledWidth * aspectRatio);
-				}
-
-				centerX = ins.left + (width / 2) - (scaledWidth / 2);
-				centerY = ins.top + (height / 2) - (scaledHeight / 2);
-
-				scaleRatioX = sourceWidth / (double) scaledWidth;
-				scaleRatioY = sourceHeight / (double) scaledHeight;
-
-				scaledUnitsPerPixelX = camera.getUnitsPerPixel().getX()
-						* scaleRatioX;
-				scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY()
-						* scaleRatioY;
+			if (this.lastWidth != width || this.lastHeight != height) {
+				calculateImageProperties();
 			}
-
-			// TODO need to handle rotation
 
 			g2d.drawImage(lastFrame, centerX, centerY, scaledWidth,
 					scaledHeight, null);
@@ -263,7 +307,7 @@ public class CameraView extends JComponent implements CameraListener {
 			selectionRectangleDashPhase = 11f;
 		}
 
-		if (selectionRectangleMode != SelectionRectMode.Creating) {
+		if (selectionRectangleMode != SelectionRectangleMode.Creating) {
 			// If we're not drawing a whole new rectangle, draw the
 			// handles for the existing one.
 			drawHandle(g2d, rx, ry);
@@ -557,10 +601,10 @@ public class CameraView extends JComponent implements CameraListener {
 	 */
 	private void updateCursor() {
 		if (selectionRectangleEnabled) {
-			if (selectionRectangleMode == SelectionRectMode.Moving) {
+			if (selectionRectangleMode == SelectionRectangleMode.Moving) {
 				setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
 			}
-			else if (selectionRectangleMode == SelectionRectMode.Resizing) {
+			else if (selectionRectangleMode == SelectionRectangleMode.Resizing) {
 				setCursor(getCursorForHandlePosition(selectionRectangleActiveHandle));
 			}
 			else if (selectionRectangleMode == null && selectionRectangle != null) {
@@ -604,12 +648,12 @@ public class CameraView extends JComponent implements CameraListener {
 					// See if there is a handle under the cursor.
 					HandlePosition handlePosition = getSelectionRectangleHandleAtPosition(x, y);
 					if (handlePosition != null) {
-						selectionRectangleMode = SelectionRectMode.Resizing;
+						selectionRectangleMode = SelectionRectangleMode.Resizing;
 						selectionRectangleActiveHandle = handlePosition;
 					}
 					// If not, perhaps they want to move the rectangle
 					else if (selectionRectangle != null && selectionRectangle.contains(x, y)) {
-						selectionRectangleMode = SelectionRectMode.Moving;
+						selectionRectangleMode = SelectionRectangleMode.Moving;
 						// Store the distance between the rectangle's origin and
 						// where they started moving it from.
 						selectionRectangleX = (int) (x - selectionRectangle.getX());
@@ -617,7 +661,7 @@ public class CameraView extends JComponent implements CameraListener {
 					}
 					// If not those, it's time to create a rectangle
 					else {
-						selectionRectangleMode = SelectionRectMode.Creating;
+						selectionRectangleMode = SelectionRectangleMode.Creating;
 						selectionRectangleX = x;
 						selectionRectangleY = y;
 					}
@@ -644,7 +688,7 @@ public class CameraView extends JComponent implements CameraListener {
 				int x = e.getX();
 				int y = e.getY();
 				
-				if (selectionRectangleMode == SelectionRectMode.Resizing) {
+				if (selectionRectangleMode == SelectionRectangleMode.Resizing) {
 					int rx = (int) selectionRectangle.getX();
 					int ry = (int) selectionRectangle.getY();
 					int rw = (int) selectionRectangle.getWidth();
@@ -675,14 +719,14 @@ public class CameraView extends JComponent implements CameraListener {
 						setSelectionRectangle(x, ry, (rw - (x - rx)), rh);
 					}
 				}
-				else if (selectionRectangleMode == SelectionRectMode.Moving) {
+				else if (selectionRectangleMode == SelectionRectangleMode.Moving) {
 					setSelectionRectangle(
 							x - selectionRectangleX, 
 							y - selectionRectangleY, 
 							(int) selectionRectangle.getWidth(), 
 							(int) selectionRectangle.getHeight());
 				}
-				else if (selectionRectangleMode == SelectionRectMode.Creating) {
+				else if (selectionRectangleMode == SelectionRectangleMode.Creating) {
 					int sx = selectionRectangleX;
 					int sy = selectionRectangleY;
 					int w = x - sx;

@@ -53,6 +53,8 @@ public class CameraPanel extends JPanel {
 	private JComboBox camerasCombo;
 	private JPanel camerasPanel;
 	
+	private CameraView selectedCameraView;
+	
 	public CameraPanel() {
 		createUi();
 
@@ -79,9 +81,14 @@ public class CameraPanel extends JPanel {
 		add(camerasPanel);
 	}
 	
+	public CameraView getSelectedCameraView() {
+		return selectedCameraView;
+	}
+	
 	class CameraSelectedAction extends AbstractAction {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
+			selectedCameraView = null;
 			if (camerasCombo.getSelectedItem().equals(SHOW_NONE_ITEM)) {
 				clearCameras();
 				camerasPanel.setLayout(new BorderLayout());
@@ -101,6 +108,10 @@ public class CameraPanel extends JPanel {
 							/ cameras.size());
 					cameraView.setCamera(camera);
 					camerasPanel.add(cameraView);
+					
+					if (cameras.size() == 1) {
+						selectedCameraView = cameraView;
+					}
 				}
 				for (int i = 0; i < (columns * columns) - cameras.size(); i++) {
 					JPanel panel = new JPanel();
@@ -116,6 +127,8 @@ public class CameraPanel extends JPanel {
 				cameraView.setCamera(camera);
 				
 				camerasPanel.add(cameraView);
+				
+				selectedCameraView = cameraView;
 			}
 			revalidate();
 			repaint();

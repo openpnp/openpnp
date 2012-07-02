@@ -69,18 +69,20 @@ public class MainFrame extends JFrame {
 	 */
 	private final Configuration configuration;
 
-	private MachineControlsPanel machineControlsPanel;
-	private PartsPanel partsPanel;
-	private FeedersPanel feedersPanel;
-	private JobPanel jobPanel;
-	private MachinePanel machinePanel;
-	private CamerasPanel camerasPanel;
-	private BoardsPanel boardsPanel;
-	private HeadsPanel headsPanel;
-	private ActuatorsPanel actuatorsPanel;
+	// TODO: Really should switch to some kind of DI model, but this will do
+	// for now.
+	public static MachineControlsPanel machineControlsPanel;
+	public static PartsPanel partsPanel;
+	public static FeedersPanel feedersPanel;
+	public static JobPanel jobPanel;
+	public static MachinePanel machinePanel;
+	public static CamerasPanel camerasPanel;
+	public static BoardsPanel boardsPanel;
+	public static HeadsPanel headsPanel;
+	public static ActuatorsPanel actuatorsPanel;
+	public static CameraPanel cameraPanel;
 
 	private JPanel contentPane;
-	private CameraPanel cameraPanel;
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
 
