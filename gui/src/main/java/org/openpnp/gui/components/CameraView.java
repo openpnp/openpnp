@@ -29,6 +29,9 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -75,14 +78,37 @@ public class CameraView extends JComponent implements CameraListener {
 
 	private JPopupMenu popupMenu;
 
-	private int lastWidth, lastHeight;
+	/**
+	 * The width and height of the image after it has been scaled to fit the
+	 * bounds of the component.
+	 */
 	private int scaledWidth, scaledHeight;
+	
+	/**
+	 * The unscaled width and height of the image.
+	 */
 	private double sourceWidth, sourceHeight;
+	
+	/**
+	 * The ratio of scaled width and height to unscaled width and height.
+	 * scaledWidth * scaleRatioX = sourceWidth
+	 * scaleRatioX = sourceWidth / scaledWidth
+	 */
 	private double scaleRatioX, scaleRatioY;
+	
+	/**
+	 * The Camera's units per pixel scaled at the same ratio as the image.
+	 * That is, each pixel in the scaled image is scaledUnitsPerPixelX wide
+	 * and scaledUnitsPerPixelY high.
+	 */
 	private double scaledUnitsPerPixelX, scaledUnitsPerPixelY;
+	
+	/**
+	 * The top left position within the component at which the scaled image
+	 * can be drawn for it to be centered. 
+	 */
 	private int centerX, centerY;
 
-	// TODO: See if this can all be moved to a glass pane. 
 	private boolean selectionRectangleEnabled;
 	private Rectangle selectionRectangle;
 	private SelectionRectangleMode selectionRectangleMode;
@@ -109,6 +135,7 @@ public class CameraView extends JComponent implements CameraListener {
 
 		addMouseListener(mouseListener);
 		addMouseMotionListener(mouseMotionListener);
+		addComponentListener(componentListener);
 	}
 
 	public CameraView(int maximumFps) {
@@ -166,30 +193,28 @@ public class CameraView extends JComponent implements CameraListener {
 		if (selectionRectangle == null || lastFrame == null) {
 			return null;
 		}
-		System.out.println(String.format("%d, %d, %f, %f, %f, %f, %d, %d", scaledWidth, scaledHeight, scaleRatioX, scaleRatioY, sourceWidth, sourceHeight, centerX, centerY));
 		selectionRectangleFlashOpacity = 8.0f;
-		// TODO: Need to figure out how to map the coordinates of the selection
-		// rect to the source image. This doesn't quite work.
-		int x = (int) ((selectionRectangle.getX() + centerX) * scaleRatioX);
-		int y = (int) ((selectionRectangle.getY() + centerY) * scaleRatioY);
-		int width = (int) (selectionRectangle.getWidth() * scaleRatioX);
-		int height = (int) (selectionRectangle.getHeight() * scaleRatioY);
-		System.out.println(String.format("%d, %d, %d, %d", x, y, width, height));
+		
+		int sx = (int) ((selectionRectangle.getX() - centerX) * scaleRatioX);
+		int sy = (int) ((selectionRectangle.getY() - centerY) * scaleRatioY);
+		int sw = (int) (selectionRectangle.getWidth() * scaleRatioX);
+		int sh = (int) (selectionRectangle.getHeight() * scaleRatioY);
+		
 		BufferedImage image = new BufferedImage(
-				width, 
-				height,
+				sw, 
+				sh,
 				BufferedImage.TYPE_INT_ARGB);
 		Graphics g = image.getGraphics();
 		g.drawImage(
 				lastFrame,
 				0, 
 				0, 
-				width, 
-				height,
-				x,
-				y,
-				width,
-				height,
+				sw, 
+				sh,
+				sx,
+				sy,
+				sx + sw,
+				sy + sh,
 				null);
 		g.dispose();
 		return image;
@@ -201,11 +226,21 @@ public class CameraView extends JComponent implements CameraListener {
 
 	@Override
 	public void frameReceived(BufferedImage img) {
-		lastFrame = img;
+		if (lastFrame == null) {
+			lastFrame = img;
+			calculateImageProperties();
+		}
+		else {
+			lastFrame = img;
+		}
 		repaint();
 	}
 	
 	private void calculateImageProperties() {
+		if (lastFrame == null) {
+			return;
+		}
+		
 		Insets ins = getInsets();
 		int width = getWidth() - ins.left - ins.right;
 		int height = getHeight() - ins.top - ins.bottom;
@@ -238,10 +273,9 @@ public class CameraView extends JComponent implements CameraListener {
 				* scaleRatioX;
 		scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY()
 				* scaleRatioY;
-		
-		this.lastWidth = width;
-		this.lastHeight = height;
 	}
+	
+	
 
 	@Override
 	protected void paintComponent(Graphics g) {
@@ -253,10 +287,6 @@ public class CameraView extends JComponent implements CameraListener {
 		g.setColor(getBackground());
 		g2d.fillRect(ins.left, ins.top, width, height);
 		if (lastFrame != null) {
-			if (this.lastWidth != width || this.lastHeight != height) {
-				calculateImageProperties();
-			}
-
 			g2d.drawImage(lastFrame, centerX, centerY, scaledWidth,
 					scaledHeight, null);
 
@@ -629,6 +659,18 @@ public class CameraView extends JComponent implements CameraListener {
 			setCursor(Cursor.getDefaultCursor());
 		}
 	}
+	
+	private ComponentListener componentListener = new ComponentAdapter() {
+		@Override
+		public void componentResized(ComponentEvent e) {
+			calculateImageProperties();
+		}
+
+		@Override
+		public void componentShown(ComponentEvent e) {
+			calculateImageProperties();
+		}
+	};
 
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
