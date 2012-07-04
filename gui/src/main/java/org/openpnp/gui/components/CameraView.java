@@ -41,6 +41,9 @@ import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
 import javax.swing.JComponent;
@@ -116,6 +119,8 @@ public class CameraView extends JComponent implements CameraListener {
 	private float selectionRectangleDashPhase;
 	private int selectionRectangleX, selectionRectangleY;
 	private float selectionRectangleFlashOpacity;
+	
+	private ScheduledExecutorService scheduledExecutor;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -136,6 +141,22 @@ public class CameraView extends JComponent implements CameraListener {
 		addMouseListener(mouseListener);
 		addMouseMotionListener(mouseMotionListener);
 		addComponentListener(componentListener);
+		
+		scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+		
+		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				if (selectionRectangleEnabled && selectionRectangle != null) {
+					// Adjust the dash phase so the line marches on the next paint
+					selectionRectangleDashPhase -= 1f;
+					if (selectionRectangleDashPhase < 0) {
+						// 11 is the sum of the dash lengths minus 1.
+						selectionRectangleDashPhase = 11f;
+					}
+					repaint();
+				}
+			}
+		}, 0, 50, TimeUnit.MILLISECONDS);
 	}
 
 	public CameraView(int maximumFps) {
@@ -193,7 +214,22 @@ public class CameraView extends JComponent implements CameraListener {
 		if (selectionRectangle == null || lastFrame == null) {
 			return null;
 		}
-		selectionRectangleFlashOpacity = 8.0f;
+		
+		selectionRectangleFlashOpacity = 1.0f;
+		
+		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				if (selectionRectangleFlashOpacity > 0) {
+					selectionRectangleFlashOpacity -= 0.07;
+					selectionRectangleFlashOpacity = Math.max(0, selectionRectangleFlashOpacity);
+					repaint();
+				}
+				else {
+					throw new RuntimeException();
+				}
+			}
+		}, 0, 30, TimeUnit.MILLISECONDS);
+
 		
 		int sx = (int) ((selectionRectangle.getX() - centerX) * scaleRatioX);
 		int sy = (int) ((selectionRectangle.getY() - centerY) * scaleRatioY);
@@ -330,12 +366,6 @@ public class CameraView extends JComponent implements CameraListener {
 				BasicStroke.JOIN_BEVEL, 0, new float[] { 6f, 6f },
 				selectionRectangleDashPhase));
 		g2d.drawRect(rx, ry, rw, rh);
-		// Adjust the dash phase so the line marches on the next paint
-		selectionRectangleDashPhase -= 1f;
-		if (selectionRectangleDashPhase < 0) {
-			// 11 is the sum of the dash lengths minus 1.
-			selectionRectangleDashPhase = 11f;
-		}
 
 		if (selectionRectangleMode != SelectionRectangleMode.Creating) {
 			// If we're not drawing a whole new rectangle, draw the
@@ -366,6 +396,11 @@ public class CameraView extends JComponent implements CameraListener {
 				(int) (selectionRectangle.getX() + selectionRectangle.getWidth() + 6), 
 				(int) (selectionRectangle.getY() + selectionRectangle.getHeight() + 6),
 				text);
+		
+		if (selectionRectangleFlashOpacity > 0) {
+			g2d.setColor(new Color(1.0f, 1.0f, 1.0f, selectionRectangleFlashOpacity));
+			g2d.fillRect(rx, ry, rw, rh);
+		}
 	}
 
 	/**

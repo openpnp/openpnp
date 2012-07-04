@@ -27,13 +27,11 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.PersistenceException;
 import org.simpleframework.xml.core.Validate;
 
 
@@ -53,7 +51,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	public boolean canFeedForHead(Head head) {
 		return true;
 	}
-
+	
 	public Location feed(Head head_, Location pickLocation)
 			throws Exception {
 		
