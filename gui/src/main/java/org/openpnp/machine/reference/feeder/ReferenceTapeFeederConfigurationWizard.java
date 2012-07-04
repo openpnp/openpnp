@@ -27,6 +27,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,10 +50,12 @@ import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.BindingListener;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.BufferedImageIconConverter;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Location;
@@ -77,6 +80,19 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private JButton feedStartAutoFill;
 	private JButton feedEndAutoFill;
 	private JButton btnSave;
+	private JButton btnCancel;
+	private JLabel lblActuatorId;
+	private JTextField textFieldActuatorId;
+	private JPanel panelGeneral;
+	private JPanel panelVision;
+	private JPanel panelLocations;
+	private JCheckBox chckbxVisionEnabled;
+	private JPanel panelVisionEnabled;
+	private JPanel panelImageTemplate;
+	private JLabel lblTemplateImage;
+	private JLabel labelTemplateImage;
+	private JButton btnNewTemplateImage;
+	private JSeparator separator;
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
@@ -251,8 +267,6 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		labelTemplateImage.setHorizontalAlignment(SwingConstants.CENTER);
 		labelTemplateImage.setSize(new Dimension(150, 150));
 		labelTemplateImage.setPreferredSize(new Dimension(150, 150));
-		labelTemplateImage.setIcon(new ImageIcon(
-				"/Users/jason/Desktop/snap.png"));
 		panelImageTemplate.add(labelTemplateImage, "2, 4, center, default");
 
 		btnNewTemplateImage = new JButton(newTemplateImageAction);
@@ -277,6 +291,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter();
 		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
+		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
 		BindingListener listener = new AbstractBindingListener() {
 			@Override
 			public void synced(Binding binding) {
@@ -303,6 +318,8 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 				feedEndZ, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "vision.enabled",
 				chckbxVisionEnabled, "selected", null, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.templateImage",
+				labelTemplateImage, "icon", imageConverter, listener));
 	}
 
 	private void loadFromModel() {
@@ -359,24 +376,14 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		public void actionPerformed(ActionEvent arg0) {
 			BufferedImage image = MainFrame.cameraPanel.getSelectedCameraView().getSelectionRectangleImage();
 			if (image == null) {
-				labelTemplateImage.setIcon(null);
+				MessageBoxes.errorBox(
+						ReferenceTapeFeederConfigurationWizard.this, 
+						"No Image Selected", 
+						"Please select an area of the camera image using the mouse.");
 			}
 			else {
 				labelTemplateImage.setIcon(new ImageIcon(image));
 			}
 		}
 	};
-	private JButton btnCancel;
-	private JLabel lblActuatorId;
-	private JTextField textFieldActuatorId;
-	private JPanel panelGeneral;
-	private JPanel panelVision;
-	private JPanel panelLocations;
-	private JCheckBox chckbxVisionEnabled;
-	private JPanel panelVisionEnabled;
-	private JPanel panelImageTemplate;
-	private JLabel lblTemplateImage;
-	private JLabel labelTemplateImage;
-	private JButton btnNewTemplateImage;
-	private JSeparator separator;
 }

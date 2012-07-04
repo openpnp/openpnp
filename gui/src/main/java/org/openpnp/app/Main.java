@@ -22,6 +22,7 @@
 package org.openpnp.app;
 
 import java.awt.EventQueue;
+import java.io.File;
 
 import javax.swing.UIManager;
 
@@ -43,7 +44,9 @@ public class Main {
 		catch (Exception e) {
 			throw new Error(e);
 		}
-		final Configuration configuration = new Configuration();
+		File configurationDirectory = new File(System.getProperty("user.home"));
+		configurationDirectory = new File(configurationDirectory, ".openpnp");
+		final Configuration configuration = new Configuration(configurationDirectory);
 		final JobProcessor jobProcessor = new JobProcessor(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {

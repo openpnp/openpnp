@@ -25,6 +25,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +60,50 @@ public class Configuration extends AbstractModelObject {
 	private LinkedHashMap<File, Board> boards = new LinkedHashMap<File, Board>();
 	private boolean dirty;
 	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
+	private File configurationDirectory;
+	
+	public Configuration(File configurationDirectory) {
+		this.configurationDirectory = configurationDirectory;
+	}
+	
+	/**
+	 * Gets a File reference for the named file within the configuration
+	 * directory. forClass is used to uniquely identify the file and keep it
+	 * separate from other classes' files.
+	 * @param forClass
+	 * @param name
+	 * @return
+	 */
+	public File getResourceFile(Class forClass, String name) throws IOException {
+		File directory = new File(configurationDirectory, forClass.getCanonicalName());
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
+		return new File(directory, name);
+	}
+	
+	/**
+	 * Creates a new file with a unique name within the configuration
+	 * directory. forClass is used to uniquely identify the file within
+	 * the application and a unique name is generated within that namespace.
+	 * suffix is appended to the unique part of the filename. The result of
+	 * calling File.getName() on the returned file can be used to load the
+	 * same file in the future by calling getResourceFile().
+	 * This method uses File.createTemporaryFile() and so the rules for that
+	 * method must be followed when calling this one.
+	 * @param forClass
+	 * @param suffix
+	 * @return
+	 * @throws IOException
+	 */
+	public File createResourceFile(Class forClass, String prefix, String suffix) throws IOException {
+		File directory = new File(configurationDirectory, forClass.getCanonicalName());
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
+		File file = File.createTempFile(prefix, suffix, directory);
+		return file;
+	}
 	
 	/**
 	 * Calls resolve(this) on the Object if it implements 
@@ -88,9 +133,7 @@ public class Configuration extends AbstractModelObject {
 		listeners.remove(listener);
 	}
 	
-	public void load(String configurationDirectoryPath) throws Exception {
-		File configurationDirectory = new File(configurationDirectoryPath);
-		
+	public void load() throws Exception {
 		boolean forceSave = false;
 		
 		try {
@@ -153,7 +196,7 @@ public class Configuration extends AbstractModelObject {
 		if (forceSave) {
 			logger.info("Defaults were loaded. Saving to configuration directory.");
 			configurationDirectory.mkdirs();
-			save(configurationDirectoryPath);
+			save();
 		}
 		dirty = false;
 		for (ConfigurationListener listener : listeners) {
@@ -161,9 +204,7 @@ public class Configuration extends AbstractModelObject {
 		}
 	}
 	
-	public void save(String configurationDirectoryPath) throws Exception {
-		File configurationDirectory = new File(configurationDirectoryPath);
-		
+	public void save() throws Exception {
 		try {
 			saveMachine(new File(configurationDirectory, "machine.xml"));
 		}

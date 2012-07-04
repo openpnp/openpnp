@@ -237,9 +237,7 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
 
 		try {
-			File configurationDirectory = new File(System.getProperty("user.home"));
-			configurationDirectory = new File(configurationDirectory, ".openpnp");
-			configuration.load(configurationDirectory.getAbsolutePath());
+			configuration.load();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -286,9 +284,7 @@ public class MainFrame extends JFrame {
 		// Save the configuration if it's dirty
 		try {
 			if (configuration.isDirty()) {
-				File configurationDirectory = new File(System.getProperty("user.home"));
-				configurationDirectory = new File(configurationDirectory, ".openpnp");
-				configuration.save(configurationDirectory.getAbsolutePath());
+				configuration.save();
 			}
 		}
 		catch (Exception e) {

@@ -116,9 +116,12 @@ public class CameraView extends JComponent implements CameraListener {
 	private Rectangle selectionRectangle;
 	private SelectionRectangleMode selectionRectangleMode;
 	private HandlePosition selectionRectangleActiveHandle;
-	private float selectionRectangleDashPhase;
 	private int selectionRectangleX, selectionRectangleY;
 	private float selectionRectangleFlashOpacity;
+	private float selectionRectangleDashPhase;
+	private static float[] selectionRectangleDashProfile = new float[] { 6f, 6f };
+	// 11 is the sum of the dash lengths minus 1.
+	private static float selectionRectangleDashPhaseStart = 11f;
 	
 	private ScheduledExecutorService scheduledExecutor;
 
@@ -150,8 +153,7 @@ public class CameraView extends JComponent implements CameraListener {
 					// Adjust the dash phase so the line marches on the next paint
 					selectionRectangleDashPhase -= 1f;
 					if (selectionRectangleDashPhase < 0) {
-						// 11 is the sum of the dash lengths minus 1.
-						selectionRectangleDashPhase = 11f;
+						selectionRectangleDashPhase = selectionRectangleDashPhaseStart;
 					}
 					repaint();
 				}
@@ -363,7 +365,7 @@ public class CameraView extends JComponent implements CameraListener {
 		g2d.drawRect(rx, ry, rw, rh);
 		g2d.setColor(Color.white);
 		g2d.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_BEVEL, 0, new float[] { 6f, 6f },
+				BasicStroke.JOIN_BEVEL, 0, selectionRectangleDashProfile,
 				selectionRectangleDashPhase));
 		g2d.drawRect(rx, ry, rw, rh);
 

@@ -23,19 +23,28 @@ package org.openpnp.machine.reference.feeder;
 
 
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
 
 
-public class ReferenceTapeFeeder extends ReferenceFeeder {
+public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
 	@Element
 	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
 	@Element
@@ -46,6 +55,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private String actuatorId; 
 	@Element(required=false)
 	private Vision vision = new Vision();
+	
+	@Override
+	public void resolve(Configuration configuration) throws Exception {
+		configuration.resolve(vision);
+	}
 	
 	@Override
 	public boolean canFeedForHead(Head head) {
@@ -143,11 +157,41 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		this.vision = vision;
 	}
 
-	public static class Vision {
+	public static class Vision implements RequiresConfigurationResolution {
 		@Attribute(required=false)
 		private boolean enabled;
-		@Element(required=false)
-		private String snapImagePath;
+		@Attribute(required=false)
+		private String templateImageName; 
+		
+		private BufferedImage templateImage;
+		private boolean templateImageDirty;
+		
+		private Configuration configuration;
+		
+		@Override
+		public void resolve(Configuration configuration) throws Exception {
+			this.configuration = configuration;
+			if (templateImageName != null) {
+				File file = configuration.getResourceFile(this.getClass(), templateImageName);
+				templateImage = ImageIO.read(file);
+			}
+		}
+		
+		@Persist
+		private void persist() throws IOException {
+			if (templateImageDirty) {
+				File file = null;
+				if (templateImageName != null) {
+					file = configuration.getResourceFile(this.getClass(), templateImageName);
+				}
+				else {
+					file = configuration.createResourceFile(this.getClass(), "tmpl_", ".png");
+					templateImageName = file.getName();
+				}
+				ImageIO.write(templateImage, "png", file);
+				templateImageDirty = false;
+			}
+		}
 		
 		@SuppressWarnings("unused")
 		@Validate
@@ -159,20 +203,23 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 			}
 		}
 		
-		public String getSnapImagePath() {
-			return snapImagePath;
-		}
-
-		public void setSnapImagePath(String snapImagePath) {
-			this.snapImagePath = snapImagePath;
-		}
-
 		public boolean isEnabled() {
 			return enabled;
 		}
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
+		}
+		
+		public BufferedImage getTemplateImage() {
+			return templateImage;
+		}
+		
+		public void setTemplateImage(BufferedImage templateImage) {
+			if (templateImage != this.templateImage) {
+				this.templateImage = templateImage;
+				templateImageDirty = true;
+			}
 		}
 	}
 }
