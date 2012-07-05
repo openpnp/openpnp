@@ -630,7 +630,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 	private Action calibrationModeAction = new AbstractAction("Calibration Mode") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			cameraView.setSelectionRectangleEnabled(((JCheckBoxMenuItem) e.getSource()).isSelected());
+			cameraView.setSelectionEnabled(((JCheckBoxMenuItem) e.getSource()).isSelected());
 		}
 	};
 }

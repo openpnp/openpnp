@@ -22,13 +22,14 @@
 package org.openpnp.machine.reference.feeder;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +46,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AbstractBindingListener;
@@ -67,10 +69,6 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Component;
-import javax.swing.border.EtchedBorder;
-import java.awt.Color;
-import javax.swing.Box;
 
 class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private final ReferenceTapeFeeder feeder;
@@ -99,6 +97,18 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private JLabel labelTemplateImage;
 	private JButton btnChangeTemplateImage;
 	private JSeparator separator;
+	private JPanel panelVisionTemplateAndAoe;
+	private JPanel panelAoE;
+	private JLabel lblLeft;
+	private JTextField textFieldAoeLeft;
+	private JLabel lblTop;
+	private JTextField textFieldAoeTop;
+	private JLabel lblRight;
+	private JTextField textFieldAoeRight;
+	private JLabel lblBottom;
+	private JTextField textFieldAoeBottom;
+	private JButton btnChangeAoe;
+	
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
@@ -349,7 +359,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
-
+		
 		createBindings();
 		loadFromModel();
 	}
@@ -453,11 +463,13 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-			cameraView.setSelectionRectangleEnabled(true);
-			if (cameraView.getSelectionRectangle() == null) {
-				// TODO: Make this default to the previous rectangle or the
-				// area of interest.
-				cameraView.setSelectionRectangle(100, 100, 100, 100);
+			cameraView.setSelectionEnabled(true);
+			org.openpnp.model.Rectangle r = feeder.getVision().getTemplateImageCoordinates();
+			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+				cameraView.setSelection(0, 0, 100, 100);
+			}
+			else {
+				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
 			}
 			btnChangeTemplateImage.setAction(captureTemplateImageAction);
 		}
@@ -470,7 +482,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 			new Thread() {
 				public void run() {
 					CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-					BufferedImage image = cameraView.captureSelectionRectangleImage();
+					BufferedImage image = cameraView.captureSelectionImage();
 					if (image == null) {
 						MessageBoxes.errorBox(
 								ReferenceTapeFeederConfigurationWizard.this, 
@@ -480,7 +492,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 					else {
 						labelTemplateImage.setIcon(new ImageIcon(image));
 					}
-					cameraView.setSelectionRectangleEnabled(false);
+					cameraView.setSelectionEnabled(false);
 					btnChangeTemplateImage.setAction(changeTemplateImageAction);
 				}
 			}.start();
@@ -492,44 +504,32 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-			cameraView.setSelectionRectangleEnabled(true);
-			if (cameraView.getSelectionRectangle() == null) {
-				// TODO: Make this default to the previous rectangle or the
-				// area of interest.
-				cameraView.setSelectionRectangle(100, 100, 100, 100);
+			cameraView.setSelectionEnabled(true);
+			org.openpnp.model.Rectangle r = feeder.getVision().getAreaOfInterest();
+			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+				cameraView.setSelection(0, 0, 100, 100);
+			}
+			else {
+				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
 			}
 			btnChangeAoe.setAction(captureAoeAction);
 		}
 	};
 	
+	// TODO: This is completely useless. Need to be capturing machine
+	// coordinates, not image coordinates.
 	private Action captureAoeAction = new AbstractAction(
 			"Capture") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			new Thread() {
-				public void run() {
-					CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-					cameraView.setSelectionRectangleEnabled(false);
-					Rectangle r = cameraView.getSelectionRectangle();
-					textFieldAoeLeft.setText("" + (int) r.getX());
-					textFieldAoeTop.setText("" + (int) r.getY());
-					textFieldAoeRight.setText("" + (int) r.getMaxX());
-					textFieldAoeBottom.setText("" + (int) r.getMaxY());
-					btnChangeAoe.setAction(changeAoeAction);
-				}
-			}.start();
+			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
+			cameraView.setSelectionEnabled(false);
+			Rectangle r = cameraView.getSelection();
+			textFieldAoeLeft.setText("" + (int) r.getX());
+			textFieldAoeTop.setText("" + (int) r.getY());
+			textFieldAoeRight.setText("" + (int) r.getMaxX());
+			textFieldAoeBottom.setText("" + (int) r.getMaxY());
+			btnChangeAoe.setAction(changeAoeAction);
 		}
 	};
-	
-	private JPanel panelVisionTemplateAndAoe;
-	private JPanel panelAoE;
-	private JLabel lblLeft;
-	private JTextField textFieldAoeLeft;
-	private JLabel lblTop;
-	private JTextField textFieldAoeTop;
-	private JLabel lblRight;
-	private JTextField textFieldAoeRight;
-	private JLabel lblBottom;
-	private JTextField textFieldAoeBottom;
-	private JButton btnChangeAoe;
 }

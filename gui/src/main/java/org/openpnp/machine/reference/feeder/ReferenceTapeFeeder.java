@@ -162,7 +162,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		@Attribute(required=false)
 		private String templateImageName;
 		@Element(required=false)
-		private Rectangle areaOfInterest = new Rectangle();;
+		private Rectangle areaOfInterest = new Rectangle();
+		@Element(required=false)
+		private Rectangle templateImageCoordinates = new Rectangle();
 		
 		private BufferedImage templateImage;
 		private boolean templateImageDirty;
@@ -220,6 +222,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 
 		public void setAreaOfInterest(Rectangle areaOfInterest) {
 			this.areaOfInterest = areaOfInterest;
+		}
+
+		public Rectangle getTemplateImageCoordinates() {
+			return templateImageCoordinates;
+		}
+
+		public void setTemplateImageCoordinates(Rectangle templateImageCoordinates) {
+			this.templateImageCoordinates = templateImageCoordinates;
 		}
 	}
 }

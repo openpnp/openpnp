@@ -58,7 +58,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-// TODO: need to handle rotation
+// TODO: Handle camera rotation.
+// TODO: Probably need to give some serious thought to rounding and
+// truncation in the selection stuff. Probably doing a lot of off by one.
+// TODO: Need to scale selection as Component size changes.
 public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
@@ -69,7 +72,7 @@ public class CameraView extends JComponent implements CameraListener {
 		NW, N, NE, E, SE, S, SW, W
 	}
 	
-	private enum SelectionRectangleMode {
+	private enum SelectionMode {
 		Resizing,
 		Moving,
 		Creating
@@ -113,16 +116,16 @@ public class CameraView extends JComponent implements CameraListener {
 	 */
 	private int centerX, centerY;
 
-	private boolean selectionRectangleEnabled;
-	private Rectangle selectionRectangle;
-	private SelectionRectangleMode selectionRectangleMode;
-	private HandlePosition selectionRectangleActiveHandle;
-	private int selectionRectangleX, selectionRectangleY;
-	private float selectionRectangleFlashOpacity;
-	private float selectionRectangleDashPhase;
-	private static float[] selectionRectangleDashProfile = new float[] { 6f, 6f };
+	private boolean selectionEnabled;
+	private Rectangle selection;
+	private SelectionMode selectionMode;
+	private HandlePosition selectionActiveHandle;
+	private int selectionX, selectionY;
+	private float selectionFlashOpacity;
+	private float selectionDashPhase;
+	private static float[] selectionDashProfile = new float[] { 6f, 6f };
 	// 11 is the sum of the dash lengths minus 1.
-	private static float selectionRectangleDashPhaseStart = 11f;
+	private static float selectionDashPhaseStart = 11f;
 	
 	private ScheduledExecutorService scheduledExecutor;
 
@@ -150,11 +153,11 @@ public class CameraView extends JComponent implements CameraListener {
 		
 		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
 			public void run() {
-				if (selectionRectangleEnabled && selectionRectangle != null) {
+				if (selectionEnabled && selection != null) {
 					// Adjust the dash phase so the line marches on the next paint
-					selectionRectangleDashPhase -= 1f;
-					if (selectionRectangleDashPhase < 0) {
-						selectionRectangleDashPhase = selectionRectangleDashPhaseStart;
+					selectionDashPhase -= 1f;
+					if (selectionDashPhase < 0) {
+						selectionDashPhase = selectionDashPhaseStart;
 					}
 					repaint();
 				}
@@ -213,18 +216,18 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 	}
 	
-	public BufferedImage captureSelectionRectangleImage() {
-		if (selectionRectangle == null || lastFrame == null) {
+	public BufferedImage captureSelectionImage() {
+		if (selection == null || lastFrame == null) {
 			return null;
 		}
 		
-		selectionRectangleFlashOpacity = 1.0f;
+		selectionFlashOpacity = 1.0f;
 		
 		ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(new Runnable() {
 			public void run() {
-				if (selectionRectangleFlashOpacity > 0) {
-					selectionRectangleFlashOpacity -= 0.07;
-					selectionRectangleFlashOpacity = Math.max(0, selectionRectangleFlashOpacity);
+				if (selectionFlashOpacity > 0) {
+					selectionFlashOpacity -= 0.07;
+					selectionFlashOpacity = Math.max(0, selectionFlashOpacity);
 					repaint();
 				}
 				else {
@@ -234,10 +237,10 @@ public class CameraView extends JComponent implements CameraListener {
 		}, 0, 30, TimeUnit.MILLISECONDS);
 
 		
-		int sx = (int) ((selectionRectangle.getX() - centerX) * scaleRatioX);
-		int sy = (int) ((selectionRectangle.getY() - centerY) * scaleRatioY);
-		int sw = (int) (selectionRectangle.getWidth() * scaleRatioX);
-		int sh = (int) (selectionRectangle.getHeight() * scaleRatioY);
+		int sx = (int) ((selection.getX() - centerX) * scaleRatioX);
+		int sy = (int) ((selection.getY() - centerY) * scaleRatioY);
+		int sw = (int) (selection.getWidth() * scaleRatioX);
+		int sh = (int) (selection.getHeight() * scaleRatioY);
 		
 		BufferedImage image = new BufferedImage(
 				sw, 
@@ -261,7 +264,25 @@ public class CameraView extends JComponent implements CameraListener {
 		
 		return image;
 	}
-
+	
+	/**
+	 * Returns the rectangle defining the selection in image coordinates,
+	 * taking scaling into account.
+	 * @return
+	 */
+	public Rectangle getSelection() {
+		if (selection == null) {
+			return null;
+		}
+		
+		int sx = (int) ((selection.getX() - centerX) * scaleRatioX);
+		int sy = (int) ((selection.getY() - centerY) * scaleRatioY);
+		int sw = (int) (selection.getWidth() * scaleRatioX);
+		int sh = (int) (selection.getHeight() * scaleRatioY);
+		
+		return new Rectangle(sx, sy, sw, sh);
+	}
+	
 	public Reticle getReticle() {
 		return reticle;
 	}
@@ -339,8 +360,8 @@ public class CameraView extends JComponent implements CameraListener {
 						scaledWidth, scaledHeight);
 			}
 
-			if (selectionRectangleEnabled && selectionRectangle != null) {
-				paintSelectionRectangle(g2d);
+			if (selectionEnabled && selection != null) {
+				paintSelection(g2d);
 			}
 
 		}
@@ -351,11 +372,11 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 	}
 	
-	private void paintSelectionRectangle(Graphics2D g2d) {
-		int rx = (int) selectionRectangle.getX();
-		int ry = (int) selectionRectangle.getY();
-		int rw = (int) selectionRectangle.getWidth();
-		int rh = (int) selectionRectangle.getHeight();
+	private void paintSelection(Graphics2D g2d) {
+		int rx = (int) selection.getX();
+		int ry = (int) selection.getY();
+		int rw = (int) selection.getWidth();
+		int rh = (int) selection.getHeight();
 		int rx2 = rx + rw;
 		int ry2 = ry + rh;
 		int rxc = rx + rw / 2;
@@ -369,11 +390,11 @@ public class CameraView extends JComponent implements CameraListener {
 		g2d.drawRect(rx, ry, rw, rh);
 		g2d.setColor(Color.white);
 		g2d.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_BEVEL, 0, selectionRectangleDashProfile,
-				selectionRectangleDashPhase));
+				BasicStroke.JOIN_BEVEL, 0, selectionDashProfile,
+				selectionDashPhase));
 		g2d.drawRect(rx, ry, rw, rh);
 
-		if (selectionRectangleMode != SelectionRectangleMode.Creating) {
+		if (selectionMode != SelectionMode.Creating) {
 			// If we're not drawing a whole new rectangle, draw the
 			// handles for the existing one.
 			drawHandle(g2d, rx, ry);
@@ -387,24 +408,24 @@ public class CameraView extends JComponent implements CameraListener {
 			drawHandle(g2d, rx, ryc);
 		}
 		
-		double widthInUnits = selectionRectangle.getWidth() * scaledUnitsPerPixelX;
-		double heightInUnits = selectionRectangle.getHeight() * scaledUnitsPerPixelY;
+		double widthInUnits = selection.getWidth() * scaledUnitsPerPixelX;
+		double heightInUnits = selection.getHeight() * scaledUnitsPerPixelY;
 
 		String text = String.format("%dpx, %dpx\n%2.3f%s, %2.3f%s", 
-				(int) selectionRectangle.getWidth(), 
-				(int) selectionRectangle.getHeight(),
+				(int) selection.getWidth(), 
+				(int) selection.getHeight(),
 				widthInUnits,
 				camera.getUnitsPerPixel().getUnits().getShortName(),
 				heightInUnits,
 				camera.getUnitsPerPixel().getUnits().getShortName());
 		drawTextOverlay(
 				g2d, 
-				(int) (selectionRectangle.getX() + selectionRectangle.getWidth() + 6), 
-				(int) (selectionRectangle.getY() + selectionRectangle.getHeight() + 6),
+				(int) (selection.getX() + selection.getWidth() + 6), 
+				(int) (selection.getY() + selection.getHeight() + 6),
 				text);
 		
-		if (selectionRectangleFlashOpacity > 0) {
-			g2d.setColor(new Color(1.0f, 1.0f, 1.0f, selectionRectangleFlashOpacity));
+		if (selectionFlashOpacity > 0) {
+			g2d.setColor(new Color(1.0f, 1.0f, 1.0f, selectionFlashOpacity));
 			g2d.fillRect(rx, ry, rw, rh);
 		}
 	}
@@ -430,14 +451,14 @@ public class CameraView extends JComponent implements CameraListener {
 	 * @param y
 	 * @return
 	 */
-	private HandlePosition getSelectionRectangleHandleAtPosition(int x, int y) {
-		if (selectionRectangle == null) {
+	private HandlePosition getSelectionHandleAtPosition(int x, int y) {
+		if (selection == null) {
 			return null;
 		}
-		int rx = (int) selectionRectangle.getX();
-		int ry = (int) selectionRectangle.getY();
-		int rw = (int) selectionRectangle.getWidth();
-		int rh = (int) selectionRectangle.getHeight();
+		int rx = (int) selection.getX();
+		int ry = (int) selection.getY();
+		int rw = (int) selection.getWidth();
+		int rh = (int) selection.getHeight();
 		int rx2 = rx + rw;
 		int ry2 = ry + rh;
 		int rxc = rx + rw / 2;
@@ -618,31 +639,37 @@ public class CameraView extends JComponent implements CameraListener {
 		return handlePosition;
 	}
 
-	public void setSelectionRectangle(int x, int y, int width, int height) {
-		setSelectionRectangle(new Rectangle(x, y, width, height));
+	public void setSelection(int x, int y, int width, int height) {
+		setSelection(new Rectangle(x, y, width, height));
 	}
 	
-	public void setSelectionRectangle(Rectangle r) {
+	public void setSelection(Rectangle r) {
 		if (r == null) {
-			selectionRectangle = null;
-			selectionRectangleMode = null;
+			selection = null;
+			selectionMode = null;
 		}
 		else {
-			selectionRectangleActiveHandle = getOpposingHandle(r, selectionRectangleActiveHandle);
-			selectionRectangle = normalizeRectangle(r);
+			int sx = (int) ((r.getX() / scaleRatioX) + centerX);
+			int sy = (int) ((r.getY() / scaleRatioY) + centerY);
+			int sw = (int) (r.getWidth() / scaleRatioX);
+			int sh = (int) (r.getHeight() / scaleRatioY);
+			
+			setSelectionRaw(sx, sy, sw, sh);
 		}
 	}
 	
-	public Rectangle getSelectionRectangle() {
-		return selectionRectangle;
+	private void setSelectionRaw(int x, int y, int width, int height) {
+		Rectangle r = new Rectangle(x, y, width, height);
+		selectionActiveHandle = getOpposingHandle(r, selectionActiveHandle);
+		selection = normalizeRectangle(r);
 	}
 	
-	public boolean isSelectionRectangleEnabled() {
-		return selectionRectangleEnabled;
+	public boolean isSelectionEnabled() {
+		return selectionEnabled;
 	}
 
-	public void setSelectionRectangleEnabled(boolean selectionRectangleEnabled) {
-		this.selectionRectangleEnabled = selectionRectangleEnabled;
+	public void setSelectionEnabled(boolean selectionEnabled) {
+		this.selectionEnabled = selectionEnabled;
 	}
 	
 	public static Cursor getCursorForHandlePosition(HandlePosition handlePosition) {
@@ -671,21 +698,21 @@ public class CameraView extends JComponent implements CameraListener {
 	 * Updates the Cursor to reflect the current state of the component.
 	 */
 	private void updateCursor() {
-		if (selectionRectangleEnabled) {
-			if (selectionRectangleMode == SelectionRectangleMode.Moving) {
+		if (selectionEnabled) {
+			if (selectionMode == SelectionMode.Moving) {
 				setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
 			}
-			else if (selectionRectangleMode == SelectionRectangleMode.Resizing) {
-				setCursor(getCursorForHandlePosition(selectionRectangleActiveHandle));
+			else if (selectionMode == SelectionMode.Resizing) {
+				setCursor(getCursorForHandlePosition(selectionActiveHandle));
 			}
-			else if (selectionRectangleMode == null && selectionRectangle != null) {
+			else if (selectionMode == null && selection != null) {
 				int x = (int) getMousePosition().getX();
 				int y = (int) getMousePosition().getY();
-				HandlePosition handlePosition = getSelectionRectangleHandleAtPosition(x, y);
+				HandlePosition handlePosition = getSelectionHandleAtPosition(x, y);
 				if (handlePosition != null) {
 					setCursor(getCursorForHandlePosition(handlePosition));
 				}
-				else if (selectionRectangle.contains(x, y)) {
+				else if (selection.contains(x, y)) {
 					setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
 				}
 				else {
@@ -724,29 +751,29 @@ public class CameraView extends JComponent implements CameraListener {
 			int x = e.getX();
 			int y = e.getY();
 			
-			if (selectionRectangleEnabled) {
+			if (selectionEnabled) {
 				// If we're not doing anything currently, we can start
 				// a new operation.
-				if (selectionRectangleMode == null) {
+				if (selectionMode == null) {
 					// See if there is a handle under the cursor.
-					HandlePosition handlePosition = getSelectionRectangleHandleAtPosition(x, y);
+					HandlePosition handlePosition = getSelectionHandleAtPosition(x, y);
 					if (handlePosition != null) {
-						selectionRectangleMode = SelectionRectangleMode.Resizing;
-						selectionRectangleActiveHandle = handlePosition;
+						selectionMode = SelectionMode.Resizing;
+						selectionActiveHandle = handlePosition;
 					}
 					// If not, perhaps they want to move the rectangle
-					else if (selectionRectangle != null && selectionRectangle.contains(x, y)) {
-						selectionRectangleMode = SelectionRectangleMode.Moving;
+					else if (selection != null && selection.contains(x, y)) {
+						selectionMode = SelectionMode.Moving;
 						// Store the distance between the rectangle's origin and
 						// where they started moving it from.
-						selectionRectangleX = (int) (x - selectionRectangle.getX());
-						selectionRectangleY = (int) (y - selectionRectangle.getY());
+						selectionX = (int) (x - selection.getX());
+						selectionY = (int) (y - selection.getY());
 					}
 					// If not those, it's time to create a rectangle
 					else {
-						selectionRectangleMode = SelectionRectangleMode.Creating;
-						selectionRectangleX = x;
-						selectionRectangleY = y;
+						selectionMode = SelectionMode.Creating;
+						selectionX = x;
+						selectionY = y;
 					}
 				}
 			}
@@ -754,8 +781,8 @@ public class CameraView extends JComponent implements CameraListener {
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			selectionRectangleMode = null;
-			selectionRectangleActiveHandle = null;
+			selectionMode = null;
+			selectionActiveHandle = null;
 		}
 	};
 
@@ -767,54 +794,54 @@ public class CameraView extends JComponent implements CameraListener {
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			if (selectionRectangleEnabled) {
+			if (selectionEnabled) {
 				int x = e.getX();
 				int y = e.getY();
 				
-				if (selectionRectangleMode == SelectionRectangleMode.Resizing) {
-					int rx = (int) selectionRectangle.getX();
-					int ry = (int) selectionRectangle.getY();
-					int rw = (int) selectionRectangle.getWidth();
-					int rh = (int) selectionRectangle.getHeight();
+				if (selectionMode == SelectionMode.Resizing) {
+					int rx = (int) selection.getX();
+					int ry = (int) selection.getY();
+					int rw = (int) selection.getWidth();
+					int rh = (int) selection.getHeight();
 					
-					if (selectionRectangleActiveHandle == HandlePosition.NW) {
-						setSelectionRectangle(x, y, (rw - (x - rx)), (rh - (y - ry)));
+					if (selectionActiveHandle == HandlePosition.NW) {
+						setSelectionRaw(x, y, (rw - (x - rx)), (rh - (y - ry)));
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.NE) {
-						setSelectionRectangle(rx, y, x - rx, (rh - (y - ry)));
+					else if (selectionActiveHandle == HandlePosition.NE) {
+						setSelectionRaw(rx, y, x - rx, (rh - (y - ry)));
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.N) {
-						setSelectionRectangle(rx, y, rw, (rh - (y - ry)));
+					else if (selectionActiveHandle == HandlePosition.N) {
+						setSelectionRaw(rx, y, rw, (rh - (y - ry)));
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.E) {
-						setSelectionRectangle(rx, ry, rw + (x - (rx + rw)), rh);
+					else if (selectionActiveHandle == HandlePosition.E) {
+						setSelectionRaw(rx, ry, rw + (x - (rx + rw)), rh);
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.SE) {
-						setSelectionRectangle(rx, ry, rw + (x - (rx + rw)), rh + (y - (ry + rh)));
+					else if (selectionActiveHandle == HandlePosition.SE) {
+						setSelectionRaw(rx, ry, rw + (x - (rx + rw)), rh + (y - (ry + rh)));
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.S) {
-						setSelectionRectangle(rx, ry, rw, rh + (y - (ry + rh)));
+					else if (selectionActiveHandle == HandlePosition.S) {
+						setSelectionRaw(rx, ry, rw, rh + (y - (ry + rh)));
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.SW) {
-						setSelectionRectangle(x, ry, (rw - (x - rx)), rh + (y - (ry + rh)));
+					else if (selectionActiveHandle == HandlePosition.SW) {
+						setSelectionRaw(x, ry, (rw - (x - rx)), rh + (y - (ry + rh)));
 					}
-					else if (selectionRectangleActiveHandle == HandlePosition.W) {
-						setSelectionRectangle(x, ry, (rw - (x - rx)), rh);
+					else if (selectionActiveHandle == HandlePosition.W) {
+						setSelectionRaw(x, ry, (rw - (x - rx)), rh);
 					}
 				}
-				else if (selectionRectangleMode == SelectionRectangleMode.Moving) {
-					setSelectionRectangle(
-							x - selectionRectangleX, 
-							y - selectionRectangleY, 
-							(int) selectionRectangle.getWidth(), 
-							(int) selectionRectangle.getHeight());
+				else if (selectionMode == SelectionMode.Moving) {
+					setSelectionRaw(
+							x - selectionX, 
+							y - selectionY, 
+							(int) selection.getWidth(), 
+							(int) selection.getHeight());
 				}
-				else if (selectionRectangleMode == SelectionRectangleMode.Creating) {
-					int sx = selectionRectangleX;
-					int sy = selectionRectangleY;
+				else if (selectionMode == SelectionMode.Creating) {
+					int sx = selectionX;
+					int sy = selectionY;
 					int w = x - sx;
 					int h = y - sy;
-					setSelectionRectangle(sx, sy, w, h);
+					setSelectionRaw(sx, sy, w, h);
 				}
 				updateCursor();
 				repaint();

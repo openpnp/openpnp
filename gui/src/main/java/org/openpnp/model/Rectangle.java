@@ -37,25 +37,40 @@ public class Rectangle {
 	public int getLeft() {
 		return left;
 	}
+	
 	public void setLeft(int left) {
 		this.left = left;
 	}
+	
 	public int getTop() {
 		return top;
 	}
+	
 	public void setTop(int top) {
 		this.top = top;
 	}
+	
 	public int getRight() {
 		return right;
 	}
+	
 	public void setRight(int right) {
 		this.right = right;
 	}
+	
 	public int getBottom() {
 		return bottom;
 	}
+	
 	public void setBottom(int bottom) {
 		this.bottom = bottom;
+	}
+	
+	public int getWidth() {
+		return Math.abs(right - left);
+	}
+	
+	public int getHeight() {
+		return Math.abs(bottom - top);
 	}
 }
