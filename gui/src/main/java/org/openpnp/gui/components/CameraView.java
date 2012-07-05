@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
@@ -212,14 +213,14 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 	}
 	
-	public BufferedImage getSelectionRectangleImage() {
+	public BufferedImage captureSelectionRectangleImage() {
 		if (selectionRectangle == null || lastFrame == null) {
 			return null;
 		}
 		
 		selectionRectangleFlashOpacity = 1.0f;
 		
-		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+		ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(new Runnable() {
 			public void run() {
 				if (selectionRectangleFlashOpacity > 0) {
 					selectionRectangleFlashOpacity -= 0.07;
@@ -255,6 +256,9 @@ public class CameraView extends JComponent implements CameraListener {
 				sy + sh,
 				null);
 		g.dispose();
+		
+		while (!future.isDone());
+		
 		return image;
 	}
 

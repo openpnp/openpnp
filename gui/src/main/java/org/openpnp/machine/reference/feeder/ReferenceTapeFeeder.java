@@ -21,8 +21,6 @@
 
 package org.openpnp.machine.reference.feeder;
 
-
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +35,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -161,7 +160,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		@Attribute(required=false)
 		private boolean enabled;
 		@Attribute(required=false)
-		private String templateImageName; 
+		private String templateImageName;
+		@Element(required=false)
+		private Rectangle areaOfInterest = new Rectangle();;
 		
 		private BufferedImage templateImage;
 		private boolean templateImageDirty;
@@ -177,6 +178,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 			}
 		}
 		
+		@SuppressWarnings("unused")
 		@Persist
 		private void persist() throws IOException {
 			if (templateImageDirty) {
@@ -190,16 +192,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				}
 				ImageIO.write(templateImage, "png", file);
 				templateImageDirty = false;
-			}
-		}
-		
-		@SuppressWarnings("unused")
-		@Validate
-		private void validate() throws Exception {
-			if (enabled) {
-//				if (tapeFeedHoleDiameter == 0) {
-//					throw new PersistenceException("ReferenceTapeFeeder: tape-feed-hole-diameter is required if vision is enabled.");
-//				}
 			}
 		}
 		
@@ -220,6 +212,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				this.templateImage = templateImage;
 				templateImageDirty = true;
 			}
+		}
+
+		public Rectangle getAreaOfInterest() {
+			return areaOfInterest;
+		}
+
+		public void setAreaOfInterest(Rectangle areaOfInterest) {
+			this.areaOfInterest = areaOfInterest;
 		}
 	}
 }
