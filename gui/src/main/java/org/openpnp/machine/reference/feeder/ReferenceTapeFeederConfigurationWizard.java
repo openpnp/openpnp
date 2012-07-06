@@ -26,7 +26,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -99,16 +98,17 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private JSeparator separator;
 	private JPanel panelVisionTemplateAndAoe;
 	private JPanel panelAoE;
-	private JLabel lblLeft;
-	private JTextField textFieldAoeLeft;
-	private JLabel lblTop;
-	private JTextField textFieldAoeTop;
-	private JLabel lblRight;
-	private JTextField textFieldAoeRight;
-	private JLabel lblBottom;
-	private JTextField textFieldAoeBottom;
-	private JButton btnChangeAoe;
-	
+	private JLabel lblTopLeft;
+	private JLabel lblX_1;
+	private JLabel lblY_1;
+	private JLabel lblZ_1;
+	private JTextField textFieldTopLeftX;
+	private JTextField textFieldTopLeftY;
+	private JTextField textFieldTopLeftZ;
+	private JLabel lblBottomRight;
+	private JTextField textFieldBottomRightX;
+	private JTextField textFieldBottomRightY;
+	private JTextField textFieldBottomRightZ;
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
@@ -199,7 +199,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		panelLocations.add(feedStartZ, "8, 6");
 		feedStartZ.setColumns(10);
 
-		feedStartAutoFill = new JButton("Set to Current");
+		feedStartAutoFill = new JButton(feedStartAutoFillAction);
 		panelLocations.add(feedStartAutoFill, "10, 6");
 
 		JLabel lblFeedEndLocation = new JLabel("Feed End Location");
@@ -217,30 +217,8 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		panelLocations.add(feedEndZ, "8, 8");
 		feedEndZ.setColumns(10);
 
-		feedEndAutoFill = new JButton("Set to Current");
+		feedEndAutoFill = new JButton(feedEndAutoFillAction);
 		panelLocations.add(feedEndAutoFill, "10, 8");
-
-		feedEndAutoFill.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Location l = wizardContainer.getMachineControlsPanel()
-						.getDisplayedLocation();
-				l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
-				feedEndX.setText(l.getLengthX().toString());
-				feedEndY.setText(l.getLengthY().toString());
-				feedEndZ.setText(l.getLengthZ().toString());
-			}
-		});
-
-		feedStartAutoFill.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Location l = wizardContainer.getMachineControlsPanel()
-						.getDisplayedLocation();
-				l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
-				feedStartX.setText(l.getLengthX().toString());
-				feedStartY.setText(l.getLengthY().toString());
-				feedStartZ.setText(l.getLengthZ().toString());
-			}
-		});
 
 		panelVision = new JPanel();
 		panelVision.setBorder(new TitledBorder(null, "Vision",
@@ -296,13 +274,13 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 												panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
 												panelAoE.setLayout(new FormLayout(new ColumnSpec[] {
 														FormFactory.RELATED_GAP_COLSPEC,
-														ColumnSpec.decode("center:default"),
-														FormFactory.RELATED_GAP_COLSPEC,
 														FormFactory.DEFAULT_COLSPEC,
 														FormFactory.RELATED_GAP_COLSPEC,
-														FormFactory.DEFAULT_COLSPEC,
+														ColumnSpec.decode("default:grow"),
 														FormFactory.RELATED_GAP_COLSPEC,
-														FormFactory.DEFAULT_COLSPEC,
+														ColumnSpec.decode("default:grow"),
+														FormFactory.RELATED_GAP_COLSPEC,
+														ColumnSpec.decode("default:grow"),
 														FormFactory.RELATED_GAP_COLSPEC,
 														FormFactory.DEFAULT_COLSPEC,},
 													new RowSpec[] {
@@ -311,42 +289,52 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 														FormFactory.RELATED_GAP_ROWSPEC,
 														FormFactory.DEFAULT_ROWSPEC,
 														FormFactory.RELATED_GAP_ROWSPEC,
-														FormFactory.DEFAULT_ROWSPEC,
-														FormFactory.RELATED_GAP_ROWSPEC,
-														FormFactory.DEFAULT_ROWSPEC,
-														FormFactory.RELATED_GAP_ROWSPEC,
 														FormFactory.DEFAULT_ROWSPEC,}));
 												
-												lblTop = new JLabel("Top");
-												panelAoE.add(lblTop, "6, 2, center, default");
+												lblX_1 = new JLabel("X");
+												panelAoE.add(lblX_1, "4, 2");
 												
-												textFieldAoeTop = new JTextField();
-												panelAoE.add(textFieldAoeTop, "6, 4, center, default");
-												textFieldAoeTop.setColumns(5);
+												lblY_1 = new JLabel("Y");
+												panelAoE.add(lblY_1, "6, 2");
 												
-												lblLeft = new JLabel("Left");
-												panelAoE.add(lblLeft, "2, 6, right, default");
+												lblZ_1 = new JLabel("Z");
+												panelAoE.add(lblZ_1, "8, 2");
 												
-												textFieldAoeLeft = new JTextField();
-												panelAoE.add(textFieldAoeLeft, "4, 6, left, default");
-												textFieldAoeLeft.setColumns(5);
+												lblTopLeft = new JLabel("Top Left");
+												panelAoE.add(lblTopLeft, "2, 4, right, default");
 												
-												btnChangeAoe = new JButton(changeAoeAction);
-												panelAoE.add(btnChangeAoe, "6, 6, center, default");
+												textFieldTopLeftX = new JTextField();
+												panelAoE.add(textFieldTopLeftX, "4, 4, fill, default");
+												textFieldTopLeftX.setColumns(6);
 												
-												textFieldAoeRight = new JTextField();
-												panelAoE.add(textFieldAoeRight, "8, 6, right, default");
-												textFieldAoeRight.setColumns(5);
+												textFieldTopLeftY = new JTextField();
+												panelAoE.add(textFieldTopLeftY, "6, 4, fill, default");
+												textFieldTopLeftY.setColumns(6);
 												
-												lblRight = new JLabel("Right");
-												panelAoE.add(lblRight, "10, 6, left, default");
+												textFieldTopLeftZ = new JTextField();
+												panelAoE.add(textFieldTopLeftZ, "8, 4, fill, default");
+												textFieldTopLeftZ.setColumns(6);
 												
-												textFieldAoeBottom = new JTextField();
-												panelAoE.add(textFieldAoeBottom, "6, 8, center, default");
-												textFieldAoeBottom.setColumns(5);
+												btnTopLeftSetToCurrent = new JButton(topLeftSetToCurrentAction);
+												panelAoE.add(btnTopLeftSetToCurrent, "10, 4");
 												
-												lblBottom = new JLabel("Bottom");
-												panelAoE.add(lblBottom, "6, 10, center, default");
+												lblBottomRight = new JLabel("Bottom Right");
+												panelAoE.add(lblBottomRight, "2, 6, right, default");
+												
+												textFieldBottomRightX = new JTextField();
+												panelAoE.add(textFieldBottomRightX, "4, 6, fill, default");
+												textFieldBottomRightX.setColumns(6);
+												
+												textFieldBottomRightY = new JTextField();
+												panelAoE.add(textFieldBottomRightY, "6, 6, fill, default");
+												textFieldBottomRightY.setColumns(6);
+												
+												textFieldBottomRightZ = new JTextField();
+												panelAoE.add(textFieldBottomRightZ, "8, 6, fill, default");
+												textFieldBottomRightZ.setColumns(6);
+												
+												btnBottomRightSetToCurrent = new JButton(bottomRightSetToCurrentAction);
+												panelAoE.add(btnBottomRightSetToCurrent, "10, 6");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -398,14 +386,20 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(feeder, "vision.templateImage",
 				labelTemplateImage, "icon", imageConverter, listener));
 		
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.left",
-				textFieldAoeLeft, "text", intConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.top",
-				textFieldAoeTop, "text", intConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.right",
-				textFieldAoeRight, "text", intConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.bottom",
-				textFieldAoeBottom, "text", intConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestTopLeft.lengthX",
+				textFieldTopLeftX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestTopLeft.lengthY",
+				textFieldTopLeftY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestTopLeft.lengthZ",
+				textFieldTopLeftZ, "text", lengthConverter, listener));
+		
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthX",
+				textFieldBottomRightX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthY",
+				textFieldBottomRightY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthZ",
+				textFieldBottomRightZ, "text", lengthConverter, listener));
+		
 	}
 
 	private void loadFromModel() {
@@ -464,7 +458,8 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		public void actionPerformed(ActionEvent arg0) {
 			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
 			cameraView.setSelectionEnabled(true);
-			org.openpnp.model.Rectangle r = feeder.getVision().getTemplateImageCoordinates();
+//			org.openpnp.model.Rectangle r = feeder.getVision().getTemplateImageCoordinates();
+			org.openpnp.model.Rectangle r = null;
 			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
 				cameraView.setSelection(0, 0, 100, 100);
 			}
@@ -499,37 +494,84 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 	
-	private Action changeAoeAction = new AbstractAction(
-			"Change") {
-		@Override
+	private Action feedEndAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
-			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-			cameraView.setSelectionEnabled(true);
-			org.openpnp.model.Rectangle r = feeder.getVision().getAreaOfInterest();
-			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
-				cameraView.setSelection(0, 0, 100, 100);
-			}
-			else {
-				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
-			}
-			btnChangeAoe.setAction(captureAoeAction);
+			Location l = wizardContainer.getMachineControlsPanel()
+					.getDisplayedLocation();
+			l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
+			feedEndX.setText(l.getLengthX().toString());
+			feedEndY.setText(l.getLengthY().toString());
+			feedEndZ.setText(l.getLengthZ().toString());
 		}
 	};
 	
-	// TODO: This is completely useless. Need to be capturing machine
-	// coordinates, not image coordinates.
-	private Action captureAoeAction = new AbstractAction(
-			"Capture") {
-		@Override
+	private Action feedStartAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
-			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-			cameraView.setSelectionEnabled(false);
-			Rectangle r = cameraView.getSelection();
-			textFieldAoeLeft.setText("" + (int) r.getX());
-			textFieldAoeTop.setText("" + (int) r.getY());
-			textFieldAoeRight.setText("" + (int) r.getMaxX());
-			textFieldAoeBottom.setText("" + (int) r.getMaxY());
-			btnChangeAoe.setAction(changeAoeAction);
+			Location l = wizardContainer.getMachineControlsPanel()
+					.getDisplayedLocation();
+			l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
+			feedStartX.setText(l.getLengthX().toString());
+			feedStartY.setText(l.getLengthY().toString());
+			feedStartZ.setText(l.getLengthZ().toString());
 		}
 	};
+	
+	private Action topLeftSetToCurrentAction = new AbstractAction("Set to Current") {
+		public void actionPerformed(ActionEvent arg0) {
+			Location l = wizardContainer.getMachineControlsPanel()
+					.getDisplayedLocation();
+			l = l.convertToUnits(feeder.getVision().getAreaOfInterestTopLeft().getUnits());
+			textFieldTopLeftX.setText(l.getLengthX().toString());
+			textFieldTopLeftY.setText(l.getLengthY().toString());
+			textFieldTopLeftZ.setText(l.getLengthZ().toString());
+		}
+	};
+	
+	private Action bottomRightSetToCurrentAction = new AbstractAction("Set to Current") {
+		public void actionPerformed(ActionEvent arg0) {
+			Location l = wizardContainer.getMachineControlsPanel()
+					.getDisplayedLocation();
+			l = l.convertToUnits(feeder.getVision().getAreaOfInterestBottomRight().getUnits());
+			textFieldBottomRightX.setText(l.getLengthX().toString());
+			textFieldBottomRightY.setText(l.getLengthY().toString());
+			textFieldBottomRightZ.setText(l.getLengthZ().toString());
+		}
+	};
+	
+	private JButton btnTopLeftSetToCurrent;
+	private JButton btnBottomRightSetToCurrent;
+	
+//	private Action changeAoeAction = new AbstractAction(
+//			"Change") {
+//		@Override
+//		public void actionPerformed(ActionEvent arg0) {
+//			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
+//			cameraView.setSelectionEnabled(true);
+//			org.openpnp.model.Rectangle r = feeder.getVision().getAreaOfInterest();
+//			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+//				cameraView.setSelection(0, 0, 100, 100);
+//			}
+//			else {
+//				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
+//			}
+//			btnChangeAoe.setAction(captureAoeAction);
+//		}
+//	};
+//	
+//	// TODO: This is completely useless. Need to be capturing machine
+//	// coordinates, not image coordinates.
+//	private Action captureAoeAction = new AbstractAction(
+//			"Capture") {
+//		@Override
+//		public void actionPerformed(ActionEvent arg0) {
+//			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
+//			cameraView.setSelectionEnabled(false);
+//			Rectangle r = cameraView.getSelection();
+//			textFieldAoeLeft.setText("" + (int) r.getX());
+//			textFieldAoeTop.setText("" + (int) r.getY());
+//			textFieldAoeRight.setText("" + (int) r.getMaxX());
+//			textFieldAoeBottom.setText("" + (int) r.getMaxY());
+//			btnChangeAoe.setAction(changeAoeAction);
+//		}
+//	};
 }

@@ -40,7 +40,6 @@ import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
-import org.simpleframework.xml.core.Validate;
 
 
 public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
@@ -162,9 +161,13 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		@Attribute(required=false)
 		private String templateImageName;
 		@Element(required=false)
-		private Rectangle areaOfInterest = new Rectangle();
+		private Location areaOfInterestTopLeft = new Location(LengthUnit.Millimeters);
 		@Element(required=false)
-		private Rectangle templateImageCoordinates = new Rectangle();
+		private Location areaOfInterestBottomRight = new Location(LengthUnit.Millimeters);
+		@Element(required=false)
+		private Location templateImageTopLeft = new Location(LengthUnit.Millimeters);
+		@Element(required=false)
+		private Location templateImageBottomRight = new Location(LengthUnit.Millimeters);
 		
 		private BufferedImage templateImage;
 		private boolean templateImageDirty;
@@ -216,20 +219,36 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 			}
 		}
 
-		public Rectangle getAreaOfInterest() {
-			return areaOfInterest;
+		public Location getAreaOfInterestTopLeft() {
+			return areaOfInterestTopLeft;
 		}
 
-		public void setAreaOfInterest(Rectangle areaOfInterest) {
-			this.areaOfInterest = areaOfInterest;
+		public void setAreaOfInterestTopLeft(Location areaOfInterestTopLeft) {
+			this.areaOfInterestTopLeft = areaOfInterestTopLeft;
 		}
 
-		public Rectangle getTemplateImageCoordinates() {
-			return templateImageCoordinates;
+		public Location getAreaOfInterestBottomRight() {
+			return areaOfInterestBottomRight;
 		}
 
-		public void setTemplateImageCoordinates(Rectangle templateImageCoordinates) {
-			this.templateImageCoordinates = templateImageCoordinates;
+		public void setAreaOfInterestBottomRight(Location areaOfInterestBottomRight) {
+			this.areaOfInterestBottomRight = areaOfInterestBottomRight;
+		}
+
+		public Location getTemplateImageTopLeft() {
+			return templateImageTopLeft;
+		}
+
+		public void setTemplateImageTopLeft(Location templateImageTopLeft) {
+			this.templateImageTopLeft = templateImageTopLeft;
+		}
+
+		public Location getTemplateImageBottomRight() {
+			return templateImageBottomRight;
+		}
+
+		public void setTemplateImageBottomRight(Location templateImageBottomRight) {
+			this.templateImageBottomRight = templateImageBottomRight;
 		}
 	}
 }
