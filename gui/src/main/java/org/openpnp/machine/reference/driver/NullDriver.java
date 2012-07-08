@@ -125,17 +125,20 @@ public class NullDriver implements ReferenceDriver {
 	@Override
 	public void pick(ReferenceHead head, Part part) throws Exception {
 		logger.info(String.format("pick(%s)", part.toString()));
+		Thread.sleep(500);
 	}
 
 	@Override
 	public void place(ReferenceHead head) throws Exception {
 		logger.info(String.format("place()"));
+		Thread.sleep(500);
 	}
 
 	@Override
 	public void actuate(ReferenceHead head, int index, boolean on)
 			throws Exception {
 		logger.info(String.format("actuate(%d, %s)", index, on));
+		Thread.sleep(500);
 	}
 
 	@Override

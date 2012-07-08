@@ -64,7 +64,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	private String sourceUri;
 	
 	@Attribute(required=false)
-	private int fps = 10;
+	private int fps = 24;
 	
 	private int tilesWide = 3;
 	private int tilesHigh = 3;

@@ -56,6 +56,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	@Element(required=false)
 	private Vision vision = new Vision();
 	
+
+	/*
+	 * visionOffset contains the difference between where the part was
+	 * expected to be and where it is. Subtracting these offsets from 
+	 * the pickLocation produces the correct pick location. Likewise,
+	 * subtracting the offsets from the feedStart and feedEndLocations 
+	 * should produce the correct feed locations.
+	 */
 	private Location visionOffset;
 	
 	@Override
@@ -83,8 +91,12 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		ReferenceHead head = (ReferenceHead) head_;
 		ReferenceActuator actuator = head.getActuator(actuatorId);
 		
+		
 		// Move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
+		
+		double offsetX = 0;
+		double offsetY = 0;
 		
 		if (vision.isEnabled()) {
 			if (visionOffset == null) {
@@ -95,34 +107,60 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				// that all future calls can go directly to the feed operation
 				// and skip checking the vision first.
 				
-				Location visionOffsets = getVisionOffsets(head, pickLocation);
+				visionOffset = getVisionOffsets(head, pickLocation);
 			}
+			
+			offsetX = visionOffset.getX();
+			offsetY = visionOffset.getY();
 		}
 		
-//		// move the head so that the pin is positioned above the feed hole
-//		head.moveTo(feedStartLocation.getX(), feedStartLocation.getY(),
-//				head.getZ(), head.getC());
-//
-//		// extend the pin
-//		actuator.actuate(true);
-//
-//		// insert the pin
-//		head.moveTo(head.getX(), head.getY(), feedStartLocation.getZ(),
-//				head.getC());
-//
-//		// drag the tape
-//		head.moveTo(feedEndLocation.getX(), feedEndLocation.getY(),
-//				feedEndLocation.getZ(), head.getC(), feedRate);
-//
-//		// move to safe Z
-//		head.moveTo(head.getX(), head.getY(), 0, head.getC());
-//
-//		// retract the pin
-//		actuator.actuate(false);
+		// move the head so that the pin is positioned above the feed hole
+		head.moveTo(
+				feedStartLocation.getX() - offsetX, 
+				feedStartLocation.getY() - offsetY,
+				head.getZ(), 
+				head.getC());
+
+		// extend the pin
+		actuator.actuate(true);
+
+		// insert the pin
+		head.moveTo(head.getX(), head.getY(), feedStartLocation.getZ(),
+				head.getC());
+
+		// drag the tape
+		head.moveTo(
+				feedEndLocation.getX() - offsetX, 
+				feedEndLocation.getY() - offsetY,
+				feedEndLocation.getZ(), 
+				head.getC(), 
+				feedRate);
+
+		// move to safe Z
+		head.moveTo(head.getX(), head.getY(), 0, head.getC());
+
+		// retract the pin
+		actuator.actuate(false);
+		
+		// Create a new pickLocation with the offsets included.
+		pickLocation = new Location(
+				pickLocation.getUnits(),
+				pickLocation.getX() - offsetX,
+				pickLocation.getY() - offsetY,
+				pickLocation.getZ(),
+				pickLocation.getRotation()
+				); 
+		
+		if (vision.isEnabled()) {
+			System.out.println("Feed complete, running vision");
+			visionOffset = getVisionOffsets(head, pickLocation);
+			System.out.println("visionOffsets " + visionOffset);
+		}
 
 		return pickLocation;
 	}
 	
+	// TODO: Throw an Exception if vision fails.
 	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
 		Machine machine = head.getMachine();
 
@@ -149,13 +187,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		double y = pickLocation.getY() - cameraOffsets.getY();
 		double z = pickLocation.getZ() - cameraOffsets.getZ();
 		
-		// TODO STOPSHIP: We will temporarily screw up the results to
-		// better test the vision.
-		double xError = 1.0 - (Math.random() * 2); 
-		double yError = 1.0 - (Math.random() * 2); 
-		x += xError;
-		y += yError;
-		
 		// Position the camera over the pick location.
 		head.moveTo(x, y, 0, head.getC());
 		
@@ -181,72 +212,26 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		double matchX = match.x;
 		double matchY = match.y;
 		
-		// Adjust the match x and y to be the center of the match instead of
+		// Adjust the match x and y to be at the center of the match instead of
 		// the top left corner.
-		matchX += templateWidth / 2;
-		matchY += templateHeight / 2;
+		matchX += (templateWidth / 2);
+		matchY += (templateHeight / 2);
 		
 		// Calculate the difference between the center of the image to the
 		// center of the match.
 		double offsetX = (imageWidth / 2) - matchX;
 		double offsetY = (imageHeight / 2) - matchY;
+		
+		// Invert the Y offset because images count top to bottom and the Y
+		// axis of the machine counts bottom to top.
 		offsetY *= -1;
 		
-		// And convert to units
+		// And convert pixels to units
 		Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(machine.getNativeUnits());
 		offsetX *= unitsPerPixel.getX();
 		offsetY *= unitsPerPixel.getY();
 		
-		System.out.println(String.format("calculated offsets %f, %f, vision offsets %f, %f, difference %f, %f",
-				xError,
-				yError,
-				offsetX,
-				offsetY,
-				xError - offsetX,
-				yError - offsetY
-				));
-		
-		x -= offsetX;
-		y -= offsetY;
-		
-		// Position the camera over the pick location.
-		head.moveTo(x, y, head.getZ(), head.getC());
-		
-//		
-//		
-//		Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(machine.getNativeUnits());
-//		
-//		// determine the position and diameter of the match, in units
-//		double matchX = match.x * unitsPerPixel.getX();
-//		double matchY = match.y * unitsPerPixel.getY();
-//
-//		// move the position from the bottom left to the center
-//		BufferedImage image = camera.capture();
-//		double imageWidthInUnits = image.getWidth() * unitsPerPixel.getX();
-//		double imageHeightInUnits = image.getHeight()
-//				* unitsPerPixel.getY();
-//
-//		circleX -= imageWidthInUnits / 2;
-//		circleY -= imageHeightInUnits / 2;
-//
-//		// get the position of the head
-//		x = getX();
-//		y = getY();
-//
-//		// apply the offset from the circle
-//		x += circleX;
-//		y += circleY;
-//
-//		// and go there
-//		moveTo(x, y, getZ(), getC());
-//		
-//		
-//		
-		
-		// Determine the offset from the best match to the planned
-		// pick location.
-		
-		return null;
+		return new Location(pickLocation.getUnits(), offsetX, offsetY, 0, 0);
 	}
 
 	@Override
