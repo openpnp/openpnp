@@ -23,4 +23,11 @@
   <classpathentry kind="var" path="M2_REPO/org/swinglabs/swingx/1.6.1/swingx-1.6.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/jhlabs/filters/2.0.235/filters-2.0.235.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/swinglabs/swing-worker/1.1/swing-worker-1.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacpp/javacpp/0.1/javacpp-0.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-linux-x86.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-linux-x86_64.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-macosx-x86_64.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-windows-x86.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-windows-x86_64.jar"/>
 </classpath>

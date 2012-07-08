@@ -17,10 +17,11 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.machine.reference.vision;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import org.simpleframework.xml.core.Commit;
  * to the program and have them each use the source. Since they update
  * different vars it should work. Maybe.
  */
+@Deprecated
 public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 	private static Map<String, RoboRealm> roboRealms = new HashMap<String, RoboRealm>();
 
@@ -49,8 +51,8 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 	private String host;
 	@Attribute
 	private int port;
-	
-	@Attribute(required=false)
+
+	@Attribute(required = false)
 	private int autoCaptureFps;
 
 	private Camera camera;
@@ -59,7 +61,7 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 	private CirclesProgram circlesProgram = new CirclesProgram(3, 100);
 
 	private RoboRealmProgram lastProgram;
-	
+
 	private Executor executor = Executors.newSingleThreadExecutor();
 
 	@Commit
@@ -97,28 +99,31 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 			if (lastProgram != circlesProgram) {
 				circlesProgram.setMinimumRadius(minimumDiameter / 2);
 				circlesProgram.setMaximumRadius(maximumDiameter / 2);
-				result = roboRealm.execute(circlesProgram.toString()); 
+				result = roboRealm.execute(circlesProgram.toString());
 				if (!result) {
-					throw new Exception("Failed to execute program on RoboRealm. Is it running?");
+					throw new Exception(
+							"Failed to execute program on RoboRealm. Is it running?");
 				}
 				lastProgram = circlesProgram;
 			}
 			else {
 				if (circlesProgram.getMinimumRadius() != (minimumDiameter / 2)) {
 					circlesProgram.setMinimumRadius(minimumDiameter / 2);
-					result = roboRealm.setParameter("Circles", 0, "min_radius", ""
-							+ circlesProgram.getMinimumRadius());
+					result = roboRealm.setParameter("Circles", 0, "min_radius",
+							"" + circlesProgram.getMinimumRadius());
 					if (!result) {
-						throw new Exception("Failed to set parameter on RoboRealm. Is it running?");
+						throw new Exception(
+								"Failed to set parameter on RoboRealm. Is it running?");
 					}
 				}
 
 				if (circlesProgram.getMaximumRadius() != (maximumDiameter / 2)) {
 					circlesProgram.setMaximumRadius(maximumDiameter / 2);
-					result = roboRealm.setParameter("Circles", 0, "max_radius", ""
-							+ circlesProgram.getMaximumRadius());
+					result = roboRealm.setParameter("Circles", 0, "max_radius",
+							"" + circlesProgram.getMaximumRadius());
 					if (!result) {
-						throw new Exception("Failed to set parameter on RoboRealm. Is it running?");
+						throw new Exception(
+								"Failed to set parameter on RoboRealm. Is it running?");
 					}
 				}
 			}
@@ -127,15 +132,17 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 
 			width = image.getWidth();
 			height = image.getHeight();
-			
+
 			result = roboRealm.setImage(image);
 			if (!result) {
-				throw new Exception("Failed to set image on RoboRealm. Is it running?");
+				throw new Exception(
+						"Failed to set image on RoboRealm. Is it running?");
 			}
 
 			variables = roboRealm.getVariables("CIRCLES_COUNT,CIRCLES");
 			if (variables == null) {
-				throw new Exception("Failed to get variables from RoboRealm. Is it running?");
+				throw new Exception(
+						"Failed to get variables from RoboRealm. Is it running?");
 			}
 		}
 		String circlesCountVar = variables.get("response.CIRCLES_COUNT");
@@ -177,7 +184,14 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 		// TODO sort
 		return circles.size() > 0 ? circles.toArray(new Circle[] {}) : null;
 	}
-	
+
+	@Override
+	public Point[] locateTemplateMatches(int roiX1, int roiY1, int roiX2,
+			int roiY2, int poiX, int poiY, BufferedImage templateImage)
+			throws Exception {
+		return null;
+	}
+
 	@Override
 	public void frameReceived(final BufferedImage img) {
 		executor.execute(new Runnable() {
@@ -188,7 +202,7 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 			}
 		});
 	}
-	
+
 	@Override
 	public Wizard getConfigurationWizard() {
 		return null;
@@ -196,6 +210,41 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 
 	private interface RoboRealmProgram {
 
+	}
+
+	private static class ObjectRecognitionProgram implements RoboRealmProgram {
+		private static String format = "<head><version>2.44.33</version></head>"
+				+ "<Object_Recognition>"
+				+ "<select_top_objects>0</select_top_objects>"
+				+ "<max_angle>360</max_angle>"
+				+ "<create_shape_array>TRUE</create_shape_array>"
+				+ "<monitor_folder>FALSE</monitor_folder>"
+				+ "<absent_after_frames>0</absent_after_frames>"
+				+ "<display_filename>TRUE</display_filename>"
+				+ "<matched_color_index>3</matched_color_index>"
+				+ "<check_tx>TRUE</check_tx>"
+				+ "<max_confidence>1000</max_confidence>"
+				+ "<check_orientation>TRUE</check_orientation>"
+				+ "<min_angle>0</min_angle>"
+				+ "<sort_array_on_y>FALSE</sort_array_on_y>"
+				+ "<font_size_index>2</font_size_index>"
+				+ "<enable_tracking>TRUE</enable_tracking>"
+				+ "<base_folder>.\temp</base_folder>"
+				+ "<display_ty>TRUE</display_ty>"
+				+ "<display_orientation>TRUE</display_orientation>"
+				+ "<recognition_method>4</recognition_method>"
+				+ "<present_after_frames>0</present_after_frames>"
+				+ "<max_size>1000</max_size>"
+				+ "<display_scale>TRUE</display_scale>"
+				+ "<check_ty>TRUE</check_ty>"
+				+ "<min_confidence>70</min_confidence>"
+				+ "<sort_array_on_x>FALSE</sort_array_on_x>"
+				+ "<min_tracking_confidence>50</min_tracking_confidence>"
+				+ "<min_size>20</min_size>"
+				+ "<check_scale>TRUE</check_scale>"
+				+ "<match_isolation>20</match_isolation>"
+				+ "<display_confidence>TRUE</display_confidence>"
+				+ "<display_tx>TRUE</display_tx>" + "</Object_Recognition>";
 	}
 
 	private static class CirclesProgram implements RoboRealmProgram {

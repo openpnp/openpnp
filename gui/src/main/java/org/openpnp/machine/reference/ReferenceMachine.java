@@ -31,6 +31,7 @@ import java.util.Set;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
+import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
@@ -237,6 +238,7 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		l.add(LtiCivilCamera.class);
 		l.add(VfwCamera.class);
 		l.add(TableScannerCamera.class);
+		l.add(OpenCvCamera.class);
 		return l;
 	}
 	

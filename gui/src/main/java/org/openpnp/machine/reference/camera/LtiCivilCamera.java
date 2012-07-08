@@ -43,6 +43,7 @@ import com.lti.civil.Image;
 import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
 
+@Deprecated
 public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver, RequiresConfigurationResolution {
 	private CaptureSystemFactory captureSystemFactory;
 	private CaptureSystem captureSystem;

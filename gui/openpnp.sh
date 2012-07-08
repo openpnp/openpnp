@@ -13,7 +13,7 @@ esac
 
 case "$platform" in
 	mac)
-		java -d32 -Djava.library.path=lib/native/mac-universal -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+		java -Djava.library.path=lib/native/mac-universal -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 	linux)
 		java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar

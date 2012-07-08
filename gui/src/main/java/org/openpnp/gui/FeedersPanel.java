@@ -53,8 +53,8 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.gui.wizards.FeederConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,11 +260,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	public Action feedFeederAction = new AbstractAction("Feed") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			Feeder feeder = getSelectedFeeder();
-			MessageBoxes.errorBox(
-					JOptionPane.getFrameForComponent(FeedersPanel.this), 
-					"Feeder Error", 
-					"Feed is not yet implemented. Try again some other time.");
+			new Thread() {
+				public void run() {
+					Feeder feeder = getSelectedFeeder();
+					Head head = configuration.getMachine().getHeads().get(0);
+					try {
+						feeder.feed(head, feeder.getLocation());
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);
+					}
+				}
+			}.start();
 		}
 	};
 }

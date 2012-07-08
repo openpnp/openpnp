@@ -37,6 +37,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.VisionProvider.Circle;
 import org.simpleframework.xml.Attribute;
@@ -302,6 +303,24 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		this.c = c + offsetC;
 		machine.fireMachineHeadActivity(machine, this);
 	}
+	
+	/**
+	 * Can be called by the driver to provide updates during the move
+	 * operation. This will allow the DROs to update more naturally, and allows
+	 * things like simulated cameras to update during the move operation.
+	 * It is not required that this be called, but it is recommended.
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param c
+	 */
+	public void updateDuringMoveTo(double x, double y, double z, double c) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.c = c;
+		machine.fireMachineHeadActivity(machine, this);
+	}
 
 	@Override
 	public boolean canPickAndPlace(Feeder feeder, Location pickLocation,
@@ -467,6 +486,11 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	@Override
 	public Wizard getConfigurationWizard() {
 		return new ReferenceHeadConfigurationWizard(this);
+	}
+	
+	@Override
+	public Machine getMachine() {
+		return machine;
 	}
 
 	/**

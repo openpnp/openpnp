@@ -17,9 +17,12 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.spi;
+
+import java.awt.Point;
+import java.awt.image.BufferedImage;
 
 import org.openpnp.gui.support.Wizard;
 
@@ -36,20 +39,24 @@ public interface VisionProvider {
 	 * @param camera
 	 */
 	public void setCamera(Camera camera);
-	
+
 	public Wizard getConfigurationWizard();
 
 	// TODO: decide if results are measured from top or bottom left and
 	// standardize on it
 	public Circle[] locateCircles(int roiX1, int roiY1, int roiX2, int roiY2,
-			int poiX, int poyY, int minimumDiameter, int diameter,
+			int poiX, int poiY, int minimumDiameter, int diameter,
 			int maximumDiameter) throws Exception;
+
+	public Point[] locateTemplateMatches(int roiX1, int roiY1, int roiX2,
+			int roiY2, int poiX, int poiY, BufferedImage templateImage)
+			throws Exception;
 
 	public class Circle {
 		private double x;
 		private double y;
 		private double diameter;
-		
+
 		public Circle(double x, double y, double diameter) {
 			this.x = x;
 			this.y = y;

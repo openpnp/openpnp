@@ -63,6 +63,8 @@ import org.slf4j.LoggerFactory;
 // truncation in the selection stuff. Probably doing a lot of off by one.
 // TODO: Need to scale selection as Component size changes.
 // TODO: Fix calibration mode.
+// TODO: In all the places that I am calling Rectangle.getN() and casting to
+// int I can just use Rectangle.n. Didn't realize it existed. Duh.
 public class CameraView extends JComponent implements CameraListener,
 		CameraViewSelectionTextDelegate {
 	private final static Logger logger = LoggerFactory

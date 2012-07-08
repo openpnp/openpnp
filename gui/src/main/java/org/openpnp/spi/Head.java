@@ -170,4 +170,6 @@ public interface Head {
 	public Wizard getConfigurationWizard();
 	
 	public String getId();
+	
+	public Machine getMachine();
 }

@@ -177,18 +177,18 @@ public class JobProcessor implements Runnable {
 		
 		Machine machine = configuration.getMachine();
 
-		fireDetailedStatusUpdated("Move to home.");		
-		
-		if (!shouldJobProcessingContinue()) {
-			return;
-		}
-
-		try {
-			machine.home();
-		}
-		catch (Exception e) {
-			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
-		}
+//		fireDetailedStatusUpdated("Move to home.");		
+//		
+//		if (!shouldJobProcessingContinue()) {
+//			return;
+//		}
+//
+//		try {
+//			machine.home();
+//		}
+//		catch (Exception e) {
+//			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
+//		}
 		
 		/*
 		 * Vision: After the Head.pick() operation is when we might do some
@@ -441,18 +441,18 @@ public class JobProcessor implements Runnable {
 			fireBoardProcessingCompleted(jobBoard);
 		}
 		
-		fireDetailedStatusUpdated(String.format("Move to home."));
-
-		if (!shouldJobProcessingContinue()) {
-			return;
-		}
-
-		try {
-			machine.home();
-		}
-		catch (Exception e) {
-			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
-		}
+//		fireDetailedStatusUpdated(String.format("Move to home."));
+//
+//		if (!shouldJobProcessingContinue()) {
+//			return;
+//		}
+//
+//		try {
+//			machine.home();
+//		}
+//		catch (Exception e) {
+//			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
+//		}
 		
 		fireDetailedStatusUpdated("Job complete.");
 		

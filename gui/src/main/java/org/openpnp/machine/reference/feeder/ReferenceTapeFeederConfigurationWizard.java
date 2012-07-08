@@ -27,7 +27,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +54,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.BufferedImageIconConverter;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
@@ -69,6 +67,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private final ReferenceTapeFeeder feeder;
 	
@@ -109,6 +108,9 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private JTextField textFieldBottomRightX;
 	private JTextField textFieldBottomRightY;
 	private JTextField textFieldBottomRightZ;
+	private JButton btnTopLeftSetToCurrent;
+	private JButton btnBottomRightSetToCurrent;
+	
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
@@ -353,7 +355,6 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		IntegerConverter intConverter = new IntegerConverter("%d");
 		LengthConverter lengthConverter = new LengthConverter();
 		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
 		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
@@ -434,6 +435,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		return null;
 	}
 
+	@SuppressWarnings("serial")
 	private Action saveAction = new AbstractAction("Apply") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -444,6 +446,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 
+	@SuppressWarnings("serial")
 	private Action cancelAction = new AbstractAction("Reset") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -452,6 +455,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 
+	@SuppressWarnings("serial")
 	private Action changeTemplateImageAction = new AbstractAction(
 			"Change") {
 		@Override
@@ -470,6 +474,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 	
+	@SuppressWarnings("serial")
 	private Action captureTemplateImageAction = new AbstractAction(
 			"Capture") {
 		@Override
@@ -494,52 +499,51 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 	
+	private static void copyLocationIntoTextFields(Location l, JTextField x, JTextField y, JTextField z) {
+		x.setText(l.getLengthX().toString());
+		y.setText(l.getLengthY().toString());
+		z.setText(l.getLengthZ().toString());
+	}
+	
+	@SuppressWarnings("serial")
 	private Action feedEndAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
 					.getDisplayedLocation();
 			l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
-			feedEndX.setText(l.getLengthX().toString());
-			feedEndY.setText(l.getLengthY().toString());
-			feedEndZ.setText(l.getLengthZ().toString());
+			copyLocationIntoTextFields(l, feedEndX, feedEndY, feedEndZ);
 		}
 	};
 	
+	@SuppressWarnings("serial")
 	private Action feedStartAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
 					.getDisplayedLocation();
 			l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
-			feedStartX.setText(l.getLengthX().toString());
-			feedStartY.setText(l.getLengthY().toString());
-			feedStartZ.setText(l.getLengthZ().toString());
+			copyLocationIntoTextFields(l, feedStartX, feedStartY, feedStartZ);
 		}
 	};
 	
+	@SuppressWarnings("serial")
 	private Action topLeftSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
 					.getDisplayedLocation();
 			l = l.convertToUnits(feeder.getVision().getAreaOfInterestTopLeft().getUnits());
-			textFieldTopLeftX.setText(l.getLengthX().toString());
-			textFieldTopLeftY.setText(l.getLengthY().toString());
-			textFieldTopLeftZ.setText(l.getLengthZ().toString());
+			copyLocationIntoTextFields(l, textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
 		}
 	};
 	
+	@SuppressWarnings("serial")
 	private Action bottomRightSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
 					.getDisplayedLocation();
 			l = l.convertToUnits(feeder.getVision().getAreaOfInterestBottomRight().getUnits());
-			textFieldBottomRightX.setText(l.getLengthX().toString());
-			textFieldBottomRightY.setText(l.getLengthY().toString());
-			textFieldBottomRightZ.setText(l.getLengthZ().toString());
+			copyLocationIntoTextFields(l, textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
 		}
 	};
-	
-	private JButton btnTopLeftSetToCurrent;
-	private JButton btnBottomRightSetToCurrent;
 	
 //	private Action changeAoeAction = new AbstractAction(
 //			"Change") {
