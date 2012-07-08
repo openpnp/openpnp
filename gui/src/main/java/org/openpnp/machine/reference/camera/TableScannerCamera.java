@@ -90,7 +90,9 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	
 	/**
 	 * Buffered used to render the tiles local to the center point. This buffer
-	 * is tilesWide * imageWidth by tilesHigh * imageHeight in pixels. 
+	 * is tilesWide * imageWidth by tilesHigh * imageHeight in pixels. By
+	 * buffering this data we are often able to render multiple frames during
+	 * small movements.
 	 */
 	private BufferedImage buffer;
 	
@@ -180,9 +182,13 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	}
 	
 	private synchronized BufferedImage renderFrame() {
-		if (lastX != head.getAbsoluteX() || lastY != head.getAbsoluteY()) {
+		// Grab these values only once since the head may continue to move
+		// while we are rendering.
+		double headX = head.getAbsoluteX();
+		double headY = head.getAbsoluteY();
+		if (lastX != headX || lastY != headY) {
 			// Find the closest tile to the head's current position.
-			Tile closestTile = getClosestTile(head.getAbsoluteX(), head.getAbsoluteY());
+			Tile closestTile = getClosestTile(headX, headY);
 			
 			// If it has changed we need to render the entire buffer.
 			if (closestTile != lastCenterTile) {
@@ -191,8 +197,8 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 			}
 			
 			// And remember the last position we rendered.
-			lastX = head.getAbsoluteX();
-			lastY = head.getAbsoluteY();
+			lastX = headX;
+			lastY = headY;
 		}
 		
 		
@@ -201,8 +207,8 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		 * TODO: Had to invert these from experimentation. Need to figure out
 		 * why and maybe make it configurable. I was too tired to figure it out.
 		 */
-		double unitsDeltaX = head.getAbsoluteX() - lastCenterTile.getX();
-		double unitsDeltaY = lastCenterTile.getY() - head.getAbsoluteY();
+		double unitsDeltaX = headX - lastCenterTile.getX();
+		double unitsDeltaY = lastCenterTile.getY() - headY;
 		
 		/*
 		 * Get the distance in pixels from the center tile to the head.
