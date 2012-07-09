@@ -115,6 +115,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		}
 		
 		// move the head so that the pin is positioned above the feed hole
+		// TODO: Need to use actuator offsets here!
 		head.moveTo(
 				feedStartLocation.getX() - offsetX, 
 				feedStartLocation.getY() - offsetY,
