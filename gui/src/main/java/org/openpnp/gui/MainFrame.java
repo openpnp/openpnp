@@ -26,6 +26,7 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -38,6 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -61,6 +63,7 @@ import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
 
 /**
@@ -79,6 +82,7 @@ public class MainFrame extends JFrame {
 	private static final int PREF_WINDOW_HEIGHT_DEF = 768;
 	private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = 400;
+	
 	
 	/*
 	 * TODO define accelerators and mnemonics
@@ -143,6 +147,8 @@ public class MainFrame extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
+		// File
+		////////////////////////////////////////////////////////////////////////
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 
@@ -152,6 +158,8 @@ public class MainFrame extends JFrame {
 		mnFile.add(new JMenuItem(jobPanel.saveJobAction));
 		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
 
+		// Edit
+		////////////////////////////////////////////////////////////////////////
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 
@@ -161,19 +169,8 @@ public class MainFrame extends JFrame {
 		mnEdit.addSeparator();
 		mnEdit.add(new JMenuItem(jobPanel.orientBoardAction));
 
-		JMenu mnJob = new JMenu("Job Control");
-		menuBar.add(mnJob);
-
-		mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
-		mnJob.add(new JMenuItem(jobPanel.stepJobAction));
-		mnJob.add(new JMenuItem(jobPanel.stopJobAction));
-		
-		JMenu mnCommands = new JMenu("Machine Commands");
-		menuBar.add(mnCommands);
-
-		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
-		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
-		
+		// View
+		////////////////////////////////////////////////////////////////////////
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 		
@@ -184,12 +181,35 @@ public class MainFrame extends JFrame {
 		mnView.add(mnUnits);
 		
 		JMenuItem menuItem;
-		menuItem = new JCheckBoxMenuItem("Inches");
+		menuItem = new JCheckBoxMenuItem(inchesUnitSelected);
 		buttonGroup.add(menuItem);
+		if (configuration.getSystemUnits() == LengthUnit.Inches) {
+			menuItem.setSelected(true);
+		}
 		mnUnits.add(menuItem);
-		menuItem = new JCheckBoxMenuItem("Millimeters");
+		menuItem = new JCheckBoxMenuItem(millimetersUnitSelected);
 		buttonGroup.add(menuItem);
+		if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
+			menuItem.setSelected(true);
+		}
 		mnUnits.add(menuItem);
+
+		// Job Control
+		////////////////////////////////////////////////////////////////////////
+		JMenu mnJob = new JMenu("Job Control");
+		menuBar.add(mnJob);
+
+		mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
+		mnJob.add(new JMenuItem(jobPanel.stepJobAction));
+		mnJob.add(new JMenuItem(jobPanel.stopJobAction));
+		
+		// Machine
+		////////////////////////////////////////////////////////////////////////
+		JMenu mnCommands = new JMenu("Machine");
+		menuBar.add(mnCommands);
+
+		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
+		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
 		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -254,7 +274,6 @@ public class MainFrame extends JFrame {
 			}
 		});
 		
-
 		panelTop.add(cameraPanel, BorderLayout.CENTER);
 		cameraPanel.setBorder(new TitledBorder(null, "Cameras",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -389,6 +408,22 @@ public class MainFrame extends JFrame {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			prefs.putInt(PREF_DIVIDER_POSITION, splitPaneTopBottom.getDividerLocation());
+		}
+	};
+	
+	private Action inchesUnitSelected = new AbstractAction(LengthUnit.Inches.name()) {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			configuration.setSystemUnits(LengthUnit.Inches);
+			MessageBoxes.errorBox(MainFrame.this, "Notice", "Please restart OpenPnP for the changes to take effect.");
+		}
+	};
+	
+	private Action millimetersUnitSelected = new AbstractAction(LengthUnit.Millimeters.name()) {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			configuration.setSystemUnits(LengthUnit.Millimeters);
+			MessageBoxes.errorBox(MainFrame.this, "Notice", "Please restart OpenPnP for the changes to take effect.");
 		}
 	};
 }

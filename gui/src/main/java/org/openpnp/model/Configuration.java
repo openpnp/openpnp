@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
@@ -55,6 +56,9 @@ import org.slf4j.LoggerFactory;
 public class Configuration extends AbstractModelObject {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 	
+	private static final String PREF_UNITS = "Configuration.units";
+	private static final String PREF_UNITS_DEF = "Millimeters";
+	
 	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
 	private Machine machine;
@@ -62,9 +66,20 @@ public class Configuration extends AbstractModelObject {
 	private boolean dirty;
 	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
 	private File configurationDirectory;
+	private Preferences prefs;
 	
 	public Configuration(File configurationDirectory) {
 		this.configurationDirectory = configurationDirectory;
+		this.prefs = Preferences.userNodeForPackage(Configuration.class);
+		
+	}
+	
+	public LengthUnit getSystemUnits() {
+		return LengthUnit.valueOf(prefs.get(PREF_UNITS, PREF_UNITS_DEF));
+	}
+	
+	public void setSystemUnits(LengthUnit lengthUnit) {
+		prefs.put(PREF_UNITS, lengthUnit.name());
 	}
 	
 	/**

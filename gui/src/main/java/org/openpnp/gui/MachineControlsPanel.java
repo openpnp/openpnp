@@ -42,6 +42,8 @@ import java.awt.event.MouseListener;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -79,6 +81,7 @@ import org.openpnp.spi.MachineListener;
 public class MachineControlsPanel extends JPanel {
 	private final JFrame frame;
 	private final CameraPanel cameraPanel;
+	private final Configuration configuration;
 	
 	private Machine machine;
 	private Head head;
@@ -89,11 +92,7 @@ public class MachineControlsPanel extends JPanel {
 	private JTextField textFieldZ;
 	private JButton btnStartStop;
 	private JSlider sliderIncrements;
-	private JRadioButton rdbtnMm;
-	private JRadioButton rdbtnInch;
 	
-	private LengthUnit units;
-
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
 	private Color droNormalColor = new Color(143, 188, 143);
@@ -111,6 +110,7 @@ public class MachineControlsPanel extends JPanel {
 	public MachineControlsPanel(Configuration configuration, JFrame frame, CameraPanel cameraPanel) {
 		this.frame = frame;
 		this.cameraPanel = cameraPanel;
+		this.configuration = configuration;
 		
 		jogControlsPanel = new JogControlsPanel(configuration, this, frame);
 		
@@ -140,7 +140,6 @@ public class MachineControlsPanel extends JPanel {
 			incrementsLabels.put(3, new JLabel("1.0"));
 			incrementsLabels.put(4, new JLabel("10"));
 			sliderIncrements.setLabelTable(incrementsLabels);
-			rdbtnMm.setSelected(true);
 		}
 		else if (units == LengthUnit.Inches) {
 			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
@@ -149,12 +148,10 @@ public class MachineControlsPanel extends JPanel {
 			incrementsLabels.put(3, new JLabel("0.1"));
 			incrementsLabels.put(4, new JLabel("1"));
 			sliderIncrements.setLabelTable(incrementsLabels);
-			rdbtnInch.setSelected(true);
 		}
 		else {
 			throw new Error("setUnits() not implemented for " + units);
 		}
-		this.units = units;
 		updateDros();
 	}
 
@@ -195,19 +192,15 @@ public class MachineControlsPanel extends JPanel {
 				);
 	}
 	
-	public LengthUnit getJogUnits() {
-		return units;
-	}
-	
 	public double getJogIncrement() {
-		if (units == LengthUnit.Millimeters) {
+		if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
 			return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
 		}
-		else if (units == LengthUnit.Inches) {
+		else if (configuration.getSystemUnits() == LengthUnit.Inches) {
 			return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
 		}
 		else {
-			throw new Error("getJogIncrement() not implemented for " + units);
+			throw new Error("getJogIncrement() not implemented for " + configuration.getSystemUnits());
 		}
 	}
 	
@@ -375,27 +368,6 @@ public class MachineControlsPanel extends JPanel {
 		sliderIncrements.setPaintTicks(true);
 		sliderIncrements.setMinimum(1);
 		sliderIncrements.setMaximum(4);
-		
-		JPanel panelUnits = new JPanel();
-		panelIncrements.add(panelUnits);
-		rdbtnMm = new JRadioButton("MM");
-		buttonGroup.add(rdbtnMm);
-		rdbtnMm.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				setUnits(LengthUnit.Millimeters);
-			}
-		});
-		panelUnits.setLayout(new BoxLayout(panelUnits, BoxLayout.Y_AXIS));
-		panelUnits.add(rdbtnMm);
-		
-		rdbtnInch = new JRadioButton("Inch");
-		buttonGroup.add(rdbtnInch);
-		rdbtnInch.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				setUnits(LengthUnit.Inches);
-			}
-		});
-		panelUnits.add(rdbtnInch);
 		
 		JPanel panelStartStop = new JPanel();
 		add(panelStartStop);
@@ -717,7 +689,7 @@ public class MachineControlsPanel extends JPanel {
 			
 			machine = configuration.getMachine();
 			head = machine.getHeads().get(0);
-			setUnits(machine.getNativeUnits());
+			setUnits(configuration.getSystemUnits());
 			machine.addListener(machineListener);
 			
 			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
