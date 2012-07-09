@@ -49,7 +49,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -57,17 +57,21 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.CameraItem;
+import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import javax.swing.ImageIcon;
+import javax.swing.JToggleButton;
 
 /**
  * Contains controls, DROs and status for the machine.
@@ -79,6 +83,7 @@ import org.openpnp.spi.MachineListener;
  */
 public class MachineControlsPanel extends JPanel {
 	private final JFrame frame;
+	private final CameraPanel cameraPanel;
 	
 	private Machine machine;
 	private Head head;
@@ -88,7 +93,6 @@ public class MachineControlsPanel extends JPanel {
 	private JTextField textFieldC;
 	private JTextField textFieldZ;
 	private JButton btnStartStop;
-	private JComboBox comboBoxCoordinateSystem;
 	private JSlider sliderIncrements;
 	private JRadioButton rdbtnMm;
 	private JRadioButton rdbtnInch;
@@ -98,7 +102,7 @@ public class MachineControlsPanel extends JPanel {
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
 	
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private ExecutorService machineExecutor = Executors.newSingleThreadExecutor();
 	
 	private JogControlsPanel jogControlsPanel;
 	private JDialog jogControlsWindow;
@@ -106,8 +110,9 @@ public class MachineControlsPanel extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public MachineControlsPanel(Configuration configuration, JFrame frame) {
+	public MachineControlsPanel(Configuration configuration, JFrame frame, CameraPanel cameraPanel) {
 		this.frame = frame;
+		this.cameraPanel = cameraPanel;
 		
 		jogControlsPanel = new JogControlsPanel(configuration, this, frame);
 		
@@ -119,6 +124,10 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.setResizable(false);
 		jogControlsWindow.getContentPane().setLayout(new BorderLayout());
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
+	}
+	
+	ExecutorService getMachineExecutor() {
+		return machineExecutor;
 	}
 	
 	public JogControlsPanel getJogControlsPanel() {
@@ -150,6 +159,43 @@ public class MachineControlsPanel extends JPanel {
 		this.units = units;
 		updateDros();
 	}
+
+	/**
+	 * Gets the current location of the tool.
+	 * TODO: Should be moved to MainFrame, or some other master controller.
+	 * @return
+	 */
+	public Location getToolLocation() {
+		return new Location(
+				machine.getNativeUnits(), 
+				head.getX(), 
+				head.getY(), 
+				head.getZ(), 
+				head.getC());
+	}
+	
+	/**
+	 * Gets the location that is currently being looked at by the selected
+	 * Camera. If no Cameras is selected, or All Cameras are selected, returns
+	 * null.
+	 * TODO: This should be moved to MainFrame, or some other master controller.
+	 * @return
+	 */
+	public Location getCameraLocation() {
+		CameraView cameraView = cameraPanel.getSelectedCameraView();
+		if (cameraView == null) {
+			return null;
+		}
+		Location toolLocation = getToolLocation();
+		Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(toolLocation.getUnits());
+		return new Location(
+				toolLocation.getUnits(),
+				toolLocation.getX() + cameraLocation.getX(),
+				toolLocation.getY() + cameraLocation.getY(),
+				toolLocation.getZ() + cameraLocation.getZ(),
+				toolLocation.getRotation() + cameraLocation.getRotation()
+				);
+	}
 	
 	public LengthUnit getJogUnits() {
 		return units;
@@ -176,95 +222,55 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsPanel.setEnabled(enabled);
 	}
 	
-	public Location getDisplayedLocation() {
-		Location location = new Location();
+	public void updateDros() {
+		if (machine == null || head == null) {
+			return;
+		}
 		
-		if (machine == null || head == null || getJogUnits() == null) {
-			return null;
-		}
-		double x = 0, y = 0, z = 0, c = 0;
-		if (comboBoxCoordinateSystem.getSelectedItem() == null || comboBoxCoordinateSystem.getSelectedItem().equals("Tool")) {
-			x = head.getX();
-			y = head.getY();
-			z = head.getZ();
-			c = head.getC();
-		}
-		else if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
-			CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
-			Camera camera = cameraItem.getCamera();
-			Location cameraLocation = camera.getLocation();
-			cameraLocation = cameraLocation.convertToUnits(machine.getNativeUnits());
-			x = head.getX() + cameraLocation.getX();
-			y = head.getY() + cameraLocation.getY();
-			z = head.getZ() + cameraLocation.getZ();
-			c = head.getC() + cameraLocation.getRotation();
-		}
-		else if (comboBoxCoordinateSystem.getSelectedItem().equals("Absolute")) {
+		double x, y, z, c;
+		
+		if (showAbsoluteCoordinatesAction.getValue(AbstractAction.SELECTED_KEY).equals(true)) {
 			x = head.getAbsoluteX();
 			y = head.getAbsoluteY();
 			z = head.getAbsoluteZ();
 			c = head.getAbsoluteC();
 		}
-		
-		location.setX(x);
-		location.setY(y);
-		location.setZ(z);
-		location.setRotation(c);
-		location.setUnits(machine.getNativeUnits());
-		
-		location = location.convertToUnits(getJogUnits());
-		
-		return location;
-	}
-	
-	public void updateDros() {
-		Location location = getDisplayedLocation();
-		
-		if (location == null) {
-			return;
+		else {
+			x = head.getX();
+			y = head.getY();
+			z = head.getZ();
+			c = head.getC();
 		}
+		
 		
 		if (!textFieldX.hasFocus()) {
-			textFieldX.setText(String.format("%1.4f", location.getX()));
+			textFieldX.setText(String.format("%1.4f", x));
 		}
 		if (!textFieldY.hasFocus()) {
-			textFieldY.setText(String.format("%1.4f", location.getY()));
+			textFieldY.setText(String.format("%1.4f", y));
 		}
 		if (!textFieldZ.hasFocus()) {
-			textFieldZ.setText(String.format("%1.4f", location.getZ()));
+			textFieldZ.setText(String.format("%1.4f", z));
 		}
 		if (!textFieldC.hasFocus()) {
-			textFieldC.setText(String.format("%1.4f", location.getRotation()));
+			textFieldC.setText(String.format("%1.4f", c));
 		}
 	}
 	
 	private void createUi() {
+		showAbsoluteCoordinatesAction.putValue(Action.SELECTED_KEY, false);
+		
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		ButtonGroup buttonGroup = new ButtonGroup();
 		
-		JPanel panelCoordinateSystem = new JPanel();
-		FlowLayout flowLayout = (FlowLayout) panelCoordinateSystem.getLayout();
-		flowLayout.setAlignment(FlowLayout.LEFT);
-		add(panelCoordinateSystem);
-		
-		JLabel lblNewLabel = new JLabel("Coordinate System");
-		panelCoordinateSystem.add(lblNewLabel);
-		
-		comboBoxCoordinateSystem = new JComboBox();
-		comboBoxCoordinateSystem.addActionListener(coordinateSystemSelectedAction);
-		panelCoordinateSystem.add(comboBoxCoordinateSystem);
-		
 		JPanel panelDrosParent = new JPanel();
 		add(panelDrosParent);
-		panelDrosParent.setLayout(new BorderLayout(0, 0));
-		
-		JPanel panel_1 = new JPanel();
-		panelDrosParent.add(panel_1, BorderLayout.CENTER);
+		panelDrosParent.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
 		JPanel panelDros = new JPanel();
+		panelDrosParent.add(panelDros);
 		panelDros.setBackground(new Color(224, 255, 255));
-		panel_1.add(panelDros);
 		panelDros.setLayout(new BoxLayout(panelDros, BoxLayout.Y_AXIS));
 		
 		JPanel panelDrosFirstLine = new JPanel();
@@ -306,6 +312,10 @@ public class MachineControlsPanel extends JPanel {
 		textFieldY.setColumns(6);
 		textFieldY.addFocusListener(droFocusListener);
 		textFieldY.setAction(droAction);
+		
+		JButton btnTargetTool = new JButton(targetToolAction);
+		panelDrosFirstLine.add(btnTargetTool);
+		btnTargetTool.setToolTipText("Position the tool over the camera's location.");
 		textFieldY.addMouseListener(droMouseListener);
 		
 		JPanel panelDrosSecondLine = new JPanel();
@@ -348,6 +358,10 @@ public class MachineControlsPanel extends JPanel {
 		textFieldZ.setAction(droAction);
 		textFieldZ.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldZ);
+		
+		JButton btnTargetCamera = new JButton(targetCameraAction);
+		panelDrosSecondLine.add(btnTargetCamera);
+		btnTargetCamera.setToolTipText("Position the camera over the tool's location.");
 		
 		JPanel panelIncrements = new JPanel();
 		add(panelIncrements);
@@ -402,33 +416,33 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public Component getComponentAfter(Container aContainer,
 				Component aComponent) {
-			return comboBoxCoordinateSystem;
+			return sliderIncrements;
 		}
 
 		@Override
 		public Component getComponentBefore(Container aContainer,
 				Component aComponent) {
-			return comboBoxCoordinateSystem;
+			return sliderIncrements;
 		}
 
 		@Override
 		public Component getDefaultComponent(Container aContainer) {
-			return comboBoxCoordinateSystem;
+			return sliderIncrements;
 		}
 
 		@Override
 		public Component getFirstComponent(Container aContainer) {
-			return comboBoxCoordinateSystem;
+			return sliderIncrements;
 		}
 
 		@Override
 		public Component getInitialComponent(Window window) {
-			return comboBoxCoordinateSystem;
+			return sliderIncrements;
 		}
 
 		@Override
 		public Component getLastComponent(Container aContainer) {
-			return comboBoxCoordinateSystem;
+			return sliderIncrements;
 		}
 	};
 	
@@ -484,36 +498,16 @@ public class MachineControlsPanel extends JPanel {
 			JTextField dro = (JTextField) e.getSource();
 			double value = Double.parseDouble(dro.getText());
 
-			Location cameraLocation = null;
-			if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
-				CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
-				Camera camera = cameraItem.getCamera();
-				cameraLocation = camera.getLocation();
-				cameraLocation = cameraLocation.convertToUnits(machine.getNativeUnits());
-			}
-			
 			if (dro == textFieldX) {
-				if (cameraLocation != null) {
-					value -= cameraLocation.getX();
-				}
 				head.setPerceivedX(value);
 			}
 			else if (dro == textFieldY) {
-				if (cameraLocation != null) {
-					value -= cameraLocation.getY();
-				}
 				head.setPerceivedY(value);
 			}
 			else if (dro == textFieldZ) {
-				if (cameraLocation != null) {
-					value -= cameraLocation.getZ();
-				}
 				head.setPerceivedZ(value);
 			}
 			else if (dro == textFieldC) {
-				if (cameraLocation != null) {
-					value -= cameraLocation.getRotation();
-				}
 				head.setPerceivedC(value);
 			}
 			btnStartStop.requestFocus();
@@ -539,10 +533,10 @@ public class MachineControlsPanel extends JPanel {
 		}
 	};
 	
-	private ActionListener coordinateSystemSelectedAction = new ActionListener() {
+	public Action showAbsoluteCoordinatesAction = new AbstractAction("Show Absolute Coordinates") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if (comboBoxCoordinateSystem.getSelectedItem().equals("Absolute")) {
+			if (getValue(Action.SELECTED_KEY).equals(true)) {
 				droAction.setEnabled(false);
 			}
 			else {
@@ -556,7 +550,7 @@ public class MachineControlsPanel extends JPanel {
 	public Action goToZeroAction = new AbstractAction("Go To Zero") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			executor.submit(new Runnable() {
+			machineExecutor.submit(new Runnable() {
 				public void run() {
 					try {
 						head.moveTo(0, 0, 0, 0);
@@ -574,25 +568,10 @@ public class MachineControlsPanel extends JPanel {
 	public Action homeAction = new AbstractAction("Home") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			executor.submit(new Runnable() {
+			machineExecutor.submit(new Runnable() {
 				public void run() {
 					try {
 						head.home();
-						
-						// TODO: I think this is dead code, if we have real homing?
-						if (comboBoxCoordinateSystem.getSelectedItem() instanceof CameraItem) {
-							CameraItem cameraItem = (CameraItem) comboBoxCoordinateSystem.getSelectedItem();
-							Camera camera = cameraItem.getCamera();
-							Location cameraLocation = camera.getLocation();
-							cameraLocation = cameraLocation.convertToUnits(machine.getNativeUnits());
-							double x = head.getX() - cameraLocation.getX();
-							double y = head.getY() - cameraLocation.getY();
-							double z = head.getZ() - cameraLocation.getZ();
-							double c = head.getC() - cameraLocation.getRotation();
-							
-							head.moveTo(x, y, z, c);
-						}
-						
 					}
 					catch (Exception e) {
 						e.printStackTrace();
@@ -637,7 +616,55 @@ public class MachineControlsPanel extends JPanel {
 		}
 	};
 	
-
+	@SuppressWarnings("serial")
+	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/target-tool.png"))) {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			final Location location = getCameraLocation();
+			machineExecutor.submit(new Runnable() {
+				public void run() {
+					try {
+						head.moveTo(
+								location.getX(),
+								location.getY(),
+								location.getZ(),
+								head.getC());
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(frame, "Move Failed", e);
+					}
+				}
+			});
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	public Action targetCameraAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/target-camera.png"))) {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			CameraView cameraView = cameraPanel.getSelectedCameraView();
+			if (cameraView == null) {
+				return;
+			}
+			final Location location = getToolLocation();
+			final Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(location.getUnits());
+			machineExecutor.submit(new Runnable() {
+				public void run() {
+					try {
+						head.moveTo(
+								location.getX() - cameraLocation.getX(),
+								location.getY() - cameraLocation.getY(),
+								location.getZ() - cameraLocation.getZ(),
+								head.getC());
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(frame, "Move Failed", e);
+					}
+				}
+			});
+		}
+	};
+	
 	private MachineListener machineListener = new MachineListener.Adapter() {
 		@Override
 		public void machineHeadActivity(Machine machine, Head head) {
@@ -684,16 +711,6 @@ public class MachineControlsPanel extends JPanel {
 			head = machine.getHeads().get(0);
 			setUnits(machine.getNativeUnits());
 			machine.addListener(machineListener);
-			
-			comboBoxCoordinateSystem.removeAllItems();
-			comboBoxCoordinateSystem.addItem("Tool");
-			for (Camera camera : machine.getCameras()) {
-				if (camera.getHead() != null) {
-					comboBoxCoordinateSystem.addItem(new CameraItem(camera));
-				}
-			}
-			comboBoxCoordinateSystem.addItem("Absolute");
-			comboBoxCoordinateSystem.setSelectedIndex(0);
 			
 			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
 			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);

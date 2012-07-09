@@ -105,8 +105,6 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	
 	private Thread thread;
 	
-	private Object captureLock = new Object();
-	
 	private int width, height;
 	
 	public TableScannerCamera() {
@@ -135,7 +133,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	@Override
 	public synchronized void stopContinuousCapture(CameraListener listener) {
 		super.stopContinuousCapture(listener);
-		if (this.listeners.size() == 0 && thread != null && thread.isAlive()) {
+		if (listeners.size() == 0 && thread != null && thread.isAlive()) {
 			thread.interrupt();
 			try {
 				thread.join();
@@ -175,83 +173,85 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 			try {
 				Thread.sleep(1000 / fps);
 			}
-			catch (Exception e) {
+			catch (InterruptedException e) {
+				return;
+			}
+		}
+	}
+	
+	private BufferedImage renderFrame() {
+		synchronized (buffer) {
+			// Grab these values only once since the head may continue to move
+			// while we are rendering.
+			double headX = head.getAbsoluteX();
+			double headY = head.getAbsoluteY();
+			if (lastX != headX || lastY != headY) {
+				// Find the closest tile to the head's current position.
+				Tile closestTile = getClosestTile(headX, headY);
 				
+				// If it has changed we need to render the entire buffer.
+				if (closestTile != lastCenterTile) {
+					lastCenterTile = closestTile;
+					renderBuffer();
+				}
+				
+				// And remember the last position we rendered.
+				lastX = headX;
+				lastY = headY;
 			}
+			
+			
+			/*
+			 * Get the distance from the center tile to the point we need to render.
+			 * TODO: Had to invert these from experimentation. Need to figure out
+			 * why and maybe make it configurable. I was too tired to figure it out.
+			 */
+			double unitsDeltaX = headX - lastCenterTile.getX();
+			double unitsDeltaY = lastCenterTile.getY() - headY;
+			
+			/*
+			 * Get the distance in pixels from the center tile to the head.
+			 */
+			double deltaX = unitsDeltaX / getUnitsPerPixel().getX();
+			double deltaY = unitsDeltaY / getUnitsPerPixel().getY();
+			
+			/*
+			 * Get the position within the buffer of the top left pixel of the
+			 * frame sized chunk we'll grab.
+			 */
+			double bufferStartX = (buffer.getWidth() / 2) - (width / 2);
+			double bufferStartY = (buffer.getHeight() / 2) - (height / 2);
+			
+			BufferedImage frame = new BufferedImage(
+					width, 
+					height, 
+					BufferedImage.TYPE_INT_ARGB);
+			
+			/*
+			 * Render the frame sized chunk from the center of the buffer offset
+			 * by the distance of the head from the center tile to the frame
+			 * buffer for final output.
+			 */
+			Graphics2D g = (Graphics2D) frame.getGraphics();
+			g.drawImage(
+					buffer, 
+					0, 
+					0, 
+					frame.getWidth(), 
+					frame.getHeight(), 
+					(int) (bufferStartX + deltaX), 
+					(int) (bufferStartY + deltaY),
+					(int) (bufferStartX + frame.getWidth() + deltaX), 
+					(int) (bufferStartY + frame.getHeight() + deltaY),
+					null
+					);
+			g.dispose();
+			
+			return frame;
 		}
 	}
 	
-	private synchronized BufferedImage renderFrame() {
-		// Grab these values only once since the head may continue to move
-		// while we are rendering.
-		double headX = head.getAbsoluteX();
-		double headY = head.getAbsoluteY();
-		if (lastX != headX || lastY != headY) {
-			// Find the closest tile to the head's current position.
-			Tile closestTile = getClosestTile(headX, headY);
-			
-			// If it has changed we need to render the entire buffer.
-			if (closestTile != lastCenterTile) {
-				lastCenterTile = closestTile;
-				renderBuffer();
-			}
-			
-			// And remember the last position we rendered.
-			lastX = headX;
-			lastY = headY;
-		}
-		
-		
-		/*
-		 * Get the distance from the center tile to the point we need to render.
-		 * TODO: Had to invert these from experimentation. Need to figure out
-		 * why and maybe make it configurable. I was too tired to figure it out.
-		 */
-		double unitsDeltaX = headX - lastCenterTile.getX();
-		double unitsDeltaY = lastCenterTile.getY() - headY;
-		
-		/*
-		 * Get the distance in pixels from the center tile to the head.
-		 */
-		double deltaX = unitsDeltaX / getUnitsPerPixel().getX();
-		double deltaY = unitsDeltaY / getUnitsPerPixel().getY();
-		
-		/*
-		 * Get the position within the buffer of the top left pixel of the
-		 * frame sized chunk we'll grab.
-		 */
-		double bufferStartX = (buffer.getWidth() / 2) - (width / 2);
-		double bufferStartY = (buffer.getHeight() / 2) - (height / 2);
-		
-		BufferedImage frame = new BufferedImage(
-				width, 
-				height, 
-				BufferedImage.TYPE_INT_ARGB);
-		
-		/*
-		 * Render the frame sized chunk from the center of the buffer offset
-		 * by the distance of the head from the center tile to the frame
-		 * buffer for final output.
-		 */
-		Graphics2D g = (Graphics2D) frame.getGraphics();
-		g.drawImage(
-				buffer, 
-				0, 
-				0, 
-				frame.getWidth(), 
-				frame.getHeight(), 
-				(int) (bufferStartX + deltaX), 
-				(int) (bufferStartY + deltaY),
-				(int) (bufferStartX + frame.getWidth() + deltaX), 
-				(int) (bufferStartY + frame.getHeight() + deltaY),
-				null
-				);
-		g.dispose();
-		
-		return frame;
-	}
-	
-	private synchronized void renderBuffer() {
+	private void renderBuffer() {
 		// determine where in the map the center tile is
 		int centerTileX = lastCenterTile.getTileX();
 		int centerTileY = lastCenterTile.getTileY();

@@ -29,12 +29,12 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -86,6 +86,7 @@ public class MainFrame extends JFrame {
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
 
+	// TODO: Remember size, position and divider location.
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
 		
@@ -100,10 +101,11 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		setBounds(100, 100, 1280, 1024);
-//		setBounds(100, 100, 1024, 768);
+//		setBounds(100, 100, 1280, 1024);
+		setBounds(100, 100, 1024, 768);
 		
-		machineControlsPanel = new MachineControlsPanel(configuration, this);
+		cameraPanel = new CameraPanel();
+		machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
 		machinePanel = new MachinePanel(configuration);
 		jobPanel = new JobPanel(configuration, jobProcessor, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, machineControlsPanel, this);
@@ -147,6 +149,10 @@ public class MainFrame extends JFrame {
 		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
 		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
 		
+		JMenu mnView = new JMenu("View");
+		menuBar.add(mnView);
+		
+		mnView.add(new JCheckBoxMenuItem(machineControlsPanel.showAbsoluteCoordinatesAction));
 
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -212,7 +218,6 @@ public class MainFrame extends JFrame {
 		});
 		
 
-		cameraPanel = new CameraPanel();
 		panelTop.add(cameraPanel, BorderLayout.CENTER);
 		cameraPanel.setBorder(new TitledBorder(null, "Cameras",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -225,7 +230,7 @@ public class MainFrame extends JFrame {
 				null, null));
 		contentPane.add(lblStatus, BorderLayout.SOUTH);
 
-		splitPaneTopBottom.setDividerLocation(600);
+		splitPaneTopBottom.setDividerLocation(400);
 		
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);

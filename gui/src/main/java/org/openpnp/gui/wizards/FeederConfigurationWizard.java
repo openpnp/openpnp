@@ -260,7 +260,7 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 	private Action setFeederLocationAction = new AbstractAction("Set") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			Location location = machineControlsPanel.getDisplayedLocation();
+			Location location = machineControlsPanel.getCameraLocation();
 
 			// By setting the properties individually we are able to make sure
 			// that bound components get updated. This is not ideal, but it gets

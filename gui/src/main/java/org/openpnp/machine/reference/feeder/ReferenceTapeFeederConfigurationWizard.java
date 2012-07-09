@@ -509,7 +509,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private Action feedEndAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
-					.getDisplayedLocation();
+					.getCameraLocation();
 			l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
 			copyLocationIntoTextFields(l, feedEndX, feedEndY, feedEndZ);
 		}
@@ -519,7 +519,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private Action feedStartAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
-					.getDisplayedLocation();
+					.getCameraLocation();
 			l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
 			copyLocationIntoTextFields(l, feedStartX, feedStartY, feedStartZ);
 		}
@@ -529,7 +529,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private Action topLeftSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
-					.getDisplayedLocation();
+					.getCameraLocation();
 			l = l.convertToUnits(feeder.getVision().getAreaOfInterestTopLeft().getUnits());
 			copyLocationIntoTextFields(l, textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
 		}
@@ -539,7 +539,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private Action bottomRightSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = wizardContainer.getMachineControlsPanel()
-					.getDisplayedLocation();
+					.getCameraLocation();
 			l = l.convertToUnits(feeder.getVision().getAreaOfInterestBottomRight().getUnits());
 			copyLocationIntoTextFields(l, textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
 		}

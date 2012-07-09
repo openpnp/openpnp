@@ -522,7 +522,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action orientBoardAction = new AbstractAction("Set Board Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			getSelectedBoardLocation().setLocation(machineControlsPanel.getDisplayedLocation());
+			getSelectedBoardLocation().setLocation(machineControlsPanel.getCameraLocation());
 			boardLocationsTableModel.fireTableDataChanged();
 		}
 	};
@@ -556,7 +556,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			// TODO: This needs to be changed to be relative to the Board's position.
-			getSelectedPlacement().setLocation(machineControlsPanel.getDisplayedLocation());
+			getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation());
 			placementsTableModel.fireTableDataChanged();
 		}
 	};

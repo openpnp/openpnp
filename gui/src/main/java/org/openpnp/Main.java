@@ -19,14 +19,13 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.app;
+package org.openpnp;
 
 import java.awt.EventQueue;
 import java.io.File;
 
 import javax.swing.UIManager;
 
-import org.openpnp.JobProcessor;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 

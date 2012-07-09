@@ -192,6 +192,9 @@ public class Configuration extends AbstractModelObject {
 			throw new Exception("Error while reading machine.xml (" + message + ")", e);
 		}
 		
+		if (machine.getHeads().size() > 1) {
+			throw new Exception("Multiple head support is completely broken right now. Don't use it.");
+		}
 		
 		if (forceSave) {
 			logger.info("Defaults were loaded. Saving to configuration directory.");

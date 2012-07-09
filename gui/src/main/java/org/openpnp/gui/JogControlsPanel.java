@@ -65,9 +65,6 @@ public class JogControlsPanel extends JPanel {
 	private JToggleButton btnPickPlace;
 	private JPanel panelActuators;
 
-	// TODO: Move out to main, or get it from the MachineControlsPanel
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
-
 	/**
 	 * Create the panel.
 	 */
@@ -99,7 +96,7 @@ public class JogControlsPanel extends JPanel {
 	}
 
 	private void jog(final int x, final int y, final int z, final int c) {
-		executor.execute(new Runnable() {
+		machineControlsPanel.getMachineExecutor().execute(new Runnable() {
 			public void run() {
 				try {
 					double xPos = head.getX();
@@ -348,7 +345,7 @@ public class JogControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			final boolean state = btnPickPlace.isSelected();
-			executor.submit(new Runnable() {
+			machineControlsPanel.getMachineExecutor().submit(new Runnable() {
 				public void run() {
 					try {
 						if (state) {
@@ -384,7 +381,7 @@ public class JogControlsPanel extends JPanel {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						final boolean state = actuatorButton.isSelected();
-						executor.execute(new Runnable() {
+						machineControlsPanel.getMachineExecutor().execute(new Runnable() {
 							@Override
 							public void run() {
 								try {

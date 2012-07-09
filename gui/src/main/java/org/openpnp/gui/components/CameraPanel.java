@@ -57,26 +57,32 @@ public class CameraPanel extends JPanel {
 	
 	public CameraPanel() {
 		createUi();
-
-		camerasCombo.setSelectedItem(SHOW_ALL_ITEM);
 	}
 
 	public void addCamera(Camera camera) {
 		cameras.add(camera);
 		camerasCombo.addItem(new CameraItem(camera));
-		camerasCombo.setSelectedIndex(camerasCombo.getSelectedIndex());
+		if (cameras.size() == 1) {
+			// First camera being added, so select it
+			camerasCombo.setSelectedIndex(1);
+		}
+		else {
+			// Otherwise this is number 2 or more, so mix in the 
+			// show all item.
+			camerasCombo.insertItemAt(SHOW_ALL_ITEM, 1);
+		}
 	}
 	
 	private void createUi() {
 		camerasPanel = new JPanel();
 
 		camerasCombo = new JComboBox();
-		camerasCombo.addActionListener(new CameraSelectedAction());
-		camerasCombo.addItem(SHOW_NONE_ITEM);
-		camerasCombo.addItem(SHOW_ALL_ITEM);
+		camerasCombo.addActionListener(cameraSelectedAction);
 
 		setLayout(new BorderLayout());
 
+		camerasCombo.addItem(SHOW_NONE_ITEM);
+		
 		add(camerasCombo, BorderLayout.NORTH);
 		add(camerasPanel);
 	}
@@ -85,7 +91,7 @@ public class CameraPanel extends JPanel {
 		return selectedCameraView;
 	}
 	
-	class CameraSelectedAction extends AbstractAction {
+	private AbstractAction cameraSelectedAction = new AbstractAction("") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			selectedCameraView = null;
@@ -95,6 +101,7 @@ public class CameraPanel extends JPanel {
 				JPanel panel = new JPanel();
 				panel.setBackground(Color.black);
 				camerasPanel.add(panel);
+				selectedCameraView = null;
 			}
 			else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM)) {
 				clearCameras();
@@ -118,6 +125,7 @@ public class CameraPanel extends JPanel {
 					panel.setBackground(Color.black);
 					camerasPanel.add(panel);
 				}
+				selectedCameraView = null;
 			}
 			else {
 				clearCameras();
@@ -143,5 +151,5 @@ public class CameraPanel extends JPanel {
 			}
 			camerasPanel.removeAll();
 		}
-	}
+	};
 }

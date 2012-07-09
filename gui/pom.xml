@@ -135,7 +135,7 @@
 						<manifest>
 							<classpathPrefix>lib/</classpathPrefix>
 							<addClasspath>true</addClasspath>
-							<mainClass>org.openpnp.app.Main</mainClass>
+							<mainClass>org.openpnp.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
