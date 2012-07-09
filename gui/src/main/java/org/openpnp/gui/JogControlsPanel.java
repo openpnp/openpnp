@@ -59,6 +59,7 @@ import org.openpnp.spi.Machine;
 public class JogControlsPanel extends JPanel {
 	private final MachineControlsPanel machineControlsPanel;
 	private final Frame frame;
+	private final Configuration configuration;
 
 	private Machine machine;
 	private Head head;
@@ -72,6 +73,7 @@ public class JogControlsPanel extends JPanel {
 			MachineControlsPanel machineControlsPanel, Frame frame) {
 		this.machineControlsPanel = machineControlsPanel;
 		this.frame = frame;
+		this.configuration = configuration;
 
 		createUi();
 
@@ -105,9 +107,9 @@ public class JogControlsPanel extends JPanel {
 					double cPos = head.getC();
 
 					double jogIncrement = new Length(machineControlsPanel
-							.getJogIncrement(), machineControlsPanel
-							.getJogUnits()).convertToUnits(
-							machine.getNativeUnits()).getValue();
+							.getJogIncrement(), configuration.getSystemUnits())
+							.convertToUnits(machine.getNativeUnits())
+							.getValue();
 
 					if (x > 0) {
 						xPos += jogIncrement;
@@ -381,19 +383,20 @@ public class JogControlsPanel extends JPanel {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						final boolean state = actuatorButton.isSelected();
-						machineControlsPanel.getMachineExecutor().execute(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									actuator_f.actuate(state);
-								}
-								catch (Exception e) {
-									MessageBoxes.errorBox(frame,
-											"Actuator Command Failed",
-											e.getMessage());
-								}
-							}
-						});
+						machineControlsPanel.getMachineExecutor().execute(
+								new Runnable() {
+									@Override
+									public void run() {
+										try {
+											actuator_f.actuate(state);
+										}
+										catch (Exception e) {
+											MessageBoxes.errorBox(frame,
+													"Actuator Command Failed",
+													e.getMessage());
+										}
+									}
+								});
 					}
 				});
 				panelActuators.add(actuatorButton);
