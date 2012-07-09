@@ -48,8 +48,8 @@ import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -57,8 +57,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraPanel;
@@ -70,15 +68,12 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import javax.swing.ImageIcon;
-import javax.swing.JToggleButton;
 
 /**
- * Contains controls, DROs and status for the machine.
- * Controls: C right / left, X + / -, Y + / -, Z + / -, stop, pause, slider for jog increment
- * DROs: X, Y, Z, C
- * Radio buttons to select mm or inch.
- * TODO add a dropdown to select Head
+ * TODO Add a dropdown to select Head
+ * TODO Lots of little bugs relating to setting absolute mode while a dro is
+ * selected and managing the background color, enabled and selected state of
+ * the dros.
  * @author jason
  */
 public class MachineControlsPanel extends JPanel {
@@ -101,6 +96,9 @@ public class MachineControlsPanel extends JPanel {
 
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
+	private Color droNormalColor = new Color(143, 188, 143);
+	private Color droEditingColor = Color.yellow;
+	private Color droWarningColor = Color.red;
 	
 	private ExecutorService machineExecutor = Executors.newSingleThreadExecutor();
 	
@@ -220,6 +218,8 @@ public class MachineControlsPanel extends JPanel {
 		homeAction.setEnabled(enabled);
 		goToZeroAction.setEnabled(enabled);
 		jogControlsPanel.setEnabled(enabled);
+		targetCameraAction.setEnabled(enabled);
+		targetToolAction.setEnabled(enabled);
 	}
 	
 	public void updateDros() {
@@ -270,7 +270,7 @@ public class MachineControlsPanel extends JPanel {
 		
 		JPanel panelDros = new JPanel();
 		panelDrosParent.add(panelDros);
-		panelDros.setBackground(new Color(224, 255, 255));
+//		panelDros.setBackground(new Color(224, 255, 255));
 		panelDros.setLayout(new BoxLayout(panelDros, BoxLayout.Y_AXIS));
 		
 		JPanel panelDrosFirstLine = new JPanel();
@@ -283,9 +283,9 @@ public class MachineControlsPanel extends JPanel {
 		
 		textFieldX = new JTextField();
 		textFieldX.setFocusTraversalKeysEnabled(false);
-		textFieldX.setSelectionColor(Color.RED);
+		textFieldX.setSelectionColor(droEditingColor);
 		textFieldX.setDisabledTextColor(Color.BLACK);
-		textFieldX.setBackground(new Color(143, 188, 143));
+		textFieldX.setBackground(droNormalColor);
 		textFieldX.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldX.setText("0000.0000");
 		panelDrosFirstLine.add(textFieldX);
@@ -303,9 +303,9 @@ public class MachineControlsPanel extends JPanel {
 		
 		textFieldY = new JTextField();
 		textFieldY.setFocusTraversalKeysEnabled(false);
-		textFieldY.setSelectionColor(Color.RED);
+		textFieldY.setSelectionColor(droEditingColor);
 		textFieldY.setDisabledTextColor(Color.BLACK);
-		textFieldY.setBackground(new Color(143, 188, 143));
+		textFieldY.setBackground(droNormalColor);
 		textFieldY.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldY.setText("0000.0000");
 		panelDrosFirstLine.add(textFieldY);
@@ -328,9 +328,9 @@ public class MachineControlsPanel extends JPanel {
 		
 		textFieldC = new JTextField();
 		textFieldC.setFocusTraversalKeysEnabled(false);
-		textFieldC.setSelectionColor(Color.RED);
+		textFieldC.setSelectionColor(droEditingColor);
 		textFieldC.setDisabledTextColor(Color.BLACK);
-		textFieldC.setBackground(new Color(143, 188, 143));
+		textFieldC.setBackground(droNormalColor);
 		textFieldC.setText("0000.0000");
 		textFieldC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldC.setColumns(6);
@@ -348,9 +348,9 @@ public class MachineControlsPanel extends JPanel {
 		
 		textFieldZ = new JTextField();
 		textFieldZ.setFocusTraversalKeysEnabled(false);
-		textFieldZ.setSelectionColor(Color.RED);
+		textFieldZ.setSelectionColor(droEditingColor);
 		textFieldZ.setDisabledTextColor(Color.BLACK);
-		textFieldZ.setBackground(new Color(143, 188, 143));
+		textFieldZ.setBackground(droNormalColor);
 		textFieldZ.setText("0000.0000");
 		textFieldZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldZ.setColumns(6);
@@ -518,7 +518,7 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void focusGained(FocusEvent e) {
 			JTextField dro = (JTextField) e.getComponent();
-			dro.setBackground(Color.RED);
+			dro.setBackground(droEditingColor);
 			dro.setSelectionStart(0);
 			dro.setSelectionEnd(dro.getText().length());
 		}
@@ -526,7 +526,7 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void focusLost(FocusEvent e) {
 			JTextField dro = (JTextField) e.getComponent();
-			dro.setBackground(new Color(143, 188, 143));
+			dro.setBackground(droNormalColor);
 			dro.setSelectionEnd(0);
 			dro.setSelectionEnd(0);
 			updateDros();
@@ -538,9 +538,17 @@ public class MachineControlsPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 			if (getValue(Action.SELECTED_KEY).equals(true)) {
 				droAction.setEnabled(false);
+				textFieldX.setBackground(droWarningColor);
+				textFieldY.setBackground(droWarningColor);
+				textFieldZ.setBackground(droWarningColor);
+				textFieldC.setBackground(droWarningColor);
 			}
 			else {
 				droAction.setEnabled(MachineControlsPanel.this.isEnabled());
+				textFieldX.setBackground(droNormalColor);
+				textFieldY.setBackground(droNormalColor);
+				textFieldZ.setBackground(droNormalColor);
+				textFieldC.setBackground(droNormalColor);
 			}
 			updateDros();
 		}
@@ -617,7 +625,7 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
-	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/target-tool.png"))) {
+	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-tool.png"))) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			final Location location = getCameraLocation();
@@ -639,7 +647,7 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
-	public Action targetCameraAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/target-camera.png"))) {
+	public Action targetCameraAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-camera.png"))) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			CameraView cameraView = cameraPanel.getSelectedCameraView();

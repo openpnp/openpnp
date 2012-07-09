@@ -34,6 +34,17 @@ public class Rectangle {
 	@Attribute
 	private int bottom;
 	
+	public Rectangle() {
+		
+	}
+	
+	public Rectangle(int left, int top, int right, int bottom) {
+		this.left = left;
+		this.top = top;
+		this.right = right;
+		this.bottom = bottom;
+	}
+	
 	public int getLeft() {
 		return left;
 	}

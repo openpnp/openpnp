@@ -26,14 +26,21 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 import javax.swing.Action;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -62,6 +69,17 @@ import org.openpnp.spi.Camera;
 @SuppressWarnings("serial")
 // TODO: check out icons at http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
 public class MainFrame extends JFrame {
+	private static final String PREF_WINDOW_X = "MainFrame.windowX";
+	private static final int PREF_WINDOW_X_DEF = 0;
+	private static final String PREF_WINDOW_Y = "MainFrame.windowY";
+	private static final int PREF_WINDOW_Y_DEF = 0;
+	private static final String PREF_WINDOW_WIDTH = "MainFrame.windowWidth";
+	private static final int PREF_WINDOW_WIDTH_DEF = 1024;
+	private static final String PREF_WINDOW_HEIGHT = "MainFrame.windowHeight";
+	private static final int PREF_WINDOW_HEIGHT_DEF = 768;
+	private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = 400;
+	
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
@@ -85,8 +103,10 @@ public class MainFrame extends JFrame {
 	private JPanel contentPane;
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
+	private JSplitPane splitPaneTopBottom;
+	
+	private Preferences prefs;
 
-	// TODO: Remember size, position and divider location.
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
 		
@@ -100,9 +120,14 @@ public class MainFrame extends JFrame {
 				quit();
 			}
 		});
+		
+		prefs = Preferences.userNodeForPackage(MainFrame.class);
 
-//		setBounds(100, 100, 1280, 1024);
-		setBounds(100, 100, 1024, 768);
+		setBounds(
+				prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
+				prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
+				prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
+				prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
 		
 		cameraPanel = new CameraPanel();
 		machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
@@ -153,13 +178,25 @@ public class MainFrame extends JFrame {
 		menuBar.add(mnView);
 		
 		mnView.add(new JCheckBoxMenuItem(machineControlsPanel.showAbsoluteCoordinatesAction));
-
+		ButtonGroup buttonGroup = new ButtonGroup();
+		
+		JMenu mnUnits = new JMenu("System Units");
+		mnView.add(mnUnits);
+		
+		JMenuItem menuItem;
+		menuItem = new JCheckBoxMenuItem("Inches");
+		buttonGroup.add(menuItem);
+		mnUnits.add(menuItem);
+		menuItem = new JCheckBoxMenuItem("Millimeters");
+		buttonGroup.add(menuItem);
+		mnUnits.add(menuItem);
+		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
 
-		JSplitPane splitPaneTopBottom = new JSplitPane();
+		splitPaneTopBottom = new JSplitPane();
 		splitPaneTopBottom.setBorder(null);
 		splitPaneTopBottom.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		splitPaneTopBottom.setContinuousLayout(true);
@@ -230,7 +267,9 @@ public class MainFrame extends JFrame {
 				null, null));
 		contentPane.add(lblStatus, BorderLayout.SOUTH);
 
-		splitPaneTopBottom.setDividerLocation(400);
+		splitPaneTopBottom.setDividerLocation(
+				prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPaneTopBottom.addPropertyChangeListener("dividerLocation", dividerLocationPcl);
 		
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);
@@ -240,6 +279,8 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
+		
+		addComponentListener(componentListener);
 
 		try {
 			configuration.load();
@@ -286,6 +327,13 @@ public class MainFrame extends JFrame {
 	}
 
 	public boolean quit() {
+		try {
+			Preferences.userRoot().flush();
+		}
+		catch (Exception e) {
+			
+		}
+		
 		// Save the configuration if it's dirty
 		try {
 			if (configuration.isDirty()) {
@@ -320,6 +368,27 @@ public class MainFrame extends JFrame {
 		@Override
 		public void detailedStatusUpdated(String status) {
 			lblStatus.setText(status);
+		}
+	};
+	
+	private ComponentListener componentListener = new ComponentAdapter() {
+		@Override
+		public void componentMoved(ComponentEvent e) {
+			prefs.putInt(PREF_WINDOW_X, getLocation().x);
+			prefs.putInt(PREF_WINDOW_Y, getLocation().y);
+		}
+
+		@Override
+		public void componentResized(ComponentEvent e) {
+			prefs.putInt(PREF_WINDOW_WIDTH, getSize().width);
+			prefs.putInt(PREF_WINDOW_HEIGHT, getSize().height);
+		}
+	};
+	
+	private PropertyChangeListener dividerLocationPcl = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			prefs.putInt(PREF_DIVIDER_POSITION, splitPaneTopBottom.getDividerLocation());
 		}
 	};
 }

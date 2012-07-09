@@ -39,6 +39,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;

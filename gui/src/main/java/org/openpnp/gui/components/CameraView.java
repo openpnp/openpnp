@@ -69,6 +69,7 @@ public class CameraView extends JComponent implements CameraListener,
 		CameraViewSelectionTextDelegate {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
+	private static final String PREF_RETICLE = "CamerView.reticle";
 
 	private final static int HANDLE_DIAMETER = 8;
 
@@ -132,13 +133,15 @@ public class CameraView extends JComponent implements CameraListener,
 	private CameraViewSelectionTextDelegate selectionTextDelegate;
 
 	private ScheduledExecutorService scheduledExecutor;
+	
+	private Preferences prefs = Preferences.userNodeForPackage(CameraView.class);
+	
 
 	public CameraView() {
 		setBackground(Color.black);
 		setOpaque(true);
 
-		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
-		String reticlePref = prefs.get("CameraView.reticle", null);
+		String reticlePref = prefs.get(PREF_RETICLE, null);
 		try {
 			Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
 			setReticle(reticle);
@@ -210,9 +213,7 @@ public class CameraView extends JComponent implements CameraListener,
 	public void setReticle(Reticle reticle) {
 		this.reticle = reticle;
 
-		// TODO: Make more global, this is temporary cause it hurts to use
-		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
-		prefs.put("CameraView.reticle", XmlSerialize.serialize(reticle));
+		prefs.put(PREF_RETICLE, XmlSerialize.serialize(reticle));
 		try {
 			prefs.flush();
 		}
