@@ -66,8 +66,8 @@ public class CameraPanel extends JPanel {
 			// First camera being added, so select it
 			camerasCombo.setSelectedIndex(1);
 		}
-		else {
-			// Otherwise this is number 2 or more, so mix in the 
+		else if (cameras.size() == 2) {
+			// Otherwise this is the second camera so mix in the 
 			// show all item.
 			camerasCombo.insertItemAt(SHOW_ALL_ITEM, 1);
 		}

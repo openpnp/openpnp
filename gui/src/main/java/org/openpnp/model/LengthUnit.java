@@ -22,19 +22,26 @@
 package org.openpnp.model;
 
 public enum LengthUnit {
-	Meters("m"),
-	Centimeters("cm"),
-	Millimeters("mm"),
-	Feet("'"),
-	Inches("\"");
+	Meters("m", "Meter"),
+	Centimeters("cm", "Centimeter"),
+	Millimeters("mm", "Millimeter"),
+	Feet("'", "Foot"),
+	Inches("\"", "Inch");
 	
-	private String shortName;
+	private final String shortName;
 	
-	private LengthUnit(String shortName) {
+	private final String singularName;
+	
+	private LengthUnit(String shortName, String singularName) {
 		this.shortName = shortName;
+		this.singularName = singularName;
 	}
 	
 	public String getShortName() {
 		return shortName;
+	}
+
+	public String getSingularName() {
+		return singularName;
 	}
 }

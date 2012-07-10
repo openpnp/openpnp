@@ -28,41 +28,37 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
 
 import com.googlecode.javacv.FrameGrabber;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 /**
- * A Camera implementation based on the OpenCV FrameGrabbers. Not yet anywhere
- * near complete. 
- *
+ * A Camera implementation based on the OpenCV FrameGrabbers.
  */
 public class OpenCvCamera extends ReferenceCamera implements RequiresConfigurationResolution, Runnable {
-	@Attribute(required=false)
-	private String str;
+	@Attribute(required=true)
+	private int deviceIndex = 0;
 	
 	private FrameGrabber fg;
+	private Thread thread;
 	
 	public OpenCvCamera() {
 		super("OpenCvCamera");
-		try {
-			fg = FrameGrabber.createDefault(0);
-			fg.start();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		new Thread(this).start();
 	}
-
+	
+	@Commit
+	private void commit() {
+		setDeviceIndex(deviceIndex);
+	}
+	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		super.resolve(configuration);
 	}
 	
 	@Override
-	public BufferedImage capture() {
+	public synchronized BufferedImage capture() {
 		try {
 			IplImage image = fg.grab();
 			return image.getBufferedImage();
@@ -73,7 +69,7 @@ public class OpenCvCamera extends ReferenceCamera implements RequiresConfigurati
 	}
 	
 	public void run() {
-		while (true) {
+		while (!Thread.interrupted()) {
 			try {
 				BufferedImage image = capture();
 				if (image != null) {
@@ -86,14 +82,56 @@ public class OpenCvCamera extends ReferenceCamera implements RequiresConfigurati
 			try {
 				Thread.sleep(1000 / 24);
 			}
-			catch (Exception e) {
-				
+			catch (InterruptedException e) {
+				break;
 			}
 		}
+	}
+	
+	public int getDeviceIndex() {
+		return deviceIndex;
+	}
+
+	public synchronized void setDeviceIndex(int deviceIndex) {
+		this.deviceIndex = deviceIndex;
+		if (thread != null) {
+			thread.interrupt();
+			try {
+				thread.join();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if (fg != null) {
+			try {
+				fg.stop();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			try {
+				fg.release();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+		}
+		try {
+			fg = FrameGrabber.createDefault(deviceIndex);
+			fg.start();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
+		thread = new Thread(this);
+		thread.start();
 	}
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new OpenCvCameraConfigurationWizard(this);
 	}
 }
