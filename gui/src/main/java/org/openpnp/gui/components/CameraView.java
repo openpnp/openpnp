@@ -61,12 +61,7 @@ import org.slf4j.LoggerFactory;
 // TODO: Handle camera rotation.
 // TODO: Probably need to give some serious thought to rounding and
 // truncation in the selection stuff. Probably doing a lot of off by one.
-// TODO: Need to scale selection as Component size changes.
-// TODO: Fix calibration mode.
-// TODO: In all the places that I am calling Rectangle.getN() and casting to
-// int I can just use Rectangle.n. Didn't realize it existed. Duh.
-public class CameraView extends JComponent implements CameraListener,
-		CameraViewSelectionTextDelegate {
+public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
 	private static final String PREF_RETICLE = "CamerView.reticle";
@@ -81,12 +76,41 @@ public class CameraView extends JComponent implements CameraListener,
 		Resizing, Moving, Creating
 	}
 
+	/**
+	 * The Camera we are viewing.
+	 */
 	private Camera camera;
+
+	/**
+	 * The last frame received, reported by the Camera.
+	 */
 	private BufferedImage lastFrame;
+
+	/**
+	 * The maximum frames per second that we'll display.
+	 */
 	private int maximumFps;
+
+	/**
+	 * A Reticle to render over the image. Nothing is rendered if this is null.
+	 */
 	private Reticle reticle;
 
 	private JPopupMenu popupMenu;
+
+	/**
+	 * The last width and height of the component that we painted for. If the
+	 * width or height is different from these values at the start of paint
+	 * we'll recalculate all the scaling data.
+	 */
+	private double lastWidth, lastHeight;
+
+	/**
+	 * The last width and height of the image that we painted for. If the width
+	 * or height is different from these values at the start of paint we'll
+	 * recalculate all the scaling data.
+	 */
+	private double lastSourceWidth, lastSourceHeight;
 
 	/**
 	 * The width and height of the image after it has been scaled to fit the
@@ -95,13 +119,8 @@ public class CameraView extends JComponent implements CameraListener,
 	private int scaledWidth, scaledHeight;
 
 	/**
-	 * The unscaled width and height of the image.
-	 */
-	private double sourceWidth, sourceHeight;
-
-	/**
 	 * The ratio of scaled width and height to unscaled width and height.
-	 * scaledWidth * scaleRatioX = sourceWidth scaleRatioX = sourceWidth /
+	 * scaledWidth * scaleRatioX = sourceWidth. scaleRatioX = sourceWidth /
 	 * scaledWidth
 	 */
 	private double scaleRatioX, scaleRatioY;
@@ -117,13 +136,21 @@ public class CameraView extends JComponent implements CameraListener,
 	 * The top left position within the component at which the scaled image can
 	 * be drawn for it to be centered.
 	 */
-	private int centerX, centerY;
+	private int imageX, imageY;
 
 	private boolean selectionEnabled;
+	/**
+	 * Rectangle describing the bounds of the selection in image coordinates.
+	 */
 	private Rectangle selection;
+	/**
+	 * The scaled version of the selection Rectangle. Rescaled any time the
+	 * component's size is changed.
+	 */
+	private Rectangle selectionScaled;
 	private SelectionMode selectionMode;
 	private HandlePosition selectionActiveHandle;
-	private int selectionX, selectionY;
+	private int selectionStartX, selectionStartY;
 	private float selectionFlashOpacity;
 	private float selectionDashPhase;
 	private static float[] selectionDashProfile = new float[] { 6f, 6f };
@@ -133,9 +160,9 @@ public class CameraView extends JComponent implements CameraListener,
 	private CameraViewSelectionTextDelegate selectionTextDelegate;
 
 	private ScheduledExecutorService scheduledExecutor;
-	
-	private Preferences prefs = Preferences.userNodeForPackage(CameraView.class);
-	
+
+	private Preferences prefs = Preferences
+			.userNodeForPackage(CameraView.class);
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -158,6 +185,8 @@ public class CameraView extends JComponent implements CameraListener,
 
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
+		// TODO: Cancel this when it's not being used instead of spinning,
+		// or maybe create a real thread and wait().
 		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
 			public void run() {
 				if (selectionEnabled && selection != null) {
@@ -221,7 +250,7 @@ public class CameraView extends JComponent implements CameraListener,
 
 		}
 	}
-	
+
 	public CameraViewSelectionTextDelegate getSelectionTextDelegate() {
 		return selectionTextDelegate;
 	}
@@ -253,10 +282,10 @@ public class CameraView extends JComponent implements CameraListener,
 					}
 				}, 0, 30, TimeUnit.MILLISECONDS);
 
-		int sx = (int) ((selection.getX() - centerX) * scaleRatioX);
-		int sy = (int) ((selection.getY() - centerY) * scaleRatioY);
-		int sw = (int) (selection.getWidth() * scaleRatioX);
-		int sh = (int) (selection.getHeight() * scaleRatioY);
+		int sx = selection.x;
+		int sy = selection.y;
+		int sw = selection.width;
+		int sh = selection.height;
 
 		BufferedImage image = new BufferedImage(sw, sh,
 				BufferedImage.TYPE_INT_ARGB);
@@ -270,23 +299,8 @@ public class CameraView extends JComponent implements CameraListener,
 		return image;
 	}
 
-	/**
-	 * Returns the rectangle defining the selection in image coordinates, taking
-	 * scaling into account.
-	 * 
-	 * @return
-	 */
 	public Rectangle getSelection() {
-		if (selection == null) {
-			return null;
-		}
-
-		int sx = (int) ((selection.getX() - centerX) * scaleRatioX);
-		int sy = (int) ((selection.getY() - centerY) * scaleRatioY);
-		int sw = (int) (selection.getWidth() * scaleRatioX);
-		int sh = (int) (selection.getHeight() * scaleRatioY);
-
-		return new Rectangle(sx, sy, sw, sh);
+		return selection;
 	}
 
 	public Reticle getReticle() {
@@ -295,18 +309,26 @@ public class CameraView extends JComponent implements CameraListener,
 
 	@Override
 	public void frameReceived(BufferedImage img) {
-		if (lastFrame == null) {
-			lastFrame = img;
-			calculateImageProperties();
-		}
-		else {
-			lastFrame = img;
+		BufferedImage oldFrame = lastFrame;
+		lastFrame = img;
+		if (oldFrame == null
+				|| (oldFrame.getWidth() != img.getWidth() || oldFrame
+						.getHeight() != img.getHeight())) {
+			calculateScalingData();
 		}
 		repaint();
 	}
 
-	private void calculateImageProperties() {
-		if (lastFrame == null) {
+	/**
+	 * Calculates a bunch of scaling data that we cache to speed up painting.
+	 * This is recalculated when the size of the component or the size of the
+	 * source changes. This method is synchronized, along with paintComponent()
+	 * so that the updates to the cached data are atomic.
+	 */
+	private synchronized void calculateScalingData() {
+		BufferedImage image = lastFrame;
+		
+		if (image == null) {
 			return;
 		}
 
@@ -315,45 +337,56 @@ public class CameraView extends JComponent implements CameraListener,
 		int height = getHeight() - ins.top - ins.bottom;
 
 		double destWidth = width, destHeight = height;
-		sourceWidth = lastFrame.getWidth();
-		sourceHeight = lastFrame.getHeight();
 
-		double heightRatio = sourceHeight / destHeight;
-		double widthRatio = sourceWidth / destWidth;
+		lastWidth = width;
+		lastHeight = height;
+
+		lastSourceWidth = image.getWidth();
+		lastSourceHeight = image.getHeight();
+
+		double heightRatio = lastSourceHeight / destHeight;
+		double widthRatio = lastSourceWidth / destWidth;
 
 		if (heightRatio > widthRatio) {
-			double aspectRatio = sourceWidth / sourceHeight;
+			double aspectRatio = lastSourceWidth / lastSourceHeight;
 			scaledHeight = (int) destHeight;
 			scaledWidth = (int) (scaledHeight * aspectRatio);
 		}
 		else {
-			double aspectRatio = sourceHeight / sourceWidth;
+			double aspectRatio = lastSourceHeight / lastSourceWidth;
 			scaledWidth = (int) destWidth;
 			scaledHeight = (int) (scaledWidth * aspectRatio);
 		}
 
-		centerX = ins.left + (width / 2) - (scaledWidth / 2);
-		centerY = ins.top + (height / 2) - (scaledHeight / 2);
+		imageX = ins.left + (width / 2) - (scaledWidth / 2);
+		imageY = ins.top + (height / 2) - (scaledHeight / 2);
 
-		scaleRatioX = sourceWidth / (double) scaledWidth;
-		scaleRatioY = sourceHeight / (double) scaledHeight;
+		scaleRatioX = lastSourceWidth / (double) scaledWidth;
+		scaleRatioY = lastSourceHeight / (double) scaledHeight;
 
 		scaledUnitsPerPixelX = camera.getUnitsPerPixel().getX() * scaleRatioX;
 		scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY() * scaleRatioY;
+
+		if (selectionEnabled && selection != null) {
+			// setSelection() handles updating the scaled rectangle
+			setSelection(selection);
+		}
 	}
 
 	@Override
-	protected void paintComponent(Graphics g) {
+	protected synchronized void paintComponent(Graphics g) {
 		super.paintComponent(g);
+		BufferedImage image = lastFrame;
 		Insets ins = getInsets();
 		int width = getWidth() - ins.left - ins.right;
 		int height = getHeight() - ins.top - ins.bottom;
 		Graphics2D g2d = (Graphics2D) g;
 		g.setColor(getBackground());
 		g2d.fillRect(ins.left, ins.top, width, height);
-		if (lastFrame != null) {
-			g2d.drawImage(lastFrame, centerX, centerY, scaledWidth,
-					scaledHeight, null);
+		if (image != null) {
+			// Only render if there is a valid image.
+			g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight,
+					null);
 
 			if (reticle != null) {
 				reticle.draw(g2d, camera.getUnitsPerPixel().getUnits(),
@@ -375,10 +408,10 @@ public class CameraView extends JComponent implements CameraListener,
 	}
 
 	private void paintSelection(Graphics2D g2d) {
-		int rx = (int) selection.getX();
-		int ry = (int) selection.getY();
-		int rw = (int) selection.getWidth();
-		int rh = (int) selection.getHeight();
+		int rx = selectionScaled.x;
+		int ry = selectionScaled.y;
+		int rw = selectionScaled.width;
+		int rh = selectionScaled.height;
 		int rx2 = rx + rw;
 		int ry2 = ry + rh;
 		int rxc = rx + rw / 2;
@@ -413,9 +446,10 @@ public class CameraView extends JComponent implements CameraListener,
 		if (selectionTextDelegate != null) {
 			String text = selectionTextDelegate.getSelectionText(this);
 			if (text != null) {
-				drawTextOverlay(g2d,
-						(int) (selection.getX() + selection.getWidth() + 6),
-						(int) (selection.getY() + selection.getHeight() + 6), text);
+				// TODO: Be awesome like Apple and move the overlay inside
+				// the rect if it goes past the edge of the window
+				drawTextOverlay(g2d, (int) (rx + rw + 6), (int) (ry + rh + 6),
+						text);
 			}
 		}
 
@@ -423,19 +457,6 @@ public class CameraView extends JComponent implements CameraListener,
 			g2d.setColor(new Color(1.0f, 1.0f, 1.0f, selectionFlashOpacity));
 			g2d.fillRect(rx, ry, rw, rh);
 		}
-	}
-
-	@Override
-	public String getSelectionText(CameraView cameraView) {
-		double widthInUnits = selection.getWidth() * scaledUnitsPerPixelX;
-		double heightInUnits = selection.getHeight() * scaledUnitsPerPixelY;
-
-		String text = String.format("%dpx, %dpx\n%2.3f%s, %2.3f%s",
-				(int) selection.getWidth(), (int) selection.getHeight(),
-				widthInUnits, camera.getUnitsPerPixel().getUnits()
-						.getShortName(), heightInUnits, camera
-						.getUnitsPerPixel().getUnits().getShortName());
-		return text;
 	}
 
 	/**
@@ -467,10 +488,11 @@ public class CameraView extends JComponent implements CameraListener,
 		if (selection == null) {
 			return null;
 		}
-		int rx = (int) selection.getX();
-		int ry = (int) selection.getY();
-		int rw = (int) selection.getWidth();
-		int rh = (int) selection.getHeight();
+
+		int rx = selectionScaled.x;
+		int ry = selectionScaled.y;
+		int rw = selectionScaled.width;
+		int rh = selectionScaled.height;
 		int rx2 = rx + rw;
 		int ry2 = ry + rh;
 		int rxc = rx + rw / 2;
@@ -524,8 +546,7 @@ public class CameraView extends JComponent implements CameraListener,
 	}
 
 	private static Rectangle normalizeRectangle(Rectangle r) {
-		return normalizeRectangle((int) r.getX(), (int) r.getY(),
-				(int) r.getWidth(), (int) r.getHeight());
+		return normalizeRectangle(r.x, r.y, r.width, r.height);
 	}
 
 	/**
@@ -655,29 +676,61 @@ public class CameraView extends JComponent implements CameraListener,
 		return handlePosition;
 	}
 
+	/**
+	 * Set the selection rectangle in image coordinates.
+	 * 
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 */
 	public void setSelection(int x, int y, int width, int height) {
 		setSelection(new Rectangle(x, y, width, height));
 	}
 
+	/**
+	 * Set the selection rectangle in image coordinates.
+	 * 
+	 * @param r
+	 */
 	public void setSelection(Rectangle r) {
 		if (r == null) {
 			selection = null;
 			selectionMode = null;
 		}
 		else {
-			int sx = (int) ((r.getX() / scaleRatioX) + centerX);
-			int sy = (int) ((r.getY() / scaleRatioY) + centerY);
-			int sw = (int) (r.getWidth() / scaleRatioX);
-			int sh = (int) (r.getHeight() / scaleRatioY);
+			selectionActiveHandle = getOpposingHandle(r, selectionActiveHandle);
+			selection = normalizeRectangle(r);
 
-			setSelectionRaw(sx, sy, sw, sh);
+			int rx = (int) (imageX + selection.x / scaleRatioX);
+			int ry = (int) (imageY + selection.y / scaleRatioY);
+			int rw = (int) (selection.width / scaleRatioX);
+			int rh = (int) (selection.height / scaleRatioY);
+			selectionScaled = new Rectangle(rx, ry, rw, rh);
 		}
 	}
 
-	private void setSelectionRaw(int x, int y, int width, int height) {
-		Rectangle r = new Rectangle(x, y, width, height);
-		selectionActiveHandle = getOpposingHandle(r, selectionActiveHandle);
-		selection = normalizeRectangle(r);
+	/**
+	 * Set the selection rectangle in component coordinates. Updates the
+	 * selection property with the properly scaled coordinates.
+	 * 
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 */
+	private void setScaledSelection(int x, int y, int width, int height) {
+		selectionScaled = new Rectangle(x, y, width, height);
+		selectionActiveHandle = getOpposingHandle(selectionScaled,
+				selectionActiveHandle);
+		selectionScaled = normalizeRectangle(selectionScaled);
+
+		int rx = (int) ((x - imageX) * scaleRatioX);
+		int ry = (int) ((y - imageY) * scaleRatioY);
+		int rw = (int) (width * scaleRatioX);
+		int rh = (int) (height * scaleRatioY);
+
+		selection = new Rectangle(rx, ry, rw, rh);
 	}
 
 	public boolean isSelectionEnabled() {
@@ -723,14 +776,15 @@ public class CameraView extends JComponent implements CameraListener,
 				setCursor(getCursorForHandlePosition(selectionActiveHandle));
 			}
 			else if (selectionMode == null && selection != null) {
-				int x = (int) getMousePosition().getX();
-				int y = (int) getMousePosition().getY();
+				int x = getMousePosition().x;
+				int y = getMousePosition().y;
+
 				HandlePosition handlePosition = getSelectionHandleAtPosition(x,
 						y);
 				if (handlePosition != null) {
 					setCursor(getCursorForHandlePosition(handlePosition));
 				}
-				else if (selection.contains(x, y)) {
+				else if (selectionScaled.contains(x, y)) {
 					setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
 				}
 				else {
@@ -746,18 +800,6 @@ public class CameraView extends JComponent implements CameraListener,
 			setCursor(Cursor.getDefaultCursor());
 		}
 	}
-
-	private ComponentListener componentListener = new ComponentAdapter() {
-		@Override
-		public void componentResized(ComponentEvent e) {
-			calculateImageProperties();
-		}
-
-		@Override
-		public void componentShown(ComponentEvent e) {
-			calculateImageProperties();
-		}
-	};
 
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
@@ -782,18 +824,20 @@ public class CameraView extends JComponent implements CameraListener,
 						selectionActiveHandle = handlePosition;
 					}
 					// If not, perhaps they want to move the rectangle
-					else if (selection != null && selection.contains(x, y)) {
+					else if (selection != null
+							&& selectionScaled.contains(x, y)) {
+
 						selectionMode = SelectionMode.Moving;
 						// Store the distance between the rectangle's origin and
 						// where they started moving it from.
-						selectionX = (int) (x - selection.getX());
-						selectionY = (int) (y - selection.getY());
+						selectionStartX = x - selectionScaled.x;
+						selectionStartY = y - selectionScaled.y;
 					}
 					// If not those, it's time to create a rectangle
 					else {
 						selectionMode = SelectionMode.Creating;
-						selectionX = x;
-						selectionY = y;
+						selectionStartX = x;
+						selectionStartY = y;
 					}
 				}
 			}
@@ -819,53 +863,78 @@ public class CameraView extends JComponent implements CameraListener,
 				int y = e.getY();
 
 				if (selectionMode == SelectionMode.Resizing) {
-					int rx = (int) selection.getX();
-					int ry = (int) selection.getY();
-					int rw = (int) selection.getWidth();
-					int rh = (int) selection.getHeight();
+					int rx = selectionScaled.x;
+					int ry = selectionScaled.y;
+					int rw = selectionScaled.width;
+					int rh = selectionScaled.height;
 
 					if (selectionActiveHandle == HandlePosition.NW) {
-						setSelectionRaw(x, y, (rw - (x - rx)), (rh - (y - ry)));
+						setScaledSelection(x, y, (rw - (x - rx)),
+								(rh - (y - ry)));
 					}
 					else if (selectionActiveHandle == HandlePosition.NE) {
-						setSelectionRaw(rx, y, x - rx, (rh - (y - ry)));
+						setScaledSelection(rx, y, x - rx, (rh - (y - ry)));
 					}
 					else if (selectionActiveHandle == HandlePosition.N) {
-						setSelectionRaw(rx, y, rw, (rh - (y - ry)));
+						setScaledSelection(rx, y, rw, (rh - (y - ry)));
 					}
 					else if (selectionActiveHandle == HandlePosition.E) {
-						setSelectionRaw(rx, ry, rw + (x - (rx + rw)), rh);
+						setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh);
 					}
 					else if (selectionActiveHandle == HandlePosition.SE) {
-						setSelectionRaw(rx, ry, rw + (x - (rx + rw)), rh
+						setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh
 								+ (y - (ry + rh)));
 					}
 					else if (selectionActiveHandle == HandlePosition.S) {
-						setSelectionRaw(rx, ry, rw, rh + (y - (ry + rh)));
+						setScaledSelection(rx, ry, rw, rh + (y - (ry + rh)));
 					}
 					else if (selectionActiveHandle == HandlePosition.SW) {
-						setSelectionRaw(x, ry, (rw - (x - rx)), rh
+						setScaledSelection(x, ry, (rw - (x - rx)), rh
 								+ (y - (ry + rh)));
 					}
 					else if (selectionActiveHandle == HandlePosition.W) {
-						setSelectionRaw(x, ry, (rw - (x - rx)), rh);
+						setScaledSelection(x, ry, (rw - (x - rx)), rh);
 					}
 				}
 				else if (selectionMode == SelectionMode.Moving) {
-					setSelectionRaw(x - selectionX, y - selectionY,
-							(int) selection.getWidth(),
-							(int) selection.getHeight());
+					setScaledSelection(x - selectionStartX,
+							y - selectionStartY, selectionScaled.width,
+							selectionScaled.height);
 				}
 				else if (selectionMode == SelectionMode.Creating) {
-					int sx = selectionX;
-					int sy = selectionY;
+					int sx = selectionStartX;
+					int sy = selectionStartY;
 					int w = x - sx;
 					int h = y - sy;
-					setSelectionRaw(sx, sy, w, h);
+					setScaledSelection(sx, sy, w, h);
 				}
 				updateCursor();
 				repaint();
 			}
+		}
+	};
+	
+	private ComponentListener componentListener = new ComponentAdapter() {
+		@Override
+		public void componentResized(ComponentEvent e) {
+			calculateScalingData();
+		}
+	};
+	
+	public CameraViewSelectionTextDelegate pixelsAndUnitsTextSelectionDelegate = new CameraViewSelectionTextDelegate() {
+		@Override
+		public String getSelectionText(CameraView cameraView) {
+			double widthInUnits = selection.width
+					* camera.getUnitsPerPixel().getX();
+			double heightInUnits = selection.height
+					* camera.getUnitsPerPixel().getY();
+
+			String text = String.format("%dpx, %dpx\n%2.3f%s, %2.3f%s",
+					(int) selection.getWidth(), (int) selection.getHeight(),
+					widthInUnits, camera.getUnitsPerPixel().getUnits()
+							.getShortName(), heightInUnits, camera
+							.getUnitsPerPixel().getUnits().getShortName());
+			return text;
 		}
 	};
 }

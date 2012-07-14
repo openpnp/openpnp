@@ -91,6 +91,30 @@ public class CameraPanel extends JPanel {
 		return selectedCameraView;
 	}
 	
+	public CameraView setSelectedCamera(Camera camera) {
+		if (selectedCameraView != null && selectedCameraView.getCamera() == camera) {
+			return selectedCameraView;
+		}
+		for (int i = 0; i < camerasCombo.getItemCount(); i++) {
+			Object o = camerasCombo.getItemAt(i);
+			if (o instanceof CameraItem) {
+				Camera c = ((CameraItem) o).getCamera();
+				if (c == camera) {
+					camerasCombo.setSelectedIndex(i);
+					return selectedCameraView;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public Camera getSelectedCamera() {
+		if (selectedCameraView != null) {
+			return selectedCameraView.getCamera();
+		}
+		return null;
+	}
+	
 	private AbstractAction cameraSelectedAction = new AbstractAction("") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {

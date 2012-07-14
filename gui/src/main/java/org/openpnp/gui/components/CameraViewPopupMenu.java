@@ -53,11 +53,9 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		
 		reticleMenu = createReticleMenu();
 		JMenu maxFpsMenu = createMaxFpsMenu();
-		JCheckBoxMenuItem calibrationModeCheckMenuItem = new JCheckBoxMenuItem(calibrationModeAction);
 		
 		add(reticleMenu);
 		add(maxFpsMenu);
-		add(calibrationModeCheckMenuItem);
 		addSeparator();
 		add("Cancel");
 		
@@ -624,13 +622,6 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		public void actionPerformed(ActionEvent e) {
 			int maximumFps = Integer.parseInt(e.getActionCommand());
 			cameraView.setMaximumFps(maximumFps);
-		}
-	};
-	
-	private Action calibrationModeAction = new AbstractAction("Calibration Mode") {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			cameraView.setSelectionEnabled(((JCheckBoxMenuItem) e.getSource()).isSelected());
 		}
 	};
 }

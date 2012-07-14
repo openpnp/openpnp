@@ -56,6 +56,7 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Font;
 
 /**
  * Scans the table, saving a photo from the camera at each position.
@@ -137,10 +138,9 @@ public class TableScanner extends JDialog implements Runnable {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		JTextPane txtpnSelectThe = new JTextPane();
-		txtpnSelectThe.setEditable(false);
-		txtpnSelectThe.setText("1. Select the camera to be used.\n2. Select an empty output directory for the resulting images.\n3. Jog the camera to the bottom left corner of the area to be scanned,\nthen press the Start Position Set button.\n4. Jog the camera to the upper right corner of the area to be scanned,\nthen press the End Position Set button.\nThe End Position values should be greater than the Start Position values.\n5. Press the Start button.\n");
-		panel_1.add(txtpnSelectThe, "2, 2, 7, 1, fill, fill");
+		JLabel lblSelectThe = new JLabel("<html>\n1. Select the camera to be used.<br/>\n2. Select an empty output directory for the resulting images.<br/>\n3. Jog the camera to the bottom left corner of the area to be scanned, then press the Start Position Set button.<br/>\n4. Jog the camera to the upper right corner of the area to be scanned, then press the End Position Set button.<br/>\nThe End Position values should be greater than the Start Position values.<br/>\n5. Press the Start button.<br/>\n</html>\n");
+		lblSelectThe.setFont(new Font("Lucida Grande", Font.PLAIN, 14));
+		panel_1.add(lblSelectThe, "2, 2, 7, 1");
 		
 		JLabel lblX = new JLabel("X");
 		panel_1.add(lblX, "4, 4");

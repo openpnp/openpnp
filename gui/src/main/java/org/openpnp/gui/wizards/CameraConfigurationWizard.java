@@ -24,6 +24,7 @@ package org.openpnp.gui.wizards;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,18 +43,24 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.BindingListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JComboBox;
 
 public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private final Camera camera;
@@ -65,9 +72,20 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private JButton btnSave;
 	private JButton btnCancel;
 	private JPanel panelUpp;
-
+	private JPanel panelLocation;
+	private JLabel lblX_1;
+	private JLabel lblY_1;
+	private JLabel lblZ;
+	private JLabel lblRotation;
+	private JTextField textFieldLocationX;
+	private JTextField textFieldLocationY;
+	private JTextField textFieldLocationZ;
+	private JTextField textFieldLocationC;
+	private JButton btnMeasure;
+	private JButton btnCancelMeasure;
+	
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
-
+	
 	public CameraConfigurationWizard(Camera camera) {
 		this.camera = camera;
 
@@ -150,11 +168,20 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 
 		uppX = new JTextField();
 		panelUpp.add(uppX, "2, 4");
-		uppX.setColumns(12);
+		uppX.setColumns(6);
 
 		uppY = new JTextField();
 		panelUpp.add(uppY, "4, 4");
-		uppY.setColumns(12);
+		uppY.setColumns(6);
+		
+		btnMeasure = new JButton("Measure");
+		btnMeasure.setAction(measureAction);
+		panelUpp.add(btnMeasure, "6, 4");
+		
+		btnCancelMeasure = new JButton("Cancel");
+		btnCancelMeasure.setAction(cancelMeasureAction);
+		btnCancelMeasure.setVisible(false);
+		panelUpp.add(btnCancelMeasure, "8, 4");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -175,6 +202,7 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter("%2.3f%s");
 		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
+		IntegerConverter intConverter = new IntegerConverter("%d");
 		BindingListener listener = new AbstractBindingListener() {
 			@Override
 			public void synced(Binding binding) {
@@ -245,13 +273,45 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
-	private JPanel panelLocation;
-	private JLabel lblX_1;
-	private JLabel lblY_1;
-	private JLabel lblZ;
-	private JLabel lblRotation;
-	private JTextField textFieldLocationX;
-	private JTextField textFieldLocationY;
-	private JTextField textFieldLocationZ;
-	private JTextField textFieldLocationC;
+	
+	private Action measureAction = new AbstractAction("Measure") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			btnMeasure.setAction(confirmAction);
+			btnCancelMeasure.setVisible(true);
+			CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+			if (cameraView == null) {
+				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
+			}
+			cameraView.setSelectionEnabled(true);
+			cameraView.setSelection(0, 0, 100, 100);
+		}
+	};
+	
+	private Action confirmAction = new AbstractAction("Confirm") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			btnMeasure.setAction(measureAction);
+			btnCancelMeasure.setVisible(false);
+			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+			if (cameraView == null) {
+				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
+			}
+			cameraView.setSelectionEnabled(false);
+			Rectangle selection = cameraView.getSelection();
+		}
+	};
+	
+	private Action cancelMeasureAction = new AbstractAction("Cancel") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			btnMeasure.setAction(measureAction);
+			btnCancelMeasure.setVisible(false);
+			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+			if (cameraView == null) {
+				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
+			}
+			cameraView.setSelectionEnabled(false);
+		}
+	};
 }
