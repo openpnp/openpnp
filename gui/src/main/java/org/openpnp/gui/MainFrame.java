@@ -60,8 +60,13 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.support.FeederCellValue;
+import org.openpnp.gui.support.HeadCellValue;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.support.PackageCellValue;
+import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -70,7 +75,8 @@ import org.openpnp.spi.Camera;
  * The main window of the application.
  */
 @SuppressWarnings("serial")
-// TODO: check out icons at http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
+// TODO: check out icons at
+// http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
 public class MainFrame extends JFrame {
 	private static final String PREF_WINDOW_X = "MainFrame.windowX";
 	private static final int PREF_WINDOW_X_DEF = 0;
@@ -81,9 +87,8 @@ public class MainFrame extends JFrame {
 	private static final String PREF_WINDOW_HEIGHT = "MainFrame.windowHeight";
 	private static final int PREF_WINDOW_HEIGHT_DEF = 768;
 	private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition";
-	private static final int PREF_DIVIDER_POSITION_DEF = 400;
-	
-	
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+
 	/*
 	 * TODO define accelerators and mnemonics
 	 * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
@@ -108,14 +113,22 @@ public class MainFrame extends JFrame {
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
 	private JSplitPane splitPaneTopBottom;
-	
-	private Preferences prefs;
+
+	private Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
 
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
 		
-		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		PartCellValue.setConfiguration(configuration);
+		LengthCellValue.setConfiguration(configuration);
+		HeadCellValue.setConfiguration(configuration);
+		FeederCellValue.setConfiguration(configuration);
+		PackageCellValue.setConfiguration(configuration);
 		
+		
+
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
 		// Get handlers for quit and close in place
 		registerForMacOSXEvents();
 		addWindowListener(new WindowAdapter() {
@@ -124,31 +137,32 @@ public class MainFrame extends JFrame {
 				quit();
 			}
 		});
-		
-		prefs = Preferences.userNodeForPackage(MainFrame.class);
 
-		setBounds(
-				prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
+		setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
 				prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
 				prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
 				prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
-		
+
 		cameraPanel = new CameraPanel();
-		machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
+		machineControlsPanel = new MachineControlsPanel(configuration, this,
+				cameraPanel);
 		machinePanel = new MachinePanel(configuration);
-		jobPanel = new JobPanel(configuration, jobProcessor, this, machineControlsPanel);
+		jobPanel = new JobPanel(configuration, jobProcessor, this,
+				machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, machineControlsPanel, this);
 		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
-		camerasPanel = new CamerasPanel(this, configuration, machineControlsPanel);
+		camerasPanel = new CamerasPanel(this, configuration,
+				machineControlsPanel);
 		boardsPanel = new BoardsPanel(configuration, this, machineControlsPanel);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
-		actuatorsPanel = new ActuatorsPanel(this, configuration, machineControlsPanel);
+		actuatorsPanel = new ActuatorsPanel(this, configuration,
+				machineControlsPanel);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
 		// File
-		////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 
@@ -159,7 +173,7 @@ public class MainFrame extends JFrame {
 		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
 
 		// Edit
-		////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 
@@ -170,16 +184,17 @@ public class MainFrame extends JFrame {
 		mnEdit.add(new JMenuItem(jobPanel.orientBoardAction));
 
 		// View
-		////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
-		
-		mnView.add(new JCheckBoxMenuItem(machineControlsPanel.showAbsoluteCoordinatesAction));
+
+		mnView.add(new JCheckBoxMenuItem(
+				machineControlsPanel.showAbsoluteCoordinatesAction));
 		ButtonGroup buttonGroup = new ButtonGroup();
-		
+
 		JMenu mnUnits = new JMenu("System Units");
 		mnView.add(mnUnits);
-		
+
 		JMenuItem menuItem;
 		menuItem = new JCheckBoxMenuItem(inchesUnitSelected);
 		buttonGroup.add(menuItem);
@@ -195,22 +210,22 @@ public class MainFrame extends JFrame {
 		mnUnits.add(menuItem);
 
 		// Job Control
-		////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////
 		JMenu mnJob = new JMenu("Job Control");
 		menuBar.add(mnJob);
 
 		mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
 		mnJob.add(new JMenuItem(jobPanel.stepJobAction));
 		mnJob.add(new JMenuItem(jobPanel.stopJobAction));
-		
+
 		// Machine
-		////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////
 		JMenu mnCommands = new JMenu("Machine");
 		menuBar.add(mnCommands);
 
 		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
 		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
-		
+
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -239,41 +254,66 @@ public class MainFrame extends JFrame {
 		machineControlsPanel.setBorder(new TitledBorder(null,
 				"Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
 				null, null));
-		
+
 		panel.add(machineControlsPanel);
-		
+
 		// Add global hotkeys for the arrow keys
 		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
-		
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().yPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().yMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().xMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().xPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().zPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().zMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().cMinusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.getJogControlsPanel().cPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.lowerIncrementAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.raiseIncrementAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.CTRL_DOWN_MASK), machineControlsPanel.showHideJogControlsWindowAction);
-		
+
+		hotkeyActionMap
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP,
+						KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+						.getJogControlsPanel().yPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().yMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().xMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().xPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().zPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().zMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().cMinusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD,
+				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				.getJogControlsPanel().cPlusAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS,
+				KeyEvent.CTRL_DOWN_MASK),
+				machineControlsPanel.lowerIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,
+				KeyEvent.CTRL_DOWN_MASK),
+				machineControlsPanel.raiseIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
+				KeyEvent.CTRL_DOWN_MASK),
+				machineControlsPanel.showHideJogControlsWindowAction);
+
 		// TODO need to restrict this capture somehow, it breaks textfields
 		// and using arrow keys to move through lists.
-		Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
-			@Override
-			protected void dispatchEvent(AWTEvent event) {
-				if (event instanceof KeyEvent) {
-					KeyStroke ks = KeyStroke.getKeyStrokeForEvent((KeyEvent) event);
-					Action action = hotkeyActionMap.get(ks);
-					if (action != null && action.isEnabled()) {
-						action.actionPerformed(null);
-						return;
+		Toolkit.getDefaultToolkit().getSystemEventQueue()
+				.push(new EventQueue() {
+					@Override
+					protected void dispatchEvent(AWTEvent event) {
+						if (event instanceof KeyEvent) {
+							KeyStroke ks = KeyStroke
+									.getKeyStrokeForEvent((KeyEvent) event);
+							Action action = hotkeyActionMap.get(ks);
+							if (action != null && action.isEnabled()) {
+								action.actionPerformed(null);
+								return;
+							}
+						}
+						super.dispatchEvent(event);
 					}
-				}
-				super.dispatchEvent(event);
-			}
-		});
-		
+				});
+
 		panelTop.add(cameraPanel, BorderLayout.CENTER);
 		cameraPanel.setBorder(new TitledBorder(null, "Cameras",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -286,10 +326,17 @@ public class MainFrame extends JFrame {
 				null, null));
 		contentPane.add(lblStatus, BorderLayout.SOUTH);
 
-		splitPaneTopBottom.setDividerLocation(
-				prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-		splitPaneTopBottom.addPropertyChangeListener("dividerLocation", dividerLocationPcl);
-		
+		splitPaneTopBottom.setDividerLocation(prefs.getInt(
+				PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPaneTopBottom.addPropertyChangeListener("dividerLocation",
+				new PropertyChangeListener() {
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						prefs.putInt(PREF_DIVIDER_POSITION,
+								splitPaneTopBottom.getDividerLocation());
+					}
+				});
+
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
@@ -298,7 +345,7 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
-		
+
 		addComponentListener(componentListener);
 
 		try {
@@ -306,17 +353,20 @@ public class MainFrame extends JFrame {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			MessageBoxes.errorBox(
-					this, 
-					"Configuration Load Error", 
-					"There was a problem loading the configuration. The reason was:\n\n" + e.getMessage() + "\n\nPlease check your configuration files and try again. The program will now exit.");
+			MessageBoxes
+					.errorBox(
+							this,
+							"Configuration Load Error",
+							"There was a problem loading the configuration. The reason was:\n\n"
+									+ e.getMessage()
+									+ "\n\nPlease check your configuration files and try again. The program will now exit.");
 			System.exit(1);
 		}
 
 		for (Camera camera : configuration.getMachine().getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
-		
+
 		jobProcessor.addListener(jobProcessorListener);
 	}
 
@@ -350,9 +400,9 @@ public class MainFrame extends JFrame {
 			Preferences.userRoot().flush();
 		}
 		catch (Exception e) {
-			
+
 		}
-		
+
 		// Save the configuration if it's dirty
 		try {
 			if (configuration.isDirty()) {
@@ -360,10 +410,13 @@ public class MainFrame extends JFrame {
 			}
 		}
 		catch (Exception e) {
-			MessageBoxes.errorBox(
-					MainFrame.this, 
-					"Configuration Save Error",
-					"There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() + "\n\nPlease check your configuration and try again.");
+			MessageBoxes
+					.errorBox(
+							MainFrame.this,
+							"Configuration Save Error",
+							"There was a problem saving the configuration. The reason was:\n\n"
+									+ e.getMessage()
+									+ "\n\nPlease check your configuration and try again.");
 			return false;
 		}
 		if (!boardsPanel.checkForModifications()) {
@@ -382,14 +435,14 @@ public class MainFrame extends JFrame {
 		System.exit(0);
 		return true;
 	}
-	
+
 	private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
 		@Override
 		public void detailedStatusUpdated(String status) {
 			lblStatus.setText(status);
 		}
 	};
-	
+
 	private ComponentListener componentListener = new ComponentAdapter() {
 		@Override
 		public void componentMoved(ComponentEvent e) {
@@ -403,27 +456,24 @@ public class MainFrame extends JFrame {
 			prefs.putInt(PREF_WINDOW_HEIGHT, getSize().height);
 		}
 	};
-	
-	private PropertyChangeListener dividerLocationPcl = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			prefs.putInt(PREF_DIVIDER_POSITION, splitPaneTopBottom.getDividerLocation());
-		}
-	};
-	
-	private Action inchesUnitSelected = new AbstractAction(LengthUnit.Inches.name()) {
+
+	private Action inchesUnitSelected = new AbstractAction(
+			LengthUnit.Inches.name()) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			configuration.setSystemUnits(LengthUnit.Inches);
-			MessageBoxes.errorBox(MainFrame.this, "Notice", "Please restart OpenPnP for the changes to take effect.");
+			MessageBoxes.errorBox(MainFrame.this, "Notice",
+					"Please restart OpenPnP for the changes to take effect.");
 		}
 	};
-	
-	private Action millimetersUnitSelected = new AbstractAction(LengthUnit.Millimeters.name()) {
+
+	private Action millimetersUnitSelected = new AbstractAction(
+			LengthUnit.Millimeters.name()) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			configuration.setSystemUnits(LengthUnit.Millimeters);
-			MessageBoxes.errorBox(MainFrame.this, "Notice", "Please restart OpenPnP for the changes to take effect.");
+			MessageBoxes.errorBox(MainFrame.this, "Notice",
+					"Please restart OpenPnP for the changes to take effect.");
 		}
 	};
 }

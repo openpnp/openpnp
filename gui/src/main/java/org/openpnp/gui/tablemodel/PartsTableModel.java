@@ -44,7 +44,6 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 
 	public PartsTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		PackageCellValue.setConfiguration(configuration);
 		configuration.addPropertyChangeListener("parts", this);
 		parts = new ArrayList<Part>(configuration.getParts());
 	}
@@ -96,7 +95,18 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 				part.setName((String) aValue);
 			}
 			else if (columnIndex == 2) {
-				Length length = ((LengthCellValue) aValue).getLength();
+				LengthCellValue value = (LengthCellValue) aValue;
+				value.setDisplayNativeUnits(true);
+				Length length = value.getLength();
+				Length oldLength = part.getHeight();
+				if (length.getUnits() == null) {
+					if (oldLength != null) {
+						length.setUnits(oldLength.getUnits());
+					}
+					if (length.getUnits() == null) {
+						length.setUnits(configuration.getSystemUnits());
+					}
+				}
 				part.setHeight(length);
 			}
 			else if (columnIndex == 3) {
@@ -118,7 +128,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 		case 1:
 			 return part.getName();
 		case 2:
-			return new LengthCellValue(part.getHeight());
+			return new LengthCellValue(part.getHeight(), true);
 		case 3:
 			 return new PackageCellValue(part.getPackage());
 		default:

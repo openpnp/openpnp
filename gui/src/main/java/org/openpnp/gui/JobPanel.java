@@ -29,6 +29,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -52,6 +53,7 @@ import org.openpnp.JobProcessor.JobState;
 import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
+import org.openpnp.gui.components.SelectAllTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
@@ -73,16 +75,22 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	final private Frame frame;
 	final private MachineControlsPanel machineControlsPanel;
 	
-	final private static String UNTITLED = "Untitled.job.xml";
+	private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+	
+	final private static String UNTITLED_JOB_FILENAME = "Untitled.job.xml";
 	
 	private BoardLocationsTableModel boardLocationsTableModel;
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardLocationsTable;
 	private JTable placementsTable;
+	private JSplitPane splitPane; 
 	
 	private ActionGroup jobSaveActionGroup;
 	private ActionGroup boardLocationSelectionActionGroup;
 	private ActionGroup placementSelectionActionGroup;
+	
+	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
 	
 	public JobPanel(Configuration configuration, 
 			JobProcessor jobProcessor, 
@@ -105,28 +113,15 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				orientPlacementAction);
 		placementSelectionActionGroup.setEnabled(false);
 		
-		boardLocationsTableModel = new BoardLocationsTableModel();
+		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
 		
-		placementsTable = new JTable(placementsTableModel);
+		placementsTable = new SelectAllTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
-//		TableRowSorter<PlacementsTableModel> placementsTableSorter = new TableRowSorter<PlacementsTableModel>(placementsTableModel);
-//		// Filters rows from the Placements table based on which Side the
-//		// selected BoardLocation is set to.
-//		placementsTableSorter.setRowFilter(new RowFilter<PlacementsTableModel, Integer>() {
-//			@Override
-//			public boolean include(
-//					Entry<? extends PlacementsTableModel, ? extends Integer> entry) {
-//				Side side = (Side) entry.getValue(2);
-//				return (side == getSelectedBoardLocation().getSide());
-//			}
-//		});
-//		placementsTable.setRowSorter(placementsTableSorter);
-
 		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -137,7 +132,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 		});
 		
-		boardLocationsTable = new JTable(boardLocationsTableModel);
+		boardLocationsTable = new SelectAllTable(boardLocationsTableModel);
 		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		boardLocationsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
@@ -157,16 +152,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				}
 			}
 		});
-		
-//		// Add a TableModelListener so that if the BoardLocation's Side is
-//		// changed we can refresh the Placements
-//		boardLocationsTableModel.addTableModelListener(new TableModelListener() {
-//			@Override
-//			public void tableChanged(TableModelEvent e) {
-//				((TableRowSorter) placementsTable.getRowSorter()).sort();
-////				placementsTableModel.fireTableDataChanged();
-//			}
-//		});
 		
 		setLayout(new BorderLayout(0, 0));
 		
@@ -193,10 +178,19 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		toolBar.addSeparator();
 		toolBar.add(new JButton(orientPlacementAction));
 		
-		JSplitPane splitPane = new JSplitPane();
+		splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(500);
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.addPropertyChangeListener("dividerLocation",
+				new PropertyChangeListener() {
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						prefs.putInt(PREF_DIVIDER_POSITION,
+								splitPane.getDividerLocation());
+					}
+				});
+		
 		splitPane.setLeftComponent(new JScrollPane(boardLocationsTable));
 		splitPane.setRightComponent(new JScrollPane(placementsTable));
 		
@@ -247,7 +241,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public boolean checkForModifications() {
 		if (jobProcessor.getJob().isDirty()) {
 			Job job = jobProcessor.getJob();
-			String name = (job.getFile() == null ? UNTITLED : job.getFile().getName());
+			String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName());
 			int result = JOptionPane.showConfirmDialog(
 					frame,
 					"Do you want to save your changes to " + name + "?" +
@@ -347,7 +341,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		Job job = jobProcessor.getJob();
 		String title = String.format("OpenPnP - %s%s",
 				job.isDirty() ? "*" : "",
-				(job.getFile() == null ? UNTITLED : job.getFile().getName()));
+				(job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName()));
 		frame.setTitle(title);
 	}
 	

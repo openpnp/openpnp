@@ -26,6 +26,12 @@ import org.simpleframework.xml.Attribute;
 
 
 public class Length {
+	public enum Field {
+		X,
+		Y,
+		Z
+	}
+	
 	@Attribute
 	private double value;
 	@Attribute
@@ -184,4 +190,60 @@ public class Length {
 			return false;
 		}
 	}
+	
+	public static Location setLocationField(Configuration configuration, Location location, Length length, Field field, boolean defaultToOldUnits) {
+		Length oldLength = null;
+		if (field == Field.X) {
+			oldLength = location.getLengthX();
+		}
+		else if (field == Field.Y) {
+			oldLength = location.getLengthY();
+		}
+		else if (field == Field.Z) {
+			oldLength = location.getLengthZ();
+		}
+		if (length.getUnits() == null) {
+			if (defaultToOldUnits) {
+				length.setUnits(oldLength.getUnits());
+			}
+			if (length.getUnits() == null) {
+				length.setUnits(configuration.getSystemUnits());
+			}
+		}
+		if (location.getUnits() == null) {
+			location.setUnits(length.getUnits());
+		}
+		else {
+			location = location.convertToUnits(length.getUnits());
+		}
+		if (field == Field.X) {
+			location.setX(length.getValue());
+		}
+		else if (field == Field.Y) {
+			location.setY(length.getValue());
+		}
+		else if (field == Field.Z) {
+			location.setZ(length.getValue());
+		}
+		return location;
+	}
+	
+	/**
+	 * Sets the specified field on the passed Location object. Enforces
+	 * application specific unit conversion. If the new Length value does not
+	 * have units set, this method will set the units of the Length to the
+	 * system default units. If the Location itself does not have units set,
+	 * the Location's units are set to the Length's units. Finally, if the
+	 * Location's units have changed, the entire Location is converted to the
+	 * new units and the new object is returned. 
+	 * @param configuration
+	 * @param location
+	 * @param length
+	 * @param field
+	 * @return
+	 */
+	public static Location setLocationField(Configuration configuration, Location location, Length length, Field field) {
+		return setLocationField(configuration, location, length, field, false);
+	}
+	
 }

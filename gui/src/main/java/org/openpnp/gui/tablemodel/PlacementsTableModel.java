@@ -41,7 +41,6 @@ public class PlacementsTableModel extends AbstractTableModel {
 
 	public PlacementsTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		PartCellValue.setConfiguration(configuration);
 	}
 
 	public void setBoard(Board board) {
@@ -95,27 +94,19 @@ public class PlacementsTableModel extends AbstractTableModel {
 				placement.setSide((Side) aValue);
 			}
 			else if (columnIndex == 3) {
-				Length length = ((LengthCellValue) aValue).getLength();
+				LengthCellValue value = (LengthCellValue) aValue;
+				value.setDisplayNativeUnits(true);
+				Length length = value.getLength();
 				Location location = placement.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setX(length.getValue());
+				location = Length.setLocationField(configuration, location, length, Length.Field.X, true);
 				placement.setLocation(location);
 			}
 			else if (columnIndex == 4) {
-				Length length = ((LengthCellValue) aValue).getLength();
+				LengthCellValue value = (LengthCellValue) aValue;
+				value.setDisplayNativeUnits(true);
+				Length length = value.getLength();
 				Location location = placement.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setY(length.getValue());
+				location = Length.setLocationField(configuration, location, length, Length.Field.Y, true);
 				placement.setLocation(location);
 			}
 			else if (columnIndex == 5) {
@@ -138,11 +129,11 @@ public class PlacementsTableModel extends AbstractTableModel {
 		case 2:
 			 return placement.getSide();
 		case 3:
-			return new LengthCellValue(loc.getX(), loc.getUnits());
+			return new LengthCellValue(loc.getLengthX(), true);
 		case 4:
-			return new LengthCellValue(loc.getY(), loc.getUnits());
+			return new LengthCellValue(loc.getLengthY(), true);
 		case 5:
-			return String.format("%2.3f", loc.getRotation());
+			return String.format(configuration.getLengthDisplayFormat(), loc.getRotation());
 		default:
 			return null;
 		}

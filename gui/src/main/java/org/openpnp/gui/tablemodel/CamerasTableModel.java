@@ -42,7 +42,6 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 
 	public CamerasTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		HeadCellValue.setConfiguration(configuration);
 		configuration.addListener(this);
 	}
 

@@ -26,6 +26,9 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -50,6 +53,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.components.SelectAllTable;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -65,6 +69,9 @@ import org.slf4j.LoggerFactory;
 
 public class CamerasPanel extends JPanel implements ConfigurationListener, WizardContainer {
 	private final static Logger logger = LoggerFactory.getLogger(CamerasPanel.class);
+
+	private static final String PREF_DIVIDER_POSITION = "CamerasPanel.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
 	
 	private final Frame frame;
 	private final Configuration configuration;
@@ -77,6 +84,7 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 	private JTextField searchTextField;
 	private JComboBox headsComboBox;
 
+	private Preferences prefs = Preferences.userNodeForPackage(CamerasPanel.class);
 
 	public CamerasPanel(Frame frame, Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.frame = frame;
@@ -124,14 +132,25 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 		JComboBox lookingComboBox = new JComboBox(Looking.values());
 		headsComboBox = new JComboBox();
 		
-		table = new JTable(tableModel);
+		table = new SelectAllTable(tableModel);
 		tableSorter = new TableRowSorter<CamerasTableModel>(tableModel);
 		table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(lookingComboBox));
 		table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(headsComboBox));
 		
-		JSplitPane splitPane = new JSplitPane();
+		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(0.3);
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.addPropertyChangeListener("dividerLocation",
+				new PropertyChangeListener() {
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						prefs.putInt(PREF_DIVIDER_POSITION,
+								splitPane.getDividerLocation());
+					}
+				});
+		
+		
+		
 		add(splitPane, BorderLayout.CENTER);
 		splitPane.setLeftComponent(new JScrollPane(table));
 		table.setRowSorter(tableSorter);

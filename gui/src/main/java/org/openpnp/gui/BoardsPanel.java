@@ -25,8 +25,11 @@ import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -43,6 +46,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.openpnp.gui.components.SelectAllTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardsTableModel;
@@ -57,6 +61,9 @@ public class BoardsPanel extends JPanel {
 	final private Frame frame;
 	final private MachineControlsPanel machineControlsPanel;
 	
+	private static final String PREF_DIVIDER_POSITION = "BoardsPanel.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+
 	private BoardsTableModel boardsTableModel;
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardsTable;
@@ -64,6 +71,8 @@ public class BoardsPanel extends JPanel {
 	
 	private ActionGroup boardSelectionActionGroup;
 	private ActionGroup placementSelectionActionGroup;
+	
+	private Preferences prefs = Preferences.userNodeForPackage(BoardsPanel.class);
 	
 	public BoardsPanel(Configuration configuration, 
 			Frame frame, 
@@ -83,7 +92,7 @@ public class BoardsPanel extends JPanel {
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
 
-		placementsTable = new JTable(placementsTableModel);
+		placementsTable = new SelectAllTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
@@ -97,7 +106,7 @@ public class BoardsPanel extends JPanel {
 			}
 		});
 		
-		boardsTable = new JTable(boardsTableModel);
+		boardsTable = new SelectAllTable(boardsTableModel);
 		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		// TODO: Add a tooltip for the path, see http://docs.oracle.com/javase/tutorial/uiswing/components/table.html#celltooltip
@@ -134,10 +143,18 @@ public class BoardsPanel extends JPanel {
 		toolBar.add(new JButton(newPlacementAction));
 		toolBar.add(new JButton(removePlacementAction));
 		
-		JSplitPane splitPane = new JSplitPane();
+		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(350);
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.addPropertyChangeListener("dividerLocation",
+				new PropertyChangeListener() {
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						prefs.putInt(PREF_DIVIDER_POSITION,
+								splitPane.getDividerLocation());
+					}
+				});
 		splitPane.setLeftComponent(new JScrollPane(boardsTable));
 		splitPane.setRightComponent(new JScrollPane(placementsTable));
 		

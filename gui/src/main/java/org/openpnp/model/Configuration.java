@@ -40,7 +40,6 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
-import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -58,6 +57,12 @@ public class Configuration extends AbstractModelObject {
 	
 	private static final String PREF_UNITS = "Configuration.units";
 	private static final String PREF_UNITS_DEF = "Millimeters";
+	
+	private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
+	private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
+	
+	private static final String PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS = "Configuration.lengthDisplayFormatWithUnits";
+	private static final String PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF = "%.3f%s";
 	
 	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
@@ -80,6 +85,22 @@ public class Configuration extends AbstractModelObject {
 	
 	public void setSystemUnits(LengthUnit lengthUnit) {
 		prefs.put(PREF_UNITS, lengthUnit.name());
+	}
+	
+	public String getLengthDisplayFormat() {
+		return prefs.get(PREF_LENGTH_DISPLAY_FORMAT, PREF_LENGTH_DISPLAY_FORMAT_DEF);
+	}
+	
+	public void setLengthDisplayFormat(String format) {
+		prefs.put(PREF_LENGTH_DISPLAY_FORMAT, format);
+	}
+	
+	public String getLengthDisplayFormatWithUnits() {
+		return prefs.get(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS, PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
+	}
+	
+	public void setLengthDisplayFormatWithUnits(String format) {
+		prefs.put(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS, format);
 	}
 	
 	/**

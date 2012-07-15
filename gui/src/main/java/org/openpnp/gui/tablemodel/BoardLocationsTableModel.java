@@ -26,14 +26,21 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
 public class BoardLocationsTableModel extends AbstractTableModel {
+	private final Configuration configuration;
+	
 	private String[] columnNames = new String[] { "Board", "Side", "X",
 			"Y", "Z", "ø" };
 	private Job job;
+	
+	public BoardLocationsTableModel(Configuration configuration) {
+		this.configuration = configuration;
+	}
 
 	public void setJob(Job job) {
 		this.job = job;
@@ -81,39 +88,24 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 				fireTableCellUpdated(rowIndex, columnIndex);
 			}
 			else if (columnIndex == 2) {
-				Length length = ((LengthCellValue) aValue).getLength();
+				LengthCellValue value = (LengthCellValue) aValue;
+				Length length = value.getLength();
 				Location location = boardLocation.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setX(length.getValue());
+				location = Length.setLocationField(configuration, location, length, Length.Field.X);
 				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 3) {
-				Length length = ((LengthCellValue) aValue).getLength();
+				LengthCellValue value = (LengthCellValue) aValue;
+				Length length = value.getLength();
 				Location location = boardLocation.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setY(length.getValue());
+				location = Length.setLocationField(configuration, location, length, Length.Field.Y);
 				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 4) {
-				Length length = ((LengthCellValue) aValue).getLength();
+				LengthCellValue value = (LengthCellValue) aValue;
+				Length length = value.getLength();
 				Location location = boardLocation.getLocation();
-				if (location.getUnits() == null) {
-					location.setUnits(length.getUnits());
-				}
-				else {
-					location = location.convertToUnits(length.getUnits());
-				}
-				location.setZ(length.getValue());
+				location = Length.setLocationField(configuration, location, length, Length.Field.Z);
 				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 5) {
@@ -134,13 +126,13 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 		case 1:
 			return boardLocation.getSide();
 		case 2:
-			return new LengthCellValue(loc.getX(), loc.getUnits());
+			return new LengthCellValue(loc.getLengthX());
 		case 3:
-			return new LengthCellValue(loc.getY(), loc.getUnits());
+			return new LengthCellValue(loc.getLengthY());
 		case 4:
-			return new LengthCellValue(loc.getZ(), loc.getUnits());
+			return new LengthCellValue(loc.getLengthZ());
 		case 5:
-			return String.format("%2.3f", loc.getRotation());
+			return String.format(configuration.getLengthDisplayFormat(), loc.getRotation(), "");
 		default:
 			return null;
 		}

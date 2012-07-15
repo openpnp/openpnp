@@ -17,44 +17,73 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui.support;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 
 public class LengthCellValue {
-	private Length length;
-
-	public LengthCellValue(double value, LengthUnit units) {
-		this.length = new Length(value, units);
-	}
+	private static Configuration configuration;
 	
+	private Length length;
+	
+	/**
+	 * When set, the toString() method will show the units contained within
+	 * the Length instead of converting to the system units.
+	 */
+	private boolean displayNativeUnits;
+	
+	public static void setConfiguration(Configuration configuration) {
+		LengthCellValue.configuration = configuration;
+	}
+
+	public LengthCellValue(Length length, boolean displayNativeUnits) {
+		setLength(length);
+		setDisplayNativeUnits(displayNativeUnits);
+	}
+
 	public LengthCellValue(Length length) {
-		this.length = length;
+		this(length, false);
 	}
 
 	public LengthCellValue(String value) {
-		Length length = Length.parse(value, true);
+		Length length = Length.parse(value, false);
 		if (length == null) {
 			throw new NullPointerException();
 		}
-		this.length = length;
+		setLength(length);
 	}
-	
+
 	public Length getLength() {
 		return length;
 	}
-	
+
 	public void setLength(Length length) {
 		this.length = length;
+	}
+	
+	public boolean isDisplayNativeUnits() {
+		return displayNativeUnits;
+	}
+
+	public void setDisplayNativeUnits(boolean displayNativeUnits) {
+		this.displayNativeUnits = displayNativeUnits;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%2.3f%s", length.getValue(),
-				length.getUnits() == null ? "?" : length.getUnits()
-						.getShortName());
+		Length l = length;
+		if (l.getUnits() == null) {
+			return String.format(configuration.getLengthDisplayFormatWithUnits(), l.getValue(), "?");
+		}
+		if (displayNativeUnits && l.getUnits() != configuration.getSystemUnits()) {
+			return String.format(configuration.getLengthDisplayFormatWithUnits(), l.getValue(), l.getUnits().getShortName());
+		}
+		else {
+			l = l.convertToUnits(configuration.getSystemUnits());
+			return String.format(configuration.getLengthDisplayFormat(), l.getValue());
+		}
 	}
 }

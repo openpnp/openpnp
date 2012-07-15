@@ -25,6 +25,9 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -46,6 +49,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.components.SelectAllTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -64,6 +68,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
 	
+	private static final String PREF_DIVIDER_POSITION = "FeedersPanel.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+	
 	private JTable table;
 
 	private FeedersTableModel tableModel;
@@ -74,6 +81,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	
 	private ActionGroup feederSelectedActionGroup; 
 
+	private Preferences prefs = Preferences.userNodeForPackage(FeedersPanel.class);
+	
 	public FeedersPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
 		this.machineControlsPanel = machineControlsPanel;
@@ -113,12 +122,20 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		});
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
-		table = new JTable(tableModel);
+		table = new SelectAllTable(tableModel);
 		tableSorter = new TableRowSorter<FeedersTableModel>(tableModel);
 		
-		JSplitPane splitPane = new JSplitPane();
+		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(0.3);
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.addPropertyChangeListener("dividerLocation",
+				new PropertyChangeListener() {
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						prefs.putInt(PREF_DIVIDER_POSITION,
+								splitPane.getDividerLocation());
+					}
+				});
 		add(splitPane, BorderLayout.CENTER);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);

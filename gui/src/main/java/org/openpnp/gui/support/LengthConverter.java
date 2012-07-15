@@ -36,15 +36,15 @@ public class LengthConverter extends Converter<Length, String> {
 	}
 	
 	@Override
-	public String convertForward(Length arg0) {
-		return arg0.toString(forwardFormat);
+	public String convertForward(Length length) {
+		return length.toString(forwardFormat);
 	}
 	
 	@Override
-	public Length convertReverse(String arg0) {
-		Length length = Length.parse(arg0, true);
+	public Length convertReverse(String s) {
+		Length length = Length.parse(s, true);
 		if (length == null) {
-			throw new RuntimeException("Unable to parse " + arg0);
+			throw new RuntimeException("Unable to parse " + s);
 		}
 		return length;
 	}
