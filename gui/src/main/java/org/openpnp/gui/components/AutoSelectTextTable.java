@@ -25,7 +25,7 @@ import javax.swing.text.JTextComponent;
  *
  * 2) reorderColumns - static convenience method for reodering table columns
  */
-public class SelectAllTable extends JTable
+public class AutoSelectTextTable extends JTable
 {
 	private boolean isSelectAllForMouseEvent = true;
 	private boolean isSelectAllForActionEvent = true;
@@ -39,7 +39,7 @@ public class SelectAllTable extends JTable
      * data model, a default column model, and a default selection
      * model.
      */
-    public SelectAllTable()
+    public AutoSelectTextTable()
     {
         this(null, null, null);
     }
@@ -51,7 +51,7 @@ public class SelectAllTable extends JTable
      *
      * @param dm        the data model for the table
      */
-    public SelectAllTable(TableModel dm)
+    public AutoSelectTextTable(TableModel dm)
     {
         this(dm, null, null);
     }
@@ -64,7 +64,7 @@ public class SelectAllTable extends JTable
      * @param dm        the data model for the table
      * @param cm        the column model for the table
      */
-    public SelectAllTable(TableModel dm, TableColumnModel cm)
+    public AutoSelectTextTable(TableModel dm, TableColumnModel cm)
     {
         this(dm, cm, null);
     }
@@ -84,7 +84,7 @@ public class SelectAllTable extends JTable
      * @param cm        the column model for the table
      * @param sm        the row selection model for the table
      */
-    public SelectAllTable(TableModel dm, TableColumnModel cm, ListSelectionModel sm)
+    public AutoSelectTextTable(TableModel dm, TableColumnModel cm, ListSelectionModel sm)
     {
         super(dm, cm, sm);
     }
@@ -98,7 +98,7 @@ public class SelectAllTable extends JTable
      * @param numRows           the number of rows the table holds
      * @param numColumns        the number of columns the table holds
      */
-    public SelectAllTable(int numRows, int numColumns)
+    public AutoSelectTextTable(int numRows, int numColumns)
     {
         this(new DefaultTableModel(numRows, numColumns));
     }
@@ -117,7 +117,7 @@ public class SelectAllTable extends JTable
      * @param rowData           the data for the new table
      * @param columnNames       names of each column
      */
-    public SelectAllTable(Vector rowData, Vector columnNames)
+    public AutoSelectTextTable(Vector rowData, Vector columnNames)
     {
         this(new DefaultTableModel(rowData, columnNames));
     }
@@ -135,7 +135,7 @@ public class SelectAllTable extends JTable
      * @param rowData           the data for the new table
      * @param columnNames       names of each column
      */
-    public SelectAllTable(final Object[][] rowData, final Object[] columnNames)
+    public AutoSelectTextTable(final Object[][] rowData, final Object[] columnNames)
     {
         super(rowData, columnNames);
     }

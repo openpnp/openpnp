@@ -49,7 +49,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
-import org.openpnp.gui.components.SelectAllTable;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -122,7 +122,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		});
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
-		table = new SelectAllTable(tableModel);
+		table = new AutoSelectTextTable(tableModel);
 		tableSorter = new TableRowSorter<FeedersTableModel>(tableModel);
 		
 		final JSplitPane splitPane = new JSplitPane();
@@ -226,17 +226,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	public void wizardCancelled(Wizard wizard) {
 	}
 	
-	@Override
-	public Configuration getConfiguration() {
-		return configuration;
-	}
-
-	@Override
-	public MachineControlsPanel getMachineControlsPanel() {
-		return machineControlsPanel;
-	}
-	
-
 	public Action newFeederAction = new AbstractAction("New Feeder...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

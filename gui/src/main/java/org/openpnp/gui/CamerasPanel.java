@@ -53,7 +53,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ClassSelectionDialog;
-import org.openpnp.gui.components.SelectAllTable;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -132,7 +132,7 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 		JComboBox lookingComboBox = new JComboBox(Looking.values());
 		headsComboBox = new JComboBox();
 		
-		table = new SelectAllTable(tableModel);
+		table = new AutoSelectTextTable(tableModel);
 		tableSorter = new TableRowSorter<CamerasTableModel>(tableModel);
 		table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(lookingComboBox));
 		table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(headsComboBox));
@@ -231,16 +231,6 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 
 	@Override
 	public void wizardCancelled(Wizard wizard) {
-	}
-	
-	@Override
-	public Configuration getConfiguration() {
-		return configuration;
-	}
-
-	@Override
-	public MachineControlsPanel getMachineControlsPanel() {
-		return machineControlsPanel;
 	}
 	
 	public Action newCameraAction = new AbstractAction("New Camera...") {

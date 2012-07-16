@@ -53,7 +53,7 @@ import org.openpnp.JobProcessor.JobState;
 import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
-import org.openpnp.gui.components.SelectAllTable;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
@@ -118,7 +118,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
 		
-		placementsTable = new SelectAllTable(placementsTableModel);
+		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
@@ -132,7 +132,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 		});
 		
-		boardLocationsTable = new SelectAllTable(boardLocationsTableModel);
+		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
 		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		boardLocationsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		

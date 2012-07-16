@@ -26,6 +26,10 @@ import org.jdesktop.beansbinding.Converter;
 public class IntegerConverter extends Converter<Integer, String> {
 	private String format;
 	
+	public IntegerConverter() {
+		this("%d");
+	}
+	
 	public IntegerConverter(String format) {
 		this.format = format;
 	}

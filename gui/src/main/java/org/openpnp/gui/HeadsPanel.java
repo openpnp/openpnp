@@ -44,7 +44,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.gui.components.SelectAllTable;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.HeadsTableModel;
@@ -105,7 +105,7 @@ public class HeadsPanel extends JPanel implements WizardContainer {
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
 
-		table = new SelectAllTable(tableModel);
+		table = new AutoSelectTextTable(tableModel);
 		tableSorter = new TableRowSorter<HeadsTableModel>(tableModel);
 
 		final JSplitPane splitPane = new JSplitPane();
@@ -188,15 +188,5 @@ public class HeadsPanel extends JPanel implements WizardContainer {
 
 	@Override
 	public void wizardCancelled(Wizard wizard) {
-	}
-
-	@Override
-	public Configuration getConfiguration() {
-		return configuration;
-	}
-
-	@Override
-	public MachineControlsPanel getMachineControlsPanel() {
-		return machineControlsPanel;
 	}
 }

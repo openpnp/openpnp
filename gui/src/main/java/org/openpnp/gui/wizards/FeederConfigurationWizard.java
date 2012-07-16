@@ -41,16 +41,15 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import org.openpnp.gui.MachineControlsPanel;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartConverter;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
@@ -180,22 +179,16 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
-
+		
 		createBindings();
 		loadFromModel();
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter("%2.3f%s");
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
+		LengthConverter lengthConverter = new LengthConverter(configuration);
+		DoubleConverter doubleConverter = new DoubleConverter(configuration.getLengthDisplayFormat());
 		PartConverter partConverter = new PartConverter(configuration);
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 
 		wrappedBindings.add(JBindings.bind(feeder, "location.lengthX",
 				textFieldLocationX, "text", lengthConverter, listener));
@@ -207,6 +200,11 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 				textFieldLocationC, "text", doubleConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "part",
 				comboBoxPart, "selectedItem", partConverter, listener));
+		
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
+		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
 	}
 
 	private void loadFromModel() {

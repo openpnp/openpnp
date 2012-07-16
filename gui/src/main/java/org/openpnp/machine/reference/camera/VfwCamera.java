@@ -28,6 +28,7 @@ import java.util.List;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.wizards.VfwCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;

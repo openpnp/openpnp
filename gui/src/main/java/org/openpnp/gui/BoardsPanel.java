@@ -46,7 +46,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.openpnp.gui.components.SelectAllTable;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardsTableModel;
@@ -92,7 +92,7 @@ public class BoardsPanel extends JPanel {
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
 
-		placementsTable = new SelectAllTable(placementsTableModel);
+		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
 		
@@ -106,7 +106,7 @@ public class BoardsPanel extends JPanel {
 			}
 		});
 		
-		boardsTable = new SelectAllTable(boardsTableModel);
+		boardsTable = new AutoSelectTextTable(boardsTableModel);
 		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		// TODO: Add a tooltip for the path, see http://docs.oracle.com/javase/tutorial/uiswing/components/table.html#celltooltip

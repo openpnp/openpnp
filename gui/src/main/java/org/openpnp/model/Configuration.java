@@ -55,6 +55,8 @@ import org.slf4j.LoggerFactory;
 public class Configuration extends AbstractModelObject {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 	
+	private static Configuration instance;
+	
 	private static final String PREF_UNITS = "Configuration.units";
 	private static final String PREF_UNITS_DEF = "Millimeters";
 	
@@ -63,6 +65,9 @@ public class Configuration extends AbstractModelObject {
 	
 	private static final String PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS = "Configuration.lengthDisplayFormatWithUnits";
 	private static final String PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF = "%.3f%s";
+	
+	private static final String PREF_VERTICAL_SCROLL_UNIT_INCREMENT = "Configuration.verticalScrollUnitIncrement";
+	private static final int PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF = 16;
 	
 	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
@@ -73,10 +78,20 @@ public class Configuration extends AbstractModelObject {
 	private File configurationDirectory;
 	private Preferences prefs;
 	
-	public Configuration(File configurationDirectory) {
+	public static Configuration get() {
+		if (instance == null) {
+			throw new Error("Configuration instance not yet initialized.");
+		}
+		return instance;
+	}
+	
+	public static synchronized void initialize(File configurationDirectory) {
+		instance = new Configuration(configurationDirectory);
+	}
+	
+	private Configuration(File configurationDirectory) {
 		this.configurationDirectory = configurationDirectory;
 		this.prefs = Preferences.userNodeForPackage(Configuration.class);
-		
 	}
 	
 	public LengthUnit getSystemUnits() {
@@ -101,6 +116,14 @@ public class Configuration extends AbstractModelObject {
 	
 	public void setLengthDisplayFormatWithUnits(String format) {
 		prefs.put(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS, format);
+	}
+	
+	public int getVerticalScrollUnitIncrement() {
+		return prefs.getInt(PREF_VERTICAL_SCROLL_UNIT_INCREMENT, PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF);
+	}
+	
+	public void setVerticalScrollUnitIncrement(int verticalScrollUnitIncrement) {
+		prefs.putInt(PREF_VERTICAL_SCROLL_UNIT_INCREMENT, PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF);
 	}
 	
 	/**

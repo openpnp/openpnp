@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.machine.reference.camera;
+package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,7 +32,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -40,23 +39,20 @@ import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.camera.OpenCvCamera;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-class VfwCameraConfigurationWizard extends JPanel implements Wizard {
-	private final VfwCamera camera;
+public class OpenCvCameraConfigurationWizard extends JPanel implements Wizard {
+	private final OpenCvCamera camera;
 
 	private WizardContainer wizardContainer;
 	private JButton btnSave;
@@ -65,8 +61,8 @@ class VfwCameraConfigurationWizard extends JPanel implements Wizard {
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
-	public VfwCameraConfigurationWizard(
-			VfwCamera camera) {
+	public OpenCvCameraConfigurationWizard(
+			OpenCvCamera camera) {
 		this.camera = camera;
 
 		setLayout(new BorderLayout());
@@ -88,33 +84,16 @@ class VfwCameraConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		JLabel lblDeviceId = new JLabel("Driver");
+		JLabel lblDeviceId = new JLabel("Device Index");
 		panelGeneral.add(lblDeviceId, "2, 2, right, default");
 		
-		Object[] deviceIds = null;
-		try {
-			deviceIds = camera.getDrivers().toArray(new String[] {});
+		comboBoxDeviceIndex = new JComboBox();
+		for (int i = 0; i < 10; i++) {
+			comboBoxDeviceIndex.addItem(new Integer(i));
 		}
-		catch (Exception e) {
-			// TODO:
-		}
-		comboBoxDriver = new JComboBox(deviceIds);
-		panelGeneral.add(comboBoxDriver, "4, 2, left, default");
-		
-		chckbxShowVideoSource = new JCheckBox("Show Video Source Dialog?");
-		panelGeneral.add(chckbxShowVideoSource, "2, 4, 3, 1");
-		
-		chckbxShowVideoFormat = new JCheckBox("Show Video Format Dialog?");
-		panelGeneral.add(chckbxShowVideoFormat, "2, 6, 3, 1");
-		
-		chckbxShowVideoDisplay = new JCheckBox("Show Video Display Dialog?");
-		panelGeneral.add(chckbxShowVideoDisplay, "2, 8, 3, 1");
+		panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -133,27 +112,10 @@ class VfwCameraConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 		
-		// The order of the properties is important. We want all the booleans
-		// to be set before we set the driver because setting the driver
-		// applies all the settings.
-		wrappedBindings.add(JBindings.bind(camera, "showVideoSourceDialog",
-				chckbxShowVideoSource, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "showVideoFormatDialog",
-				chckbxShowVideoFormat, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "showVideoDisplayDialog",
-				chckbxShowVideoDisplay, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "driver",
-				comboBoxDriver, "selectedItem", listener));
+		wrappedBindings.add(JBindings.bind(camera, "deviceIndex",
+				comboBoxDeviceIndex, "selectedItem", listener));
 	}
 
 	private void loadFromModel() {
@@ -193,7 +155,7 @@ class VfwCameraConfigurationWizard extends JPanel implements Wizard {
 		public void actionPerformed(ActionEvent arg0) {
 			saveToModel();
 			wizardContainer
-					.wizardCompleted(VfwCameraConfigurationWizard.this);
+					.wizardCompleted(OpenCvCameraConfigurationWizard.this);
 		}
 	};
 
@@ -203,8 +165,5 @@ class VfwCameraConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
-	private JComboBox comboBoxDriver;
-	private JCheckBox chckbxShowVideoSource;
-	private JCheckBox chckbxShowVideoFormat;
-	private JCheckBox chckbxShowVideoDisplay;
+	private JComboBox comboBoxDeviceIndex;
 }

@@ -22,29 +22,30 @@
 package org.openpnp.gui.support;
 
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 
 public class LengthConverter extends Converter<Length, String> {
-	private String forwardFormat;
+	private Configuration configuration;
 	
-	public LengthConverter() {
-		this(null);
-	}
-	
-	public LengthConverter(String forwardFormat) {
-		this.forwardFormat = forwardFormat;
+	public LengthConverter(Configuration configuration) {
+		this.configuration = configuration;
 	}
 	
 	@Override
 	public String convertForward(Length length) {
-		return length.toString(forwardFormat);
+		length = length.convertToUnits(configuration.getSystemUnits());
+		return String.format(configuration.getLengthDisplayFormat(), length.getValue());
 	}
 	
 	@Override
 	public Length convertReverse(String s) {
-		Length length = Length.parse(s, true);
+		Length length = Length.parse(s, false);
 		if (length == null) {
 			throw new RuntimeException("Unable to parse " + s);
+		}
+		if (length.getUnits() == null) {
+			length.setUnits(configuration.getSystemUnits());
 		}
 		return length;
 	}

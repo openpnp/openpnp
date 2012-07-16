@@ -43,7 +43,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.gui.components.SelectAllTable;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
@@ -96,7 +96,7 @@ public class PartsPanel extends JPanel {
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
 
-		partsTable = new SelectAllTable(partsTableModel);
+		partsTable = new AutoSelectTextTable(partsTableModel);
 		partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		add(new JScrollPane(partsTable), BorderLayout.CENTER);

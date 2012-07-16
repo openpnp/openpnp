@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -38,16 +38,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -119,6 +120,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		panelMain = new JPanel();
 		
 		scrollPane = new JScrollPane(panelMain);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 		scrollPane.setBorder(null);
 		panelMain.setLayout(new BoxLayout(panelMain, BoxLayout.Y_AXIS));
 		
@@ -147,7 +149,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		panelGeneral.add(textFieldId, "4, 2");
 		textFieldId.setColumns(5);
 		
-		JLabel lblFeedRate = new JLabel("Feed Rate (mm/sec)");
+		JLabel lblFeedRate = new JLabel("Feed Rate (units/sec)");
 		panelGeneral.add(lblFeedRate, "6, 2, right, default");
 		
 		textFieldFeedRate = new JTextField();
@@ -195,10 +197,10 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		chckbxSoftLimitsEnabled = new JCheckBox("Soft Limits Enabled?");
 		panelSoftLimits.add(chckbxSoftLimitsEnabled, "2, 2, 5, 1");
 		
-		lblMinimum = new JLabel("Minimum (mm)");
+		lblMinimum = new JLabel("Minimum");
 		panelSoftLimits.add(lblMinimum, "4, 4");
 		
-		lblMacimum = new JLabel("Maximum (mm)");
+		lblMacimum = new JLabel("Maximum");
 		panelSoftLimits.add(lblMacimum, "6, 4");
 		
 		lblX = new JLabel("X");
@@ -375,16 +377,10 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	}
 	
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		IntegerConverter integerConverter = new IntegerConverter("%d");
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
+		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+		IntegerConverter integerConverter = new IntegerConverter();
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 		
 		wrappedBindings.add(JBindings.bind(head, "id", textFieldId, "text", listener));
 		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", doubleConverter, listener));
@@ -411,6 +407,27 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthX", textFieldHomingDotX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthY", textFieldHomingDotY, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthZ", textFieldHomingDotZ, "text", lengthConverter, listener));
+		
+		ComponentDecorators.decorateWithAutoSelect(textFieldId);
+		ComponentDecorators.decorateWithAutoSelect(textFieldFeedRate);
+		ComponentDecorators.decorateWithAutoSelect(textFieldPickDwell);
+		ComponentDecorators.decorateWithAutoSelect(textFieldPlaceDwell);
+
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSoftLimitsXMin);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSoftLimitsXMax);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSoftLimitsYMin);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSoftLimitsYMax);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSoftLimitsZMin);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSoftLimitsZMax);
+		
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHomeLocationX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHomeLocationY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHomeLocationZ);
+		
+		ComponentDecorators.decorateWithAutoSelect(textFieldHomingDotDiameter);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHomingDotX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHomingDotX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHomingDotX);
 	}
 	
 	private void loadFromModel() {

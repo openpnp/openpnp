@@ -40,27 +40,24 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
-import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
 
 public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private final Camera camera;
@@ -194,36 +191,38 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
-
+		
 		createBindings();
 		loadFromModel();
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter("%2.3f%s");
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
-		IntegerConverter intConverter = new IntegerConverter("%d");
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
-
+		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		
 		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthX",
 				uppX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthY",
 				uppY, "text", lengthConverter, listener));
 		
-		wrappedBindings.add(JBindings.bind(camera, "location.lengthX",
+		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthX",
 				textFieldLocationX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(camera, "location.lengthY",
+		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthY",
 				textFieldLocationY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(camera, "location.lengthZ",
+		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthZ",
 				textFieldLocationZ, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(camera, "location.rotation",
 				textFieldLocationC, "text", doubleConverter, listener));
+		
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(uppX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(uppY);
+
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
+		
+		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
 	}
 
 	private void loadFromModel() {

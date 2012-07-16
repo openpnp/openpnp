@@ -118,7 +118,6 @@ public class MainFrame extends JFrame {
 
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
-		
 		PartCellValue.setConfiguration(configuration);
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);

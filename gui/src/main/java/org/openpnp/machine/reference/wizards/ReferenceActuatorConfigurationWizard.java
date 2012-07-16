@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.machine.reference.camera;
+package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -39,36 +39,39 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
-import javax.swing.JCheckBox;
 
-class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
-	private final LtiCivilCamera camera;
+public class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
+	private final ReferenceActuator actuator;
 
 	private WizardContainer wizardContainer;
+
+	private JTextField locationX;
+	private JTextField locationY;
+	private JTextField locationZ;
 	private JButton btnSave;
 	private JButton btnCancel;
-	private JPanel panelGeneral;
+	private JPanel panelOffsets;
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
-	public LtiCivilCameraConfigurationWizard(
-			LtiCivilCamera camera) {
-		this.camera = camera;
+	public ReferenceActuatorConfigurationWizard(
+			ReferenceActuator referenceActuator) {
+		actuator = referenceActuator;
 
 		setLayout(new BorderLayout());
 
@@ -77,35 +80,44 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 
 		JScrollPane scrollPane = new JScrollPane(panelFields);
 
-		panelGeneral = new JPanel();
-		panelFields.add(panelGeneral);
-		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+		panelOffsets = new JPanel();
+		panelFields.add(panelOffsets);
+		panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
-		
-		JLabel lblDeviceId = new JLabel("Device ID");
-		panelGeneral.add(lblDeviceId, "2, 2, right, default");
-		
-		Object[] deviceIds = null;
-		try {
-			deviceIds = camera.getDeviceIds().toArray(new String[] {});
-		}
-		catch (Exception e) {
-			// TODO:
-		}
-		comboBoxDeviceId = new JComboBox(deviceIds);
-		panelGeneral.add(comboBoxDeviceId, "4, 2, left, default");
-		
-		chckbxForceGrayscale = new JCheckBox("Force Grayscale?");
-		panelGeneral.add(chckbxForceGrayscale, "2, 4, 3, 1");
+
+		JLabel lblX = new JLabel("X");
+		panelOffsets.add(lblX, "2, 2");
+
+		JLabel lblY = new JLabel("Y");
+		panelOffsets.add(lblY, "4, 2");
+
+		JLabel lblZ = new JLabel("Z");
+		panelOffsets.add(lblZ, "6, 2");
+
+		locationX = new JTextField();
+		panelOffsets.add(locationX, "2, 4");
+		locationX.setColumns(5);
+
+		locationY = new JTextField();
+		panelOffsets.add(locationY, "4, 4");
+		locationY.setColumns(5);
+
+		locationZ = new JTextField();
+		panelOffsets.add(locationZ, "6, 4");
+		locationZ.setColumns(5);
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -115,32 +127,28 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 
 		btnCancel = new JButton(cancelAction);
 		panelActions.add(btnCancel);
-		
+
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
-
+		
 		createBindings();
 		loadFromModel();
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
+		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+
+		wrappedBindings.add(JBindings.bind(actuator, "location.lengthX",
+				locationX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(actuator, "location.lengthY",
+				locationY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(actuator, "location.lengthZ",
+				locationZ, "text", lengthConverter, listener));
 		
-		// The order of the properties is important. We want all the booleans
-		// to be set before we set the driver because setting the driver
-		// applies all the settings.
-		wrappedBindings.add(JBindings.bind(camera, "forceGrayscale",
-				chckbxForceGrayscale, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "deviceId",
-				comboBoxDeviceId, "selectedItem", listener));
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
 	}
 
 	private void loadFromModel() {
@@ -180,7 +188,7 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 		public void actionPerformed(ActionEvent arg0) {
 			saveToModel();
 			wizardContainer
-					.wizardCompleted(LtiCivilCameraConfigurationWizard.this);
+					.wizardCompleted(ReferenceActuatorConfigurationWizard.this);
 		}
 	};
 
@@ -190,6 +198,4 @@ class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
-	private JComboBox comboBoxDeviceId;
-	private JCheckBox chckbxForceGrayscale;
 }

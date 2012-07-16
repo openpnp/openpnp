@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference.feeder;
+package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -47,19 +47,20 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.BufferedImageIconConverter;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -68,18 +69,18 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
+public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	private final ReferenceTapeFeeder feeder;
 	
 	private WizardContainer wizardContainer;
 
-	private JTextField feedStartX;
-	private JTextField feedStartY;
-	private JTextField feedStartZ;
-	private JTextField feedEndX;
-	private JTextField feedEndY;
-	private JTextField feedEndZ;
-	private JTextField feedRate;
+	private JTextField textFieldFeedStartX;
+	private JTextField textFieldFeedStartY;
+	private JTextField textFieldFeedStartZ;
+	private JTextField textFieldFeedEndX;
+	private JTextField textFieldFeedEndY;
+	private JTextField textFieldFeedEndZ;
+	private JTextField textFieldFeedRate;
 	private JButton feedStartAutoFill;
 	private JButton feedEndAutoFill;
 	private JButton btnSave;
@@ -137,21 +138,22 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 						FormFactory.RELATED_GAP_ROWSPEC,
 						FormFactory.DEFAULT_ROWSPEC, }));
 
-		JLabel lblFeedRate = new JLabel("Feed Rate");
+		JLabel lblFeedRate = new JLabel("Feed Rate (units/sec)");
 		panelGeneral.add(lblFeedRate, "2, 2");
 
-		feedRate = new JTextField();
-		panelGeneral.add(feedRate, "4, 2");
-		feedRate.setColumns(5);
+		textFieldFeedRate = new JTextField();
+		panelGeneral.add(textFieldFeedRate, "4, 2");
+		textFieldFeedRate.setColumns(5);
 
 		lblActuatorId = new JLabel("Actuator Id");
-		panelGeneral.add(lblActuatorId, "2, 4");
+		panelGeneral.add(lblActuatorId, "2, 4, right, default");
 
 		textFieldActuatorId = new JTextField();
 		panelGeneral.add(textFieldActuatorId, "4, 4");
 		textFieldActuatorId.setColumns(5);
 
 		JScrollPane scrollPane = new JScrollPane(panelFields);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 
 		panelLocations = new JPanel();
 		panelFields.add(panelLocations);
@@ -187,37 +189,37 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		panelLocations.add(lblZ, "8, 4");
 
 		JLabel lblFeedStartLocation = new JLabel("Feed Start Location");
-		panelLocations.add(lblFeedStartLocation, "2, 6");
+		panelLocations.add(lblFeedStartLocation, "2, 6, right, default");
 
-		feedStartX = new JTextField();
-		panelLocations.add(feedStartX, "4, 6");
-		feedStartX.setColumns(10);
+		textFieldFeedStartX = new JTextField();
+		panelLocations.add(textFieldFeedStartX, "4, 6");
+		textFieldFeedStartX.setColumns(10);
 
-		feedStartY = new JTextField();
-		panelLocations.add(feedStartY, "6, 6");
-		feedStartY.setColumns(10);
+		textFieldFeedStartY = new JTextField();
+		panelLocations.add(textFieldFeedStartY, "6, 6");
+		textFieldFeedStartY.setColumns(10);
 
-		feedStartZ = new JTextField();
-		panelLocations.add(feedStartZ, "8, 6");
-		feedStartZ.setColumns(10);
+		textFieldFeedStartZ = new JTextField();
+		panelLocations.add(textFieldFeedStartZ, "8, 6");
+		textFieldFeedStartZ.setColumns(10);
 
 		feedStartAutoFill = new JButton(feedStartAutoFillAction);
 		panelLocations.add(feedStartAutoFill, "10, 6");
 
 		JLabel lblFeedEndLocation = new JLabel("Feed End Location");
-		panelLocations.add(lblFeedEndLocation, "2, 8");
+		panelLocations.add(lblFeedEndLocation, "2, 8, right, default");
 
-		feedEndX = new JTextField();
-		panelLocations.add(feedEndX, "4, 8");
-		feedEndX.setColumns(10);
+		textFieldFeedEndX = new JTextField();
+		panelLocations.add(textFieldFeedEndX, "4, 8");
+		textFieldFeedEndX.setColumns(10);
 
-		feedEndY = new JTextField();
-		panelLocations.add(feedEndY, "6, 8");
-		feedEndY.setColumns(10);
+		textFieldFeedEndY = new JTextField();
+		panelLocations.add(textFieldFeedEndY, "6, 8");
+		textFieldFeedEndY.setColumns(10);
 
-		feedEndZ = new JTextField();
-		panelLocations.add(feedEndZ, "8, 8");
-		feedEndZ.setColumns(10);
+		textFieldFeedEndZ = new JTextField();
+		panelLocations.add(textFieldFeedEndZ, "8, 8");
+		textFieldFeedEndZ.setColumns(10);
 
 		feedEndAutoFill = new JButton(feedEndAutoFillAction);
 		panelLocations.add(feedEndAutoFill, "10, 8");
@@ -355,35 +357,29 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
+		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 
-		wrappedBindings.add(JBindings.bind(feeder, "feedRate", feedRate,
+		wrappedBindings.add(JBindings.bind(feeder, "feedRate", textFieldFeedRate,
 				"text", doubleConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "actuatorId",
 				textFieldActuatorId, "text", listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthX",
-				feedStartX, "text", lengthConverter, listener));
+				textFieldFeedStartX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthY",
-				feedStartY, "text", lengthConverter, listener));
+				textFieldFeedStartY, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthZ",
-				feedStartZ, "text", lengthConverter, listener));
+				textFieldFeedStartZ, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthX",
-				feedEndX, "text", lengthConverter, listener));
+				textFieldFeedEndX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthY",
-				feedEndY, "text", lengthConverter, listener));
+				textFieldFeedEndY, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedEndLocation.lengthZ",
-				feedEndZ, "text", lengthConverter, listener));
+				textFieldFeedEndZ, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "vision.enabled",
-				chckbxVisionEnabled, "selected", null, listener));
+				chckbxVisionEnabled, "selected", listener));
 		wrappedBindings.add(JBindings.bind(feeder, "vision.templateImage",
 				labelTemplateImage, "icon", imageConverter, listener));
 		
@@ -401,6 +397,20 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthZ",
 				textFieldBottomRightZ, "text", lengthConverter, listener));
 		
+		ComponentDecorators.decorateWithAutoSelect(textFieldFeedRate);
+		ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTopLeftX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTopLeftY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTopLeftZ);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldBottomRightX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldBottomRightY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldBottomRightZ);
 	}
 
 	private void loadFromModel() {
@@ -508,28 +518,25 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	@SuppressWarnings("serial")
 	private Action feedEndAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = wizardContainer.getMachineControlsPanel()
-					.getCameraLocation();
+			Location l = MainFrame.machineControlsPanel.getCameraLocation();
 			l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
-			copyLocationIntoTextFields(l, feedEndX, feedEndY, feedEndZ);
+			copyLocationIntoTextFields(l, textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ);
 		}
 	};
 	
 	@SuppressWarnings("serial")
 	private Action feedStartAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = wizardContainer.getMachineControlsPanel()
-					.getCameraLocation();
+			Location l = MainFrame.machineControlsPanel.getCameraLocation();
 			l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
-			copyLocationIntoTextFields(l, feedStartX, feedStartY, feedStartZ);
+			copyLocationIntoTextFields(l, textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ);
 		}
 	};
 	
 	@SuppressWarnings("serial")
 	private Action topLeftSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = wizardContainer.getMachineControlsPanel()
-					.getCameraLocation();
+			Location l = MainFrame.machineControlsPanel.getCameraLocation();
 			l = l.convertToUnits(feeder.getVision().getAreaOfInterestTopLeft().getUnits());
 			copyLocationIntoTextFields(l, textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
 		}
@@ -538,8 +545,7 @@ class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
 	@SuppressWarnings("serial")
 	private Action bottomRightSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = wizardContainer.getMachineControlsPanel()
-					.getCameraLocation();
+			Location l = MainFrame.machineControlsPanel.getCameraLocation();
 			l = l.convertToUnits(feeder.getVision().getAreaOfInterestBottomRight().getUnits());
 			copyLocationIntoTextFields(l, textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
 		}

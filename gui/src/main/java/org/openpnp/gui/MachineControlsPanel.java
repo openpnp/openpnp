@@ -138,7 +138,7 @@ public class MachineControlsPanel extends JPanel {
 			incrementsLabels.put(1, new JLabel("0.01"));
 			incrementsLabels.put(2, new JLabel("0.1"));
 			incrementsLabels.put(3, new JLabel("1.0"));
-			incrementsLabels.put(4, new JLabel("10mm"));
+			incrementsLabels.put(4, new JLabel("10"));
 			sliderIncrements.setLabelTable(incrementsLabels);
 		}
 		else if (units == LengthUnit.Inches) {
@@ -146,7 +146,7 @@ public class MachineControlsPanel extends JPanel {
 			incrementsLabels.put(1, new JLabel("0.001"));
 			incrementsLabels.put(2, new JLabel("0.01"));
 			incrementsLabels.put(3, new JLabel("0.1"));
-			incrementsLabels.put(4, new JLabel("1\""));
+			incrementsLabels.put(4, new JLabel("1.0"));
 			sliderIncrements.setLabelTable(incrementsLabels);
 		}
 		else {

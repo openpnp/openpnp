@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;

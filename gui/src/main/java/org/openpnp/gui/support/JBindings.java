@@ -50,7 +50,7 @@ public class JBindings {
 			String sourcePropertyName, 
 			TS component, 
 			String targetPropertyName) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, null);
+		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, (BindingListener[]) null);
 	}
 	
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
@@ -59,7 +59,7 @@ public class JBindings {
 			TS component, 
 			String targetPropertyName, 
 			Converter<SV, TV> converter) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, null);
+		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, (BindingListener[]) null);
 	}
 
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
@@ -68,8 +68,8 @@ public class JBindings {
 			TS component, 
 			String targetPropertyName, 
 			Converter<SV, TV> converter,
-			BindingListener listener) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, listener);
+			BindingListener... listeners) {
+		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, listeners);
 	}
 
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
@@ -77,8 +77,8 @@ public class JBindings {
 			String sourcePropertyName, 
 			TS component, 
 			String targetPropertyName, 
-			BindingListener listener) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, listener);
+			BindingListener... listeners) {
+		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, listeners);
 	}
 
 	public static class WrappedBinding<SS, SV, TS extends JComponent, TV> {
@@ -92,7 +92,7 @@ public class JBindings {
 				TS component, 
 				String targetPropertyName, 
 				Converter<SV, TV> converter,
-				BindingListener listener) {
+				BindingListener... listeners) {
 			this.source = source;
 			this.sourceProperty = BeanProperty.create(sourcePropertyName);
 			this.wrapper = new Wrapper<SV>(sourceProperty.getValue(source));
@@ -108,8 +108,10 @@ public class JBindings {
 				wrappedBinding.setConverter(converter);
 			}
 			wrappedBinding.addBindingListener(new JComponentBackgroundUpdater(component));
-			if (listener != null) {
-				wrappedBinding.addBindingListener(listener);
+			if (listeners != null) {
+				for (BindingListener listener : listeners) {
+					wrappedBinding.addBindingListener(listener);
+				}
 			}
 			wrappedBinding.bind();
 			AutoBinding<SS, SV, Wrapper<SV>, SV> binding = Bindings.createAutoBinding(

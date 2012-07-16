@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,45 +32,39 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.camera.VfwCamera;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
-	private final ReferenceActuator actuator;
+public class VfwCameraConfigurationWizard extends JPanel implements Wizard {
+	private final VfwCamera camera;
 
 	private WizardContainer wizardContainer;
-
-	private JTextField locationX;
-	private JTextField locationY;
-	private JTextField locationZ;
 	private JButton btnSave;
 	private JButton btnCancel;
-	private JPanel panelOffsets;
+	private JPanel panelGeneral;
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
-	public ReferenceActuatorConfigurationWizard(
-			ReferenceActuator referenceActuator) {
-		actuator = referenceActuator;
+	public VfwCameraConfigurationWizard(
+			VfwCamera camera) {
+		this.camera = camera;
 
 		setLayout(new BorderLayout());
 
@@ -79,44 +73,45 @@ class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
 
 		JScrollPane scrollPane = new JScrollPane(panelFields);
 
-		panelOffsets = new JPanel();
-		panelFields.add(panelOffsets);
-		panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
+		panelGeneral = new JPanel();
+		panelFields.add(panelGeneral);
+		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,},
+				ColumnSpec.decode("default:grow"),},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
-
-		JLabel lblX = new JLabel("X");
-		panelOffsets.add(lblX, "2, 2");
-
-		JLabel lblY = new JLabel("Y");
-		panelOffsets.add(lblY, "4, 2");
-
-		JLabel lblZ = new JLabel("Z");
-		panelOffsets.add(lblZ, "6, 2");
-
-		locationX = new JTextField();
-		panelOffsets.add(locationX, "2, 4");
-		locationX.setColumns(5);
-
-		locationY = new JTextField();
-		panelOffsets.add(locationY, "4, 4");
-		locationY.setColumns(5);
-
-		locationZ = new JTextField();
-		panelOffsets.add(locationZ, "6, 4");
-		locationZ.setColumns(5);
+		
+		JLabel lblDeviceId = new JLabel("Driver");
+		panelGeneral.add(lblDeviceId, "2, 2, right, default");
+		
+		Object[] deviceIds = null;
+		try {
+			deviceIds = camera.getDrivers().toArray(new String[] {});
+		}
+		catch (Exception e) {
+			// TODO:
+		}
+		comboBoxDriver = new JComboBox(deviceIds);
+		panelGeneral.add(comboBoxDriver, "4, 2, left, default");
+		
+		chckbxShowVideoSource = new JCheckBox("Show Video Source Dialog?");
+		panelGeneral.add(chckbxShowVideoSource, "2, 4, 3, 1");
+		
+		chckbxShowVideoFormat = new JCheckBox("Show Video Format Dialog?");
+		panelGeneral.add(chckbxShowVideoFormat, "2, 6, 3, 1");
+		
+		chckbxShowVideoDisplay = new JCheckBox("Show Video Display Dialog?");
+		panelGeneral.add(chckbxShowVideoDisplay, "2, 8, 3, 1");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -126,7 +121,7 @@ class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
 
 		btnCancel = new JButton(cancelAction);
 		panelActions.add(btnCancel);
-
+		
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
 
@@ -135,22 +130,19 @@ class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		DoubleConverter doubleConverter = new DoubleConverter("%2.3f");
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
-
-		wrappedBindings.add(JBindings.bind(actuator, "location.lengthX",
-				locationX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(actuator, "location.lengthY",
-				locationY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(actuator, "location.lengthZ",
-				locationZ, "text", lengthConverter, listener));
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		
+		// The order of the properties is important. We want all the booleans
+		// to be set before we set the driver because setting the driver
+		// applies all the settings.
+		wrappedBindings.add(JBindings.bind(camera, "showVideoSourceDialog",
+				chckbxShowVideoSource, "selected", listener));
+		wrappedBindings.add(JBindings.bind(camera, "showVideoFormatDialog",
+				chckbxShowVideoFormat, "selected", listener));
+		wrappedBindings.add(JBindings.bind(camera, "showVideoDisplayDialog",
+				chckbxShowVideoDisplay, "selected", listener));
+		wrappedBindings.add(JBindings.bind(camera, "driver",
+				comboBoxDriver, "selectedItem", listener));
 	}
 
 	private void loadFromModel() {
@@ -190,7 +182,7 @@ class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
 		public void actionPerformed(ActionEvent arg0) {
 			saveToModel();
 			wizardContainer
-					.wizardCompleted(ReferenceActuatorConfigurationWizard.this);
+					.wizardCompleted(VfwCameraConfigurationWizard.this);
 		}
 	};
 
@@ -200,4 +192,8 @@ class ReferenceActuatorConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
+	private JComboBox comboBoxDriver;
+	private JCheckBox chckbxShowVideoSource;
+	private JCheckBox chckbxShowVideoFormat;
+	private JCheckBox chckbxShowVideoDisplay;
 }

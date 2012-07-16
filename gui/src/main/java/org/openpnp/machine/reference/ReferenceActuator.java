@@ -23,6 +23,7 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;

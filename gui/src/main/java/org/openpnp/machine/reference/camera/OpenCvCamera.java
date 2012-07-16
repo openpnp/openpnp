@@ -26,6 +26,7 @@ import java.awt.image.BufferedImage;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;

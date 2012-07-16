@@ -19,7 +19,7 @@
  	For more information about OpenPnP visit http://openpnp.org
 */
 
-package org.openpnp.machine.reference.feeder;
+package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -35,15 +35,16 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
-import org.jdesktop.beansbinding.AbstractBindingListener;
-import org.jdesktop.beansbinding.Binding;
-import org.jdesktop.beansbinding.BindingListener;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.SaveResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -55,11 +56,11 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 
 	private WizardContainer wizardContainer;
 	
-	private JTextField offsetsX;
-	private JTextField offsetsY;
-	private JTextField offsetsZ;
-	private JTextField trayCountX;
-	private JTextField trayCountY;
+	private JTextField textFieldOffsetsX;
+	private JTextField textFieldOffsetsY;
+	private JTextField textFieldOffsetsZ;
+	private JTextField textFielTrayCountX;
+	private JTextField textFieldTrayCountY;
 	
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
@@ -121,33 +122,34 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		JLabel lblFeedStartLocation = new JLabel("Offsets");
 		panelFields.add(lblFeedStartLocation, "2, 4, right, default");
 
-		offsetsX = new JTextField();
-		panelFields.add(offsetsX, "4, 4, fill, default");
-		offsetsX.setColumns(10);
+		textFieldOffsetsX = new JTextField();
+		panelFields.add(textFieldOffsetsX, "4, 4, fill, default");
+		textFieldOffsetsX.setColumns(10);
 
-		offsetsY = new JTextField();
-		panelFields.add(offsetsY, "6, 4, fill, default");
-		offsetsY.setColumns(10);
+		textFieldOffsetsY = new JTextField();
+		panelFields.add(textFieldOffsetsY, "6, 4, fill, default");
+		textFieldOffsetsY.setColumns(10);
 
-		offsetsZ = new JTextField();
-		panelFields.add(offsetsZ, "8, 4, fill, default");
-		offsetsZ.setColumns(10);
+		textFieldOffsetsZ = new JTextField();
+		panelFields.add(textFieldOffsetsZ, "8, 4, fill, default");
+		textFieldOffsetsZ.setColumns(10);
 
 		JLabel lblTrayCount = new JLabel("Tray Count");
 		panelFields.add(lblTrayCount, "2, 6, right, default");
 
-		trayCountX = new JTextField();
-		panelFields.add(trayCountX, "4, 6, fill, default");
-		trayCountX.setColumns(10);
+		textFielTrayCountX = new JTextField();
+		panelFields.add(textFielTrayCountX, "4, 6, fill, default");
+		textFielTrayCountX.setColumns(10);
 
-		trayCountY = new JTextField();
-		panelFields.add(trayCountY, "6, 6, fill, default");
-		trayCountY.setColumns(10);
+		textFieldTrayCountY = new JTextField();
+		panelFields.add(textFieldTrayCountY, "6, 6, fill, default");
+		textFieldTrayCountY.setColumns(10);
 
 		JButton btnSave = new JButton(saveAction);
 		setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPane = new JScrollPane(panelFields);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 		
@@ -166,22 +168,23 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 	}
 	
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		IntegerConverter integerConverter = new IntegerConverter("%d");
-		BindingListener listener = new AbstractBindingListener() {
-			@Override
-			public void synced(Binding binding) {
-				saveAction.setEnabled(true);
-				cancelAction.setEnabled(true);
-			}
-		};
+		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		IntegerConverter integerConverter = new IntegerConverter();
+		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 		
-		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthX", offsetsX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthY", offsetsY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthZ", offsetsZ, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthX", textFieldOffsetsX, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthY", textFieldOffsetsY, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthZ", textFieldOffsetsZ, "text", lengthConverter, listener));
 		
-		wrappedBindings.add(JBindings.bind(feeder, "trayCountX", trayCountX, "text", integerConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "trayCountY", trayCountY, "text", integerConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "trayCountX", textFielTrayCountX, "text", integerConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "trayCountY", textFieldTrayCountY, "text", integerConverter, listener));
+		
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsZ);
+		
+		ComponentDecorators.decorateWithAutoSelect(textFielTrayCountX);
+		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountY);
 	}
 	
 	private void loadFromModel() {

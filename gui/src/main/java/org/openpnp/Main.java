@@ -45,7 +45,8 @@ public class Main {
 		}
 		File configurationDirectory = new File(System.getProperty("user.home"));
 		configurationDirectory = new File(configurationDirectory, ".openpnp");
-		final Configuration configuration = new Configuration(configurationDirectory);
+		Configuration.initialize(configurationDirectory);
+		final Configuration configuration = Configuration.get();
 		final JobProcessor jobProcessor = new JobProcessor(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
