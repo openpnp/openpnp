@@ -65,8 +65,8 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	private int pickDwellMilliseconds;
 	@Attribute(required = false)
 	private int placeDwellMilliseconds;
-	@Attribute
-	private double feedRate;
+	@Element
+	private Length feedRate;
 	@Element
 	private SoftLimits softLimits = new SoftLimits();
 	@Element(required = false)
@@ -268,7 +268,8 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 
 	@Override
 	public void moveTo(double x, double y, double z, double c) throws Exception {
-		moveTo(x, y, z, c, feedRate);
+		Length feedRate = this.feedRate.convertToUnits(getMachine().getNativeUnits());
+		moveTo(x, y, z, c, feedRate.getValue());
 	}
 
 	@Override
@@ -278,24 +279,31 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 				|| Double.isNaN(c)) {
 			throw new Exception(
 					String.format(
-							"Movement to %2.4f, %2.4f, %2.4f, %2.4f is invalid. You have bad data somewhere.",
+							"Movement to %2.4f, %2.4f, %2.4f, %2.4f is not valid. You have bad data somewhere.",
 							x, y, z, c));
 		}
+		Location min = softLimits.getMinimums().convertToUnits(getMachine().getNativeUnits());
+		Location max = softLimits.getMaximums().convertToUnits(getMachine().getNativeUnits());
+		
 		if (!softLimitsOverridden && softLimits.enabled && (
-				x < softLimits.minX || x > softLimits.maxX 
-				|| y < softLimits.minY || y > softLimits.maxY 
-				|| z < softLimits.minZ || z > softLimits.maxZ 
-				|| c < softLimits.minC || c > softLimits.maxC)) {
+				x < min.getX() || x > max.getX() || 
+				y < min.getY() || y > max.getY() || 
+				z < min.getZ() || z > max.getZ() || 
+				c < min.getRotation() || c > max.getRotation() 
+				)) {
 			throw new Exception(
 					String.format(
 							"Movement to %2.4f, %2.4f, %2.4f, %2.4f would violate soft limits of (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f), (%2.4f, %2.4f).",
-							x, y, z, c, softLimits.minX, softLimits.maxX,
-							softLimits.minY, softLimits.maxY, softLimits.minZ,
-							softLimits.maxZ, softLimits.minC, softLimits.maxC));
+							x, y, z, c,
+							min.getX(), max.getX(),
+							min.getY(), max.getY(),
+							min.getZ(), max.getZ(),
+							min.getRotation(), max.getRotation()
+							));
 		}
 		double feedRateMmPerMinute = new Length(feedRatePerMinute,
 				machine.getNativeUnits())
-				.convertToUnits(LengthUnit.Millimeters).getValue();
+				.convertToUnits(getMachine().getNativeUnits()).getValue();
 		machine.getDriver().moveTo(this, x + offsetX, y + offsetY, z + offsetZ,
 				c + offsetC, feedRateMmPerMinute);
 		this.x = x + offsetX;
@@ -460,11 +468,11 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		this.placeDwellMilliseconds = placeDwellMilliseconds;
 	}
 
-	public double getFeedRate() {
+	public Length getFeedRate() {
 		return feedRate;
 	}
 
-	public void setFeedRate(double feedRate) {
+	public void setFeedRate(Length feedRate) {
 		this.feedRate = feedRate;
 	}
 
@@ -498,22 +506,10 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	 * Stores all the values associated with the Head's soft limits.
 	 */
 	public static class SoftLimits {
-		@Attribute
-		private double minX = Double.NEGATIVE_INFINITY;
-		@Attribute
-		private double maxX = Double.POSITIVE_INFINITY;
-		@Attribute
-		private double minY = Double.NEGATIVE_INFINITY;
-		@Attribute
-		private double maxY = Double.POSITIVE_INFINITY;
-		@Attribute
-		private double minZ = Double.NEGATIVE_INFINITY;
-		@Attribute
-		private double maxZ = Double.POSITIVE_INFINITY;
-		@Attribute
-		private double minC = Double.NEGATIVE_INFINITY;
-		@Attribute
-		private double maxC = Double.POSITIVE_INFINITY;
+		@Element
+		private Location minimums = new Location(LengthUnit.Millimeters, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
+		@Element
+		private Location maximums = new Location(LengthUnit.Millimeters, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
 		@Attribute(required=false)
 		private boolean enabled;
 		
@@ -525,68 +521,20 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 			this.enabled = enabled;
 		}
 
-		public double getMinX() {
-			return minX;
+		public Location getMinimums() {
+			return minimums;
 		}
 
-		public void setMinX(double minX) {
-			this.minX = minX;
+		public void setMinimums(Location minimums) {
+			this.minimums = minimums;
 		}
 
-		public double getMaxX() {
-			return maxX;
+		public Location getMaximums() {
+			return maximums;
 		}
 
-		public void setMaxX(double maxX) {
-			this.maxX = maxX;
-		}
-
-		public double getMinY() {
-			return minY;
-		}
-
-		public void setMinY(double minY) {
-			this.minY = minY;
-		}
-
-		public double getMaxY() {
-			return maxY;
-		}
-
-		public void setMaxY(double maxY) {
-			this.maxY = maxY;
-		}
-
-		public double getMinZ() {
-			return minZ;
-		}
-
-		public void setMinZ(double minZ) {
-			this.minZ = minZ;
-		}
-
-		public double getMaxZ() {
-			return maxZ;
-		}
-
-		public void setMaxZ(double maxZ) {
-			this.maxZ = maxZ;
-		}
-
-		public double getMinC() {
-			return minC;
-		}
-
-		public void setMinC(double minC) {
-			this.minC = minC;
-		}
-
-		public double getMaxC() {
-			return maxC;
-		}
-
-		public void setMaxC(double maxC) {
-			this.maxC = maxC;
+		public void setMaximums(Location maximums) {
+			this.maximums = maximums;
 		}
 	}
 

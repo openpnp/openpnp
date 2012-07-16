@@ -35,6 +35,7 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -50,8 +51,8 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
 	@Element
 	private Location feedEndLocation = new Location(LengthUnit.Millimeters);
-	@Attribute
-	private double feedRate;
+	@Element
+	private Length feedRate;
 	@Attribute
 	private String actuatorId; 
 	@Element(required=false)
@@ -92,6 +93,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		ReferenceHead head = (ReferenceHead) head_;
 		ReferenceActuator actuator = head.getActuator(actuatorId);
 		
+		// Convert all the Locations we'll be dealing with
+		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
+		Location feedStartLocation = this.feedStartLocation.convertToUnits(head.getMachine().getNativeUnits());
+		Location feedEndLocation = this.feedEndLocation.convertToUnits(head.getMachine().getNativeUnits());
+		Length feedRate = this.feedRate.convertToUnits(head.getMachine().getNativeUnits());
 		
 		// Move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
@@ -136,7 +142,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				feedEndLocation.getY() - offsetY,
 				feedEndLocation.getZ(), 
 				head.getC(), 
-				feedRate);
+				feedRate.getValue());
 
 		// move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
@@ -262,11 +268,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		this.feedEndLocation = feedEndLocation;
 	}
 
-	public double getFeedRate() {
+	public Length getFeedRate() {
 		return feedRate;
 	}
 
-	public void setFeedRate(double feedRate) {
+	public void setFeedRate(Length feedRate) {
 		this.feedRate = feedRate;
 	}
 	

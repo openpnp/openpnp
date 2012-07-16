@@ -2,8 +2,12 @@
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
       <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
       <heads>
-         <reference-head id="H1" pick-dwell-milliseconds="100" place-dwell-milliseconds="100" feed-rate="9000.0">
-            <soft-limits min-x="-100.0" max-x="1000.0" min-y="-100.0" max-y="1000.0" min-z="-100.0" max-z="100.0" min-c="0.0" max-c="360.0" enabled="true"/>
+         <reference-head id="H1" pick-dwell-milliseconds="100" place-dwell-milliseconds="100">
+         	<feed-rate units="Millimeters" value="9000.0" />
+            <soft-limits enabled="true">
+            	<minimums units="Millimeters" x="-100" y="-100" z="-100" rotation="0" />
+            	<maximums units="Millimeters" x="1000" y="1000" z="1000" rotation="360" />
+            </soft-limits>
             <homing>
                <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             </homing>

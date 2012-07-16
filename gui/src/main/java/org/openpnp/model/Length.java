@@ -37,6 +37,10 @@ public class Length {
 	@Attribute
 	private LengthUnit units;
 	
+	public Length() {
+		
+	}
+	
 	public Length(double value, LengthUnit units) {
 		this.value = value;
 		this.units = units;

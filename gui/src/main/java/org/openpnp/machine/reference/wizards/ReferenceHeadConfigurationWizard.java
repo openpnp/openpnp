@@ -147,28 +147,28 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		
 		textFieldId = new JTextField();
 		panelGeneral.add(textFieldId, "4, 2");
-		textFieldId.setColumns(5);
+		textFieldId.setColumns(8);
 		
-		JLabel lblFeedRate = new JLabel("Feed Rate (units/sec)");
+		JLabel lblFeedRate = new JLabel("Feed Rate (units/min)");
 		panelGeneral.add(lblFeedRate, "6, 2, right, default");
 		
 		textFieldFeedRate = new JTextField();
 		panelGeneral.add(textFieldFeedRate, "8, 2");
-		textFieldFeedRate.setColumns(5);
+		textFieldFeedRate.setColumns(8);
 		
 		lblNewLabel = new JLabel("Pick Dwell (ms)");
 		panelGeneral.add(lblNewLabel, "2, 4, right, default");
 		
 		textFieldPickDwell = new JTextField();
 		panelGeneral.add(textFieldPickDwell, "4, 4");
-		textFieldPickDwell.setColumns(5);
+		textFieldPickDwell.setColumns(8);
 		
 		JLabel lblPlaceDwell = new JLabel("Place Dwell (ms)");
 		panelGeneral.add(lblPlaceDwell, "6, 4, right, default");
 		
 		textFieldPlaceDwell = new JTextField();
 		panelGeneral.add(textFieldPlaceDwell, "8, 4");
-		textFieldPlaceDwell.setColumns(5);
+		textFieldPlaceDwell.setColumns(8);
 		
 		panelSoftLimits = new JPanel();
 		panelMain.add(panelSoftLimits);
@@ -383,19 +383,19 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 		
 		wrappedBindings.add(JBindings.bind(head, "id", textFieldId, "text", listener));
-		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", doubleConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "pickDwellMilliseconds", textFieldPickDwell, "text", integerConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "placeDwellMilliseconds", textFieldPlaceDwell, "text", integerConverter, listener));
 
 		wrappedBindings.add(JBindings.bind(head, "softLimits.enabled", chckbxSoftLimitsEnabled, "selected", listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minX", textFieldSoftLimitsXMin, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maxX", textFieldSoftLimitsXMax, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minY", textFieldSoftLimitsYMin, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maxY", textFieldSoftLimitsYMax, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minZ", textFieldSoftLimitsZMin, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maxZ", textFieldSoftLimitsZMax, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minC", textFieldSoftLimitsCMin, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maxC", textFieldSoftLimitsCMax, "text", doubleConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthX", textFieldSoftLimitsXMin, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthX", textFieldSoftLimitsXMax, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthY", textFieldSoftLimitsYMin, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthY", textFieldSoftLimitsYMax, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthZ", textFieldSoftLimitsZMin, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthZ", textFieldSoftLimitsZMax, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.rotation", textFieldSoftLimitsCMin, "text", doubleConverter, listener));
+		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.rotation", textFieldSoftLimitsCMax, "text", doubleConverter, listener));
 		
 		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthX", textFieldHomeLocationX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthY", textFieldHomeLocationY, "text", lengthConverter, listener));
@@ -409,7 +409,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthZ", textFieldHomingDotZ, "text", lengthConverter, listener));
 		
 		ComponentDecorators.decorateWithAutoSelect(textFieldId);
-		ComponentDecorators.decorateWithAutoSelect(textFieldFeedRate);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPickDwell);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPlaceDwell);
 

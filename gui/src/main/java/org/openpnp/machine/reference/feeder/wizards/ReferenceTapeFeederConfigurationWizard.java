@@ -138,7 +138,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 						FormFactory.RELATED_GAP_ROWSPEC,
 						FormFactory.DEFAULT_ROWSPEC, }));
 
-		JLabel lblFeedRate = new JLabel("Feed Rate (units/sec)");
+		JLabel lblFeedRate = new JLabel("Feed Rate (units/min)");
 		panelGeneral.add(lblFeedRate, "2, 2");
 
 		textFieldFeedRate = new JTextField();
@@ -358,12 +358,11 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
-		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
 		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 
 		wrappedBindings.add(JBindings.bind(feeder, "feedRate", textFieldFeedRate,
-				"text", doubleConverter, listener));
+				"text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "actuatorId",
 				textFieldActuatorId, "text", listener));
 		wrappedBindings.add(JBindings.bind(feeder, "feedStartLocation.lengthX",
@@ -397,7 +396,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthZ",
 				textFieldBottomRightZ, "text", lengthConverter, listener));
 		
-		ComponentDecorators.decorateWithAutoSelect(textFieldFeedRate);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
 		ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);

@@ -62,6 +62,9 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 			throws Exception {
 		ReferenceHead head = (ReferenceHead) head_;
 
+		// Convert all the Locations we'll be dealing with
+		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
+		
 		int partX = (pickCount / trayCountX);
 		int partY = (pickCount - (partX * trayCountX));
 
