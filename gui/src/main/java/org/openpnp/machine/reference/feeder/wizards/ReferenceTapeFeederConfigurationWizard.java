@@ -51,6 +51,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.BufferedImageIconConverter;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
@@ -507,18 +508,11 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		}
 	};
 	
-	private static void copyLocationIntoTextFields(Location l, JTextField x, JTextField y, JTextField z) {
-		x.setText(l.getLengthX().toString());
-		y.setText(l.getLengthY().toString());
-		z.setText(l.getLengthZ().toString());
-	}
-	
 	@SuppressWarnings("serial")
 	private Action feedEndAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			l = l.convertToUnits(feeder.getFeedEndLocation().getUnits());
-			copyLocationIntoTextFields(l, textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ);
+			Helpers.copyLocationIntoTextFields(l, textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ);
 		}
 	};
 	
@@ -526,8 +520,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 	private Action feedStartAutoFillAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			l = l.convertToUnits(feeder.getFeedStartLocation().getUnits());
-			copyLocationIntoTextFields(l, textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ);
+			Helpers.copyLocationIntoTextFields(l, textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ);
 		}
 	};
 	
@@ -535,8 +528,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 	private Action topLeftSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			l = l.convertToUnits(feeder.getVision().getAreaOfInterestTopLeft().getUnits());
-			copyLocationIntoTextFields(l, textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
+			Helpers.copyLocationIntoTextFields(l, textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
 		}
 	};
 	
@@ -544,8 +536,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 	private Action bottomRightSetToCurrentAction = new AbstractAction("Set to Current") {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			l = l.convertToUnits(feeder.getVision().getAreaOfInterestBottomRight().getUnits());
-			copyLocationIntoTextFields(l, textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
+			Helpers.copyLocationIntoTextFields(l, textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
 		}
 	};
 	
