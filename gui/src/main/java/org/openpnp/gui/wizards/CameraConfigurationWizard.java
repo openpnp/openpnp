@@ -64,8 +64,8 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 
 	private WizardContainer wizardContainer;
 
-	private JTextField uppX;
-	private JTextField uppY;
+	private JTextField textFieldUppX;
+	private JTextField textFieldUppY;
 	private JButton btnSave;
 	private JButton btnCancel;
 	private JPanel panelUpp;
@@ -92,6 +92,7 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
 		JScrollPane scrollPane = new JScrollPane(panelFields);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 		
 		panelLocation = new JPanel();
 		panelLocation.setBorder(new TitledBorder(null, "Location / Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -155,6 +156,8 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 
 		JLabel lblX = new JLabel("X");
@@ -163,13 +166,13 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		JLabel lblY = new JLabel("Y");
 		panelUpp.add(lblY, "4, 2");
 
-		uppX = new JTextField();
-		panelUpp.add(uppX, "2, 4");
-		uppX.setColumns(6);
+		textFieldUppX = new JTextField();
+		panelUpp.add(textFieldUppX, "2, 4");
+		textFieldUppX.setColumns(8);
 
-		uppY = new JTextField();
-		panelUpp.add(uppY, "4, 4");
-		uppY.setColumns(6);
+		textFieldUppY = new JTextField();
+		panelUpp.add(textFieldUppY, "4, 4");
+		textFieldUppY.setColumns(8);
 		
 		btnMeasure = new JButton("Measure");
 		btnMeasure.setAction(measureAction);
@@ -179,6 +182,9 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		btnCancelMeasure.setAction(cancelMeasureAction);
 		btnCancelMeasure.setVisible(false);
 		panelUpp.add(btnCancelMeasure, "8, 4");
+		
+		lblNewLabel = new JLabel("<html>\n<ol>\n<li>Place an object that is 1 unit by 1 unit square onto the table. Graphing paper is a good, easy choice for this.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Use the camera selection rectangle to measure the object and press the Confirm button.\n</ol>\n</html>");
+		panelUpp.add(lblNewLabel, "2, 6, 6, 1, default, fill");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -202,9 +208,9 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 		
 		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthX",
-				uppX, "text", lengthConverter, listener));
+				textFieldUppX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthY",
-				uppY, "text", lengthConverter, listener));
+				textFieldUppY, "text", lengthConverter, listener));
 		
 		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthX",
 				textFieldLocationX, "text", lengthConverter, listener));
@@ -215,8 +221,8 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(camera, "location.rotation",
 				textFieldLocationC, "text", doubleConverter, listener));
 		
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(uppX);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(uppY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
@@ -298,6 +304,8 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 			}
 			cameraView.setSelectionEnabled(false);
 			Rectangle selection = cameraView.getSelection();
+			textFieldUppX.setText(String.format(Configuration.get().getLengthDisplayFormat(), (1.0 / selection.width)));
+			textFieldUppY.setText(String.format(Configuration.get().getLengthDisplayFormat(), (1.0 / selection.height)));
 		}
 	};
 	
@@ -313,4 +321,5 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 			cameraView.setSelectionEnabled(false);
 		}
 	};
+	private JLabel lblNewLabel;
 }

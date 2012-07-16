@@ -51,7 +51,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.BufferedImageIconConverter;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
