@@ -32,3 +32,6 @@ Development
 OpenPnP builds with Maven. There is an included pom.xml that should build
 the project and will build a proper Eclipse project using the command
 mvn eclipse:eclipse
+
+To build the jar package from the command line, use the command
+mvn package

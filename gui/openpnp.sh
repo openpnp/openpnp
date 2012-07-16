@@ -5,17 +5,19 @@ unamestr=`uname`
 case "$unamestr" in
 	Linux)
 		platform='linux'
+		rootdir="$(dirname $(readlink -f $0))"
 	;;
 	Darwin)
 		platform='mac'
+		rootdir="$(cd $(dirname $0); pwd -P)"
 	;;
 esac
 
 case "$platform" in
 	mac)
-		java -Djava.library.path=lib/native/mac-universal -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+		java -Djava.library.path=$rootdir/lib/native/mac-universal -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 	linux)
-		java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+		java -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 esac
