@@ -99,7 +99,7 @@ public class MachineControlsPanel extends JPanel {
 	private Color droEditingColor = Color.yellow;
 	private Color droWarningColor = Color.red;
 	
-	private ExecutorService machineExecutor = Executors.newSingleThreadExecutor();
+	private ExecutorService machineTaskExecutor = Executors.newSingleThreadExecutor();
 	
 	private JogControlsPanel jogControlsPanel;
 	private JDialog jogControlsWindow;
@@ -124,8 +124,12 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
-	public ExecutorService getMachineExecutor() {
-		return machineExecutor;
+	public void submitMachineTask(Runnable runnable) {
+		if (!machine.isEnabled()) {
+			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
+			return;
+		}
+		machineTaskExecutor.submit(runnable);
 	}
 	
 	public JogControlsPanel getJogControlsPanel() {
@@ -530,7 +534,7 @@ public class MachineControlsPanel extends JPanel {
 	public Action goToZeroAction = new AbstractAction("Go To Zero") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			machineExecutor.submit(new Runnable() {
+			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
 						head.moveTo(0, 0, 0, 0);
@@ -548,7 +552,7 @@ public class MachineControlsPanel extends JPanel {
 	public Action homeAction = new AbstractAction("Home") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			machineExecutor.submit(new Runnable() {
+			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
 						head.home();
@@ -601,7 +605,7 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			final Location location = getCameraLocation();
-			machineExecutor.submit(new Runnable() {
+			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
 						head.moveTo(
@@ -628,7 +632,7 @@ public class MachineControlsPanel extends JPanel {
 			}
 			final Location location = getToolLocation();
 			final Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(location.getUnits());
-			machineExecutor.submit(new Runnable() {
+			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
 						head.moveTo(

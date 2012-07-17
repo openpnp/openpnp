@@ -172,7 +172,7 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		panelLocation.add(textFieldLocationC, "8, 4");
 		textFieldLocationC.setColumns(8);
 		
-		locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ);
+		locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ, textFieldLocationC);
 		panelLocation.add(locationButtonsPanel, "10, 4");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);

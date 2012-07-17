@@ -63,6 +63,7 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
@@ -549,8 +550,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	public Action orientPlacementAction = new AbstractAction("Set Placement Location") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// TODO: This needs to be changed to be relative to the Board's position.
-			getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation());
+			Location boardLocation = getSelectedBoardLocation().getLocation();
+			getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation().subtract(boardLocation));
 			placementsTableModel.fireTableDataChanged();
 		}
 	};

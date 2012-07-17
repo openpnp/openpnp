@@ -204,6 +204,7 @@ public class TableScanner extends JDialog implements Runnable {
 		}
 	}
 	
+	// TODO: This needs to happen on the machine executor, or just die completely.
 	public void run() {
 		try {
 			Machine machine = configuration.getMachine();

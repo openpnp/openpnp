@@ -201,7 +201,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		panelLocations.add(textFieldFeedStartZ, "8, 6");
 		textFieldFeedStartZ.setColumns(8);
 		
-		locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ);
+		locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ, null);
 		panelLocations.add(locationButtonsPanelFeedStart, "10, 6");
 
 		JLabel lblFeedEndLocation = new JLabel("Feed End Location");
@@ -219,7 +219,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		panelLocations.add(textFieldFeedEndZ, "8, 8");
 		textFieldFeedEndZ.setColumns(8);
 		
-		locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ);
+		locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ, null);
 		panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
 
 		panelVision = new JPanel();
@@ -317,7 +317,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 												panelAoE.add(textFieldTopLeftZ, "8, 4, fill, default");
 												textFieldTopLeftZ.setColumns(6);
 												
-												locationButtonsPanelAoeTopLeft = new LocationButtonsPanel(textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
+												locationButtonsPanelAoeTopLeft = new LocationButtonsPanel(textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ, null);
 												panelAoE.add(locationButtonsPanelAoeTopLeft, "10, 4");
 												
 												lblBottomRight = new JLabel("Bottom Right");
@@ -335,7 +335,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 												panelAoE.add(textFieldBottomRightZ, "8, 6, fill, default");
 												textFieldBottomRightZ.setColumns(6);
 												
-												locationButtonsPanelAoeBottomRight = new LocationButtonsPanel(textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
+												locationButtonsPanelAoeBottomRight = new LocationButtonsPanel(textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ, null);
 												panelAoE.add(locationButtonsPanelAoeBottomRight, "10, 6");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);

@@ -20,15 +20,16 @@ import org.openpnp.spi.Head;
 import java.awt.FlowLayout;
 
 public class LocationButtonsPanel extends JPanel {
-	private JTextField textFieldX, textFieldY, textFieldZ;
+	private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
 	
-	public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ) {
+	public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ, JTextField textFieldC) {
 		FlowLayout flowLayout = (FlowLayout) getLayout();
 		flowLayout.setVgap(0);
 		flowLayout.setHgap(2);
 		this.textFieldX = textFieldX;
 		this.textFieldY = textFieldY;
 		this.textFieldZ = textFieldZ;
+		this.textFieldC = textFieldC;
 		
 		JButton buttonCaptureCamera = new JButton(getCameraCoordinatesAction);
 		buttonCaptureCamera.setToolTipText("Capture the location that the camera is centered over.");
@@ -66,7 +67,7 @@ public class LocationButtonsPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getCameraLocation();
 			System.out.println(l);
-			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ);
+			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ, textFieldC);
 		}
 	};
 	
@@ -75,7 +76,7 @@ public class LocationButtonsPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getToolLocation();
 			System.out.println(l);
-			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ);
+			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ, textFieldC);
 		}
 	};
 	
@@ -98,13 +99,16 @@ public class LocationButtonsPanel extends JPanel {
 		if (textFieldZ != null) {
 			location.setZ(Length.parse(textFieldZ.getText()).getValue());
 		}
+		if (textFieldC != null) {
+			location.setRotation(Double.parseDouble(textFieldC.getText()));
+		}
 		return location;
 	}
 	
 	private Action positionCameraAction = new AbstractAction("Position Camera") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MainFrame.machineControlsPanel.getMachineExecutor().execute(new Runnable() {
+			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					Head head = Configuration.get().getMachine().getHeads().get(0);
 					Camera camera = MainFrame.cameraPanel.getSelectedCamera();
@@ -124,7 +128,7 @@ public class LocationButtonsPanel extends JPanel {
 	private Action positionToolAction = new AbstractAction("Position Tool") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MainFrame.machineControlsPanel.getMachineExecutor().execute(new Runnable() {
+			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					Head head = Configuration.get().getMachine().getHeads().get(0);
 					Location location = getParsedLocation().convertToUnits(head.getMachine().getNativeUnits());

@@ -98,7 +98,7 @@ public class JogControlsPanel extends JPanel {
 	}
 
 	private void jog(final int x, final int y, final int z, final int c) {
-		machineControlsPanel.getMachineExecutor().execute(new Runnable() {
+		machineControlsPanel.submitMachineTask(new Runnable() {
 			public void run() {
 				try {
 					double xPos = head.getX();
@@ -347,7 +347,7 @@ public class JogControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			final boolean state = btnPickPlace.isSelected();
-			machineControlsPanel.getMachineExecutor().submit(new Runnable() {
+			machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					try {
 						if (state) {
@@ -383,7 +383,7 @@ public class JogControlsPanel extends JPanel {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						final boolean state = actuatorButton.isSelected();
-						machineControlsPanel.getMachineExecutor().execute(
+						machineControlsPanel.submitMachineTask(
 								new Runnable() {
 									@Override
 									public void run() {
