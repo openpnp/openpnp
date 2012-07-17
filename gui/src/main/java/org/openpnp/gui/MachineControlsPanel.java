@@ -124,7 +124,7 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
-	ExecutorService getMachineExecutor() {
+	public ExecutorService getMachineExecutor() {
 		return machineExecutor;
 	}
 	

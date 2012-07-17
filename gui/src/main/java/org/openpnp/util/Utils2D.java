@@ -26,6 +26,7 @@ import org.openpnp.model.Point;
 
 
 public class Utils2D {
+	// TODO: Move these into their respective classes.
 	public static Outline rotateTranslateScaleOutline(Outline outline, double c, double x, double y, double scale) {
 		Outline newOutline = new Outline();
 		newOutline.setUnits(outline.getUnits());

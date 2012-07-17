@@ -93,10 +93,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		ReferenceHead head = (ReferenceHead) head_;
 		ReferenceActuator actuator = head.getActuator(actuatorId);
 		
-		// Convert all the Locations we'll be dealing with
+		// Convert all the Locations we'll be dealing with to machine native units
 		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
 		Location feedStartLocation = this.feedStartLocation.convertToUnits(head.getMachine().getNativeUnits());
 		Location feedEndLocation = this.feedEndLocation.convertToUnits(head.getMachine().getNativeUnits());
+		Location actuatorOffsets = actuator.getLocation().convertToUnits(head.getMachine().getNativeUnits());
 		Length feedRate = this.feedRate.convertToUnits(head.getMachine().getNativeUnits());
 		
 		// Move to safe Z
@@ -121,8 +122,15 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 			offsetY = visionOffset.getY();
 		}
 		
-		// move the head so that the pin is positioned above the feed hole
-		// TODO: Need to use actuator offsets here!
+		// Apply the actuator offsets. We subtract instead of adding because we
+		// want to position the actuator over the location versus wanting to know
+		// where the actuator is in relation to the location.
+		feedStartLocation = feedStartLocation.subtract(actuatorOffsets);
+		feedEndLocation = feedEndLocation.subtract(actuatorOffsets);
+
+		// Move the head so that the pin is positioned above the feed hole
+		// feedStartLocation is the position of the hole in the tool's coordinate
+		// system, so we need to offset that by the actuator offsets.
 		head.moveTo(
 				feedStartLocation.getX() - offsetX, 
 				feedStartLocation.getY() - offsetY,

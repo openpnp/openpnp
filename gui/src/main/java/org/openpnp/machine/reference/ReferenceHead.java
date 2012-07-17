@@ -120,15 +120,15 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		setPerceivedZ(homingLocation.getZ());
 		setPerceivedC(homingLocation.getRotation());
 
-		if (homing.vision.enabled) {
-			logger.debug("Home With Vision");
-			homeWithVision();
-			Location homingDotLocation = homing.vision.homingDotLocation;
-			logger.debug("Set homing dot location");
-			setPerceivedX(homingDotLocation.getX());
-			setPerceivedY(homingDotLocation.getY());
-			setPerceivedZ(homingDotLocation.getZ());
-		}
+//		if (homing.vision.enabled) {
+//			logger.debug("Home With Vision");
+//			homeWithVision();
+//			Location homingDotLocation = homing.vision.homingDotLocation;
+//			logger.debug("Set homing dot location");
+//			setPerceivedX(homingDotLocation.getX());
+//			setPerceivedY(homingDotLocation.getY());
+//			setPerceivedZ(homingDotLocation.getZ());
+//		}
 	}
 
 	private void homeWithVision() throws Exception {

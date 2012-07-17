@@ -66,4 +66,27 @@ public class Outline {
 		
 		return String.format("units %s, points (%s)", units, sb);
 	}
+	
+//	public static Outline convertOutline(Outline outline, LengthUnit toUnits) {
+//	Outline newOutline = new Outline();
+//	newOutline.setUnits(outline.getUnits());
+//	for (int i = 0; i < outline.getPoints().size(); i++) {
+//		Point p = outline.getPoints().get(i);
+//		
+//		p = convertPoint(p, outline.getUnits(), toUnits);
+//		
+//		newOutline.addPoint(p.getX(), p.getY());
+//	}
+//	
+//	return newOutline;
+//}
+//
+//public static Point convertPoint(Point point, LengthUnit fromUnits, LengthUnit toUnits) {
+//	double x = point.getX();
+//	double y = point.getY();
+//	x = LengthUtil.convertLength(x, fromUnits, toUnits);
+//	y = LengthUtil.convertLength(y, fromUnits, toUnits);
+//	return new Point(x, y);
+//}
+	
 }

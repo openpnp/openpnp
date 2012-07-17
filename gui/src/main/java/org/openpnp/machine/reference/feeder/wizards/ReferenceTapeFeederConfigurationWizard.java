@@ -67,6 +67,7 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.gui.components.LocationButtonsPanel;
 
 @SuppressWarnings("serial")
 public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
@@ -81,8 +82,6 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 	private JTextField textFieldFeedEndY;
 	private JTextField textFieldFeedEndZ;
 	private JTextField textFieldFeedRate;
-	private JButton feedStartAutoFill;
-	private JButton feedEndAutoFill;
 	private JButton btnSave;
 	private JButton btnCancel;
 	private JLabel lblActuatorId;
@@ -109,8 +108,6 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 	private JTextField textFieldBottomRightX;
 	private JTextField textFieldBottomRightY;
 	private JTextField textFieldBottomRightZ;
-	private JButton btnTopLeftSetToCurrent;
-	private JButton btnBottomRightSetToCurrent;
 	
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
@@ -159,25 +156,26 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		panelFields.add(panelLocations);
 		panelLocations.setBorder(new TitledBorder(null, "Locations",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelLocations.setLayout(new FormLayout(
-				new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC,
-						FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC,
-						FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC,
-						FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC,
-						FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC, }));
+		panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("left:default:grow"),},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
 
 		JLabel lblX = new JLabel("X");
 		panelLocations.add(lblX, "4, 4");
@@ -193,36 +191,36 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 
 		textFieldFeedStartX = new JTextField();
 		panelLocations.add(textFieldFeedStartX, "4, 6");
-		textFieldFeedStartX.setColumns(10);
+		textFieldFeedStartX.setColumns(8);
 
 		textFieldFeedStartY = new JTextField();
 		panelLocations.add(textFieldFeedStartY, "6, 6");
-		textFieldFeedStartY.setColumns(10);
+		textFieldFeedStartY.setColumns(8);
 
 		textFieldFeedStartZ = new JTextField();
 		panelLocations.add(textFieldFeedStartZ, "8, 6");
-		textFieldFeedStartZ.setColumns(10);
-
-		feedStartAutoFill = new JButton(feedStartAutoFillAction);
-		panelLocations.add(feedStartAutoFill, "10, 6");
+		textFieldFeedStartZ.setColumns(8);
+		
+		locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ);
+		panelLocations.add(locationButtonsPanelFeedStart, "10, 6");
 
 		JLabel lblFeedEndLocation = new JLabel("Feed End Location");
 		panelLocations.add(lblFeedEndLocation, "2, 8, right, default");
 
 		textFieldFeedEndX = new JTextField();
 		panelLocations.add(textFieldFeedEndX, "4, 8");
-		textFieldFeedEndX.setColumns(10);
+		textFieldFeedEndX.setColumns(8);
 
 		textFieldFeedEndY = new JTextField();
 		panelLocations.add(textFieldFeedEndY, "6, 8");
-		textFieldFeedEndY.setColumns(10);
+		textFieldFeedEndY.setColumns(8);
 
 		textFieldFeedEndZ = new JTextField();
 		panelLocations.add(textFieldFeedEndZ, "8, 8");
-		textFieldFeedEndZ.setColumns(10);
-
-		feedEndAutoFill = new JButton(feedEndAutoFillAction);
-		panelLocations.add(feedEndAutoFill, "10, 8");
+		textFieldFeedEndZ.setColumns(8);
+		
+		locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ);
+		panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
 
 		panelVision = new JPanel();
 		panelVision.setBorder(new TitledBorder(null, "Vision",
@@ -286,7 +284,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 														FormFactory.RELATED_GAP_COLSPEC,
 														ColumnSpec.decode("default:grow"),
 														FormFactory.RELATED_GAP_COLSPEC,
-														FormFactory.DEFAULT_COLSPEC,},
+														ColumnSpec.decode("default:grow"),},
 													new RowSpec[] {
 														FormFactory.RELATED_GAP_ROWSPEC,
 														FormFactory.DEFAULT_ROWSPEC,
@@ -319,8 +317,8 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 												panelAoE.add(textFieldTopLeftZ, "8, 4, fill, default");
 												textFieldTopLeftZ.setColumns(6);
 												
-												btnTopLeftSetToCurrent = new JButton(topLeftSetToCurrentAction);
-												panelAoE.add(btnTopLeftSetToCurrent, "10, 4");
+												locationButtonsPanelAoeTopLeft = new LocationButtonsPanel(textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
+												panelAoE.add(locationButtonsPanelAoeTopLeft, "10, 4");
 												
 												lblBottomRight = new JLabel("Bottom Right");
 												panelAoE.add(lblBottomRight, "2, 6, right, default");
@@ -337,8 +335,8 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 												panelAoE.add(textFieldBottomRightZ, "8, 6, fill, default");
 												textFieldBottomRightZ.setColumns(6);
 												
-												btnBottomRightSetToCurrent = new JButton(bottomRightSetToCurrentAction);
-												panelAoE.add(btnBottomRightSetToCurrent, "10, 6");
+												locationButtonsPanelAoeBottomRight = new LocationButtonsPanel(textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
+												panelAoE.add(locationButtonsPanelAoeBottomRight, "10, 6");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -508,37 +506,10 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		}
 	};
 	
-	@SuppressWarnings("serial")
-	private Action feedEndAutoFillAction = new AbstractAction("Set to Current") {
-		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			Helpers.copyLocationIntoTextFields(l, textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ);
-		}
-	};
-	
-	@SuppressWarnings("serial")
-	private Action feedStartAutoFillAction = new AbstractAction("Set to Current") {
-		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			Helpers.copyLocationIntoTextFields(l, textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ);
-		}
-	};
-	
-	@SuppressWarnings("serial")
-	private Action topLeftSetToCurrentAction = new AbstractAction("Set to Current") {
-		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			Helpers.copyLocationIntoTextFields(l, textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ);
-		}
-	};
-	
-	@SuppressWarnings("serial")
-	private Action bottomRightSetToCurrentAction = new AbstractAction("Set to Current") {
-		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			Helpers.copyLocationIntoTextFields(l, textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ);
-		}
-	};
+	private LocationButtonsPanel locationButtonsPanelFeedStart;
+	private LocationButtonsPanel locationButtonsPanelFeedEnd;
+	private LocationButtonsPanel locationButtonsPanelAoeTopLeft;
+	private LocationButtonsPanel locationButtonsPanelAoeBottomRight;
 	
 //	private Action changeAoeAction = new AbstractAction(
 //			"Change") {

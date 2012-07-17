@@ -62,6 +62,7 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.gui.components.LocationButtonsPanel;
 
 public class FeederConfigurationWizard extends JPanel implements Wizard {
 	private final Feeder feeder;
@@ -126,21 +127,22 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 				TitledBorder.LEADING, TitledBorder.TOP, null,
 				new Color(0, 0, 0)));
 		panelFields.add(panelLocation);
-		panelLocation.setLayout(new FormLayout(
-				new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"),
-						FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"),
-						FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"),
-						FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"),
-						FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC, }));
+		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("left:default:grow"),},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
 
 		lblX_1 = new JLabel("X");
 		panelLocation.add(lblX_1, "2, 2");
@@ -156,23 +158,22 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 
 		textFieldLocationX = new JTextField();
 		panelLocation.add(textFieldLocationX, "2, 4");
-		textFieldLocationX.setColumns(10);
+		textFieldLocationX.setColumns(8);
 
 		textFieldLocationY = new JTextField();
 		panelLocation.add(textFieldLocationY, "4, 4");
-		textFieldLocationY.setColumns(10);
+		textFieldLocationY.setColumns(8);
 
 		textFieldLocationZ = new JTextField();
 		panelLocation.add(textFieldLocationZ, "6, 4");
-		textFieldLocationZ.setColumns(10);
+		textFieldLocationZ.setColumns(8);
 
 		textFieldLocationC = new JTextField();
 		panelLocation.add(textFieldLocationC, "8, 4");
-		textFieldLocationC.setColumns(10);
-
-		btnSetFeedLocation = new JButton(setFeederLocationAction);
-		btnSetFeedLocation.setText("Set to Current");
-		panelLocation.add(btnSetFeedLocation, "10, 4");
+		textFieldLocationC.setColumns(8);
+		
+		locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ);
+		panelLocation.add(locationButtonsPanel, "10, 4");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -265,15 +266,6 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 
-	private Action setFeederLocationAction = new AbstractAction("Set") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			Location location = machineControlsPanel.getCameraLocation();
-			Helpers.copyLocationIntoTextFields(location, textFieldLocationX,
-					textFieldLocationY, textFieldLocationZ, textFieldLocationC);
-		}
-	};
-
 	private JComboBox comboBoxPart;
-	private JButton btnSetFeedLocation;
+	private LocationButtonsPanel locationButtonsPanel;
 }

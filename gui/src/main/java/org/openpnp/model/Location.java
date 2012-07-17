@@ -21,9 +21,6 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -172,6 +169,16 @@ public class Location extends AbstractModelObject {
 			firePropertyChange("lengthY", null, getLengthY());
 		}
 		firePropertyChange("lengthZ", null, getLengthZ());
+	}
+	
+	public Location subtract(Location l) {
+		l = l.convertToUnits(getUnits());
+		return new Location(l.getUnits(), x - l.getX(), y - l.getY(), z - l.getZ(), l.getRotation());
+	}
+	
+	public Location add(Location l) {
+		l = l.convertToUnits(getUnits());
+		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), l.getRotation());
 	}
 	
 	@Override
