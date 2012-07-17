@@ -105,6 +105,8 @@ public interface Camera {
 	 */
 	public void stopContinuousCapture(CameraListener listener);
 	
+	public void setVisionProvider(VisionProvider visionProvider);
+	
 	/**
 	 * Get the VisionProvider that is attached to this Camera, if any.
 	 * @return

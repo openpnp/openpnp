@@ -60,6 +60,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.CamerasTableModel;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
+import org.openpnp.machine.reference.vision.OpenCvVisionProvider;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
@@ -250,6 +251,16 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 				Camera camera = cameraClass.newInstance();
 				configuration.resolve(camera);
 				configuration.getMachine().addCamera(camera);
+				
+				// TODO: Horrible hack until we have VisionProvider configuration.
+				try {
+					camera.setVisionProvider(new OpenCvVisionProvider());
+				}
+				catch (Exception e) {
+					logger.debug("Couldn't set default vision provider. Meh.");
+				}
+				
+				MainFrame.cameraPanel.addCamera(camera);
 				tableModel.refresh();
 				configuration.setDirty(true);
 			}

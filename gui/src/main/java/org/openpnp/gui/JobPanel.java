@@ -67,6 +67,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 
@@ -107,7 +108,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		
 		boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction, 
 				orientBoardAction,
-				newPlacementAction);
+				newPlacementAction,
+				moveToBoardLocationAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 		
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
@@ -173,6 +175,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		toolBar.add(new JButton(removeBoardAction));
 		toolBar.addSeparator();
 		toolBar.add(new JButton(orientBoardAction));
+		toolBar.add(new JButton(moveToBoardLocationAction));
 		toolBar.addSeparator();
 		toolBar.add(new JButton(newPlacementAction));
 		toolBar.add(new JButton(removePlacementAction));
@@ -518,7 +521,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			getSelectedBoardLocation().setLocation(machineControlsPanel.getCameraLocation());
-			boardLocationsTableModel.fireTableDataChanged();
+			boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(), boardLocationsTable.getSelectedRow());
 		}
 	};
 	
@@ -552,7 +555,29 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		public void actionPerformed(ActionEvent arg0) {
 			Location boardLocation = getSelectedBoardLocation().getLocation();
 			getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation().subtract(boardLocation));
-			placementsTableModel.fireTableDataChanged();
+			placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(), placementsTable.getSelectedRow());
+		}
+	};
+	
+	public Action moveToBoardLocationAction = new AbstractAction("Move To Board Location") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+				public void run() {
+					Head head = configuration.getMachine().getHeads().get(0);
+					try {
+						Location boardLocation = getSelectedBoardLocation().getLocation();
+						boardLocation = boardLocation.convertToUnits(configuration.getMachine().getNativeUnits());
+						// Move to Safe-Z first
+						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						head.moveTo(boardLocation.getX(), boardLocation.getY(), head.getZ(), head.getC());
+						head.moveTo(head.getX(), head.getY(), head.getZ(), head.getC());
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", e);
+					}
+				}
+			});
 		}
 	};
 	

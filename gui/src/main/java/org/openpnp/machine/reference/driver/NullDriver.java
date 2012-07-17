@@ -124,7 +124,7 @@ public class NullDriver implements ReferenceDriver {
 
 	@Override
 	public void pick(ReferenceHead head, Part part) throws Exception {
-		logger.info(String.format("pick(%s)", part.toString()));
+		logger.info(String.format("pick(%s)", part == null ? "" : part.toString()));
 		Thread.sleep(500);
 	}
 

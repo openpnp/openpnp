@@ -358,6 +358,7 @@ public class JogControlsPanel extends JPanel {
 						}
 					}
 					catch (Exception e) {
+						e.printStackTrace();
 						MessageBoxes.errorBox(frame,
 								"Pick/Place Operation Failed", e.getMessage());
 					}

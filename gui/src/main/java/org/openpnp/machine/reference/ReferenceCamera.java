@@ -142,6 +142,12 @@ public abstract class ReferenceCamera implements Camera, RequiresConfigurationRe
 	}
 	
 	@Override
+	public void setVisionProvider(VisionProvider visionProvider) {
+		this.visionProvider = visionProvider;
+		visionProvider.setCamera(this);
+	}
+
+	@Override
 	public VisionProvider getVisionProvider() {
 		return visionProvider;
 	}

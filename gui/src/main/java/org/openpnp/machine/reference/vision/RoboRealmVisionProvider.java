@@ -85,10 +85,10 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 			camera.startContinuousCapture(this, autoCaptureFps);
 		}
 	}
-
+	
 	@Override
-	public Circle[] locateCircles(int roiX1, int roiY1, int roiX2, int roiY2,
-			int poiX, int poyY, int minimumDiameter, int diameter,
+	public Circle[] locateCircles(int roiX, int roiY, int roiWidth, int roiHeight,
+			int coiX, int coiY, int minimumDiameter, int diameter,
 			int maximumDiameter) throws Exception {
 		Map<String, String> variables;
 		int width, height;
@@ -160,21 +160,8 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 			int x = Integer.parseInt(circlesVarParts[i * 13 + 0]);
 			int y = Integer.parseInt(circlesVarParts[i * 13 + 1]);
 			int d = Integer.parseInt(circlesVarParts[i * 13 + 2]) * 2;
-
-			if (roiX1 == -1) {
-				roiX1 = 0;
-			}
-			if (roiY1 == -1) {
-				roiY1 = 0;
-			}
-			if (roiX2 == -1) {
-				roiX2 = width;
-			}
-			if (roiY2 == -1) {
-				roiY2 = height;
-			}
-
-			// TODO Check ROI
+			
+			// TODO: Check ROI & COI
 
 			if (d >= minimumDiameter && d <= maximumDiameter) {
 				Circle circle = new Circle(x, y, d);
@@ -185,9 +172,10 @@ public class RoboRealmVisionProvider implements VisionProvider, CameraListener {
 		return circles.size() > 0 ? circles.toArray(new Circle[] {}) : null;
 	}
 
+	
 	@Override
-	public Point[] locateTemplateMatches(int roiX1, int roiY1, int roiX2,
-			int roiY2, int poiX, int poiY, BufferedImage templateImage)
+	public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
+			int roiHeight, int coiX, int coiY, BufferedImage templateImage)
 			throws Exception {
 		return null;
 	}

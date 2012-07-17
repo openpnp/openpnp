@@ -44,12 +44,12 @@ public interface VisionProvider {
 
 	// TODO: decide if results are measured from top or bottom left and
 	// standardize on it
-	public Circle[] locateCircles(int roiX1, int roiY1, int roiX2, int roiY2,
-			int poiX, int poiY, int minimumDiameter, int diameter,
+	public Circle[] locateCircles(int roiX, int roiY, int roiWidth, int roiHeight,
+			int coiX, int coiY, int minimumDiameter, int diameter,
 			int maximumDiameter) throws Exception;
 
-	public Point[] locateTemplateMatches(int roiX1, int roiY1, int roiX2,
-			int roiY2, int poiX, int poiY, BufferedImage templateImage)
+	public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
+			int roiHeight, int coiX, int coiY, BufferedImage templateImage)
 			throws Exception;
 
 	public class Circle {

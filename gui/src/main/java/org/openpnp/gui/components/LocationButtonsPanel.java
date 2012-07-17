@@ -115,7 +115,10 @@ public class LocationButtonsPanel extends JPanel {
 					Location location = getParsedLocation().convertToUnits(head.getMachine().getNativeUnits());
 					location = location.subtract(camera.getLocation());
 					try {
-						head.moveTo(location.getX(), location.getY(), location.getZ(), location.getRotation());
+						// Move to Safe-Z first
+						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(), "Movement Error", e);
@@ -133,7 +136,10 @@ public class LocationButtonsPanel extends JPanel {
 					Head head = Configuration.get().getMachine().getHeads().get(0);
 					Location location = getParsedLocation().convertToUnits(head.getMachine().getNativeUnits());
 					try {
-						head.moveTo(location.getX(), location.getY(), location.getZ(), location.getRotation());
+						// Move to Safe-Z first
+						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(), "Movement Error", e);

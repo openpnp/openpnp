@@ -124,6 +124,8 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
+	// TODO: Change this to take an interface that will pass in the Machine,
+	// Configuration, Head, etc. and handle exceptions with the proper dialog.
 	public void submitMachineTask(Runnable runnable) {
 		if (!machine.isEnabled()) {
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
