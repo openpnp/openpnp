@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -50,8 +52,9 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.BufferedImageIconConverter;
-import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
@@ -61,13 +64,11 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import org.openpnp.gui.components.LocationButtonsPanel;
 
 @SuppressWarnings("serial")
 public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wizard {
@@ -97,17 +98,12 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 	private JSeparator separator;
 	private JPanel panelVisionTemplateAndAoe;
 	private JPanel panelAoE;
-	private JLabel lblTopLeft;
 	private JLabel lblX_1;
 	private JLabel lblY_1;
-	private JLabel lblZ_1;
-	private JTextField textFieldTopLeftX;
-	private JTextField textFieldTopLeftY;
-	private JTextField textFieldTopLeftZ;
-	private JLabel lblBottomRight;
-	private JTextField textFieldBottomRightX;
-	private JTextField textFieldBottomRightY;
-	private JTextField textFieldBottomRightZ;
+	private JTextField textFieldAoiX;
+	private JTextField textFieldAoiY;
+	private JTextField textFieldAoiWidth;
+	private JTextField textFieldAoiHeight;
 	
 
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
@@ -266,77 +262,74 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 										labelTemplateImage.setHorizontalAlignment(SwingConstants.CENTER);
 										labelTemplateImage.setSize(new Dimension(150, 150));
 										labelTemplateImage.setPreferredSize(new Dimension(150, 150));
-										
-												btnChangeTemplateImage = new JButton(changeTemplateImageAction);
-												btnChangeTemplateImage.setAlignmentX(Component.CENTER_ALIGNMENT);
-												panelTemplate.add(btnChangeTemplateImage);
+												
+												panel = new JPanel();
+												panelTemplate.add(panel);
+												
+														btnChangeTemplateImage = new JButton(selectTemplateImageAction);
+														panel.add(btnChangeTemplateImage);
+														btnChangeTemplateImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+														
+														btnCancelChangeTemplateImage = new JButton(cancelSelectTemplateImageAction);
+														panel.add(btnCancelChangeTemplateImage);
 												
 												panelAoE = new JPanel();
 												panelAoE.setBorder(new TitledBorder(null, "Area of Interest", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 												panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
 												panelAoE.setLayout(new FormLayout(new ColumnSpec[] {
 														FormFactory.RELATED_GAP_COLSPEC,
+														ColumnSpec.decode("default:grow"),
+														FormFactory.RELATED_GAP_COLSPEC,
+														ColumnSpec.decode("default:grow"),
+														FormFactory.RELATED_GAP_COLSPEC,
 														FormFactory.DEFAULT_COLSPEC,
 														FormFactory.RELATED_GAP_COLSPEC,
-														ColumnSpec.decode("default:grow"),
+														FormFactory.DEFAULT_COLSPEC,
 														FormFactory.RELATED_GAP_COLSPEC,
-														ColumnSpec.decode("default:grow"),
+														FormFactory.DEFAULT_COLSPEC,
 														FormFactory.RELATED_GAP_COLSPEC,
-														ColumnSpec.decode("default:grow"),
-														FormFactory.RELATED_GAP_COLSPEC,
-														ColumnSpec.decode("default:grow"),},
+														FormFactory.DEFAULT_COLSPEC,},
 													new RowSpec[] {
-														FormFactory.RELATED_GAP_ROWSPEC,
-														FormFactory.DEFAULT_ROWSPEC,
 														FormFactory.RELATED_GAP_ROWSPEC,
 														FormFactory.DEFAULT_ROWSPEC,
 														FormFactory.RELATED_GAP_ROWSPEC,
 														FormFactory.DEFAULT_ROWSPEC,}));
 												
 												lblX_1 = new JLabel("X");
-												panelAoE.add(lblX_1, "4, 2");
+												panelAoE.add(lblX_1, "2, 2");
 												
 												lblY_1 = new JLabel("Y");
-												panelAoE.add(lblY_1, "6, 2");
+												panelAoE.add(lblY_1, "4, 2");
 												
-												lblZ_1 = new JLabel("Z");
-												panelAoE.add(lblZ_1, "8, 2");
+												lblWidth = new JLabel("Width");
+												panelAoE.add(lblWidth, "6, 2");
 												
-												lblTopLeft = new JLabel("Top Left");
-												panelAoE.add(lblTopLeft, "2, 4, right, default");
+												lblHeight = new JLabel("Height");
+												panelAoE.add(lblHeight, "8, 2");
 												
-												textFieldTopLeftX = new JTextField();
-												panelAoE.add(textFieldTopLeftX, "4, 4, fill, default");
-												textFieldTopLeftX.setColumns(6);
+												textFieldAoiX = new JTextField();
+												panelAoE.add(textFieldAoiX, "2, 4, fill, default");
+												textFieldAoiX.setColumns(5);
 												
-												textFieldTopLeftY = new JTextField();
-												panelAoE.add(textFieldTopLeftY, "6, 4, fill, default");
-												textFieldTopLeftY.setColumns(6);
+												textFieldAoiY = new JTextField();
+												panelAoE.add(textFieldAoiY, "4, 4, fill, default");
+												textFieldAoiY.setColumns(5);
 												
-												textFieldTopLeftZ = new JTextField();
-												panelAoE.add(textFieldTopLeftZ, "8, 4, fill, default");
-												textFieldTopLeftZ.setColumns(6);
+												textFieldAoiWidth = new JTextField();
+												panelAoE.add(textFieldAoiWidth, "6, 4, fill, default");
+												textFieldAoiWidth.setColumns(5);
 												
-												locationButtonsPanelAoeTopLeft = new LocationButtonsPanel(textFieldTopLeftX, textFieldTopLeftY, textFieldTopLeftZ, null);
-												panelAoE.add(locationButtonsPanelAoeTopLeft, "10, 4");
+												textFieldAoiHeight = new JTextField();
+												panelAoE.add(textFieldAoiHeight, "8, 4, fill, default");
+												textFieldAoiHeight.setColumns(5);
 												
-												lblBottomRight = new JLabel("Bottom Right");
-												panelAoE.add(lblBottomRight, "2, 6, right, default");
+												btnChangeAoi = new JButton("Change");
+												btnChangeAoi.setAction(selectAoiAction);
+												panelAoE.add(btnChangeAoi, "10, 4");
 												
-												textFieldBottomRightX = new JTextField();
-												panelAoE.add(textFieldBottomRightX, "4, 6, fill, default");
-												textFieldBottomRightX.setColumns(6);
-												
-												textFieldBottomRightY = new JTextField();
-												panelAoE.add(textFieldBottomRightY, "6, 6, fill, default");
-												textFieldBottomRightY.setColumns(6);
-												
-												textFieldBottomRightZ = new JTextField();
-												panelAoE.add(textFieldBottomRightZ, "8, 6, fill, default");
-												textFieldBottomRightZ.setColumns(6);
-												
-												locationButtonsPanelAoeBottomRight = new LocationButtonsPanel(textFieldBottomRightX, textFieldBottomRightY, textFieldBottomRightZ, null);
-												panelAoE.add(locationButtonsPanelAoeBottomRight, "10, 6");
+												btnCancelChangeAoi = new JButton("Cancel");
+												btnCancelChangeAoi.setAction(cancelSelectAoiAction);
+												panelAoE.add(btnCancelChangeAoi, "12, 4");
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
 
@@ -350,12 +343,16 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		btnSave = new JButton(saveAction);
 		panelActions.add(btnSave);
 		
+		cancelSelectTemplateImageAction.setEnabled(false);
+		cancelSelectAoiAction.setEnabled(false);
+		
 		createBindings();
 		loadFromModel();
 	}
 
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		IntegerConverter intConverter = new IntegerConverter();
 		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
 		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
 
@@ -380,19 +377,14 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		wrappedBindings.add(JBindings.bind(feeder, "vision.templateImage",
 				labelTemplateImage, "icon", imageConverter, listener));
 		
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestTopLeft.lengthX",
-				textFieldTopLeftX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestTopLeft.lengthY",
-				textFieldTopLeftY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestTopLeft.lengthZ",
-				textFieldTopLeftZ, "text", lengthConverter, listener));
-		
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthX",
-				textFieldBottomRightX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthY",
-				textFieldBottomRightY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterestBottomRight.lengthZ",
-				textFieldBottomRightZ, "text", lengthConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.x",
+				textFieldAoiX, "text", intConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.y",
+				textFieldAoiY, "text", intConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.width",
+				textFieldAoiWidth, "text", intConverter, listener));
+		wrappedBindings.add(JBindings.bind(feeder, "vision.areaOfInterest.height",
+				textFieldAoiHeight, "text", intConverter, listener));
 		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
 		ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
@@ -402,12 +394,10 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTopLeftX);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTopLeftY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTopLeftZ);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldBottomRightX);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldBottomRightY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldBottomRightZ);
+		ComponentDecorators.decorateWithAutoSelect(textFieldAoiX);
+		ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
+		ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
+		ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
 	}
 
 	private void loadFromModel() {
@@ -449,7 +439,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 			saveToModel();
 			wizardContainer
 					.wizardCompleted(ReferenceTapeFeederConfigurationWizard.this);
-			btnChangeTemplateImage.setAction(changeTemplateImageAction);
+			btnChangeTemplateImage.setAction(selectTemplateImageAction);
 		}
 	};
 
@@ -458,13 +448,13 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			loadFromModel();
-			btnChangeTemplateImage.setAction(changeTemplateImageAction);
+			btnChangeTemplateImage.setAction(selectTemplateImageAction);
 		}
 	};
 
 	@SuppressWarnings("serial")
-	private Action changeTemplateImageAction = new AbstractAction(
-			"Change") {
+	private Action selectTemplateImageAction = new AbstractAction(
+			"Select") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
@@ -475,15 +465,16 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 				cameraView.setSelection(0, 0, 100, 100);
 			}
 			else {
-				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
+//				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
 			}
-			btnChangeTemplateImage.setAction(captureTemplateImageAction);
+			btnChangeTemplateImage.setAction(confirmSelectTemplateImageAction);
+			cancelSelectTemplateImageAction.setEnabled(true);
 		}
 	};
 	
 	@SuppressWarnings("serial")
-	private Action captureTemplateImageAction = new AbstractAction(
-			"Capture") {
+	private Action confirmSelectTemplateImageAction = new AbstractAction(
+			"Confirm") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			new Thread() {
@@ -500,48 +491,96 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 						labelTemplateImage.setIcon(new ImageIcon(image));
 					}
 					cameraView.setSelectionEnabled(false);
-					btnChangeTemplateImage.setAction(changeTemplateImageAction);
+					btnChangeTemplateImage.setAction(selectTemplateImageAction);
+					cancelSelectTemplateImageAction.setEnabled(false);
 				}
 			}.start();
 		}
 	};
 	
+	@SuppressWarnings("serial")
+	private Action cancelSelectTemplateImageAction = new AbstractAction(
+			"Cancel") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			btnChangeTemplateImage.setAction(selectTemplateImageAction);
+			cancelSelectTemplateImageAction.setEnabled(false);
+			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+			if (cameraView == null) {
+				MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Unable to locate Camera.");
+			}
+			cameraView.setSelectionEnabled(false);
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action selectAoiAction = new AbstractAction(
+			"Select") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			btnChangeAoi.setAction(confirmSelectAoiAction);
+			cancelSelectAoiAction.setEnabled(true);
+
+			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
+			cameraView.setSelectionEnabled(true);
+			org.openpnp.model.Rectangle r = feeder.getVision().getAreaOfInterest();
+			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+				cameraView.setSelection(0, 0, 100, 100);
+			}
+			else {
+				cameraView.setSelection(r.getX(), r.getY(), r.getWidth(), r.getHeight());
+			}
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action confirmSelectAoiAction = new AbstractAction(
+			"Confirm") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			new Thread() {
+				public void run() {
+					btnChangeAoi.setAction(selectAoiAction);
+					cancelSelectAoiAction.setEnabled(false);
+
+					CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
+					cameraView.setSelectionEnabled(false);
+					final Rectangle rect = cameraView.getSelection();
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							textFieldAoiX.setText(Integer.toString(rect.x));
+							textFieldAoiY.setText(Integer.toString(rect.y));
+							textFieldAoiWidth.setText(Integer.toString(rect.width));
+							textFieldAoiHeight.setText(Integer.toString(rect.height));
+						}
+					});
+				}
+			}.start();
+		}
+	};
+	
+	@SuppressWarnings("serial")
+	private Action cancelSelectAoiAction = new AbstractAction(
+			"Cancel") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			btnChangeAoi.setAction(selectAoiAction);
+			cancelSelectAoiAction.setEnabled(false);
+			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+			if (cameraView == null) {
+				MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Unable to locate Camera.");
+			}
+			cameraView.setSelectionEnabled(false);
+		}
+	};
+	
+	
 	private LocationButtonsPanel locationButtonsPanelFeedStart;
 	private LocationButtonsPanel locationButtonsPanelFeedEnd;
-	private LocationButtonsPanel locationButtonsPanelAoeTopLeft;
-	private LocationButtonsPanel locationButtonsPanelAoeBottomRight;
-	
-//	private Action changeAoeAction = new AbstractAction(
-//			"Change") {
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-//			cameraView.setSelectionEnabled(true);
-//			org.openpnp.model.Rectangle r = feeder.getVision().getAreaOfInterest();
-//			if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
-//				cameraView.setSelection(0, 0, 100, 100);
-//			}
-//			else {
-//				cameraView.setSelection(r.getLeft(), r.getTop(), r.getWidth(), r.getHeight());
-//			}
-//			btnChangeAoe.setAction(captureAoeAction);
-//		}
-//	};
-//	
-//	// TODO: This is completely useless. Need to be capturing machine
-//	// coordinates, not image coordinates.
-//	private Action captureAoeAction = new AbstractAction(
-//			"Capture") {
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView(); 
-//			cameraView.setSelectionEnabled(false);
-//			Rectangle r = cameraView.getSelection();
-//			textFieldAoeLeft.setText("" + (int) r.getX());
-//			textFieldAoeTop.setText("" + (int) r.getY());
-//			textFieldAoeRight.setText("" + (int) r.getMaxX());
-//			textFieldAoeBottom.setText("" + (int) r.getMaxY());
-//			btnChangeAoe.setAction(changeAoeAction);
-//		}
-//	};
+	private JLabel lblWidth;
+	private JLabel lblHeight;
+	private JButton btnChangeAoi;
+	private JButton btnCancelChangeAoi;
+	private JPanel panel;
+	private JButton btnCancelChangeTemplateImage;
 }

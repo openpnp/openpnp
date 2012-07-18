@@ -4,6 +4,7 @@ import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_32F;
 import static com.googlecode.javacv.cpp.opencv_core.cvCreateImage;
 import static com.googlecode.javacv.cpp.opencv_core.cvMinMaxLoc;
 import static com.googlecode.javacv.cpp.opencv_core.cvRect;
+import static com.googlecode.javacv.cpp.opencv_core.cvResetImageROI;
 import static com.googlecode.javacv.cpp.opencv_core.cvSetImageROI;
 import static com.googlecode.javacv.cpp.opencv_core.cvSize;
 import static com.googlecode.javacv.cpp.opencv_imgproc.cvMatchTemplate;
@@ -61,31 +62,28 @@ public class OpenCvVisionProvider implements VisionProvider {
     	double maxVal[] = new double[1];
     	CvPoint minLoc = new CvPoint();
     	CvPoint maxLoc = new CvPoint();
+        CvPoint resLoc;
+        double resValue;
     	
         IplImage templateImage = IplImage.createFrom(templateImage_);
-        BufferedImage rawImage = camera.capture();
-        IplImage image = IplImage.createFrom(rawImage);
-//        cvSetImageROI(image, cvRect(roiX, roiX, roiWidth, roiHeight));
-        IplImage res = cvCreateImage(
-        		cvSize(
-        				image.width() - templateImage.width() + 1, 
-        				image.height() - templateImage.height() + 1),
-        		IPL_DEPTH_32F, 1);
-        cvMatchTemplate(image, templateImage, res, opencv_imgproc.CV_TM_CCOEFF);
-        cvMinMaxLoc(res, minVal, maxVal, minLoc, maxLoc, null);
-        CvPoint resLoc = maxLoc;
-        double resValue = maxVal[0];
-        logger.debug(String.format("locateTemplateMatches finished with certainty of %f at %d, %d", resValue, resLoc.x(), resLoc.y()));
+        IplImage image = IplImage.createFrom(camera.capture());
+        IplImage result = cvCreateImage(
+        		cvSize(roiWidth - templateImage.width() + 1, roiHeight - templateImage.height() + 1),
+        		IPL_DEPTH_32F,
+        		1);
         
-//        cvLine(res, maxLoc, cvPoint(maxLoc.x() + templateImage.width(), maxLoc.y()), CvScalar.RED, 1, CV_AA, 0);
-//        cvLine(res, maxLoc, cvPoint(maxLoc.x(), maxLoc.y() + templateImage.height()), CvScalar.RED, 1, CV_AA, 0);
+        cvSetImageROI(image, cvRect(roiX, roiY, roiWidth, roiHeight));
+        cvMatchTemplate(image, templateImage, result, opencv_imgproc.CV_TM_CCOEFF);
+        cvResetImageROI(image);
+        cvMinMaxLoc(result, minVal, maxVal, minLoc, maxLoc, null);
         
-//        BufferedImage r = new BufferedImage(res.width(), res.height(), BufferedImage.TYPE_INT_ARGB);
-//        res.copyTo(r);
-//        debugger.getImage1().setIcon(new ImageIcon(templateImage.getBufferedImage()));
-//        debugger.getImage2().setIcon(new ImageIcon(image.getBufferedImage()));
-//        debugger.getImage3().setIcon(new ImageIcon(r));
-        return new Point[] { new Point(resLoc.x(), resLoc.y()) };
+        resLoc = maxLoc;
+        resValue = maxVal[0];
+        
+        logger.debug(String.format("with    %d, %d, %d, %d", roiX, roiY, roiWidth, roiHeight));
+        logger.debug(String.format("locateTemplateMatches certainty %f at %d, %d", resValue, resLoc.x(), resLoc.y()));
+        
+        return new Point[] { new Point(resLoc.x() + roiX, resLoc.y() + roiY) };
 	}
 
 }

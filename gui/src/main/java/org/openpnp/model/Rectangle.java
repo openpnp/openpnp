@@ -26,62 +26,54 @@ import org.simpleframework.xml.Attribute;
 
 public class Rectangle {
 	@Attribute
-	private int left;
+	private int x;
 	@Attribute
-	private int top;
+	private int y;
 	@Attribute
-	private int right;
+	private int width;
 	@Attribute
-	private int bottom;
+	private int height;
 	
 	public Rectangle() {
 		
 	}
 	
-	public Rectangle(int left, int top, int right, int bottom) {
-		this.left = left;
-		this.top = top;
-		this.right = right;
-		this.bottom = bottom;
+	public Rectangle(int x, int y, int width, int height) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
 	}
-	
-	public int getLeft() {
-		return left;
+
+	public int getX() {
+		return x;
 	}
-	
-	public void setLeft(int left) {
-		this.left = left;
+
+	public void setX(int x) {
+		this.x = x;
 	}
-	
-	public int getTop() {
-		return top;
+
+	public int getY() {
+		return y;
 	}
-	
-	public void setTop(int top) {
-		this.top = top;
+
+	public void setY(int y) {
+		this.y = y;
 	}
-	
-	public int getRight() {
-		return right;
-	}
-	
-	public void setRight(int right) {
-		this.right = right;
-	}
-	
-	public int getBottom() {
-		return bottom;
-	}
-	
-	public void setBottom(int bottom) {
-		this.bottom = bottom;
-	}
-	
+
 	public int getWidth() {
-		return Math.abs(right - left);
+		return width;
 	}
-	
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
 	public int getHeight() {
-		return Math.abs(bottom - top);
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 	}
 }

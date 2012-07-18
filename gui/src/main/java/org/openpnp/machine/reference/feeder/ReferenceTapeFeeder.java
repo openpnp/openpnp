@@ -38,6 +38,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -203,16 +204,31 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		double y = pickLocation.getY() - cameraOffsets.getY();
 		double z = pickLocation.getZ() - cameraOffsets.getZ();
 		
+		// Move to Safe-Z
+		head.moveTo(head.getX(), head.getY(), 0, head.getC());
+		
 		// Position the camera over the pick location.
 		head.moveTo(x, y, 0, head.getC());
 		
 		// Move the camera to be in focus over the pick location.
 		head.moveTo(head.getX(), head.getY(), z, head.getC());
 		
+		// Settle the camera
+		Thread.sleep(200);
+		
 		VisionProvider visionProvider = camera.getVisionProvider();
 		
+		Rectangle aoi = getVision().getAreaOfInterest();
+		
 		// Perform the template match
-		Point[] matchingPoints = visionProvider.locateTemplateMatches(0, 0, 0, 0, 0, 0, vision.getTemplateImage());
+		Point[] matchingPoints = visionProvider.locateTemplateMatches(
+				aoi.getX(), 
+				aoi.getY(), 
+				aoi.getWidth(), 
+				aoi.getHeight(), 
+				0, 
+				0, 
+				vision.getTemplateImage());
 		
 		// Get the best match from the array
 		Point match = matchingPoints[0];
@@ -306,9 +322,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		@Attribute(required=false)
 		private String templateImageName;
 		@Element(required=false)
-		private Location areaOfInterestTopLeft = new Location(LengthUnit.Millimeters);
-		@Element(required=false)
-		private Location areaOfInterestBottomRight = new Location(LengthUnit.Millimeters);
+		private Rectangle areaOfInterest = new Rectangle();
 		@Element(required=false)
 		private Location templateImageTopLeft = new Location(LengthUnit.Millimeters);
 		@Element(required=false)
@@ -363,21 +377,13 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				templateImageDirty = true;
 			}
 		}
-
-		public Location getAreaOfInterestTopLeft() {
-			return areaOfInterestTopLeft;
+		
+		public Rectangle getAreaOfInterest() {
+			return areaOfInterest;
 		}
 
-		public void setAreaOfInterestTopLeft(Location areaOfInterestTopLeft) {
-			this.areaOfInterestTopLeft = areaOfInterestTopLeft;
-		}
-
-		public Location getAreaOfInterestBottomRight() {
-			return areaOfInterestBottomRight;
-		}
-
-		public void setAreaOfInterestBottomRight(Location areaOfInterestBottomRight) {
-			this.areaOfInterestBottomRight = areaOfInterestBottomRight;
+		public void setAreaOfInterest(Rectangle areaOfInterest) {
+			this.areaOfInterest = areaOfInterest;
 		}
 
 		public Location getTemplateImageTopLeft() {

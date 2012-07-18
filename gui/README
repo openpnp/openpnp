@@ -3,7 +3,7 @@ Prerequisites
 
 OpenCV
 ------
-OpenCV 2.4.0 is required for some features of OpenPnP. Binaries should be
+OpenCV 2.4.2+ is required for some features of OpenPnP. Binaries should be
 installed and accessible to Java. This usually means making sure the libraries
 are in your path.
 

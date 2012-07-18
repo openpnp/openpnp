@@ -180,7 +180,6 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		
 		btnCancelMeasure = new JButton("Cancel");
 		btnCancelMeasure.setAction(cancelMeasureAction);
-		btnCancelMeasure.setVisible(false);
 		panelUpp.add(btnCancelMeasure, "8, 4");
 		
 		lblNewLabel = new JLabel("<html>\n<ol>\n<li>Place an object that is 1 unit by 1 unit square onto the table. Graphing paper is a good, easy choice for this.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Use the camera selection rectangle to measure the object and press the Confirm button.\n</ol>\n</html>");
@@ -282,8 +281,8 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private Action measureAction = new AbstractAction("Measure") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			btnMeasure.setAction(confirmAction);
-			btnCancelMeasure.setVisible(true);
+			btnMeasure.setAction(confirmMeasureAction);
+			cancelMeasureAction.setEnabled(true);
 			CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
 			if (cameraView == null) {
 				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
@@ -293,11 +292,11 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		}
 	};
 	
-	private Action confirmAction = new AbstractAction("Confirm") {
+	private Action confirmMeasureAction = new AbstractAction("Confirm") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			btnMeasure.setAction(measureAction);
-			btnCancelMeasure.setVisible(false);
+			cancelMeasureAction.setEnabled(false);
 			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
 			if (cameraView == null) {
 				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
@@ -313,7 +312,7 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			btnMeasure.setAction(measureAction);
-			btnCancelMeasure.setVisible(false);
+			cancelMeasureAction.setEnabled(false);
 			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
 			if (cameraView == null) {
 				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
