@@ -80,7 +80,8 @@ public class OpenCvVisionProvider implements VisionProvider {
         resLoc = maxLoc;
         resValue = maxVal[0];
         
-        logger.debug(String.format("with    %d, %d, %d, %d", roiX, roiY, roiWidth, roiHeight));
+        // TODO: Figure out certainty and how to filter on it.
+        
         logger.debug(String.format("locateTemplateMatches certainty %f at %d, %d", resValue, resLoc.x(), resLoc.y()));
         
         return new Point[] { new Point(resLoc.x() + roiX, resLoc.y() + roiY) };

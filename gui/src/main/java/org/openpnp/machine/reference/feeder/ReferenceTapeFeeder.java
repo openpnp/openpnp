@@ -33,6 +33,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -46,8 +47,12 @@ import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
+	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
+	
 	@Element
 	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
 	@Element
@@ -115,10 +120,12 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				// for the next operation. By front loading this we make sure
 				// that all future calls can go directly to the feed operation
 				// and skip checking the vision first.
+				logger.debug("First feed, running vision pre-flight.");
 				
 				visionOffset = getVisionOffsets(head, pickLocation);
 			}
 			
+			logger.debug("visionOffsets " + visionOffset);
 			offsetX = visionOffset.getX();
 			offsetY = visionOffset.getY();
 		}
@@ -169,9 +176,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				); 
 		
 		if (vision.isEnabled()) {
-			System.out.println("Feed complete, running vision");
+			logger.debug("Feed complete, running vision.");
 			visionOffset = getVisionOffsets(head, pickLocation);
-			System.out.println("visionOffsets " + visionOffset);
+			logger.debug("visionOffsets " + visionOffset);
 		}
 
 		return pickLocation;

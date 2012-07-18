@@ -66,7 +66,6 @@ public class LocationButtonsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getCameraLocation();
-			System.out.println(l);
 			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ, textFieldC);
 		}
 	};
@@ -75,7 +74,6 @@ public class LocationButtonsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Location l = MainFrame.machineControlsPanel.getToolLocation();
-			System.out.println(l);
 			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ, textFieldC);
 		}
 	};
