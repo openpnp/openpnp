@@ -39,6 +39,7 @@ public class NullDriver implements ReferenceDriver {
 	@Override
 	public void home(ReferenceHead head, double feedRateMmPerMinute)
 			throws Exception {
+		logger.info("home()");
 	}
 
 	@Override
@@ -143,5 +144,6 @@ public class NullDriver implements ReferenceDriver {
 
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
+		logger.info("setEnabled({})", enabled);
 	}
 }

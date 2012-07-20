@@ -26,6 +26,7 @@ import java.io.File;
 
 import javax.swing.UIManager;
 
+import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 
@@ -43,8 +44,27 @@ public class Main {
 		catch (Exception e) {
 			throw new Error(e);
 		}
+		
 		File configurationDirectory = new File(System.getProperty("user.home"));
 		configurationDirectory = new File(configurationDirectory, ".openpnp");
+		
+		// If the log4j.properties is not in the configuration directory, copy
+		// the default over.
+		File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
+		if (!log4jConfigurationFile.exists()) {
+			try {
+				FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties"), log4jConfigurationFile);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		// Use the local configuration if it exists.
+		if (log4jConfigurationFile.exists()) {
+			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
+		}
+		
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();
 		final JobProcessor jobProcessor = new JobProcessor(configuration);

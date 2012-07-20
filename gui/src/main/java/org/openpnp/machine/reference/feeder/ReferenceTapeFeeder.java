@@ -33,7 +33,6 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -50,6 +49,28 @@ import org.simpleframework.xml.core.Persist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Vision System Description
+ * 
+ * The Vision Operation is defined as moving the Camera to the defined Pick
+ * Location, performing a template match against the Template Image bound by
+ * the Area of Interest and then storing the offsets from the Pick Location to
+ * the matched image as Vision Offsets.
+ * 
+ * The feed operation consists of:
+ * 1. Apply the Vision Offsets to the Feed Start Location
+ * and Feed End Location.
+ * 2. Feed the tape with the modified Locations.
+ * 3. Perform the Vision Operation.
+ * 4. Apply the new Vision Offsets to the Pick Location and return the Pick
+ * Location for Picking.
+ * 
+ * This leaves the head directly above the Pick Location, which means that
+ * when the Feeder is then commanded to pick the Part it only needs to move
+ * the distance of the Vision Offsets and do the pick. The Vision Offsets are
+ * then used in the next feed operation to be sure to hit the tape at the
+ * right position.
+ */
 public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
@@ -87,6 +108,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	
 	public Location feed(Head head_, Location pickLocation)
 			throws Exception {
+		logger.debug("feed({}, {})", head_, pickLocation);
 		
 		/*
 		 * TODO: We can optimize the feed process:
@@ -105,6 +127,13 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		Location feedEndLocation = this.feedEndLocation.convertToUnits(head.getMachine().getNativeUnits());
 		Location actuatorOffsets = actuator.getLocation().convertToUnits(head.getMachine().getNativeUnits());
 		Length feedRate = this.feedRate.convertToUnits(head.getMachine().getNativeUnits());
+		
+		logger.debug("Converted inputs: pickLocation {}, feedStartLocation {}, feedEndLocation {}, actuatorOffsets {}, feedRate {}", new Object[] {
+				pickLocation, 
+				feedStartLocation, 
+				feedEndLocation, 
+				actuatorOffsets,
+				feedRate});
 		
 		// Move to safe Z
 		head.moveTo(head.getX(), head.getY(), 0, head.getC());
@@ -126,6 +155,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 			}
 			
 			logger.debug("visionOffsets " + visionOffset);
+			
 			offsetX = visionOffset.getX();
 			offsetY = visionOffset.getY();
 		}
@@ -135,6 +165,10 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		// where the actuator is in relation to the location.
 		feedStartLocation = feedStartLocation.subtract(actuatorOffsets);
 		feedEndLocation = feedEndLocation.subtract(actuatorOffsets);
+		
+		logger.debug("Modified Locations: feedStartLocation {}, feedEndLocation {}", 
+				feedStartLocation, 
+				feedEndLocation);
 
 		// Move the head so that the pin is positioned above the feed hole
 		// feedStartLocation is the position of the hole in the tool's coordinate
@@ -173,12 +207,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				pickLocation.getY() - offsetY,
 				pickLocation.getZ(),
 				pickLocation.getRotation()
-				); 
+				);
+		
+		logger.debug("Modified pickLocation {}", pickLocation);
 		
 		if (vision.isEnabled()) {
-			logger.debug("Feed complete, running vision.");
 			visionOffset = getVisionOffsets(head, pickLocation);
-			logger.debug("visionOffsets " + visionOffset);
+			
+			logger.debug("final visionOffsets " + visionOffset);
 		}
 
 		return pickLocation;
