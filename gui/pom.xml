@@ -6,9 +6,11 @@
 	<artifactId>openpnp-gui</artifactId>
 	<version>0.0.1-alpha-SNAPSHOT</version>
 	<packaging>jar</packaging>
-
 	<name>openpnp-gui</name>
 	<url>http://openpnp.org</url>
+	<scm>
+		<connection>scm:git:https://code.google.com/p/openpnp/ </connection>
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -80,41 +82,57 @@
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.1</version>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.1</version>
 			<classifier>linux-x86</classifier>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.1</version>
 			<classifier>linux-x86_64</classifier>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.1</version>
 			<classifier>macosx-x86_64</classifier>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.1</version>
 			<classifier>windows-x86</classifier>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.1</version>
 			<classifier>windows-x86_64</classifier>
-		</dependency>	
+		</dependency>
 	</dependencies>
-	
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.1</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doCheck>true</doCheck>
+					<doUpdate>true</doUpdate>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -124,7 +142,6 @@
 					<mainClass>org.openpnp.app.Main</mainClass>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -140,7 +157,6 @@
 					</archive>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -161,7 +177,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 	</build>
 	<repositories>
