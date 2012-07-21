@@ -424,6 +424,8 @@ public class CameraView extends JComponent implements CameraListener {
 		g2d.setStroke(new BasicStroke(1f));
 		g2d.setColor(Color.red);
 		
+		double c = camera.getHead().getC();
+		
 		// Convert the outline to the camera's units per pixel
 		Outline outline = this.outline.convertToUnits(camera.getUnitsPerPixel()
 				.getUnits());
@@ -432,9 +434,11 @@ public class CameraView extends JComponent implements CameraListener {
 		Insets ins = getInsets();
 		int width = getWidth() - ins.left - ins.right;
 		int height = getHeight() - ins.top - ins.bottom;
+		int cx = width / 2;
+		int cy = height / 2;
 
 		// Rotate to the head's rotation and scale to fit the window
-		outline = Utils2D.rotateTranslateScaleOutline(outline, camera.getHead().getC(), 0, 0, 1.0 / scaledUnitsPerPixelX, 1.0 / scaledUnitsPerPixelY);
+		outline = Utils2D.rotateTranslateScaleOutline(outline, c, 0, 0, 1.0 / scaledUnitsPerPixelX, 1.0 / scaledUnitsPerPixelY);
 		
 		// Draw it
 		for (int i = 0; i < outline.getPoints().size() - 1; i++) {
@@ -442,26 +446,35 @@ public class CameraView extends JComponent implements CameraListener {
 			Point p2 = outline.getPoints().get(i + 1);
 
 			g2d.drawLine(
-					(int) (p1.getX() + width / 2.0), 
-					(int) (p1.getY() + height / 2.0), 
-					(int) (p2.getX() + width / 2.0),
-					(int) (p2.getY() + height / 2.0));
+					(int) (p1.getX() + cx), 
+					(int) (p1.getY() + cy), 
+					(int) (p2.getX() + cx),
+					(int) (p2.getY() + cy));
 		}
 
 		Point p1 = outline.getPoints().get(outline.getPoints().size() - 1);
 		Point p2 = outline.getPoints().get(0);
 
 		g2d.drawLine(
-				(int) (p1.getX() + width / 2.0), 
-				(int) (p1.getY() + height / 2.0), 
-				(int) (p2.getX() + width / 2.0),
-				(int) (p2.getY() + height / 2.0));
+				(int) (p1.getX() + cx), 
+				(int) (p1.getY() + cy), 
+				(int) (p2.getX() + cx),
+				(int) (p2.getY() + cy));
 		
 		// Draw a crosshair with the north line being green and the rest red.
-		int cx = width / 2;
-		int cy = height / 2;
 		
+		Point p;
+		g2d.setColor(Color.red);
+		p = new Point(width / 8, 0);
+		p = Utils2D.rotatePoint(p, c);
+		g2d.drawLine(cx, cy, (int) (cx + p.getX()), (int) (cy + p.getY()));
+		g2d.drawLine(cx, cy, (int) (cx - p.getX()), (int) (cy - p.getY()));
+		
+		p = new Point(0, height / 8);
+		p = Utils2D.rotatePoint(p, c);
+		g2d.drawLine(cx, cy, (int) (cx + p.getX()), (int) (cy + p.getY()));
 		g2d.setColor(Color.green);
+		g2d.drawLine(cx, cy, (int) (cx - p.getX()), (int) (cy - p.getY()));
 	}
 
 	private void paintSelection(Graphics2D g2d) {
