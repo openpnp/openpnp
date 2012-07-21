@@ -40,6 +40,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,10 +53,7 @@ import javax.swing.JPopupMenu;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.components.reticle.Reticle;
-import org.openpnp.model.Outline;
-import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.Utils2D;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +65,10 @@ import org.slf4j.LoggerFactory;
 public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
+	
 	private static final String PREF_RETICLE = "CamerView.reticle";
+	
+	private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
 	private final static int HANDLE_DIAMETER = 8;
 
@@ -94,10 +95,7 @@ public class CameraView extends JComponent implements CameraListener {
 	 */
 	private int maximumFps;
 
-	/**
-	 * A Reticle to render over the image. Nothing is rendered if this is null.
-	 */
-	private Reticle reticle;
+	private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<Object, Reticle>();
 
 	private JPopupMenu popupMenu;
 
@@ -167,8 +165,6 @@ public class CameraView extends JComponent implements CameraListener {
 	private Preferences prefs = Preferences
 			.userNodeForPackage(CameraView.class);
 
-	private Outline outline;
-
 	public CameraView() {
 		setBackground(Color.black);
 		setOpaque(true);
@@ -176,7 +172,7 @@ public class CameraView extends JComponent implements CameraListener {
 		String reticlePref = prefs.get(PREF_RETICLE, null);
 		try {
 			Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
-			setReticle(reticle);
+			setDefaultReticle(reticle);
 		}
 		catch (Exception e) {
 			// logger.warn("Warning: Unable to load Reticle preference");
@@ -212,10 +208,6 @@ public class CameraView extends JComponent implements CameraListener {
 		setMaximumFps(maximumFps);
 	}
 
-	public void setOutline(Outline outline) {
-		this.outline = outline;
-	}
-
 	public void setMaximumFps(int maximumFps) {
 		this.maximumFps = maximumFps;
 		// turn off capture for the camera we are replacing, if any
@@ -248,8 +240,8 @@ public class CameraView extends JComponent implements CameraListener {
 		return camera;
 	}
 
-	public void setReticle(Reticle reticle) {
-		this.reticle = reticle;
+	public void setDefaultReticle(Reticle reticle) {
+		setReticle(DEFAULT_RETICLE_KEY, reticle);
 
 		prefs.put(PREF_RETICLE, XmlSerialize.serialize(reticle));
 		try {
@@ -258,6 +250,27 @@ public class CameraView extends JComponent implements CameraListener {
 		catch (Exception e) {
 
 		}
+	}
+	
+	public Reticle getDefaultReticle() {
+		return reticles.get(DEFAULT_RETICLE_KEY);
+	}
+	
+	public void setReticle(Object key, Reticle reticle) {
+		if (reticle == null) {
+			removeReticle(key);
+		}
+		else {
+			reticles.put(key, reticle);
+		}
+	}
+	
+	public Reticle getReticle(Object key) {
+		return reticles.get(key);
+	}
+	
+	public Reticle removeReticle(Object key) {
+		return reticles.remove(key);
 	}
 
 	public CameraViewSelectionTextDelegate getSelectionTextDelegate() {
@@ -310,10 +323,6 @@ public class CameraView extends JComponent implements CameraListener {
 
 	public Rectangle getSelection() {
 		return selection;
-	}
-
-	public Reticle getReticle() {
-		return reticle;
 	}
 
 	@Override
@@ -397,84 +406,33 @@ public class CameraView extends JComponent implements CameraListener {
 			g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight,
 					null);
 
-			if (reticle != null) {
-				reticle.draw(g2d, camera.getUnitsPerPixel().getUnits(),
-						scaledUnitsPerPixelX, scaledUnitsPerPixelY, ins.left
-								+ (width / 2), ins.top + (height / 2),
-						scaledWidth, scaledHeight);
+			double c = 0;
+			if (camera.getHead() != null) {
+				c = camera.getHead().getC();
+			}
+			
+			for (Reticle reticle : reticles.values()) {
+				reticle.draw(
+						g2d, 
+						camera.getUnitsPerPixel().getUnits(),
+						scaledUnitsPerPixelX, 
+						scaledUnitsPerPixelY, 
+						ins.left + (width / 2), 
+						ins.top + (height / 2),
+						scaledWidth, 
+						scaledHeight,
+						c);
 			}
 
 			if (selectionEnabled && selection != null) {
 				paintSelection(g2d);
 			}
-
-			if (outline != null) {
-				paintOutline(g2d);
-			}
-
 		}
 		else {
 			g.setColor(Color.red);
 			g.drawLine(ins.left, ins.top, ins.right, ins.bottom);
 			g.drawLine(ins.right, ins.top, ins.left, ins.bottom);
 		}
-	}
-
-	private void paintOutline(Graphics2D g2d) {
-		g2d.setStroke(new BasicStroke(1f));
-		g2d.setColor(Color.red);
-		
-		double c = camera.getHead().getC();
-		
-		// Convert the outline to the camera's units per pixel
-		Outline outline = this.outline.convertToUnits(camera.getUnitsPerPixel()
-				.getUnits());
-		
-		// Get width and height of the component
-		Insets ins = getInsets();
-		int width = getWidth() - ins.left - ins.right;
-		int height = getHeight() - ins.top - ins.bottom;
-		int cx = width / 2;
-		int cy = height / 2;
-
-		// Rotate to the head's rotation and scale to fit the window
-		outline = Utils2D.rotateTranslateScaleOutline(outline, c, 0, 0, 1.0 / scaledUnitsPerPixelX, 1.0 / scaledUnitsPerPixelY);
-		
-		// Draw it
-		for (int i = 0; i < outline.getPoints().size() - 1; i++) {
-			Point p1 = outline.getPoints().get(i);
-			Point p2 = outline.getPoints().get(i + 1);
-
-			g2d.drawLine(
-					(int) (p1.getX() + cx), 
-					(int) (p1.getY() + cy), 
-					(int) (p2.getX() + cx),
-					(int) (p2.getY() + cy));
-		}
-
-		Point p1 = outline.getPoints().get(outline.getPoints().size() - 1);
-		Point p2 = outline.getPoints().get(0);
-
-		g2d.drawLine(
-				(int) (p1.getX() + cx), 
-				(int) (p1.getY() + cy), 
-				(int) (p2.getX() + cx),
-				(int) (p2.getY() + cy));
-		
-		// Draw a crosshair with the north line being green and the rest red.
-		
-		Point p;
-		g2d.setColor(Color.red);
-		p = new Point(width / 8, 0);
-		p = Utils2D.rotatePoint(p, c);
-		g2d.drawLine(cx, cy, (int) (cx + p.getX()), (int) (cy + p.getY()));
-		g2d.drawLine(cx, cy, (int) (cx - p.getX()), (int) (cy - p.getY()));
-		
-		p = new Point(0, height / 8);
-		p = Utils2D.rotatePoint(p, c);
-		g2d.drawLine(cx, cy, (int) (cx + p.getX()), (int) (cy + p.getY()));
-		g2d.setColor(Color.green);
-		g2d.drawLine(cx, cy, (int) (cx - p.getX()), (int) (cy - p.getY()));
 	}
 
 	private void paintSelection(Graphics2D g2d) {

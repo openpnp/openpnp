@@ -66,6 +66,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -566,12 +567,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				public void run() {
 					Head head = configuration.getMachine().getHeads().get(0);
 					try {
-						Location boardLocation = getSelectedBoardLocation().getLocation();
-						boardLocation = boardLocation.convertToUnits(configuration.getMachine().getNativeUnits());
+						Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+						Location location = getSelectedBoardLocation().getLocation();
+						location = location.convertToUnits(configuration.getMachine().getNativeUnits());
+						location = location.subtract(camera.getLocation());
 						// Move to Safe-Z first
 						head.moveTo(head.getX(), head.getY(), 0, head.getC());
-						head.moveTo(boardLocation.getX(), boardLocation.getY(), head.getZ(), head.getC());
-						head.moveTo(head.getX(), head.getY(), head.getZ(), head.getC());
+						head.moveTo(location.getX(), location.getY(), head.getZ(), head.getC());
+						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", e);

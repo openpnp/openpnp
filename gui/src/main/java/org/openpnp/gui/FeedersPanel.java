@@ -49,7 +49,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -294,7 +296,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					org.openpnp.model.Package pkg = part.getPackage();
 					if (pkg != null) {
 						Outline outline = pkg.getOutline();
-						MainFrame.cameraPanel.getSelectedCameraView().setOutline(outline);
+						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+						if (cameraView.getReticle(this) != null) {
+							cameraView.removeReticle(this);
+						}
+						else {
+							cameraView.setReticle(this, new OutlineReticle(outline));
+						}
 					}
 				}
 			}

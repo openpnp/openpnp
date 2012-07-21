@@ -35,5 +35,6 @@ public interface Reticle {
 			double viewPortCenterX, 
 			double viewPortCenterY,
 			int viewPortWidth,
-			int viewPortHeight);
+			int viewPortHeight,
+			double rotation);
 }

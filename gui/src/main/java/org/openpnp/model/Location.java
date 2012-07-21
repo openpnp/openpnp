@@ -171,14 +171,26 @@ public class Location extends AbstractModelObject {
 		firePropertyChange("lengthZ", null, getLengthZ());
 	}
 	
+	/**
+	 * Subtracts the given Location's X, Y, and Z components from this
+	 * Location's X, Y, and Z components. Rotation is left unchanged.
+	 * @param l
+	 * @return
+	 */
 	public Location subtract(Location l) {
 		l = l.convertToUnits(getUnits());
-		return new Location(l.getUnits(), x - l.getX(), y - l.getY(), z - l.getZ(), l.getRotation());
+		return new Location(l.getUnits(), x - l.getX(), y - l.getY(), z - l.getZ(), getRotation());
 	}
 	
+	/**
+	 * Add the given Location's X, Y, and Z components to this
+	 * Location's X, Y, and Z components. Rotation is left unchanged.
+	 * @param l
+	 * @return
+	 */
 	public Location add(Location l) {
 		l = l.convertToUnits(getUnits());
-		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), l.getRotation());
+		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), getRotation());
 	}
 	
 	@Override

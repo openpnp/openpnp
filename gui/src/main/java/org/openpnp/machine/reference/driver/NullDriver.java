@@ -32,7 +32,7 @@ public class NullDriver implements ReferenceDriver {
 	private final static Logger logger = LoggerFactory.getLogger(NullDriver.class);
 	
 	@Attribute(required=false)
-	private String nullDriver;
+	private String dummy;
 	
 	private double x, y, z, c;
 
@@ -47,13 +47,14 @@ public class NullDriver implements ReferenceDriver {
 			double c, double feedRateMmPerMinute) throws Exception {
 		logger.info(String.format("moveTo(%f, %f, %f, %f, %f)", x, y, z, c, feedRateMmPerMinute));
 
-		// angles over 360* are silly
+		// If the angle is more than 360* we take it's modulo. No reason to
+		// travel more than a full circle.
 		c = c % 360.0;
 		
-		// if the travel is more than 180* we go the opposite direction
-		if (c > 180) {
-			c = (360 - c) * -1;
-		}
+//		// If the travel is more than 180* we go the opposite direction instead.
+//		if (c > 180) {
+//			c = (360 - c) * -1;
+//		}
 		
 		double x1 = this.x;
 		double y1 = this.y;
@@ -64,22 +65,44 @@ public class NullDriver implements ReferenceDriver {
 		double z2 = z;
 		double c2 = c;
 		
-		// distances to travel in each axis
+		// Calculate the linear distance to travel in each axis.
 		double vx = x2 - x1;
 		double vy = y2 - y1;
 		double vz = z2 - z1;
-		double va = c2 - c1;
+		double vc = c2 - c1;
 		
-		double mag = Math.sqrt(vx*vx + vy*vy);
+		// Calculate the linear distance to travel in each plane XY, Z and C.
+		double pxy = Math.sqrt(vx*vx + vy*vy);
+		double pz = Math.abs(vz);
+		double pc = Math.abs(vc); 
 
-		double distance = 0;
+		// Distance moved in each plane so far.
+		double dxy = 0, dz = 0, dc = 0;
 		
+		// The distance that we'll move each loop. 
 		double distancePerTick = feedRateMmPerMinute / 60.0 / 10.0;
 		
-		while (distance < mag) {
-			this.x = x1 + (vx / mag * distance);
-			this.y = y1 + (vy / mag * distance);
-			this.c = c1 + (va / mag * distance);
+		while (dxy < pxy || dz < pz || dc < pc) {
+			if (dxy < pxy) {
+				this.x = x1 + (vx / pxy * dxy);
+				this.y = y1 + (vy / pxy * dxy);
+			}
+			else {
+				this.x = x;
+				this.y = y;
+			}
+			if (dz < pz) {
+				this.z = z1 + dz * (vz < 0 ? -1 : 1);
+			}
+			else {
+				this.z = z;
+			}
+			if (dc < pc) {
+				this.c = c1 + dc * (vc < 0 ? -1 : 1);
+			}
+			else {
+				this.c = c;
+			}
 			
 			head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
 			
@@ -90,35 +113,15 @@ public class NullDriver implements ReferenceDriver {
 				
 			}
 			
-			distance = Math.min(mag, distance + distancePerTick);
+			dxy = Math.min(pxy, dxy + distancePerTick);
+			dz = Math.min(pz, dz + distancePerTick);
+			dc = Math.min(pc, dc + distancePerTick);
 		}
 		
 		this.x = x;
 		this.y = y;
-		this.c = c;
-		
-		head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
-		
-		mag = Math.abs(vz);
-		
-		distance = 0;
-		
-		while (distance < mag) {
-			this.z = z1 + (vz / mag * distance);
-
-			head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
-
-			try {
-				Thread.sleep(100);
-			}
-			catch (Exception e) {
-				
-			}
-			
-			distance = Math.min(mag, distance + distancePerTick);
-		}
-		
 		this.z = z;
+		this.c = c;
 
 		head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
 	}

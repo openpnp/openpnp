@@ -115,7 +115,9 @@ public class LocationButtonsPanel extends JPanel {
 					try {
 						// Move to Safe-Z first
 						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						// Move the head to the right position at Safe-Z
 						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						// Move Z
 						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
 					}
 					catch (Exception e) {
@@ -136,7 +138,9 @@ public class LocationButtonsPanel extends JPanel {
 					try {
 						// Move to Safe-Z first
 						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						// Move the head to the right position at Safe-Z
 						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						// Move Z
 						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
 					}
 					catch (Exception e) {

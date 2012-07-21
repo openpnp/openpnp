@@ -24,18 +24,22 @@ package org.openpnp.gui.components.reticle;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.RenderingHints;
 
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Outline;
 import org.openpnp.model.Point;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.Utils2D;
 
-public class CrosshairReticle implements Reticle {
+public class OutlineReticle implements Reticle {
 	private Color color;
 	private Color complimentaryColor;
+	private Outline outline;
 	
-	public CrosshairReticle() {
+	public OutlineReticle(Outline outline) {
+		setOutline(outline);
 		setColor(Color.red);
 	}
 	
@@ -46,6 +50,14 @@ public class CrosshairReticle implements Reticle {
 	public void setColor(Color color) {
 		this.color = color;
 		complimentaryColor = new HslColor(color).getComplementary();
+	}
+	
+	public Outline getOutline() {
+		return outline;
+	}
+
+	public void setOutline(Outline outline) {
+		this.outline = outline;
 	}
 
 	@Override
@@ -63,39 +75,36 @@ public class CrosshairReticle implements Reticle {
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		
+		g2d.setStroke(new BasicStroke(1f));
+		g2d.setColor(Color.red);
 
-		// TODO: Rotate a bounding box and use the calculated width and height
-		// so that the lines reach the edges of the component once rotated.
-		// We currently use the full width for each half width segment, so it
-		// works but it is sloppy.
+		// Convert the outline to the camera's units per pixel
+		Outline outline = this.outline.convertToUnits(cameraUnitsPerPixelUnits);
 		
-		Point p;
-		g2d.setColor(color);
-		p = new Point(viewPortWidth, 0);
-		p = Utils2D.rotatePoint(p, rotation);
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX + p.getX()), 
-				(int) (viewPortCenterY + p.getY()));
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX - p.getX()), 
-				(int) (viewPortCenterY - p.getY()));
+		// Rotate to the head's rotation and scale to fit the window
+		outline = Utils2D.rotateTranslateScaleOutline(outline, rotation, 0, 0, 1.0 / cameraUnitsPerPixelX, 1.0 / cameraUnitsPerPixelY);
 		
-		p = new Point(0, viewPortHeight);
-		p = Utils2D.rotatePoint(p, rotation);
+		// TODO: Cache the results of the above two operations.
+		
+		// Draw it
+		for (int i = 0; i < outline.getPoints().size() - 1; i++) {
+			Point p1 = outline.getPoints().get(i);
+			Point p2 = outline.getPoints().get(i + 1);
+
+			g2d.drawLine(
+					(int) (p1.getX() + viewPortCenterX), 
+					(int) (p1.getY() + viewPortCenterY), 
+					(int) (p2.getX() + viewPortCenterX),
+					(int) (p2.getY() + viewPortCenterY));
+		}
+
+		Point p1 = outline.getPoints().get(outline.getPoints().size() - 1);
+		Point p2 = outline.getPoints().get(0);
+
 		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX + p.getX()), 
-				(int) (viewPortCenterY + p.getY()));
-		g2d.setColor(complimentaryColor);
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX - p.getX()), 
-				(int) (viewPortCenterY - p.getY()));
+				(int) (p1.getX() + viewPortCenterX), 
+				(int) (p1.getY() + viewPortCenterY), 
+				(int) (p2.getX() + viewPortCenterX),
+				(int) (p2.getY() + viewPortCenterY));
 	}
 }

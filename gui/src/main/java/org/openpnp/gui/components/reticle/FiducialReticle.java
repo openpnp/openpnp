@@ -94,7 +94,8 @@ public class FiducialReticle implements Reticle {
 			double viewPortCenterX, 
 			double viewPortCenterY,
 			int viewPortWidth,
-			int viewPortHeight) {
+			int viewPortHeight,
+			double rotation) {
 
 		g2d.setColor(color);
 		

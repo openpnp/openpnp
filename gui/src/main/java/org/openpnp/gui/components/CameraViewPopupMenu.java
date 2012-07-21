@@ -59,15 +59,15 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		addSeparator();
 		add("Cancel");
 		
-		if (cameraView.getReticle() != null) {
-			if (cameraView.getReticle() instanceof CrosshairReticle) {
-				setReticleOptionsMenu(createCrosshairReticleOptionsMenu((CrosshairReticle) cameraView.getReticle()));
+		if (cameraView.getDefaultReticle() != null) {
+			if (cameraView.getDefaultReticle() instanceof CrosshairReticle) {
+				setReticleOptionsMenu(createCrosshairReticleOptionsMenu((CrosshairReticle) cameraView.getDefaultReticle()));
 			}
-			else if (cameraView.getReticle() instanceof RulerReticle) {
-				setReticleOptionsMenu(createRulerReticleOptionsMenu((RulerReticle) cameraView.getReticle()));
+			else if (cameraView.getDefaultReticle() instanceof RulerReticle) {
+				setReticleOptionsMenu(createRulerReticleOptionsMenu((RulerReticle) cameraView.getDefaultReticle()));
 			}
-			else if (cameraView.getReticle() instanceof FiducialReticle) {
-				setReticleOptionsMenu(createFiducialReticleOptionsMenu((FiducialReticle) cameraView.getReticle()));
+			else if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
+				setReticleOptionsMenu(createFiducialReticleOptionsMenu((FiducialReticle) cameraView.getDefaultReticle()));
 			}
 		}
 	}
@@ -121,25 +121,25 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		JRadioButtonMenuItem menuItem;
 		
 		menuItem = new JRadioButtonMenuItem(noReticleAction);
-		if (cameraView.getReticle() == null) {
+		if (cameraView.getDefaultReticle() == null) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		menuItem = new JRadioButtonMenuItem(crosshairReticleAction);
-		if (cameraView.getReticle() instanceof CrosshairReticle) {
+		if (cameraView.getDefaultReticle() instanceof CrosshairReticle) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		menuItem = new JRadioButtonMenuItem(rulerReticleAction);
-		if (cameraView.getReticle() instanceof RulerReticle) {
+		if (cameraView.getDefaultReticle() instanceof RulerReticle) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		menuItem = new JRadioButtonMenuItem(fiducialReticleAction);
-		if (cameraView.getReticle() instanceof FiducialReticle) {
+		if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
@@ -164,7 +164,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.red);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		menu.add(menuItem);
@@ -177,7 +177,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.green);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		menu.add(menuItem);
@@ -190,7 +190,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.yellow);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		menu.add(menuItem);
@@ -203,7 +203,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.blue);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		menu.add(menuItem);
@@ -216,7 +216,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.white);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		menu.add(menuItem);
@@ -242,7 +242,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.red);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -255,7 +255,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.green);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -268,7 +268,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.yellow);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -281,7 +281,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.blue);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -294,7 +294,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.white);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -311,7 +311,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnits(LengthUnit.Millimeters);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -324,7 +324,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnits(LengthUnit.Inches);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -341,7 +341,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnitsPerTick(0.1);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -354,7 +354,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnitsPerTick(0.25);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -367,7 +367,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnitsPerTick(0.50);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -380,7 +380,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnitsPerTick(1);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -393,7 +393,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnitsPerTick(10);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -420,7 +420,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.red);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -433,7 +433,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.green);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -446,7 +446,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.yellow);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -459,7 +459,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.blue);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -472,7 +472,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setColor(Color.white);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -489,7 +489,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnits(LengthUnit.Millimeters);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -502,7 +502,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setUnits(LengthUnit.Inches);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -519,7 +519,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setShape(FiducialReticle.Shape.Circle);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -532,7 +532,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setShape(FiducialReticle.Shape.Square);
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		subMenu.add(menuItem);
@@ -544,7 +544,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reticle.setFilled(((JCheckBoxMenuItem)e.getSource()).isSelected());
-				cameraView.setReticle(reticle);
+				cameraView.setDefaultReticle(reticle);
 			}
 		});
 		menu.add(chkMenuItem);
@@ -558,7 +558,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 						reticle.getSize() + "");
 				if (result != null) {
 					reticle.setSize(Double.valueOf(result));
-					cameraView.setReticle(reticle);
+					cameraView.setDefaultReticle(reticle);
 				}
 			}
 		});
@@ -583,7 +583,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			setReticleOptionsMenu(null);
-			cameraView.setReticle(null);
+			cameraView.setDefaultReticle(null);
 		}
 	};
 	
@@ -593,7 +593,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			CrosshairReticle reticle = new CrosshairReticle();
 			JMenu optionsMenu = createCrosshairReticleOptionsMenu(reticle);
 			setReticleOptionsMenu(optionsMenu);
-			cameraView.setReticle(reticle);
+			cameraView.setDefaultReticle(reticle);
 		}
 	};
 	
@@ -603,7 +603,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			RulerReticle reticle = new RulerReticle();
 			JMenu optionsMenu = createRulerReticleOptionsMenu(reticle);
 			setReticleOptionsMenu(optionsMenu);
-			cameraView.setReticle(reticle);
+			cameraView.setDefaultReticle(reticle);
 		}
 	};
 	
@@ -613,7 +613,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
 			FiducialReticle reticle = new FiducialReticle();
 			JMenu optionsMenu = createFiducialReticleOptionsMenu(reticle);
 			setReticleOptionsMenu(optionsMenu);
-			cameraView.setReticle(reticle);
+			cameraView.setDefaultReticle(reticle);
 		}
 	};
 	
