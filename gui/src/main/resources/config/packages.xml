@@ -49,26 +49,34 @@
    </package>
    <package id="0603" name="0603">
       <outline units="Inches">
-         <point x="-0.04" y="-0.025"/>
-         <point x="-0.04" y="0.025"/>
-         <point x="0.04" y="0.025"/>
-         <point x="0.04" y="-0.025"/>
+         <point x="-0.03" y="-0.015"/>
+         <point x="-0.03" y="0.015"/>
+         <point x="0.03" y="0.015"/>
+         <point x="0.03" y="-0.015"/>
       </outline>
    </package>
    <package id="0603-4" name="0603-4">
       <outline units="Inches">
-         <point x="-0.04" y="-0.025"/>
-         <point x="-0.04" y="0.025"/>
-         <point x="0.04" y="0.025"/>
-         <point x="0.04" y="-0.025"/>
+         <point x="-0.03" y="-0.015"/>
+         <point x="-0.03" y="0.015"/>
+         <point x="0.03" y="0.015"/>
+         <point x="0.03" y="-0.015"/>
       </outline>
    </package>
    <package id="1206" name="1206">
       <outline units="Inches">
-         <point x="-0.04" y="-0.025"/>
-         <point x="-0.04" y="0.025"/>
-         <point x="0.04" y="0.025"/>
-         <point x="0.04" y="-0.025"/>
+         <point x="-0.06" y="-0.03"/>
+         <point x="-0.06" y="0.03"/>
+         <point x="0.06" y="0.03"/>
+         <point x="0.06" y="-0.03"/>
+      </outline>
+   </package>
+   <package id="2012" name="2012">
+      <outline units="Inches">
+         <point x="-0.1" y="-0.06"/>
+         <point x="-0.1" y="0.06"/>
+         <point x="0.1" y="0.06"/>
+         <point x="0.1" y="-0.06"/>
       </outline>
    </package>
    <package id="EIA3528" name="EIA3528">

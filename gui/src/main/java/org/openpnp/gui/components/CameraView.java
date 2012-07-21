@@ -52,7 +52,10 @@ import javax.swing.JPopupMenu;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.model.Outline;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,6 +167,8 @@ public class CameraView extends JComponent implements CameraListener {
 	private Preferences prefs = Preferences
 			.userNodeForPackage(CameraView.class);
 
+	private Outline outline;
+
 	public CameraView() {
 		setBackground(Color.black);
 		setOpaque(true);
@@ -205,6 +210,10 @@ public class CameraView extends JComponent implements CameraListener {
 	public CameraView(int maximumFps) {
 		this();
 		setMaximumFps(maximumFps);
+	}
+
+	public void setOutline(Outline outline) {
+		this.outline = outline;
 	}
 
 	public void setMaximumFps(int maximumFps) {
@@ -327,7 +336,7 @@ public class CameraView extends JComponent implements CameraListener {
 	 */
 	private synchronized void calculateScalingData() {
 		BufferedImage image = lastFrame;
-		
+
 		if (image == null) {
 			return;
 		}
@@ -399,12 +408,60 @@ public class CameraView extends JComponent implements CameraListener {
 				paintSelection(g2d);
 			}
 
+			if (outline != null) {
+				paintOutline(g2d);
+			}
+
 		}
 		else {
 			g.setColor(Color.red);
 			g.drawLine(ins.left, ins.top, ins.right, ins.bottom);
 			g.drawLine(ins.right, ins.top, ins.left, ins.bottom);
 		}
+	}
+
+	private void paintOutline(Graphics2D g2d) {
+		g2d.setStroke(new BasicStroke(1f));
+		g2d.setColor(Color.red);
+		
+		// Convert the outline to the camera's units per pixel
+		Outline outline = this.outline.convertToUnits(camera.getUnitsPerPixel()
+				.getUnits());
+		
+		// Get width and height of the component
+		Insets ins = getInsets();
+		int width = getWidth() - ins.left - ins.right;
+		int height = getHeight() - ins.top - ins.bottom;
+
+		// Rotate to the head's rotation and scale to fit the window
+		outline = Utils2D.rotateTranslateScaleOutline(outline, camera.getHead().getC(), 0, 0, 1.0 / scaledUnitsPerPixelX, 1.0 / scaledUnitsPerPixelY);
+		
+		// Draw it
+		for (int i = 0; i < outline.getPoints().size() - 1; i++) {
+			Point p1 = outline.getPoints().get(i);
+			Point p2 = outline.getPoints().get(i + 1);
+
+			g2d.drawLine(
+					(int) (p1.getX() + width / 2.0), 
+					(int) (p1.getY() + height / 2.0), 
+					(int) (p2.getX() + width / 2.0),
+					(int) (p2.getY() + height / 2.0));
+		}
+
+		Point p1 = outline.getPoints().get(outline.getPoints().size() - 1);
+		Point p2 = outline.getPoints().get(0);
+
+		g2d.drawLine(
+				(int) (p1.getX() + width / 2.0), 
+				(int) (p1.getY() + height / 2.0), 
+				(int) (p2.getX() + width / 2.0),
+				(int) (p2.getY() + height / 2.0));
+		
+		// Draw a crosshair with the north line being green and the rest red.
+		int cx = width / 2;
+		int cy = height / 2;
+		
+		g2d.setColor(Color.green);
 	}
 
 	private void paintSelection(Graphics2D g2d) {
@@ -913,14 +970,14 @@ public class CameraView extends JComponent implements CameraListener {
 			}
 		}
 	};
-	
+
 	private ComponentListener componentListener = new ComponentAdapter() {
 		@Override
 		public void componentResized(ComponentEvent e) {
 			calculateScalingData();
 		}
 	};
-	
+
 	public CameraViewSelectionTextDelegate pixelsAndUnitsTextSelectionDelegate = new CameraViewSelectionTextDelegate() {
 		@Override
 		public String getSelectionText(CameraView cameraView) {

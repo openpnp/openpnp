@@ -115,6 +115,7 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<!-- <finalName>${name}-${version}-${buildNumber}</finalName> -->
 		<plugins>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -129,8 +130,8 @@
 					</execution>
 				</executions>
 				<configuration>
-					<doCheck>true</doCheck>
-					<doUpdate>true</doUpdate>
+					<doCheck>false</doCheck>
+					<doUpdate>false</doUpdate>
 				</configuration>
 			</plugin>
 			<plugin>

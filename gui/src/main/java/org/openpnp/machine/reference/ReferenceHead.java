@@ -282,6 +282,20 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 							"Movement to %2.4f, %2.4f, %2.4f, %2.4f is not valid. You have bad data somewhere.",
 							x, y, z, c));
 		}
+		
+		if (Math.abs(x) == 0) {
+			x = 0;
+		}
+		if (Math.abs(y) == 0) {
+			y = 0;
+		}
+		if (Math.abs(z) == 0) {
+			z = 0;
+		}
+		if (Math.abs(c) == 0) {
+			c = 0;
+		}
+		
 		Location min = softLimits.getMinimums().convertToUnits(getMachine().getNativeUnits());
 		Location max = softLimits.getMaximums().convertToUnits(getMachine().getNativeUnits());
 		

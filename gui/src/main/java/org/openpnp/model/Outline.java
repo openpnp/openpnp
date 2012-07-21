@@ -21,6 +21,7 @@
 
 package org.openpnp.model;
 
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,19 +29,19 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
 /**
- * An Outline is a polygon shape with attached units that can be used for bounds checking
- * and can be drawn to a Graphics for display to the user.
+ * An Outline is a polygon shape with attached units that can be used for bounds
+ * checking and can be drawn to a Graphics for display to the user.
  */
 public class Outline {
-	@ElementList(inline=true)
+	@ElementList(inline = true)
 	private List<Point> points = new ArrayList<Point>();
 	@Attribute
 	private LengthUnit units;
-	
+
 	public void addPoint(double x, double y) {
 		points.add(new Point(x, y));
 	}
-	
+
 	public LengthUnit getUnits() {
 		return units;
 	}
@@ -48,45 +49,37 @@ public class Outline {
 	public void setUnits(LengthUnit units) {
 		this.units = units;
 	}
-	
+
 	public List<Point> getPoints() {
 		return points;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		
+
 		for (Point point : points) {
 			sb.append(point.x + "," + point.y + " -> ");
 		}
 		if (points.size() > 0) {
 			sb.append(points.get(0).x + "," + points.get(0).y);
 		}
-		
+
 		return String.format("units %s, points (%s)", units, sb);
 	}
-	
-//	public static Outline convertOutline(Outline outline, LengthUnit toUnits) {
-//	Outline newOutline = new Outline();
-//	newOutline.setUnits(outline.getUnits());
-//	for (int i = 0; i < outline.getPoints().size(); i++) {
-//		Point p = outline.getPoints().get(i);
-//		
-//		p = convertPoint(p, outline.getUnits(), toUnits);
-//		
-//		newOutline.addPoint(p.getX(), p.getY());
-//	}
-//	
-//	return newOutline;
-//}
-//
-//public static Point convertPoint(Point point, LengthUnit fromUnits, LengthUnit toUnits) {
-//	double x = point.getX();
-//	double y = point.getY();
-//	x = LengthUtil.convertLength(x, fromUnits, toUnits);
-//	y = LengthUtil.convertLength(y, fromUnits, toUnits);
-//	return new Point(x, y);
-//}
-	
+
+	public Outline convertToUnits(LengthUnit units) {
+		Outline outline = new Outline();
+		outline.setUnits(getUnits());
+		for (int i = 0; i < getPoints().size(); i++) {
+			Point p = getPoints().get(i);
+			
+			Length px = new Length(p.getX(), getUnits()).convertToUnits(units);
+			Length py = new Length(p.getY(), getUnits()).convertToUnits(units);
+
+			outline.addPoint(px.getValue(), py.getValue());
+		}
+
+		return outline;
+	}
 }

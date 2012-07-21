@@ -257,7 +257,7 @@ public class JobProcessor implements Runnable {
 				// as the board
 				p = Utils2D.rotateTranslateScalePoint(p, boardLocation
 						.getRotation(), boardLocation.getX(), boardLocation
-						.getY(), 1.0);
+						.getY(), 1.0, 1.0);
 
 				// Update the placementLocation with the transformed point
 				placementLocation.setX(p.getX());

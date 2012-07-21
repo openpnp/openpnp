@@ -48,8 +48,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
-import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -57,6 +57,8 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.gui.wizards.FeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Outline;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.slf4j.Logger;
@@ -106,6 +108,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		
 		toolBar.addSeparator();
 		toolBar.add(feedFeederAction);
+		toolBar.add(showPartAction);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -154,7 +157,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction);
+		feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction, showPartAction);
 		
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -280,4 +283,22 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			}.start();
 		}
 	};
+	
+	public Action showPartAction = new AbstractAction("Show Part") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			Feeder feeder = getSelectedFeeder();
+			if (feeder != null) {
+				Part part = feeder.getPart();
+				if (part != null) {
+					org.openpnp.model.Package pkg = part.getPackage();
+					if (pkg != null) {
+						Outline outline = pkg.getOutline();
+						MainFrame.cameraPanel.getSelectedCameraView().setOutline(outline);
+					}
+				}
+			}
+		}
+	};
+
 }
