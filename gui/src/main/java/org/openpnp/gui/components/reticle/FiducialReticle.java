@@ -21,8 +21,10 @@
 
 package org.openpnp.gui.components.reticle;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -98,6 +100,9 @@ public class FiducialReticle implements Reticle {
 			double rotation) {
 
 		g2d.setColor(color);
+		g2d.setStroke(new BasicStroke(1f));
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// TODO performance, calculate all this stuff only when the incoming values change
 		
