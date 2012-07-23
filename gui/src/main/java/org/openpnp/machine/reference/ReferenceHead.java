@@ -108,8 +108,12 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 
 	@Override
 	public void home() throws Exception {
-		// TODO: Perform home switch homing first.
-		logger.debug("Perform home switch homing");
+		logger.debug("Start driver homing operation.");
+		machine.getDriver().home(null, 0);
+		
+		// Our contract with the driver is that everything gets zeroed out
+		// after a homing operation.
+		x = y = z = c = 0;
 
 		// Apply the homing location to the current position
 		logger.debug("Apply the homing location to the current position");
