@@ -60,6 +60,12 @@ public class LocationButtonsPanel extends JPanel {
 		buttonCenterTool.setText("");
 		buttonCenterTool.setIcon(new ImageIcon(LocationButtonsPanel.class.getResource("/icons/center-tool.png")));
 		add(buttonCenterTool);
+		
+		JButton button = new JButton(positionActuatorAction);
+		button.setToolTipText("Position the actuator over the center of the location.");
+		button.setText("");
+		button.setIcon(new ImageIcon(LocationButtonsPanel.class.getResource("/icons/center-pin.png")));
+		add(button);
 	}
 	
 	private Action getCameraCoordinatesAction = new AbstractAction("Get Camera Coordinates") {
@@ -135,6 +141,30 @@ public class LocationButtonsPanel extends JPanel {
 				public void run() {
 					Head head = Configuration.get().getMachine().getHeads().get(0);
 					Location location = getParsedLocation().convertToUnits(head.getMachine().getNativeUnits());
+					try {
+						// Move to Safe-Z first
+						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						// Move the head to the right position at Safe-Z
+						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						// Move Z
+						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(getTopLevelAncestor(), "Movement Error", e);
+					}
+				}
+			});
+		}
+	};
+	
+	private Action positionActuatorAction = new AbstractAction("Position Actuator") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+				public void run() {
+					Head head = Configuration.get().getMachine().getHeads().get(0);
+					Location location = getParsedLocation().convertToUnits(head.getMachine().getNativeUnits());
+//					location = location.subtract(camera.getLocation());
 					try {
 						// Move to Safe-Z first
 						head.moveTo(head.getX(), head.getY(), 0, head.getC());
