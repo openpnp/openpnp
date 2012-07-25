@@ -69,7 +69,11 @@ public class Main {
 			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
 		}
 		
-		logger.debug("OpenPnP vX.X.X Started.");
+		String version = Main.class.getPackage().getImplementationVersion();
+		if (version == null) {
+			version = "INTERNAL BUILD";
+		}
+		logger.debug(String.format("OpenPnP %s Started.", version));
 		
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();
