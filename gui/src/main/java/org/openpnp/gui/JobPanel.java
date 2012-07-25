@@ -571,9 +571,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 						Location location = getSelectedBoardLocation().getLocation();
 						location = location.convertToUnits(configuration.getMachine().getNativeUnits());
 						location = location.subtract(camera.getLocation());
-						// Move to Safe-Z first
 						head.moveToSafeZ();
-						head.moveTo(location.getX(), location.getY(), head.getZ(), head.getC());
+						// Move the head to the location at Safe-Z 
+						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						// Move Z
 						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
 					}
 					catch (Exception e) {

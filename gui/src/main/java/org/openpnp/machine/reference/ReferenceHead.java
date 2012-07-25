@@ -186,7 +186,6 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		y -= camera.getLocation().getY();
 		z -= camera.getLocation().getZ();
 		
-		// Go to Safe-Z
 		moveToSafeZ();
 
 		// Position the camera over the homing dot

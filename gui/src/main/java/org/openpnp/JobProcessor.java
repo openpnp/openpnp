@@ -307,7 +307,6 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// Move the nozzle to safe Z
 				try {
 					head.moveToSafeZ();
 				}
@@ -336,7 +335,6 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// Move the nozzle to safe Z
 				try {
 					head.moveToSafeZ();
 				}
@@ -384,7 +382,6 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// Move the nozzle to safe Z
 				try {
 					head.moveToSafeZ();
 				}
@@ -436,7 +433,6 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// Move the nozzle to safe Z
 				try {
 					head.moveToSafeZ();
 				}

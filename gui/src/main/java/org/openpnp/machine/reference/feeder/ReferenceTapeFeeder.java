@@ -160,7 +160,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				actuatorOffsets,
 				feedRate});
 		
-		// Move to safe Z
 		head.moveToSafeZ();
 		
 		double offsetX = 0;
@@ -219,7 +218,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 				head.getC(), 
 				feedRate.getValue());
 
-		// Move to safe Z
 		head.moveToSafeZ();
 
 		// retract the pin
@@ -272,7 +270,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		double y = pickLocation.getY() - cameraOffsets.getY();
 		double z = pickLocation.getZ() - cameraOffsets.getZ();
 		
-		// Move to Safe-Z
 		head.moveToSafeZ();
 		
 		// Position the camera over the pick location.

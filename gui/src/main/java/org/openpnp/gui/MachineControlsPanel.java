@@ -534,7 +534,6 @@ public class MachineControlsPanel extends JPanel {
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
-						// Move to Safe-Z first.
 						head.moveToSafeZ();
 						// Move to 0, 0, 0, 0.
 						head.moveTo(0, 0, 0, 0);
