@@ -411,6 +411,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		return l;
 	}
 
+	@Override
 	public ReferenceActuator getActuator(String name) {
 		return actuators.get(name);
 	}

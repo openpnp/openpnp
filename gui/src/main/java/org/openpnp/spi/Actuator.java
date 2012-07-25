@@ -22,6 +22,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Location;
 
 /**
  * Defines a simple interface to some type of device that can be actuated
@@ -31,7 +32,7 @@ import org.openpnp.gui.support.Wizard;
  */
 public interface Actuator {
 	/**
-	 * The unique id of the Actuator. This valid should be unique for a given
+	 * The unique id of the Actuator. This id should be unique for a given
 	 * head if the Actuator is attached to a head, or unique within machine
 	 * Actuators.
 	 * @return
@@ -50,4 +51,8 @@ public interface Actuator {
 	 * @return
 	 */
 	public Wizard getConfigurationWizard();
+	
+	public Location getLocation();
+	
+	public void setLocation(Location location);
 }

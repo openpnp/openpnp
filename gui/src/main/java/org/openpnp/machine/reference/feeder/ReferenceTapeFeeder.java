@@ -23,6 +23,8 @@ package org.openpnp.machine.reference.feeder;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 
@@ -30,15 +32,14 @@ import javax.imageio.ImageIO;
 
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -74,6 +75,27 @@ import org.slf4j.LoggerFactory;
 public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
+	private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+	
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(listener);
+	}
+
+	public void addPropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(propertyName,
+				listener);
+	}
+
 	@Element
 	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
 	@Element
@@ -106,9 +128,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		return true;
 	}
 	
-	public Location feed(Head head_, Location pickLocation)
+	public Location feed(Head head, Location pickLocation)
 			throws Exception {
-		logger.debug("feed({}, {})", head_, pickLocation);
+		logger.debug("feed({}, {})", head, pickLocation);
 		
 		/*
 		 * TODO: We can optimize the feed process:
@@ -118,8 +140,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		 * pin since if the tool was going to hit it would have already hit.
 		 */
 
-		ReferenceHead head = (ReferenceHead) head_;
-		ReferenceActuator actuator = head.getActuator(actuatorId);
+		Actuator actuator = head.getActuator(actuatorId);
+		
+		if (actuator == null) {
+			throw new Exception(String.format("No Actuator found with ID %s on feed Head %s", actuatorId, head.getId()));
+		}
 		
 		// Convert all the Locations we'll be dealing with to machine native units
 		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
@@ -348,7 +373,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	}
 
 	public void setActuatorId(String actuatorId) {
+		String oldValue = this.actuatorId;
 		this.actuatorId = actuatorId;
+		propertyChangeSupport.firePropertyChange("actuatorId", oldValue, actuatorId);
 	}
 
 	public Vision getVision() {

@@ -49,6 +49,10 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Binding;
+import org.jdesktop.beansbinding.Bindings;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -398,6 +402,10 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
 		ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
 		ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
+		
+		BeanProperty actuatorIdProperty = BeanProperty.create("actuatorId");
+		Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty, locationButtonsPanelFeedStart, actuatorIdProperty).bind();
+		Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty, locationButtonsPanelFeedEnd, actuatorIdProperty).bind();
 	}
 
 	private void loadFromModel() {

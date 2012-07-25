@@ -67,10 +67,12 @@ public class ReferenceActuator implements Actuator, RequiresConfigurationResolut
 		this.id = id;
 	}
 
+	@Override
 	public Location getLocation() {
 		return location;
 	}
 
+	@Override
 	public void setLocation(Location location) {
 		this.location = location;
 	}

@@ -170,6 +170,8 @@ public interface Head {
 	 */
 	public List<Actuator> getActuators();
 	
+	public Actuator getActuator(String id);
+	
 	/**
 	 * Get a Wizard that can be used to configure this Head.
 	 * @return

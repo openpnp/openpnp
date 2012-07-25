@@ -309,7 +309,7 @@ public class MachineControlsPanel extends JPanel {
 		
 		JButton btnTargetTool = new JButton(targetToolAction);
 		panelDrosFirstLine.add(btnTargetTool);
-		btnTargetTool.setToolTipText("Position the tool over the camera's current location.");
+		btnTargetTool.setToolTipText("Position the tool at the camera's current location.");
 		textFieldY.addMouseListener(droMouseListener);
 		
 		JPanel panelDrosSecondLine = new JPanel();
@@ -355,7 +355,7 @@ public class MachineControlsPanel extends JPanel {
 		
 		JButton btnTargetCamera = new JButton(targetCameraAction);
 		panelDrosSecondLine.add(btnTargetCamera);
-		btnTargetCamera.setToolTipText("Position the camera over the tool's current location.");
+		btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
 		
 		JPanel panelIncrements = new JPanel();
 		add(panelIncrements);
