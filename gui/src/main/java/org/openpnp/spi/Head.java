@@ -106,6 +106,13 @@ public interface Head {
 	 * @param feedRatePerMinute
 	 */
 	void moveTo(double x, double y, double z, double c, double feedRatePerMinute) throws Exception;
+	
+	/**
+	 * Move the head to the Safe-Z location. By default this is 0 but can be
+	 * overridden on a per Head basis. This causes movement in the Z axis only.
+	 * All other axes remain the same.
+	 */
+	void moveToSafeZ() throws Exception;
 
 	/**
 	 * Queries the Head to determine if it has the ability to pick from the given Feeder

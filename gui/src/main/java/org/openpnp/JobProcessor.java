@@ -309,7 +309,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getC());
+					head.moveToSafeZ();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -338,7 +338,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getC());
+					head.moveToSafeZ();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -352,7 +352,7 @@ public class JobProcessor implements Runnable {
 				
 				// Move the nozzle to the pick Location at safe Z
 				try {
-					head.moveTo(pickLocation.getX(), pickLocation.getY(), 0, pickLocation.getRotation());
+					head.moveTo(pickLocation.getX(), pickLocation.getY(), head.getZ(), pickLocation.getRotation());
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -386,7 +386,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getC());
+					head.moveToSafeZ();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -404,7 +404,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to the placement Location at safe Z
 				try {
-					head.moveTo(placementLocation.getX(), placementLocation.getY(), 0, placementLocation.getRotation());
+					head.moveTo(placementLocation.getX(), placementLocation.getY(), head.getZ(), placementLocation.getRotation());
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -438,7 +438,7 @@ public class JobProcessor implements Runnable {
 
 				// Move the nozzle to safe Z
 				try {
-					head.moveTo(head.getX(), head.getY(), 0, head.getC());
+					head.moveToSafeZ();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());

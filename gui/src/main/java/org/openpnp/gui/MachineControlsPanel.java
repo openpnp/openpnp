@@ -32,7 +32,6 @@ import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -42,8 +41,6 @@ import java.awt.event.MouseListener;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.prefs.PreferenceChangeEvent;
-import java.util.prefs.PreferenceChangeListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -56,7 +53,6 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 
@@ -243,16 +239,16 @@ public class MachineControlsPanel extends JPanel {
 		
 		
 		if (!textFieldX.hasFocus()) {
-			textFieldX.setText(String.format("%1.4f", x));
+			textFieldX.setText(String.format(configuration.getLengthDisplayFormat(), x));
 		}
 		if (!textFieldY.hasFocus()) {
-			textFieldY.setText(String.format("%1.4f", y));
+			textFieldY.setText(String.format(configuration.getLengthDisplayFormat(), y));
 		}
 		if (!textFieldZ.hasFocus()) {
-			textFieldZ.setText(String.format("%1.4f", z));
+			textFieldZ.setText(String.format(configuration.getLengthDisplayFormat(), z));
 		}
 		if (!textFieldC.hasFocus()) {
-			textFieldC.setText(String.format("%1.4f", c));
+			textFieldC.setText(String.format(configuration.getLengthDisplayFormat(), c));
 		}
 	}
 	
@@ -269,7 +265,6 @@ public class MachineControlsPanel extends JPanel {
 		
 		JPanel panelDros = new JPanel();
 		panelDrosParent.add(panelDros);
-//		panelDros.setBackground(new Color(224, 255, 255));
 		panelDros.setLayout(new BoxLayout(panelDros, BoxLayout.Y_AXIS));
 		
 		JPanel panelDrosFirstLine = new JPanel();
@@ -539,6 +534,9 @@ public class MachineControlsPanel extends JPanel {
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
+						// Move to Safe-Z first.
+						head.moveToSafeZ();
+						// Move to 0, 0, 0, 0.
 						head.moveTo(0, 0, 0, 0);
 					}
 					catch (Exception e) {
@@ -610,6 +608,7 @@ public class MachineControlsPanel extends JPanel {
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
+						head.moveToSafeZ();
 						head.moveTo(
 								location.getX(),
 								location.getY(),
@@ -637,6 +636,7 @@ public class MachineControlsPanel extends JPanel {
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
+						head.moveToSafeZ();
 						head.moveTo(
 								location.getX() - cameraLocation.getX(),
 								location.getY() - cameraLocation.getY(),

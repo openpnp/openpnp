@@ -187,10 +187,10 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		z -= camera.getLocation().getZ();
 		
 		// Go to Safe-Z
-		moveTo(getX(), getY(), 0, getC());
+		moveToSafeZ();
 
 		// Position the camera over the homing dot
-		moveTo(x, y, 0, getC());
+		moveTo(x, y, z, getC());
 		
 		// Move the camera to be in focus over the homing dot
 		moveTo(getX(), getY(), z, getC());
@@ -330,6 +330,10 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		this.z = z + offsetZ;
 		this.c = c + offsetC;
 		machine.fireMachineHeadActivity(machine, this);
+	}
+	
+	public void moveToSafeZ() throws Exception {
+		moveTo(getX(), getY(), 0, getC());
 	}
 	
 	/**

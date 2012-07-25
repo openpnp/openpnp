@@ -120,7 +120,7 @@ public class LocationButtonsPanel extends JPanel {
 					location = location.subtract(camera.getLocation());
 					try {
 						// Move to Safe-Z first
-						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						head.moveToSafeZ();
 						// Move the head to the right position at Safe-Z
 						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
 						// Move Z
@@ -143,7 +143,7 @@ public class LocationButtonsPanel extends JPanel {
 					Location location = getParsedLocation().convertToUnits(head.getMachine().getNativeUnits());
 					try {
 						// Move to Safe-Z first
-						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						head.moveToSafeZ();
 						// Move the head to the right position at Safe-Z
 						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
 						// Move Z
@@ -167,7 +167,7 @@ public class LocationButtonsPanel extends JPanel {
 //					location = location.subtract(camera.getLocation());
 					try {
 						// Move to Safe-Z first
-						head.moveTo(head.getX(), head.getY(), 0, head.getC());
+						head.moveToSafeZ();
 						// Move the head to the right position at Safe-Z
 						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
 						// Move Z

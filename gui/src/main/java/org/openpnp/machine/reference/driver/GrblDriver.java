@@ -81,7 +81,7 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 	
 	@Override
 	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
-		moveTo(head, 0, 0, 0, 0, feedRateMmPerMinute);
+		throw new Exception("Homing is not implemented for GrblDriver.");
 	}
 	
 	@Override
