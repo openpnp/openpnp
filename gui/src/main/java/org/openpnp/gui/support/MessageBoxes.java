@@ -26,8 +26,13 @@ import java.awt.Component;
 import javax.swing.JOptionPane;
 
 import org.openpnp.util.LineBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MessageBoxes {
+	private static final Logger logger = LoggerFactory
+			.getLogger(MessageBoxes.class);
+
 	public static void errorBox(Component parent, String title, Throwable cause) {
 		String message = null;
 		if (cause != null) {
@@ -36,17 +41,29 @@ public class MessageBoxes {
 		if (message == null) {
 			message = "";
 		}
+		logger.debug(title, cause);
 		JOptionPane.showMessageDialog(parent,
 				LineBreaker.formatLines(message, 60), title,
 				JOptionPane.ERROR_MESSAGE);
+		// message = message.replaceAll("\n", "<br/>");
+		// message = message.replaceAll("\r", "");
+		// message = "<html><body>" + message + "</body></html>";
+		// JOptionPane.showMessageDialog(parent, message, title,
+		// JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void errorBox(Component parent, String title, String message) {
 		if (message == null) {
 			message = "";
 		}
+		logger.debug("{}: {}", title, message);
 		JOptionPane.showMessageDialog(parent,
 				LineBreaker.formatLines(message, 60), title,
 				JOptionPane.ERROR_MESSAGE);
+		// message = message.replaceAll("\n", "<br/>");
+		// message = message.replaceAll("\r", "");
+		// message = "<html><body>" + message + "</body></html>";
+		// JOptionPane.showMessageDialog(parent, message, title,
+		// JOptionPane.ERROR_MESSAGE);
 	}
 }

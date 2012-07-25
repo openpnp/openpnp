@@ -38,11 +38,14 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.Utils2D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-//TODO don't forget the whole damn thing is mirrored
 // TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
 // possible to make things faster.
 public class JobProcessor implements Runnable {
+	private static final Logger logger = LoggerFactory.getLogger(JobProcessor.class);
+	
 	public enum JobState {
 		Stopped,
 		Running,
@@ -112,6 +115,7 @@ public class JobProcessor implements Runnable {
 	 * Start the Job. The Job must be in the Stopped state.
 	 */
 	public void start() throws Exception {
+		logger.debug("start()");
 		if (state != JobState.Stopped) {
 			throw new Exception("Invalid state. Cannot start new job while state is " + state);
 		}
@@ -127,6 +131,7 @@ public class JobProcessor implements Runnable {
 	 * it's state so that it can be resumed. 
 	 */
 	public void pause() {
+		logger.debug("pause()");
 		state = JobState.Paused;
 		fireJobStateChanged();
 	}
@@ -137,6 +142,7 @@ public class JobProcessor implements Runnable {
 	 * @throws Exception
 	 */
 	public void step() throws Exception {
+		logger.debug("step()");
 		if (state == JobState.Stopped) {
 			pauseAtNextStep = true;
 			start();
@@ -151,6 +157,7 @@ public class JobProcessor implements Runnable {
 	 * Resume a running Job. The Job will resume from where it was paused.
 	 */
 	public void resume() {
+		logger.debug("resume()");
 		state = JobState.Running;
 		fireJobStateChanged();
 		synchronized (runLock) {
@@ -163,6 +170,7 @@ public class JobProcessor implements Runnable {
 	 * freshly loaded state. All state about parts already placed will be lost.
 	 */
 	public void stop() {
+		logger.debug("stop()");
 		state = JobState.Stopped;
 		fireJobStateChanged();
 		synchronized (runLock) {
@@ -177,19 +185,6 @@ public class JobProcessor implements Runnable {
 		
 		Machine machine = configuration.getMachine();
 
-//		fireDetailedStatusUpdated("Move to home.");		
-//		
-//		if (!shouldJobProcessingContinue()) {
-//			return;
-//		}
-//
-//		try {
-//			machine.home();
-//		}
-//		catch (Exception e) {
-//			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
-//		}
-		
 		/*
 		 * Vision: After the Head.pick() operation is when we might do some
 		 * vision work. We can use bottom vision, or maybe even top, to
@@ -435,24 +430,25 @@ public class JobProcessor implements Runnable {
 				
 				firePartPlaced(jobBoard, placement);
 				
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));		
+
+				if (!shouldJobProcessingContinue()) {
+					return;
+				}
+
+				// Move the nozzle to safe Z
+				try {
+					head.moveTo(head.getX(), head.getY(), 0, head.getC());
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				}
+				
 				firePartProcessingComplete(jobBoard, placement);
 			}
 			
 			fireBoardProcessingCompleted(jobBoard);
 		}
-		
-//		fireDetailedStatusUpdated(String.format("Move to home."));
-//
-//		if (!shouldJobProcessingContinue()) {
-//			return;
-//		}
-//
-//		try {
-//			machine.home();
-//		}
-//		catch (Exception e) {
-//			fireJobEncounteredError(JobError.MachineHomingError, e.getMessage());
-//		}
 		
 		fireDetailedStatusUpdated("Job complete.");
 		
@@ -492,60 +488,70 @@ public class JobProcessor implements Runnable {
 	}
 	
 	private void fireJobEncounteredError(JobError error, String description) {
+		logger.debug("fireJobEncounteredError({}, {})", error, description);
 		for (JobProcessorListener listener : listeners) {
 			listener.jobEncounteredError(error, description);
 		}
 	}
 	
 	private void fireJobLoaded() {
+		logger.debug("fireJobLoaded()");
 		for (JobProcessorListener listener : listeners) {
 			listener.jobLoaded(job);
 		}
 	}
 	
 	private void fireJobStateChanged() {
+		logger.debug("fireJobStateChanged({})", state);
 		for (JobProcessorListener listener : listeners) {
 			listener.jobStateChanged(state);
 		}
 	}
 	
 	private void fireBoardProcessingStarted(BoardLocation board) {
+		logger.debug("fireBoardProcessingStarted({})", board);
 		for (JobProcessorListener listener : listeners) {
 			listener.boardProcessingStarted(board);
 		}
 	}
 	
 	private void fireBoardProcessingCompleted(BoardLocation board) {
+		logger.debug("fireBoardProcessingCompleted({})", board);
 		for (JobProcessorListener listener : listeners) {
 			listener.boardProcessingCompleted(board);
 		}
 	}
 	
 	private void firePartProcessingStarted(BoardLocation board, Placement placement) {
+		logger.debug("firePartProcessingStarted({}, {})", board, placement);
 		for (JobProcessorListener listener : listeners) {
 			listener.partProcessingStarted(board, placement);
 		}
 	}
 	
 	private void firePartPicked(BoardLocation board, Placement placement) {
+		logger.debug("firePartPicked({}, {})", board, placement);
 		for (JobProcessorListener listener : listeners) {
 			listener.partPicked(board, placement);
 		}
 	}
 	
 	private void firePartPlaced(BoardLocation board, Placement placement) {
+		logger.debug("firePartPlaced({}, {})", board, placement);
 		for (JobProcessorListener listener : listeners) {
 			listener.partPlaced(board, placement);
 		}
 	}
 	
 	private void firePartProcessingComplete(BoardLocation board, Placement placement) {
+		logger.debug("firePartProcessingComplete({}, {})", board, placement);
 		for (JobProcessorListener listener : listeners) {
 			listener.partProcessingCompleted(board, placement);
 		}
 	}
 	
 	private void fireDetailedStatusUpdated(String status) {
+		logger.debug("fireDetailedStatusUpdated({})", status);
 		for (JobProcessorListener listener : listeners) {
 			listener.detailedStatusUpdated(status);
 		}

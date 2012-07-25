@@ -279,6 +279,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	@Override
 	public void moveTo(double x, double y, double z, double c,
 			double feedRatePerMinute) throws Exception {
+		logger.debug("moveTo({}, {}, {}, {}, {})", new Object[] { x, y, z, c, feedRatePerMinute });
 		if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)
 				|| Double.isNaN(c)) {
 			throw new Exception(
@@ -357,6 +358,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 
 	@Override
 	public void pick() throws Exception {
+		logger.debug("pick()");
 		machine.getDriver().pick(this, null);
 		machine.fireMachineHeadActivity(machine, this);
 	}
@@ -364,6 +366,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	@Override
 	public void pick(Part part, Feeder feeder, Location pickLocation)
 			throws Exception {
+		logger.debug("pick({}, {}, {})", new Object[] { part, feeder, pickLocation });
 		// move to the pick location
 		moveTo(pickLocation.getX(), pickLocation.getY(), getZ(),
 				pickLocation.getRotation());
@@ -378,12 +381,14 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 
 	@Override
 	public void place() throws Exception {
+		logger.debug("place()");
 		machine.getDriver().place(this);
 		machine.fireMachineHeadActivity(machine, this);
 	}
 
 	@Override
 	public void place(Part part, Location placeLocation) throws Exception {
+		logger.debug("place({}, {})", new Object[] { part, placeLocation });
 		// move to the place location
 		moveTo(placeLocation.getX(), placeLocation.getY(), getZ(),
 				placeLocation.getRotation());
@@ -428,24 +433,28 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 
 	@Override
 	public void setPerceivedX(double perceivedX) {
+		logger.debug("setPerceivedX({})", perceivedX);
 		offsetX = x - perceivedX;
 		machine.fireMachineHeadActivity(machine, this);
 	}
 
 	@Override
 	public void setPerceivedY(double perceivedY) {
+		logger.debug("setPerceivedY({})", perceivedY);
 		offsetY = y - perceivedY;
 		machine.fireMachineHeadActivity(machine, this);
 	}
 
 	@Override
 	public void setPerceivedZ(double perceivedZ) {
+		logger.debug("setPerceivedZ({})", perceivedZ);
 		offsetZ = z - perceivedZ;
 		machine.fireMachineHeadActivity(machine, this);
 	}
 
 	@Override
 	public void setPerceivedC(double perceivedC) {
+		logger.debug("setPerceivedC({})", perceivedC);
 		offsetC = c - perceivedC;
 		machine.fireMachineHeadActivity(machine, this);
 	}

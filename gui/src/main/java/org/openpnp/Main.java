@@ -29,6 +29,8 @@ import javax.swing.UIManager;
 import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
@@ -36,6 +38,8 @@ import org.openpnp.model.Configuration;
  *
  */
 public class Main {
+	private static final Logger logger = LoggerFactory.getLogger(Main.class);
+	
 	public static void main(String[] args) {
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		try {
@@ -64,6 +68,8 @@ public class Main {
 		if (log4jConfigurationFile.exists()) {
 			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
 		}
+		
+		logger.debug("OpenPnP vX.X.X Started.");
 		
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();
