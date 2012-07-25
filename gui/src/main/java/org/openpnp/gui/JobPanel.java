@@ -197,28 +197,30 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		JButton button_5 = new JButton(removeBoardAction);
 		toolBar_1.add(button_5);
 		toolBar_1.addSeparator();
-		JButton button_6 = new JButton(captureToolBoardLocationAction);
-		button_6.setHideActionText(true);
-		button_6.setAction(captureCameraBoardLocationAction);
-		button_6.setText("");
+		JButton button_6 = new JButton(captureCameraBoardLocationAction);
 		button_6.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-camera.png")));
+		button_6.setToolTipText("Set the board's location to the camera's location.");
+		button_6.setHideActionText(true);
 		toolBar_1.add(button_6);
 		
-		JButton button_11 = new JButton("");
-		button_11.setHideActionText(true);
-		button_11.setAction(captureToolBoardLocationAction);
+		JButton button_11 = new JButton(captureToolBoardLocationAction);
 		button_11.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-tool.png")));
+		button_11.setToolTipText("Set the board's location to the tool's location.");
+		button_11.setHideActionText(true);
 		toolBar_1.add(button_11);
+		
 		JButton button_7 = new JButton(moveCameraToBoardLocationAction);
-		button_7.setText("");
+		button_7.setToolTipText("Position the camera at the board's location.");
 		button_7.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/center-camera.png")));
+		button_7.setHideActionText(true);
 		toolBar_1.add(button_7);
 		
-		JButton btnNewButton = new JButton("");
+		JButton btnNewButton = new JButton(moveToolToBoardLocationAction);
+		btnNewButton.setToolTipText("Position the tool at the board's location.");
 		btnNewButton.setHideActionText(true);
-		btnNewButton.setAction(moveToolToBoardLocationAction);
 		btnNewButton.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/center-tool.png")));
 		toolBar_1.add(btnNewButton);
+		
 		left.add(new JScrollPane(boardLocationsTable));
 		JPanel right = new JPanel();
 		right.setLayout(new BorderLayout(0, 0));
@@ -237,9 +239,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		button_10.setText("");
 		toolBar_2.add(button_10);
 		
-		JButton button_12 = new JButton("");
+		JButton button_12 = new JButton(captureToolPlacementLocation);
 		button_12.setHideActionText(true);
-		button_12.setAction(captureToolPlacementLocation);
 		button_12.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-tool.png")));
 		toolBar_2.add(button_12);
 		right.add(new JScrollPane(placementsTable));
