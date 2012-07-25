@@ -180,7 +180,7 @@ public class MainFrame extends JFrame {
 		mnEdit.add(new JMenuItem(jobPanel.addBoardAction));
 		mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
 		mnEdit.addSeparator();
-		mnEdit.add(new JMenuItem(jobPanel.orientBoardAction));
+		mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
 
 		// View
 		// //////////////////////////////////////////////////////////////////////
