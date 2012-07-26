@@ -44,6 +44,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class TableScannerCameraConfigurationWizard extends AbstractWizard {
 	private final TableScannerCamera camera;
 
