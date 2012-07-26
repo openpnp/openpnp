@@ -21,22 +21,12 @@
 
 package org.openpnp.gui.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Vector;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -44,17 +34,12 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import org.openpnp.gui.MachineControlsPanel;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.support.AbstractWizard;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.Helpers;
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartConverter;
-import org.openpnp.gui.support.ApplyResetBindingListener;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 
@@ -62,16 +47,11 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import org.openpnp.gui.components.LocationButtonsPanel;
 
-public class FeederConfigurationWizard extends JPanel implements Wizard {
+public class FeederConfigurationWizard extends AbstractWizard {
 	private final Feeder feeder;
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;
-
-	private WizardContainer wizardContainer;
-	private JButton btnSave;
-	private JButton btnCancel;
 
 	private JPanel panelLocation;
 	private JLabel lblX_1;
@@ -84,8 +64,6 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 	private JTextField textFieldLocationC;
 	private JPanel panelPart;
 
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
-
 	public FeederConfigurationWizard(Feeder feeder,
 			Configuration configuration,
 			MachineControlsPanel machineControlsPanel) {
@@ -93,17 +71,10 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		this.configuration = configuration;
 		this.machineControlsPanel = machineControlsPanel;
 
-		setLayout(new BorderLayout());
-
-		JPanel panelFields = new JPanel();
-		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
-		JScrollPane scrollPane = new JScrollPane(panelFields);
-
 		panelPart = new JPanel();
 		panelPart.setBorder(new TitledBorder(null, "Part",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelFields.add(panelPart);
+		contentPanel.add(panelPart);
 		panelPart
 				.setLayout(new FormLayout(new ColumnSpec[] {
 						FormFactory.RELATED_GAP_COLSPEC,
@@ -126,7 +97,7 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 				EtchedBorder.LOWERED, null, null), "Pickup Location",
 				TitledBorder.LEADING, TitledBorder.TOP, null,
 				new Color(0, 0, 0)));
-		panelFields.add(panelLocation);
+		contentPanel.add(panelLocation);
 		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),
@@ -174,41 +145,20 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		
 		locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ, textFieldLocationC);
 		panelLocation.add(locationButtonsPanel, "10, 4");
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
-
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panelActions, BorderLayout.SOUTH);
-
-		btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
-
-		btnSave = new JButton(saveAction);
-		panelActions.add(btnSave);
-
-		createBindings();
-		loadFromModel();
 	}
 
-	private void createBindings() {
+	@Override
+	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(configuration);
 		DoubleConverter doubleConverter = new DoubleConverter(
 				configuration.getLengthDisplayFormat());
 		PartConverter partConverter = new PartConverter(configuration);
-		ApplyResetBindingListener listener = new ApplyResetBindingListener(
-				saveAction, cancelAction);
 
-		wrappedBindings.add(JBindings.bind(feeder, "location.lengthX",
-				textFieldLocationX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "location.lengthY",
-				textFieldLocationY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "location.lengthZ",
-				textFieldLocationZ, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "location.rotation",
-				textFieldLocationC, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "part", comboBoxPart,
-				"selectedItem", partConverter, listener));
+		addWrappedBinding(feeder, "location.lengthX", textFieldLocationX, "text", lengthConverter);
+		addWrappedBinding(feeder, "location.lengthY", textFieldLocationY, "text", lengthConverter);
+		addWrappedBinding(feeder, "location.lengthZ", textFieldLocationZ, "text", lengthConverter);
+		addWrappedBinding(feeder, "location.rotation", textFieldLocationC, "text", doubleConverter);
+		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem", partConverter);
 
 		ComponentDecorators
 				.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
@@ -218,53 +168,6 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 				.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
 		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
 	}
-
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
-	}
-
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer.wizardCompleted(FeederConfigurationWizard.this);
-		}
-	};
-
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
 
 	private JComboBox comboBoxPart;
 	private LocationButtonsPanel locationButtonsPanel;

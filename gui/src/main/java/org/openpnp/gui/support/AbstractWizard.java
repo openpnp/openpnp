@@ -39,6 +39,7 @@ import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +102,10 @@ public abstract class AbstractWizard extends JPanel implements Wizard {
 		}
 		applyAction.setEnabled(false);
 		resetAction.setEnabled(false);
+	}
+	
+	public WrappedBinding addWrappedBinding(Object source, String sourceProperty, JComponent component, String componentProperty, Converter converter) {
+		return addWrappedBinding(JBindings.bind(source, sourceProperty, component, componentProperty, converter));
 	}
 	
 	public WrappedBinding addWrappedBinding(Object source, String sourceProperty, JComponent component, String componentProperty) {
