@@ -41,15 +41,17 @@ import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
+import org.openpnp.model.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractWizard extends JPanel implements Wizard {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	protected WizardContainer wizardContainer;
-	protected JButton btnApply;
-	protected JButton btnReset;
+	private JButton btnApply;
+	private JButton btnReset;
 	protected JPanel contentPanel;
+	private JScrollPane scrollPane;
 	
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 	private ApplyResetBindingListener listener;
@@ -60,7 +62,7 @@ public abstract class AbstractWizard extends JPanel implements Wizard {
 		contentPanel = new JPanel();
 		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
-		JScrollPane scrollPane = new JScrollPane(contentPanel);
+		scrollPane = new JScrollPane(contentPanel);
 		
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
@@ -132,6 +134,7 @@ public abstract class AbstractWizard extends JPanel implements Wizard {
 	@Override
 	public void setWizardContainer(WizardContainer wizardContainer) {
 		this.wizardContainer = wizardContainer;
+		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 		listener = new ApplyResetBindingListener(applyAction, resetAction);
 		createBindings();
 		loadFromModel();

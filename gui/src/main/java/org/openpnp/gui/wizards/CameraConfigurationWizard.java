@@ -21,21 +21,15 @@
 
 package org.openpnp.gui.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -43,14 +37,10 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractWizard;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.ApplyResetBindingListener;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
@@ -59,15 +49,11 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class CameraConfigurationWizard extends JPanel implements Wizard {
+public class CameraConfigurationWizard extends AbstractWizard {
 	private final Camera camera;
-
-	private WizardContainer wizardContainer;
 
 	private JTextField textFieldUppX;
 	private JTextField textFieldUppY;
-	private JButton btnSave;
-	private JButton btnCancel;
 	private JPanel panelUpp;
 	private JPanel panelLocation;
 	private JLabel lblX_1;
@@ -81,22 +67,13 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 	private JButton btnMeasure;
 	private JButton btnCancelMeasure;
 	
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
-	
 	public CameraConfigurationWizard(Camera camera) {
 		this.camera = camera;
 
-		setLayout(new BorderLayout());
-
-		JPanel panelFields = new JPanel();
-		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
-		JScrollPane scrollPane = new JScrollPane(panelFields);
-		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 		
 		panelLocation = new JPanel();
 		panelLocation.setBorder(new TitledBorder(null, "Location / Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelFields.add(panelLocation);
+		contentPanel.add(panelLocation);
 		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),
@@ -141,7 +118,7 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		textFieldLocationC.setColumns(6);
 
 		panelUpp = new JPanel();
-		panelFields.add(panelUpp);
+		contentPanel.add(panelUpp);
 		panelUpp.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Units Per Pixel", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -184,41 +161,20 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		
 		lblNewLabel = new JLabel("<html>\n<ol>\n<li>Place an object that is 1 unit by 1 unit square onto the table. Graphing paper is a good, easy choice for this.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Use the camera selection rectangle to measure the object and press the Confirm button.\n</ol>\n</html>");
 		panelUpp.add(lblNewLabel, "2, 6, 6, 1, default, fill");
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
-
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panelActions, BorderLayout.SOUTH);
-
-		btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
-
-		btnSave = new JButton(saveAction);
-		panelActions.add(btnSave);
-		
-		createBindings();
-		loadFromModel();
 	}
 
-	private void createBindings() {
+	@Override
+	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
-		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthX",
-				textFieldUppX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(camera, "unitsPerPixel.lengthY",
-				textFieldUppY, "text", lengthConverter, listener));
+		addWrappedBinding(camera, "unitsPerPixel.lengthX", textFieldUppX, "text", lengthConverter);
+		addWrappedBinding(camera, "unitsPerPixel.lengthY", textFieldUppY, "text", lengthConverter);
 		
-		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthX",
-				textFieldLocationX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthY",
-				textFieldLocationY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(camera.getLocation(), "lengthZ",
-				textFieldLocationZ, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(camera, "location.rotation",
-				textFieldLocationC, "text", doubleConverter, listener));
+		addWrappedBinding(camera.getLocation(), "lengthX", textFieldLocationX, "text", lengthConverter);
+		addWrappedBinding(camera.getLocation(), "lengthY", textFieldLocationY, "text", lengthConverter);
+		addWrappedBinding(camera.getLocation(), "lengthZ", textFieldLocationZ, "text", lengthConverter);
+		addWrappedBinding(camera, "location.rotation", textFieldLocationC, "text", doubleConverter);
 		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
@@ -230,54 +186,6 @@ public class CameraConfigurationWizard extends JPanel implements Wizard {
 		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
 	}
 
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
-	}
-
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer
-					.wizardCompleted(CameraConfigurationWizard.this);
-		}
-	};
-
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
-	
 	private Action measureAction = new AbstractAction("Measure") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

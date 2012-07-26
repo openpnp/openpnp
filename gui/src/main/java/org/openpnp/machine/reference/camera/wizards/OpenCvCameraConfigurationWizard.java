@@ -21,29 +21,15 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.ApplyResetBindingListener;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.gui.support.AbstractWizard;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -51,29 +37,18 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class OpenCvCameraConfigurationWizard extends JPanel implements Wizard {
+@SuppressWarnings("serial")
+public class OpenCvCameraConfigurationWizard extends AbstractWizard {
 	private final OpenCvCamera camera;
 
-	private WizardContainer wizardContainer;
-	private JButton btnSave;
-	private JButton btnCancel;
 	private JPanel panelGeneral;
-
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 
 	public OpenCvCameraConfigurationWizard(
 			OpenCvCamera camera) {
 		this.camera = camera;
 
-		setLayout(new BorderLayout());
-
-		JPanel panelFields = new JPanel();
-		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
-		JScrollPane scrollPane = new JScrollPane(panelFields);
-
 		panelGeneral = new JPanel();
-		panelFields.add(panelGeneral);
+		contentPanel.add(panelGeneral);
 		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -94,76 +69,12 @@ public class OpenCvCameraConfigurationWizard extends JPanel implements Wizard {
 			comboBoxDeviceIndex.addItem(new Integer(i));
 		}
 		panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
-
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panelActions, BorderLayout.SOUTH);
-
-		btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
-		
-		btnSave = new JButton(saveAction);
-		panelActions.add(btnSave);
-
-		createBindings();
-		loadFromModel();
-	}
-
-	private void createBindings() {
-		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
-		
-		wrappedBindings.add(JBindings.bind(camera, "deviceIndex",
-				comboBoxDeviceIndex, "selectedItem", listener));
-	}
-
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
 	}
 
 	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
+	public void createBindings() {
+		addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 	}
 
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer
-					.wizardCompleted(OpenCvCameraConfigurationWizard.this);
-		}
-	};
-
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
 	private JComboBox comboBoxDeviceIndex;
 }

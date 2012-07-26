@@ -27,6 +27,7 @@ import org.openpnp.spi.Head;
  * is set, this causes the component to use the specified Actuator in place
  * of the tool. 
  */
+@SuppressWarnings("serial")
 public class LocationButtonsPanel extends JPanel {
 	private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
 	private String actuatorId;
@@ -97,7 +98,6 @@ public class LocationButtonsPanel extends JPanel {
 		return location;
 	}
 
-	@SuppressWarnings("serial")
 	private Action captureCameraCoordinatesAction = new AbstractAction(
 			"Get Camera Coordinates", new ImageIcon(
 					LocationButtonsPanel.class
@@ -115,7 +115,6 @@ public class LocationButtonsPanel extends JPanel {
 		}
 	};
 
-	@SuppressWarnings("serial")
 	private Action captureToolCoordinatesAction = new AbstractAction(
 			"Get Tool Coordinates", new ImageIcon(
 					LocationButtonsPanel.class
@@ -133,7 +132,6 @@ public class LocationButtonsPanel extends JPanel {
 		}
 	};
 
-	@SuppressWarnings("serial")
 	private Action captureActuatorCoordinatesAction = new AbstractAction(
 			"Get Actuator Coordinates", new ImageIcon(
 					LocationButtonsPanel.class
@@ -168,7 +166,6 @@ public class LocationButtonsPanel extends JPanel {
 		}
 	};
 
-	@SuppressWarnings("serial")
 	private Action positionCameraAction = new AbstractAction("Position Camera",
 			new ImageIcon(
 					LocationButtonsPanel.class
