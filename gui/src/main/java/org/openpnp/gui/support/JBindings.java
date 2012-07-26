@@ -85,7 +85,12 @@ public class JBindings {
 		private SS source;
 		private BeanProperty<SS, SV> sourceProperty;
 		private Wrapper<SV> wrapper;
+		private AutoBinding wrappedBinding;
 		
+		public final void addBindingListener(BindingListener listener) {
+			wrappedBinding.addBindingListener(listener);
+		}
+
 		public WrappedBinding(
 				SS source, 
 				String sourcePropertyName, 
@@ -98,7 +103,7 @@ public class JBindings {
 			this.wrapper = new Wrapper<SV>(sourceProperty.getValue(source));
 			BeanProperty<Wrapper<SV>, SV> wrapperProperty = BeanProperty.create("value");
 			BeanProperty<TS, TV> targetProperty = BeanProperty.create(targetPropertyName);
-			AutoBinding<Wrapper<SV>, SV, TS, TV> wrappedBinding = Bindings.createAutoBinding(
+			wrappedBinding = Bindings.createAutoBinding(
 					UpdateStrategy.READ_WRITE, 
 					wrapper,
 					wrapperProperty, 
@@ -129,6 +134,10 @@ public class JBindings {
 		
 		public void reset() {
 			wrapper.setValue(sourceProperty.getValue(source));
+		}
+		
+		public Wrapper<SV> getWrapper() {
+			return wrapper;
 		}
 	}
 	

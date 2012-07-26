@@ -44,7 +44,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
@@ -125,7 +125,7 @@ public class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard 
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
 		// The order of the properties is important. We want all the booleans
 		// to be set before we set the driver because setting the driver

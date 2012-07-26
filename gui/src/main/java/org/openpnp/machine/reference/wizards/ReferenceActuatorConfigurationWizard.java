@@ -44,7 +44,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -137,7 +137,7 @@ public class ReferenceActuatorConfigurationWizard extends JPanel implements Wiza
 
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 
 		wrappedBindings.add(JBindings.bind(actuator, "location.lengthX",
 				locationX, "text", lengthConverter, listener));

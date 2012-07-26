@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.openpnp.CameraListener;
 import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -38,7 +39,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
-public abstract class ReferenceCamera implements Camera, RequiresConfigurationResolution {
+public abstract class ReferenceCamera extends AbstractModelObject implements Camera, RequiresConfigurationResolution {
 	@Attribute
 	protected String name;
 

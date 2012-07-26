@@ -41,7 +41,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -112,7 +112,7 @@ public class OpenCvCameraConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
 		wrappedBindings.add(JBindings.bind(camera, "deviceIndex",
 				comboBoxDeviceIndex, "selectedItem", listener));

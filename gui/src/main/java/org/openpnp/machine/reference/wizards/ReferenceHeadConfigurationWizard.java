@@ -44,7 +44,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -380,7 +380,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		IntegerConverter integerConverter = new IntegerConverter();
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
 		wrappedBindings.add(JBindings.bind(head, "id", textFieldId, "text", listener));
 		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", lengthConverter, listener));

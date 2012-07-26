@@ -63,7 +63,7 @@ import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
@@ -358,7 +358,7 @@ public class ReferenceTapeFeederConfigurationWizard extends JPanel implements Wi
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
 		IntegerConverter intConverter = new IntegerConverter();
 		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 
 		wrappedBindings.add(JBindings.bind(feeder, "feedRate", textFieldFeedRate,
 				"text", lengthConverter, listener));

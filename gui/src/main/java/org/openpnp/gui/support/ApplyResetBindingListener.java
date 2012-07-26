@@ -6,11 +6,11 @@ import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.Binding.SyncFailure;
 
-public class SaveResetBindingListener extends AbstractBindingListener {
+public class ApplyResetBindingListener extends AbstractBindingListener {
 	private final Action saveAction;
 	private final Action resetAction;
 	
-	public SaveResetBindingListener(Action saveAction, Action resetAction) {
+	public ApplyResetBindingListener(Action saveAction, Action resetAction) {
 		this.saveAction = saveAction;
 		this.resetAction = resetAction;
 	}

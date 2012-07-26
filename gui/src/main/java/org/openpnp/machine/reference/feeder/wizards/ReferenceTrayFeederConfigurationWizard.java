@@ -40,7 +40,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
@@ -170,7 +170,7 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 	private void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
 		IntegerConverter integerConverter = new IntegerConverter();
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
 		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthX", textFieldOffsetsX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthY", textFieldOffsetsY, "text", lengthConverter, listener));

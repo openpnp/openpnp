@@ -42,7 +42,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.VfwCamera;
@@ -130,7 +130,7 @@ public class VfwCameraConfigurationWizard extends JPanel implements Wizard {
 	}
 
 	private void createBindings() {
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
 		// The order of the properties is important. We want all the booleans
 		// to be set before we set the driver because setting the driver

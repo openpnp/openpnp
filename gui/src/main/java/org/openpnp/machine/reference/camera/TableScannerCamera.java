@@ -24,9 +24,13 @@ package org.openpnp.machine.reference.camera;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.ref.SoftReference;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,15 +39,20 @@ import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.TableScannerCameraConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -55,13 +64,9 @@ import org.simpleframework.xml.core.Commit;
  * scale it down.
  */
 public class TableScannerCamera extends ReferenceCamera implements Runnable {
-	/**
-	 * Path to the directory of tile images.
-	 */
-	@Element
-	private String cacheDirectoryPath;
+	private final static Logger logger = LoggerFactory.getLogger(TableScannerCamera.class);
 	
-	@Element(required=false)
+	@Element
 	private String sourceUri;
 	
 	@Attribute(required=false)
@@ -69,8 +74,6 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	
 	private int tilesWide = 3;
 	private int tilesHigh = 3;
-	
-	private File cacheDirectory;
 	
 	/**
 	 * The last X and Y position that we rendered for. Used to optimize the
@@ -87,7 +90,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	/**
 	 * List of all of the tiles. Used when searching for closest matches.
 	 */
-	private List<Tile> tileList = new ArrayList<Tile>();
+	private List<Tile> tileList;
 	
 	/**
 	 * Buffered used to render the tiles local to the center point. This buffer
@@ -104,9 +107,11 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	 */
 	private Tile lastCenterTile;
 	
-	private Thread thread;
-	
 	private int width, height;
+	
+	private Thread thread;
+	private URL sourceUrl;
+	private File cacheDirectory;
 	
 	public TableScannerCamera() {
 		super("TableScannerCamera");
@@ -115,26 +120,25 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	@SuppressWarnings("unused")
 	@Commit
 	private void commit() throws Exception {
-		cacheDirectory = new File(cacheDirectoryPath);
-		if (!cacheDirectory.exists()) {
-			throw new Exception("cache-directory-path " + cacheDirectoryPath + " does not exist.");
-		}
-		initialize();
+		setSourceUri(sourceUri);
 	}
 	
 	@Override
 	public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
-		if (thread == null) {
-			thread = new Thread(this);
-			thread.start();
-		}
+		start();
 		super.startContinuousCapture(listener, maximumFps);
 	}
 	
 	@Override
 	public synchronized void stopContinuousCapture(CameraListener listener) {
 		super.stopContinuousCapture(listener);
-		if (listeners.size() == 0 && thread != null && thread.isAlive()) {
+		if (listeners.size() == 0) {
+			stop();
+		}
+	}
+	
+	private synchronized void stop() {
+		if (thread != null && thread.isAlive()) {
 			thread.interrupt();
 			try {
 				thread.join();
@@ -145,21 +149,34 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 			thread = null;
 		}
 	}
-
-	public String getCacheDirectoryPath() {
-		return cacheDirectoryPath;
-	}
-
-	public void setCacheDirectoryPath(String cacheDirectoryPath) {
-		this.cacheDirectoryPath = cacheDirectoryPath;
+	
+	private synchronized void start() {
+		if (thread == null) {
+			thread = new Thread(this);
+			thread.start();
+		}
 	}
 
 	public String getSourceUri() {
 		return sourceUri;
 	}
 
-	public void setSourceUri(String sourceUri) {
+	public void setSourceUri(String sourceUri) throws Exception {
+		String oldValue = this.sourceUri;
 		this.sourceUri = sourceUri;
+		firePropertyChange("sourceUri", oldValue, sourceUri);
+		// TODO: Move to start() so simply setting a property doesn't sometimes
+		// blow up.
+		initialize();
+	}
+	
+	public String getCacheSizeDescription() {
+		return FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(cacheDirectory));
+	}
+	
+	public synchronized void clearCache() throws IOException {
+		FileUtils.cleanDirectory(cacheDirectory);
+		firePropertyChange("cacheSizeDescription", null, getCacheSizeDescription());
 	}
 
 	@Override
@@ -311,27 +328,41 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		g.dispose();
 	}
 	
-	private void initialize() {
-		// Load all png files from the directory that look like they match what
-		// we are expecting.
-		File[] files = cacheDirectory.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File arg0, String arg1) {
-				return arg1.contains(".") && arg1.contains(",") && arg1.endsWith(".png");
-			}
-		});
-		// Load the first image we found and use it's properties as a template
-		// for the rest of the images.
-		BufferedImage templateImage;
+	private synchronized void initialize() throws Exception {
+		stop();
+		sourceUrl = new URL(sourceUri);
+		cacheDirectory = new File(Configuration.get().getResourceDirectory(getClass()), DigestUtils.shaHex(sourceUri));
+		if (!cacheDirectory.exists()) {
+			cacheDirectory.mkdirs();
+		}
+		File[] files = null;
+		// Attempt to get the list of files from the source.
 		try {
-			templateImage = ImageIO.read(files[0]);
+			files = loadSourceFiles(); 
 		}
 		catch (Exception e) {
-			throw new Error(e);
+			logger.warn("Unable to load file list from {}", sourceUri);
+			logger.warn("Reason", e);
 		}
+		
+		if (files == null) {
+			files = loadCachedFiles();
+		}
+		
+		if (files.length == 0) {
+			throw new Exception("No source or cached files found.");
+		}
+		// Load the first image we found and use it's properties as a template
+		// for the rest of the images.
+		BufferedImage templateImage = new Tile(0, 0, files[0]).getImage();
 		
 		width = templateImage.getWidth();
 		height = templateImage.getHeight();
+		
+		tileList = new ArrayList<Tile>();
+		lastX = Double.MIN_VALUE;
+		lastY = Double.MIN_VALUE;
+		lastCenterTile = null;
 		
 		// We build a set of unique X and Y positions that we see so we can
 		// later build a two dimensional array of the riles
@@ -383,6 +414,44 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 				templateImage.getWidth() * tilesWide,
 				templateImage.getHeight() * tilesHigh,
 				BufferedImage.TYPE_INT_ARGB);
+		
+		if (listeners.size() > 0) {
+			start();
+		}
+	}
+	
+	private File[] loadSourceFiles() throws Exception {
+		// Load the list of the files from the website
+		URL filesUrl = new URL(sourceUrl, "files.txt");
+		BufferedReader reader = new BufferedReader(new InputStreamReader(filesUrl.openStream()));
+		ArrayList<File> files = new ArrayList<File>();
+		String line;
+		while ((line = reader.readLine()) != null) {
+			line = line.trim();
+			if (line.length() == 0) {
+				continue;
+			}
+			File file = new File(cacheDirectory, line);
+			files.add(file);
+		}
+		if (files.size() == 0) {
+			throw new Exception("No files found.");
+		}
+		logger.debug("Loaded {} filenames from {}", files.size(), sourceUri);
+		return files.toArray(new File[] {});
+	}
+	
+	private File[] loadCachedFiles() throws Exception {
+		// Load all png files from the directory that look like they match what
+		// we are expecting.
+		File[] files = cacheDirectory.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File arg0, String arg1) {
+				return arg1.contains(".") && arg1.contains(",") && arg1.endsWith(".png");
+			}
+		});
+		
+		return files;
 	}
 	
 	private Tile getClosestTile(double x, double y) {
@@ -403,7 +472,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		return new TableScannerCameraConfigurationWizard(this);
 	}
 	
-	public static class Tile {
+	public class Tile {
 		private File file;
 		private double x, y;
 		private int tileX, tileY;
@@ -417,6 +486,18 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		
 		public synchronized BufferedImage getImage() {
 			if (image == null || image.get() == null) {
+				if (!file.exists() && sourceUrl != null) {
+					// If the file doesn't exist, see if we can downlaod it
+					// from the Intertron.
+					try {
+						URL imageUrl = new URL(sourceUrl, file.getName());
+						logger.debug("Attempting to download {}", imageUrl.toString());
+						FileUtils.copyURLToFile(imageUrl, file);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 				try {
 					image = new SoftReference<BufferedImage>(ImageIO.read(file));
 				}

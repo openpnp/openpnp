@@ -21,31 +21,22 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.support.JBindings;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.support.AbstractWizard;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.SaveResetBindingListener;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -53,29 +44,19 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class TableScannerCameraConfigurationWizard extends JPanel implements Wizard {
+public class TableScannerCameraConfigurationWizard extends AbstractWizard {
 	private final TableScannerCamera camera;
 
-	private WizardContainer wizardContainer;
-	private JButton btnSave;
-	private JButton btnCancel;
 	private JPanel panelGeneral;
 
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
+	private WrappedBinding<TableScannerCamera, String, JTextField, String> sourceUriBinding;
 
 	public TableScannerCameraConfigurationWizard(
 			TableScannerCamera camera) {
 		this.camera = camera;
 		
-		setLayout(new BorderLayout());
-
-		JPanel panelFields = new JPanel();
-		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
-		JScrollPane scrollPane = new JScrollPane(panelFields);
-
 		panelGeneral = new JPanel();
-		panelFields.add(panelGeneral);
+		contentPanel.add(panelGeneral);
 		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -90,118 +71,59 @@ public class TableScannerCameraConfigurationWizard extends JPanel implements Wiz
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		lblCacheDirectory = new JLabel("Cache Directory");
-		panelGeneral.add(lblCacheDirectory, "2, 2, right, default");
-		
-		textFieldCacheDirectory = new JTextField();
-		panelGeneral.add(textFieldCacheDirectory, "4, 2, fill, default");
-		textFieldCacheDirectory.setColumns(10);
-		
-		btnBrowse = new JButton(browseAction);
-		panelGeneral.add(btnBrowse, "6, 2");
-		
 		lblUrl = new JLabel("URL");
-		panelGeneral.add(lblUrl, "2, 4, right, default");
+		panelGeneral.add(lblUrl, "2, 2, right, default");
 		
 		textFieldUrl = new JTextField();
-		panelGeneral.add(textFieldUrl, "4, 4, fill, default");
+		panelGeneral.add(textFieldUrl, "4, 2, 3, 1, fill, default");
 		textFieldUrl.setColumns(10);
 		
-		btnCheck = new JButton("Check");
-		panelGeneral.add(btnCheck, "6, 4");
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
-
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panelActions, BorderLayout.SOUTH);
-
-		btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
+		lblCache = new JLabel("Cache");
+		panelGeneral.add(lblCache, "2, 4");
 		
-		btnSave = new JButton(saveAction);
-		panelActions.add(btnSave);
-
-		createBindings();
-		loadFromModel();
-	}
-
-	private void createBindings() {
-		SaveResetBindingListener listener = new SaveResetBindingListener(saveAction, cancelAction);
+		lblCacheInfo = new JLabel("");
+		panelGeneral.add(lblCacheInfo, "4, 4");
 		
-		wrappedBindings.add(JBindings.bind(camera, "cacheDirectoryPath",
-				textFieldCacheDirectory, "text", listener));
-		wrappedBindings.add(JBindings.bind(camera, "sourceUri",
-				textFieldUrl, "text", listener));
-		
-	}
-
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
+		btnDelete = new JButton("Delete Cache");
+		btnDelete.setAction(deleteCacheAction);
+		panelGeneral.add(btnDelete, "6, 4");
 	}
 
 	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
-	}
-
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
+	public void createBindings() {
+		sourceUriBinding = addWrappedBinding(camera, "sourceUri", textFieldUrl, "text");
+		bind(UpdateStrategy.READ, camera, "cacheSizeDescription", lblCacheInfo, "text");
 	}
 	
-	private Action browseAction = new AbstractAction("Browse") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			JFileChooser fileDialog = new JFileChooser(textFieldCacheDirectory.getText());
-			fileDialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			if (fileDialog.showSaveDialog(getTopLevelAncestor()) == JFileChooser.APPROVE_OPTION) {
-				File file = fileDialog.getCurrentDirectory();
-				if (file != null) {
-					textFieldCacheDirectory.setText(file.getAbsolutePath());
-				}
+	@Override
+	public void validateInput() throws Exception {
+		if (sourceUriBinding.getWrapper().getValue() != null) {
+			String sourceUri = sourceUriBinding.getWrapper().getValue().trim();
+			if (!sourceUri.endsWith("/")) {
+				sourceUri += "/";
 			}
+			sourceUriBinding.getWrapper().setValue(sourceUri);
 		}
-	};
+	}
 
-	
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer
-					.wizardCompleted(TableScannerCameraConfigurationWizard.this);
-		}
-	};
-
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
-	private JLabel lblCacheDirectory;
-	private JTextField textFieldCacheDirectory;
-	private JButton btnBrowse;
 	private JLabel lblUrl;
 	private JTextField textFieldUrl;
-	private JButton btnCheck;
+	private JLabel lblCache;
+	private JLabel lblCacheInfo;
+	private JButton btnDelete;
+	private final Action deleteCacheAction = new SwingAction();
+	private class SwingAction extends AbstractAction {
+		public SwingAction() {
+			putValue(NAME, "Delete Cache");
+			putValue(SHORT_DESCRIPTION, "Delete the on disk cache.");
+		}
+		public void actionPerformed(ActionEvent e) {
+			try {
+				camera.clearCache();
+			}
+			catch (Exception ex) {
+				MessageBoxes.errorBox(getTopLevelAncestor(), "Error", ex);
+			}
+		}
+	}
 }

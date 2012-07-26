@@ -127,6 +127,21 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	/**
+	 * Gets a File reference for the resources directory belonging to the
+	 * given class. The directory is guaranteed to exist. 
+	 * @param forClass
+	 * @return
+	 * @throws IOException
+	 */
+	public File getResourceDirectory(Class forClass) throws IOException {
+		File directory = new File(configurationDirectory, forClass.getCanonicalName());
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
+		return directory;
+	}
+	
+	/**
 	 * Gets a File reference for the named file within the configuration
 	 * directory. forClass is used to uniquely identify the file and keep it
 	 * separate from other classes' files.
@@ -135,11 +150,7 @@ public class Configuration extends AbstractModelObject {
 	 * @return
 	 */
 	public File getResourceFile(Class forClass, String name) throws IOException {
-		File directory = new File(configurationDirectory, forClass.getCanonicalName());
-		if (!directory.exists()) {
-			directory.mkdirs();
-		}
-		return new File(directory, name);
+		return new File(getResourceDirectory(forClass), name);
 	}
 	
 	/**

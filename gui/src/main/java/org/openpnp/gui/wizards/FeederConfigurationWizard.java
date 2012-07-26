@@ -50,7 +50,7 @@ import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartConverter;
-import org.openpnp.gui.support.SaveResetBindingListener;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
@@ -196,7 +196,7 @@ public class FeederConfigurationWizard extends JPanel implements Wizard {
 		DoubleConverter doubleConverter = new DoubleConverter(
 				configuration.getLengthDisplayFormat());
 		PartConverter partConverter = new PartConverter(configuration);
-		SaveResetBindingListener listener = new SaveResetBindingListener(
+		ApplyResetBindingListener listener = new ApplyResetBindingListener(
 				saveAction, cancelAction);
 
 		wrappedBindings.add(JBindings.bind(feeder, "location.lengthX",
