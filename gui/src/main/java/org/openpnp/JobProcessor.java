@@ -186,11 +186,6 @@ public class JobProcessor implements Runnable {
 		Machine machine = configuration.getMachine();
 
 		/*
-		 * Vision: After the Head.pick() operation is when we might do some
-		 * vision work. We can use bottom vision, or maybe even top, to
-		 * determine how well we picked the part and then adjust internally the
-		 * offset we are holding it at.
-		 * 
 		 * Optimizations: Build a hit list up front of all the movements that
 		 * have to be made along with substitution options such as different
 		 * feeders and heads for parts, then sort the whole mess by distance and
@@ -203,6 +198,12 @@ public class JobProcessor implements Runnable {
 			Board board = jobBoard.getBoard();
 			fireBoardProcessingStarted(jobBoard);
 			for (Placement placement : board.getPlacements()) {
+				// TODO: Maybe break this giant loop up into some smaller chunks.
+				
+				if (placement.getSide() != jobBoard.getSide()) {
+					continue;
+				}
+				
 				firePartProcessingStarted(jobBoard, placement);
 				Part part = placement.getPart();
 
