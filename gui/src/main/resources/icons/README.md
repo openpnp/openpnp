@@ -46,32 +46,66 @@ a new icon set.
 
 * capture-camera.png
 
-Captures the coordinates of the camera and inserts them into a location field.
+ Captures the coordinates of the camera and inserts them into a location field.
 		
 * capture-pin.png
 
-Captures the coordinates of the pin/actuator and inserts them into a location
+ Captures the coordinates of the pin/actuator and inserts them into a location
 field.
 
 * capture-tool.png
 
-Captures the coordinates of the tool and inserts them into a location field.
+ Captures the coordinates of the tool and inserts them into a location field.
 
 * capture-tool-z.png
 
-Captures only the Z coordinate of the tool and inserts it into a location
+ Captures only the Z coordinate of the tool and inserts it into a location
 field.
 
 * center-camera.png
 
-Positions the camera to be in focus over a highlighted location.
+ Positions the camera to be in focus over a highlighted location.
 
 * center-tool.png
 
-Positions the tool so that it is touching the highlighted location.
+ Positions the tool so that it is touching the highlighted location.
 
 * center-pin.png
 
-Positions the pin so that it is touching the highlighted location.
+ Positions the pin so that it is touching the highlighted location.
 
+* start.png
 
+ Start an operation. Think "play" button. The next X icons could be of a
+standard music player motif.
+
+* stop.png
+
+ Stop an operation.
+
+* pause.png
+
+ Pause an operation.
+
+* step.png
+
+ Step through an operation. A riff on start, like a play button with a line to
+the left.
+
+* resume.png
+
+ Resume a paused operation. Possible that this could just be the same as
+the start.png.
+
+* new.png
+
+ Create a new object. The standard "New Document" type icon could apply here.
+Paper / page with a star?
+
+* add.png
+
+ Add an existing object to the list. Document with a plus symbol?
+
+* delete.png
+
+ Delete an object from the list. Document with a X mark? 

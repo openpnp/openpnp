@@ -40,6 +40,14 @@ import org.slf4j.LoggerFactory;
 public class Main {
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 	
+	public static String getVersion() {
+		String version = Main.class.getPackage().getImplementationVersion();
+		if (version == null) {
+			version = "INTERNAL BUILD";
+		}
+		return version;
+	}
+	
 	public static void main(String[] args) {
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		try {
@@ -69,11 +77,7 @@ public class Main {
 			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
 		}
 		
-		String version = Main.class.getPackage().getImplementationVersion();
-		if (version == null) {
-			version = "INTERNAL BUILD";
-		}
-		logger.debug(String.format("OpenPnP %s Started.", version));
+		logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
 		
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();

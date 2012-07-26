@@ -75,8 +75,6 @@ import org.openpnp.spi.Camera;
  * The main window of the application.
  */
 @SuppressWarnings("serial")
-// TODO: check out icons at
-// http://www.iconarchive.com/show/soft-scraps-icons-by-deleket.1.html
 public class MainFrame extends JFrame {
 	private static final String PREF_WINDOW_X = "MainFrame.windowX";
 	private static final int PREF_WINDOW_X_DEF = 0;
@@ -123,13 +121,12 @@ public class MainFrame extends JFrame {
 		HeadCellValue.setConfiguration(configuration);
 		FeederCellValue.setConfiguration(configuration);
 		PackageCellValue.setConfiguration(configuration);
-		
-		
 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-		// Get handlers for quit and close in place
-		registerForMacOSXEvents();
+		// Get handlers for Mac application menu in place.
+		boolean macOsXMenus = registerForMacOSXEvents();
+		
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -161,7 +158,7 @@ public class MainFrame extends JFrame {
 		setJMenuBar(menuBar);
 
 		// File
-		// //////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 
@@ -170,9 +167,13 @@ public class MainFrame extends JFrame {
 		mnFile.addSeparator();
 		mnFile.add(new JMenuItem(jobPanel.saveJobAction));
 		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
+		if (!macOsXMenus) {
+			mnFile.addSeparator();
+			mnFile.add(new JMenuItem(quitAction));
+		}
 
 		// Edit
-		// //////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 
@@ -183,7 +184,7 @@ public class MainFrame extends JFrame {
 		mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
 
 		// View
-		// //////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 
@@ -209,7 +210,7 @@ public class MainFrame extends JFrame {
 		mnUnits.add(menuItem);
 
 		// Job Control
-		// //////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
 		JMenu mnJob = new JMenu("Job Control");
 		menuBar.add(mnJob);
 
@@ -218,12 +219,21 @@ public class MainFrame extends JFrame {
 		mnJob.add(new JMenuItem(jobPanel.stopJobAction));
 
 		// Machine
-		// //////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
 		JMenu mnCommands = new JMenu("Machine");
 		menuBar.add(mnCommands);
 
 		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
 		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
+		
+		// Help
+		/////////////////////////////////////////////////////////////////////
+		if (!macOsXMenus) {
+			JMenu mnHelp = new JMenu("Help");
+			menuBar.add(mnHelp);
+			
+			mnHelp.add(new JMenuItem(aboutAction));
+		}
 
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -294,8 +304,6 @@ public class MainFrame extends JFrame {
 				KeyEvent.CTRL_DOWN_MASK),
 				machineControlsPanel.showHideJogControlsWindowAction);
 
-		// TODO need to restrict this capture somehow, it breaks textfields
-		// and using arrow keys to move through lists.
 		Toolkit.getDefaultToolkit().getSystemEventQueue()
 				.push(new EventQueue() {
 					@Override
@@ -369,7 +377,7 @@ public class MainFrame extends JFrame {
 		jobProcessor.addListener(jobProcessorListener);
 	}
 
-	public void registerForMacOSXEvents() {
+	public boolean registerForMacOSXEvents() {
 		if ((System.getProperty("os.name").toLowerCase().startsWith("mac os x"))) {
 			try {
 				// Generate and register the OSXAdapter, passing it a hash of
@@ -378,8 +386,8 @@ public class MainFrame extends JFrame {
 				// com.apple.eawt.ApplicationListener methods
 				OSXAdapter.setQuitHandler(this,
 						getClass().getDeclaredMethod("quit", (Class[]) null));
-				// OSXAdapter.setAboutHandler(this,
-				// getClass().getDeclaredMethod("about", (Class[]) null));
+				OSXAdapter.setAboutHandler(this,
+						getClass().getDeclaredMethod("about", (Class[]) null));
 				// OSXAdapter.setPreferencesHandler(this, getClass()
 				// .getDeclaredMethod("preferences", (Class[]) null));
 				// OSXAdapter.setFileHandler(
@@ -391,7 +399,16 @@ public class MainFrame extends JFrame {
 				System.err.println("Error while loading the OSXAdapter:");
 				e.printStackTrace();
 			}
+			return true;
 		}
+		return false;
+	}
+
+	public void about() {
+		AboutDialog dialog = new AboutDialog(this);
+		dialog.setSize(350, 350);
+		dialog.setLocationRelativeTo(null);
+		dialog.setVisible(true);		
 	}
 
 	public boolean quit() {
@@ -473,6 +490,20 @@ public class MainFrame extends JFrame {
 			configuration.setSystemUnits(LengthUnit.Millimeters);
 			MessageBoxes.errorBox(MainFrame.this, "Notice",
 					"Please restart OpenPnP for the changes to take effect.");
+		}
+	};
+	
+	private Action quitAction = new AbstractAction("Exit") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			quit();
+		}
+	};
+	
+	private Action aboutAction = new AbstractAction("About") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			about();
 		}
 	};
 }
