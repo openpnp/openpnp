@@ -862,13 +862,21 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			indicatedAngle = Math.toDegrees(indicatedAngle);
 			logger.debug("indicatedAngle " + indicatedAngle);
 
-			// Subtract the difference and we have our angle.
+			// Subtract the difference and we have the angle that the board
+			// is rotated by.
 			double angle = indicatedAngle - expectedAngle;
 			logger.debug("angle " + angle);
 
-			// Circle intersection solver stolen from
+
+			// Now we want to derive the position of 0,0 in relation to the
+			// two captured coordinates. We will use the intersection of two
+			// circles centered at the coordinates with a radius of the
+			// distance from each coordinate to 0,0.
+			
+			// Circle intersection solver borrowed from
 			// http://www.vb-helper.com/howto_circle_circle_intersection.html
 
+			// Get the two circles center points and radius. 
 			double cx0 = boardLocationA.getX();
 			double cy0 = boardLocationA.getY();
 			double radius0 = Math.sqrt(Math.pow(placementLocationA.getX(), 2)
@@ -882,6 +890,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			logger.debug(String.format("%f %f %f %f %f %f", cx0, cy0, radius0,
 					cx1, cy1, radius1));
 
+			// Calculate the distance between the two center points.
 			double dx = cx0 - cx1;
 			double dy = cy0 - cy1;
 			double dist = Math.sqrt(dx * dx + dy * dy);
@@ -890,6 +899,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					/ (2 * dist);
 			double h = Math.sqrt(radius0 * radius0 - a * a);
 
+			
 			double cx2 = cx0 + a * (cx1 - cx0) / dist;
 			double cy2 = cy0 + a * (cy1 - cy0) / dist;
 
@@ -898,6 +908,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			double intersectionx2 = cx2 - h * (cy1 - cy0) / dist;
 			double intersectiony2 = cy2 + h * (cx1 - cx0) / dist;
 
+			// We now have the locations of the two intersecting points on
+			// the cirlcles. Now we have to figure out which one is correct.
 			Point p0 = new Point(intersectionx1, intersectiony1);
 			Point p1 = new Point(intersectionx2, intersectiony2);
 
