@@ -40,9 +40,9 @@ import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.VfwCamera;

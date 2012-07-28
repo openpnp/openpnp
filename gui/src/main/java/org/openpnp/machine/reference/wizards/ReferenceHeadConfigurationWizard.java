@@ -39,12 +39,12 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.ReferenceHead;

@@ -34,6 +34,7 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -74,11 +75,14 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.Utils2D;
-
-import javax.swing.ImageIcon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel implements ConfigurationListener {
+	private static final Logger logger = LoggerFactory
+			.getLogger(JobPanel.class);
+
 	final private Configuration configuration;
 	final private JobProcessor jobProcessor;
 	final private Frame frame;
@@ -832,10 +836,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			Location boardLocationB = new Location(LengthUnit.Millimeters,
 					12.324044, 5.619940, 0, 0);
 
-			System.out.println(String.format("locate"));
-			System.out.println(String.format("%s - %s", boardLocationA,
+			logger.debug(String.format("locate"));
+			logger.debug(String.format("%s - %s", boardLocationA,
 					placementLocationA));
-			System.out.println(String.format("%s - %s", boardLocationB,
+			logger.debug(String.format("%s - %s", boardLocationB,
 					placementLocationB));
 
 			// Calculate the expected angle between the two coordinates, based
@@ -846,7 +850,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			double y2 = placementLocationB.getY();
 			double expectedAngle = Math.atan2(y1 - y2, x1 - x2);
 			expectedAngle = Math.toDegrees(expectedAngle);
-			System.out.println("expectedAngle " + expectedAngle);
+			logger.debug("expectedAngle " + expectedAngle);
 
 			// Then calculate the actual angle between the two coordinates,
 			// based on the captured values.
@@ -856,11 +860,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			y2 = boardLocationB.getY();
 			double indicatedAngle = Math.atan2(y1 - y2, x1 - x2);
 			indicatedAngle = Math.toDegrees(indicatedAngle);
-			System.out.println("indicatedAngle " + indicatedAngle);
+			logger.debug("indicatedAngle " + indicatedAngle);
 
 			// Subtract the difference and we have our angle.
 			double angle = indicatedAngle - expectedAngle;
-			System.out.println("angle " + angle);
+			logger.debug("angle " + angle);
 
 			// Circle intersection solver stolen from
 			// http://www.vb-helper.com/howto_circle_circle_intersection.html
@@ -875,8 +879,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			double radius1 = Math.sqrt(Math.pow(placementLocationB.getX(), 2)
 					+ Math.pow(placementLocationB.getY(), 2));
 
-			System.out.println(String.format("%f %f %f %f %f %f", cx0, cy0,
-					radius0, cx1, cy1, radius1));
+			logger.debug(String.format("%f %f %f %f %f %f", cx0, cy0, radius0,
+					cx1, cy1, radius1));
 
 			double dx = cx0 - cx1;
 			double dy = cy0 - cy1;
@@ -897,7 +901,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			Point p0 = new Point(intersectionx1, intersectiony1);
 			Point p1 = new Point(intersectionx2, intersectiony2);
 
-			System.out.println(String.format("p0 = %s, p1 = %s", p0, p1));
+			logger.debug(String.format("p0 = %s, p1 = %s", p0, p1));
 
 			// Create two points based on the boardLocationA.
 			Point p0r = new Point(boardLocationA.getX(), boardLocationA.getY());
@@ -914,7 +918,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			p0r = Utils2D.rotatePoint(p0r, angle * -1);
 			p1r = Utils2D.rotatePoint(p1r, angle * -1);
 
-			System.out.println(String.format("p0r = %s, p1r = %s", p0r, p1r));
+			logger.debug(String.format("p0r = %s, p1r = %s", p0r, p1r));
 
 			// Now, whichever result is closer to the value of boardLocationA
 			// is the right result. So, calculate the linear distance between
@@ -926,11 +930,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					p1r.x - placementLocationA.getX(), 2)
 					+ Math.pow(p1r.y - placementLocationA.getY(), 2)));
 
-			System.out.println(String.format("d0 %f, d1 %f", d0, d1));
+			logger.debug(String.format("d0 %f, d1 %f", d0, d1));
 
 			Point result = ((d0 < d1) ? p0 : p1);
 
-			System.out.println("Result: " + result);
+			logger.debug("Result: " + result);
 
 			Location boardLocation = new Location(Configuration.get()
 					.getSystemUnits(), result.x, result.y, 0, angle * -1);

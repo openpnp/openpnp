@@ -23,6 +23,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -40,7 +41,6 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.MessageBoxes;
@@ -56,7 +56,6 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Font;
 
 /**
  * Scans the table, saving a photo from the camera at each position.

@@ -31,6 +31,7 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -51,7 +52,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.swing.JButton;
 
 public class PartsPanel extends JPanel {
 	private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);

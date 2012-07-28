@@ -34,7 +34,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.simpleframework.xml.Attribute;
