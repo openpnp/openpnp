@@ -236,8 +236,6 @@ public class TwoPlacementBoardLocationProcess {
 		Location boardLocation = new Location(Configuration.get()
 				.getSystemUnits(), result.x, result.y, 0, angle * -1);
 
-//		boardLocation = boardLocation.add(MainFrame.cameraPanel.getSelectedCamera().getLocation());
-	
 		jobPanel.getSelectedBoardLocation().setLocation(boardLocation);
 		jobPanel.refreshSelectedBoardRow();
 		
