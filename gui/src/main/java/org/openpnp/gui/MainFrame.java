@@ -149,7 +149,7 @@ public class MainFrame extends JFrame {
 		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
 		camerasPanel = new CamerasPanel(this, configuration,
 				machineControlsPanel);
-		boardsPanel = new BoardsPanel(configuration, this, machineControlsPanel);
+		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(this, configuration,
 				machineControlsPanel);

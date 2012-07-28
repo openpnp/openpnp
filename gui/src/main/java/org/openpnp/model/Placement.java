@@ -50,7 +50,7 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	private String partId;
 	
 	private Placement() {
-		setLocation(new Location());
+		setLocation(new Location(LengthUnit.Millimeters));
 	}
 	
 	public Placement(String id) {

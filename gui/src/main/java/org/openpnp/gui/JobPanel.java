@@ -17,7 +17,7 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui;
 
@@ -63,110 +63,128 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.util.Utils2D;
+
 import javax.swing.ImageIcon;
 
+@SuppressWarnings("serial")
 public class JobPanel extends JPanel implements ConfigurationListener {
 	final private Configuration configuration;
 	final private JobProcessor jobProcessor;
 	final private Frame frame;
 	final private MachineControlsPanel machineControlsPanel;
-	
+
 	private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
-	
+
 	final private static String UNTITLED_JOB_FILENAME = "Untitled.job.xml";
-	
+
 	private BoardLocationsTableModel boardLocationsTableModel;
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardLocationsTable;
 	private JTable placementsTable;
-	private JSplitPane splitPane; 
-	
+	private JSplitPane splitPane;
+
 	private ActionGroup jobSaveActionGroup;
 	private ActionGroup boardLocationSelectionActionGroup;
 	private ActionGroup placementSelectionActionGroup;
-	
+
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
-	
-	public JobPanel(Configuration configuration, 
-			JobProcessor jobProcessor, 
-			Frame frame, 
-			MachineControlsPanel machineControlsPanel) {
+
+	private Location boardLocationA, boardLocationB;
+	private Placement boardLocationPlacementA, boardLocationPlacementB;
+
+	public JobPanel(Configuration configuration, JobProcessor jobProcessor,
+			Frame frame, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
 		this.jobProcessor = jobProcessor;
 		this.frame = frame;
 		this.machineControlsPanel = machineControlsPanel;
-		
+
 		jobSaveActionGroup = new ActionGroup(saveJobAction, saveJobAsAction);
 		jobSaveActionGroup.setEnabled(false);
-		
+
 		boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction,
 				captureCameraBoardLocationAction,
-				captureToolBoardLocationAction,
-				newPlacementAction,
-				moveCameraToBoardLocationAction,
-				moveToolToBoardLocationAction);
+				captureToolBoardLocationAction, newPlacementAction,
+				moveCameraToBoardLocationAction, moveToolToBoardLocationAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
-		
+
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
-				captureCameraPlacementLocation,
-				captureToolPlacementLocation);
+				captureCameraPlacementLocation, captureToolPlacementLocation,
+				twoPointLocateBoardLocationActionA,
+				twoPointLocateBoardLocationActionB);
 		placementSelectionActionGroup.setEnabled(false);
-		
+
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
-		
+
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
-		
-		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				placementSelectionActionGroup.setEnabled(getSelectedPlacement() != null);
-			}
-		});
-		
+		placementsTable.getColumnModel().getColumn(2)
+				.setCellEditor(new DefaultCellEditor(sidesComboBox));
+
+		placementsTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						if (e.getValueIsAdjusting()) {
+							return;
+						}
+						placementSelectionActionGroup
+								.setEnabled(getSelectedPlacement() != null);
+					}
+				});
+
 		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
-		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		boardLocationsTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(sidesComboBox));
-		
-		boardLocationsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				BoardLocation boardLocation = getSelectedBoardLocation();
-				boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
-				if (boardLocation == null) {
-					placementsTableModel.setBoard(null);
-				}
-				else {
-					placementsTableModel.setBoard(boardLocation.getBoard());
-				}
-			}
-		});
-		
+		boardLocationsTable
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		boardLocationsTable.getColumnModel().getColumn(1)
+				.setCellEditor(new DefaultCellEditor(sidesComboBox));
+
+		boardLocationsTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						if (e.getValueIsAdjusting()) {
+							return;
+						}
+						BoardLocation boardLocation = getSelectedBoardLocation();
+						boardLocationSelectionActionGroup
+								.setEnabled(boardLocation != null);
+						if (boardLocation == null) {
+							placementsTableModel.setBoard(null);
+						}
+						else {
+							placementsTableModel.setBoard(boardLocation
+									.getBoard());
+						}
+						boardLocationA = boardLocationB = null;
+						twoPointLocateBoardLocationAction
+								.setEnabled(boardLocationA != null
+										&& boardLocationB != null);
+					}
+				});
+
 		setLayout(new BorderLayout(0, 0));
-		
+
 		splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
+				PREF_DIVIDER_POSITION_DEF));
 		splitPane.addPropertyChangeListener("dividerLocation",
 				new PropertyChangeListener() {
 					@Override
@@ -175,87 +193,109 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 								splitPane.getDividerLocation());
 					}
 				});
-		
-		JPanel left = new JPanel();
-		left.setLayout(new BorderLayout(0, 0));
-		
-		JToolBar toolBar_1 = new JToolBar();
-		toolBar_1.setFloatable(false);
-		left.add(toolBar_1, BorderLayout.NORTH);
-		
-		JButton button = new JButton(startPauseResumeJobAction);
-		toolBar_1.add(button);
-		JButton button_1 = new JButton(stepJobAction);
-		toolBar_1.add(button_1);
-		JButton button_2 = new JButton(stopJobAction);
-		toolBar_1.add(button_2);
-		toolBar_1.addSeparator();
-		JButton button_3 = new JButton(newBoardAction);
-		toolBar_1.add(button_3);
-		JButton button_4 = new JButton(addBoardAction);
-		toolBar_1.add(button_4);
-		JButton button_5 = new JButton(removeBoardAction);
-		toolBar_1.add(button_5);
-		toolBar_1.addSeparator();
-		JButton button_6 = new JButton(captureCameraBoardLocationAction);
-		button_6.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-camera.png")));
-		button_6.setToolTipText("Set the board's location to the camera's location.");
-		button_6.setHideActionText(true);
-		toolBar_1.add(button_6);
-		
-		JButton button_11 = new JButton(captureToolBoardLocationAction);
-		button_11.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-tool.png")));
-		button_11.setToolTipText("Set the board's location to the tool's location.");
-		button_11.setHideActionText(true);
-		toolBar_1.add(button_11);
-		
-		JButton button_7 = new JButton(moveCameraToBoardLocationAction);
-		button_7.setToolTipText("Position the camera at the board's location.");
-		button_7.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/center-camera.png")));
-		button_7.setHideActionText(true);
-		toolBar_1.add(button_7);
-		
-		JButton btnNewButton = new JButton(moveToolToBoardLocationAction);
-		btnNewButton.setToolTipText("Position the tool at the board's location.");
-		btnNewButton.setHideActionText(true);
-		btnNewButton.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/center-tool.png")));
-		toolBar_1.add(btnNewButton);
-		
-		left.add(new JScrollPane(boardLocationsTable));
-		JPanel right = new JPanel();
-		right.setLayout(new BorderLayout(0, 0));
-		
-		JToolBar toolBar_2 = new JToolBar();
-		toolBar_2.setFloatable(false);
-		right.add(toolBar_2, BorderLayout.NORTH);
-		JButton button_8 = new JButton(newPlacementAction);
-		toolBar_2.add(button_8);
-		JButton button_9 = new JButton(removePlacementAction);
-		toolBar_2.add(button_9);
-		toolBar_2.addSeparator();
-		JButton button_10 = new JButton(captureCameraPlacementLocation);
-		button_10.setHideActionText(true);
-		button_10.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-camera.png")));
-		button_10.setText("");
-		toolBar_2.add(button_10);
-		
-		JButton button_12 = new JButton(captureToolPlacementLocation);
-		button_12.setHideActionText(true);
-		button_12.setIcon(new ImageIcon(JobPanel.class.getResource("/icons/capture-tool.png")));
-		toolBar_2.add(button_12);
-		right.add(new JScrollPane(placementsTable));
-		
-		splitPane.setLeftComponent(left);
-		splitPane.setRightComponent(right);
-		
+
+		JPanel pnlBoards = new JPanel();
+		pnlBoards.setLayout(new BorderLayout(0, 0));
+
+		JToolBar toolBarBoards = new JToolBar();
+		toolBarBoards.setFloatable(false);
+		pnlBoards.add(toolBarBoards, BorderLayout.NORTH);
+
+		JButton btnStartPauseResumeJob = new JButton(startPauseResumeJobAction);
+		btnStartPauseResumeJob.setHideActionText(true);
+		toolBarBoards.add(btnStartPauseResumeJob);
+		JButton btnStepJob = new JButton(stepJobAction);
+		btnStepJob.setHideActionText(true);
+		toolBarBoards.add(btnStepJob);
+		JButton btnStopJob = new JButton(stopJobAction);
+		btnStopJob.setHideActionText(true);
+		toolBarBoards.add(btnStopJob);
+		toolBarBoards.addSeparator();
+		JButton btnNewBoard = new JButton(newBoardAction);
+		btnNewBoard.setHideActionText(true);
+		toolBarBoards.add(btnNewBoard);
+		JButton btnAddBoard = new JButton(addBoardAction);
+		btnAddBoard.setHideActionText(true);
+		toolBarBoards.add(btnAddBoard);
+		JButton btnRemoveBoard = new JButton(removeBoardAction);
+		btnRemoveBoard.setHideActionText(true);
+		toolBarBoards.add(btnRemoveBoard);
+		toolBarBoards.addSeparator();
+		JButton btnCaptureCameraBoardLocation = new JButton(
+				captureCameraBoardLocationAction);
+		btnCaptureCameraBoardLocation.setHideActionText(true);
+		toolBarBoards.add(btnCaptureCameraBoardLocation);
+
+		JButton btnCaptureToolBoardLocation = new JButton(
+				captureToolBoardLocationAction);
+		btnCaptureToolBoardLocation.setHideActionText(true);
+		toolBarBoards.add(btnCaptureToolBoardLocation);
+
+		JButton btnPositionCameraBoardLocation = new JButton(
+				moveCameraToBoardLocationAction);
+		btnPositionCameraBoardLocation.setHideActionText(true);
+		toolBarBoards.add(btnPositionCameraBoardLocation);
+
+		JButton btnPositionToolBoardLocation = new JButton(
+				moveToolToBoardLocationAction);
+		btnPositionToolBoardLocation.setHideActionText(true);
+		toolBarBoards.add(btnPositionToolBoardLocation);
+
+		pnlBoards.add(new JScrollPane(boardLocationsTable));
+		JPanel pnlPlacements = new JPanel();
+		pnlPlacements.setLayout(new BorderLayout(0, 0));
+
+		JToolBar toolBarPlacements = new JToolBar();
+		toolBarPlacements.setFloatable(false);
+		pnlPlacements.add(toolBarPlacements, BorderLayout.NORTH);
+		JButton btnNewPlacement = new JButton(newPlacementAction);
+		btnNewPlacement.setHideActionText(true);
+		toolBarPlacements.add(btnNewPlacement);
+		JButton btnRemovePlacement = new JButton(removePlacementAction);
+		btnRemovePlacement.setHideActionText(true);
+		toolBarPlacements.add(btnRemovePlacement);
+		toolBarPlacements.addSeparator();
+		JButton btnCaptureCameraPlacementLocation = new JButton(
+				captureCameraPlacementLocation);
+		btnCaptureCameraPlacementLocation.setToolTipText("");
+		btnCaptureCameraPlacementLocation.setText("");
+		btnCaptureCameraPlacementLocation.setHideActionText(true);
+		toolBarPlacements.add(btnCaptureCameraPlacementLocation);
+
+		JButton btnCaptureToolPlacementLocation = new JButton(
+				captureToolPlacementLocation);
+		btnCaptureToolPlacementLocation.setToolTipText("");
+		btnCaptureToolPlacementLocation.setText("");
+		btnCaptureToolPlacementLocation.setHideActionText(true);
+		toolBarPlacements.add(btnCaptureToolPlacementLocation);
+
+		toolBarPlacements.addSeparator();
+
+		JButton btnTwoPointBoardLocationA = new JButton(
+				twoPointLocateBoardLocationActionA);
+		toolBarPlacements.add(btnTwoPointBoardLocationA);
+
+		JButton btnTwoPointBoardLocationB = new JButton(
+				twoPointLocateBoardLocationActionB);
+		toolBarPlacements.add(btnTwoPointBoardLocationB);
+
+		JButton btnTwoPointBoardLocation = new JButton(
+				twoPointLocateBoardLocationAction);
+		btnTwoPointBoardLocation.setEnabled(false);
+		toolBarPlacements.add(btnTwoPointBoardLocation);
+		pnlPlacements.add(new JScrollPane(placementsTable));
+
+		splitPane.setLeftComponent(pnlBoards);
+		splitPane.setRightComponent(pnlPlacements);
+
 		add(splitPane);
-		
+
 		jobProcessor.addListener(jobProcessorListener);
 		jobProcessor.setDelegate(jobProcessorDelegate);
 
 		configuration.addListener(this);
 	}
-	
+
 	public BoardLocation getSelectedBoardLocation() {
 		int index = boardLocationsTable.getSelectedRow();
 		if (index == -1) {
@@ -263,10 +303,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 		else {
 			index = boardLocationsTable.convertRowIndexToModel(index);
-			return JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
+			return JobPanel.this.jobProcessor.getJob().getBoardLocations()
+					.get(index);
 		}
 	}
-	
+
 	public Placement getSelectedPlacement() {
 		if (getSelectedBoardLocation() == null) {
 			return null;
@@ -277,32 +318,31 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 		else {
 			index = placementsTable.convertRowIndexToModel(index);
-			return getSelectedBoardLocation().getBoard().getPlacements().get(index);
+			return getSelectedBoardLocation().getBoard().getPlacements()
+					.get(index);
 		}
 	}
-	
+
 	public void configurationLoaded(Configuration configuration) {
 		configuration.getMachine().addListener(machineListener);
 		updateJobActions();
-		
+
 		// Create an empty Job if one is not loaded
 		if (jobProcessor.getJob() == null) {
 			Job job = new Job();
 			jobProcessor.load(job);
 		}
 	}
-	
+
 	public boolean checkForModifications() {
 		if (jobProcessor.getJob().isDirty()) {
 			Job job = jobProcessor.getJob();
-			String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName());
-			int result = JOptionPane.showConfirmDialog(
-					frame,
-					"Do you want to save your changes to " + name + "?" +
-					"\n" +
-					"If you don't save, your changes will be lost.",
-					"Save " + name + "?", 
-					JOptionPane.YES_NO_CANCEL_OPTION);
+			String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job
+					.getFile().getName());
+			int result = JOptionPane.showConfirmDialog(frame,
+					"Do you want to save your changes to " + name + "?" + "\n"
+							+ "If you don't save, your changes will be lost.",
+					"Save " + name + "?", JOptionPane.YES_NO_CANCEL_OPTION);
 			if (result == JOptionPane.YES_OPTION) {
 				return saveJob();
 			}
@@ -312,14 +352,15 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 		return true;
 	}
-	
+
 	private boolean saveJob() {
 		if (jobProcessor.getJob().getFile() == null) {
 			return saveJobAs();
 		}
 		else {
 			try {
-				configuration.saveJob(jobProcessor.getJob(), jobProcessor.getJob().getFile());
+				configuration.saveJob(jobProcessor.getJob(), jobProcessor
+						.getJob().getFile());
 				return true;
 			}
 			catch (Exception e) {
@@ -328,9 +369,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 		}
 	}
-	
+
 	private boolean saveJobAs() {
-		FileDialog fileDialog = new FileDialog(frame, "Save Job As...", FileDialog.SAVE);
+		FileDialog fileDialog = new FileDialog(frame, "Save Job As...",
+				FileDialog.SAVE);
 		fileDialog.setFilenameFilter(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -346,8 +388,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			if (!filename.toLowerCase().endsWith(".job.xml")) {
 				filename = filename + ".job.xml";
 			}
-			File file = new File(new File(fileDialog.getDirectory()),
-					filename);
+			File file = new File(new File(fileDialog.getDirectory()), filename);
 			configuration.saveJob(jobProcessor.getJob(), file);
 			return true;
 		}
@@ -356,7 +397,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Updates the Job controls based on the Job state and the Machine's
 	 * readiness.
@@ -366,18 +407,39 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		if (state == JobState.Stopped) {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
+			startPauseResumeJobAction.putValue(
+					AbstractAction.SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/start.png")));
+			startPauseResumeJobAction.putValue(
+					AbstractAction.SHORT_DESCRIPTION,
+					"Start processing the job.");
 			stopJobAction.setEnabled(false);
 			stepJobAction.setEnabled(true);
 		}
 		else if (state == JobState.Running) {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause");
+			startPauseResumeJobAction.putValue(
+					AbstractAction.SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/pause.png")));
+			startPauseResumeJobAction.putValue(
+					AbstractAction.SHORT_DESCRIPTION,
+					"Pause processing of the job.");
 			stopJobAction.setEnabled(true);
 			stepJobAction.setEnabled(false);
 		}
 		else if (state == JobState.Paused) {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume");
+			startPauseResumeJobAction.putValue(
+					AbstractAction.SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/start.png")));
+			startPauseResumeJobAction.putValue(
+					AbstractAction.SHORT_DESCRIPTION,
+					"Resume processing of the job.");
 			stopJobAction.setEnabled(true);
 			stepJobAction.setEnabled(true);
 		}
@@ -390,15 +452,16 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			stepJobAction.setEnabled(false);
 		}
 	}
-	
+
 	private void updateTitle() {
 		Job job = jobProcessor.getJob();
 		String title = String.format("OpenPnP - %s%s",
 				job.isDirty() ? "*" : "",
-				(job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName()));
+				(job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile()
+						.getName()));
 		frame.setTitle(title);
 	}
-	
+
 	public Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -450,7 +513,16 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action startPauseResumeJobAction = new AbstractAction("Start") {
+	public Action startPauseResumeJobAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/start.png")));
+			putValue(NAME, "Start");
+			putValue(SHORT_DESCRIPTION, "Start processing the job.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			JobState state = jobProcessor.getState();
@@ -459,7 +531,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					jobProcessor.start();
 				}
 				catch (Exception e) {
-					MessageBoxes.errorBox(frame, "Job Start Error", e.getMessage());
+					MessageBoxes.errorBox(frame, "Job Start Error",
+							e.getMessage());
 				}
 			}
 			else if (state == JobState.Paused) {
@@ -471,7 +544,16 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action stepJobAction = new AbstractAction("Step") {
+	public Action stepJobAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class.getResource("/icons/step.png")));
+			putValue(NAME, "Step");
+			putValue(SHORT_DESCRIPTION,
+					"Process one step of the job and pause.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			try {
@@ -483,17 +565,34 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action stopJobAction = new AbstractAction("Stop") {
+	public Action stopJobAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class.getResource("/icons/stop.png")));
+			putValue(NAME, "Stop");
+			putValue(SHORT_DESCRIPTION, "Stop processing the job.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jobProcessor.stop();
 		}
 	};
 
-	public Action newBoardAction = new AbstractAction("New Board...") {
+	public Action newBoardAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(JobPanel.class.getResource("/icons/new.png")));
+			putValue(NAME, "New Board...");
+			putValue(SHORT_DESCRIPTION,
+					"Create a new board and add it to the job.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			FileDialog fileDialog = new FileDialog(frame, "Save New Board As...", FileDialog.SAVE);
+			FileDialog fileDialog = new FileDialog(frame,
+					"Save New Board As...", FileDialog.SAVE);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -511,7 +610,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						filename);
-				
+
 				Board board = configuration.getBoard(file);
 				BoardLocation boardLocation = new BoardLocation(board);
 				jobProcessor.getJob().addBoardLocation(boardLocation);
@@ -519,12 +618,20 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage());
+				MessageBoxes.errorBox(frame, "Unable to create new board",
+						e.getMessage());
 			}
 		}
 	};
 
-	public Action addBoardAction = new AbstractAction("Add Board...") {
+	public Action addBoardAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(JobPanel.class.getResource("/icons/add.png")));
+			putValue(NAME, "Add Board...");
+			putValue(SHORT_DESCRIPTION, "Add an existing board to the job.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			FileDialog fileDialog = new FileDialog(frame);
@@ -541,7 +648,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						fileDialog.getFile());
-			
+
 				Board board = configuration.getBoard(file);
 				BoardLocation boardLocation = new BoardLocation(board);
 				jobProcessor.getJob().addBoardLocation(boardLocation);
@@ -549,94 +656,346 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(frame, "Board load failed", e.getMessage());
+				MessageBoxes.errorBox(frame, "Board load failed",
+						e.getMessage());
 			}
 		}
 	};
 
 	public Action removeBoardAction = new AbstractAction("Remove Board") {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/delete.png")));
+			putValue(NAME, "Remove Board");
+			putValue(SHORT_DESCRIPTION,
+					"Remove the selected board from the job.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			int index = boardLocationsTable.getSelectedRow();
 			if (index != -1) {
 				index = boardLocationsTable.convertRowIndexToModel(index);
-				BoardLocation boardLocation = JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
-				JobPanel.this.jobProcessor.getJob().removeBoardLocation(boardLocation);
+				BoardLocation boardLocation = JobPanel.this.jobProcessor
+						.getJob().getBoardLocations().get(index);
+				JobPanel.this.jobProcessor.getJob().removeBoardLocation(
+						boardLocation);
 				boardLocationsTableModel.fireTableDataChanged();
 			}
 		}
 	};
 
-	public Action captureCameraBoardLocationAction = new AbstractAction("Capture Camera Location") {
+	public Action captureCameraBoardLocationAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/capture-camera.png")));
+			putValue(NAME, "Capture Camera Location");
+			putValue(SHORT_DESCRIPTION,
+					"Set the board's location to the camera's current position.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			getSelectedBoardLocation().setLocation(machineControlsPanel.getCameraLocation());
-			boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(), boardLocationsTable.getSelectedRow());
+			getSelectedBoardLocation().setLocation(
+					machineControlsPanel.getCameraLocation());
+			boardLocationsTableModel.fireTableRowsUpdated(
+					boardLocationsTable.getSelectedRow(),
+					boardLocationsTable.getSelectedRow());
 		}
 	};
-	
-	// TODO: Need a better name for the MenuItem
-	public Action captureToolBoardLocationAction = new AbstractAction("Capture Tool Location") {
+
+	public Action captureToolBoardLocationAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/capture-tool.png")));
+			putValue(NAME, "Capture Tool Location");
+			putValue(SHORT_DESCRIPTION,
+					"Set the board's location to the tool's current position.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			getSelectedBoardLocation().setLocation(machineControlsPanel.getToolLocation());
-			boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(), boardLocationsTable.getSelectedRow());
+			getSelectedBoardLocation().setLocation(
+					machineControlsPanel.getToolLocation());
+			boardLocationsTableModel.fireTableRowsUpdated(
+					boardLocationsTable.getSelectedRow(),
+					boardLocationsTable.getSelectedRow());
 		}
 	};
-	
-	public Action moveCameraToBoardLocationAction = new AbstractAction("Move Camera To Board Location") {
+
+	public Action moveCameraToBoardLocationAction = new AbstractAction(
+			"Move Camera To Board Location") {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/center-camera.png")));
+			putValue(NAME, "Move Camera To Board Location");
+			putValue(SHORT_DESCRIPTION,
+					"Position the camera at the board's location.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					Head head = configuration.getMachine().getHeads().get(0);
 					try {
-						Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-						Location location = getSelectedBoardLocation().getLocation();
-						location = location.convertToUnits(configuration.getMachine().getNativeUnits());
+						Camera camera = MainFrame.cameraPanel
+								.getSelectedCamera();
+						Location location = getSelectedBoardLocation()
+								.getLocation();
+						location = location.convertToUnits(configuration
+								.getMachine().getNativeUnits());
 						location = location.subtract(camera.getLocation());
 						head.moveToSafeZ();
-						// Move the head to the location at Safe-Z 
-						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						// Move the head to the location at Safe-Z
+						head.moveTo(location.getX(), location.getY(),
+								head.getZ(), location.getRotation());
 						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
+						head.moveTo(head.getX(), head.getY(), location.getZ(),
+								head.getC());
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", e);
+						MessageBoxes.errorBox(getTopLevelAncestor(),
+								"Move Error", e);
 					}
 				}
 			});
 		}
 	};
-	
-	public Action moveToolToBoardLocationAction = new AbstractAction("Move Tool To Board Location") {
+
+	public Action moveToolToBoardLocationAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/center-tool.png")));
+			putValue(NAME, "Move Tool To Board Location");
+			putValue(SHORT_DESCRIPTION,
+					"Position the tool at the board's location.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					Head head = configuration.getMachine().getHeads().get(0);
 					try {
-						Location location = getSelectedBoardLocation().getLocation();
-						location = location.convertToUnits(configuration.getMachine().getNativeUnits());
+						Location location = getSelectedBoardLocation()
+								.getLocation();
+						location = location.convertToUnits(configuration
+								.getMachine().getNativeUnits());
 						head.moveToSafeZ();
-						// Move the head to the location at Safe-Z 
-						head.moveTo(location.getX(), location.getY(), head.getZ(), location.getRotation());
+						// Move the head to the location at Safe-Z
+						head.moveTo(location.getX(), location.getY(),
+								head.getZ(), location.getRotation());
 						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(), head.getC());
+						head.moveTo(head.getX(), head.getY(), location.getZ(),
+								head.getC());
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", e);
+						MessageBoxes.errorBox(getTopLevelAncestor(),
+								"Move Error", e);
 					}
 				}
 			});
 		}
 	};
-	
-	public Action newPlacementAction = new AbstractAction("New Placement") {
+
+	public Action twoPointLocateBoardLocationAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/two-point-locate.png")));
+			putValue(NAME, "Finish");
+			putValue(SHORT_DESCRIPTION,
+					"Set the board's location and rotation using two points.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			// Get the Locations we'll be using and convert to system units.
+			Location placementLocationA = new Location(LengthUnit.Millimeters,
+					0, 2.13, 0, 0);
+			Location boardLocationA = new Location(LengthUnit.Millimeters,
+					11.464044, 8.979940, 0, 0);
+			Location placementLocationB = new Location(LengthUnit.Millimeters,
+					2.8, 0, 0, 0);
+			Location boardLocationB = new Location(LengthUnit.Millimeters,
+					12.324044, 5.619940, 0, 0);
+
+			System.out.println(String.format("locate"));
+			System.out.println(String.format("%s - %s", boardLocationA,
+					placementLocationA));
+			System.out.println(String.format("%s - %s", boardLocationB,
+					placementLocationB));
+
+			// Calculate the expected angle between the two coordinates, based
+			// on their locations in the placement.
+			double x1 = placementLocationA.getX();
+			double y1 = placementLocationA.getY();
+			double x2 = placementLocationB.getX();
+			double y2 = placementLocationB.getY();
+			double expectedAngle = Math.atan2(y1 - y2, x1 - x2);
+			expectedAngle = Math.toDegrees(expectedAngle);
+			System.out.println("expectedAngle " + expectedAngle);
+
+			// Then calculate the actual angle between the two coordinates,
+			// based on the captured values.
+			x1 = boardLocationA.getX();
+			y1 = boardLocationA.getY();
+			x2 = boardLocationB.getX();
+			y2 = boardLocationB.getY();
+			double indicatedAngle = Math.atan2(y1 - y2, x1 - x2);
+			indicatedAngle = Math.toDegrees(indicatedAngle);
+			System.out.println("indicatedAngle " + indicatedAngle);
+
+			// Subtract the difference and we have our angle.
+			double angle = indicatedAngle - expectedAngle;
+			System.out.println("angle " + angle);
+
+			// Circle intersection solver stolen from
+			// http://www.vb-helper.com/howto_circle_circle_intersection.html
+
+			double cx0 = boardLocationA.getX();
+			double cy0 = boardLocationA.getY();
+			double radius0 = Math.sqrt(Math.pow(placementLocationA.getX(), 2)
+					+ Math.pow(placementLocationA.getY(), 2));
+
+			double cx1 = boardLocationB.getX();
+			double cy1 = boardLocationB.getY();
+			double radius1 = Math.sqrt(Math.pow(placementLocationB.getX(), 2)
+					+ Math.pow(placementLocationB.getY(), 2));
+
+			System.out.println(String.format("%f %f %f %f %f %f", cx0, cy0,
+					radius0, cx1, cy1, radius1));
+
+			double dx = cx0 - cx1;
+			double dy = cy0 - cy1;
+			double dist = Math.sqrt(dx * dx + dy * dy);
+
+			double a = (radius0 * radius0 - radius1 * radius1 + dist * dist)
+					/ (2 * dist);
+			double h = Math.sqrt(radius0 * radius0 - a * a);
+
+			double cx2 = cx0 + a * (cx1 - cx0) / dist;
+			double cy2 = cy0 + a * (cy1 - cy0) / dist;
+
+			double intersectionx1 = cx2 + h * (cy1 - cy0) / dist;
+			double intersectiony1 = cy2 - h * (cx1 - cx0) / dist;
+			double intersectionx2 = cx2 - h * (cy1 - cy0) / dist;
+			double intersectiony2 = cy2 + h * (cx1 - cx0) / dist;
+
+			Point p0 = new Point(intersectionx1, intersectiony1);
+			Point p1 = new Point(intersectionx2, intersectiony2);
+
+			System.out.println(String.format("p0 = %s, p1 = %s", p0, p1));
+
+			// Create two points based on the boardLocationA.
+			Point p0r = new Point(boardLocationA.getX(), boardLocationA.getY());
+			Point p1r = new Point(boardLocationA.getX(), boardLocationA.getY());
+
+			// Translate each point by one of the results from the circle
+			// intersection
+			p0r = Utils2D.translatePoint(p0r, p0.getX() * -1, p0.getY() * -1);
+			p1r = Utils2D.translatePoint(p1r, p1.getX() * -1, p1.getY() * -1);
+
+			// Rotate each point by the negative of the angle previously
+			// calculated. This effectively de-rotates the point with one of the
+			// results as the origin.
+			p0r = Utils2D.rotatePoint(p0r, angle * -1);
+			p1r = Utils2D.rotatePoint(p1r, angle * -1);
+
+			System.out.println(String.format("p0r = %s, p1r = %s", p0r, p1r));
+
+			// Now, whichever result is closer to the value of boardLocationA
+			// is the right result. So, calculate the linear distance between
+			// the calculated point and the placementLocationA.
+			double d0 = Math.abs(Math.sqrt(Math.pow(
+					p0r.x - placementLocationA.getX(), 2)
+					+ Math.pow(p0r.y - placementLocationA.getY(), 2)));
+			double d1 = Math.abs(Math.sqrt(Math.pow(
+					p1r.x - placementLocationA.getX(), 2)
+					+ Math.pow(p1r.y - placementLocationA.getY(), 2)));
+
+			System.out.println(String.format("d0 %f, d1 %f", d0, d1));
+
+			Point result = ((d0 < d1) ? p0 : p1);
+
+			System.out.println("Result: " + result);
+
+			Location boardLocation = new Location(Configuration.get()
+					.getSystemUnits(), result.x, result.y, 0, angle * -1);
+
+			getSelectedBoardLocation().setLocation(boardLocation);
+			boardLocationsTableModel.fireTableRowsUpdated(
+					boardLocationsTable.getSelectedRow(),
+					boardLocationsTable.getSelectedRow());
+		}
+	};
+
+	public Action twoPointLocateBoardLocationActionA = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/two-point-locate.png")));
+			putValue(NAME, "A");
+			putValue(SHORT_DESCRIPTION,
+					"Set the location of the first placement to locate the board.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			boardLocationA = MainFrame.machineControlsPanel.getCameraLocation();
+			boardLocationPlacementA = getSelectedPlacement();
+			twoPointLocateBoardLocationAction.setEnabled(boardLocationA != null
+					&& boardLocationB != null);
+		}
+	};
+
+	public Action twoPointLocateBoardLocationActionB = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/two-point-locate.png")));
+			putValue(NAME, "B");
+			putValue(SHORT_DESCRIPTION,
+					"Set the location of the second placement to locate the board.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			boardLocationB = MainFrame.machineControlsPanel.getCameraLocation();
+			boardLocationPlacementB = getSelectedPlacement();
+			twoPointLocateBoardLocationAction.setEnabled(boardLocationA != null
+					&& boardLocationB != null);
+		}
+	};
+
+	public Action newPlacementAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(JobPanel.class.getResource("/icons/new.png")));
+			putValue(NAME, "New Placement");
+			putValue(SHORT_DESCRIPTION,
+					"Create a new placement and add it to the board.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			BoardLocation boardLocation = getSelectedBoardLocation();
-			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new placement.");
+			String id = JOptionPane.showInputDialog(frame,
+					"Please enter an ID for the new placement.");
 			if (id == null) {
 				return;
 			}
@@ -646,8 +1005,18 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			placementsTableModel.fireTableDataChanged();
 		}
 	};
-	
-	public Action removePlacementAction = new AbstractAction("Remove Placement") {
+
+	public Action removePlacementAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/delete.png")));
+			putValue(NAME, "Remove Placement");
+			putValue(SHORT_DESCRIPTION,
+					"Remove the currently selected placement.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			BoardLocation boardLocation = getSelectedBoardLocation();
@@ -656,27 +1025,53 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			placementsTableModel.fireTableDataChanged();
 		}
 	};
-	
-	public Action captureCameraPlacementLocation = new AbstractAction("Capture Camera Placement Location") {
+
+	public Action captureCameraPlacementLocation = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/capture-camera.png")));
+			putValue(NAME, "Capture Camera Placement Location");
+			putValue(SHORT_DESCRIPTION,
+					"Set the placement's location to the camera's current position.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-//			Location boardLocation = getSelectedBoardLocation().getLocation();
-//			getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation().subtract(boardLocation));
-//			placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(), placementsTable.getSelectedRow());
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented", "This action is not yet implemented.");
+			// Location boardLocation =
+			// getSelectedBoardLocation().getLocation();
+			// getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation().subtract(boardLocation));
+			// placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(),
+			// placementsTable.getSelectedRow());
+			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented",
+					"This action is not yet implemented.");
 		}
 	};
-	
-	public Action captureToolPlacementLocation = new AbstractAction("Capture Tool Placement Location") {
+
+	public Action captureToolPlacementLocation = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/capture-tool.png")));
+			putValue(NAME, "Capture Tool Placement Location");
+			putValue(SHORT_DESCRIPTION,
+					"Set the placement's location to the tool's current position.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-//			Location boardLocation = getSelectedBoardLocation().getLocation();
-//			getSelectedPlacement().setLocation(machineControlsPanel.getToolLocation().subtract(boardLocation));
-//			placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(), placementsTable.getSelectedRow());
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented", "This action is not yet implemented.");
+			// Location boardLocation =
+			// getSelectedBoardLocation().getLocation();
+			// getSelectedPlacement().setLocation(machineControlsPanel.getToolLocation().subtract(boardLocation));
+			// placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(),
+			// placementsTable.getSelectedRow());
+			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented",
+					"This action is not yet implemented.");
 		}
 	};
-	
+
 	private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
 		@Override
 		public void jobStateChanged(JobState state) {
@@ -695,12 +1090,13 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void jobEncounteredError(JobError error, String description) {
-			MessageBoxes.errorBox(frame, error.toString(), description + "\n\nThe job will be paused.");
+			MessageBoxes.errorBox(frame, error.toString(), description
+					+ "\n\nThe job will be paused.");
 			// TODO: Implement a way to retry, abort, etc.
 			jobProcessor.pause();
 		}
 	};
-	
+
 	private JobProcessorDelegate jobProcessorDelegate = new JobProcessorDelegate() {
 		@Override
 		public PickRetryAction partPickFailed(BoardLocation board, Part part,
@@ -708,7 +1104,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			return PickRetryAction.SkipAndContinue;
 		}
 	};
-	
+
 	private MachineListener machineListener = new MachineListener.Adapter() {
 		@Override
 		public void machineEnabled(Machine machine) {
@@ -721,7 +1117,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			jobProcessor.stop();
 		}
 	};
-	
+
 	private PropertyChangeListener titlePropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {

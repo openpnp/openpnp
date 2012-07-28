@@ -32,6 +32,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -103,14 +104,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		panel.add(toolBar, BorderLayout.CENTER);
 		
 		JButton btnNewFeeder = new JButton(newFeederAction);
+		btnNewFeeder.setHideActionText(true);
 		toolBar.add(btnNewFeeder);
 		
 		JButton btnDeleteFeeder = new JButton(deleteFeederAction);
+		btnDeleteFeeder.setHideActionText(true);
 		toolBar.add(btnDeleteFeeder);
 		
 		toolBar.addSeparator();
-		toolBar.add(feedFeederAction);
-		toolBar.add(showPartAction);
+		JButton button = toolBar.add(feedFeederAction);
+		JButton button_1 = toolBar.add(showPartAction);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -231,7 +234,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	public void wizardCancelled(Wizard wizard) {
 	}
 	
-	public Action newFeederAction = new AbstractAction("New Feeder...") {
+	public Action newFeederAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(NAME, "New Feeder...");
+			putValue(SHORT_DESCRIPTION,
+					"Create a new feeder.");
+		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<Feeder>(
@@ -260,7 +270,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		}
 	};
 
-	public Action deleteFeederAction = new AbstractAction("Delete Feeder") {
+	public Action deleteFeederAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(NAME, "Delete Feeder");
+			putValue(SHORT_DESCRIPTION,
+					"Delete the selected feeder.");
+		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			configuration.getMachine().removeFeeder(getSelectedFeeder());
@@ -268,7 +285,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	};
 	
 
-	public Action feedFeederAction = new AbstractAction("Feed") {
+	public Action feedFeederAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/feed.png")));
+			putValue(NAME, "Feed");
+			putValue(SHORT_DESCRIPTION,
+					"Command the selected feeder to perform a feed operation.");
+		}
+		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			new Thread() {
@@ -286,7 +311,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		}
 	};
 	
-	public Action showPartAction = new AbstractAction("Show Part") {
+	public Action showPartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass()
+							.getResource("/icons/show-part.png")));
+			putValue(NAME, "Show Part");
+			putValue(SHORT_DESCRIPTION,
+					"Show an outline of the part for the selected feeder in the camera view.");
+		}
+		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Feeder feeder = getSelectedFeeder();

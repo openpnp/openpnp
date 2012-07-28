@@ -40,7 +40,7 @@ public class BoardLocation extends AbstractModelObject implements PropertyChange
 	private String boardFile;
 	
 	BoardLocation() {
-		setLocation(new Location());
+		setLocation(new Location(LengthUnit.Millimeters));
 	}
 	
 	public BoardLocation(Board board) {

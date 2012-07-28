@@ -164,6 +164,8 @@ public class CameraView extends JComponent implements CameraListener {
 
 	private Preferences prefs = Preferences
 			.userNodeForPackage(CameraView.class);
+	
+	private String text;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -280,6 +282,14 @@ public class CameraView extends JComponent implements CameraListener {
 	public void setSelectionTextDelegate(
 			CameraViewSelectionTextDelegate selectionTextDelegate) {
 		this.selectionTextDelegate = selectionTextDelegate;
+	}
+	
+	public String getText() {
+		return text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
 	}
 
 	public BufferedImage captureSelectionImage() {
@@ -422,6 +432,10 @@ public class CameraView extends JComponent implements CameraListener {
 						scaledWidth, 
 						scaledHeight,
 						c);
+			}
+			
+			if (text != null) {
+				drawTextOverlay(g2d, 10, 10, text);
 			}
 
 			if (selectionEnabled && selection != null) {
@@ -612,8 +626,13 @@ public class CameraView extends JComponent implements CameraListener {
 	 */
 	private static void drawTextOverlay(Graphics2D g2d, int topLeftX,
 			int topLeftY, String text) {
+		Insets insets = new Insets(10, 10, 10, 10);
+		int interLineSpacing = 4;
+		int cornerRadius = 8;
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setStroke(new BasicStroke(1.0f));
-		g2d.setFont(g2d.getFont().deriveFont(10.0f));
+		g2d.setFont(g2d.getFont().deriveFont(12.0f));
 		String[] lines = text.split("\n");
 		List<TextLayout> textLayouts = new ArrayList<TextLayout>();
 		int textWidth = 0, textHeight = 0;
@@ -622,20 +641,31 @@ public class CameraView extends JComponent implements CameraListener {
 					g2d.getFontRenderContext());
 			textWidth = (int) Math.max(textWidth, textLayout.getBounds()
 					.getWidth());
-			textHeight += (int) textLayout.getBounds().getHeight() + 4;
+			textHeight += (int) textLayout.getBounds().getHeight() + interLineSpacing;
 			textLayouts.add(textLayout);
 		}
+		textHeight -= interLineSpacing;
 		g2d.setColor(new Color(0, 0, 0, 0.75f));
-		g2d.fillRoundRect(topLeftX, topLeftY, textWidth + 10, textHeight + 10,
-				6, 6);
+		g2d.fillRoundRect(
+				topLeftX, 
+				topLeftY, 
+				textWidth + insets.left + insets.right, 
+				textHeight + insets.top + insets.bottom,
+				cornerRadius,
+				cornerRadius);
 		g2d.setColor(Color.white);
-		g2d.drawRoundRect(topLeftX, topLeftY, textWidth + 10, textHeight + 10,
-				6, 6);
-		int yPen = topLeftY + 5;
+		g2d.drawRoundRect(
+				topLeftX, 
+				topLeftY, 
+				textWidth + insets.left + insets.right, 
+				textHeight + insets.top + insets.bottom,
+				cornerRadius,
+				cornerRadius);
+		int yPen = topLeftY + insets.top;
 		for (TextLayout textLayout : textLayouts) {
 			yPen += textLayout.getBounds().getHeight();
-			textLayout.draw(g2d, topLeftX + 5, yPen);
-			yPen += 4;
+			textLayout.draw(g2d, topLeftX + insets.left, yPen);
+			yPen += interLineSpacing;
 		}
 	}
 
@@ -832,9 +862,14 @@ public class CameraView extends JComponent implements CameraListener {
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			popupMenu.show(e.getComponent(), e.getX(), e.getY());
+			if (e.getClickCount() == 1) {
+				popupMenu.show(e.getComponent(), e.getX(), e.getY());
+			}
+			else if (e.getClickCount() == 2){
+				System.out.println("Double");
+			}
 		}
-
+		
 		@Override
 		public void mousePressed(MouseEvent e) {
 			int x = e.getX();

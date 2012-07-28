@@ -17,7 +17,7 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui;
 
@@ -34,6 +34,7 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -56,11 +57,10 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Placement;
 
+@SuppressWarnings("serial")
 public class BoardsPanel extends JPanel {
 	final private Configuration configuration;
-	final private Frame frame;
-	final private MachineControlsPanel machineControlsPanel;
-	
+
 	private static final String PREF_DIVIDER_POSITION = "BoardsPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
@@ -68,85 +68,105 @@ public class BoardsPanel extends JPanel {
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardsTable;
 	private JTable placementsTable;
-	
+
 	private ActionGroup boardSelectionActionGroup;
 	private ActionGroup placementSelectionActionGroup;
-	
-	private Preferences prefs = Preferences.userNodeForPackage(BoardsPanel.class);
-	
-	public BoardsPanel(Configuration configuration, 
-			Frame frame, 
-			MachineControlsPanel machineControlsPanel) {
+
+	private Preferences prefs = Preferences
+			.userNodeForPackage(BoardsPanel.class);
+
+	public BoardsPanel(Configuration configuration) {
 		this.configuration = configuration;
-		this.frame = frame;
-		this.machineControlsPanel = machineControlsPanel;
-		
+
 		boardSelectionActionGroup = new ActionGroup(newPlacementAction);
 		boardSelectionActionGroup.setEnabled(false);
-		
+
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction);
 		placementSelectionActionGroup.setEnabled(false);
-		
+
 		boardsTableModel = new BoardsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
+		setLayout(new BorderLayout(0, 0));
+
+		JPanel panelBoards = new JPanel();
+		panelBoards.setLayout(new BorderLayout(0, 0));
+
+		boardsTable = new AutoSelectTextTable(boardsTableModel);
+		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		// TODO: Add a tooltip for the path, see
+		// http://docs.oracle.com/javase/tutorial/uiswing/components/table.html#celltooltip
+
+		boardsTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						if (e.getValueIsAdjusting()) {
+							return;
+						}
+						Board board = getSelectedBoard();
+						boardSelectionActionGroup.setEnabled(board != null);
+						if (board == null) {
+							placementsTableModel.setBoard(null);
+						}
+						else {
+							placementsTableModel.setBoard(board);
+						}
+					}
+				});
+
+		JToolBar toolBarBoards = new JToolBar();
+		panelBoards.add(toolBarBoards, BorderLayout.NORTH);
+		toolBarBoards.setFloatable(false);
+
+		JButton btnNewBoard = new JButton(newBoardAction);
+		btnNewBoard.setHideActionText(true);
+		toolBarBoards.add(btnNewBoard);
+		JButton btnLoadBoard = new JButton(addBoardAction);
+		btnLoadBoard.setHideActionText(true);
+		toolBarBoards.add(btnLoadBoard);
+		JScrollPane scrollPaneBoards = new JScrollPane(boardsTable);
+		panelBoards.add(scrollPaneBoards, BorderLayout.CENTER);
+
+		JPanel panelPlacements = new JPanel();
+		panelPlacements.setLayout(new BorderLayout(0, 0));
 
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(sidesComboBox));
-		
-		placementsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				placementSelectionActionGroup.setEnabled(getSelectedPlacement() != null);
-			}
-		});
-		
-		boardsTable = new AutoSelectTextTable(boardsTableModel);
-		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
-		// TODO: Add a tooltip for the path, see http://docs.oracle.com/javase/tutorial/uiswing/components/table.html#celltooltip
-		
-		boardsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				Board board = getSelectedBoard();
-				boardSelectionActionGroup.setEnabled(board != null);
-				if (board == null) {
-					placementsTableModel.setBoard(null);
-				}
-				else {
-					placementsTableModel.setBoard(board);
-				}
-			}
-		});
-		setLayout(new BorderLayout(0, 0));
-		
-		JPanel panel = new JPanel();
-		add(panel, BorderLayout.NORTH);
-		panel.setLayout(new BorderLayout(0, 0));
-		
+		placementsTable.getColumnModel().getColumn(2)
+				.setCellEditor(new DefaultCellEditor(sidesComboBox));
+
+		placementsTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						if (e.getValueIsAdjusting()) {
+							return;
+						}
+						placementSelectionActionGroup
+								.setEnabled(getSelectedPlacement() != null);
+					}
+				});
+		JScrollPane scrollPanePlacements = new JScrollPane(placementsTable);
+		panelPlacements.add(scrollPanePlacements, BorderLayout.CENTER);
+
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
-		panel.add(toolBar);
-		
-		toolBar.add(new JButton(newBoardAction));
-		toolBar.add(new JButton(addBoardAction));
-		toolBar.addSeparator();
-		toolBar.add(new JButton(newPlacementAction));
-		toolBar.add(new JButton(removePlacementAction));
-		
+		panelPlacements.add(toolBar, BorderLayout.NORTH);
+		JButton btnNewPlacement = new JButton(newPlacementAction);
+		toolBar.add(btnNewPlacement);
+		btnNewPlacement.setHideActionText(true);
+		JButton btnRemovePlacement = new JButton(removePlacementAction);
+		toolBar.add(btnRemovePlacement);
+		btnRemovePlacement.setHideActionText(true);
+
 		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
+				PREF_DIVIDER_POSITION_DEF));
 		splitPane.addPropertyChangeListener("dividerLocation",
 				new PropertyChangeListener() {
 					@Override
@@ -155,28 +175,31 @@ public class BoardsPanel extends JPanel {
 								splitPane.getDividerLocation());
 					}
 				});
-		splitPane.setLeftComponent(new JScrollPane(boardsTable));
-		splitPane.setRightComponent(new JScrollPane(placementsTable));
-		
+		splitPane.setLeftComponent(panelBoards);
+		splitPane.setRightComponent(panelPlacements);
 		add(splitPane);
 	}
-	
+
 	public boolean checkForModifications() {
 		for (Board board : configuration.getBoards()) {
 			if (board.isDirty()) {
-				int result = JOptionPane.showConfirmDialog(
-						frame, 
-						"Do you want to save your changes to " + board.getFile().getName() + "?" +
-						"\n" +
-						"If you don't save, your changes will be lost.",
-						"Save " + board.getFile().getName() + "?", 
-						JOptionPane.YES_NO_CANCEL_OPTION);
+				int result = JOptionPane
+						.showConfirmDialog(
+								getTopLevelAncestor(),
+								"Do you want to save your changes to "
+										+ board.getFile().getName()
+										+ "?"
+										+ "\n"
+										+ "If you don't save, your changes will be lost.",
+								"Save " + board.getFile().getName() + "?",
+								JOptionPane.YES_NO_CANCEL_OPTION);
 				if (result == JOptionPane.YES_OPTION) {
 					try {
 						configuration.saveBoard(board);
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Board Save Error", e.getMessage());
+						MessageBoxes.errorBox(getTopLevelAncestor(),
+								"Board Save Error", e.getMessage());
 						return false;
 					}
 				}
@@ -187,7 +210,7 @@ public class BoardsPanel extends JPanel {
 		}
 		return true;
 	}
-	
+
 	public Board getSelectedBoard() {
 		int index = boardsTable.getSelectedRow();
 		if (index == -1) {
@@ -198,7 +221,7 @@ public class BoardsPanel extends JPanel {
 			return configuration.getBoards().get(index);
 		}
 	}
-	
+
 	public Placement getSelectedPlacement() {
 		if (getSelectedBoard() == null) {
 			return null;
@@ -212,11 +235,21 @@ public class BoardsPanel extends JPanel {
 			return getSelectedBoard().getPlacements().get(index);
 		}
 	}
-	
-	public Action newBoardAction = new AbstractAction("New Board...") {
+
+	public Action newBoardAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(NAME, "New Board...");
+			putValue(SHORT_DESCRIPTION,
+					"Create a new board and add it to the list.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			FileDialog fileDialog = new FileDialog(frame, "Save New Board As...", FileDialog.SAVE);
+			FileDialog fileDialog = new FileDialog(
+					(Frame) getTopLevelAncestor(), "Save New Board As...",
+					FileDialog.SAVE);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -234,20 +267,29 @@ public class BoardsPanel extends JPanel {
 				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						filename);
-				
-				Board board = configuration.getBoard(file);
+
+				configuration.getBoard(file);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage());
+				MessageBoxes.errorBox(getTopLevelAncestor(),
+						"Unable to create new board", e.getMessage());
 			}
 		}
 	};
 
-	public Action addBoardAction = new AbstractAction("Load Board...") {
+	public Action addBoardAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/add.png")));
+			putValue(NAME, "Load Board...");
+			putValue(SHORT_DESCRIPTION, "Load an existing board.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			FileDialog fileDialog = new FileDialog(frame);
+			FileDialog fileDialog = new FileDialog(
+					(Frame) getTopLevelAncestor());
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -261,33 +303,52 @@ public class BoardsPanel extends JPanel {
 				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						fileDialog.getFile());
-			
-				Board board = configuration.getBoard(file);
+
+				configuration.getBoard(file);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				MessageBoxes.errorBox(frame, "Board load failed", e.getMessage());
+				MessageBoxes.errorBox(getTopLevelAncestor(),
+						"Board load failed", e.getMessage());
 			}
 		}
 	};
 
-	public Action newPlacementAction = new AbstractAction("New Placement") {
+	public Action newPlacementAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(NAME, "New Placement");
+			putValue(SHORT_DESCRIPTION,
+					"Create a new placement and add it to the board.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Board board = getSelectedBoard();
 			// TODO: Make sure it's unique
-			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new placement.");
+			String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
+					"Please enter an ID for the new placement.");
 			if (id == null) {
 				return;
 			}
 			Placement placement = new Placement(id);
-			placement.getLocation().setUnits(configuration.getMachine().getNativeUnits());
+			placement.getLocation().setUnits(
+					configuration.getMachine().getNativeUnits());
 			board.addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();
 		}
 	};
-	
+
 	public Action removePlacementAction = new AbstractAction("Remove Placement") {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(NAME, "Remove Placement");
+			putValue(SHORT_DESCRIPTION,
+					"Remove the currently selected placement.");
+		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Board board = getSelectedBoard();

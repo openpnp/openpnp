@@ -54,6 +54,10 @@ public class Point {
 		this.y = y;
 	}
 	
+	public Point subtract(Point p) {
+		return new Point(x - p.x, y - p.y);
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("%f, %f", x, y);

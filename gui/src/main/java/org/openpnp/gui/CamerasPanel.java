@@ -34,6 +34,7 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -52,8 +53,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
@@ -104,9 +105,11 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 		panel.add(toolBar, BorderLayout.CENTER);
 		
 		JButton btnNewCamera = new JButton(newCameraAction);
+		btnNewCamera.setHideActionText(true);
 		toolBar.add(btnNewCamera);
 		
 		JButton btnDeleteCamera = new JButton(deleteCameraAction);
+		btnDeleteCamera.setHideActionText(true);
 		toolBar.add(btnDeleteCamera);
 		
 		toolBar.addSeparator();
@@ -234,7 +237,15 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 	public void wizardCancelled(Wizard wizard) {
 	}
 	
-	public Action newCameraAction = new AbstractAction("New Camera...") {
+	public Action newCameraAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(NAME, "New Camera...");
+			putValue(SHORT_DESCRIPTION,
+					"Create a new camera.");
+		}
+		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			ClassSelectionDialog<Camera> dialog = new ClassSelectionDialog<Camera>(
@@ -274,6 +285,13 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 	};
 
 	public Action deleteCameraAction = new AbstractAction("Delete Camera") {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(NAME, "Delete Camera");
+			putValue(SHORT_DESCRIPTION,
+					"Delete the currently selected camera.");
+		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 //			configuration.getMachine().removeFeeder(getSelectedFeeder());

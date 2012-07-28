@@ -32,40 +32,30 @@ public class AboutDialog extends JDialog {
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
 		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-		{
-			JLabel lblOpenpnp = new JLabel("OpenPnP");
-			lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
-			lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
-			contentPanel.add(lblOpenpnp);
-		}
-		{
-			JLabel lblCopyright = new JLabel("Copyright © 2011, 2012 Jason von Nieda");
-			lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-			lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
-			contentPanel.add(lblCopyright);
-		}
-		{
-			JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
-			lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-			lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
-			contentPanel.add(lblVersion);
-		}
-		{
-			JPanel buttonPane = new JPanel();
-			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-			getContentPane().add(buttonPane, BorderLayout.SOUTH);
-			{
-				JButton okButton = new JButton("OK");
-				okButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent arg0) {
-						setVisible(false);
-					}
-				});
-				okButton.setActionCommand("OK");
-				buttonPane.add(okButton);
-				getRootPane().setDefaultButton(okButton);
+		JLabel lblOpenpnp = new JLabel("OpenPnP");
+		lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
+		lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
+		contentPanel.add(lblOpenpnp);
+		JLabel lblCopyright = new JLabel(
+				"Copyright © 2011, 2012 Jason von Nieda");
+		lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
+		contentPanel.add(lblCopyright);
+		JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
+		lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
+		contentPanel.add(lblVersion);
+		JPanel buttonPane = new JPanel();
+		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		getContentPane().add(buttonPane, BorderLayout.SOUTH);
+		JButton okButton = new JButton("OK");
+		okButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setVisible(false);
 			}
-		}
+		});
+		okButton.setActionCommand("OK");
+		buttonPane.add(okButton);
+		getRootPane().setDefaultButton(okButton);
 	}
-
 }

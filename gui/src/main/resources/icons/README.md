@@ -3,7 +3,7 @@ OpenPnP Icon Specifications
 
 
 Common Themes
--------------
+-------------0
 The current icon set has some common elements that are used across multiple
 icons. It is not necessary to use these exact same elements, but some thought
 should be given to maintaining a set of common elements across sets of features
@@ -92,11 +92,6 @@ standard music player motif.
  Step through an operation. A riff on start, like a play button with a line to
 the left.
 
-* resume.png
-
- Resume a paused operation. Possible that this could just be the same as
-the start.png.
-
 * new.png
 
  Create a new object. The standard "New Document" type icon could apply here.
@@ -108,4 +103,16 @@ Paper / page with a star?
 
 * delete.png
 
- Delete an object from the list. Document with a X mark? 
+ Delete an object from the list. Document with a X mark?
+ 
+* two-point-locate.png
+
+ Use two points to define the location and rotation of an object.
+ 
+* feed.png
+
+ Command the selected feeder to perform a feed operation.
+ 
+* show.png
+
+ Show an outline of the part for the selected feeder in the camera view.

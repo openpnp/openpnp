@@ -30,6 +30,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -50,6 +51,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.swing.JButton;
 
 public class PartsPanel extends JPanel {
 	private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
@@ -118,8 +120,10 @@ public class PartsPanel extends JPanel {
 		
 		deletePartAction.setEnabled(false);
 		
-		toolBar.add(newPartAction);
-		toolBar.add(deletePartAction);
+		JButton btnNewPart = toolBar.add(newPartAction);
+		btnNewPart.setToolTipText("");
+		JButton btnDeletePart = toolBar.add(deletePartAction);
+		btnDeletePart.setToolTipText("");
 	}
 	
 	private Part getSelectedPart() {
@@ -145,7 +149,12 @@ public class PartsPanel extends JPanel {
 		partsTableSorter.setRowFilter(rf);
 	}
 
-	public Action newPartAction = new AbstractAction("New Part") {
+	public Action newPartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(NAME, "New Part...");
+			putValue(SHORT_DESCRIPTION, "Create a new part, specifying it's ID.");
+		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new part.");
@@ -163,7 +172,12 @@ public class PartsPanel extends JPanel {
 		}
 	};
 	
-	public Action deletePartAction = new AbstractAction("Delete Part") {
+	public Action deletePartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(NAME, "Delete Part");
+			putValue(SHORT_DESCRIPTION, "Delete the currently selected part.");
+		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 		}

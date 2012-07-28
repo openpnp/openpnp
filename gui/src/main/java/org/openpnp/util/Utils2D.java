@@ -72,4 +72,53 @@ public class Utils2D {
 	public static Point scalePoint(Point point, double scaleX, double scaleY) {
 		return new Point(point.getX() * scaleX, point.getY() * scaleY);
 	}
+	
+	public static void main(String[] args) {
+		Point p = new Point(0, 1);
+		System.out.println(rotatePoint(p, 90));
+	}
+	
+	
+	// // Calculate lengths of the sides
+	// double a = Math.sqrt(Math.pow(pc.x - pb.x, 2) + Math.pow(pc.y - pb.y,
+	// 2));
+	// double b = Math.sqrt(Math.pow(pc.x - pa.x, 2) + Math.pow(pc.y - pa.y,
+	// 2));
+	// double c = Math.sqrt(Math.pow(pb.x - pa.x, 2) + Math.pow(pb.y - pa.y,
+	// 2));
+	//
+	// // Change the variables around so that c is the largest side and a
+	// and
+	// // b are the others. This allows us to use the cosine rule to
+	// // calculate the largest angle.
+	// if (a >= b && a >= c) {
+	// double t = c;
+	// c = a;
+	// a = b;
+	// b = t;
+	// }
+	// else if (b >= a && b >= c) {
+	// double t = c;
+	// c = b;
+	// b = a;
+	// a = t;
+	// }
+	//
+	// System.out.println(String.format("pa %s, pb %s, pc %s", pa, pb, pc));
+	// System.out.println(String.format("a %f, b %f, c %f", a, b, c));
+	//
+	// // Use the cosine rule to find the angle opposite the largest side
+	// double cosC = (Math.pow(a, 2) + Math.pow(b, 2) - Math.pow(c, 2)) / (2
+	// * a * b);
+	//
+	// double C = Math.toDegrees(Math.acos(cosC));
+	//
+	// double sinA = (a * Math.sin(Math.toRadians(C))) / c;
+	//
+	// double A = Math.toDegrees(Math.asin(sinA));
+	//
+	// double B = 180.0 - C - A;
+	//
+	// System.out.println(String.format("A %f, B %f, C %f", A, B, C));
+	
 }

@@ -373,6 +373,8 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	 * @throws Exception
 	 */
 	private void dwell() throws Exception {
+		// TODO: Might be better to use M400 here. It is a simple
+		// sync without sleep.
 		sendCommand("G4 P0");
 	}
 
