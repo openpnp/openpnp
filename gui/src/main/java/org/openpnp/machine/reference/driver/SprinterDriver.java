@@ -163,8 +163,13 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	
 	@Override
 	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
-		sendCommand(String.format("G28 %s %s %s %s", homeX ? "X" : "", homeY ? "Y" : "", homeZ ? "Z" : "", homeC ? "E" : ""));
-		dwell();
+		if (homeX || homeY || homeZ || homeC) {
+			sendCommand(String.format("G28 %s %s %s %s", homeX ? "X" : "", homeY ? "Y" : "", homeZ ? "Z" : "", homeC ? "E" : ""));
+			dwell();
+		}
+		else {
+			throw new Exception("No homing axes defined. See the homeX, homeY, homeZ and homeC parameters.");
+		}
 		// Reset all axes to 0. This is required so that the Head and Driver
 		// stay in sync.
 		sendCommand("G92 X0 Y0 Z0 E0");
