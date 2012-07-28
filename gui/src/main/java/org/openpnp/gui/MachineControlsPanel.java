@@ -184,14 +184,8 @@ public class MachineControlsPanel extends JPanel {
 			return null;
 		}
 		Location toolLocation = getToolLocation();
-		Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(toolLocation.getUnits());
-		return new Location(
-				toolLocation.getUnits(),
-				toolLocation.getX() + cameraLocation.getX(),
-				toolLocation.getY() + cameraLocation.getY(),
-				toolLocation.getZ() + cameraLocation.getZ(),
-				toolLocation.getRotation() + cameraLocation.getRotation()
-				);
+		Location cameraLocation = cameraView.getCamera().getLocation();
+		return toolLocation.add(cameraLocation);
 	}
 	
 	public double getJogIncrement() {

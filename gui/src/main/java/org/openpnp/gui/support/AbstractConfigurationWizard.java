@@ -45,7 +45,7 @@ import org.openpnp.model.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractWizard extends JPanel implements Wizard {
+public abstract class AbstractConfigurationWizard extends JPanel implements Wizard {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	protected WizardContainer wizardContainer;
 	private JButton btnApply;
@@ -56,7 +56,7 @@ public abstract class AbstractWizard extends JPanel implements Wizard {
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 	private ApplyResetBindingListener listener;
 	
-	public AbstractWizard() {
+	public AbstractConfigurationWizard() {
 		setLayout(new BorderLayout());
 
 		contentPanel = new JPanel();
@@ -154,7 +154,7 @@ public abstract class AbstractWizard extends JPanel implements Wizard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			saveToModel();
-			wizardContainer.wizardCompleted(AbstractWizard.this);
+			wizardContainer.wizardCompleted(AbstractConfigurationWizard.this);
 		}
 	};
 

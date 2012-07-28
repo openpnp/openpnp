@@ -35,7 +35,7 @@ import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import org.openpnp.gui.MachineControlsPanel;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.support.AbstractWizard;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartConverter;
@@ -48,7 +48,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class FeederConfigurationWizard extends AbstractWizard {
+public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final Feeder feeder;
 	private final Configuration configuration;
 	private final MachineControlsPanel machineControlsPanel;

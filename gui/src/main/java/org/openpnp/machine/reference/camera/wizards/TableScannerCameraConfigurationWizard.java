@@ -34,7 +34,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.gui.support.AbstractWizard;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
@@ -45,7 +45,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class TableScannerCameraConfigurationWizard extends AbstractWizard {
+public class TableScannerCameraConfigurationWizard extends AbstractConfigurationWizard {
 	private final TableScannerCamera camera;
 
 	private JPanel panelGeneral;

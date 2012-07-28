@@ -23,10 +23,12 @@ package org.openpnp.gui;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -43,6 +45,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -52,9 +55,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.JobProcessor;
@@ -70,6 +75,8 @@ import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
+import javax.swing.UIManager;
+import java.awt.Font;
 
 /**
  * The main window of the application.
@@ -111,8 +118,12 @@ public class MainFrame extends JFrame {
 	private JLabel lblStatus;
 	private JTabbedPane panelBottom;
 	private JSplitPane splitPaneTopBottom;
+	private TitledBorder panelInstructionsBorder;
 
 	private Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
+	
+	private ActionListener instructionsCancelActionListener;
+	private ActionListener instructionsProceedActionListener;
 
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
@@ -320,10 +331,61 @@ public class MainFrame extends JFrame {
 						super.dispatchEvent(event);
 					}
 				});
+		
+		JPanel panelCameraAndInstructions = new JPanel(new BorderLayout());
+		panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
-		panelTop.add(cameraPanel, BorderLayout.CENTER);
+		panelTop.add(panelCameraAndInstructions, BorderLayout.CENTER);
 		cameraPanel.setBorder(new TitledBorder(null, "Cameras",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		
+		panelInstructions = new JPanel();
+		panelInstructions.setVisible(false);
+		panelInstructions.setBorder(panelInstructionsBorder = new TitledBorder(null, "Instructions", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panelCameraAndInstructions.add(panelInstructions, BorderLayout.SOUTH);
+		panelInstructions.setLayout(new BorderLayout(0, 0));
+		
+		panelInstructionActions = new JPanel();
+		panelInstructionActions.setAlignmentY(Component.BOTTOM_ALIGNMENT);
+		panelInstructions.add(panelInstructionActions, BorderLayout.EAST);
+		panelInstructionActions.setLayout(new BorderLayout(0, 0));
+		
+		panel_2 = new JPanel();
+		FlowLayout flowLayout_2 = (FlowLayout) panel_2.getLayout();
+		flowLayout_2.setVgap(0);
+		flowLayout_2.setHgap(0);
+		panelInstructionActions.add(panel_2, BorderLayout.SOUTH);
+		
+		btnInstructionsCancel = new JButton("Cancel");
+		btnInstructionsCancel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (instructionsCancelActionListener != null) {
+					instructionsCancelActionListener.actionPerformed(arg0);
+				}
+			}
+		});
+		panel_2.add(btnInstructionsCancel);
+		
+		btnInstructionsNext = new JButton("Next");
+		btnInstructionsNext.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (instructionsProceedActionListener != null) {
+					instructionsProceedActionListener.actionPerformed(arg0);
+				}
+			}
+		});
+		panel_2.add(btnInstructionsNext);
+		
+		panel_1 = new JPanel();
+		panelInstructions.add(panel_1, BorderLayout.CENTER);
+		panel_1.setLayout(new BorderLayout(0, 0));
+		
+		lblInstructions = new JTextPane();
+		lblInstructions.setFont(new Font("Lucida Grande", Font.PLAIN, 14));
+		lblInstructions.setBackground(UIManager.getColor("Panel.background"));
+		lblInstructions.setContentType("text/html");
+		lblInstructions.setEditable(false);
+		panel_1.add(lblInstructions);
 
 		panelBottom = new JTabbedPane(JTabbedPane.TOP);
 		splitPaneTopBottom.setRightComponent(panelBottom);
@@ -375,6 +437,31 @@ public class MainFrame extends JFrame {
 		}
 
 		jobProcessor.addListener(jobProcessorListener);
+	}
+	
+	public void showInstructions(
+			String title,
+			String instructions, 
+			boolean showCancelButton, 
+			boolean showProceedButton, 
+			String proceedButtonText,
+			ActionListener cancelActionListener,
+			ActionListener proceedActionListener) {
+		panelInstructionsBorder.setTitle(title);
+		lblInstructions.setText(instructions);
+		btnInstructionsCancel.setVisible(showCancelButton);
+		btnInstructionsNext.setVisible(showProceedButton);
+		btnInstructionsNext.setText(proceedButtonText);
+		instructionsCancelActionListener = cancelActionListener;
+		instructionsProceedActionListener = proceedActionListener;
+		panelInstructions.setVisible(true);
+		doLayout();
+		panelInstructions.repaint();
+	}
+	
+	public void hideInstructions() {
+		panelInstructions.setVisible(false);
+		doLayout();
 	}
 
 	public boolean registerForMacOSXEvents() {
@@ -506,4 +593,11 @@ public class MainFrame extends JFrame {
 			about();
 		}
 	};
+	private JPanel panelInstructions;
+	private JPanel panelInstructionActions;
+	private JPanel panel_1;
+	private JButton btnInstructionsNext;
+	private JButton btnInstructionsCancel;
+	private JTextPane lblInstructions;
+	private JPanel panel_2;
 }

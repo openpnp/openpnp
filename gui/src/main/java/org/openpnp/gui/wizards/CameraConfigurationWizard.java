@@ -37,7 +37,7 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.support.AbstractWizard;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
@@ -49,7 +49,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class CameraConfigurationWizard extends AbstractWizard {
+public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	private final Camera camera;
 
 	private JTextField textFieldUppX;

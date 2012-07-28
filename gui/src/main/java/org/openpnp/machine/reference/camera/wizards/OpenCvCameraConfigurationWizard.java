@@ -29,7 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.support.AbstractWizard;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -38,7 +38,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class OpenCvCameraConfigurationWizard extends AbstractWizard {
+public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard {
 	private final OpenCvCamera camera;
 
 	private JPanel panelGeneral;

@@ -56,8 +56,6 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		
 		add(reticleMenu);
 		add(maxFpsMenu);
-		addSeparator();
-		add("Cancel");
 		
 		if (cameraView.getDefaultReticle() != null) {
 			if (cameraView.getDefaultReticle() instanceof CrosshairReticle) {

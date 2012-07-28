@@ -201,8 +201,9 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		synchronized (buffer) {
 			// Grab these values only once since the head may continue to move
 			// while we are rendering.
-			double headX = head.getAbsoluteX();
-			double headY = head.getAbsoluteY();
+			Location offsets = getLocation().convertToUnits(head.getMachine().getNativeUnits());
+			double headX = head.getX() + offsets.getX();
+			double headY = head.getY() + offsets.getY();
 			if (lastX != headX || lastY != headY) {
 				// Find the closest tile to the head's current position.
 				Tile closestTile = getClosestTile(headX, headY);

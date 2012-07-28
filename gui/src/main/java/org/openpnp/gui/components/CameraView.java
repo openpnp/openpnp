@@ -166,6 +166,8 @@ public class CameraView extends JComponent implements CameraListener {
 			.userNodeForPackage(CameraView.class);
 	
 	private String text;
+	
+	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -208,6 +210,16 @@ public class CameraView extends JComponent implements CameraListener {
 	public CameraView(int maximumFps) {
 		this();
 		setMaximumFps(maximumFps);
+	}
+	
+	public void addActionListener(CameraViewActionListener listener) {
+		if (!actionListeners.contains(listener)) {
+			actionListeners.add(listener);
+		}
+	}
+	
+	public boolean removeActionListener(CameraViewActionListener listener) {
+		return actionListeners.remove(listener);
 	}
 
 	public void setMaximumFps(int maximumFps) {
@@ -862,16 +874,24 @@ public class CameraView extends JComponent implements CameraListener {
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			if (e.getClickCount() == 1) {
-				popupMenu.show(e.getComponent(), e.getX(), e.getY());
-			}
-			else if (e.getClickCount() == 2){
-				System.out.println("Double");
+			CameraViewActionEvent action = new CameraViewActionEvent(
+					CameraView.this, 
+					e.getX(), 
+					e.getY(), 
+					e.getX() * scaledUnitsPerPixelX, 
+					e.getY() * scaledUnitsPerPixelY);
+			for (CameraViewActionListener listener : actionListeners) {
+				listener.actionPerformed(action);
 			}
 		}
 		
 		@Override
 		public void mousePressed(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				return;
+			}
+			
 			int x = e.getX();
 			int y = e.getY();
 
@@ -907,7 +927,12 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 
 		@Override
-		public void mouseReleased(MouseEvent arg0) {
+		public void mouseReleased(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				return;
+			}
+			
 			selectionMode = null;
 			selectionActiveHandle = null;
 		}

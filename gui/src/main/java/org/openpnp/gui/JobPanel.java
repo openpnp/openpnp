@@ -23,7 +23,6 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FileDialog;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -57,6 +56,7 @@ import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
@@ -64,17 +64,14 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +82,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 	final private Configuration configuration;
 	final private JobProcessor jobProcessor;
-	final private Frame frame;
+	final private MainFrame frame;
 	final private MachineControlsPanel machineControlsPanel;
 
 	private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
@@ -105,11 +102,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
 
-	private Location boardLocationA, boardLocationB;
-	private Placement boardLocationPlacementA, boardLocationPlacementB;
-
 	public JobPanel(Configuration configuration, JobProcessor jobProcessor,
-			Frame frame, MachineControlsPanel machineControlsPanel) {
+			MainFrame frame, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
 		this.jobProcessor = jobProcessor;
 		this.frame = frame;
@@ -121,13 +115,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction,
 				captureCameraBoardLocationAction,
 				captureToolBoardLocationAction, newPlacementAction,
-				moveCameraToBoardLocationAction, moveToolToBoardLocationAction);
+				moveCameraToBoardLocationAction, moveToolToBoardLocationAction,
+				twoPointLocateBoardLocationAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
-				captureCameraPlacementLocation, captureToolPlacementLocation,
-				twoPointLocateBoardLocationActionA,
-				twoPointLocateBoardLocationActionB);
+				captureCameraPlacementLocation, captureToolPlacementLocation);
 		placementSelectionActionGroup.setEnabled(false);
 
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
@@ -175,10 +168,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 							placementsTableModel.setBoard(boardLocation
 									.getBoard());
 						}
-						boardLocationA = boardLocationB = null;
-						twoPointLocateBoardLocationAction
-								.setEnabled(boardLocationA != null
-										&& boardLocationB != null);
 					}
 				});
 
@@ -244,6 +233,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				moveToolToBoardLocationAction);
 		btnPositionToolBoardLocation.setHideActionText(true);
 		toolBarBoards.add(btnPositionToolBoardLocation);
+		toolBarBoards.addSeparator();
+
+		JButton btnTwoPointBoardLocation = new JButton(
+				twoPointLocateBoardLocationAction);
+		toolBarBoards.add(btnTwoPointBoardLocation);
+		btnTwoPointBoardLocation.setHideActionText(true);
 
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
 		JPanel pnlPlacements = new JPanel();
@@ -272,21 +267,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		btnCaptureToolPlacementLocation.setText("");
 		btnCaptureToolPlacementLocation.setHideActionText(true);
 		toolBarPlacements.add(btnCaptureToolPlacementLocation);
-
-		toolBarPlacements.addSeparator();
-
-		JButton btnTwoPointBoardLocationA = new JButton(
-				twoPointLocateBoardLocationActionA);
-		toolBarPlacements.add(btnTwoPointBoardLocationA);
-
-		JButton btnTwoPointBoardLocationB = new JButton(
-				twoPointLocateBoardLocationActionB);
-		toolBarPlacements.add(btnTwoPointBoardLocationB);
-
-		JButton btnTwoPointBoardLocation = new JButton(
-				twoPointLocateBoardLocationAction);
-		btnTwoPointBoardLocation.setEnabled(false);
-		toolBarPlacements.add(btnTwoPointBoardLocation);
 		pnlPlacements.add(new JScrollPane(placementsTable));
 
 		splitPane.setLeftComponent(pnlBoards);
@@ -299,6 +279,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		configuration.addListener(this);
 	}
+
+	public void refreshSelectedBoardRow() {
+		boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(), boardLocationsTable.getSelectedRow());
+	}
+	
 
 	public BoardLocation getSelectedBoardLocation() {
 		int index = boardLocationsTable.getSelectedRow();
@@ -819,182 +804,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					SMALL_ICON,
 					new ImageIcon(JobPanel.class
 							.getResource("/icons/two-point-locate.png")));
-			putValue(NAME, "Finish");
+			putValue(NAME, "Two Point Board Location");
 			putValue(SHORT_DESCRIPTION,
-					"Set the board's location and rotation using two points.");
+					"Set the board's location and rotation using two placements.");
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// Get the Locations we'll be using and convert to system units.
-			Location placementLocationA = new Location(LengthUnit.Millimeters,
-					0, 2.13, 0, 0);
-			Location boardLocationA = new Location(LengthUnit.Millimeters,
-					11.464044, 8.979940, 0, 0);
-			Location placementLocationB = new Location(LengthUnit.Millimeters,
-					2.8, 0, 0, 0);
-			Location boardLocationB = new Location(LengthUnit.Millimeters,
-					12.324044, 5.619940, 0, 0);
-
-			logger.debug(String.format("locate"));
-			logger.debug(String.format("%s - %s", boardLocationA,
-					placementLocationA));
-			logger.debug(String.format("%s - %s", boardLocationB,
-					placementLocationB));
-
-			// Calculate the expected angle between the two coordinates, based
-			// on their locations in the placement.
-			double x1 = placementLocationA.getX();
-			double y1 = placementLocationA.getY();
-			double x2 = placementLocationB.getX();
-			double y2 = placementLocationB.getY();
-			double expectedAngle = Math.atan2(y1 - y2, x1 - x2);
-			expectedAngle = Math.toDegrees(expectedAngle);
-			logger.debug("expectedAngle " + expectedAngle);
-
-			// Then calculate the actual angle between the two coordinates,
-			// based on the captured values.
-			x1 = boardLocationA.getX();
-			y1 = boardLocationA.getY();
-			x2 = boardLocationB.getX();
-			y2 = boardLocationB.getY();
-			double indicatedAngle = Math.atan2(y1 - y2, x1 - x2);
-			indicatedAngle = Math.toDegrees(indicatedAngle);
-			logger.debug("indicatedAngle " + indicatedAngle);
-
-			// Subtract the difference and we have the angle that the board
-			// is rotated by.
-			double angle = indicatedAngle - expectedAngle;
-			logger.debug("angle " + angle);
-
-
-			// Now we want to derive the position of 0,0 in relation to the
-			// two captured coordinates. We will use the intersection of two
-			// circles centered at the coordinates with a radius of the
-			// distance from each coordinate to 0,0.
-			
-			// Circle intersection solver borrowed from
-			// http://www.vb-helper.com/howto_circle_circle_intersection.html
-
-			// Get the two circles center points and radius. 
-			double cx0 = boardLocationA.getX();
-			double cy0 = boardLocationA.getY();
-			double radius0 = Math.sqrt(Math.pow(placementLocationA.getX(), 2)
-					+ Math.pow(placementLocationA.getY(), 2));
-
-			double cx1 = boardLocationB.getX();
-			double cy1 = boardLocationB.getY();
-			double radius1 = Math.sqrt(Math.pow(placementLocationB.getX(), 2)
-					+ Math.pow(placementLocationB.getY(), 2));
-
-			logger.debug(String.format("%f %f %f %f %f %f", cx0, cy0, radius0,
-					cx1, cy1, radius1));
-
-			// Calculate the distance between the two center points.
-			double dx = cx0 - cx1;
-			double dy = cy0 - cy1;
-			double dist = Math.sqrt(dx * dx + dy * dy);
-
-			double a = (radius0 * radius0 - radius1 * radius1 + dist * dist)
-					/ (2 * dist);
-			double h = Math.sqrt(radius0 * radius0 - a * a);
-
-			
-			double cx2 = cx0 + a * (cx1 - cx0) / dist;
-			double cy2 = cy0 + a * (cy1 - cy0) / dist;
-
-			double intersectionx1 = cx2 + h * (cy1 - cy0) / dist;
-			double intersectiony1 = cy2 - h * (cx1 - cx0) / dist;
-			double intersectionx2 = cx2 - h * (cy1 - cy0) / dist;
-			double intersectiony2 = cy2 + h * (cx1 - cx0) / dist;
-
-			// We now have the locations of the two intersecting points on
-			// the cirlcles. Now we have to figure out which one is correct.
-			Point p0 = new Point(intersectionx1, intersectiony1);
-			Point p1 = new Point(intersectionx2, intersectiony2);
-
-			logger.debug(String.format("p0 = %s, p1 = %s", p0, p1));
-
-			// Create two points based on the boardLocationA.
-			Point p0r = new Point(boardLocationA.getX(), boardLocationA.getY());
-			Point p1r = new Point(boardLocationA.getX(), boardLocationA.getY());
-
-			// Translate each point by one of the results from the circle
-			// intersection
-			p0r = Utils2D.translatePoint(p0r, p0.getX() * -1, p0.getY() * -1);
-			p1r = Utils2D.translatePoint(p1r, p1.getX() * -1, p1.getY() * -1);
-
-			// Rotate each point by the negative of the angle previously
-			// calculated. This effectively de-rotates the point with one of the
-			// results as the origin.
-			p0r = Utils2D.rotatePoint(p0r, angle * -1);
-			p1r = Utils2D.rotatePoint(p1r, angle * -1);
-
-			logger.debug(String.format("p0r = %s, p1r = %s", p0r, p1r));
-
-			// Now, whichever result is closer to the value of boardLocationA
-			// is the right result. So, calculate the linear distance between
-			// the calculated point and the placementLocationA.
-			double d0 = Math.abs(Math.sqrt(Math.pow(
-					p0r.x - placementLocationA.getX(), 2)
-					+ Math.pow(p0r.y - placementLocationA.getY(), 2)));
-			double d1 = Math.abs(Math.sqrt(Math.pow(
-					p1r.x - placementLocationA.getX(), 2)
-					+ Math.pow(p1r.y - placementLocationA.getY(), 2)));
-
-			logger.debug(String.format("d0 %f, d1 %f", d0, d1));
-
-			Point result = ((d0 < d1) ? p0 : p1);
-
-			logger.debug("Result: " + result);
-
-			Location boardLocation = new Location(Configuration.get()
-					.getSystemUnits(), result.x, result.y, 0, angle * -1);
-
-			getSelectedBoardLocation().setLocation(boardLocation);
-			boardLocationsTableModel.fireTableRowsUpdated(
-					boardLocationsTable.getSelectedRow(),
-					boardLocationsTable.getSelectedRow());
-		}
-	};
-
-	public Action twoPointLocateBoardLocationActionA = new AbstractAction() {
-		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/two-point-locate.png")));
-			putValue(NAME, "A");
-			putValue(SHORT_DESCRIPTION,
-					"Set the location of the first placement to locate the board.");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			boardLocationA = MainFrame.machineControlsPanel.getCameraLocation();
-			boardLocationPlacementA = getSelectedPlacement();
-			twoPointLocateBoardLocationAction.setEnabled(boardLocationA != null
-					&& boardLocationB != null);
-		}
-	};
-
-	public Action twoPointLocateBoardLocationActionB = new AbstractAction() {
-		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/two-point-locate.png")));
-			putValue(NAME, "B");
-			putValue(SHORT_DESCRIPTION,
-					"Set the location of the second placement to locate the board.");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			boardLocationB = MainFrame.machineControlsPanel.getCameraLocation();
-			boardLocationPlacementB = getSelectedPlacement();
-			twoPointLocateBoardLocationAction.setEnabled(boardLocationA != null
-					&& boardLocationB != null);
+			new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
 		}
 	};
 
