@@ -127,6 +127,14 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	private int vacuumPin = 31;
 	@Attribute(required=false)
 	private int actuatorPin = 33;
+	@Attribute(required=false)
+	private boolean homeX;
+	@Attribute(required=false)
+	private boolean homeY;
+	@Attribute(required=false)
+	private boolean homeZ;
+	@Attribute(required=false)
+	private boolean homeC;
 	
 	private double x, y, z, c;
 	private SerialPort serialPort;
@@ -155,12 +163,11 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	
 	@Override
 	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
-		// TODO: Make the axes that get homed configurable.
-		sendCommand("G28XY");
+		sendCommand(String.format("G28 %s %s %s %s", homeX ? "X" : "", homeY ? "Y" : "", homeZ ? "Z" : "", homeC ? "E" : ""));
 		dwell();
 		// Reset all axes to 0. This is required so that the Head and Driver
 		// stay in sync.
-		sendCommand("G92 X0 Y0 Z0 C0");
+		sendCommand("G92 X0 Y0 Z0 E0");
 	}
 	
 	@Override
@@ -168,19 +175,19 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 			throws Exception {
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
-			sb.append(String.format("X%2.4f", x));
+			sb.append(String.format("X%2.4f ", x));
 		}
 		if (y != this.y) {
-			sb.append(String.format("Y%2.4f", y));
+			sb.append(String.format("Y%2.4f ", y));
 		}
 		if (z != this.z) {
-			sb.append(String.format("Z%2.4f", z));
+			sb.append(String.format("Z%2.4f ", z));
 		}
 		if (c != this.c) {
-			sb.append(String.format("C%2.4f", c));
+			sb.append(String.format("E%2.4f ", c));
 		}
 		if (sb.length() > 0) {
-			sb.append(String.format("F%2.4f", feedRateMmPerMinute));
+			sb.append(String.format("F%2.4f ", feedRateMmPerMinute));
 			sendCommand("G1" + sb.toString());
 			dwell();
 		}
@@ -192,7 +199,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
-		sendCommand(String.format("M84%s", enabled ? "T" : ""));
+		sendCommand(String.format("M84 %s", enabled ? "T" : ""));
 	}
 
 	@Override
@@ -279,25 +286,8 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 		
 		// Reset all axes to 0, in case the firmware was not reset on
 		// connect.
-		sendCommand("G92 X0 Y0 Z0 C0");
+		sendCommand("G92 X0 Y0 Z0 E0");
 	}
-	
-//	Sprinter
-//	1.3.11T / 19.03.2012
-//	start
-//	Soft PWM Init
-//	Planner Init
-//	Stepper Timer init
-//	Using Default settings
-//	Free Ram: 4866
-//	Plan Buffer Size:1152 / 16
-//	Unknown command:
-//	$
-//	ok
-//	FIRMWARE_NAME: Sprinter Experimental PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1
-//	00000000-0000-0000-0000-000000000000
-//	ok
-	
 	
 	private void processConnectionResponses(List<String> responses) {
 		for (String response : responses) {
@@ -375,7 +365,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	private void dwell() throws Exception {
 		// TODO: Might be better to use M400 here. It is a simple
 		// sync without sleep.
-		sendCommand("G4 P0");
+		sendCommand("M400");
 	}
 
 	private List<String> drainResponseQueue() {
