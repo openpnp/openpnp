@@ -129,6 +129,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		JComboBox sidesComboBox = new JComboBox(Side.values());
 
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
+		placementsTable.setAutoCreateRowSorter(true);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2)
 				.setCellEditor(new DefaultCellEditor(sidesComboBox));
@@ -146,6 +147,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				});
 
 		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
+		boardLocationsTable.setAutoCreateRowSorter(true);
 		boardLocationsTable
 				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		boardLocationsTable.getColumnModel().getColumn(1)

@@ -94,6 +94,7 @@ public class BoardsPanel extends JPanel {
 		panelBoards.setLayout(new BorderLayout(0, 0));
 
 		boardsTable = new AutoSelectTextTable(boardsTableModel);
+		boardsTable.setAutoCreateRowSorter(true);
 		boardsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		// TODO: Add a tooltip for the path, see
@@ -134,6 +135,7 @@ public class BoardsPanel extends JPanel {
 		panelPlacements.setLayout(new BorderLayout(0, 0));
 
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
+		placementsTable.setAutoCreateRowSorter(true);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		placementsTable.getColumnModel().getColumn(2)
 				.setCellEditor(new DefaultCellEditor(sidesComboBox));

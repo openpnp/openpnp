@@ -53,11 +53,11 @@ import org.openpnp.model.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("serial")
 public class PartsPanel extends JPanel {
 	private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
 	
 	final private Configuration configuration;
-	final private MachineControlsPanel machineControlsPanel;
 	final private Frame frame;
 	
 	private PartsTableModel partsTableModel;
@@ -65,9 +65,8 @@ public class PartsPanel extends JPanel {
 	private JTextField searchTextField;
 	private JTable partsTable;
 
-	public PartsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel, Frame frame) {
+	public PartsPanel(Configuration configuration, Frame frame) {
 		this.configuration = configuration;
-		this.machineControlsPanel = machineControlsPanel;
 		this.frame = frame;
 		
 		setLayout(new BorderLayout(0, 0));
