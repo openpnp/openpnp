@@ -87,6 +87,7 @@ public class Configuration extends AbstractModelObject {
 	
 	public static synchronized void initialize(File configurationDirectory) {
 		instance = new Configuration(configurationDirectory);
+		instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
 	}
 	
 	private Configuration(File configurationDirectory) {

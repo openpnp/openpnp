@@ -335,12 +335,14 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 				output.write(command.getBytes());
 				output.write("\n".getBytes());
 			}
+			long t = System.currentTimeMillis();
 			if (timeout == -1) {
 				commandLock.wait();
 			}
 			else {
 				commandLock.wait(timeout);
 			}
+			logger.debug("Waited {} ms for command to return.", (System.currentTimeMillis() - t));
 		}
 		List<String> responses = drainResponseQueue();
 		return responses;
