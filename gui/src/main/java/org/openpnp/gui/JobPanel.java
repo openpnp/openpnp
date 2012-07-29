@@ -872,11 +872,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// Location boardLocation =
-			// getSelectedBoardLocation().getLocation();
-			// getSelectedPlacement().setLocation(machineControlsPanel.getCameraLocation().subtract(boardLocation));
-			// placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(),
-			// placementsTable.getSelectedRow());
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented",
 					"This action is not yet implemented.");
 		}
@@ -895,11 +890,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// Location boardLocation =
-			// getSelectedBoardLocation().getLocation();
-			// getSelectedPlacement().setLocation(machineControlsPanel.getToolLocation().subtract(boardLocation));
-			// placementsTableModel.fireTableRowsUpdated(placementsTable.getSelectedRow(),
-			// placementsTable.getSelectedRow());
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented",
 					"This action is not yet implemented.");
 		}
