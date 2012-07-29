@@ -466,6 +466,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			});
 			fileDialog.setVisible(true);
 			try {
+				if (fileDialog.getFile() == null) {
+					return;
+				}
 				File file = new File(new File(fileDialog.getDirectory()),
 						fileDialog.getFile());
 				Job job = configuration.loadJob(file);
