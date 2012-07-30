@@ -34,8 +34,24 @@ import org.openpnp.model.Location;
 public class BoardLocationsTableModel extends AbstractTableModel {
 	private final Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Board", "Side", "X",
-			"Y", "Z", "ø" };
+	private String[] columnNames = new String[] { 
+			"Board", 
+			"Side", 
+			"X",
+			"Y", 
+			"Z", 
+			"ø" 
+	};
+	
+	private Class[] columnTypes = new Class[] {
+			String.class,
+			Side.class,
+			LengthCellValue.class,
+			LengthCellValue.class,
+			LengthCellValue.class,
+			String.class
+	};
+	
 	private Job job;
 	
 	public BoardLocationsTableModel(Configuration configuration) {
@@ -65,10 +81,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 2 || columnIndex == 3 || columnIndex == 4) {
-			return LengthCellValue.class;
-		}
-		return super.getColumnClass(columnIndex);
+		return columnTypes[columnIndex];
 	}
 
 	@Override

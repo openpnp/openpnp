@@ -26,6 +26,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -57,9 +58,9 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
+import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.JobProcessor;
@@ -70,13 +71,9 @@ import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
-import org.openpnp.gui.support.PackageCellValue;
-import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
-import javax.swing.UIManager;
-import java.awt.Font;
 
 /**
  * The main window of the application.
@@ -127,11 +124,9 @@ public class MainFrame extends JFrame {
 
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
-		PartCellValue.setConfiguration(configuration);
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);
 		FeederCellValue.setConfiguration(configuration);
-		PackageCellValue.setConfiguration(configuration);
 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
@@ -157,13 +152,11 @@ public class MainFrame extends JFrame {
 		jobPanel = new JobPanel(configuration, jobProcessor, this,
 				machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
-		feedersPanel = new FeedersPanel(configuration, machineControlsPanel);
-		camerasPanel = new CamerasPanel(this, configuration,
-				machineControlsPanel);
+		feedersPanel = new FeedersPanel(configuration);
+		camerasPanel = new CamerasPanel(this, configuration);
 		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
-		actuatorsPanel = new ActuatorsPanel(this, configuration,
-				machineControlsPanel);
+		actuatorsPanel = new ActuatorsPanel(configuration);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);

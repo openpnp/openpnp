@@ -25,6 +25,7 @@ import javax.swing.text.JTextComponent;
  *
  * 2) reorderColumns - static convenience method for reodering table columns
  */
+@SuppressWarnings("serial")
 public class AutoSelectTextTable extends JTable
 {
 	private boolean isSelectAllForMouseEvent = true;

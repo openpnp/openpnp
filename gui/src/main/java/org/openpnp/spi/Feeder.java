@@ -22,6 +22,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -31,17 +32,8 @@ import org.openpnp.model.Part;
  * A Feeder is an abstraction that represents any type of part source. 
  * It can be a tape and reel feeder, a tray handler, a single part in a 
  * specific location or anything else that can be used as a pick source.
- * 
- * When a Feeder is first configured as part of machine setup it is not
- * given a Part to handle. This is because in the case of something like a
- * reel the user may swap different Parts into the same Feeder without
- * needing to reconfigure the Feeder.
- * 
- * For instance, if the Feeder is setup to feed 5mm cut tape, the user
- * may run a 0805 resistor in the Feeder for one job and a 0805 capacitor
- * in the same Feeder for a different job.
  */
-public interface Feeder {
+public interface Feeder extends Identifiable {
 	/**
 	 * Gets the id that was set when the Feeder was initialized.
 	 * @return

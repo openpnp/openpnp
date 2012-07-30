@@ -79,9 +79,9 @@
 			<version>2.2pre2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.swinglabs</groupId>
-			<artifactId>swingx</artifactId>
-			<version>1.6.1</version>
+			<groupId>org.swinglabs.swingx</groupId>
+			<artifactId>swingx-all</artifactId>
+			<version>1.6.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
@@ -122,12 +122,20 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>true</downloadJavadocs>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
 				<version>1.1</version>
 				<executions>
 					<execution>
-						<phase>initialize</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>create</goal>
 						</goals>
@@ -136,7 +144,7 @@
 				<configuration>
 					<doCheck>true</doCheck>
 					<doUpdate>true</doUpdate>
-					<shortRevisionLength>5</shortRevisionLength>					
+					<shortRevisionLength>5</shortRevisionLength>
 				</configuration>
 			</plugin>
 			<plugin>

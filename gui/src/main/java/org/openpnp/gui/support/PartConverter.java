@@ -27,6 +27,7 @@ import org.openpnp.model.Part;
 
 public class PartConverter extends Converter<Part, String> {
 	private Configuration configuration; 
+	private IdentifiableObjectToStringConverter<Part> toStringConverter = new IdentifiableObjectToStringConverter<Part>();
 	
 	public PartConverter(Configuration configuration) {
 		this.configuration = configuration;
@@ -34,7 +35,7 @@ public class PartConverter extends Converter<Part, String> {
 	
 	@Override
 	public String convertForward(Part part) {
-		return part == null ? null : part.getId();
+		return toStringConverter.getPreferredStringForItem(part);
 	}
 
 	@Override

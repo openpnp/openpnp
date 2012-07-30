@@ -22,6 +22,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 
 /**
@@ -30,13 +31,14 @@ import org.openpnp.model.Location;
  * expected that concrete implementations may have many other capabilities
  * exposed in their specific implementations. 
  */
-public interface Actuator {
+public interface Actuator extends Identifiable {
 	/**
 	 * The unique id of the Actuator. This id should be unique for a given
 	 * head if the Actuator is attached to a head, or unique within machine
 	 * Actuators.
 	 * @return
 	 */
+	@Override
 	public String getId();
 	
 	/**

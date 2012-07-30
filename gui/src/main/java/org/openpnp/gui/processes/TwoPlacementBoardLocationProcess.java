@@ -1,10 +1,11 @@
-package org.openpnp.gui.support;
+package org.openpnp.gui.processes;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;

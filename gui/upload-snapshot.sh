@@ -1,5 +1,13 @@
+echo "Checking for STOPSHIP in source."
 grep -ri stopship src
 if [ $? -eq 0 ]; then
+	echo "Files found with STOPSHIP. Aborting release."
+	exit 1
+fi
+echo "Checking for files without a license header."
+grep -Lr "OpenPnP is free software: you can redistribute it and/or modify" --include='*.java' .
+if [ $? -eq 0 ]; then
+	echo "Files found with no license header. Aborting release."
 	exit 1
 fi
 javadoc -sourcepath src/main/java -subpackages org.openpnp -d doc/javadoc

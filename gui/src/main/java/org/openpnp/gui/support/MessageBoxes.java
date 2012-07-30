@@ -66,4 +66,8 @@ public class MessageBoxes {
 		// JOptionPane.showMessageDialog(parent, message, title,
 		// JOptionPane.ERROR_MESSAGE);
 	}
+	
+	public static void notYetImplemented(Component parent) {
+		errorBox(parent, "Not Yet Implemented", "This function is not yet implemented.");
+	}
 }

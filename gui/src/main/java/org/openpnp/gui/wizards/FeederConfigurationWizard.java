@@ -32,13 +32,14 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
-import org.openpnp.gui.MachineControlsPanel;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartConverter;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -48,10 +49,10 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final Feeder feeder;
 	private final Configuration configuration;
-	private final MachineControlsPanel machineControlsPanel;
 
 	private JPanel panelLocation;
 	private JLabel lblX_1;
@@ -65,11 +66,9 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private JPanel panelPart;
 
 	public FeederConfigurationWizard(Feeder feeder,
-			Configuration configuration,
-			MachineControlsPanel machineControlsPanel) {
+			Configuration configuration) {
 		this.feeder = feeder;
 		this.configuration = configuration;
-		this.machineControlsPanel = machineControlsPanel;
 
 		panelPart = new JPanel();
 		panelPart.setBorder(new TitledBorder(null, "Part",
@@ -84,12 +83,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 						FormFactory.RELATED_GAP_ROWSPEC,
 						FormFactory.DEFAULT_ROWSPEC, }));
 
-		Vector<String> partIds = new Vector<String>();
-		for (Part part : configuration.getParts()) {
-			partIds.add(part.getId());
-		}
-		comboBoxPart = new JComboBox(partIds);
-		AutoCompleteDecorator.decorate(comboBoxPart);
+		comboBoxPart = new JComboBox(new PartsComboBoxModel());
+		comboBoxPart.setRenderer(new IdentifiableListCellRenderer());
 		panelPart.add(comboBoxPart, "2, 2, left, default");
 
 		panelLocation = new JPanel();
@@ -152,13 +147,12 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		LengthConverter lengthConverter = new LengthConverter(configuration);
 		DoubleConverter doubleConverter = new DoubleConverter(
 				configuration.getLengthDisplayFormat());
-		PartConverter partConverter = new PartConverter(configuration);
 
 		addWrappedBinding(feeder, "location.lengthX", textFieldLocationX, "text", lengthConverter);
 		addWrappedBinding(feeder, "location.lengthY", textFieldLocationY, "text", lengthConverter);
 		addWrappedBinding(feeder, "location.lengthZ", textFieldLocationZ, "text", lengthConverter);
 		addWrappedBinding(feeder, "location.rotation", textFieldLocationC, "text", doubleConverter);
-		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem", partConverter);
+		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 
 		ComponentDecorators
 				.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);

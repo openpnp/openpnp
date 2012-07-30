@@ -50,11 +50,15 @@ import javax.swing.event.ListSelectionListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 
 @SuppressWarnings("serial")
@@ -134,12 +138,17 @@ public class BoardsPanel extends JPanel {
 		JPanel panelPlacements = new JPanel();
 		panelPlacements.setLayout(new BorderLayout(0, 0));
 
+
+		JComboBox partsComboBox = new JComboBox(new PartsComboBoxModel());
+		partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setAutoCreateRowSorter(true);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.getColumnModel().getColumn(2)
-				.setCellEditor(new DefaultCellEditor(sidesComboBox));
-
+		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
+		placementsTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+		
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override

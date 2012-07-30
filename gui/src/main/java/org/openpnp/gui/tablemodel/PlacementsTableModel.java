@@ -24,19 +24,33 @@ package org.openpnp.gui.tablemodel;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 
 public class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Part", "Side", 
-			"X", "Y", "ø" };
+	private String[] columnNames = new String[] {
+		"Id", 
+		"Part", 
+		"Side", 
+		"X", 
+		"Y", 
+		"ø"
+		};
+	private Class[] columnTypes = new Class[] {
+		String.class,
+		Part.class,
+		Side.class,
+		LengthCellValue.class,
+		LengthCellValue.class,
+		String.class
+	};
 	private Board board;
 
 	public PlacementsTableModel(Configuration configuration) {
@@ -68,13 +82,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 1) {
-			return PartCellValue.class;
-		}
-		else if (columnIndex == 3 || columnIndex == 4) {
-			return LengthCellValue.class;
-		}
-		return super.getColumnClass(columnIndex);
+		return columnTypes[columnIndex];
 	}
 
 	@Override
@@ -88,7 +96,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 				placement.setId(aValue.toString());
 			}
 			else if (columnIndex == 1) {
-				placement.setPart(((PartCellValue) aValue).getPart());
+				placement.setPart((Part) aValue);
 			}
 			else if (columnIndex == 2) {
 				placement.setSide((Side) aValue);
@@ -125,7 +133,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 		case 0:
 			 return placement.getId();
 		case 1:
-			return new PartCellValue(placement.getPart());
+			return placement.getPart();
 		case 2:
 			 return placement.getSide();
 		case 3:

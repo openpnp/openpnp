@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persist;
  * and is placed at a Placement as part of a Job. Parts can be used across many boards and should generally represent
  * a single part in the real world.
  */
-public class Part extends AbstractModelObject implements RequiresConfigurationResolution {
+public class Part extends AbstractModelObject implements RequiresConfigurationResolution, Identifiable {
 	@Attribute
 	private String id;
 	@Attribute(required=false)
@@ -56,11 +56,15 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 		packageId = (packag == null ? null : packag.getId());
 	}
 
+	@Override
 	public String getId() {
 		return id;
 	}
 
 	public void setId(String id) {
+		if (id == null) {
+			throw new IllegalArgumentException("Part.id must not be null.");
+		}
 		Object oldValue = this.id;
 		this.id = id;
 		firePropertyChange("id", oldValue, id);

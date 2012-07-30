@@ -67,11 +67,11 @@ import org.openpnp.spi.Head;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
 	private final static Logger logger = LoggerFactory.getLogger(FeedersPanel.class);
 	
 	private final Configuration configuration;
-	private final MachineControlsPanel machineControlsPanel;
 	
 	private static final String PREF_DIVIDER_POSITION = "FeedersPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -88,9 +88,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	private Preferences prefs = Preferences.userNodeForPackage(FeedersPanel.class);
 	
-	public FeedersPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
+	public FeedersPanel(Configuration configuration) {
 		this.configuration = configuration;
-		this.machineControlsPanel = machineControlsPanel;
 		
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new FeedersTableModel(configuration);
@@ -112,8 +111,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		toolBar.add(btnDeleteFeeder);
 		
 		toolBar.addSeparator();
-		JButton button = toolBar.add(feedFeederAction);
-		JButton button_1 = toolBar.add(showPartAction);
+		toolBar.add(feedFeederAction);
+		toolBar.add(showPartAction);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -179,8 +178,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				feederSpecificConfigPanel.removeAll();
 				if (feeder != null) {
 					Wizard generalConfigWizard = new FeederConfigurationWizard(feeder, 
-							FeedersPanel.this.configuration, 
-							FeedersPanel.this.machineControlsPanel);
+							FeedersPanel.this.configuration);
 					if (generalConfigWizard != null) {
 						generalConfigWizard.setWizardContainer(FeedersPanel.this);
 						JPanel panel = generalConfigWizard.getWizardPanel();

@@ -25,7 +25,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 
-public class Package {
+public class Package implements Identifiable {
 	@Attribute
 	private String id;
 	@Attribute(required=false)
@@ -33,6 +33,7 @@ public class Package {
 	@Element(required=false)
 	private Outline outline;
 	
+	@Override
 	public String getId() {
 		return id;
 	}

@@ -22,7 +22,6 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Frame;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -53,15 +52,14 @@ import org.openpnp.spi.Actuator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("serial")
 public class ActuatorsPanel extends JPanel implements WizardContainer {
 	private final static Logger logger = LoggerFactory.getLogger(ActuatorsPanel.class);
 	
 	private static final String PREF_DIVIDER_POSITION = "ActuatorsPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
 	
-	private final Frame frame;
 	private final Configuration configuration;
-	private final MachineControlsPanel machineControlsPanel;
 
 	private JTable table;
 
@@ -72,11 +70,8 @@ public class ActuatorsPanel extends JPanel implements WizardContainer {
 	
 	private Preferences prefs = Preferences.userNodeForPackage(ActuatorsPanel.class);
 	
-	public ActuatorsPanel(Frame frame, Configuration configuration,
-			MachineControlsPanel machineControlsPanel) {
-		this.frame = frame;
+	public ActuatorsPanel(Configuration configuration) {
 		this.configuration = configuration;
-		this.machineControlsPanel = machineControlsPanel;
 
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new ActuatorsTableModel(configuration);

@@ -54,9 +54,12 @@ import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.TwoPlacementBoardLocationProcess;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
@@ -77,6 +80,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel implements ConfigurationListener {
+	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory
 			.getLogger(JobPanel.class);
 
@@ -127,31 +131,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
-
-		placementsTable = new AutoSelectTextTable(placementsTableModel);
-		placementsTable.setAutoCreateRowSorter(true);
-		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.getColumnModel().getColumn(2)
-				.setCellEditor(new DefaultCellEditor(sidesComboBox));
-
-		placementsTable.getSelectionModel().addListSelectionListener(
-				new ListSelectionListener() {
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						if (e.getValueIsAdjusting()) {
-							return;
-						}
-						placementSelectionActionGroup
-								.setEnabled(getSelectedPlacement() != null);
-					}
-				});
-
+		
 		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
 		boardLocationsTable.setAutoCreateRowSorter(true);
-		boardLocationsTable
-				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		boardLocationsTable.getColumnModel().getColumn(1)
-				.setCellEditor(new DefaultCellEditor(sidesComboBox));
+		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
 
 		boardLocationsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -170,6 +154,30 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 							placementsTableModel.setBoard(boardLocation
 									.getBoard());
 						}
+					}
+				});
+		
+		
+		JComboBox partsComboBox = new JComboBox(new PartsComboBoxModel());
+		partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+
+		placementsTable = new AutoSelectTextTable(placementsTableModel);
+		placementsTable.setAutoCreateRowSorter(true);
+		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
+		placementsTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+
+		
+		placementsTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						if (e.getValueIsAdjusting()) {
+							return;
+						}
+						placementSelectionActionGroup
+								.setEnabled(getSelectedPlacement() != null);
 					}
 				});
 
@@ -877,8 +885,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented",
-					"This action is not yet implemented.");
+			MessageBoxes.notYetImplemented(getTopLevelAncestor());
 		}
 	};
 
@@ -895,8 +902,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Not Yet Implemented",
-					"This action is not yet implemented.");
+			MessageBoxes.notYetImplemented(getTopLevelAncestor());
 		}
 	};
 

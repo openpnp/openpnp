@@ -29,17 +29,27 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.gui.support.PackageCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 
+@SuppressWarnings("serial")
 public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Name",
-			"Height", "Package" };
+	private String[] columnNames = new String[] { 
+		"Id", 
+		"Description",
+		"Height", 
+		"Package" 
+	};
+	private Class[] columnTypes = new Class[] {
+		String.class,
+		String.class,
+		LengthCellValue.class,
+		Package.class,
+	};
 	private List<Part> parts;
 
 	public PartsTableModel(Configuration configuration) {
@@ -63,13 +73,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 2) {
-			return LengthCellValue.class;
-		}
-		else if (columnIndex == 3) {
-			return PackageCellValue.class;
-		}
-		return super.getColumnClass(columnIndex);
+		return columnTypes[columnIndex];
 	}
 	
 	@Override
@@ -110,8 +114,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 				part.setHeight(length);
 			}
 			else if (columnIndex == 3) {
-				Package packag = ((PackageCellValue) aValue).getPackage(); 
-				part.setPackage(packag);
+				part.setPackage((Package) aValue);
 			}
 			configuration.setDirty(true);
 		}
@@ -130,7 +133,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 		case 2:
 			return new LengthCellValue(part.getHeight(), true);
 		case 3:
-			 return new PackageCellValue(part.getPackage());
+			 return part.getPackage();
 		default:
 			return null;
 		}

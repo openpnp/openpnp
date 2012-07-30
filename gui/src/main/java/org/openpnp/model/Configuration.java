@@ -308,6 +308,17 @@ public class Configuration extends AbstractModelObject {
 		return packages.get(id.toUpperCase());
 	}
 	
+	public Collection<Package> getPackages() {
+		return Collections.unmodifiableCollection(packages.values());
+	}
+	
+	public void addPackage(Package pkg) {
+		packages.put(pkg.getId().toUpperCase(), pkg);
+//		pkg.addPropertyChangeListener("id", partIdPcl);
+		dirty = true;
+		firePropertyChange("packages", null, packages);
+	}
+	
 	public Part getPart(String id) {
 		if (id == null) {
 			return null;
@@ -370,7 +381,7 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		PackagesConfigurationHolder holder = serializer.read(PackagesConfigurationHolder.class, file);
 		for (Package pkg : holder.packages) {
-			packages.put(pkg.getId().toUpperCase(), pkg);
+			addPackage(pkg);
 		}
 	}
 	

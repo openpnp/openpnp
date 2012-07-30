@@ -69,6 +69,7 @@ import org.openpnp.spi.Head;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("serial")
 public class CamerasPanel extends JPanel implements ConfigurationListener, WizardContainer {
 	private final static Logger logger = LoggerFactory.getLogger(CamerasPanel.class);
 
@@ -77,7 +78,6 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 	
 	private final Frame frame;
 	private final Configuration configuration;
-	private final MachineControlsPanel machineControlsPanel;
 	
 	private JTable table;
 
@@ -88,10 +88,9 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 
 	private Preferences prefs = Preferences.userNodeForPackage(CamerasPanel.class);
 
-	public CamerasPanel(Frame frame, Configuration configuration, MachineControlsPanel machineControlsPanel) {
+	public CamerasPanel(Frame frame, Configuration configuration) {
 		this.frame = frame;
 		this.configuration = configuration;
-		this.machineControlsPanel = machineControlsPanel;
 		
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new CamerasTableModel(configuration);
@@ -294,7 +293,7 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-//			configuration.getMachine().removeFeeder(getSelectedFeeder());
+			MessageBoxes.notYetImplemented(getTopLevelAncestor());
 		}
 	};
 	

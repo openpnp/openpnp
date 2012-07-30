@@ -30,8 +30,10 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -46,7 +48,10 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -96,9 +101,14 @@ public class PartsPanel extends JPanel {
 		});
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
+		
+		JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
+		packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
 		partsTable = new AutoSelectTextTable(partsTableModel);
 		partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		partsTable.setDefaultEditor(org.openpnp.model.Package.class, new DefaultCellEditor(packagesCombo));
+		partsTable.setDefaultRenderer(org.openpnp.model.Package.class, new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
 		
 		add(new JScrollPane(partsTable), BorderLayout.CENTER);
 
@@ -156,18 +166,18 @@ public class PartsPanel extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			String id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new part.");
-			if (id == null) {
-				return;
+			String id;
+			while ((id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new part.")) != null) {
+				if (configuration.getPart(id) != null) {
+					MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+					continue;
+				}
+				Part part = new Part();
+				part.setId(id);
+				configuration.addPart(part);
+				partsTableModel.fireTableDataChanged();
+				break;
 			}
-			if (configuration.getPart(id) != null) {
-				MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
-				return;
-			}
-			Part part = new Part();
-			part.setId(id);
-			configuration.addPart(part);
-			partsTableModel.fireTableDataChanged();
 		}
 	};
 	
@@ -179,6 +189,7 @@ public class PartsPanel extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			MessageBoxes.notYetImplemented(getTopLevelAncestor());
 		}
 	};
 }
