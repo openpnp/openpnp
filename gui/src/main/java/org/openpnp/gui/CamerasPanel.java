@@ -56,6 +56,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.HeadCellValue;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
@@ -110,11 +111,6 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 		JButton btnDeleteCamera = new JButton(deleteCameraAction);
 		btnDeleteCamera.setHideActionText(true);
 		toolBar.add(btnDeleteCamera);
-		
-		toolBar.addSeparator();
-		
-		JButton btnTableScanner = new JButton(tableScannerAction);
-		toolBar.add(btnTableScanner);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -259,19 +255,25 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 			}
 			try {
 				Camera camera = cameraClass.newInstance();
-				configuration.resolve(camera);
-				configuration.getMachine().addCamera(camera);
 				
-				// TODO: Horrible hack until we have VisionProvider configuration.
+				camera.setName(Helpers.createUniqueName("Camera ", Configuration.get().getMachine().getCameras(), "name"));
+				camera.getUnitsPerPixel().setUnits(Configuration.get().getSystemUnits());
 				try {
-					camera.setVisionProvider(new OpenCvVisionProvider());
+					if (camera.getVisionProvider() == null) {
+						camera.setVisionProvider(new OpenCvVisionProvider());
+					}
 				}
 				catch (Exception e) {
 					logger.debug("Couldn't set default vision provider. Meh.");
 				}
 				
+				
+				configuration.resolve(camera);
+				configuration.getMachine().addCamera(camera);
+				
 				MainFrame.cameraPanel.addCamera(camera);
 				tableModel.refresh();
+				Helpers.selectLastTableRow(table);
 				configuration.setDirty(true);
 			}
 			catch (Exception e) {

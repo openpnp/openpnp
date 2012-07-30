@@ -61,7 +61,9 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		setPart(configuration.getPart(partId));
+		if (getPart() == null) {
+			setPart(configuration.getPart(partId));
+		}
 	}
 	
 	@SuppressWarnings("unused")

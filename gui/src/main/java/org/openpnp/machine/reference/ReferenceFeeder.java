@@ -53,7 +53,9 @@ public abstract class ReferenceFeeder implements Feeder, RequiresConfigurationRe
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		setPart(configuration.getPart(partId));
+		if (getPart() == null) {
+			setPart(configuration.getPart(partId));
+		}
 	}
 	
 	@SuppressWarnings("unused")

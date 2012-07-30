@@ -61,7 +61,9 @@ public class ReferenceActuator implements Actuator, RequiresConfigurationResolut
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		this.machine = (ReferenceMachine) configuration.getMachine();
+		if (this.machine == null) {
+			this.machine = (ReferenceMachine) configuration.getMachine();
+		}
 	}
 	
 	public void setReferenceHead(ReferenceHead head) {

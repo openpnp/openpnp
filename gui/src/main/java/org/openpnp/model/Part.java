@@ -36,7 +36,7 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	@Attribute(required=false)
 	private String name;
 	@Attribute
-	private LengthUnit heightUnits;
+	private LengthUnit heightUnits = LengthUnit.Millimeters;
 	@Attribute
 	private double height;
 	
@@ -56,7 +56,9 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		setPackage(configuration.getPackage(packageId));
+		if (getPackage() == null) {
+			setPackage(configuration.getPackage(packageId));
+		}
 	}
 	
 	@SuppressWarnings("unused")

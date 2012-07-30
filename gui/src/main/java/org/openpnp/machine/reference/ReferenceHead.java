@@ -99,7 +99,9 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
-		this.machine = (ReferenceMachine) configuration.getMachine();
+		if (this.machine == null) {
+			this.machine = (ReferenceMachine) configuration.getMachine();
+		}
 		for (ReferenceActuator actuator : actuators.values()) {
 			configuration.resolve(actuator);
 			actuator.setReferenceHead(this);

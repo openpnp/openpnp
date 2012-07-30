@@ -49,6 +49,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
@@ -60,6 +61,7 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import javax.swing.border.TitledBorder;
 
 @SuppressWarnings("serial")
 public class BoardsPanel extends JPanel {
@@ -95,6 +97,8 @@ public class BoardsPanel extends JPanel {
 		setLayout(new BorderLayout(0, 0));
 
 		JPanel panelBoards = new JPanel();
+		panelBoards.setBorder(new TitledBorder(null, "Boards",
+				TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panelBoards.setLayout(new BorderLayout(0, 0));
 
 		boardsTable = new AutoSelectTextTable(boardsTableModel);
@@ -136,8 +140,9 @@ public class BoardsPanel extends JPanel {
 		panelBoards.add(scrollPaneBoards, BorderLayout.CENTER);
 
 		JPanel panelPlacements = new JPanel();
+		panelPlacements.setBorder(new TitledBorder(null, "Placements",
+				TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panelPlacements.setLayout(new BorderLayout(0, 0));
-
 
 		JComboBox partsComboBox = new JComboBox(new PartsComboBoxModel());
 		partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
@@ -145,10 +150,13 @@ public class BoardsPanel extends JPanel {
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setAutoCreateRowSorter(true);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
-		placementsTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
-		
+		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
+				sidesComboBox));
+		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
+				partsComboBox));
+		placementsTable.setDefaultRenderer(Part.class,
+				new IdentifiableTableCellRenderer<Part>());
+
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
@@ -279,7 +287,11 @@ public class BoardsPanel extends JPanel {
 				File file = new File(new File(fileDialog.getDirectory()),
 						filename);
 
+				// Calling getBoard() loads the board if it's not loaded and
+				// fires the PCL that will refresh the table.
 				configuration.getBoard(file);
+
+				Helpers.selectLastTableRow(boardsTable);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -316,6 +328,8 @@ public class BoardsPanel extends JPanel {
 						fileDialog.getFile());
 
 				configuration.getBoard(file);
+
+				Helpers.selectLastTableRow(boardsTable);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -336,6 +350,15 @@ public class BoardsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (Configuration.get().getParts().size() == 0) {
+				MessageBoxes
+						.errorBox(
+								getTopLevelAncestor(),
+								"Error",
+								"There are currently no parts defined in the system. Please create at least one part before creating a placement.");
+				return;
+			}
+
 			Board board = getSelectedBoard();
 			// TODO: Make sure it's unique
 			String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
@@ -343,11 +366,18 @@ public class BoardsPanel extends JPanel {
 			if (id == null) {
 				return;
 			}
+			
+			
+			// TODO: Make sure it's unique.
 			Placement placement = new Placement(id);
+
+			placement.setPart(Configuration.get().getParts().get(0));
 			placement.getLocation().setUnits(
 					configuration.getMachine().getNativeUnits());
+			
 			board.addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();
+			Helpers.selectLastTableRow(placementsTable);
 		}
 	};
 

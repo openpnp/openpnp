@@ -75,34 +75,15 @@ import org.slf4j.LoggerFactory;
 public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
-	private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 	
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(listener);
-	}
-
-	public void addPropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
-	}
-
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(listener);
-	}
-
-	public void removePropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(propertyName,
-				listener);
-	}
-
 	@Element
 	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
 	@Element
 	private Location feedEndLocation = new Location(LengthUnit.Millimeters);
-	@Element
+	@Element(required=false)
 	private Length feedRate;
-	@Attribute
+	@Attribute(required=false)
 	private String actuatorId; 
 	@Element(required=false)
 	private Vision vision = new Vision();
@@ -131,6 +112,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	public Location feed(Head head, Location pickLocation)
 			throws Exception {
 		logger.debug("feed({}, {})", head, pickLocation);
+		
+		if (feedRate == null) {
+			throw new Exception("No feed rate set."); 
+		}
+		
+		if (actuatorId == null) {
+			throw new Exception("No actuator ID set.");
+		}
 		
 		/*
 		 * TODO: We can optimize the feed process:
@@ -381,6 +370,25 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 
 	public void setVision(Vision vision) {
 		this.vision = vision;
+	}
+	
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(listener);
+	}
+
+	public void addPropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(propertyName,
+				listener);
 	}
 
 	public static class Vision implements RequiresConfigurationResolution {

@@ -56,12 +56,12 @@ import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
-import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
-import org.openpnp.gui.tablemodel.BoardsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -78,6 +78,9 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.swing.border.TitledBorder;
+import javax.swing.border.EtchedBorder;
+import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel implements ConfigurationListener {
@@ -132,11 +135,13 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
-		
+
 		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
 		boardLocationsTable.setAutoCreateRowSorter(true);
-		boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+		boardLocationsTable
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
+				sidesComboBox));
 
 		boardLocationsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -157,19 +162,20 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 						}
 					}
 				});
-		
-		
+
 		JComboBox partsComboBox = new JComboBox(new PartsComboBoxModel());
 		partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
 
 		placementsTable = new AutoSelectTextTable(placementsTableModel);
 		placementsTable.setAutoCreateRowSorter(true);
 		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
-		placementsTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
+				sidesComboBox));
+		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
+				partsComboBox));
+		placementsTable.setDefaultRenderer(Part.class,
+				new IdentifiableTableCellRenderer<Part>());
 
-		
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
@@ -199,6 +205,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				});
 
 		JPanel pnlBoards = new JPanel();
+		pnlBoards.setBorder(new TitledBorder(new EtchedBorder(
+				EtchedBorder.LOWERED, null, null), "Boards",
+				TitledBorder.LEADING, TitledBorder.TOP, null,
+				new Color(0, 0, 0)));
 		pnlBoards.setLayout(new BorderLayout(0, 0));
 
 		JToolBar toolBarBoards = new JToolBar();
@@ -253,6 +263,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
 		JPanel pnlPlacements = new JPanel();
+		pnlPlacements.setBorder(new TitledBorder(null, "Placements",
+				TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		pnlPlacements.setLayout(new BorderLayout(0, 0));
 
 		JToolBar toolBarPlacements = new JToolBar();
@@ -292,9 +304,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	}
 
 	public void refreshSelectedBoardRow() {
-		boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(), boardLocationsTable.getSelectedRow());
+		boardLocationsTableModel.fireTableRowsUpdated(
+				boardLocationsTable.getSelectedRow(),
+				boardLocationsTable.getSelectedRow());
 	}
-	
 
 	public BoardLocation getSelectedBoardLocation() {
 		int index = boardLocationsTable.getSelectedRow();
@@ -618,12 +631,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				BoardLocation boardLocation = new BoardLocation(board);
 				jobProcessor.getJob().addBoardLocation(boardLocation);
 				boardLocationsTableModel.fireTableDataChanged();
-				
-				// Select the newly added board.
-				boardLocationsTable.clearSelection();
-				int index = boardLocationsTableModel.getRowCount() - 1;
-				index = boardLocationsTable.convertRowIndexToView(index);
-				boardLocationsTable.addRowSelectionInterval(index, index);
+
+				Helpers.selectLastTableRow(boardLocationsTable);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -663,12 +672,8 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				jobProcessor.getJob().addBoardLocation(boardLocation);
 				// TODO: Move to a list property listener.
 				boardLocationsTableModel.fireTableDataChanged();
-				
-				// Select the newly added board.
-				boardLocationsTable.clearSelection();
-				int index = boardLocationsTableModel.getRowCount() - 1;
-				index = boardLocationsTable.convertRowIndexToView(index);
-				boardLocationsTable.addRowSelectionInterval(index, index);
+
+				Helpers.selectLastTableRow(boardLocationsTable);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -853,6 +858,15 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (Configuration.get().getParts().size() == 0) {
+				MessageBoxes
+						.errorBox(
+								getTopLevelAncestor(),
+								"Error",
+								"There are currently no parts defined in the system. Please create at least one part before creating a placement.");
+				return;
+			}
+
 			BoardLocation boardLocation = getSelectedBoardLocation();
 			String id = JOptionPane.showInputDialog(frame,
 					"Please enter an ID for the new placement.");
@@ -861,15 +875,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			}
 			// TODO: Make sure it's unique.
 			Placement placement = new Placement(id);
+
+			placement.setPart(Configuration.get().getParts().get(0));
+			placement.getLocation().setUnits(
+					configuration.getMachine().getNativeUnits());
+			
 			boardLocation.getBoard().addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();
-			
-			// Select the newly added placement.
-			placementsTable.clearSelection();
-			int index = placementsTableModel.getRowCount() - 1;
-			index = placementsTable.convertRowIndexToView(index);
-			placementsTable.addRowSelectionInterval(index, index);
-			
+			Helpers.selectLastTableRow(placementsTable);
 		}
 	};
 

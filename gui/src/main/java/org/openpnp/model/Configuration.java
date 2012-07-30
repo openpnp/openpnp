@@ -21,13 +21,10 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -308,8 +305,8 @@ public class Configuration extends AbstractModelObject {
 		return packages.get(id.toUpperCase());
 	}
 	
-	public Collection<Package> getPackages() {
-		return Collections.unmodifiableCollection(packages.values());
+	public List<Package> getPackages() {
+		return Collections.unmodifiableList(new ArrayList<Package>(packages.values()));
 	}
 	
 	public void addPackage(Package pkg) {
@@ -325,8 +322,8 @@ public class Configuration extends AbstractModelObject {
 		return parts.get(id.toUpperCase());
 	}
 	
-	public Collection<Part> getParts() {
-		return Collections.unmodifiableCollection(parts.values());
+	public List<Part> getParts() {
+		return Collections.unmodifiableList(new ArrayList<Part>(parts.values()));
 	}
 	
 	public void addPart(Part part) {
@@ -501,8 +498,8 @@ public class Configuration extends AbstractModelObject {
 	 */
 	@Root(name="openpnp-packages")
 	public static class PackagesConfigurationHolder {
-		@ElementList(inline=true, entry="package")
-		private ArrayList<Package> packages;
+		@ElementList(inline=true, entry="package", required=false)
+		private ArrayList<Package> packages = new ArrayList<Package>();
 	}
 	
 	/**
@@ -510,7 +507,7 @@ public class Configuration extends AbstractModelObject {
 	 */
 	@Root(name="openpnp-parts")
 	public static class PartsConfigurationHolder {
-		@ElementList(inline=true, entry="part")
-		private ArrayList<Part> parts;
+		@ElementList(inline=true, entry="part", required=false)
+		private ArrayList<Part> parts = new ArrayList<Part>();
 	}
 }

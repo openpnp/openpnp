@@ -17,7 +17,7 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui;
 
@@ -54,6 +54,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
@@ -69,13 +70,14 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
-	private final static Logger logger = LoggerFactory.getLogger(FeedersPanel.class);
-	
+	private final static Logger logger = LoggerFactory
+			.getLogger(FeedersPanel.class);
+
 	private final Configuration configuration;
-	
+
 	private static final String PREF_DIVIDER_POSITION = "FeedersPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
-	
+
 	private JTable table;
 
 	private FeedersTableModel tableModel;
@@ -83,14 +85,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private JTextField searchTextField;
 	private JPanel generalConfigPanel;
 	private JPanel feederSpecificConfigPanel;
-	
-	private ActionGroup feederSelectedActionGroup; 
 
-	private Preferences prefs = Preferences.userNodeForPackage(FeedersPanel.class);
-	
+	private ActionGroup feederSelectedActionGroup;
+
+	private Preferences prefs = Preferences
+			.userNodeForPackage(FeedersPanel.class);
+
 	public FeedersPanel(Configuration configuration) {
 		this.configuration = configuration;
-		
+
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new FeedersTableModel(configuration);
 
@@ -101,19 +104,19 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
-		
+
 		JButton btnNewFeeder = new JButton(newFeederAction);
 		btnNewFeeder.setHideActionText(true);
 		toolBar.add(btnNewFeeder);
-		
+
 		JButton btnDeleteFeeder = new JButton(deleteFeederAction);
 		btnDeleteFeeder.setHideActionText(true);
 		toolBar.add(btnDeleteFeeder);
-		
+
 		toolBar.addSeparator();
 		toolBar.add(feedFeederAction);
 		toolBar.add(showPartAction);
-		
+
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
 
@@ -131,10 +134,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		searchTextField.setColumns(15);
 		table = new AutoSelectTextTable(tableModel);
 		tableSorter = new TableRowSorter<FeedersTableModel>(tableModel);
-		
+
 		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
+				PREF_DIVIDER_POSITION_DEF));
 		splitPane.addPropertyChangeListener("dividerLocation",
 				new PropertyChangeListener() {
 					@Override
@@ -144,68 +148,73 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					}
 				});
 		add(splitPane, BorderLayout.CENTER);
-		
+
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		
+
 		generalConfigPanel = new JPanel();
-		tabbedPane.addTab("General Configuration", null, generalConfigPanel, null);
+		tabbedPane.addTab("General Configuration", null, generalConfigPanel,
+				null);
 		generalConfigPanel.setLayout(new BorderLayout(0, 0));
-		
+
 		feederSpecificConfigPanel = new JPanel();
-		tabbedPane.addTab("Feeder Specific", null, feederSpecificConfigPanel, null);
+		tabbedPane.addTab("Feeder Specific", null, feederSpecificConfigPanel,
+				null);
 		feederSpecificConfigPanel.setLayout(new BorderLayout(0, 0));
-		
-		
+
 		splitPane.setLeftComponent(new JScrollPane(table));
 		splitPane.setRightComponent(tabbedPane);
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
-		feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction, showPartAction);
-		
-		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				
-				Feeder feeder = getSelectedFeeder();
-				
-				feederSelectedActionGroup.setEnabled(feeder != null);
-				
-				generalConfigPanel.removeAll();
-				feederSpecificConfigPanel.removeAll();
-				if (feeder != null) {
-					Wizard generalConfigWizard = new FeederConfigurationWizard(feeder, 
-							FeedersPanel.this.configuration);
-					if (generalConfigWizard != null) {
-						generalConfigWizard.setWizardContainer(FeedersPanel.this);
-						JPanel panel = generalConfigWizard.getWizardPanel();
-						generalConfigPanel.add(panel);
+
+		feederSelectedActionGroup = new ActionGroup(deleteFeederAction,
+				feedFeederAction, showPartAction);
+
+		table.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						if (e.getValueIsAdjusting()) {
+							return;
+						}
+
+						Feeder feeder = getSelectedFeeder();
+
+						feederSelectedActionGroup.setEnabled(feeder != null);
+
+						generalConfigPanel.removeAll();
+						feederSpecificConfigPanel.removeAll();
+						if (feeder != null) {
+							Wizard generalConfigWizard = new FeederConfigurationWizard(
+									feeder, FeedersPanel.this.configuration);
+							if (generalConfigWizard != null) {
+								generalConfigWizard
+										.setWizardContainer(FeedersPanel.this);
+								JPanel panel = generalConfigWizard
+										.getWizardPanel();
+								generalConfigPanel.add(panel);
+							}
+							Wizard wizard = feeder.getConfigurationWizard();
+							if (wizard != null) {
+								wizard.setWizardContainer(FeedersPanel.this);
+								JPanel panel = wizard.getWizardPanel();
+								feederSpecificConfigPanel.add(panel);
+							}
+						}
+						revalidate();
+						repaint();
 					}
-					Wizard wizard = feeder.getConfigurationWizard();
-					if (wizard != null) {
-						wizard.setWizardContainer(FeedersPanel.this);
-						JPanel panel = wizard.getWizardPanel();
-						feederSpecificConfigPanel.add(panel);
-					}
-				}
-				revalidate();
-				repaint();
-			}
-		});
-		
+				});
+
 		feederSelectedActionGroup.setEnabled(false);
 	}
-	
+
 	private Feeder getSelectedFeeder() {
 		int index = table.getSelectedRow();
-		
+
 		if (index == -1) {
 			return null;
 		}
-		
+
 		index = table.convertRowIndexToModel(index);
 		return tableModel.getFeeder(index);
 	}
@@ -214,7 +223,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		RowFilter<FeedersTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
 		try {
-			rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+			rf = RowFilter.regexFilter("(?i)"
+					+ searchTextField.getText().trim());
 		}
 		catch (PatternSyntaxException e) {
 			logger.warn("Search failed", e);
@@ -231,21 +241,30 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	@Override
 	public void wizardCancelled(Wizard wizard) {
 	}
-	
+
 	public Action newFeederAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON,
 					new ImageIcon(getClass().getResource("/icons/new.png")));
 			putValue(NAME, "New Feeder...");
-			putValue(SHORT_DESCRIPTION,
-					"Create a new feeder.");
+			putValue(SHORT_DESCRIPTION, "Create a new feeder.");
 		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (Configuration.get().getParts().size() == 0) {
+				MessageBoxes
+						.errorBox(
+								getTopLevelAncestor(),
+								"Error",
+								"There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
+				return;
+			}
+
 			ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<Feeder>(
-					JOptionPane.getFrameForComponent(FeedersPanel.this), 
-					"Select Feeder...", 
-					"Please select a Feeder implemention from the list below.", 
+					JOptionPane.getFrameForComponent(FeedersPanel.this),
+					"Select Feeder...",
+					"Please select a Feeder implemention from the list below.",
 					configuration.getMachine().getCompatibleFeederClasses());
 			dialog.setVisible(true);
 			Class<? extends Feeder> feederClass = dialog.getSelectedClass();
@@ -254,16 +273,21 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			}
 			try {
 				Feeder feeder = feederClass.newInstance();
+
+				feeder.setName(Helpers.createUniqueName("F", Configuration.get().getMachine().getFeeders(), "name"));
+				feeder.setPart(Configuration.get().getParts().get(0));
+				feeder.getLocation().setUnits(Configuration.get().getSystemUnits());
+				
 				configuration.resolve(feeder);
 				configuration.getMachine().addFeeder(feeder);
 				tableModel.refresh();
+				Helpers.selectLastTableRow(table);
 				configuration.setDirty(true);
 			}
 			catch (Exception e) {
 				MessageBoxes.errorBox(
-						JOptionPane.getFrameForComponent(FeedersPanel.this), 
-						"Feeder Error", 
-						e);
+						JOptionPane.getFrameForComponent(FeedersPanel.this),
+						"Feeder Error", e);
 			}
 		}
 	};
@@ -273,15 +297,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			putValue(SMALL_ICON,
 					new ImageIcon(getClass().getResource("/icons/delete.png")));
 			putValue(NAME, "Delete Feeder");
-			putValue(SHORT_DESCRIPTION,
-					"Delete the selected feeder.");
+			putValue(SHORT_DESCRIPTION, "Delete the selected feeder.");
 		}
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			configuration.getMachine().removeFeeder(getSelectedFeeder());
+//			configuration.getMachine().removeFeeder(getSelectedFeeder());
+			MessageBoxes.notYetImplemented(getTopLevelAncestor());
 		}
 	};
-	
 
 	public Action feedFeederAction = new AbstractAction() {
 		{
@@ -291,7 +315,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			putValue(SHORT_DESCRIPTION,
 					"Command the selected feeder to perform a feed operation.");
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			new Thread() {
@@ -302,13 +326,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 						feeder.feed(head, feeder.getLocation());
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);
+						MessageBoxes.errorBox(FeedersPanel.this, "Feed Error",
+								e);
 					}
 				}
 			}.start();
 		}
 	};
-	
+
 	public Action showPartAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON,
@@ -318,7 +343,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			putValue(SHORT_DESCRIPTION,
 					"Show an outline of the part for the selected feeder in the camera view.");
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			Feeder feeder = getSelectedFeeder();
@@ -328,12 +353,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					org.openpnp.model.Package pkg = part.getPackage();
 					if (pkg != null) {
 						Outline outline = pkg.getOutline();
-						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+						CameraView cameraView = MainFrame.cameraPanel
+								.getSelectedCameraView();
 						if (cameraView.getReticle(this) != null) {
 							cameraView.removeReticle(this);
 						}
 						else {
-							cameraView.setReticle(this, new OutlineReticle(outline));
+							cameraView.setReticle(this, new OutlineReticle(
+									outline));
 						}
 					}
 				}

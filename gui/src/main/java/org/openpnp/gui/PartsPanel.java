@@ -48,6 +48,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
@@ -158,7 +159,7 @@ public class PartsPanel extends JPanel {
 		partsTableSorter.setRowFilter(rf);
 	}
 
-	public Action newPartAction = new AbstractAction() {
+	public final Action newPartAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/new.png")));
 			putValue(NAME, "New Part...");
@@ -166,6 +167,15 @@ public class PartsPanel extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			if (Configuration.get().getPackages().size() == 0) {
+				MessageBoxes
+						.errorBox(
+								getTopLevelAncestor(),
+								"Error",
+								"There are currently no packages defined in the system. Please create at least one package before creating a part.");
+				return;
+			}
+			
 			String id;
 			while ((id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new part.")) != null) {
 				if (configuration.getPart(id) != null) {
@@ -173,14 +183,18 @@ public class PartsPanel extends JPanel {
 					continue;
 				}
 				Part part = new Part(id);
+				
+				part.setPackage(Configuration.get().getPackages().get(0));
+				
 				configuration.addPart(part);
 				partsTableModel.fireTableDataChanged();
+				Helpers.selectLastTableRow(partsTable);
 				break;
 			}
 		}
 	};
 	
-	public Action deletePartAction = new AbstractAction() {
+	public final Action deletePartAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/delete.png")));
 			putValue(NAME, "Delete Part");
