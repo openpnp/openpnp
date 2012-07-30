@@ -24,6 +24,7 @@ package org.openpnp.spi;
 import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -33,7 +34,7 @@ import org.openpnp.model.Part;
  * is the movable object in a Machine.
  * Unless otherwise noted, the methods in this class block while performing their operations.
  */
-public interface Head {
+public interface Head extends Identifiable {
 	/**
 	 * Directs the head to move to it's home position and set all it's axes to 0. 
 	 */
@@ -178,6 +179,7 @@ public interface Head {
 	 */
 	public Wizard getConfigurationWizard();
 	
+	@Override
 	public String getId();
 	
 	public Machine getMachine();

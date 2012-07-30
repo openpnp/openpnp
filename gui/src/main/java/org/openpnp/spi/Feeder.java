@@ -38,6 +38,7 @@ public interface Feeder extends Identifiable {
 	 * Gets the id that was set when the Feeder was initialized.
 	 * @return
 	 */
+	@Override
 	public String getId();
 	
 	public void setId(String id);
