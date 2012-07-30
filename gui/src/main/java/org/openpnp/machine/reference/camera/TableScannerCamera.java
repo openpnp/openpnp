@@ -171,7 +171,12 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	}
 	
 	public String getCacheSizeDescription() {
-		return FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(cacheDirectory));
+		try {
+			return FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(cacheDirectory));
+		}
+		catch (Exception e) {
+			return "Not Initialized";
+		}
 	}
 	
 	public synchronized void clearCache() throws IOException {
@@ -198,6 +203,12 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	}
 	
 	private BufferedImage renderFrame() {
+		if (buffer == null) {
+			return null;
+		}
+		if (head == null) {
+			return null;
+		}
 		synchronized (buffer) {
 			// Grab these values only once since the head may continue to move
 			// while we are rendering.

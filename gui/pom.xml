@@ -86,36 +86,36 @@
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 			<classifier>linux-x86</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 			<classifier>linux-x86_64</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 			<classifier>macosx-x86_64</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 			<classifier>windows-x86</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 			<classifier>windows-x86_64</classifier>
 		</dependency>
 	</dependencies>
