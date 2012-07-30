@@ -314,7 +314,6 @@ public class Configuration extends AbstractModelObject {
 	
 	public void addPackage(Package pkg) {
 		packages.put(pkg.getId().toUpperCase(), pkg);
-//		pkg.addPropertyChangeListener("id", partIdPcl);
 		dirty = true;
 		firePropertyChange("packages", null, packages);
 	}
@@ -332,7 +331,6 @@ public class Configuration extends AbstractModelObject {
 	
 	public void addPart(Part part) {
 		parts.put(part.getId().toUpperCase(), part);
-		part.addPropertyChangeListener("id", partIdPcl);
 		dirty = true;
 		firePropertyChange("parts", null, parts);
 	}
@@ -488,19 +486,6 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = new Persister(strategy, format);
 		return serializer;
 	}
-	
-	/**
-	 * Listens for changes in a Part's Id field and resets it's Id in
-	 * the parts Map if it changes.
-	 */
-	private PropertyChangeListener partIdPcl = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			Part part = (Part) evt.getSource();
-			parts.remove(part);
-			parts.put(part.getId().toUpperCase(), part);
-		}
-	};
 	
 	/**
 	 * Used to provide a fixed root for the Machine when serializing. 

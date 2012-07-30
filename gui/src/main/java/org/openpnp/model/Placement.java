@@ -49,13 +49,14 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	@Attribute
 	private String partId;
 	
+	@SuppressWarnings("unused")
 	private Placement() {
-		setLocation(new Location(LengthUnit.Millimeters));
+		this(null);
 	}
 	
 	public Placement(String id) {
-		this();
-		setId(id);
+		this.id = id;
+		setLocation(new Location(LengthUnit.Millimeters));
 	}
 	
 	@Override
@@ -69,6 +70,7 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 		partId = (part == null ? null : part.getId());
 	}
 	
+	@SuppressWarnings("unused")
 	@Commit
 	private void commit() {
 		setLocation(location);
@@ -86,12 +88,6 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		Object oldValue = this.id;
-		this.id = id;
-		firePropertyChange("id", oldValue, id);
 	}
 
 	public Location getLocation() {

@@ -48,13 +48,6 @@ public interface Machine {
 	public Head getHead(String id);
 	
 	/**
-	 * Gets the Feeder defined with the specified id.
-	 * @param id
-	 * @return
-	 */
-	public Feeder getFeeder(String id);
-	
-	/**
 	 * Gets a List of Feeders attached to the Machine.
 	 * @return
 	 */

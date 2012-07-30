@@ -172,8 +172,7 @@ public class PartsPanel extends JPanel {
 					MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
 					continue;
 				}
-				Part part = new Part();
-				part.setId(id);
+				Part part = new Part(id);
 				configuration.addPart(part);
 				partsTableModel.fireTableDataChanged();
 				break;

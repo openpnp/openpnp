@@ -61,6 +61,7 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
+import org.openpnp.gui.tablemodel.BoardsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -617,6 +618,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				BoardLocation boardLocation = new BoardLocation(board);
 				jobProcessor.getJob().addBoardLocation(boardLocation);
 				boardLocationsTableModel.fireTableDataChanged();
+				
+				// Select the newly added board.
+				boardLocationsTable.clearSelection();
+				int index = boardLocationsTableModel.getRowCount() - 1;
+				index = boardLocationsTable.convertRowIndexToView(index);
+				boardLocationsTable.addRowSelectionInterval(index, index);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -654,7 +661,14 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				Board board = configuration.getBoard(file);
 				BoardLocation boardLocation = new BoardLocation(board);
 				jobProcessor.getJob().addBoardLocation(boardLocation);
+				// TODO: Move to a list property listener.
 				boardLocationsTableModel.fireTableDataChanged();
+				
+				// Select the newly added board.
+				boardLocationsTable.clearSelection();
+				int index = boardLocationsTableModel.getRowCount() - 1;
+				index = boardLocationsTable.convertRowIndexToView(index);
+				boardLocationsTable.addRowSelectionInterval(index, index);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -849,6 +863,13 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			Placement placement = new Placement(id);
 			boardLocation.getBoard().addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();
+			
+			// Select the newly added placement.
+			placementsTable.clearSelection();
+			int index = placementsTableModel.getRowCount() - 1;
+			index = placementsTable.convertRowIndexToView(index);
+			placementsTable.addRowSelectionInterval(index, index);
+			
 		}
 	};
 

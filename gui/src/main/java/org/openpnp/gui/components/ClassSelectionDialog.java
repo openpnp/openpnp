@@ -46,6 +46,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+@SuppressWarnings("serial")
 public class ClassSelectionDialog<T> extends JDialog {
 	private Class<? extends T> selectedClass;
 	private JList list;

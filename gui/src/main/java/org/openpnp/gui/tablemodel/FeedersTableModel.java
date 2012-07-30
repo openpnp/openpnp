@@ -33,7 +33,7 @@ import org.openpnp.spi.Feeder;
 public class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };
+	private String[] columnNames = new String[] { "Name", "Type", "Enabled" };
 	private List<Feeder> feeders;
 
 	public FeedersTableModel(Configuration configuration) {
@@ -80,7 +80,7 @@ public class FeedersTableModel extends AbstractTableModel implements Configurati
 				if (aValue == null || aValue.toString().trim().length() == 0) {
 					return;
 				}
-				feeder.setId(aValue.toString());
+				feeder.setName(aValue.toString());
 			}
 			else if (columnIndex == 2) {
 				feeder.setEnabled((Boolean) aValue);
@@ -103,7 +103,7 @@ public class FeedersTableModel extends AbstractTableModel implements Configurati
 	public Object getValueAt(int row, int col) {
 		switch (col) {
 		case 0:
-			return feeders.get(row).getId();
+			return feeders.get(row).getName();
 		case 1:
 			return feeders.get(row).getClass().getSimpleName();
 		case 2:

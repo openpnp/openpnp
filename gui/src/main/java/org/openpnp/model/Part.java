@@ -45,6 +45,15 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	@Attribute
 	private String packageId;
 	
+	@SuppressWarnings("unused")
+	private Part() {
+		this(null);
+	}
+	
+	public Part(String id) {
+		this.id = id;
+	}
+	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		setPackage(configuration.getPackage(packageId));
@@ -59,15 +68,6 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	@Override
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		if (id == null) {
-			throw new IllegalArgumentException("Part.id must not be null.");
-		}
-		Object oldValue = this.id;
-		this.id = id;
-		firePropertyChange("id", oldValue, id);
 	}
 
 	public String getName() {

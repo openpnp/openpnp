@@ -59,10 +59,9 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	@ElementList
 	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
 	@ElementList(name="feeders")
-	private ArrayList<ReferenceFeeder> feedersList = new ArrayList<ReferenceFeeder>();
+	private ArrayList<ReferenceFeeder> feeders = new ArrayList<ReferenceFeeder>();
 
 	private LinkedHashMap<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
-	private LinkedHashMap<String, ReferenceFeeder> feeders = new LinkedHashMap<String, ReferenceFeeder>();
 	
 	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
 	private boolean enabled;
@@ -73,9 +72,6 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		for (ReferenceHead head : headsList) {
 			heads.put(head.getId(), head);
 		}
-		for (ReferenceFeeder feeder : feedersList) {
-			feeders.put(feeder.getId(), feeder);
-		}
 	}
 	
 	@SuppressWarnings("unused")
@@ -83,8 +79,6 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	private void persist() {
 		headsList.clear();
 		headsList.addAll(heads.values());
-		feedersList.clear();
-		feedersList.addAll(feeders.values());
 	}
 	
 	@Override
@@ -96,14 +90,9 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		for (ReferenceCamera camera : cameras) {
 			configuration.resolve(camera);
 		}
-		for (ReferenceFeeder feeder : feeders.values()) {
+		for (ReferenceFeeder feeder : feeders) {
 			configuration.resolve(feeder);
 		}
-	}
-
-	@Override
-	public Feeder getFeeder(String id) {
-		return feeders.get(id);
 	}
 
 	@Override
@@ -128,8 +117,8 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	@Override
 	public List<Feeder> getFeeders() {
 		ArrayList<Feeder> l = new ArrayList<Feeder>();
-		l.addAll(feeders.values());
-		return l;
+		l.addAll(feeders);
+		return Collections.unmodifiableList(l);
 	}
 
 	@Override
@@ -248,16 +237,7 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 			throw new Exception("Can't add a Feeder that is not an instance of ReferenceFeeder.");
 		}
 		ReferenceFeeder referenceFeeder = (ReferenceFeeder) feeder;
-		// Create an Id for the feeder.
-		for (int i = 0; i < Integer.MAX_VALUE; i++) {
-			String id = "F" + Integer.toString(i);
-			if (!feeders.containsKey(id)) {
-				referenceFeeder.setId(id);
-				feeders.put(id, referenceFeeder);
-				return;
-			}
-		}
-		throw new Exception("Could not create a new Id for the Feeder.");
+		feeders.add(referenceFeeder);
 	}
 	
 	@Override

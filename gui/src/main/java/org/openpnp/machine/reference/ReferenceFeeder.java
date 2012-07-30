@@ -29,14 +29,19 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
  * A common base class for Feeders that the ReferenceMachine supports.
  */
 public abstract class ReferenceFeeder implements Feeder, RequiresConfigurationResolution {
-	@Attribute
+	// TODO: Remove a few versions from now, once people have had their XML
+	// upgraded.
+	@Attribute(required=false)
 	protected String id;
+	@Attribute(required=false)
+	protected String name;
 	@Attribute(required=false)
 	protected boolean enabled;
 	@Element(required=false)
@@ -45,10 +50,19 @@ public abstract class ReferenceFeeder implements Feeder, RequiresConfigurationRe
 	protected String partId;
 	
 	protected Part part;
-
+	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		setPart(configuration.getPart(partId));
+	}
+	
+	@SuppressWarnings("unused")
+	@Commit
+	private void commit() {
+		if (name == null) {
+			name = id;
+		}
+		id = null;
 	}
 	
 	@SuppressWarnings("unused")
@@ -96,13 +110,13 @@ public abstract class ReferenceFeeder implements Feeder, RequiresConfigurationRe
 	}
 
 	@Override
-	public String getId() {
-		return id;
+	public String getName() {
+		return name;
 	}
 
 	@Override
-	public void setId(String id) {
-		this.id = id;
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	public void start(ReferenceMachine machine) throws Exception {

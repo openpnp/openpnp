@@ -50,6 +50,15 @@ public class ReferenceActuator implements Actuator, RequiresConfigurationResolut
 	private ReferenceMachine machine;
 	private ReferenceHead head;
 	
+	@SuppressWarnings("unused")
+	private ReferenceActuator() {
+		this(null);
+	}
+	
+	public ReferenceActuator(String id) {
+		this.id = id;
+	}
+	
 	@Override
 	public void resolve(Configuration configuration) throws Exception {
 		this.machine = (ReferenceMachine) configuration.getMachine();
@@ -61,10 +70,6 @@ public class ReferenceActuator implements Actuator, RequiresConfigurationResolut
 
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	@Override

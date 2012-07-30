@@ -78,7 +78,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return true;
+		return columnIndex != 0;
 	}
 	
 	public Part getPart(int index) {
@@ -89,13 +89,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
 			Part part = parts.get(rowIndex);
-			if (columnIndex == 0) {
-				if (aValue == null || aValue.toString().trim().length() == 0) {
-					return;
-				}
-				part.setId(aValue.toString());
-			}
-			else if (columnIndex == 1) {
+			if (columnIndex == 1) {
 				part.setName((String) aValue);
 			}
 			else if (columnIndex == 2) {

@@ -75,6 +75,14 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	private ArrayList<ReferenceActuator> actuatorsList = new ArrayList<ReferenceActuator>();
 
 	private LinkedHashMap<String, ReferenceActuator> actuators = new LinkedHashMap<String, ReferenceActuator>();
+	
+	private ReferenceHead() {
+		this(null);
+	}
+	
+	public ReferenceHead(String id) {
+		this.id = id;
+	}
 
 	@Commit
 	private void commit() {
@@ -98,10 +106,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		}
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
+	@Override
 	public String getId() {
 		return id;
 	}

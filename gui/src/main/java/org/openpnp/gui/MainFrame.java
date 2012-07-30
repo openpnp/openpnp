@@ -66,7 +66,6 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.support.FeederCellValue;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -126,7 +125,6 @@ public class MainFrame extends JFrame {
 		this.configuration = configuration;
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);
-		FeederCellValue.setConfiguration(configuration);
 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 

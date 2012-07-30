@@ -316,7 +316,7 @@ public class JobProcessor implements Runnable {
 				}
 
 				// TODO: Need to be able to see the thing that caused an error, but we also want to see what is about to happen when paused. Figure it out.
-				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getId()));
+				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getName()));
 				
 				if (!shouldJobProcessingContinue()) {
 					return;
