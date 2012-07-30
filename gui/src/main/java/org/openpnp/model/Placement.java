@@ -122,4 +122,9 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	public void propertyChange(PropertyChangeEvent evt) {
 		propertyChangeSupport.firePropertyChange(evt);
 	}
+
+	@Override
+	public String toString() {
+		return String.format("id %s, location %s, side %s, part %s", id, location, side, part);
+	}
 }
