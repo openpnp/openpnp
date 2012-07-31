@@ -61,7 +61,6 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	
 	private JCheckBox chckbxSoftLimitsEnabled;
 	private JTextField textFieldFeedRate;
-	private JTextField textFieldId;
 	private JTextField textFieldPickDwell;
 	private JTextField textFieldPlaceDwell;
 	private JLabel lblNewLabel;
@@ -141,13 +140,6 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
-		
-		JLabel lblId = new JLabel("Id");
-		panelGeneral.add(lblId, "2, 2, right, default");
-		
-		textFieldId = new JTextField();
-		panelGeneral.add(textFieldId, "4, 2");
-		textFieldId.setColumns(8);
 		
 		JLabel lblFeedRate = new JLabel("Feed Rate (units/min)");
 		panelGeneral.add(lblFeedRate, "6, 2, right, default");
@@ -381,8 +373,6 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		IntegerConverter integerConverter = new IntegerConverter();
 		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
-		
-		wrappedBindings.add(JBindings.bind(head, "id", textFieldId, "text", listener));
 		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "pickDwellMilliseconds", textFieldPickDwell, "text", integerConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "placeDwellMilliseconds", textFieldPlaceDwell, "text", integerConverter, listener));
@@ -407,8 +397,6 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthX", textFieldHomingDotX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthY", textFieldHomingDotY, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthZ", textFieldHomingDotZ, "text", lengthConverter, listener));
-		
-		ComponentDecorators.decorateWithAutoSelect(textFieldId);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPickDwell);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPlaceDwell);
