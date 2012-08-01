@@ -121,18 +121,31 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	
 	@Attribute
 	private String portName;
+	
 	@Attribute
 	private int baud;
+	
 	@Attribute(required=false)
 	private int vacuumPin = 31;
+	
+	@Attribute(required=false)
+	private boolean invertVacuum;
+	
 	@Attribute(required=false)
 	private int actuatorPin = 33;
+	
+	@Attribute(required=false)
+	private boolean invertActuator;
+	
 	@Attribute(required=false)
 	private boolean homeX;
+	
 	@Attribute(required=false)
 	private boolean homeY;
+	
 	@Attribute(required=false)
 	private boolean homeZ;
+	
 	@Attribute(required=false)
 	private boolean homeC;
 	
@@ -156,7 +169,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	public void actuate(ReferenceHead head, int index, boolean on)
 			throws Exception {
 		if (index == 0) {
-			sendCommand(String.format("M42 P%d S%d", actuatorPin, on ? 255 : 0));
+			sendCommand(String.format("M42 P%d S%d", actuatorPin, on ^ invertActuator ? 255 : 0));
 			dwell();
 		}
 	}
@@ -205,17 +218,19 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
 		sendCommand(String.format("M84 %s", enabled ? "T" : ""));
+		place(null);
+		actuate(null, 0, false);
 	}
 
 	@Override
 	public void pick(ReferenceHead head, Part part) throws Exception {
-		sendCommand(String.format("M42 P%d S%d", vacuumPin, 255));
+		sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 0 : 255));
 		dwell();
 	}
 
 	@Override
 	public void place(ReferenceHead head) throws Exception {
-		sendCommand(String.format("M42 P%d S%d", vacuumPin, 0));
+		sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 255 : 0));
 		dwell();
 	}
 
