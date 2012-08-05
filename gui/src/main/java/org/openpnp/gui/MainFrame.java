@@ -169,6 +169,15 @@ public class MainFrame extends JFrame {
 		mnFile.addSeparator();
 		mnFile.add(new JMenuItem(jobPanel.saveJobAction));
 		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
+		
+		// File -> Import
+		//////////////////////////////////////////////////////////////////////
+		mnFile.addSeparator();
+		JMenu mnImport = new JMenu("Import Board");
+		mnFile.add(mnImport);
+		mnImport.add(new JMenuItem(jobPanel.importMountsmdUlpAction));
+		
+		
 		if (!macOsXMenus) {
 			mnFile.addSeparator();
 			mnFile.add(new JMenuItem(quitAction));
@@ -584,6 +593,7 @@ public class MainFrame extends JFrame {
 			about();
 		}
 	};
+	
 	private JPanel panelInstructions;
 	private JPanel panelInstructionActions;
 	private JPanel panel_1;

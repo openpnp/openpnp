@@ -22,6 +22,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
@@ -43,6 +44,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -54,6 +57,8 @@ import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.importer.MountsmdUlpImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -78,9 +83,6 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.swing.border.TitledBorder;
-import javax.swing.border.EtchedBorder;
-import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel implements ConfigurationListener {
@@ -475,7 +477,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		frame.setTitle(title);
 	}
 
-	public Action openJobAction = new AbstractAction("Open Job...") {
+	public final Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			if (!checkForModifications()) {
@@ -505,7 +507,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action newJobAction = new AbstractAction("New Job") {
+	public final Action newJobAction = new AbstractAction("New Job") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			if (!checkForModifications()) {
@@ -515,21 +517,21 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action saveJobAction = new AbstractAction("Save Job") {
+	public final Action saveJobAction = new AbstractAction("Save Job") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			saveJob();
 		}
 	};
 
-	public Action saveJobAsAction = new AbstractAction("Save Job As...") {
+	public final Action saveJobAsAction = new AbstractAction("Save Job As...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			saveJobAs();
 		}
 	};
 
-	public Action startPauseResumeJobAction = new AbstractAction() {
+	public final Action startPauseResumeJobAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -560,7 +562,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action stepJobAction = new AbstractAction() {
+	public final Action stepJobAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -581,7 +583,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action stopJobAction = new AbstractAction() {
+	public final Action stopJobAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -596,7 +598,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action newBoardAction = new AbstractAction() {
+	public final Action newBoardAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON,
 					new ImageIcon(JobPanel.class.getResource("/icons/new.png")));
@@ -642,7 +644,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action addBoardAction = new AbstractAction() {
+	public final Action addBoardAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON,
 					new ImageIcon(JobPanel.class.getResource("/icons/add.png")));
@@ -683,7 +685,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action removeBoardAction = new AbstractAction("Remove Board") {
+	public final Action removeBoardAction = new AbstractAction("Remove Board") {
 		{
 			putValue(
 					SMALL_ICON,
@@ -708,7 +710,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action captureCameraBoardLocationAction = new AbstractAction() {
+	public final Action captureCameraBoardLocationAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -729,7 +731,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action captureToolBoardLocationAction = new AbstractAction() {
+	public final Action captureToolBoardLocationAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -750,7 +752,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action moveCameraToBoardLocationAction = new AbstractAction(
+	public final Action moveCameraToBoardLocationAction = new AbstractAction(
 			"Move Camera To Board Location") {
 		{
 			putValue(
@@ -792,7 +794,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action moveToolToBoardLocationAction = new AbstractAction() {
+	public final Action moveToolToBoardLocationAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -830,7 +832,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action twoPointLocateBoardLocationAction = new AbstractAction() {
+	public final Action twoPointLocateBoardLocationAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -847,7 +849,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action newPlacementAction = new AbstractAction() {
+	public final Action newPlacementAction = new AbstractAction() {
 		{
 			putValue(SMALL_ICON,
 					new ImageIcon(JobPanel.class.getResource("/icons/new.png")));
@@ -886,7 +888,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action removePlacementAction = new AbstractAction() {
+	public final Action removePlacementAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -906,7 +908,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action captureCameraPlacementLocation = new AbstractAction() {
+	public final Action captureCameraPlacementLocation = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -923,7 +925,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public Action captureToolPlacementLocation = new AbstractAction() {
+	public final Action captureToolPlacementLocation = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
@@ -939,8 +941,29 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			MessageBoxes.notYetImplemented(getTopLevelAncestor());
 		}
 	};
-
-	private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
+	
+	public final Action importMountsmdUlpAction = new AbstractAction("EAGLE mountsmd.ulp") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if (getSelectedBoardLocation() == null) {
+				return;
+			}
+			BoardImporter importer = new MountsmdUlpImporter(JOptionPane.getFrameForComponent(JobPanel.this));
+			try {
+				Board importedBoard = importer.importBoard();
+				Board existingBoard = getSelectedBoardLocation().getBoard();
+				for (Placement placement : importedBoard.getPlacements()) {
+					existingBoard.addPlacement(placement);
+				}
+				placementsTableModel.fireTableDataChanged();
+			}
+			catch (Exception e) {
+				MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+			}
+		}
+	};
+	
+	private final JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
 		@Override
 		public void jobStateChanged(JobState state) {
 			updateJobActions();
@@ -965,7 +988,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	private JobProcessorDelegate jobProcessorDelegate = new JobProcessorDelegate() {
+	private final JobProcessorDelegate jobProcessorDelegate = new JobProcessorDelegate() {
 		@Override
 		public PickRetryAction partPickFailed(BoardLocation board, Part part,
 				Feeder feeder) {
@@ -973,7 +996,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	private MachineListener machineListener = new MachineListener.Adapter() {
+	private final MachineListener machineListener = new MachineListener.Adapter() {
 		@Override
 		public void machineEnabled(Machine machine) {
 			updateJobActions();
@@ -986,7 +1009,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	private PropertyChangeListener titlePropertyChangeListener = new PropertyChangeListener() {
+	private final PropertyChangeListener titlePropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			updateTitle();

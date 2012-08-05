@@ -58,13 +58,13 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	private transient File file;
 	private transient boolean dirty;
 	
-	private Board() {
-		addPropertyChangeListener(this);
+	public Board() {
+		this(null);
 	}
 	
 	public Board(File file) {
-		this();
 		setFile(file);
+		addPropertyChangeListener(this);
 	}
 	
 	@Override
@@ -74,6 +74,7 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	@Commit
 	private void commit() {
 		for (Placement placement : placements) {
