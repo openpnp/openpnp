@@ -139,7 +139,16 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
+		
+		label = new JLabel("Safe-Z");
+		panelGeneral.add(label, "2, 2, right, default");
+		
+		textFieldSafeZ = new JTextField();
+		textFieldSafeZ.setColumns(8);
+		panelGeneral.add(textFieldSafeZ, "4, 2");
 		
 		JLabel lblFeedRate = new JLabel("Feed Rate (units/min)");
 		panelGeneral.add(lblFeedRate, "6, 2, right, default");
@@ -373,6 +382,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		IntegerConverter integerConverter = new IntegerConverter();
 		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
+		wrappedBindings.add(JBindings.bind(head, "safeZ", textFieldSafeZ, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "pickDwellMilliseconds", textFieldPickDwell, "text", integerConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "placeDwellMilliseconds", textFieldPlaceDwell, "text", integerConverter, listener));
@@ -397,6 +407,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthX", textFieldHomingDotX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthY", textFieldHomingDotY, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthZ", textFieldHomingDotZ, "text", lengthConverter, listener));
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPickDwell);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPlaceDwell);
@@ -464,4 +475,6 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 			loadFromModel();
 		}
 	};
+	private JLabel label;
+	private JTextField textFieldSafeZ;
 }

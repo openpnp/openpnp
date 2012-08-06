@@ -73,6 +73,8 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	private Homing homing = new Homing();
 	@ElementList(required = false, name = "actuators")
 	private ArrayList<ReferenceActuator> actuatorsList = new ArrayList<ReferenceActuator>();
+	@Element(required=false)
+	private Length safeZ = new Length(0, LengthUnit.Millimeters);
 
 	private LinkedHashMap<String, ReferenceActuator> actuators = new LinkedHashMap<String, ReferenceActuator>();
 	
@@ -111,6 +113,14 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	@Override
 	public String getId() {
 		return id;
+	}
+	
+	public Length getSafeZ() {
+		return safeZ;
+	}
+
+	public void setSafeZ(Length safeZ) {
+		this.safeZ = safeZ;
 	}
 
 	@Override
@@ -339,7 +349,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	}
 	
 	public void moveToSafeZ() throws Exception {
-		moveTo(getX(), getY(), 0, getC());
+		moveTo(getX(), getY(), safeZ.convertToUnits(machine.getNativeUnits()).getValue(), getC());
 	}
 	
 	/**
