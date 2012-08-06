@@ -58,7 +58,6 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 	
 	private JTextField textFieldOffsetsX;
 	private JTextField textFieldOffsetsY;
-	private JTextField textFieldOffsetsZ;
 	private JTextField textFielTrayCountX;
 	private JTextField textFieldTrayCountY;
 	
@@ -116,9 +115,6 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		JLabel lblY = new JLabel("Y");
 		panelFields.add(lblY, "6, 2");
 
-		JLabel lblZ = new JLabel("Z");
-		panelFields.add(lblZ, "8, 2");
-
 		JLabel lblFeedStartLocation = new JLabel("Offsets");
 		panelFields.add(lblFeedStartLocation, "2, 4, right, default");
 
@@ -129,10 +125,6 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		textFieldOffsetsY = new JTextField();
 		panelFields.add(textFieldOffsetsY, "6, 4, fill, default");
 		textFieldOffsetsY.setColumns(10);
-
-		textFieldOffsetsZ = new JTextField();
-		panelFields.add(textFieldOffsetsZ, "8, 4, fill, default");
-		textFieldOffsetsZ.setColumns(10);
 
 		JLabel lblTrayCount = new JLabel("Tray Count");
 		panelFields.add(lblTrayCount, "2, 6, right, default");
@@ -174,14 +166,12 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		
 		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthX", textFieldOffsetsX, "text", lengthConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthY", textFieldOffsetsY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthZ", textFieldOffsetsZ, "text", lengthConverter, listener));
 		
 		wrappedBindings.add(JBindings.bind(feeder, "trayCountX", textFielTrayCountX, "text", integerConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "trayCountY", textFieldTrayCountY, "text", integerConverter, listener));
 		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsZ);
 		
 		ComponentDecorators.decorateWithAutoSelect(textFielTrayCountX);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountY);
