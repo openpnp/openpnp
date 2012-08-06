@@ -65,8 +65,18 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 		// Convert all the Locations we'll be dealing with
 		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
 		
-		int partX = (pickCount / trayCountX);
-		int partY = (pickCount - (partX * trayCountX));
+		int partX, partY;
+		
+		if (trayCountX >= trayCountY) {
+			// X major axis.
+			partX = pickCount / trayCountY;
+			partY = pickCount % trayCountY;
+		}
+		else {
+			// Y major axis.
+			partX = pickCount % trayCountX;
+			partY = pickCount / trayCountX;
+		}
 
 		Location l = new Location();
 		l.setX(pickLocation.getX() + (partX * offsets.getX()));
@@ -120,5 +130,4 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	public void setPickCount(int pickCount) {
 		this.pickCount = pickCount;
 	}
-
 }
