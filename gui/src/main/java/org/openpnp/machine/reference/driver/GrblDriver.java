@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurationResolution {
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
-	private static final double minimumRequiredVersion = 0.75;
+	private static final double minimumRequiredVersion = 0.81;
 	
 	@Attribute
 	private String portName;
@@ -80,7 +80,8 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 	
 	@Override
 	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
-		throw new Exception("Homing is not implemented for GrblDriver.");
+		sendCommand("G28");
+		x = y = z= c = 0;
 	}
 	
 	@Override
@@ -188,6 +189,7 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 		if (connectedVersion < minimumRequiredVersion) {
 			throw new Error(String.format("This driver requires Grbl version %.2f or higher. You are running version %.2f", minimumRequiredVersion, connectedVersion));
 		}
+		
 		// We are connected to at least the minimum required version now
 		// So perform some setup
 		

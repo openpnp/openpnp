@@ -186,6 +186,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 		// Reset all axes to 0. This is required so that the Head and Driver
 		// stay in sync.
 		sendCommand("G92 X0 Y0 Z0 E0");
+		x = y = z= c = 0;
 	}
 	
 	@Override
