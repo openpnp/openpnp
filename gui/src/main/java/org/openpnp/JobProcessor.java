@@ -60,6 +60,7 @@ public class JobProcessor implements Runnable {
 		HeadError,
 		PickError,
 		PlaceError,
+		PartError
 	}
 	
 	public enum PickRetryAction {
@@ -77,6 +78,9 @@ public class JobProcessor implements Runnable {
 	private Object runLock = new Object();
 	
 	private boolean pauseAtNextStep;
+	
+	private double safeZ;
+	private int placementCount;
 	
 	public JobProcessor(Configuration configuration) {
 		this.configuration = configuration;
@@ -178,22 +182,30 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	// TODO: shouldn't all the job errors return instead of continuing?
 	public void run() {
 		state = JobState.Running;
 		fireJobStateChanged();
 		
 		Machine machine = configuration.getMachine();
+		
+		preProcessJob(machine);
+		
+		for (Head head : machine.getHeads()) {
+			fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getId()));		
+	
+			if (!shouldJobProcessingContinue()) {
+				return;
+			}
+	
+			try {
+				head.moveToSafeZ();
+			}
+			catch (Exception e) {
+				fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+				return;
+			}
+		}
 
-		/*
-		 * Optimizations: Build a hit list up front of all the movements that
-		 * have to be made along with substitution options such as different
-		 * feeders and heads for parts, then sort the whole mess by distance and
-		 * determine the best route.
-		 * 
-		 * How do we handle Heads working in tandem? Need multiple threads, or
-		 * async Head operations.
-		 */
 		for (BoardLocation jobBoard : job.getBoardLocations()) {
 			Board board = jobBoard.getBoard();
 			fireBoardProcessingStarted(jobBoard);
@@ -207,27 +219,12 @@ public class JobProcessor implements Runnable {
 				firePartProcessingStarted(jobBoard, placement);
 				Part part = placement.getPart();
 
-				// Get a list of Feeders that can source the part
-				List<Feeder> feeders = new ArrayList<Feeder>();
-				for (Feeder feeder : machine.getFeeders()) {
-					// TODO: currently passing null till we determine if we'll pass head or change this system
-					if (feeder.getPart() == part && feeder.canFeedForHead(null) && feeder.isEnabled()) {
-						feeders.add(feeder);
-					}
-				}
+				Feeder feeder = getFeederSolution(machine, part);
 				
-				if (feeders.size() < 1) {
+				if (feeder == null) {
 					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
+					return;
 				}
-
-				// TODO Loop through this next block checking Feeders against
-				// Heads until one works.
-
-				// Determine which feeder to pick the part from. This can be
-				// optimized to handle
-				// distance, capacity, etc.
-				// For now we just take the first Feeder that can feed the part.
-				Feeder feeder = feeders.get(0);
 
 				// Get the Location of the pick point from the feeder
 				Location pickLocation = feeder.getLocation();
@@ -245,7 +242,6 @@ public class JobProcessor implements Runnable {
 				placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
 
 				// Create the point that represents the final placement location
-				// TODO This is currently in relation to the 0,0 of the board
 				Point p = new Point(placementLocation.getX(),
 						placementLocation.getY());
 
@@ -295,6 +291,7 @@ public class JobProcessor implements Runnable {
 
 				if (heads.size() < 1) {
 					fireJobEncounteredError(JobError.HeadError, "No Head available to service Placement " + placement);
+					return;
 				}
 
 				// Choose the Head that will service the operation, can be
@@ -302,7 +299,7 @@ public class JobProcessor implements Runnable {
 				// Currently we just take the first available Head
 				Head head = heads.get(0);
 
-				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));		
+				fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getId(), head.getX(), head.getY(), (double) 0, head.getC()));		
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -313,6 +310,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
 				}
 
 				// TODO: Need to be able to see the thing that caused an error, but we also want to see what is about to happen when paused. Figure it out.
@@ -328,6 +326,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.FeederError, e.getMessage());
+					return;
 				}
 
 				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));
@@ -341,6 +340,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
 				}
 
 				fireDetailedStatusUpdated(String.format("Move to pick location, safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", pickLocation.getX(), pickLocation.getY(), (double) 0, pickLocation.getRotation()));
@@ -355,6 +355,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
 				}
 
 				fireDetailedStatusUpdated(String.format("Request part pick at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", pickLocation.getX(), pickLocation.getY(), pickLocation.getZ(), pickLocation.getRotation()));
@@ -373,6 +374,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.PickError, e.getMessage());
+					return;
 				}
 				
 				firePartPicked(jobBoard, placement);
@@ -388,6 +390,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
 				}
 
 				fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", 
@@ -406,6 +409,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
 				}
 
 				fireDetailedStatusUpdated(String.format("Request part place. at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", 
@@ -424,6 +428,7 @@ public class JobProcessor implements Runnable {
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.PlaceError, e.getMessage());
+					return;
 				}
 				
 				firePartPlaced(jobBoard, placement);
@@ -434,11 +439,13 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
+				// Return to Safe-Z above the board. 
 				try {
 					head.moveToSafeZ();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
 				}
 				
 				firePartProcessingComplete(jobBoard, placement);
@@ -451,6 +458,99 @@ public class JobProcessor implements Runnable {
 		
 		state = JobState.Stopped;
 		fireJobStateChanged();
+	}
+	
+	/*
+	 * Pre-process the Job. We will:
+	 * 	Look for setup errors.
+	 * 	Look for missing parts.
+	 * 	Look for missing feeders.
+	 * 	Look for feeders that cannot feed the number of parts that
+	 * 		will be needed.
+	 * 	Calculate the base Safe-Z for the job.
+	 * 	Calculate the number of parts that need to be placed.
+	 * 	Calculate the total distance that will need to be traveled.
+	 * 	Calculate the total time it should take to place the job.
+	 * 
+	 * Time calculation is tough unless we also ask the feeders to simulate
+	 * their work. Otherwise we can just calculate the total distance *
+	 * the feed rate to get close. This doesn't include acceleration and
+	 * such. 
+	 * 
+	 * The base Safe-Z is the maximum of:
+	 * 		Highest placement location.
+	 * 		Highest pick location.
+	 */
+	private void preProcessJob(Machine machine) {
+		safeZ = Double.NEGATIVE_INFINITY;
+		placementCount = 0;
+		
+		for (BoardLocation jobBoard : job.getBoardLocations()) {
+			Board board = jobBoard.getBoard();
+			
+			for (Placement placement : board.getPlacements()) {
+				if (placement.getSide() != jobBoard.getSide()) {
+					continue;
+				}
+				
+				Part part = placement.getPart();
+				
+				if (part == null) {
+					fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", board.getName(), placement.getId()));
+					return;
+				}
+				
+				Feeder feeder = getFeederSolution(machine, part);
+				
+				if (feeder == null) {
+					fireJobEncounteredError(JobError.FeederError, String.format("No viable Feeders found for Board %s, Part %s)", board.getName(), part.getId()));
+					return;
+				}
+				
+				Location boardLocation = jobBoard.getLocation().convertToUnits(machine.getNativeUnits());
+				double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
+				double placementZ = boardLocation.getZ() + partHeight;
+				safeZ = Math.max(safeZ, placementZ);
+				
+				// Determine which feeder to pick the part from. This can be
+				// optimized to handle
+				// distance, capacity, etc.
+				Location pickLocation = feeder.getLocation().convertToUnits(machine.getNativeUnits());
+				safeZ = Math.max(safeZ, pickLocation.getZ());
+				
+				placementCount++;
+			}
+		}
+		
+		// TODO: Adjust Safe-Z by a clearance amount.
+		safeZ += 5;
+		
+		logger.debug(String.format("%d placements to process.", placementCount));
+		logger.debug(String.format("Calculated Safe-Z %f.", safeZ));
+	}
+	
+	// TODO: The Feeder and Head solutions are mutually dependant. We need a
+	// Feeder that can feed the part and a Head that service both the Feeder
+	// and the Placement.
+	private static Feeder getFeederSolution(Machine machine, Part part) {
+		// Determine which feeder to pick the part from. This can be
+		// optimized to handle
+		// distance, capacity, etc.
+		
+		// Get a list of Feeders that can source the part
+		List<Feeder> feeders = new ArrayList<Feeder>();
+		for (Feeder feeder : machine.getFeeders()) {
+			// TODO: currently passing null till we determine if we'll pass head or change this system
+			if (feeder.getPart() == part && feeder.canFeedForHead(null) && feeder.isEnabled()) {
+				feeders.add(feeder);
+			}
+		}
+		if (feeders.size() < 1) {
+			return null;
+		}
+		// For now we just take the first Feeder that can feed the part.
+		Feeder feeder = feeders.get(0);
+		return feeder;
 	}
 	
 	/**
