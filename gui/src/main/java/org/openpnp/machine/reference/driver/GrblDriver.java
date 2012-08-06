@@ -89,20 +89,20 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 			throws Exception {
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
-			sb.append(String.format("X%2.2f", x));
+			sb.append(String.format("X%2.2f ", x));
 		}
 		if (y != this.y) {
-			sb.append(String.format("Y%2.2f", y));
+			sb.append(String.format("Y%2.2f ", y));
 		}
 		if (z != this.z) {
-			sb.append(String.format("Z%2.2f", z));
+			sb.append(String.format("Z%2.2f ", z));
 		}
 		if (c != this.c) {
-			sb.append(String.format("C%2.2f", c));
+			sb.append(String.format("C%2.2f ", c));
 		}
 		if (sb.length() > 0) {
 			sb.append(String.format("F%2.2f", feedRateMmPerMinute));
-			sendCommand("G1" + sb.toString());
+			sendCommand("G1 " + sb.toString());
 			dwell();
 		}
 		this.x = x;
