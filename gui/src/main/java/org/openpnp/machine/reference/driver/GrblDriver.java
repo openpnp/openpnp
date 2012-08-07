@@ -87,6 +87,16 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 	@Override
 	public void moveTo(ReferenceHead head, double x, double y, double z, double c, double feedRateMmPerMinute)
 			throws Exception {
+		// TODO: Due to a bug (of my creating) in Grbl, C movements are
+		// included in the linear movements, and since they are much slower
+		// than X, Y movements they end up slowing the whole thing down.
+		// So, as a temporary hack, if there is a C move to be made we'll
+		// make it first. 
+		// Also, since C is so slow in comparison, we just increase it
+		// by a factor of 10.
+		if (c != this.c && (x != this.x || y != this.y || z != this.z)) {
+			moveTo(head, this.x, this.y, this.z, c, feedRateMmPerMinute);
+		}
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
 			sb.append(String.format("X%2.2f ", x));
@@ -98,6 +108,8 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 			sb.append(String.format("Z%2.2f ", z));
 		}
 		if (c != this.c) {
+			// TODO see above bug note, and remove this when fixed.
+			feedRateMmPerMinute *= 10;
 			sb.append(String.format("C%2.2f ", c));
 		}
 		if (sb.length() > 0) {
