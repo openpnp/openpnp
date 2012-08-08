@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -183,4 +184,8 @@ public interface Head extends Identifiable {
 	public String getId();
 	
 	public Machine getMachine();
+	
+	public Length getSafeZ();
+	
+	public void setSafeZ(Length safeZ);
 }

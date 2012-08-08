@@ -115,10 +115,12 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		return id;
 	}
 	
+	@Override
 	public Length getSafeZ() {
 		return safeZ;
 	}
 
+	@Override
 	public void setSafeZ(Length safeZ) {
 		this.safeZ = safeZ;
 	}
