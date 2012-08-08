@@ -36,6 +36,7 @@ import org.openpnp.machine.reference.camera.TableScannerCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -218,6 +219,7 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 		List<Class<? extends Feeder>> l = new ArrayList<Class<? extends Feeder>>();
 		l.add(ReferenceTrayFeeder.class);
 		l.add(ReferenceTapeFeeder.class);
+		l.add(ReferenceTubeFeeder.class);
 		return l;
 	}
 
