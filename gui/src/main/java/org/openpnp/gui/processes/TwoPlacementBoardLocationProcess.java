@@ -31,6 +31,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
+import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.Utils2D;
@@ -139,11 +140,24 @@ public class TwoPlacementBoardLocationProcess {
 			return false;
 		}
 		
+		if (placementA.getSide() != placementB.getSide()) {
+			MessageBoxes.errorBox(mainFrame, "Error", "Both placements must be on the same side of the board.");
+			return false;
+		}
+		
 		// Get the Locations we'll be using and convert to system units.
 		Location boardLocationA = placementLocationA.convertToUnits(Configuration.get().getSystemUnits());
 		Location placementLocationA = placementA.getLocation().convertToUnits(Configuration.get().getSystemUnits());
 		Location boardLocationB = placementLocationB.convertToUnits(Configuration.get().getSystemUnits());
 		Location placementLocationB = placementB.getLocation().convertToUnits(Configuration.get().getSystemUnits());
+		
+		// If the placements are on the Bottom of the board we need to invert X
+		if (placementA.getSide() == Side.Bottom) {
+//			boardLocationA = boardLocationA.invert(true, false, false, false);
+			placementLocationA = placementLocationA.invert(true, false, false, false);
+//			boardLocationB = boardLocationB.invert(true, false, false, false);
+			placementLocationB = placementLocationB.invert(true, false, false, false);
+		}
 	
 		logger.debug(String.format("locate"));
 		logger.debug(String.format("%s - %s", boardLocationA,
@@ -151,12 +165,13 @@ public class TwoPlacementBoardLocationProcess {
 		logger.debug(String.format("%s - %s", boardLocationB,
 				placementLocationB));
 	
-		// Calculate the expected angle between the two coordinates, based
-		// on their locations in the placement.
 		double x1 = placementLocationA.getX();
 		double y1 = placementLocationA.getY();
 		double x2 = placementLocationB.getX();
 		double y2 = placementLocationB.getY();
+		
+		// Calculate the expected angle between the two coordinates, based
+		// on their locations in the placement.
 		double expectedAngle = Math.atan2(y1 - y2, x1 - x2);
 		expectedAngle = Math.toDegrees(expectedAngle);
 		logger.debug("expectedAngle " + expectedAngle);

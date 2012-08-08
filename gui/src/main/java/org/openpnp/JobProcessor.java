@@ -34,6 +34,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
+import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -240,6 +241,12 @@ public class JobProcessor implements Runnable {
 				// Convert the locations to machine native units
 				boardLocation = boardLocation.convertToUnits(machine.getNativeUnits());
 				placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
+				
+				// If we are placing the bottom of the board we need to invert
+				// the placement location.
+				if (jobBoard.getSide() == Side.Bottom) {
+					placementLocation = placementLocation.invert(true, false, false, false);
+				}
 
 				// Create the point that represents the final placement location
 				Point p = new Point(placementLocation.getX(),

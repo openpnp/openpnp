@@ -193,6 +193,17 @@ public class Location extends AbstractModelObject {
 		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), getRotation());
 	}
 	
+	public Location invert(boolean x, boolean y, boolean z, boolean rotation) {
+		Location l = new Location(getUnits());
+
+		l.setX(getX() * (x ? -1 : 1));
+		l.setY(getY() * (y ? -1 : 1));
+		l.setZ(getZ() * (z ? -1 : 1));
+		l.setRotation(getRotation() * (rotation ? -1 : 1));
+		
+		return l;
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units, x, y, z, rotation);
