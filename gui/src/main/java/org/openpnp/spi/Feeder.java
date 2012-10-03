@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 : Feeder keeps pickLocation
  */
 
 package org.openpnp.spi;
@@ -42,6 +45,7 @@ public interface Feeder {
 	public void setEnabled(boolean enabled);
 	
 	public Location getLocation();
+	public Location getPickLocation();  // Returns adjusted location (vision/tray.)
 	
 	public void setLocation(Location location);
 	
@@ -67,7 +71,7 @@ public interface Feeder {
 	 * @return
 	 * @throws Exception
 	 */
-	public Location feed(Head head, Location pickLocation) throws Exception;
+	public void feed(Head head) throws Exception;
 	
 	public Wizard getConfigurationWizard();
 }

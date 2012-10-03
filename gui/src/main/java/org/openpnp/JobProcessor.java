@@ -17,6 +17,12 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Change log:
+ * 03/10/2012 Ami:
+ *	- Feeder keeps adjusted pick location.
+ *	- Add progress status for each placement
+ *	- Add small functions to pick/place/feed part.
  */
 
 package org.openpnp;
@@ -33,6 +39,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Progress;
 import org.openpnp.model.Point;
 import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Feeder;
@@ -150,6 +157,7 @@ public class JobProcessor implements Runnable {
 		logger.debug("step()");
 		if (state == JobState.Stopped) {
 			pauseAtNextStep = true;
+
 			start();
 		}
 		else {
@@ -183,6 +191,21 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
+	/**
+	 * Reset job Progress to Todo except Skip
+	 */
+	public void reset(){
+
+		for (BoardLocation jobBoard : job.getBoardLocations()) {
+		    Board board = jobBoard.getBoard();
+
+		    for (Placement placement : board.getPlacements()) {
+
+			if(placement.getProgress() == Progress.Done)
+			    placement.setProgress(Progress.Auto);
+		    }
+		}
+	}
 	public void run() {
 		state = JobState.Running;
 		fireJobStateChanged();
@@ -216,7 +239,11 @@ public class JobProcessor implements Runnable {
 				if (placement.getSide() != jobBoard.getSide()) {
 					continue;
 				}
-				
+				// Ami. Do only what's not done
+				if (placement.getProgress() != Progress.Auto) {
+					continue;
+				}
+				// Ami. end
 				firePartProcessingStarted(jobBoard, placement);
 				Part part = placement.getPart();
 
@@ -227,12 +254,6 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// Get the Location of the pick point from the feeder
-				Location pickLocation = feeder.getLocation();
-
-				// Convert the Location to the machine's native units if
-				// necessary
-				pickLocation = pickLocation.convertToUnits(machine.getNativeUnits());
 
 				// Determine where we will place the part
 				Location boardLocation = jobBoard.getLocation();
@@ -254,9 +275,10 @@ public class JobProcessor implements Runnable {
 
 				// Rotate and translate the point into the same coordinate space
 				// as the board
-				p = Utils2D.rotateTranslateScalePoint(p, boardLocation
-						.getRotation(), boardLocation.getX(), boardLocation
-						.getY(), 1.0, 1.0);
+				p = Utils2D.rotateTranslateCenterPoint(p, boardLocation.getRotation(),
+							    boardLocation.getX(),
+							    boardLocation.getY(),
+							    jobBoard.getCenter() );
 
 				// Update the placementLocation with the transformed point
 				placementLocation.setX(p.getX());
@@ -281,6 +303,19 @@ public class JobProcessor implements Runnable {
 				// where we will obtain the part and placementLocation and it's
 				// rotation plus board rotation,
 				// which determines where we will place the part
+
+
+				// Get the Location of the pick point from the feeder
+				// Ami. Todo: Bug/Error This is adjusted to the CURRENT pick-location
+				//	so it can NOT be used to determine if head is capable to pick the NEXT part.
+				//	for example tray next X/Y offset may be outside head's ability
+				//
+				Location pickLocation = feeder.getPickLocation();
+
+				// Convert the Location to the machine's native units if
+				// necessary
+				pickLocation = pickLocation.convertToUnits(machine.getNativeUnits());
+
 
 				// Get a list of Heads that can service both the pick and place
 				// operations. This is not
@@ -329,7 +364,8 @@ public class JobProcessor implements Runnable {
 
 				// Request that the Feeder feeds the part
 				try {
-					pickLocation = feeder.feed(head, pickLocation);
+				        // Ami: Feeder keeps the adjusted pickLocation
+					feeder.feed(head);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.FeederError, e.getMessage());
@@ -377,7 +413,9 @@ public class JobProcessor implements Runnable {
 					// failed to pick, use the delegate to notify and potentially retry
 					// We now have the delegate for this, just need to use it and 
 					// implement the logic for it's potential responses
-					head.pick(part, feeder, pickLocation);
+
+				    head.pick(part, feeder); // Ami: Feeder knows the adjusted pick location
+
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.PickError, e.getMessage());
@@ -437,7 +475,7 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.PlaceError, e.getMessage());
 					return;
 				}
-				
+				placement.setProgress(Progress.Done);
 				firePartPlaced(jobBoard, placement);
 				
 				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));		
@@ -466,7 +504,130 @@ public class JobProcessor implements Runnable {
 		state = JobState.Stopped;
 		fireJobStateChanged();
 	}
+	// Ami. Break jobs into three parts: feed pick and place
+	public void feedPart(Part part )
+	{
 	
+	    Machine machine = configuration.getMachine();
+	    Feeder feeder = getFeederSolution(machine, part);
+
+	    Head head = machine.getHeads().get(0);
+	    try {
+		if(feeder != null)
+		{
+		    // Get the Location of the pick point from the feeder
+		    Location pickLocation = feeder.getPickLocation();
+
+		    // Convert the Location to the machine's native units if
+		    // necessary
+		    pickLocation = pickLocation.convertToUnits(machine.getNativeUnits());
+
+		    feeder.feed(head); // adjusted location from vision system
+
+		}
+	    }
+	    catch (Exception e) {
+		fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+
+	    }
+
+	}
+
+	public void pickPart(Part part ) // if pickLocation is null, get it from feeder
+	{
+
+	    Machine machine = configuration.getMachine();
+	    Feeder feeder = getFeederSolution(machine, part);
+
+	    Head head = machine.getHeads().get(0);
+	    try {
+		if(feeder != null)
+		{
+		    head.moveToSafeZ();
+		    head.pick(part, feeder);
+
+		    head.moveToSafeZ();
+		}
+	    }
+	    catch (Exception e) {
+		fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+
+	    }
+	}
+
+	public void placePart(Placement placement, BoardLocation jobBoard )
+	{
+
+	    Machine machine = configuration.getMachine();
+
+	    try {
+		Part part = placement.getPart();
+		//eeder feeder = JobProcessor.getFeederSolution(machine, part);
+		Head head = machine.getHeads().get(0);
+
+
+		Location boardLocation = jobBoard.getLocation();
+		Location placementLocation = placement.getLocation();
+
+		// Convert the locations to machine native units
+		boardLocation = boardLocation.convertToUnits(machine.getNativeUnits());
+		placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
+
+		// If we are placing the bottom of the board we need to invert
+		// the placement location.
+		if (jobBoard.getSide() == Side.Bottom) {
+			placementLocation = placementLocation.invert(true, false, false, false);
+		}
+
+		// Create the point that represents the final placement location
+		Point p = new Point(placementLocation.getX(),
+				placementLocation.getY());
+
+		// Rotate and translate the point into the same coordinate space
+		// as the board
+		p = Utils2D.rotateTranslateCenterPoint(p, boardLocation.getRotation(),
+							    boardLocation.getX(),
+							    boardLocation.getY(),
+							    jobBoard.getCenter() );
+
+		// Update the placementLocation with the transformed point
+		placementLocation.setX(p.getX());
+		placementLocation.setY(p.getY());
+
+		// Update the placementLocation with the board's rotation and
+		// the placement's rotation
+		// This sets the rotation of the part itself when it will be
+		// placed
+		placementLocation
+				.setRotation((placementLocation.getRotation() + boardLocation
+						.getRotation()) % 360.0);
+
+		// Update the placementLocation with the proper Z value. This is
+		// the distance to the top of the board plus the height of
+		// the part.
+		double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
+		placementLocation.setZ(boardLocation.getZ() + partHeight);
+
+
+		// Start movements
+		head.moveToSafeZ();
+		head.moveTo(placementLocation.getX(), placementLocation.getY(), head.getZ(), placementLocation.getRotation());
+		head.place(part, placementLocation);
+		placement.setProgress(Progress.Done);
+		firePartPlaced(jobBoard, placement);
+		head.moveToSafeZ();
+		// end move
+	    }
+	    catch (Exception e) {
+		fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+
+	    }
+	}
+
+	// Ami. end
+
+
+
 	/*
 	 * Pre-process the Job. We will:
 	 * 	Look for setup errors.
@@ -522,7 +683,7 @@ public class JobProcessor implements Runnable {
 				// Determine which feeder to pick the part from. This can be
 				// optimized to handle
 				// distance, capacity, etc.
-				Location pickLocation = feeder.getLocation().convertToUnits(machine.getNativeUnits());
+				Location pickLocation = feeder.getPickLocation().convertToUnits(machine.getNativeUnits());
 				safeZ = Math.max(safeZ, pickLocation.getZ());
 				
 				placementCount++;
@@ -539,7 +700,7 @@ public class JobProcessor implements Runnable {
 	// TODO: The Feeder and Head solutions are mutually dependant. We need a
 	// Feeder that can feed the part and a Head that service both the Feeder
 	// and the Placement.
-	private static Feeder getFeederSolution(Machine machine, Part part) {
+	public static Feeder getFeederSolution(Machine machine, Part part) {
 		// Determine which feeder to pick the part from. This can be
 		// optimized to handle
 		// distance, capacity, etc.

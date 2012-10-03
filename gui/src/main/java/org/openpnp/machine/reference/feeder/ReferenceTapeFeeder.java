@@ -17,6 +17,11 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami:
+ * - Feeder now keeps the adjusted pickLocation.
+ *   Head will just ask to feed, and it should know what to do.
  */
 
 package org.openpnp.machine.reference.feeder;
@@ -88,7 +93,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	@Element(required=false)
 	private Vision vision = new Vision();
 	
-
+	Configuration configuration;
 	/*
 	 * visionOffset contains the difference between where the part was
 	 * expected to be and where it is. Subtracting these offsets from 
@@ -102,16 +107,45 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 	public void resolve(Configuration configuration) throws Exception {
 		super.resolve(configuration);
 		configuration.resolve(vision);
+		this.configuration = configuration;
 	}
 	
 	@Override
 	public boolean canFeedForHead(Head head) {
 		return true;
 	}
+	@Override
+	public Location getPickLocation()  {
+	    // When asked for pickLocation, here we'd just give the adjusted location
+	    // without moving the head / camera.
+		double offsetX = 0; // this is in machine native units
+		double offsetY = 0;
 	
-	public Location feed(Head head, Location pickLocation)
+		if (vision.isEnabled()) {
+
+
+
+			if (visionOffset != null) {
+			    	logger.debug("Pick visionOffsets " + visionOffset);
+
+			    offsetX = visionOffset.getX();
+			    offsetY = visionOffset.getY();
+			}
+		}
+		Location pickLocation = location.convertToUnits(configuration.getMachine().getNativeUnits());
+		// Create a new pickLocation with the offsets included.
+		pickLocation = new Location(
+				pickLocation.getUnits(),
+				pickLocation.getX() - offsetX,
+				pickLocation.getY() - offsetY,
+				pickLocation.getZ(),
+				pickLocation.getRotation()
+				);
+		logger.debug("Modified pickLocation {}", pickLocation);
+		return pickLocation;
+	}
+	public void feed(Head head)
 			throws Exception {
-		logger.debug("feed({}, {})", head, pickLocation);
 		
 		if (feedRate == null) {
 			throw new Exception("No feed rate set."); 
@@ -136,12 +170,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		}
 		
 		// Convert all the Locations we'll be dealing with to machine native units
-		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
-		Location feedStartLocation = this.feedStartLocation.convertToUnits(head.getMachine().getNativeUnits());
-		Location feedEndLocation = this.feedEndLocation.convertToUnits(head.getMachine().getNativeUnits());
-		Location actuatorOffsets = actuator.getLocation().convertToUnits(head.getMachine().getNativeUnits());
-		Length feedRate = this.feedRate.convertToUnits(head.getMachine().getNativeUnits());
-		
+		// Ami. Tape feeder starts with the pick-location given by configuration and adjust it below
+		Location pickLocation = location.convertToUnits(configuration.getMachine().getNativeUnits());
+		Location feedStartLocation = this.feedStartLocation.convertToUnits(configuration.getMachine().getNativeUnits());
+		Location feedEndLocation = this.feedEndLocation.convertToUnits(configuration.getMachine().getNativeUnits());
+		Location actuatorOffsets = actuator.getLocation().convertToUnits(configuration.getMachine().getNativeUnits());
+		Length feedRate = this.feedRate.convertToUnits(configuration.getMachine().getNativeUnits());
+		logger.debug("feed({}, {})", head, pickLocation);
+
 		logger.debug("Converted inputs: pickLocation {}, feedStartLocation {}, feedEndLocation {}, actuatorOffsets {}, feedRate {}", new Object[] {
 				pickLocation, 
 				feedStartLocation, 
@@ -212,29 +248,23 @@ public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConf
 		// retract the pin
 		actuator.actuate(false);
 		
-		// Create a new pickLocation with the offsets included.
-		pickLocation = new Location(
-				pickLocation.getUnits(),
-				pickLocation.getX() - offsetX,
-				pickLocation.getY() - offsetY,
-				pickLocation.getZ(),
-				pickLocation.getRotation()
-				);
 		
-		logger.debug("Modified pickLocation {}", pickLocation);
-		
+		// Ami: Move the camera to the pick location and re-capture pick location offset after feeding
+		// We start from the original location, to avoid drifting.
+		// This is the only actual move of the camera.
+		// getPickLocation depends on this result
 		if (vision.isEnabled()) {
 			visionOffset = getVisionOffsets(head, pickLocation);
 			
 			logger.debug("final visionOffsets " + visionOffset);
 		}
 
-		return pickLocation;
+
 	}
 	
 	// TODO: Throw an Exception if vision fails.
 	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-		Machine machine = head.getMachine();
+		Machine machine = configuration.getMachine();
 
 		// Find the Camera to be used for homing
 		// TODO: Consider caching this

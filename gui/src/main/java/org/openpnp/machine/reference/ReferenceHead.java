@@ -17,6 +17,8 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ * Changelog:
+ * 03/10/2012 Ami: Feeder now keeps pick location, head can simply ask where it is.
  */
 
 package org.openpnp.machine.reference;
@@ -386,8 +388,13 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	}
 
 	@Override
-	public void pick(Part part, Feeder feeder, Location pickLocation)
+	public void pick(Part part, Feeder feeder)
 			throws Exception {
+		// Ami. Feeder MUST provide pick location, adjusted to tray-offset / vision if available
+	        // Higher level object doesn't need to know where to pick.
+		Location pickLocation = feeder.getPickLocation();
+		pickLocation = pickLocation.convertToUnits(machine.getNativeUnits());
+
 		logger.debug("pick({}, {}, {})", new Object[] { part, feeder, pickLocation });
 		// move to the pick location
 		moveTo(pickLocation.getX(), pickLocation.getY(), getZ(),

@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Add sort placement function
  */
 
 
@@ -104,7 +107,24 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	public List<Placement> getPlacements() {
 		return Collections.unmodifiableList(placements);
 	}
+
+	// Ami: Add sortPlacements function
+	public void sortPlacements(List<String> sortedPlacementIdList) {
+		ArrayList<Placement> oldPlacements = placements;
+		placements = new ArrayList<Placement>();
+		for(String placementId : sortedPlacementIdList)
+		{
+		    for(Placement placement : oldPlacements)
+		    {
+			if(placement.getId().equals(placementId))
+			    placements.add(placement);
 	
+		    }
+		}
+		firePropertyChange("placements", oldPlacements, placements);
+
+	}
+	// Ami. end.
 	public void addPlacement(Placement placement) {
 		Object oldValue = placements;
 		placements = new ArrayList<Placement>(placements);

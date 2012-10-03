@@ -17,6 +17,8 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ * Change log:
+ * 03/10/2012: Feeder keeps adjusted pick location
  */
 
 package org.openpnp.gui;
@@ -323,7 +325,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					Feeder feeder = getSelectedFeeder();
 					Head head = configuration.getMachine().getHeads().get(0);
 					try {
-						feeder.feed(head, feeder.getLocation());
+						feeder.feed(head); // Feeder keeps pick location
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(FeedersPanel.this, "Feed Error",

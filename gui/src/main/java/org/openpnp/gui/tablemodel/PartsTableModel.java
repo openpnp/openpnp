@@ -17,6 +17,8 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ * Change log:
+ * 03/10/2012 Ami: Add parts quantity collumns
 */
 
 package org.openpnp.gui.tablemodel;
@@ -33,6 +35,8 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
+import org.openpnp.model.Board;
 
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
@@ -40,15 +44,17 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 	
 	private String[] columnNames = new String[] { 
 		"Id", 
-		"Description",
+		"Name",
 		"Height", 
-		"Package" 
+		"Package",
+		"Qty"
 	};
 	private Class[] columnTypes = new Class[] {
 		String.class,
 		String.class,
 		LengthCellValue.class,
 		Package.class,
+		Integer.class,
 	};
 	private List<Part> parts;
 
@@ -128,6 +134,29 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 			return new LengthCellValue(part.getHeight(), true);
 		case 3:
 			 return part.getPackage();
+		case 4:
+		    // Ami: Count the parts from all boards in this job
+			List<Board> boards = configuration.getBoards();
+			int qty = 0;
+			String partId = part.getId();
+			for( Board board : boards)
+			{
+
+
+			    List<Placement> placements = board.getPlacements();
+
+
+
+			    for(Placement placement : placements)
+			    {
+				if(placement.getPart().getId().equals(partId))
+				{
+				    qty++;
+				}
+			    }
+			}
+
+			return qty;
 		default:
 			return null;
 		}

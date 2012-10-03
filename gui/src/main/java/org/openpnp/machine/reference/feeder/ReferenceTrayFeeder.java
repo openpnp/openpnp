@@ -17,6 +17,12 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Feeder now keeps the pickLocation
+ * Todo: Limit the pickCount
+ * Todo: Tell jobProcessor the NEXT pickLocation (next pick location may not be accessible
+ * to the head chosen by jobProcessor.
  */
 
 package org.openpnp.machine.reference.feeder;
@@ -57,13 +63,11 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	public boolean canFeedForHead(Head head) {
 		return (pickCount < (trayCountX * trayCountY));
 	}
+	@Override
+	public Location getPickLocation() {
+		// getLocation always return adjusted (current) location to pick part,
 
-	public Location feed(Head head_, Location pickLocation)
-			throws Exception {
-		ReferenceHead head = (ReferenceHead) head_;
 
-		// Convert all the Locations we'll be dealing with
-		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
 		
 		int partX, partY;
 		
@@ -79,19 +83,30 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 		}
 
 		Location l = new Location();
-		l.setX(pickLocation.getX() + (partX * offsets.getX()));
-		l.setY(pickLocation.getY() + (partY * offsets.getY()));
-		l.setZ(pickLocation.getZ());
-		l.setRotation(pickLocation.getRotation());
-		l.setUnits(pickLocation.getUnits());
+		l.setX(location.getX() + (partX * offsets.getX()));
+		l.setY(location.getY() + (partY * offsets.getY()));
+		l.setZ(location.getZ());
+		l.setRotation(location.getRotation());
+		l.setUnits(location.getUnits());
 
 		logger.debug(String.format(
-				"Feeding part # %d, x %d, y %d, xPos %f, yPos %f", pickCount,
+				"PickLocation part # %d, x %d, y %d, xPos %f, yPos %f", pickCount,
 				partX, partY, l.getX(), l.getY()));
+
+
+
+		return l;
+	}
+	public void feed(Head head_)
+			throws Exception {
+
+
+		logger.debug(String.format(
+				"Feeding part # %d", pickCount));
 
 		pickCount++;
 
-		return l;
+
 	}
 
 	@Override

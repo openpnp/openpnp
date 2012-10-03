@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Add feeder and progress collumns
 */
 
 package org.openpnp.gui.tablemodel;
@@ -31,6 +34,11 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Progress;
+import org.openpnp.JobProcessor;
+
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Machine;
 
 public class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
@@ -41,7 +49,9 @@ public class PlacementsTableModel extends AbstractTableModel {
 		"Side", 
 		"X", 
 		"Y", 
-		"ø"
+		"A",	    // Ami. "ø" symbol changed to A, it gave me problem.
+		"Feeder",   // Ami. Added feeder solution if exist
+		"Progress"  // Ami. Added progress column
 		};
 	private Class[] columnTypes = new Class[] {
 		String.class,
@@ -49,7 +59,9 @@ public class PlacementsTableModel extends AbstractTableModel {
 		Side.class,
 		LengthCellValue.class,
 		LengthCellValue.class,
-		String.class
+		String.class,
+		String.class,
+		Progress.class
 	};
 	private Board board;
 
@@ -114,6 +126,11 @@ public class PlacementsTableModel extends AbstractTableModel {
 			else if (columnIndex == 5) {
 				placement.getLocation().setRotation(Double.parseDouble(aValue.toString()));
 			}
+			// Ami. start : add feeder and progress
+			else if (columnIndex == 7) {
+				placement.setProgress((Progress) aValue);
+		}
+			// Ami. end
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
@@ -136,6 +153,17 @@ public class PlacementsTableModel extends AbstractTableModel {
 			return new LengthCellValue(loc.getLengthY(), true);
 		case 5:
 			return String.format(configuration.getLengthDisplayFormat(), loc.getRotation());
+		// Ami. start : add feeder and progress
+		case 6:
+		    Machine machine = configuration.getMachine();
+		    Feeder feeder = JobProcessor.getFeederSolution(machine, placement.getPart());
+		    if(feeder != null)
+			return feeder.getName();
+		    else
+			return "";
+		case 7:
+			return placement.getProgress();
+		// Ami. end
 		default:
 			return null;
 		}

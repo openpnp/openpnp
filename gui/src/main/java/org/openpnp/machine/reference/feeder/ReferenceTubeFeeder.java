@@ -40,9 +40,9 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
 		return true;
 	}
 
-	public Location feed(Head head_, Location pickLocation)
+	public void feed(Head head_)
 			throws Exception {
-		return pickLocation;
+
 	}
 
 	@Override
