@@ -1,8 +1,7 @@
-Prerequisites
-=============
+# Prerequisites
 
-OpenCV
-------
+## OpenCV
+
 OpenCV 2.4.2+ is required for some features of OpenPnP. Binaries should be
 installed and accessible to Java. This usually means making sure the libraries
 are in your path.
@@ -10,27 +9,25 @@ are in your path.
 http://opencv.willowgarage.com/wiki/
 
 
-Running
-=======
+# Running
 
-Mac
----
+## Mac
+
 Open a Terminal window and run the openpnp.sh script from the directory this
 file is in.
 
-Windows
--------
+## Windows
+
 Open a Command Prompt and run the openpnp.bat batch file from the directory
 this file is in.
 
-Linux
------
+## Linux
+
 Open a Terminal window and run the openpnp.sh script from the directory this
 file is in.
 
 
-Configuration
-=============
+# Configuration
 
 Configuration files are created during the first run and are stored in
 $HOME/.openpnp/. 
@@ -38,8 +35,8 @@ $HOME/.openpnp/.
 If you run into configuration problems, delete the files in that directory
 and they will be recreated.
 
-Development
-===========
+
+# Development
 
 OpenPnP builds with Maven. There is an included pom.xml that should build
 the project and will build a proper Eclipse project using the command
