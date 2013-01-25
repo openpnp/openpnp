@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-  <classpathentry kind="src" path="src/test/java" output="target/test-classes" including="**/*.java"/>
   <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
   <classpathentry kind="src" path="src/main/resources" excluding="**/*.java"/>
   <classpathentry kind="output" path="target/classes"/>
@@ -50,11 +49,11 @@
       <attribute value="jar:file:/Users/jason/.m2/repository/org/swinglabs/swingx/swingx-all/1.6.4/swingx-all-1.6.4-javadoc.jar!/" name="javadoc_location"/>
     </attributes>
   </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacpp/javacpp/0.1/javacpp-0.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-linux-x86.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-linux-x86_64.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-macosx-x86_64.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-windows-x86.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.1/javacv-0.1-windows-x86_64.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacpp/javacpp/0.2/javacpp-0.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-linux-x86.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-linux-x86_64.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-macosx-x86_64.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-windows-x86.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-windows-x86_64.jar"/>
 </classpath>
