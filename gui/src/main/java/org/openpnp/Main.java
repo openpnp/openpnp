@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Change log:
+ * 03/10/2012 Ami: Quick fix for locale problem
 */
 
 package org.openpnp;
@@ -25,6 +28,7 @@ import java.awt.EventQueue;
 import java.io.File;
 
 import javax.swing.UIManager;
+import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
@@ -49,6 +53,7 @@ public class Main {
 	}
 	
 	public static void main(String[] args) {
+		Locale.setDefault(Locale.US); // Ami: This is quick-fix to solve problems with comma as decimal points. Eagle file uses '.'
 		// http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		try {

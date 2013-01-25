@@ -17,6 +17,10 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Feeder now keeps the adjusted pick location.
+ * - Add getPickLocation function as default just return location
  */
 
 package org.openpnp.machine.reference;
@@ -75,6 +79,10 @@ public abstract class ReferenceFeeder implements Feeder, RequiresConfigurationRe
 	
 	@Override
 	public Location getLocation() {
+		return location;
+	}
+	@Override
+	public Location getPickLocation() {
 		return location;
 	}
 

@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Add quantity of part
  */
 
 package org.openpnp.model;
@@ -45,6 +48,8 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	@Attribute
 	private String packageId;
 	
+	private String qty;
+
 	@SuppressWarnings("unused")
 	private Part() {
 		this(null);

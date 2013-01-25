@@ -17,6 +17,12 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 : Add progress
+ * Todo: ManualPlacement I would like to have the job stop just before placing a specific part,
+ * such as SOIC or other fine-pitch, so I can adjust it manually before placement.
+ * 
  */
 
 package org.openpnp.model;
@@ -38,6 +44,14 @@ import org.simpleframework.xml.core.Persist;
  * @author jason
  */
 public class Placement extends AbstractModelObject implements RequiresConfigurationResolution, PropertyChangeListener {
+
+    public enum Progress {
+		Auto,
+		Done,
+		Skip,	// Do not place
+		// todo Manual	// Stop 1mm above placement and do not drop it.
+	}
+
 	@Attribute
 	private String id;
 	@Element
@@ -46,6 +60,9 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	private Side side = Side.Top;
 	private Part part;
 	
+	@Attribute
+	private Progress progress = Progress.Auto;
+
 	@Attribute
 	private String partId;
 	
@@ -56,6 +73,7 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	
 	public Placement(String id) {
 		this.id = id;
+
 		setLocation(new Location(LengthUnit.Millimeters));
 	}
 	
@@ -116,6 +134,16 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 		Object oldValue = this.side;
 		this.side = side;
 		firePropertyChange("side", oldValue, side);
+	}
+
+	public Progress getProgress() {
+		return progress;
+	}
+
+	public void setProgress(Progress progress) {
+		Object oldValue = this.progress;
+		this.progress = progress;
+		firePropertyChange("progress", oldValue, progress);
 	}
 
 	@Override

@@ -131,9 +131,9 @@ public class PartsPanel extends JPanel {
 		deletePartAction.setEnabled(false);
 		
 		JButton btnNewPart = toolBar.add(newPartAction);
-		btnNewPart.setToolTipText("");
+		btnNewPart.setToolTipText("New part");
 		JButton btnDeletePart = toolBar.add(deletePartAction);
-		btnDeletePart.setToolTipText("");
+		btnDeletePart.setToolTipText("Delete part");
 	}
 	
 	private Part getSelectedPart() {

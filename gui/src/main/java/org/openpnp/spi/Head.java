@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+
+ * Changelog:
+ * 03/10/2012 Ami: Feeder keeps picklocation
  */
 
 package org.openpnp.spi;
@@ -144,8 +147,9 @@ public interface Head extends Identifiable {
 	 * @param feeder
 	 * @param pickLocation
 	 * @throws Exception
+	 * Ami. Feeder will supply the pick location, maybe vision-adjusted if necessary.
 	 */
-	public void pick(Part part, Feeder feeder, Location pickLocation) throws Exception;
+	public void pick(Part part, Feeder feeder) throws Exception;
 	
 	/**
 	 * Commands the Head to perform it's place operation. Generally this just consists

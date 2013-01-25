@@ -17,6 +17,14 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Add center point field.
+ * Rotating from (0,0) as it was theoretically should work the same BUT,
+ * in reality when adjusting with camera, there is always error,
+ * the further the part to (0,0) the bigger the error.
+ * By setting rotation center to the center of the board, error is shared equally
+ * by all parts.
 */
 
 package org.openpnp.model;
@@ -32,6 +40,8 @@ import org.simpleframework.xml.core.Commit;
 public class BoardLocation extends AbstractModelObject implements PropertyChangeListener {
 	@Element
 	private Location location;
+
+
 	@Attribute
 	private Side side = Side.Top;
 	private Board board;
@@ -39,6 +49,9 @@ public class BoardLocation extends AbstractModelObject implements PropertyChange
 	@Attribute
 	private String boardFile;
 	
+	@Element
+	private Point center = new Point(0,0);	// Ami: this is the center point used for rotation
+
 	BoardLocation() {
 		setLocation(new Location(LengthUnit.Millimeters));
 	}
@@ -57,7 +70,9 @@ public class BoardLocation extends AbstractModelObject implements PropertyChange
 	public Location getLocation() {
 		return location;
 	}
-
+	public Point getCenter() {
+		return center;
+	}
 	public void setLocation(Location location) {
 		Location oldValue = this.location;
 		this.location = location;
@@ -69,7 +84,11 @@ public class BoardLocation extends AbstractModelObject implements PropertyChange
 			location.addPropertyChangeListener(this);
 		}
 	}
+	public void setCenter(Point p) {
 
+		this.center = p;
+
+	}
 	public Side getSide() {
 		return side;
 	}

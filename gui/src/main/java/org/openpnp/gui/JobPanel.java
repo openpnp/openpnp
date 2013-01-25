@@ -30,6 +30,9 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.prefs.Preferences;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -59,7 +62,7 @@ import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.MountsmdUlpImporter;
-import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
+import org.openpnp.gui.processes.FourPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -76,6 +79,8 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Progress;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -83,6 +88,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.openpnp.util.Utils2D;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel implements ConfigurationListener {
@@ -126,7 +132,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				captureCameraBoardLocationAction,
 				captureToolBoardLocationAction, newPlacementAction,
 				moveCameraToBoardLocationAction, moveToolToBoardLocationAction,
-				twoPointLocateBoardLocationAction);
+				fourPointLocateBoardLocationAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
@@ -137,6 +143,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		placementsTableModel = new PlacementsTableModel(configuration);
 
 		JComboBox sidesComboBox = new JComboBox(Side.values());
+		JComboBox progressComboBox = new JComboBox(Progress.values()); // Ami: Add progress collumn
 
 		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
 		boardLocationsTable.setAutoCreateRowSorter(true);
@@ -175,6 +182,9 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 				sidesComboBox));
 		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
 				partsComboBox));
+		// Ami: Add progress collumn
+		placementsTable.setDefaultEditor(Progress.class, new DefaultCellEditor(
+				progressComboBox));
 		placementsTable.setDefaultRenderer(Part.class,
 				new IdentifiableTableCellRenderer<Part>());
 
@@ -226,6 +236,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		JButton btnStopJob = new JButton(stopJobAction);
 		btnStopJob.setHideActionText(true);
 		toolBarBoards.add(btnStopJob);
+		// Ami : add reset button
+		JButton btnResetJob = new JButton(resetJobAction);
+		btnResetJob.setHideActionText(true);
+		toolBarBoards.add(btnResetJob);
+		// Ami. end
 		toolBarBoards.addSeparator();
 		JButton btnNewBoard = new JButton(newBoardAction);
 		btnNewBoard.setHideActionText(true);
@@ -258,11 +273,12 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		toolBarBoards.add(btnPositionToolBoardLocation);
 		toolBarBoards.addSeparator();
 
-		JButton btnTwoPointBoardLocation = new JButton(
-				twoPointLocateBoardLocationAction);
-		toolBarBoards.add(btnTwoPointBoardLocation);
-		btnTwoPointBoardLocation.setHideActionText(true);
-
+		// Ami: Change to four points
+		JButton btnfourPointBoardLocation = new JButton(
+				fourPointLocateBoardLocationAction);
+		toolBarBoards.add(btnfourPointBoardLocation);
+		btnfourPointBoardLocation.setHideActionText(true);
+                // Ami. end
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
 		JPanel pnlPlacements = new JPanel();
 		pnlPlacements.setBorder(new TitledBorder(null, "Placements",
@@ -278,6 +294,11 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		JButton btnRemovePlacement = new JButton(removePlacementAction);
 		btnRemovePlacement.setHideActionText(true);
 		toolBarPlacements.add(btnRemovePlacement);
+		// Ami: Add sort placement button
+		JButton btnSortPlacement = new JButton(sortPlacementAction);
+		btnSortPlacement.setHideActionText(true);
+		toolBarPlacements.add(btnSortPlacement);
+		// Ami. end
 		toolBarPlacements.addSeparator();
 		JButton btnCaptureCameraPlacementLocation = new JButton(
 				captureCameraPlacementLocation);
@@ -292,6 +313,35 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		btnCaptureToolPlacementLocation.setText("");
 		btnCaptureToolPlacementLocation.setHideActionText(true);
 		toolBarPlacements.add(btnCaptureToolPlacementLocation);
+
+		// Ami. Add position camera/tool to placement
+		JButton btnPositionCameraPlacementLocation = new JButton(
+				moveCameraToPlacementLocationAction);
+		btnPositionCameraPlacementLocation.setHideActionText(true);
+		toolBarPlacements.add(btnPositionCameraPlacementLocation);
+
+		JButton btnPositionToolPlacementLocation = new JButton(
+				moveToolToPlacementLocationAction);
+		btnPositionToolPlacementLocation.setHideActionText(true);
+		toolBarPlacements.add(btnPositionToolPlacementLocation);
+		toolBarBoards.addSeparator();
+		// Ami. Add feed pick and place part
+
+		JButton btnFeedPart = new JButton(
+				feedPartAction);
+		btnFeedPart.setHideActionText(true);
+		toolBarPlacements.add(btnFeedPart);
+
+		JButton btnPickPart = new JButton(
+				pickPartAction);
+		btnPickPart.setHideActionText(true);
+		toolBarPlacements.add(btnPickPart);
+
+		JButton btnPlacePart = new JButton(
+				placePartAction);
+		btnPlacePart.setHideActionText(true);
+		toolBarPlacements.add(btnPlacePart);
+		// Ami. end
 		pnlPlacements.add(new JScrollPane(placementsTable));
 
 		splitPane.setLeftComponent(pnlBoards);
@@ -420,6 +470,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 	private void updateJobActions() {
 		JobState state = jobProcessor.getState();
 		if (state == JobState.Stopped) {
+			resetJobAction.setEnabled(true); // Ami.
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
 			startPauseResumeJobAction.putValue(
@@ -465,6 +516,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			startPauseResumeJobAction.setEnabled(false);
 			stopJobAction.setEnabled(false);
 			stepJobAction.setEnabled(false);
+			resetJobAction.setEnabled(false); // Ami
 		}
 	}
 
@@ -597,6 +649,28 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			jobProcessor.stop();
 		}
 	};
+
+	// Ami. Add reset placement progress
+	public final Action resetJobAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class.getResource("/icons/control_start_blue.png")));
+			putValue(NAME, "Reset");
+			putValue(SHORT_DESCRIPTION, "Stop and reset job progress status.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if(jobProcessor.getState() != JobState.Stopped)
+			    jobProcessor.stop();
+
+			jobProcessor.reset();
+			placementsTableModel.fireTableDataChanged();
+
+		}
+	};
+	// Ami. end
 
 	public final Action newBoardAction = new AbstractAction() {
 		{
@@ -832,20 +906,223 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	};
 
-	public final Action twoPointLocateBoardLocationAction = new AbstractAction() {
+	// Ami.
+	public final Action moveCameraToPlacementLocationAction = new AbstractAction(
+			"Move Camera To Placement Location") {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/center-camera.png")));
+			putValue(NAME, "Move Camera To Placement Location");
+			putValue(SHORT_DESCRIPTION,
+					"Position the camera at the placement's location.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+				public void run() {
+					Head head = configuration.getMachine().getHeads().get(0);
+					try {
+						Camera camera = MainFrame.cameraPanel
+								.getSelectedCamera();
+					    Machine machine = configuration.getMachine();
+					    BoardLocation jobBoard = getSelectedBoardLocation();
+					    Location boardLocation = jobBoard.getLocation();
+					    Placement placement = getSelectedPlacement();
+					    Location placementLocation = placement.getLocation();
+					    Part part = placement.getPart();
+					    // Convert the locations to machine native units
+					    boardLocation = boardLocation.convertToUnits(machine.getNativeUnits());
+					    placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
+
+					    // If we are placing the bottom of the board we need to invert
+					    // the placement location.
+					    if (jobBoard.getSide() == Side.Bottom) {
+						    placementLocation = placementLocation.invert(true, false, false, false);
+					    }
+
+					    // Create the point that represents the final placement location
+					    Point p = new Point(placementLocation.getX(),
+							    placementLocation.getY());
+
+					    // Rotate and translate the point into the same coordinate space
+					    // as the board
+					    p = Utils2D.rotateTranslateCenterPoint(p, boardLocation.getRotation(),
+							    boardLocation.getX(),
+							    boardLocation.getY(),
+							    jobBoard.getCenter() );
+
+					    // Update the placementLocation with the transformed point
+					    placementLocation.setX(p.getX());
+					    placementLocation.setY(p.getY());
+
+
+
+						placementLocation = placementLocation.convertToUnits(configuration
+								.getMachine().getNativeUnits());
+						placementLocation = placementLocation.subtract(camera.getLocation());
+						head.moveToSafeZ();
+						// Move the head to the location at Safe-Z
+						head.moveTo(placementLocation.getX(), placementLocation.getY(),
+								head.getZ(), 0);
+
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(getTopLevelAncestor(),
+								"Move Error", e);
+					}
+				}
+			});
+		}
+	};
+	public final Action moveToolToPlacementLocationAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/center-tool.png")));
+			putValue(NAME, "Move Tool To Placement Location");
+			putValue(SHORT_DESCRIPTION,
+					"Position the tool at the placement's location.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+				public void run() {
+					Head head = configuration.getMachine().getHeads().get(0);
+					try {
+
+						Machine machine = configuration.getMachine();
+						BoardLocation jobBoard = getSelectedBoardLocation();
+					    Location boardLocation = jobBoard.getLocation();
+					    Placement placement = getSelectedPlacement();
+					    Location placementLocation = placement.getLocation();
+					    Part part = placement.getPart();
+					    // Convert the locations to machine native units
+					    boardLocation = boardLocation.convertToUnits(machine.getNativeUnits());
+					    placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
+
+					    // If we are placing the bottom of the board we need to invert
+					    // the placement location.
+					    if (jobBoard.getSide() == Side.Bottom) {
+						    placementLocation = placementLocation.invert(true, false, false, false);
+					    }
+
+					    // Create the point that represents the final placement location
+					    Point p = new Point(placementLocation.getX(),
+							    placementLocation.getY());
+
+					    // Rotate and translate the point into the same coordinate space
+					    // as the board
+					    p = Utils2D.rotateTranslateCenterPoint(p, boardLocation.getRotation(),
+							    boardLocation.getX(),
+							    boardLocation.getY(),
+							    jobBoard.getCenter() );
+
+					    // Update the placementLocation with the transformed point
+					    placementLocation.setX(p.getX());
+					    placementLocation.setY(p.getY());
+
+
+					    // Update the placementLocation with the proper Z value. This is
+					    // the distance to the top of the board plus the height of
+					    // the part.
+					    double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
+					    placementLocation.setZ(boardLocation.getZ() + partHeight);
+						head.moveToSafeZ();
+						// Move the head to the location at Safe-Z
+						head.moveTo(placementLocation.getX(), placementLocation.getY(),
+								head.getZ(), 0);
+						// Move Z
+						head.moveTo(head.getX(), head.getY(), placementLocation.getZ(),
+								head.getC());
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(getTopLevelAncestor(),
+								"Move Error", e);
+					}
+				}
+			});
+		}
+	};
+
+	public Action feedPartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/feed.png")));
+			putValue(NAME, "Feed part");
+			putValue(SHORT_DESCRIPTION,
+					"Feed one part for the selected placement feeder");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			new Thread() {
+				public void run() {
+
+				    jobProcessor.feedPart(getSelectedPlacement().getPart());
+
+				}
+			}.start();
+		}
+	};
+	public Action pickPartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/arrow_up.png")));
+			putValue(NAME, "Pick part");
+			putValue(SHORT_DESCRIPTION,
+					"Pick part for the selected placement feeder");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			new Thread() {
+				public void run() {
+				    jobProcessor.pickPart(getSelectedPlacement().getPart());
+
+				}
+			}.start();
+		}
+	};
+	public Action placePartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/arrow_down.png")));
+			putValue(NAME, "Place part");
+			putValue(SHORT_DESCRIPTION,
+					"Place part on the selected placement");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			new Thread() {
+				public void run() {
+				    BoardLocation jobBoard = getSelectedBoardLocation();
+				    jobProcessor.placePart(getSelectedPlacement(),jobBoard);
+
+				}
+			}.start();
+		}
+	};
+	// End Ami.
+	public final Action fourPointLocateBoardLocationAction = new AbstractAction() {
 		{
 			putValue(
 					SMALL_ICON,
 					new ImageIcon(JobPanel.class
 							.getResource("/icons/two-point-locate.png")));
-			putValue(NAME, "Two Point Board Location");
+			putValue(NAME, "Four Point Board Location");
 			putValue(SHORT_DESCRIPTION,
-					"Set the board's location and rotation using two placements.");
+					"Set the board's location and rotation using four placements.");
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
+			new FourPlacementBoardLocationProcess(frame, JobPanel.this);
 		}
 	};
 
@@ -907,7 +1184,30 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			placementsTableModel.fireTableDataChanged();
 		}
 	};
+	public final Action sortPlacementAction = new AbstractAction() {
+		{
+			putValue(
+					SMALL_ICON,
+					new ImageIcon(JobPanel.class
+							.getResource("/icons/text_list_numbers.png")));
+			putValue(NAME, "Set Placement Order");
+			putValue(SHORT_DESCRIPTION,
+					"Set placement order according to the table sorting order.");
+		}
 
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			ArrayList<String> sortedPlacementId = new ArrayList<String>();
+			for(int i = 0; i < placementsTable.getRowCount();++i)
+			{
+				String id = placementsTable.getValueAt(i, 0).toString();
+				sortedPlacementId.add(id);
+			}
+			BoardLocation boardLocation = getSelectedBoardLocation();
+			boardLocation.getBoard().sortPlacements(sortedPlacementId);
+			//placementsTableModel.fireTableDataChanged();
+		}
+	};
 	public final Action captureCameraPlacementLocation = new AbstractAction() {
 		{
 			putValue(
@@ -985,6 +1285,10 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 					+ "\n\nThe job will be paused.");
 			// TODO: Implement a way to retry, abort, etc.
 			jobProcessor.pause();
+		}
+		@Override
+		public void partPlaced(BoardLocation board, Placement placement) {
+		    placementsTableModel.fireTableDataChanged();
 		}
 	};
 
