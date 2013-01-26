@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -116,21 +117,21 @@ public class LinuxCNC implements ReferenceDriver, Runnable, RequiresConfiguratio
 		//}
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
-			sb.append(String.format("X%2.2f ", x));
+			sb.append(String.format(Locale.US, "X%2.2f ", x));
 		}
 		if (y != this.y) {
-			sb.append(String.format("Y%2.2f ", y));
+			sb.append(String.format(Locale.US, "Y%2.2f ", y));
 		}
 		if (z != this.z) {
-			sb.append(String.format("Z%2.2f ", z));
+			sb.append(String.format(Locale.US, "Z%2.2f ", z));
 		}
 		if (a != this.a) {
 			// TODO see above bug note, and remove this when fixed.
 			//feedRateMmPerMinute *= 10;
-			sb.append(String.format("A%2.2f ", a));
+			sb.append(String.format(Locale.US, "A%2.2f ", a));
 		}
 		if (sb.length() > 0) {
-			sb.append(String.format("F%2.2f", feedRateMmPerMinute));
+			sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
 			sendCommand("set mdi G1 " + sb.toString());
 			dwell();
 		}

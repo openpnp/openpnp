@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.util.Locale;
+
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Part;
@@ -45,7 +47,7 @@ public class NullDriver implements ReferenceDriver {
 	@Override
 	public void moveTo(ReferenceHead head, double x, double y, double z,
 			double c, double feedRateMmPerMinute) throws Exception {
-		logger.info(String.format("moveTo(%f, %f, %f, %f, %f)", x, y, z, c, feedRateMmPerMinute));
+		logger.info(String.format(Locale.US, "moveTo(%f, %f, %f, %f, %f)", x, y, z, c, feedRateMmPerMinute));
 
 		// If the angle is more than 360* we take it's modulo. No reason to
 		// travel more than a full circle.

@@ -28,6 +28,7 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -265,7 +266,7 @@ public class TableScanner extends JDialog implements Runnable {
 				image = camera.capture();
 				image = camera.capture();
 				File outputFile = new File(outputDirectory,
-						String.format("%2.3f,%2.3f.png", head.getX(), head.getY()));
+						String.format(Locale.US, "%2.3f,%2.3f.png", head.getX(), head.getY()));
 				ImageIO.write(image, "png",outputFile);
 				progressBar.setValue(currentImage);
 				currentImage++;

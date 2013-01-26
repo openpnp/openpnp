@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -194,19 +195,19 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 			throws Exception {
 		StringBuffer sb = new StringBuffer();
 		if (x != this.x) {
-			sb.append(String.format("X%2.4f ", x));
+			sb.append(String.format(Locale.US, "X%2.4f ", x));
 		}
 		if (y != this.y) {
-			sb.append(String.format("Y%2.4f ", y));
+			sb.append(String.format(Locale.US, "Y%2.4f ", y));
 		}
 		if (z != this.z) {
-			sb.append(String.format("Z%2.4f ", z));
+			sb.append(String.format(Locale.US, "Z%2.4f ", z));
 		}
 		if (c != this.c) {
-			sb.append(String.format("E%2.4f ", c));
+			sb.append(String.format(Locale.US, "E%2.4f ", c));
 		}
 		if (sb.length() > 0) {
-			sb.append(String.format("F%2.4f ", feedRateMmPerMinute));
+			sb.append(String.format(Locale.US, "F%2.4f ", feedRateMmPerMinute));
 			sendCommand("G1" + sb.toString());
 			dwell();
 		}
