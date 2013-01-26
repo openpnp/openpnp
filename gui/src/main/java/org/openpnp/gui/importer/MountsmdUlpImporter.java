@@ -65,11 +65,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-//C1 41.91 34.93 180 0.1uF C0805
-//T10 21.59 14.22  90  SOT23-BEC
-
-// printf("%s %5.2f %5.2f %3.0f %s %s\n",
-
 @SuppressWarnings("serial")
 public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 	private Board board;
@@ -180,6 +175,10 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			if (line.length() == 0) {
 				continue;
 			}
+
+			// C1 41.91 34.93 180 0.1uF C0805
+			// T10 21.59 14.22  90  SOT23-BEC
+			// printf("%s %5.2f %5.2f %3.0f %s %s\n",
 
 			Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
 			Matcher matcher = pattern.matcher(line);
