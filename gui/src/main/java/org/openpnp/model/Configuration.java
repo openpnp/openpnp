@@ -310,6 +310,9 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	public void addPackage(Package pkg) {
+	    if (null == pkg.getId()) {
+	        throw new Error("Package with null Id cannot be added to Configuration.");
+	    }
 		packages.put(pkg.getId().toUpperCase(), pkg);
 		dirty = true;
 		firePropertyChange("packages", null, packages);
@@ -327,6 +330,9 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	public void addPart(Part part) {
+	    if (null == part.getId()) {
+            throw new Error("Part with null Id cannot be added to Configuration.");
+	    }
 		parts.put(part.getId().toUpperCase(), part);
 		dirty = true;
 		firePropertyChange("parts", null, parts);

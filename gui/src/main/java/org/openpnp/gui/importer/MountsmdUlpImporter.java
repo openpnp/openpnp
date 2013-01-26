@@ -40,6 +40,7 @@ import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -53,11 +54,11 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Placement;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Part;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Package;
+import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -79,6 +80,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 	private final Action browseBottomFileAction = new SwingAction_1();
 	private final Action importAction = new SwingAction_2();
 	private final Action cancelAction = new SwingAction_3();
+	private JCheckBox chckbxCreateMissingParts;
 	
 	public MountsmdUlpImporter(Frame parent) {
 		super(parent, "Import EAGLE mountsmd.ulp Files", true);
@@ -125,6 +127,16 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		getContentPane().add(panel_1);
+		panel_1.setLayout(new FormLayout(new ColumnSpec[] {
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,},
+		    new RowSpec[] {
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,}));
+		
+		chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+		chckbxCreateMissingParts.setSelected(true);
+		panel_1.add(chckbxCreateMissingParts, "2, 2");
 		
 		JSeparator separator = new JSeparator();
 		getContentPane().add(separator);
@@ -159,7 +171,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 		return board;
 	}
 	
-	private static List<Placement> parseFile(File file, Side side) throws Exception {
+	private static List<Placement> parseFile(File file, Side side, boolean createMissingParts) throws Exception {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 		ArrayList<Placement> placements = new ArrayList<Placement>();
 		String line;
@@ -178,7 +190,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			placement.getLocation().setY(Double.parseDouble(matcher.group(3)));
 			placement.getLocation().setRotation(Double.parseDouble(matcher.group(4)));
 			Configuration cfg = Configuration.get();
-			if(cfg != null)
+			if(cfg != null && createMissingParts)
 			{
 			    String packageId = matcher.group(6);
 
@@ -265,8 +277,8 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			board = new Board();
 			List<Placement> placements = new ArrayList<Placement>();
 			try {
-				placements.addAll(parseFile(topFile, Side.Top));
-				placements.addAll(parseFile(bottomFile, Side.Bottom));
+				placements.addAll(parseFile(topFile, Side.Top, chckbxCreateMissingParts.isSelected()));
+				placements.addAll(parseFile(bottomFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
 			}
 			catch (Exception e1) {
 				MessageBoxes.errorBox(MountsmdUlpImporter.this, "Import Error", e1);
