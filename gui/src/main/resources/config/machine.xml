@@ -1,5 +1,7 @@
 <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
+      <!--  <driver class="org.openpnp.machine.reference.driver.LinuxCNC"
+server-ip="192.168.1.7" port="5007" /> -->
       <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
       <heads>
          <reference-head id="H1" pick-dwell-milliseconds="100" place-dwell-milliseconds="100">
