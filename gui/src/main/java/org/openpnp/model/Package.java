@@ -37,7 +37,7 @@ public class Package implements Identifiable {
 		this(null);
 	}
 	
-	private Package(String id) {
+	public  Package(String id) { 
 		this.id = id;
 	}
 	

@@ -1,3 +1,7 @@
+
+// Change log:
+// 03/10/2012 Ami: Add part and package
+
 package org.openpnp.gui.importer;
 
 import java.awt.FileDialog;
@@ -34,6 +38,9 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
+import org.openpnp.model.Package;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -144,8 +151,8 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			if (line.length() == 0) {
 				continue;
 			}
-			
-			Pattern pattern = Pattern.compile("(\\w+\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
+
+			Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
 			Matcher matcher = pattern.matcher(line);
 			matcher.matches();
 			Placement placement = new Placement(matcher.group(1));
@@ -153,6 +160,34 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			placement.getLocation().setX(Double.parseDouble(matcher.group(2)));
 			placement.getLocation().setY(Double.parseDouble(matcher.group(3)));
 			placement.getLocation().setRotation(Double.parseDouble(matcher.group(4)));
+			Configuration cfg = Configuration.get();
+			if(cfg != null)
+			{
+			    String packageId = matcher.group(6);
+
+
+			    String partId = packageId +"-"+matcher.group(5);
+			    Part part = cfg.getPart(partId);
+			    if(part == null)
+			    {
+				part = new Part(partId);
+				Package pkg = cfg.getPackage(packageId);
+				if(pkg == null)
+				{
+				    pkg = new Package(packageId);
+				    cfg.addPackage(pkg);
+				}
+				part.setPackage(pkg);
+
+				cfg.addPart(part);
+			    }
+			    placement.setPart(part);
+
+			}
+			// Ami. end
+
+
+
 			placement.setSide(side);
 			placements.add(placement);
 		}
