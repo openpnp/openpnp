@@ -17,6 +17,9 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
+ *
+ * Changelog:
+ * 03/10/2012 Ami: Add rotate using center point
  */
 
 package org.openpnp.util;
@@ -47,7 +50,14 @@ public class Utils2D {
 		point = scalePoint(point, scaleX, scaleY);
 		return point;
 	}
+	public static Point rotateTranslateCenterPoint(Point point, double c, double x, double y, Point center) {
+		point = translatePoint(point,center.getX()*-1,center.getY()*-1);
+		point = rotatePoint(point, c);
+		point = translatePoint(point,center.getX(),center.getY());
+		point = translatePoint(point, x, y);
 	
+		return point;
+	}
 	public static Point translatePoint(Point point, double x, double y) {
 		return new Point(point.getX() + x, point.getY() + y);
 	}
