@@ -190,32 +190,25 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			placement.getLocation().setY(Double.parseDouble(matcher.group(3)));
 			placement.getLocation().setRotation(Double.parseDouble(matcher.group(4)));
 			Configuration cfg = Configuration.get();
-			if(cfg != null && createMissingParts)
-			{
-			    String packageId = matcher.group(6);
+            if (cfg != null && createMissingParts) {
+                String packageId = matcher.group(6);
 
+                String partId = packageId + "-" + matcher.group(5);
+                Part part = cfg.getPart(partId);
+                if (part == null) {
+                    part = new Part(partId);
+                    Package pkg = cfg.getPackage(packageId);
+                    if (pkg == null) {
+                        pkg = new Package(packageId);
+                        cfg.addPackage(pkg);
+                    }
+                    part.setPackage(pkg);
 
-			    String partId = packageId +"-"+matcher.group(5);
-			    Part part = cfg.getPart(partId);
-			    if(part == null)
-			    {
-				part = new Part(partId);
-				Package pkg = cfg.getPackage(packageId);
-				if(pkg == null)
-				{
-				    pkg = new Package(packageId);
-				    cfg.addPackage(pkg);
-				}
-				part.setPackage(pkg);
+                    cfg.addPart(part);
+                }
+                placement.setPart(part);
 
-				cfg.addPart(part);
-			    }
-			    placement.setPart(part);
-
-			}
-			// Ami. end
-
-
+            }
 
 			placement.setSide(side);
 			placements.add(placement);
