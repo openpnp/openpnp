@@ -23,6 +23,8 @@ package org.openpnp.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.model.Board.Side;
@@ -38,6 +40,15 @@ import org.simpleframework.xml.core.Persist;
  * @author jason
  */
 public class Placement extends AbstractModelObject implements RequiresConfigurationResolution, PropertyChangeListener {
+    public enum Option {
+        HoldBeforeFeed,
+        HoldAfterFeed,
+        HoldBeforePick,
+        HoldAfterPick,
+        HoldBeforePlace,
+        HoldAfterPlace
+    }
+    
 	@Attribute
 	private String id;
 	@Element
@@ -48,6 +59,9 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	
 	@Attribute
 	private String partId;
+	
+    @Element(required=false)
+    private Set<Option> options = new HashSet<Option>();
 	
 	@SuppressWarnings("unused")
 	private Placement() {
@@ -117,6 +131,20 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 		this.side = side;
 		firePropertyChange("side", oldValue, side);
 	}
+	
+    public boolean isOptionSet(Option option) {
+        return options.contains(option);
+    }
+    
+    public void setOption(Option option, boolean set) {
+        if (set) {
+            options.add(option);
+        }
+        else {
+            options.remove(option);
+        }
+        firePropertyChange("options", null, options);
+    }
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
