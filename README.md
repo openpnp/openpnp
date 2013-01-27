@@ -1,6 +1,6 @@
 # OpenPnP
 
-Open Source SMD Pick and Place Hardware and Software
+Open Source SMT Pick and Place Hardware and Software
 
 ## Introduction
 
