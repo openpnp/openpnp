@@ -25,121 +25,110 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 
-public class FiducialReticle implements Reticle {
-	public enum Shape {
-		Circle,
-		Square
-	}
-	private Shape shape;
-	private boolean filled;
-	private Color color;
-	private LengthUnit units;
-	private double size;
-	
-	public FiducialReticle() {
-		this.shape = Shape.Circle;
-		this.filled = false;
-		this.color = Color.red;
-		this.units = LengthUnit.Millimeters;
-		this.size = 1;
-	}
+public class FiducialReticle extends CrosshairReticle {
+    public enum Shape {
+        Circle, Square
+    }
 
-	public Shape getShape() {
-		return shape;
-	}
+    private Shape shape;
+    private boolean filled;
+    private LengthUnit units;
+    private double size;
 
-	public void setShape(Shape shape) {
-		this.shape = shape;
-	}
+    public FiducialReticle() {
+        super();
+        this.shape = Shape.Circle;
+        this.filled = false;
+        this.units = LengthUnit.Millimeters;
+        this.size = 1;
+        setColor(Color.red);
+    }
 
-	public boolean isFilled() {
-		return filled;
-	}
+    public Shape getShape() {
+        return shape;
+    }
 
-	public void setFilled(boolean filled) {
-		this.filled = filled;
-	}
+    public void setShape(Shape shape) {
+        this.shape = shape;
+    }
 
-	public Color getColor() {
-		return color;
-	}
+    public boolean isFilled() {
+        return filled;
+    }
 
-	public void setColor(Color color) {
-		this.color = color;
-	}
+    public void setFilled(boolean filled) {
+        this.filled = filled;
+    }
 
-	public LengthUnit getUnits() {
-		return units;
-	}
+    public LengthUnit getUnits() {
+        return units;
+    }
 
-	public void setUnits(LengthUnit units) {
-		this.units = units;
-	}
+    public void setUnits(LengthUnit units) {
+        this.units = units;
+    }
 
-	public double getSize() {
-		return size;
-	}
+    public double getSize() {
+        return size;
+    }
 
-	public void setSize(double size) {
-		this.size = size;
-	}
-	
-	@Override
-	public void draw(Graphics2D g2d, 			
-			LengthUnit cameraUnitsPerPixelUnits,
-			double cameraUnitsPerPixelX, 
-			double cameraUnitsPerPixelY, 
-			double viewPortCenterX, 
-			double viewPortCenterY,
-			int viewPortWidth,
-			int viewPortHeight,
-			double rotation) {
+    public void setSize(double size) {
+        this.size = size;
+    }
 
-		g2d.setColor(color);
-		g2d.setStroke(new BasicStroke(1f));
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		
-		// TODO performance, calculate all this stuff only when the incoming values change
-		
-		// draw the horizontal splitter
-		g2d.drawLine((int) (viewPortCenterX - (viewPortWidth / 2)), (int) viewPortCenterY, (int) (viewPortCenterX + (viewPortWidth / 2)), (int) viewPortCenterY);
-		// draw the vertical splitter
-		g2d.drawLine((int) viewPortCenterX, (int) (viewPortCenterY - (viewPortHeight / 2)), (int) viewPortCenterX, (int) (viewPortCenterY + (viewPortHeight / 2)));
-		
-		double pixelsPerUnitX = 1.0 / new Length(cameraUnitsPerPixelX, cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
-		double pixelsPerUnitY = 1.0 / new Length(cameraUnitsPerPixelY, cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
+    @Override
+    public void draw(Graphics2D g2d, LengthUnit cameraUnitsPerPixelUnits,
+            double cameraUnitsPerPixelX, double cameraUnitsPerPixelY,
+            double viewPortCenterX, double viewPortCenterY, int viewPortWidth,
+            int viewPortHeight, double rotation) {
 
-		if (shape == Shape.Circle) {
-			int width = (int) (size * pixelsPerUnitX);
-			int height = (int) (size * pixelsPerUnitY);
-			int x = (int) (viewPortCenterX - (width / 2));
-			int y = (int) (viewPortCenterY - (height / 2));
-			
-			if (filled) {
-				g2d.fillArc(x, y, width, height, 0, 360);
-			}
-			else {
-				g2d.drawArc(x, y, width, height, 0, 360);
-			}
-		}
-		else if (shape == Shape.Square) {
-			int width = (int) (size * pixelsPerUnitX);
-			int height = (int) (size * pixelsPerUnitY);
-			int x = (int) (viewPortCenterX - (width / 2));
-			int y = (int) (viewPortCenterY - (height / 2));
-			
-			if (filled) {
-				g2d.fillRect(x, y, width, height);
-			}
-			else {
-				g2d.drawRect(x, y, width, height);
-			}
-		}
-	}
+        super.draw(g2d, cameraUnitsPerPixelUnits, cameraUnitsPerPixelX,
+                cameraUnitsPerPixelY, viewPortCenterX, viewPortCenterY,
+                viewPortWidth, viewPortHeight, rotation);
+
+        g2d.setColor(color);
+        g2d.setStroke(new BasicStroke(1f));
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
+        AffineTransform origTx = g2d.getTransform();
+
+        g2d.translate(viewPortCenterX, viewPortCenterY);
+        g2d.rotate(Math.toRadians(rotation));
+
+        double pixelsPerUnitX = 1.0 / new Length(cameraUnitsPerPixelX,
+                cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
+        double pixelsPerUnitY = 1.0 / new Length(cameraUnitsPerPixelY,
+                cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
+
+        int width = (int) (size * pixelsPerUnitX);
+        int height = (int) (size * pixelsPerUnitY);
+        int x = (int) -(width / 2);
+        int y = (int) -(height / 2);
+
+        if (shape == Shape.Circle) {
+            if (filled) {
+                g2d.fillArc(x, y, width, height, 0, 360);
+            }
+            else {
+                g2d.drawArc(x, y, width, height, 0, 360);
+            }
+        }
+        else if (shape == Shape.Square) {
+            if (filled) {
+                g2d.fillRect(x, y, width, height);
+            }
+            else {
+                g2d.drawRect(x, y, width, height);
+            }
+        }
+
+        g2d.setTransform(origTx);
+    }
 
 }

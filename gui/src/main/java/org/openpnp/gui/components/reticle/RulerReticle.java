@@ -25,96 +25,84 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 
-public class RulerReticle implements Reticle {
-	private LengthUnit units;
-	private double unitsPerTick;
-	private Color color;
-	
-	public RulerReticle() {
-		this.units = LengthUnit.Millimeters;
-		this.unitsPerTick = 1;
-		this.color = Color.red;
-	}
-	
-	public LengthUnit getUnits() {
-		return units;
-	}
+public class RulerReticle extends CrosshairReticle {
+    private LengthUnit units;
+    private double unitsPerTick;
 
-	public void setUnits(LengthUnit units) {
-		this.units = units;
-	}
+    public RulerReticle() {
+        super();
+        this.units = LengthUnit.Millimeters;
+        this.unitsPerTick = 1;
+        setColor(Color.red);
+    }
 
-	public double getUnitsPerTick() {
-		return unitsPerTick;
-	}
+    public LengthUnit getUnits() {
+        return units;
+    }
 
-	public void setUnitsPerTick(double unitsPerTick) {
-		this.unitsPerTick = unitsPerTick;
-	}
+    public void setUnits(LengthUnit units) {
+        this.units = units;
+    }
 
-	public Color getColor() {
-		return color;
-	}
+    public double getUnitsPerTick() {
+        return unitsPerTick;
+    }
 
-	public void setColor(Color color) {
-		this.color = color;
-	}
+    public void setUnitsPerTick(double unitsPerTick) {
+        this.unitsPerTick = unitsPerTick;
+    }
 
-	@Override
-	public void draw(Graphics2D g2d, 			
-			LengthUnit cameraUnitsPerPixelUnits,
-			double cameraUnitsPerPixelX, 
-			double cameraUnitsPerPixelY, 
-			double viewPortCenterX, 
-			double viewPortCenterY,
-			int viewPortWidth,
-			int viewPortHeight,
-			double rotation) {
+    @Override
+    public void draw(Graphics2D g2d, LengthUnit cameraUnitsPerPixelUnits,
+            double cameraUnitsPerPixelX, double cameraUnitsPerPixelY,
+            double viewPortCenterX, double viewPortCenterY, int viewPortWidth,
+            int viewPortHeight, double rotation) {
 
-		g2d.setColor(color);
-		g2d.setStroke(new BasicStroke(1f));
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+        super.draw(g2d, cameraUnitsPerPixelUnits, cameraUnitsPerPixelX,
+                cameraUnitsPerPixelY, viewPortCenterX, viewPortCenterY,
+                viewPortWidth, viewPortHeight, rotation);
 
-		// TODO performance, calculate all this stuff only when the incoming values change
-		
-		// draw the horizontal splitter
-		g2d.drawLine((int) (viewPortCenterX - (viewPortWidth / 2)), (int) viewPortCenterY, (int) (viewPortCenterX + (viewPortWidth / 2)), (int) viewPortCenterY);
-		// draw the vertical splitter
-		g2d.drawLine((int) viewPortCenterX, (int) (viewPortCenterY - (viewPortHeight / 2)), (int) viewPortCenterX, (int) (viewPortCenterY + (viewPortHeight / 2)));
-		double uppX = new Length(cameraUnitsPerPixelX, units).convertToUnits(this.units).getValue();
-		double uppY = new Length(cameraUnitsPerPixelY, units).convertToUnits(this.units).getValue();
-		double pixelsPerTickX = unitsPerTick / uppX;
-		double pixelsPerTickY = unitsPerTick / uppY;
-		int tickHeight = 10;
-		double x;
-		x = viewPortCenterX + pixelsPerTickX;
-		while (x < (viewPortCenterX + (viewPortWidth / 2))) {
-			g2d.drawLine((int) x, (int) viewPortCenterY - tickHeight, (int) x, (int) viewPortCenterY + tickHeight);
-			x += pixelsPerTickX;
-		}
-		x = viewPortCenterX - pixelsPerTickX;
-		while (x > (viewPortCenterX - (viewPortWidth / 2))) {
-			g2d.drawLine((int) x, (int) viewPortCenterY - tickHeight, (int) x, (int) viewPortCenterY + tickHeight);
-			x -= pixelsPerTickX;
-		}
-		
-		double y;
-		y = viewPortCenterY + pixelsPerTickY;
-		while (y < (viewPortCenterY + (viewPortHeight / 2))) {
-			g2d.drawLine((int) viewPortCenterX - tickHeight, (int) y, (int) viewPortCenterX + tickHeight, (int) y);
-			y += pixelsPerTickY;
-		}
-		y = viewPortCenterY - pixelsPerTickY;
-		while (y > (viewPortCenterY - (viewPortHeight / 2))) {
-			g2d.drawLine((int) viewPortCenterX - tickHeight, (int) y, (int) viewPortCenterX + tickHeight, (int) y);
-			y -= pixelsPerTickY;
-		}
-		
-	}
+        g2d.setStroke(new BasicStroke(1f));
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Calculate half the diagonal size of the viewport.
+        int halfDiagonal = (int) (Math.sqrt(Math.pow(viewPortWidth, 2)
+                + Math.pow(viewPortHeight, 2)) / 2.0);
+
+        AffineTransform origTx = g2d.getTransform();
+
+        g2d.translate(viewPortCenterX, viewPortCenterY);
+        g2d.rotate(Math.toRadians(rotation));
+
+        double uppX = new Length(cameraUnitsPerPixelX, units).convertToUnits(
+                this.units).getValue();
+        double uppY = new Length(cameraUnitsPerPixelY, units).convertToUnits(
+                this.units).getValue();
+        double pixelsPerTickX = unitsPerTick / uppX;
+        double pixelsPerTickY = unitsPerTick / uppY;
+        int tickLength = 10;
+
+        g2d.setColor(color);
+        for (int i = 1; i < (halfDiagonal / pixelsPerTickX); i++) {
+            int x = (int) (i * pixelsPerTickX);
+            g2d.drawLine(x, -tickLength, x, tickLength);
+            g2d.drawLine(-x, -tickLength, -x, tickLength);
+        }
+
+        for (int i = 1; i < (halfDiagonal / pixelsPerTickY); i++) {
+            int y = (int) (i * pixelsPerTickY);
+            g2d.setColor(color);
+            g2d.drawLine(-tickLength, y, tickLength, y);
+            g2d.setColor(complimentaryColor);
+            g2d.drawLine(-tickLength, -y, tickLength, -y);
+        }
+        g2d.setTransform(origTx);
+    }
 
 }
