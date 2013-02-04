@@ -1,4 +1,7 @@
-### Linear Bearing Machines
+### Linear Bearing Machines, Electronic Actuators
+* Tbd
+
+### Linear Bearing Machines, Pneumatic Actuators
 * Tbd
 
 ### MakerSlide Machines
