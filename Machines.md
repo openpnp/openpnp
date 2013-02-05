@@ -5,7 +5,7 @@ Machines are organized by the architecture that corresponds to intended use, ran
 * Tbd
 
 ### Medium-Duty Closed Bearing Machines, Electronic Actuators
-* Tbd
+* [Ouch! My Head!](https://groups.google.com/forum/m/#!topic/openpnp/vXqJjlmN04I) in progress, eta mid 2013, by Michael Grant. Three head, single carriage, custom driver boards.
 
 ### Heavy-Duty Closed Bearing Machines, Pneumatic Actuators
 * Tbd
