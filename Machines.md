@@ -7,6 +7,7 @@ Machines are organized by the architecture that corresponds to intended use, ran
 
 ### Medium-Duty Closed Bearing Machines, Electronic Actuators
 * [Ouch! My Head!](https://groups.google.com/forum/m/#!topic/openpnp/vXqJjlmN04I) in progress, eta mid 2013, by Michael Grant. Three head, single carriage, custom driver boards.
+* [[Sylvestre]] ca. 2012, by Ami. Work-in-progress. Tray tape feeder, single head.
 
 ### Heavy-Duty Closed Bearing Machines, Pneumatic Actuators
 * Tbd
