@@ -2,6 +2,7 @@ Machines are organized by the architecture that corresponds to intended use, ran
 
 ### Light-Duty Open Bearing Machines (e.g., MakerSlide)
 * [FirePick](http://www.firepick.org) in progress, eta late 2013, by Karl Lew. Dual fixed gantry with multiple moving tables (tray tape feeder, pcb tray)
+* [Zippy](http://www.richardspelling.com/?p=683) ca. 2012, by Richard Spelling. Remarkable 3D feeder design. Square tube open bearing.
 * Tbd
 
 ### Medium-Duty Closed Bearing Machines, Electronic Actuators
