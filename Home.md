@@ -1,7 +1,3 @@
-# OpenPnP
-
-Open Source SMT Pick and Place Hardware and Software
-
 ## Introduction
 
 OpenPnP is a project to create the plans, prototype and software for a completely Open Source SMT pick and place machine that anyone can afford. I believe that with the ubiquity of cheap, precise motion control hardware, some ingenuity and plenty of Open Source software it should be possible to build and own a fully functional SMT pick and place machine for under $1000.
