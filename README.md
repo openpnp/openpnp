@@ -12,11 +12,11 @@ Overall, the project is in a pre-alpha state. This means that it's under heavy d
 
 ## Get Started
 
-OpenPnP is still under development. If you would like to keep up with our progress you can Watch this project, check out [our Twitter](http://twitter.com/openpnp), or [join the discussion group](http://groups.google.com/group/openpnp).
+OpenPnP is still under development. If you would like to keep up with our progress you can [Watch this project on GitHub](http://github.com/openpnp/openpnp), check out [our Twitter](http://twitter.com/openpnp), or [join the discussion group](http://groups.google.com/group/openpnp).
 
 ## Get Involved
 
-If you'd like to be involved in the development of OpenPnP, please [join the discussion group](http://groups.google.com/group/openpnp) and let us know how you can help.
+If you'd like to be involved in the development of OpenPnP, please [join the discussion group](http://groups.google.com/group/openpnp), introduce yourself and let us know how you can help.
 
 ## Thanks
 
