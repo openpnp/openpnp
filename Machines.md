@@ -11,4 +11,4 @@ Please keep your entries to a single line. Use a separate wiki page as necessary
 * [Ouch! My Head!](https://groups.google.com/forum/m/#!topic/openpnp/vXqJjlmN04I) in progress, eta mid 2013, by Michael Grant. Three head, single carriage, custom driver boards.
 
 ### Heavy-Duty Closed Bearing Machines, Pneumatic Actuators
-* Tbd
+* TBD
