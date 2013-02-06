@@ -1,3 +1,5 @@
+These are machines that are compatible with OpenPnP or are being designed to be compatible with OpenPnP. These machines are not part of the OpenPnP project.
+
 Machines are organized by the architecture that corresponds to intended use, ranging from light-duty machines for makers and hobbyists, up to heavy-duty machines for light industrial use in small businesses.
 
 Please keep your entries to a single line. Use a separate wiki page as necessary for more information if you don't have a separate web site.
