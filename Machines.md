@@ -1,6 +1,6 @@
 Machines are organized by the architecture that corresponds to intended use, ranging from light-duty machines for makers and hobbyists, up to heavy-duty machines for light industrial use in small businesses.
 
-Please keep your entries to a single line. Use a separate wiki page as necessary for more information if you don't have a separate blog, web-site, etc.
+Please keep your entries to a single line. Use a separate wiki page as necessary for more information if you don't have a separate web site.
 
 ### Light-Duty Open Bearing Machines (e.g., MakerSlide)
 * [FirePick](http://www.firepick.org) in progress, eta late 2013, by Karl Lew. Dual fixed gantry with multiple moving tables (tray tape feeder, pcb tray). Open source kit.
