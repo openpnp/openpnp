@@ -1,4 +1,4 @@
-# Development Practices
+# Developers Guide
 
 Important information for anyone interested in hacking on or contributing to any of the OpenPnP modules. 
 
