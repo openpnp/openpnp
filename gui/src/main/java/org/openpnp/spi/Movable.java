@@ -14,4 +14,6 @@ public interface Movable extends Locatable {
      * @throws Exception
      */
     public void moveTo(Location location, double speed) throws Exception;
+    
+    public void moveToSafeZ(double speed) throws Exception;
 }

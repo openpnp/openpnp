@@ -78,10 +78,10 @@ public class ReferenceMachine extends AbstractMachine {
 				this.enabled = true;
 			}
 			catch (Exception e) {
-				fireMachineEnableFailed(this, e.getMessage());
+				fireMachineEnableFailed(e.getMessage());
 				throw e;
 			}
-			fireMachineEnabled(this);
+			fireMachineEnabled();
 		}
 		else {
 			try {
@@ -89,10 +89,10 @@ public class ReferenceMachine extends AbstractMachine {
 				this.enabled = false;
 			}
 			catch (Exception e) {
-				fireMachineDisableFailed(this, e.getMessage());
+				fireMachineDisableFailed(e.getMessage());
 				throw e;
 			}
-			fireMachineDisabled(this, "User requested stop.");
+			fireMachineDisabled("User requested stop.");
 		}
 	}
 
@@ -118,33 +118,5 @@ public class ReferenceMachine extends AbstractMachine {
 		l.add(TableScannerCamera.class);
 		l.add(OpenCvCamera.class);
 		return l;
-	}
-	
-	@Override
-	public void addFeeder(Feeder feeder) throws Exception {
-		if (! (feeder instanceof ReferenceFeeder)) {
-			throw new Exception("Can't add a Feeder that is not an instance of ReferenceFeeder.");
-		}
-		ReferenceFeeder referenceFeeder = (ReferenceFeeder) feeder;
-		feeders.add(referenceFeeder);
-	}
-	
-	@Override
-	public void removeFeeder(Feeder feeder) {
-	    // TODO: 
-	}
-
-	@Override
-	public void addCamera(Camera camera) throws Exception {
-		if (! (camera instanceof ReferenceCamera)) {
-			throw new Exception("Can't add a Camera that is not an instance of ReferenceFeeder.");
-		}
-		ReferenceCamera referenceCamera = (ReferenceCamera) camera;
-		cameras.add(referenceCamera);
-	}
-	
-	@Override
-	public void removeCamera(Camera camera) {
-	    // TODO: 
 	}
 }

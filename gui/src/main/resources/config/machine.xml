@@ -1,33 +1,15 @@
 <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
-      <!--  <driver class="org.openpnp.machine.reference.driver.LinuxCNC"
-server-ip="192.168.1.7" port="5007" /> -->
-      <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
+      <driver class="org.openpnp.machine.reference.driver.NullDriver2"/>
       <heads>
-         <reference-head id="H1" pick-dwell-milliseconds="100" place-dwell-milliseconds="100">
-         	<feed-rate units="Millimeters" value="9000.0" />
-            <soft-limits enabled="true">
-            	<minimums units="Millimeters" x="-100" y="-100" z="-100" rotation="0" />
-            	<maximums units="Millimeters" x="1000" y="1000" z="1000" rotation="360" />
-            </soft-limits>
-            <homing>
-               <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            </homing>
-            <actuators>
-               <reference-actuator id="PIN" index="0">
-                  <location units="Millimeters" x="-20.0" y="0.0" z="0.0" rotation="0.0"/>
-               </reference-actuator>
-            </actuators>
-            <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="M1" allow-incompatible-packages="false">
-                <compatible-package-ids>
-                    <id>0805</id>
-                </compatible-package-ids>
-            </nozzle-tip>
-         </reference-head>
+        <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
+            <nozzles>
+                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1">
+                    <head-offsets x="0" y="0" z="0" rotation="0" units="Millimeters" />
+                    <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" />
+                </nozzle>
+            </nozzles>
+        </head>
       </heads>
-      <cameras>
-      </cameras>
-      <feeders>
-      </feeders>
    </machine>
 </openpnp-machine>

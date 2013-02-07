@@ -23,8 +23,9 @@ public abstract class AbstractHead implements Head {
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
     
+    @SuppressWarnings("unused")
     @Commit
-    public void commit() {
+    private void commit() {
         for (Nozzle nozzle : nozzles) {
             nozzle.setHead(this);
         }

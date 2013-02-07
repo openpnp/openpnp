@@ -79,12 +79,4 @@ public interface Head extends Identifiable, WizardConfigurable {
      * attached devices to their home positions. 
      */
     void home() throws Exception;
-    
-    /**
-     * Move all devices on the Head to their Safe Z position. This is a
-     * position which should make it safe to move the Head in X and Y without
-     * crashing any of the attached devices. Typically this call should only
-     * produce motion in the Z axis.
-     */
-    void moveToSafeZ() throws Exception;
 }

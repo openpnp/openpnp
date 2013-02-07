@@ -37,7 +37,7 @@ import org.openpnp.spi.Head;
 public class CamerasTableModel extends AbstractTableModel implements ConfigurationListener {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Name", "Looking", "Head" };
+	private String[] columnNames = new String[] { "Id", "Looking", "Head" };
 	private List<Camera> cameras;
 
 	public CamerasTableModel(Configuration configuration) {
@@ -73,7 +73,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return true;
+		return columnIndex == 1 || columnIndex == 2;
 	}
 	
 	@Override
@@ -88,10 +88,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
 			Camera camera = cameras.get(rowIndex);
-			if (columnIndex == 0) {
-				camera.setName((String) aValue);
-			}
-			else if (columnIndex == 1) {
+			if (columnIndex == 1) {
 				camera.setLooking((Looking) aValue);
 			}
 			else if (columnIndex == 2) {
@@ -110,7 +107,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 		Location loc = camera.getLocation();
 		switch (col) {
 		case 0:
-			return camera.getName();
+			return camera.getId();
 		case 1:
 			return camera.getLooking();
 		case 2:

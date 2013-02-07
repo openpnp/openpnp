@@ -23,11 +23,9 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
-import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
-import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
 
@@ -37,7 +35,7 @@ import com.googlecode.javacv.cpp.opencv_core.IplImage;
 /**
  * A Camera implementation based on the OpenCV FrameGrabbers.
  */
-public class OpenCvCamera extends ReferenceCamera implements RequiresConfigurationResolution, Runnable {
+public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	@Attribute(required=true)
 	private int deviceIndex = 0;
 	
@@ -45,17 +43,11 @@ public class OpenCvCamera extends ReferenceCamera implements RequiresConfigurati
 	private Thread thread;
 	
 	public OpenCvCamera() {
-		super("OpenCvCamera");
 	}
 	
 	@Commit
 	private void commit() {
 		setDeviceIndex(deviceIndex);
-	}
-	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		super.resolve(configuration);
 	}
 	
 	@Override

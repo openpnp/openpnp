@@ -71,7 +71,8 @@ public class Configuration extends AbstractModelObject {
 	private Machine machine;
 	private LinkedHashMap<File, Board> boards = new LinkedHashMap<File, Board>();
 	private boolean dirty;
-	private Set<ConfigurationListener> listeners = new HashSet<ConfigurationListener>();
+	private boolean loaded;
+	private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<ConfigurationListener>());
 	private File configurationDirectory;
 	private Preferences prefs;
 	
@@ -196,6 +197,15 @@ public class Configuration extends AbstractModelObject {
 
 	public void addListener(ConfigurationListener listener) {
 		listeners.add(listener);
+		if (loaded) {
+		    try {
+		        listener.configurationLoaded(this);
+		    }
+		    catch (Exception e) {
+		        // TODO: Need to find a way to raise this to the GUI
+		        throw new Error(e);
+		    }
+		}
 	}
 	
 	public void removeListener(ConfigurationListener listener) {
@@ -204,10 +214,11 @@ public class Configuration extends AbstractModelObject {
 	
 	public void load() throws Exception {
 		boolean forceSave = false;
+		boolean overrideUserConfig = Boolean.getBoolean("overrideUserConfig");
 		
 		try {
 			File file = new File(configurationDirectory, "packages.xml");
-			if (!file.exists()) {
+			if (overrideUserConfig || !file.exists()) {
 				logger.info("No packages.xml found in configuration directory, loading defaults.");
 				file = File.createTempFile("packages", "xml");
 				FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/packages.xml"), file);
@@ -226,7 +237,7 @@ public class Configuration extends AbstractModelObject {
 		
 		try {
 			File file = new File(configurationDirectory, "parts.xml");
-			if (!file.exists()) {
+			if (overrideUserConfig || !file.exists()) {
 				logger.info("No parts.xml found in configuration directory, loading defaults.");
 				file = File.createTempFile("parts", "xml");
 				FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/parts.xml"), file);
@@ -245,7 +256,7 @@ public class Configuration extends AbstractModelObject {
 		
 		try {
 			File file = new File(configurationDirectory, "machine.xml");
-			if (!file.exists()) {
+			if (overrideUserConfig || !file.exists()) {
 				logger.info("No machine.xml found in configuration directory, loading defaults.");
 				file = File.createTempFile("machine", "xml");
 				FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/machine.xml"), file);
@@ -261,16 +272,13 @@ public class Configuration extends AbstractModelObject {
 			throw new Exception("Error while reading machine.xml (" + message + ")", e);
 		}
 		
-		if (machine.getHeads().size() > 1) {
-			throw new Exception("Multiple head support is completely broken right now. Don't use it.");
-		}
-		
 		if (forceSave) {
 			logger.info("Defaults were loaded. Saving to configuration directory.");
 			configurationDirectory.mkdirs();
 			save();
 		}
 		dirty = false;
+		loaded = true;
 		for (ConfigurationListener listener : listeners) {
 			listener.configurationLoaded(this);
 		}

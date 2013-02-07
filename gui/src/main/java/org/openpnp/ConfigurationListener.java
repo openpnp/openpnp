@@ -24,5 +24,11 @@ package org.openpnp;
 import org.openpnp.model.Configuration;
 
 public interface ConfigurationListener {
+    /**
+     * Called by Configuration when it is loaded and ready to be used. This
+     * method will also be called when the ConfigurationListener is added
+     * to the Configuration if the Configuration has already been loaded.
+     * @param configuration
+     */
 	public void configurationLoaded(Configuration configuration) throws Exception;
 }

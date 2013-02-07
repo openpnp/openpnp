@@ -32,7 +32,6 @@ import javax.imageio.ImageIO;
 
 import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -44,6 +43,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.spi.base.AbstractFeeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
  * then used in the next feed operation to be sure to hit the tape at the
  * right position.
  */
-public class ReferenceTapeFeeder extends ReferenceFeeder implements RequiresConfigurationResolution {
+public class ReferenceTapeFeeder extends AbstractFeeder implements RequiresConfigurationResolution {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);

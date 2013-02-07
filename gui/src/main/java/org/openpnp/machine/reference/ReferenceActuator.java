@@ -21,90 +21,80 @@
 
 package org.openpnp.machine.reference;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
+import org.openpnp.spi.base.AbstractActuator;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * A simple binary Actuator that sends an indexed actuate command to the
- * driver and has a Location which provides offsets from the Head or Machine. 
- */
-public class ReferenceActuator implements Actuator, RequiresConfigurationResolution {
-	@Attribute
-	private String id;
+public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
+    private final static Logger logger = LoggerFactory
+            .getLogger(ReferenceNozzle.class);
+    
+    @Element
+    private Location headOffsets;
+    
 	@Attribute
 	private int index;
-	/**
-	 * If the Actuator is attached to a Head, this Location provides the
-	 * offsets from the Head to the Actuator. These offsets are added to
-	 * the Head location to get the Actuator location.
-	 */
-	@Element(required=false)
-	private Location location;
 	
-	private ReferenceMachine machine;
-	private ReferenceHead head;
-	
-	@SuppressWarnings("unused")
-	private ReferenceActuator() {
-		this(null);
-	}
-	
-	public ReferenceActuator(String id) {
-		this.id = id;
-	}
-	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		if (this.machine == null) {
-			this.machine = (ReferenceMachine) configuration.getMachine();
-		}
-	}
-	
-	public void setReferenceHead(ReferenceHead head) {
-		this.head = head;
-	}
+    private ReferenceMachine machine;
+    private ReferenceDriver driver;
 
-	public String getId() {
-		return id;
-	}
+    public ReferenceActuator() {
+        Configuration.get().addListener(new ConfigurationListener() {
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                machine = (ReferenceMachine) configuration.getMachine();
+                driver = machine.getDriver();
+            }
+        });
+    }
+    
+    public Location getHeadOffsets() {
+        return headOffsets;
+    }
 
-	@Override
-	public Location getLocation() {
-		return location;
-	}
-
-	@Override
-	public void setLocation(Location location) {
-		this.location = location;
-	}
-	
 	public int getIndex() {
 		return index;
 	}
 
-	public void setIndex(int index) {
-		this.index = index;
-	}
-
 	@Override
 	public void actuate(boolean on) throws Exception {
-		if (head != null) {
-			machine.getDriver().actuate(head, index, on);
-		}
-		else {
-			machine.getDriver().actuate(head, index, on);
-		}
-		// TODO Build out fireMachineActuatorActivity
-//		machine.fireMachineHeadActivity(machine, this);
+		driver.actuate(this, on);
+		machine.fireMachineHeadActivity(head);
 	}
 	
 	@Override
+    public Location getLocation() {
+	    return driver.getLocation(this);
+    }
+
+    @Override
+    public void actuate(double value) throws Exception {
+        driver.actuate(this, value);
+        machine.fireMachineHeadActivity(head);
+    }
+
+    @Override
+    public void moveTo(Location location, double speed) throws Exception {
+        driver.moveTo(this, location, speed);
+    }
+
+    @Override
+    public void moveToSafeZ(double speed) throws Exception {
+        logger.debug("moveToSafeZ({})", new Object[] { speed } );
+        Location l = new Location(getLocation().getUnits(), Double.NaN,
+                Double.NaN, 0, Double.NaN);
+        driver.moveTo(this, l, speed);
+    }
+
+    @Override
 	public Wizard getConfigurationWizard() {
 		return new ReferenceActuatorConfigurationWizard(this);
 	}

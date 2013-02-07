@@ -21,165 +21,55 @@
 
 package org.openpnp.machine.reference;
 
-import java.awt.image.BufferedImage;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.openpnp.CameraListener;
-import org.openpnp.RequiresConfigurationResolution;
-import org.openpnp.model.AbstractModelObject;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.VisionProvider;
-import org.simpleframework.xml.Attribute;
+import org.openpnp.spi.base.AbstractCamera;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Persist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class ReferenceCamera extends AbstractModelObject implements Camera, RequiresConfigurationResolution {
-	@Attribute
-	protected String name;
+public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
+    private final static Logger logger = LoggerFactory
+            .getLogger(ReferenceCamera.class);
+    
+    @Element
+    private Location headOffsets;
+    
+    private ReferenceMachine machine;
+    private ReferenceDriver driver;
 
-	@Element
-	protected Location location = new Location(LengthUnit.Millimeters);
-	
-	@Attribute
-	protected Looking looking = Looking.Down;
-	
-	@Element
-	protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
-	
-	@Element(required=false)
-	protected VisionProvider visionProvider;
-	
-	@Attribute(required=false)
-	protected String headId;
+    public ReferenceCamera() {
+        Configuration.get().addListener(new ConfigurationListener() {
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                machine = (ReferenceMachine) configuration.getMachine();
+                driver = machine.getDriver();
+            }
+        });
+    }
+    
+    public Location getHeadOffsets() {
+        return headOffsets;
+    }
+    
+    @Override
+    public void moveTo(Location location, double speed) throws Exception {
+        logger.debug("moveTo({}, {})", new Object[] { location, speed } );
+        driver.moveTo(this, location, speed);
+    }
 
-	protected Head head;
+    @Override
+    public void moveToSafeZ(double speed) throws Exception {
+        logger.debug("moveToSafeZ({})", new Object[] { speed } );
+        Location l = new Location(getLocation().getUnits(), Double.NaN,
+                Double.NaN, 0, Double.NaN);
+        driver.moveTo(this, l, speed);
+    }
 
-	protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
-	
-	public ReferenceCamera(String name) {
-		setName(name);
-	}
-
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		if (head == null) {
-			head = configuration.getMachine().getHead(headId);
-		}
-		if (visionProvider != null) {
-			visionProvider.setCamera(this);
-		}
-	}
-	
-	@SuppressWarnings("unused")
-	@Persist
-	private void persist() {
-		headId = (head == null ? null : head.getId());
-	}
-	
-	@Override
-	public Location getUnitsPerPixel() {
-		return unitsPerPixel;
-	}
-	
-	@Override
-	public void setUnitsPerPixel(Location unitsPerPixel) {
-		this.unitsPerPixel = unitsPerPixel;
-	}
-
-	@Override
-	public Head getHead() {
-		return head;
-	}
-	
-	@Override
-	public void setHead(Head head) {
-		this.head = head;
-	}
-	
-	@Override
-	public void setLooking(Looking looking) {
-		this.looking = looking;
-	}
-
-	@Override
-	public Looking getLooking() {
-		return looking;
-	}
-	
-	@Override
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	@Override
-	public String getName() {
-		return name;
-	}
-	
-	@Override
-	public void setLocation(Location location) {
-		this.location = location;
-	}
-
-	@Override
-	public Location getLocation() {
-		return location;
-	}
-
-	@Override
-	public void startContinuousCapture(CameraListener listener, int maximumFps) {
-		listeners.add(new ListenerEntry(listener, maximumFps));
-	}
-
-	@Override
-	public void stopContinuousCapture(CameraListener listener) {
-		listeners.remove(new ListenerEntry(listener, 0));
-	}
-	
-	@Override
-	public void setVisionProvider(VisionProvider visionProvider) {
-		this.visionProvider = visionProvider;
-		visionProvider.setCamera(this);
-	}
-
-	@Override
-	public VisionProvider getVisionProvider() {
-		return visionProvider;
-	}
-
-	protected void broadcastCapture(BufferedImage img) {
-		for (ListenerEntry listener : listeners) {
-			if (listener.lastFrameSent < (System.currentTimeMillis() - (1000 / listener.maximumFps))) {
-				listener.listener.frameReceived(img);
-				listener.lastFrameSent = System.currentTimeMillis();
-			}
-		}
-	}
-
-	protected class ListenerEntry {
-		public CameraListener listener;
-		public int maximumFps;
-		public long lastFrameSent;
-
-		public ListenerEntry(CameraListener listener, int maximumFps) {
-			this.listener = listener;
-			this.maximumFps = maximumFps;
-		}
-
-		@Override
-		public int hashCode() {
-			return listener.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			return obj.equals(listener);
-		}
-	}
+    @Override
+    public Location getLocation() {
+        return driver.getLocation(this);
+    }
 }

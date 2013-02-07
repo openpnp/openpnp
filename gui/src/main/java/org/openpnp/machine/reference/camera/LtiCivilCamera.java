@@ -26,7 +26,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.LtiCivilCameraConfigurationWizard;
@@ -45,7 +45,7 @@ import com.lti.civil.VideoFormat;
 import com.lti.civil.awt.AWTImageConverter;
 
 @Deprecated
-public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver, RequiresConfigurationResolution {
+public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	private CaptureSystemFactory captureSystemFactory;
 	private CaptureSystem captureSystem;
 	private CaptureStream captureStream;
@@ -63,21 +63,21 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver, 
 	private Object captureLock = new Object();
 	
 	public LtiCivilCamera() {
-		super("LtiCivilCamera");
+		Configuration.get().addListener(new ConfigurationListener() {
+            
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                captureSystemFactory = DefaultCaptureSystemFactorySingleton.instance();
+                captureSystem = captureSystemFactory.createCaptureSystem();
+                
+                if (deviceId != null && deviceId.trim().length() != 0) {
+                    setDeviceId(deviceId);
+                }
+            }
+        });
 	}
 
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		super.resolve(configuration);
-		
-		captureSystemFactory = DefaultCaptureSystemFactorySingleton.instance();
-		captureSystem = captureSystemFactory.createCaptureSystem();
-		
-		if (deviceId != null && deviceId.trim().length() != 0) {
-			setDeviceId(deviceId);
-		}
-	}
-	
 	public void setDeviceId(String deviceId) throws Exception {
 		if (captureStream != null) {
 			captureStream.stop();

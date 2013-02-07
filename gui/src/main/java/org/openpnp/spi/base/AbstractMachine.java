@@ -5,8 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.RequiresConfigurationResolution;
-import org.openpnp.gui.support.Wizard;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -16,8 +15,8 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.ElementList;
 
-public abstract class AbstractMachine implements Machine, RequiresConfigurationResolution {
-    @ElementList(required=false)
+public abstract class AbstractMachine implements Machine {
+    @ElementList
     protected IdentifiableList<Head> heads = new IdentifiableList<Head>();
     @ElementList(required=false)
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<Feeder>();
@@ -26,19 +25,24 @@ public abstract class AbstractMachine implements Machine, RequiresConfigurationR
     
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
     
-    @Override
-    public void resolve(Configuration configuration) throws Exception {
-        for (Head head : heads) {
-            configuration.resolve(head);
-        }
-        for (Feeder feeder : feeders) {
-            configuration.resolve(feeder);
-        }
-        for (Camera camera : cameras) {
-            configuration.resolve(camera);
-        }
+    protected AbstractMachine() {
+        Configuration.get().addListener(new ConfigurationListener() {
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                for (Head head : heads) {
+                    configuration.resolve(head);
+                }
+                for (Feeder feeder : feeders) {
+                    configuration.resolve(feeder);
+                }
+                for (Camera camera : cameras) {
+                    configuration.resolve(camera);
+                }
+            }
+        });
     }
-
+    
     @Override
     public List<Head> getHeads() {
         return heads;
@@ -87,37 +91,52 @@ public abstract class AbstractMachine implements Machine, RequiresConfigurationR
     }
     
     @Override
-    public Wizard getConfigurationWizard() {
-        return null;
+    public void addFeeder(Feeder feeder) throws Exception {
+        feeders.add(feeder);
     }
 
-    protected void fireMachineHeadActivity(Machine machine, Head head) {
+    @Override
+    public void removeFeeder(Feeder feeder) {
+        feeders.remove(feeder);
+    }
+
+    @Override
+    public void addCamera(Camera camera) throws Exception {
+        cameras.add(camera);
+    }
+
+    @Override
+    public void removeCamera(Camera camera) {
+        cameras.remove(camera);
+    }
+
+    public void fireMachineHeadActivity(Head head) {
         for (MachineListener listener : listeners) {
-            listener.machineHeadActivity(machine, head);
+            listener.machineHeadActivity(this, head);
         }
     }
     
-    protected void fireMachineEnabled(Machine machine) {
+    public void fireMachineEnabled() {
         for (MachineListener listener : listeners) {
-            listener.machineEnabled(machine);
+            listener.machineEnabled(this);
         }
     }
     
-    protected void fireMachineEnableFailed(Machine machine, String reason) {
+    public void fireMachineEnableFailed(String reason) {
         for (MachineListener listener : listeners) {
-            listener.machineEnableFailed(machine, reason);
+            listener.machineEnableFailed(this, reason);
         }
     }
     
-    protected void fireMachineDisabled(Machine machine, String reason) {
+    public void fireMachineDisabled(String reason) {
         for (MachineListener listener : listeners) {
-            listener.machineDisabled(machine, reason);
+            listener.machineDisabled(this, reason);
         }
     }
     
-    protected void fireMachineDisableFailed(Machine machine, String reason) {
+    public void fireMachineDisableFailed(String reason) {
         for (MachineListener listener : listeners) {
-            listener.machineDisableFailed(machine, reason);
+            listener.machineDisableFailed(this, reason);
         }
     }
 }

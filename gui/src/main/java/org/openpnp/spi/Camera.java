@@ -40,25 +40,6 @@ public interface Camera extends Identifiable, HeadMountable, WizardConfigurable 
 	}
 	
 	/**
-	 * Get the name of the Camera as defined by it's configuration.
-	 * @return
-	 */
-	public String getName();
-	
-	public void setName(String name);
-	
-	/**
-	 * Get the Location of the Camera in relation to either the Head it's
-	 * attached to or the Machine itself. When the Camera is attached to
-	 * a Head this value is considered to be a set of offsets that are
-	 * added to the Head's position to get the Camera's location.
-	 * @return
-	 */
-	public Location getLocation();
-	
-	public void setLocation(Location location);
-	
-	/**
 	 * Get the direction the Camera is looking. 
 	 * @return
 	 */

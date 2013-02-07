@@ -24,12 +24,12 @@ package org.openpnp.machine.reference.feeder;
 
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.base.AbstractFeeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * parts to be picked from without moving any tape. Can handle trays of
  * arbitrary X and Y count.
  */
-public class ReferenceTrayFeeder extends ReferenceFeeder {
+public class ReferenceTrayFeeder extends AbstractFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTrayFeeder.class);
 	
 	@Attribute

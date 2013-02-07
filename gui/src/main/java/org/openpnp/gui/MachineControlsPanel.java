@@ -66,6 +66,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.Movable;
 
 /**
  * TODO Add a dropdown to select Head
@@ -80,7 +81,7 @@ public class MachineControlsPanel extends JPanel {
 	private final Configuration configuration;
 	
 	private Machine machine;
-	private Head head;
+	private Movable movable;
 
 	private JTextField textFieldX;
 	private JTextField textFieldY;
@@ -212,24 +213,19 @@ public class MachineControlsPanel extends JPanel {
 	}
 	
 	public void updateDros() {
-		if (machine == null || head == null) {
+		if (machine == null || movable == null) {
 			return;
 		}
 		
+		Location l = movable.getLocation();
+		l = l.convertToUnits(configuration.getSystemUnits());
+		
 		double x, y, z, c;
 		
-		if (showAbsoluteCoordinatesAction.getValue(AbstractAction.SELECTED_KEY).equals(true)) {
-			x = head.getAbsoluteX();
-			y = head.getAbsoluteY();
-			z = head.getAbsoluteZ();
-			c = head.getAbsoluteC();
-		}
-		else {
-			x = head.getX();
-			y = head.getY();
-			z = head.getZ();
-			c = head.getC();
-		}
+		x = l.getX();
+		y = l.getY();
+		z = l.getZ();
+		c = l.getRotation();
 		
 		
 		if (!textFieldX.hasFocus()) {
@@ -462,22 +458,23 @@ public class MachineControlsPanel extends JPanel {
 	private Action droAction = new AbstractAction() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JTextField dro = (JTextField) e.getSource();
-			double value = Double.parseDouble(dro.getText());
-
-			if (dro == textFieldX) {
-				head.setPerceivedX(value);
-			}
-			else if (dro == textFieldY) {
-				head.setPerceivedY(value);
-			}
-			else if (dro == textFieldZ) {
-				head.setPerceivedZ(value);
-			}
-			else if (dro == textFieldC) {
-				head.setPerceivedC(value);
-			}
-			btnStartStop.requestFocus();
+		    // TODO: Remove
+//			JTextField dro = (JTextField) e.getSource();
+//			double value = Double.parseDouble(dro.getText());
+//
+//			if (dro == textFieldX) {
+//				head.setPerceivedX(value);
+//			}
+//			else if (dro == textFieldY) {
+//				head.setPerceivedY(value);
+//			}
+//			else if (dro == textFieldZ) {
+//				head.setPerceivedZ(value);
+//			}
+//			else if (dro == textFieldC) {
+//				head.setPerceivedC(value);
+//			}
+//			btnStartStop.requestFocus();
 		}
 	};
 	
@@ -687,7 +684,7 @@ public class MachineControlsPanel extends JPanel {
 			}
 			
 			machine = configuration.getMachine();
-			head = machine.getHeads().get(0);
+			movable = machine.getHeads().get(0).getNozzles().get(0);
 			setUnits(configuration.getSystemUnits());
 			machine.addListener(machineListener);
 			

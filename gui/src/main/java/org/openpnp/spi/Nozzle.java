@@ -28,38 +28,15 @@ public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable 
     
     /**
      * Commands the Nozzle to perform it's pick operation. Generally this just
-     * consists of turning on the vacuum. This method call is only used by
-     * manual user process. During Job processing the 
-     * pick(Feeder) method will be called.
+     * consists of turning on the vacuum.
      * @throws Exception
      */
     public void pick() throws Exception;
     
     /**
-     * Commands the Nozzle to pick a Part from the specified Feeder. In general,
-     * this operation should move the Nozzle to the Feeder's pick location 
-     * and turn on the vacuum. Before this operation is called the Feeder has
-     * already been commanded to feed the Part.
-     * @param feeder
-     * @throws Exception
-     */
-    public void pick(Feeder feeder) throws Exception;
-    
-    /**
      * Commands the Nozzle to perform it's place operation. Generally this just consists
-     * of releasing vacuum and may include a puff of air to set the Part. This method
-     * is only used by manual user process. During Job processing the place(Part, Location)
-     * method will be used. 
+     * of releasing vacuum and may include a puff of air to set the Part.
      * @throws Exception
      */
     public void place() throws Exception;
-    
-    /**
-     * Commands the Nozzle to place the given Part at the specified Location. In general,
-     * this operation should move the nozzle to the specified Location and turn off the
-     * vacuum.
-     * @param placeLocation
-     * @throws Exception
-     */
-    public void place(Location placeLocation) throws Exception;
 }

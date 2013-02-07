@@ -49,6 +49,11 @@ public interface Feeder extends Identifiable, WizardConfigurable {
 	public Part getPart();
 	
 	/**
+	 * Set the Part that is loaded into this Feeder.
+	 */
+	public void setPart(Part part);
+	
+	/**
 	 * Returns true if the Feeder is ready and willing to source the Part for
 	 * the given Nozzle. An example of what this check could be used for would
 	 * be to see if the specified Nozzle's Head has an appropriate Actuator

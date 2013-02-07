@@ -24,6 +24,7 @@ package org.openpnp.machine.reference.camera;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -65,6 +66,8 @@ import org.slf4j.LoggerFactory;
  */
 public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	private final static Logger logger = LoggerFactory.getLogger(TableScannerCamera.class);
+	
+	private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
 	@Element
 	private String sourceUri;
@@ -114,7 +117,6 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	private File cacheDirectory;
 	
 	public TableScannerCamera() {
-		super("TableScannerCamera");
 	}
 	
 	@SuppressWarnings("unused")
@@ -164,7 +166,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	public void setSourceUri(String sourceUri) throws Exception {
 		String oldValue = this.sourceUri;
 		this.sourceUri = sourceUri;
-		firePropertyChange("sourceUri", oldValue, sourceUri);
+		pcs.firePropertyChange("sourceUri", oldValue, sourceUri);
 		// TODO: Move to start() so simply setting a property doesn't sometimes
 		// blow up.
 		initialize();
@@ -181,7 +183,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	
 	public synchronized void clearCache() throws IOException {
 		FileUtils.cleanDirectory(cacheDirectory);
-		firePropertyChange("cacheSizeDescription", null, getCacheSizeDescription());
+		pcs.firePropertyChange("cacheSizeDescription", null, getCacheSizeDescription());
 	}
 
 	@Override
@@ -212,9 +214,9 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		synchronized (buffer) {
 			// Grab these values only once since the head may continue to move
 			// while we are rendering.
-			Location offsets = getLocation().convertToUnits(head.getMachine().getNativeUnits());
-			double headX = head.getX() + offsets.getX();
-			double headY = head.getY() + offsets.getY();
+			Location l = getLocation();
+			double headX = l.getX();
+			double headY = l.getY();
 			if (lastX != headX || lastY != headY) {
 				// Find the closest tile to the head's current position.
 				Tile closestTile = getClosestTile(headX, headY);
