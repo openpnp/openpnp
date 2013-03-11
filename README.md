@@ -16,7 +16,7 @@ OpenPnP is still under development. If you would like to keep up with our progre
 
 ## Get Involved
 
-If you'd like to be involved in the development of OpenPnP, please [join the discussion group](http://groups.google.com/group/openpnp), introduce yourself and let us know how you can help.
+If you'd like to be involved in the development of OpenPnP, please [join the discussion group](http://groups.google.com/group/openpnp), introduce yourself and let us know how you can help. We are also active on Freenode IRC in the #openpnp channel. If you don't have an IRC client, you can [use this web based one](http://webchat.freenode.net/?channels=openpnp).
 
 ## Thanks
 
