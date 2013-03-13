@@ -8,6 +8,7 @@ recompile it, you should install the JDK. If you just want to run it you can
 install the smaller JRE.
 
 You can download the latest revision of the JDK or JRE 6 at:
+
 http://www.oracle.com/technetwork/java/javasebusiness/downloads/java-archive-downloads-javase6-419409.html
 
 
