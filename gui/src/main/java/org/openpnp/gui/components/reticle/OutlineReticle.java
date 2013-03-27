@@ -25,16 +25,15 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Outline;
-import org.openpnp.model.Point;
-import org.openpnp.util.HslColor;
-import org.openpnp.util.Utils2D;
 
 public class OutlineReticle implements Reticle {
 	private Color color;
-	private Color complimentaryColor;
 	private Outline outline;
 	
 	public OutlineReticle(Outline outline) {
@@ -48,7 +47,6 @@ public class OutlineReticle implements Reticle {
 
 	public void setColor(Color color) {
 		this.color = color;
-		complimentaryColor = new HslColor(color).getComplementary();
 	}
 	
 	public Outline getOutline() {
@@ -73,37 +71,29 @@ public class OutlineReticle implements Reticle {
 		g2d.setStroke(new BasicStroke(1f));
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setColor(color);
 		
-		g2d.setStroke(new BasicStroke(1f));
-		g2d.setColor(Color.red);
 
-		// Convert the outline to the camera's units per pixel
-		Outline outline = this.outline.convertToUnits(cameraUnitsPerPixelUnits);
+		Shape shape = outline.getShape();
+		// Determine the scaling factor to go from Outline units to
+		// Camera units.
+		Length l = new Length(1, outline.getUnits());
+		l = l.convertToUnits(cameraUnitsPerPixelUnits);
+		double unitScale = l.getValue();
 		
-		// Rotate to the head's rotation and scale to fit the window
-		outline = Utils2D.rotateTranslateScaleOutline(outline, rotation, 0, 0, 1.0 / cameraUnitsPerPixelX, 1.0 / cameraUnitsPerPixelY);
+		// Create a transform to scale the Shape by
+		AffineTransform tx = new AffineTransform();
 		
-		// TODO: Cache the results of the above two operations.
+        tx.translate(viewPortCenterX, viewPortCenterY);
+        tx.rotate(Math.toRadians(rotation));
+        
+        // First we scale by units to convert the units and then we scale
+        // by the camera X and Y units per pixels to get pixel locations.
+		tx.scale(unitScale, unitScale);
+		tx.scale(1.0 / cameraUnitsPerPixelX, 1.0 / cameraUnitsPerPixelY);
 		
-		// Draw it
-		for (int i = 0; i < outline.getPoints().size() - 1; i++) {
-			Point p1 = outline.getPoints().get(i);
-			Point p2 = outline.getPoints().get(i + 1);
-
-			g2d.drawLine(
-					(int) (p1.getX() + viewPortCenterX), 
-					(int) (p1.getY() + viewPortCenterY), 
-					(int) (p2.getX() + viewPortCenterX),
-					(int) (p2.getY() + viewPortCenterY));
-		}
-
-		Point p1 = outline.getPoints().get(outline.getPoints().size() - 1);
-		Point p2 = outline.getPoints().get(0);
-
-		g2d.drawLine(
-				(int) (p1.getX() + viewPortCenterX), 
-				(int) (p1.getY() + viewPortCenterY), 
-				(int) (p2.getX() + viewPortCenterX),
-				(int) (p2.getY() + viewPortCenterY));
+		// Transform the Shape and draw it out.
+		shape = tx.createTransformedShape(shape);
+		g2d.draw(shape);
 	}
 }

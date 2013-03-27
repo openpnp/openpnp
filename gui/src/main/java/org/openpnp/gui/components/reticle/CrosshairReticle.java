@@ -25,77 +25,53 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Point;
 import org.openpnp.util.HslColor;
-import org.openpnp.util.Utils2D;
 
 public class CrosshairReticle implements Reticle {
-	private Color color;
-	private Color complimentaryColor;
-	
-	public CrosshairReticle() {
-		setColor(Color.red);
-	}
-	
-	public Color getColor() {
-		return color;
-	}
+    protected Color color;
+    protected Color complimentaryColor;
 
-	public void setColor(Color color) {
-		this.color = color;
-		complimentaryColor = new HslColor(color).getComplementary();
-	}
+    public CrosshairReticle() {
+        setColor(Color.red);
+    }
 
-	@Override
-	public void draw(Graphics2D g2d,
-			LengthUnit cameraUnitsPerPixelUnits,
-			double cameraUnitsPerPixelX, 
-			double cameraUnitsPerPixelY, 
-			double viewPortCenterX, 
-			double viewPortCenterY,
-			int viewPortWidth,
-			int viewPortHeight,
-			double rotation) {
-		
-		g2d.setStroke(new BasicStroke(1f));
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		
+    public Color getColor() {
+        return color;
+    }
 
-		// TODO: Rotate a bounding box and use the calculated width and height
-		// so that the lines reach the edges of the component once rotated.
-		// We currently use the full width for each half width segment, so it
-		// works but it is sloppy.
-		
-		Point p;
-		g2d.setColor(color);
-		p = new Point(viewPortWidth, 0);
-		p = Utils2D.rotatePoint(p, rotation);
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX + p.getX()), 
-				(int) (viewPortCenterY + p.getY()));
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX - p.getX()), 
-				(int) (viewPortCenterY - p.getY()));
-		
-		p = new Point(0, viewPortHeight);
-		p = Utils2D.rotatePoint(p, rotation);
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX + p.getX()), 
-				(int) (viewPortCenterY + p.getY()));
-		g2d.setColor(complimentaryColor);
-		g2d.drawLine(
-				(int) viewPortCenterX, 
-				(int) viewPortCenterY, 
-				(int) (viewPortCenterX - p.getX()), 
-				(int) (viewPortCenterY - p.getY()));
-	}
+    public void setColor(Color color) {
+        this.color = color;
+        complimentaryColor = new HslColor(color).getComplementary();
+    }
+
+    @Override
+    public void draw(Graphics2D g2d, LengthUnit cameraUnitsPerPixelUnits,
+            double cameraUnitsPerPixelX, double cameraUnitsPerPixelY,
+            double viewPortCenterX, double viewPortCenterY, int viewPortWidth,
+            int viewPortHeight, double rotation) {
+
+        g2d.setStroke(new BasicStroke(1f));
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Calculate half the diagonal size of the viewport.
+        int halfDiagonal = (int) (Math.sqrt(Math.pow(viewPortWidth, 2)
+                + Math.pow(viewPortHeight, 2)) / 2.0);
+
+        AffineTransform origTx = g2d.getTransform();
+
+        g2d.translate(viewPortCenterX, viewPortCenterY);
+        g2d.rotate(Math.toRadians(rotation));
+        g2d.setColor(color);
+        g2d.drawLine(0, 0, halfDiagonal, 0);
+        g2d.drawLine(0, 0, -halfDiagonal, 0);
+        g2d.drawLine(0, 0, 0, halfDiagonal);
+        g2d.setColor(complimentaryColor);
+        g2d.drawLine(0, 0, 0, -halfDiagonal);
+
+        g2d.setTransform(origTx);
+    }
 }

@@ -58,15 +58,15 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		add(maxFpsMenu);
 		
 		if (cameraView.getDefaultReticle() != null) {
-			if (cameraView.getDefaultReticle() instanceof CrosshairReticle) {
-				setReticleOptionsMenu(createCrosshairReticleOptionsMenu((CrosshairReticle) cameraView.getDefaultReticle()));
-			}
-			else if (cameraView.getDefaultReticle() instanceof RulerReticle) {
+			if (cameraView.getDefaultReticle() instanceof RulerReticle) {
 				setReticleOptionsMenu(createRulerReticleOptionsMenu((RulerReticle) cameraView.getDefaultReticle()));
 			}
 			else if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
 				setReticleOptionsMenu(createFiducialReticleOptionsMenu((FiducialReticle) cameraView.getDefaultReticle()));
 			}
+			else if (cameraView.getDefaultReticle() instanceof CrosshairReticle) {
+                setReticleOptionsMenu(createCrosshairReticleOptionsMenu((CrosshairReticle) cameraView.getDefaultReticle()));
+            }
 		}
 	}
 	
@@ -124,20 +124,23 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
+		
 		menuItem = new JRadioButtonMenuItem(crosshairReticleAction);
-		if (cameraView.getDefaultReticle() instanceof CrosshairReticle) {
+		if (cameraView.getDefaultReticle().getClass() == CrosshairReticle.class) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
+		
 		menuItem = new JRadioButtonMenuItem(rulerReticleAction);
-		if (cameraView.getDefaultReticle() instanceof RulerReticle) {
+		if (cameraView.getDefaultReticle().getClass() == RulerReticle.class) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
+		
 		menuItem = new JRadioButtonMenuItem(fiducialReticleAction);
-		if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
+		if (cameraView.getDefaultReticle().getClass() == FiducialReticle.class) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
