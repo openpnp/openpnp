@@ -1,0 +1,92 @@
+<openpnp-board name="btpd-v6.board.xml">
+   <fiducials/>
+   <placements>
+      <placement id="C1" side="Bottom" part-id="C0805-0.1uF">
+         <location units="Millimeters" x="41.91" y="34.93" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="C2" side="Bottom" part-id="C0805-1uF">
+         <location units="Millimeters" x="8.89" y="15.24" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="C3" side="Bottom" part-id="C0805-10uF">
+         <location units="Millimeters" x="8.89" y="12.7" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="C4" side="Bottom" part-id="C0805-1uF">
+         <location units="Millimeters" x="4.45" y="12.7" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="C5" side="Bottom" part-id="C0805-10uF">
+         <location units="Millimeters" x="4.45" y="15.24" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="C6" side="Bottom" part-id="C0805-0.1uF">
+         <location units="Millimeters" x="52.07" y="44.45" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="C7" side="Bottom" part-id="C0805-0.1uF">
+         <location units="Millimeters" x="59.69" y="21.59" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="IC1" side="Bottom" part-id="TQFP32-08-ATMEGA168">
+         <location units="Millimeters" x="33.02" y="39.37" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="IC2" side="Bottom" part-id="SO18L-">
+         <location units="Millimeters" x="18.54" y="39.24" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="IC3" side="Bottom" part-id="TO252-7805DT">
+         <location units="Millimeters" x="7.62" y="22.98" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="IC4" side="Bottom" part-id="SOIC8-LTC485S">
+         <location units="Millimeters" x="52.07" y="39.37" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="IC5" side="Bottom" part-id="SO16-74AC138D">
+         <location units="Millimeters" x="51.56" y="13.97" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R9" side="Bottom" part-id="R0805-10k">
+         <location units="Millimeters" x="41.91" y="43.94" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="RN1" side="Bottom" part-id="EXBS8V-1k">
+         <location units="Millimeters" x="54.61" y="22.86" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="RN2" side="Bottom" part-id="EXBS8V-1k">
+         <location units="Millimeters" x="46.99" y="22.86" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="RN3" side="Bottom" part-id="EXBS8V-1k">
+         <location units="Millimeters" x="16.51" y="22.86" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="RN4" side="Bottom" part-id="EXBS8V-47">
+         <location units="Millimeters" x="8.89" y="42.55" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="RN5" side="Bottom" part-id="EXBS8V-47">
+         <location units="Millimeters" x="8.89" y="37.21" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="S1" side="Bottom" part-id="TACTILE_SWITCH_SMD-">
+         <location units="Millimeters" x="62.23" y="14.22" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="T1" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="41.91" y="19.3" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T2" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="36.83" y="19.3" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T3" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="31.75" y="19.3" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T4" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="26.67" y="19.3" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T5" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="21.59" y="19.3" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T6" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="41.91" y="14.22" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T7" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="36.83" y="14.22" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T8" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="31.75" y="14.22" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T9" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="26.67" y="14.22" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="T10" side="Bottom" part-id="SOT23-BEC-">
+         <location units="Millimeters" x="21.59" y="14.22" z="0.0" rotation="90.0"/>
+      </placement>
+   </placements>
+</openpnp-board>

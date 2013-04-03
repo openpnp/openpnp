@@ -1,0 +1,7 @@
+<openpnp-job>
+   <board-locations>
+      <board-location side="Bottom" board-file="btpd-v6.board.xml">
+         <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+      </board-location>
+   </board-locations>
+</openpnp-job>
