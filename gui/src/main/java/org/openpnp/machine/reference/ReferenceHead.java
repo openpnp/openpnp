@@ -39,6 +39,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.VisionProvider.Circle;
 import org.simpleframework.xml.Attribute;
@@ -75,6 +76,8 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 	private ArrayList<ReferenceActuator> actuatorsList = new ArrayList<ReferenceActuator>();
 	@Element(required=false)
 	private Length safeZ = new Length(0, LengthUnit.Millimeters);
+	@Element
+	private NozzleTip nozzleTip;
 
 	private LinkedHashMap<String, ReferenceActuator> actuators = new LinkedHashMap<String, ReferenceActuator>();
 	
@@ -108,6 +111,7 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 			configuration.resolve(actuator);
 			actuator.setReferenceHead(this);
 		}
+		configuration.resolve(nozzleTip);
 	}
 
 	@Override
@@ -371,11 +375,16 @@ public class ReferenceHead implements Head, RequiresConfigurationResolution {
 		this.c = c;
 		machine.fireMachineHeadActivity(machine, this);
 	}
-
+	
 	@Override
+    public NozzleTip getNozzleTip() {
+	    return nozzleTip;
+    }
+
+    @Override
 	public boolean canPickAndPlace(Feeder feeder, Location pickLocation,
 			Location placeLocation) {
-		return true;
+		return nozzleTip.canHandle(feeder.getPart());
 	}
 
 	@Override

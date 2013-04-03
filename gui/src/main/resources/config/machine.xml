@@ -18,6 +18,11 @@ server-ip="192.168.1.7" port="5007" /> -->
                   <location units="Millimeters" x="-20.0" y="0.0" z="0.0" rotation="0.0"/>
                </reference-actuator>
             </actuators>
+            <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="M1" allow-incompatible-packages="false">
+                <compatible-package-ids>
+                    <id>0805</id>
+                </compatible-package-ids>
+            </nozzle-tip>
          </reference-head>
       </heads>
       <cameras>
