@@ -39,21 +39,28 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
 
-public class ReferenceMachine extends AbstractMachine implements ConfigurationListener {
+public class ReferenceMachine extends AbstractMachine {
 	@Element
 	private ReferenceDriver driver;
 	
 	private boolean enabled;
 	
 	public ReferenceMachine() {
-	    Configuration.get().addListener(this);
+	    /**
+	     * Note: The pattern below is used so that subclasses do not interfere
+	     * with this class getting the Configuration information it needs. If
+	     * the class instead just implemented ConfigurationListener then a
+	     * subclass might override this.
+	     */
+	    Configuration.get().addListener(new ConfigurationListener() {
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                configuration.resolve(driver);
+            }
+        });
 	}
 	
-	@Override
-    public void configurationLoaded(Configuration configuration) throws Exception {
-	    configuration.resolve(driver);
-    }
-
 	ReferenceDriver getDriver() {
 		return driver;
 	}
