@@ -22,13 +22,9 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -38,102 +34,26 @@ import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 
-// TODO: See if any of the Reference* classes can be done away with and use only the SPI classes.
-public class ReferenceMachine implements Machine, RequiresConfigurationResolution {
-	final static private LengthUnit nativeUnits = LengthUnit.Millimeters;
-	
+public class ReferenceMachine extends AbstractMachine implements ConfigurationListener {
 	@Element
 	private ReferenceDriver driver;
-	@ElementList(name="heads")
-	private ArrayList<ReferenceHead> headsList = new ArrayList<ReferenceHead>();
-	@ElementList
-	private ArrayList<ReferenceCamera> cameras = new ArrayList<ReferenceCamera>();
-	@ElementList(name="feeders")
-	private ArrayList<ReferenceFeeder> feeders = new ArrayList<ReferenceFeeder>();
-
-	private LinkedHashMap<String, ReferenceHead> heads = new LinkedHashMap<String, ReferenceHead>();
 	
-	private Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
 	private boolean enabled;
 	
-	@SuppressWarnings("unused")
-	@Commit
-	private void commit() {
-		for (ReferenceHead head : headsList) {
-			heads.put(head.getId(), head);
-		}
-	}
-	
-	@SuppressWarnings("unused")
-	@Persist
-	private void persist() {
-		headsList.clear();
-		headsList.addAll(heads.values());
+	public ReferenceMachine() {
+	    Configuration.get().addListener(this);
 	}
 	
 	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		configuration.resolve(driver);
-		for (ReferenceHead head : heads.values()) {
-			configuration.resolve(head);
-		}
-		for (ReferenceCamera camera : cameras) {
-			configuration.resolve(camera);
-		}
-		for (ReferenceFeeder feeder : feeders) {
-			configuration.resolve(feeder);
-		}
-	}
+    public void configurationLoaded(Configuration configuration) throws Exception {
+	    configuration.resolve(driver);
+    }
 
-	@Override
-	public List<Head> getHeads() {
-		ArrayList<Head> l = new ArrayList<Head>();
-		l.addAll(heads.values());
-		return l;
-	}
-	
-	@Override
-	public ReferenceHead getHead(String id) {
-		return heads.get(id);
-	}
-	
-	@Override
-	public List<Camera> getCameras() {
-		ArrayList<Camera> l = new ArrayList<Camera>();
-		l.addAll(cameras);
-		return l;
-	}
-
-	@Override
-	public List<Feeder> getFeeders() {
-		ArrayList<Feeder> l = new ArrayList<Feeder>();
-		l.addAll(feeders);
-		return Collections.unmodifiableList(l);
-	}
-
-	@Override
-	public LengthUnit getNativeUnits() {
-		return nativeUnits;
-	}
-	
-	@Override
-	public void home() throws Exception {
-		for (Head head : heads.values()) {
-			head.home();
-		}
-	}
-	
 	ReferenceDriver getDriver() {
 		return driver;
 	}
@@ -170,46 +90,6 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	}
 
 	@Override
-	public void addListener(MachineListener listener) {
-		listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(MachineListener listener) {
-		listeners.remove(listener);
-	}
-	
-	void fireMachineHeadActivity(Machine machine, Head head) {
-		for (MachineListener listener : listeners) {
-			listener.machineHeadActivity(machine, head);
-		}
-	}
-	
-	private void fireMachineEnabled(Machine machine) {
-		for (MachineListener listener : listeners) {
-			listener.machineEnabled(machine);
-		}
-	}
-	
-	private void fireMachineEnableFailed(Machine machine, String reason) {
-		for (MachineListener listener : listeners) {
-			listener.machineEnableFailed(machine, reason);
-		}
-	}
-	
-	private void fireMachineDisabled(Machine machine, String reason) {
-		for (MachineListener listener : listeners) {
-			listener.machineDisabled(machine, reason);
-		}
-	}
-	
-	private void fireMachineDisableFailed(Machine machine, String reason) {
-		for (MachineListener listener : listeners) {
-			listener.machineDisableFailed(machine, reason);
-		}
-	}
-	
-	@Override
 	public Wizard getConfigurationWizard() {
 		return null;
 	}
@@ -244,6 +124,7 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	
 	@Override
 	public void removeFeeder(Feeder feeder) {
+	    // TODO: 
 	}
 
 	@Override
@@ -257,7 +138,6 @@ public class ReferenceMachine implements Machine, RequiresConfigurationResolutio
 	
 	@Override
 	public void removeCamera(Camera camera) {
-		// TODO Auto-generated method stub
-		
+	    // TODO: 
 	}
 }
