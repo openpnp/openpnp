@@ -24,7 +24,7 @@ package org.openpnp.spi;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.CameraListener;
-import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 
 /**
@@ -33,7 +33,7 @@ import org.openpnp.model.Location;
  * and details about the returned image. The Camera is expected to return all
  * future images using the same dimensions and type. 
  */
-public interface Camera {
+public interface Camera extends Identifiable, HeadMountable, WizardConfigurable {
 	public enum Looking {
 		Down,
 		Up
@@ -76,15 +76,6 @@ public interface Camera {
 	public void setUnitsPerPixel(Location unitsPerPixel);
 	
 	/**
-	 * Get the Head the Camera is attached to. If the Camera is stationary this should return
-	 * null.
-	 * @return
-	 */
-	public Head getHead();
-	
-	public void setHead(Head head);
-	
-	/**
 	 * Immediately captures an image from the camera and returns it in it's native format.
 	 * @return
 	 */
@@ -112,10 +103,4 @@ public interface Camera {
 	 * @return
 	 */
 	public VisionProvider getVisionProvider();
-	
-	/**
-	 * Gets a Wizard that can be used to configure the Camera.
-	 * @return null if no Wizard is available.
-	 */
-	public Wizard getConfigurationWizard();
 }

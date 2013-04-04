@@ -36,7 +36,7 @@ public interface Machine extends WizardConfigurable {
 	 */
 	public List<Head> getHeads();
 	
-	public Head getHeadById(String id);
+	public Head getHead(String id);
 	
 	/**
 	 * Gets a List of Feeders attached to the Machine.
@@ -44,7 +44,7 @@ public interface Machine extends WizardConfigurable {
 	 */
 	public List<Feeder> getFeeders();
 	
-	public Feeder getFeederById(String id);
+	public Feeder getFeeder(String id);
 	
 	/**
 	 * Gets a List of Cameras attached to the Machine that are not attached
@@ -53,7 +53,7 @@ public interface Machine extends WizardConfigurable {
 	 */
 	public List<Camera> getCameras();
 	
-	public Camera getCameraById(String id);
+	public Camera getCamera(String id);
 	
 	/**
 	 * Commands all Heads to move to their home positions and reset their current positions
@@ -96,15 +96,15 @@ public interface Machine extends WizardConfigurable {
 	
 	public void removeListener(MachineListener listener);
 	
-//	public List<Class<? extends Feeder>> getCompatibleFeederClasses();
+	public List<Class<? extends Feeder>> getCompatibleFeederClasses();
 	
-//	public List<Class<? extends Camera>> getCompatibleCameraClasses();
+	public List<Class<? extends Camera>> getCompatibleCameraClasses();
 	
-//	public void addFeeder(Feeder feeder) throws Exception;
-//	
-//	public void removeFeeder(Feeder feeder);
-//	
-//	public void addCamera(Camera camera) throws Exception;
-//	
-//	public void removeCamera(Camera camera);
+	public void addFeeder(Feeder feeder) throws Exception;
+	
+	public void removeFeeder(Feeder feeder);
+	
+	public void addCamera(Camera camera) throws Exception;
+
+	public void removeCamera(Camera camera);
 }

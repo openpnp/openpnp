@@ -2,7 +2,6 @@ package org.openpnp.spi.base;
 
 import java.util.List;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -48,7 +47,7 @@ public abstract class AbstractHead implements Head {
     }
 
     @Override
-    public Nozzle getNozzleById(String id) {
+    public Nozzle getNozzle(String id) {
         return nozzles.get(id);
     }
 
@@ -58,7 +57,7 @@ public abstract class AbstractHead implements Head {
     }
 
     @Override
-    public Actuator getActuatorById(String id) {
+    public Actuator getActuator(String id) {
         return actuators.get(id);
     }
 
@@ -68,12 +67,7 @@ public abstract class AbstractHead implements Head {
     }
 
     @Override
-    public Camera getCameraById(String id) {
+    public Camera getCamera(String id) {
         return cameras.get(id);
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        return null;
     }
 }

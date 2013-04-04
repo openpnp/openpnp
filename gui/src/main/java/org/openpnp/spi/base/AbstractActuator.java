@@ -1,6 +1,5 @@
 package org.openpnp.spi.base;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
@@ -24,10 +23,5 @@ public abstract class AbstractActuator implements Actuator {
     @Override
     public void setHead(Head head) {
         this.head = head;
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        return null;
     }
 }

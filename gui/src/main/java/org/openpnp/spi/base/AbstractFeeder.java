@@ -1,6 +1,5 @@
 package org.openpnp.spi.base;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
@@ -18,12 +17,6 @@ public abstract class AbstractFeeder implements Feeder {
     @Override
     public String getId() {
         return id;
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override

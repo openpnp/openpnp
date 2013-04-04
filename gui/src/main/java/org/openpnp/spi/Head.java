@@ -46,7 +46,7 @@ public interface Head extends Identifiable, WizardConfigurable {
      * @param id
      * @return
      */
-    public Nozzle getNozzleById(String id);
+    public Nozzle getNozzle(String id);
     
 	/**
 	 * Get a list of Actuators that are attached to this Head.
@@ -59,7 +59,7 @@ public interface Head extends Identifiable, WizardConfigurable {
 	 * @param id
 	 * @return
 	 */
-	public Actuator getActuatorById(String id);
+	public Actuator getActuator(String id);
 	
 	/**
 	 * Get a list of Cameras that are attached to this Head.
@@ -72,7 +72,7 @@ public interface Head extends Identifiable, WizardConfigurable {
 	 * @param id
 	 * @return
 	 */
-	public Camera getCameraById(String id);
+	public Camera getCamera(String id);
 	
     /**
      * Directs the Head to move to it's home position and to move any

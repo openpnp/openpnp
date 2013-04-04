@@ -1,9 +1,7 @@
 package org.openpnp.spi.base;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractNozzle implements Nozzle {
@@ -25,15 +23,5 @@ public abstract class AbstractNozzle implements Nozzle {
     @Override
     public void setHead(Head head) {
         this.head = head;
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        return null;
-    }
-
-    @Override
-    public NozzleTip getNozzleTip() {
-        return null;
     }
 }

@@ -45,7 +45,7 @@ public abstract class AbstractMachine implements Machine, RequiresConfigurationR
     }
 
     @Override
-    public Head getHeadById(String id) {
+    public Head getHead(String id) {
         return heads.get(id);
     }
 
@@ -55,7 +55,7 @@ public abstract class AbstractMachine implements Machine, RequiresConfigurationR
     }
 
     @Override
-    public Feeder getFeederById(String id) {
+    public Feeder getFeeder(String id) {
         return feeders.get(id);
     }
     
@@ -65,7 +65,7 @@ public abstract class AbstractMachine implements Machine, RequiresConfigurationR
     }
 
     @Override
-    public Camera getCameraById(String id) {
+    public Camera getCamera(String id) {
         return cameras.get(id);
     }
 
