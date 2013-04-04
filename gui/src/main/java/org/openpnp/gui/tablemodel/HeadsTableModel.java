@@ -41,7 +41,7 @@ public class HeadsTableModel extends AbstractTableModel implements Configuration
 		configuration.addListener(this);
 	}
 
-	public void configurationLoaded(Configuration configuration) {
+	public void configurationLoaded(Configuration configuration) throws Exception {
 		heads = new ArrayList<Head>(configuration.getMachine().getHeads());
 		fireTableDataChanged();
 	}

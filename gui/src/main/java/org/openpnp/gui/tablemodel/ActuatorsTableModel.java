@@ -40,7 +40,7 @@ public class ActuatorsTableModel extends AbstractTableModel implements Configura
 		configuration.addListener(this);
 	}
 
-	public void configurationLoaded(Configuration configuration) {
+	public void configurationLoaded(Configuration configuration) throws Exception {
 		actuators = new ArrayList<HeadActuator>();
 		for (Head head : configuration.getMachine().getHeads()) {
 			for (Actuator actuator : head.getActuators()) {
