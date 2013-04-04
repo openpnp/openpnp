@@ -338,7 +338,7 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		}
 	}
 
-	public void configurationLoaded(Configuration configuration) {
+	public void configurationLoaded(Configuration configuration) throws Exception {
 		configuration.getMachine().addListener(machineListener);
 		updateJobActions();
 

@@ -202,7 +202,7 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 	}
 	
 	@Override
-	public void configurationLoaded(Configuration configuration) {
+	public void configurationLoaded(Configuration configuration) throws Exception {
 		headsComboBox.removeAllItems();
 		headsComboBox.addItem(new HeadCellValue((Head) null)); 
 		for (Head head : configuration.getMachine().getHeads()) {

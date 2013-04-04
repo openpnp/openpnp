@@ -45,7 +45,7 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 		configuration.addListener(this);
 	}
 
-	public void configurationLoaded(Configuration configuration) {
+	public void configurationLoaded(Configuration configuration) throws Exception {
 		refresh();
 	}
 
