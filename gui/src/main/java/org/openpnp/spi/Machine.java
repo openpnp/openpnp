@@ -23,29 +23,20 @@ package org.openpnp.spi;
 
 import java.util.List;
 
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.model.LengthUnit;
-
 
 /**
  * Machine represents the pick and place machine itself. It provides the information and interface needed to
  * cause the machine to do work. A Machine has one or more Heads.
  * Unless otherwise noted, the methods in this class block while performing their operations.
  */
-public interface Machine {
-	/**
-	 * The units used to describe the machine's measurements.
-	 * @return
-	 */
-	public LengthUnit getNativeUnits();
-	
+public interface Machine extends WizardConfigurable {
 	/**
 	 * Gets all active heads on the machine.
 	 * @return
 	 */
 	public List<Head> getHeads();
 	
-	public Head getHead(String id);
+	public Head getHeadById(String id);
 	
 	/**
 	 * Gets a List of Feeders attached to the Machine.
@@ -53,11 +44,16 @@ public interface Machine {
 	 */
 	public List<Feeder> getFeeders();
 	
+	public Feeder getFeederById(String id);
+	
 	/**
-	 * Gets a List of Cameras attached to the Machine.
+	 * Gets a List of Cameras attached to the Machine that are not attached
+	 * to Heads.
 	 * @return
 	 */
 	public List<Camera> getCameras();
+	
+	public Camera getCameraById(String id);
 	
 	/**
 	 * Commands all Heads to move to their home positions and reset their current positions
@@ -73,22 +69,26 @@ public interface Machine {
 	public boolean isEnabled();
 	
 	/**
-	 * Attempts to bring the Machine to a ready state. This would include turning on motor
-	 * drivers, turning on compressors, resetting solenoids, etc. If the Machine is unable to
-	 * become ready for any reason it should throw an Exception explaining the reason. This method
-	 * should block until the Machine is ready.
-	 * After this method is called successfully, isReady() should return true unless the Machine
+	 * Attempts to bring the Machine to a ready state or attempts to
+	 * immediately stop it depending on the value of enabled.
+	 * 
+	 * If true, this would include turning on motor drivers, turning on
+	 * compressors, resetting solenoids, etc. If the Machine is unable to
+	 * become ready for any reason it should throw an Exception explaining the
+	 * reason. This method should block until the Machine is ready.
+	 * 
+	 * After this method is called successfully, isEnabled() should return true unless the Machine
 	 * encounters some error.
-	 */
-	/**
-	 * Stops the machine and disables it as soon as possible. This may include turning off power to
-	 * motors and stopping compressors. It is expected that the machine may need to be re-homed after
-	 * this is called. 
-	 * If the Machine cannot be stopped for any reason, this method may throw an Exception explaining
-	 * the reason but this should probably only happen in very extreme cases.
-	 * This method should effectively be considered a software emergency stop.
-	 * After this method return, isReady() should return false until start() is successfully
-	 * called again.
+	 * 
+	 * If false, stops the machine and disables it as soon as possible. This
+	 * may include turning off power to motors and stopping compressors. It is
+	 * expected that the machine may need to be re-homed after this is called.
+	 *  
+	 * If the Machine cannot be stopped for any reason, this method may throw
+	 * an Exception explaining the reason but this should probably only happen
+	 * in very extreme cases. This method should effectively be considered a
+	 * software emergency stop. After this method returns, isEnabled() should
+	 * return false until setEnabled(true) is successfully called again.
 	 */
 	public void setEnabled(boolean enabled) throws Exception;
 	
@@ -96,17 +96,15 @@ public interface Machine {
 	
 	public void removeListener(MachineListener listener);
 	
-	public Wizard getConfigurationWizard();
+//	public List<Class<? extends Feeder>> getCompatibleFeederClasses();
 	
-	public List<Class<? extends Feeder>> getCompatibleFeederClasses();
+//	public List<Class<? extends Camera>> getCompatibleCameraClasses();
 	
-	public List<Class<? extends Camera>> getCompatibleCameraClasses();
-	
-	public void addFeeder(Feeder feeder) throws Exception;
-	
-	public void removeFeeder(Feeder feeder);
-	
-	public void addCamera(Camera camera) throws Exception;
-	
-	public void removeCamera(Camera camera);
+//	public void addFeeder(Feeder feeder) throws Exception;
+//	
+//	public void removeFeeder(Feeder feeder);
+//	
+//	public void addCamera(Camera camera) throws Exception;
+//	
+//	public void removeCamera(Camera camera);
 }

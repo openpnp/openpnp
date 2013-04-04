@@ -21,9 +21,7 @@
 
 package org.openpnp.spi;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Identifiable;
-import org.openpnp.model.Location;
 
 /**
  * Defines a simple interface to some type of device that can be actuated
@@ -31,16 +29,7 @@ import org.openpnp.model.Location;
  * expected that concrete implementations may have many other capabilities
  * exposed in their specific implementations. 
  */
-public interface Actuator extends Identifiable {
-	/**
-	 * The unique id of the Actuator. This id should be unique for a given
-	 * head if the Actuator is attached to a head, or unique within machine
-	 * Actuators.
-	 * @return
-	 */
-	@Override
-	public String getId();
-	
+public interface Actuator extends Identifiable, HeadMountable, WizardConfigurable {
 	/**
 	 * Turns the Actuator on or off.
 	 * @param on
@@ -49,12 +38,10 @@ public interface Actuator extends Identifiable {
 	public void actuate(boolean on) throws Exception;
 	
 	/**
-	 * Gets a Wizard that can be used to confgure this Actuator.
-	 * @return
+	 * Provides the actuator with a double value to which it can respond
+	 * in an implementation dependent manner.
+	 * @param value
+	 * @throws Exception
 	 */
-	public Wizard getConfigurationWizard();
-	
-	public Location getLocation();
-	
-	public void setLocation(Location location);
+	public void actuate(double value) throws Exception;
 }

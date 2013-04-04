@@ -2,7 +2,6 @@ package org.openpnp.spi;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 
 /**
  * A Nozzle is a tool capable of picking up parts and releasing them. It is
@@ -11,7 +10,7 @@ import org.openpnp.model.Part;
  * types of Packages it can handle and it may have the capability of changing
  * it's NozzleTip.
  */
-public interface Nozzle extends Identifiable {
+public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable {
     /**
      * Get the NozzleTip currently attached to the Nozzle.
      * @return
@@ -19,60 +18,48 @@ public interface Nozzle extends Identifiable {
     NozzleTip getNozzleTip();
     
     /**
-     * Queries the Head to determine if it has the ability to pick from the
-     * given Feeder at the given Location and then move the Part to the
-     * destination Location.
-     * 
+     * Returns true if the Nozzle is capable of picking from the specified
+     * Feeder and placing the picked Part at the specified placeLocation.
      * @param feeder
-     * @param pickLocation
      * @param placeLocation
      * @return
      */
-    public boolean canPickAndPlace(Feeder feeder, Location pickLocation,
-            Location placeLocation);
-
+    public boolean canPickAndPlace(Feeder feeder, Location placeLocation);
+    
     /**
-     * Commands the Head to perform it's pick operation. Generally this just
+     * Commands the Nozzle to perform it's pick operation. Generally this just
      * consists of turning on the vacuum. This method call is only used by
-     * manual user process. During Job processing the pick(Part, Feeder,
-     * Location) method will be called.
-     * 
+     * manual user process. During Job processing the 
+     * pick(Feeder) method will be called.
      * @throws Exception
      */
     public void pick() throws Exception;
-
+    
     /**
-     * Commands the Head to pick the Part from the Feeder using the given
-     * Location. In general, this operation should move the nozzle to the
-     * specified Location and turn on the vacuum. Before this operation is
-     * called the Feeder has already been commanded to feed the Part.
-     * 
-     * @param part
+     * Commands the Nozzle to pick a Part from the specified Feeder. In general,
+     * this operation should move the Nozzle to the Feeder's pick location 
+     * and turn on the vacuum. Before this operation is called the Feeder has
+     * already been commanded to feed the Part.
      * @param feeder
-     * @param pickLocation
      * @throws Exception
      */
-    public void pick(Part part, Feeder feeder, Location pickLocation)
-            throws Exception;
-
+    public void pick(Feeder feeder) throws Exception;
+    
     /**
-     * Commands the Head to perform it's place operation. Generally this just
-     * consists of releasing vacuum and may include a puff of air to set the
-     * Part. This method is only used by manual user process. During Job
-     * processing the place(Part, Location) method will be used.
-     * 
+     * Commands the Nozzle to perform it's place operation. Generally this just consists
+     * of releasing vacuum and may include a puff of air to set the Part. This method
+     * is only used by manual user process. During Job processing the place(Part, Location)
+     * method will be used. 
      * @throws Exception
      */
     public void place() throws Exception;
-
+    
     /**
-     * Commands the Head to place the given Part at the specified Location. In
-     * general, this operation should move the nozzle to the specified Location
-     * and turn off the vacuum.
-     * 
-     * @param part
+     * Commands the Nozzle to place the given Part at the specified Location. In general,
+     * this operation should move the nozzle to the specified Location and turn off the
+     * vacuum.
      * @param placeLocation
      * @throws Exception
      */
-    public void place(Part part, Location placeLocation) throws Exception;
+    public void place(Location placeLocation) throws Exception;
 }

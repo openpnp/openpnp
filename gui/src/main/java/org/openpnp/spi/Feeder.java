@@ -21,7 +21,7 @@
 
 package org.openpnp.spi;
 
-import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -32,42 +32,47 @@ import org.openpnp.model.Part;
  * It can be a tape and reel feeder, a tray handler, a single part in a 
  * specific location or anything else that can be used as a pick source.
  */
-public interface Feeder {
-	public String getName();
-	
-	public void setName(String name);
-	
+public interface Feeder extends Identifiable, WizardConfigurable {
+    /**
+     * Return true is the Feeder is currently enabled and can be considered
+     * in Job planning.
+     * @return
+     */
 	public boolean isEnabled();
-
+	
 	public void setEnabled(boolean enabled);
-	
-	public Location getLocation();
-	
-	public void setLocation(Location location);
-	
+
+	/**
+	 * Get the Part that is loaded into this Feeder.
+	 * @return
+	 */
 	public Part getPart();
-	
-	public void setPart(Part part);
 	
 	/**
 	 * Returns true if the Feeder is ready and willing to source the Part for
-	 * the given Head.
+	 * the given Nozzle. An example of what this check could be used for would
+	 * be to see if the specified Nozzle's Head has an appropriate Actuator
+	 * to drag a tape.
 	 * @return
 	 */
-	public boolean canFeedForHead(Head head); 
-	
+	public boolean canFeedToNozzle(Nozzle nozzle);
 	
 	/**
-	 * Allows the Feeder to do anything it needs to to prepare the part to be picked. If the Feeder requires the
-	 * pick location to be modified it can return a new Location, otherwise it should just return the original
-	 * passed in Location. The incoming pickLocation should not be modified.
-	 * @param head
-	 * @param part
-	 * @param pickLocation
+	 * Gets the Location from which the currently available Part should be
+	 * picked from. 
 	 * @return
+	 */
+	public Location getPickLocation();
+	
+	/**
+	 * Commands the Feeder to do anything it needs to do to prepare the part
+	 * to be picked by the specified Nozzle. If the Feeder requires Head
+	 * interaction to feed it will perform those operations during this call.
+	 * @param nozzle The Nozzle to be used for picking after the feed is
+	 * completed. The Feeder may use this Nozzle to determine which Head,
+	 * and therefore which Actuators and Cameras it can use for assistance. 
+	 * @return The Location where the fed part can be picked from.
 	 * @throws Exception
 	 */
-	public Location feed(Head head, Location pickLocation) throws Exception;
-	
-	public Wizard getConfigurationWizard();
+	public void feed(Nozzle nozzle) throws Exception;
 }

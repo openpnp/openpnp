@@ -23,117 +23,68 @@ package org.openpnp.spi;
 
 import java.util.List;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Identifiable;
-import org.openpnp.model.Length;
 
 
 /**
- * A Head is a moving toolholder on a Machine. The head has a current position. A Head
- * is the movable object in a Machine.
- * Unless otherwise noted, the methods in this class block while performing their operations.
+ * A Head is a movable group of components attached to a Machine. Components
+ * which can be attached consist of Nozzles, Actuators and Cameras. A Head
+ * itself is not directly movable, but can be moved by moving any one of it's
+ * components. When any attached component is moved in (at least) X or Y, it is
+ * expected that all components attached to the Head also move in the same
+ * axes.
  */
-public interface Head extends Identifiable, Nozzle {
+public interface Head extends Identifiable, WizardConfigurable {
+    /**
+     * Get a list of Nozzles that are attached to this head.
+     * @return
+     */
+    public List<Nozzle> getNozzles();
+    
+    /**
+     * Get the Nozzle attached to this Head that has the specified id.
+     * @param id
+     * @return
+     */
+    public Nozzle getNozzleById(String id);
+    
 	/**
-	 * Directs the head to move to it's home position and set all it's axes to 0. 
-	 */
-	void home() throws Exception;
-	
-	/**
-	 * Get the X position of the Head, with perception offsets applied.
-	 * @return
-	 */
-	public double getX();
-	/**
-	 * Get the Y position of the Head, with perception offsets applied.
-	 * @return
-	 */
-	public double getY();
-	/**
-	 * Get the Z position of the Head, with perception offsets applied.
-	 * @return
-	 */
-	public double getZ();
-	/**
-	 * Get the C position of the Head, with perception offsets applied.
-	 * @return
-	 */
-	public double getC();
-
-	public void setPerceivedX(double x);
-	public void setPerceivedY(double y);
-	public void setPerceivedZ(double z);
-	public void setPerceivedC(double c);
-	
-	/**
-	 * Get the X position of the Head, without perception offsets applied.
-	 * @return
-	 */
-	public double getAbsoluteX();
-	/**
-	 * Get the Y position of the Head, without perception offsets applied.
-	 * @return
-	 */
-	public double getAbsoluteY();
-	/**
-	 * Get the Z position of the Head, without perception offsets applied.
-	 * @return
-	 */
-	public double getAbsoluteZ();
-	/**
-	 * Get the C position of the Head, without perception offsets applied.
-	 * @return
-	 */
-	public double getAbsoluteC();
-	
-	/**
-	 * Move the Head to the given position. Values are in Machine native units. Heads are not
-	 * required to make the movement in any particular order.
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @param a
-	 */
-	void moveTo(double x, double y, double z, double c) throws Exception;
-
-	/**
-	 * Move the Head to the given position. Values are in Machine native units. Heads are not
-	 * required to make the movement in any particular order.
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @param a
-	 * @param feedRatePerMinute
-	 */
-	void moveTo(double x, double y, double z, double c, double feedRatePerMinute) throws Exception;
-	
-	/**
-	 * Move the head to the Safe-Z location. By default this is 0 but can be
-	 * overridden on a per Head basis. This causes movement in the Z axis only.
-	 * All other axes remain the same.
-	 */
-	void moveToSafeZ() throws Exception;
-
-	/**
-	 * Get a list of Actuators that are attached to this head.
+	 * Get a list of Actuators that are attached to this Head.
 	 * @return
 	 */
 	public List<Actuator> getActuators();
 	
-	public Actuator getActuator(String id);
-	
 	/**
-	 * Get a Wizard that can be used to configure this Head.
+	 * Get the Actuator attached to this Head that has the specified id.
+	 * @param id
 	 * @return
 	 */
-	public Wizard getConfigurationWizard();
+	public Actuator getActuatorById(String id);
 	
-	@Override
-	public String getId();
+	/**
+	 * Get a list of Cameras that are attached to this Head.
+	 * @return
+	 */
+	public List<Camera> getCameras();
 	
-	public Machine getMachine();
+	/**
+	 * Get the Camera attached to this Head that has the specified id.
+	 * @param id
+	 * @return
+	 */
+	public Camera getCameraById(String id);
 	
-	public Length getSafeZ();
-	
-	public void setSafeZ(Length safeZ);
+    /**
+     * Directs the Head to move to it's home position and to move any
+     * attached devices to their home positions. 
+     */
+    void home() throws Exception;
+    
+    /**
+     * Move all devices on the Head to their Safe Z position. This is a
+     * position which should make it safe to move the Head in X and Y without
+     * crashing any of the attached devices. Typically this call should only
+     * produce motion in the Z axis.
+     */
+    void moveToSafeZ() throws Exception;
 }
