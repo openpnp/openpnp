@@ -428,10 +428,7 @@ public class CameraView extends JComponent implements CameraListener {
 			g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight,
 					null);
 
-			double c = 0;
-			if (camera.getHead() != null) {
-				c = camera.getHead().getC();
-			}
+			double c = camera.getLocation().getRotation();
 			
 			for (Reticle reticle : reticles.values()) {
 				reticle.draw(

@@ -23,9 +23,13 @@ package org.openpnp.machine.reference.driver;
 
 import java.util.Locale;
 
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.model.Part;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,15 +43,26 @@ public class NullDriver implements ReferenceDriver {
 	private double x, y, z, c;
 
 	@Override
-	public void home(ReferenceHead head, double feedRateMmPerMinute)
+	public void home(ReferenceHead head)
 			throws Exception {
 		logger.info("home()");
 	}
-
+	
 	@Override
-	public void moveTo(ReferenceHead head, double x, double y, double z,
-			double c, double feedRateMmPerMinute) throws Exception {
-		logger.info(String.format(Locale.US, "moveTo(%f, %f, %f, %f, %f)", x, y, z, c, feedRateMmPerMinute));
+    public Location getLocation(ReferenceHeadMountable hm) {
+	    return new Location(LengthUnit.Millimeters);
+    }
+
+    @Override
+    public void actuate(ReferenceActuator actuator, double value)
+            throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+	public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+		logger.info(String.format(Locale.US, "moveTo(%s, %s, %f)", hm, location, speed));
 
 		// If the angle is more than 360* we take it's modulo. No reason to
 		// travel more than a full circle.
@@ -57,6 +72,13 @@ public class NullDriver implements ReferenceDriver {
 //		if (c > 180) {
 //			c = (360 - c) * -1;
 //		}
+		
+		location = location.convertToUnits(LengthUnit.Millimeters);
+		
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        double c = location.getRotation();
 		
 		double x1 = this.x;
 		double y1 = this.y;
@@ -80,6 +102,8 @@ public class NullDriver implements ReferenceDriver {
 
 		// Distance moved in each plane so far.
 		double dxy = 0, dz = 0, dc = 0;
+		
+		double feedRateMmPerMinute = 15000 * speed + 1;
 		
 		// The distance that we'll move each loop. 
 		double distancePerTick = feedRateMmPerMinute / 60.0 / 10.0;
@@ -106,7 +130,8 @@ public class NullDriver implements ReferenceDriver {
 				this.c = c;
 			}
 			
-			head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
+			// TODO
+//			head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
 			
 			try {
 				Thread.sleep(100);
@@ -125,25 +150,26 @@ public class NullDriver implements ReferenceDriver {
 		this.z = z;
 		this.c = c;
 
-		head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
+		// TODO
+//		head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
 	}
 
 	@Override
-	public void pick(ReferenceHead head, Part part) throws Exception {
-		logger.info(String.format("pick(%s)", part == null ? "" : part.toString()));
+	public void pick(ReferenceNozzle nozzle) throws Exception {
+		logger.info("pick({})", nozzle);
 		Thread.sleep(500);
 	}
 
 	@Override
-	public void place(ReferenceHead head) throws Exception {
-		logger.info(String.format("place()"));
+	public void place(ReferenceNozzle nozzle) throws Exception {
+		logger.info("place({})", nozzle);
 		Thread.sleep(500);
 	}
 
 	@Override
-	public void actuate(ReferenceHead head, int index, boolean on)
+	public void actuate(ReferenceActuator actuator, boolean on)
 			throws Exception {
-		logger.info(String.format("actuate(%d, %s)", index, on));
+		logger.info("actuate({}, {})", actuator, on);
 		Thread.sleep(500);
 	}
 

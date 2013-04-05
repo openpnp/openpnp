@@ -372,8 +372,7 @@ public class BoardsPanel extends JPanel {
 			Placement placement = new Placement(id);
 
 			placement.setPart(Configuration.get().getParts().get(0));
-			placement.getLocation().setUnits(
-					configuration.getMachine().getNativeUnits());
+			placement.getLocation().setUnits(configuration.getSystemUnits());
 			
 			board.addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();

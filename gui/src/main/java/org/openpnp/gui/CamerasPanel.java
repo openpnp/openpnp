@@ -256,7 +256,8 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 			try {
 				Camera camera = cameraClass.newInstance();
 				
-				camera.setName(Helpers.createUniqueName("Camera ", Configuration.get().getMachine().getCameras(), "name"));
+				// TODO
+//				camera.setName(Helpers.createUniqueName("Camera ", Configuration.get().getMachine().getCameras(), "name"));
 				camera.getUnitsPerPixel().setUnits(Configuration.get().getSystemUnits());
 				try {
 					if (camera.getVisionProvider() == null) {
