@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.openpnp.RequiresConfigurationResolution;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -41,7 +40,7 @@ import org.simpleframework.xml.core.Commit;
  * Placements that will be used to specify pick and place operations. 
  */
 @Root(name="openpnp-board")
-public class Board extends AbstractModelObject implements RequiresConfigurationResolution, PropertyChangeListener {
+public class Board extends AbstractModelObject implements PropertyChangeListener {
 	public enum Side {
 		Bottom,
 		Top
@@ -65,13 +64,6 @@ public class Board extends AbstractModelObject implements RequiresConfigurationR
 	public Board(File file) {
 		setFile(file);
 		addPropertyChangeListener(this);
-	}
-	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		for (Placement placement : placements) {
-			placement.resolve(configuration);
-		}
 	}
 	
 	@SuppressWarnings("unused")

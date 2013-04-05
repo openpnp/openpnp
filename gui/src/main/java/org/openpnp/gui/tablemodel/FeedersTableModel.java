@@ -30,7 +30,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Feeder;
 
-public class FeedersTableModel extends AbstractTableModel implements ConfigurationListener {
+public class FeedersTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };
@@ -38,13 +38,13 @@ public class FeedersTableModel extends AbstractTableModel implements Configurati
 
 	public FeedersTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		configuration.addListener(this);
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            public void configurationComplete(Configuration configuration) throws Exception {
+                refresh();
+            }
+        });
 	}
 
-	public void configurationLoaded(Configuration configuration) throws Exception {
-		refresh();
-	}
-	
 	public void refresh() {
 		feeders = new ArrayList<Feeder>(configuration.getMachine().getFeeders());
 		fireTableDataChanged();

@@ -24,7 +24,7 @@ package org.openpnp.model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -37,7 +37,7 @@ import org.simpleframework.xml.core.Persist;
  * along with information about how to place it. 
  * @author jason
  */
-public class Placement extends AbstractModelObject implements RequiresConfigurationResolution, PropertyChangeListener {
+public class Placement extends AbstractModelObject implements PropertyChangeListener {
 	@Attribute
 	private String id;
 	@Element
@@ -57,13 +57,15 @@ public class Placement extends AbstractModelObject implements RequiresConfigurat
 	public Placement(String id) {
 		this.id = id;
 		setLocation(new Location(LengthUnit.Millimeters));
-	}
-	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		if (getPart() == null) {
-			setPart(configuration.getPart(partId));
-		}
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                if (getPart() == null) {
+                    setPart(configuration.getPart(partId));
+                }
+            }
+        });
 	}
 	
 	@SuppressWarnings("unused")

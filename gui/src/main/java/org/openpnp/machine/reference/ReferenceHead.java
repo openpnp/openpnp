@@ -37,7 +37,7 @@ public class ReferenceHead extends AbstractHead {
     private ReferenceDriver driver;
 
     public ReferenceHead() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
                     throws Exception {

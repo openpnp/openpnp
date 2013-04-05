@@ -34,7 +34,7 @@ public abstract class AbstractCamera implements Camera {
     protected Head head;
     
     public AbstractCamera() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
                     throws Exception {

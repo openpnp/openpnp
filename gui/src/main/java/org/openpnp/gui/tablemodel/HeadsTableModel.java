@@ -30,7 +30,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 
-public class HeadsTableModel extends AbstractTableModel implements ConfigurationListener {
+public class HeadsTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Class" };
@@ -38,12 +38,12 @@ public class HeadsTableModel extends AbstractTableModel implements Configuration
 
 	public HeadsTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		configuration.addListener(this);
-	}
-
-	public void configurationLoaded(Configuration configuration) throws Exception {
-		heads = new ArrayList<Head>(configuration.getMachine().getHeads());
-		fireTableDataChanged();
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            public void configurationComplete(Configuration configuration) throws Exception {
+                heads = new ArrayList<Head>(configuration.getMachine().getHeads());
+                fireTableDataChanged();
+            }
+        });
 	}
 
 	@Override

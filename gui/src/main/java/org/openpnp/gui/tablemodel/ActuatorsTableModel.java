@@ -31,23 +31,23 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 
-public class ActuatorsTableModel extends AbstractTableModel implements ConfigurationListener {
+public class ActuatorsTableModel extends AbstractTableModel {
 	
 	private String[] columnNames = new String[] { "Id", "Head", "Class" };
 	private List<HeadActuator> actuators;
 
 	public ActuatorsTableModel(Configuration configuration) {
-		configuration.addListener(this);
-	}
-
-	public void configurationLoaded(Configuration configuration) throws Exception {
-		actuators = new ArrayList<HeadActuator>();
-		for (Head head : configuration.getMachine().getHeads()) {
-			for (Actuator actuator : head.getActuators()) {
-				actuators.add(new HeadActuator(head, actuator));
-			}
-		}
-		fireTableDataChanged();
+	    Configuration.get().addListener(new ConfigurationListener.Adapter() {
+	        public void configurationComplete(Configuration configuration) throws Exception {
+	            actuators = new ArrayList<HeadActuator>();
+	            for (Head head : configuration.getMachine().getHeads()) {
+	                for (Actuator actuator : head.getActuators()) {
+	                    actuators.add(new HeadActuator(head, actuator));
+	                }
+	            }
+	            fireTableDataChanged();
+	        }
+	    });
 	}
 
 	@Override

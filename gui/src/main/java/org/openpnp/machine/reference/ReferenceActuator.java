@@ -46,7 +46,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     private ReferenceDriver driver;
 
     public ReferenceActuator() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
                     throws Exception {

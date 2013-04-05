@@ -21,7 +21,7 @@
 
 package org.openpnp.model;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persist;
  * and is placed at a Placement as part of a Job. Parts can be used across many boards and should generally represent
  * a single part in the real world.
  */
-public class Part extends AbstractModelObject implements RequiresConfigurationResolution, Identifiable {
+public class Part extends AbstractModelObject implements Identifiable {
 	@Attribute
 	private String id;
 	@Attribute(required=false)
@@ -52,13 +52,15 @@ public class Part extends AbstractModelObject implements RequiresConfigurationRe
 	
 	public Part(String id) {
 		this.id = id;
-	}
-	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		if (getPackage() == null) {
-			setPackage(configuration.getPackage(packageId));
-		}
+		Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration)
+                    throws Exception {
+                if (getPackage() == null) {
+                    setPackage(configuration.getPackage(packageId));
+                }
+            }
+		});
 	}
 	
 	@SuppressWarnings("unused")

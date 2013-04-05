@@ -85,7 +85,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-public class JobPanel extends JPanel implements ConfigurationListener {
+public class JobPanel extends JPanel {
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory
 			.getLogger(JobPanel.class);
@@ -302,7 +302,18 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 		jobProcessor.addListener(jobProcessorListener);
 		jobProcessor.setDelegate(jobProcessorDelegate);
 
-		configuration.addListener(this);
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            public void configurationComplete(Configuration configuration) throws Exception {
+                configuration.getMachine().addListener(machineListener);
+                updateJobActions();
+
+                // Create an empty Job if one is not loaded
+                if (JobPanel.this.jobProcessor.getJob() == null) {
+                    Job job = new Job();
+                    JobPanel.this.jobProcessor.load(job);
+                }
+            }
+        });
 	}
 
 	public void refreshSelectedBoardRow() {
@@ -335,17 +346,6 @@ public class JobPanel extends JPanel implements ConfigurationListener {
 			index = placementsTable.convertRowIndexToModel(index);
 			return getSelectedBoardLocation().getBoard().getPlacements()
 					.get(index);
-		}
-	}
-
-	public void configurationLoaded(Configuration configuration) throws Exception {
-		configuration.getMachine().addListener(machineListener);
-		updateJobActions();
-
-		// Create an empty Job if one is not loaded
-		if (jobProcessor.getJob() == null) {
-			Job job = new Job();
-			jobProcessor.load(job);
 		}
 	}
 

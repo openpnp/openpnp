@@ -40,7 +40,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private ReferenceDriver driver;
 
     public ReferenceCamera() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
                     throws Exception {

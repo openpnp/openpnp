@@ -24,7 +24,6 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -33,7 +32,6 @@ import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.base.AbstractMachine;
@@ -44,22 +42,6 @@ public class ReferenceMachine extends AbstractMachine {
 	private ReferenceDriver driver;
 	
 	private boolean enabled;
-	
-	public ReferenceMachine() {
-	    /**
-	     * Note: The pattern below is used so that subclasses do not interfere
-	     * with this class getting the Configuration information it needs. If
-	     * the class instead just implemented ConfigurationListener then a
-	     * subclass might override this.
-	     */
-	    Configuration.get().addListener(new ConfigurationListener() {
-            @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
-                configuration.resolve(driver);
-            }
-        });
-	}
 	
 	ReferenceDriver getDriver() {
 		return driver;

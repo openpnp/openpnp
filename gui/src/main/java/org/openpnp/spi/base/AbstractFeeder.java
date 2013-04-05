@@ -17,7 +17,7 @@ public abstract class AbstractFeeder implements Feeder {
     protected Part part;
     
     private AbstractFeeder() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
                     throws Exception {

@@ -30,7 +30,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
  * then used in the next feed operation to be sure to hit the tape at the
  * right position.
  */
-public class ReferenceTapeFeeder extends AbstractFeeder implements RequiresConfigurationResolution {
+public class ReferenceTapeFeeder extends AbstractFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
@@ -97,12 +97,6 @@ public class ReferenceTapeFeeder extends AbstractFeeder implements RequiresConfi
 	 * should produce the correct feed locations.
 	 */
 	private Location visionOffset;
-	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		super.resolve(configuration);
-		configuration.resolve(vision);
-	}
 	
 	@Override
 	public boolean canFeedForHead(Head head) {
@@ -391,7 +385,7 @@ public class ReferenceTapeFeeder extends AbstractFeeder implements RequiresConfi
 				listener);
 	}
 
-	public static class Vision implements RequiresConfigurationResolution {
+	public static class Vision {
 		@Attribute(required=false)
 		private boolean enabled;
 		@Attribute(required=false)
@@ -406,15 +400,17 @@ public class ReferenceTapeFeeder extends AbstractFeeder implements RequiresConfi
 		private BufferedImage templateImage;
 		private boolean templateImageDirty;
 		
-		private Configuration configuration;
-		
-		@Override
-		public void resolve(Configuration configuration) throws Exception {
-			this.configuration = configuration;
-			if (templateImageName != null) {
-				File file = configuration.getResourceFile(this.getClass(), templateImageName);
-				templateImage = ImageIO.read(file);
-			}
+		public Vision() {
+	        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+	            @Override
+	            public void configurationLoaded(Configuration configuration)
+	                    throws Exception {
+	                if (templateImageName != null) {
+	                    File file = configuration.getResourceFile(this.getClass(), templateImageName);
+	                    templateImage = ImageIO.read(file);
+	                }
+	            }
+	        });
 		}
 		
 		@SuppressWarnings("unused")
@@ -423,10 +419,10 @@ public class ReferenceTapeFeeder extends AbstractFeeder implements RequiresConfi
 			if (templateImageDirty) {
 				File file = null;
 				if (templateImageName != null) {
-					file = configuration.getResourceFile(this.getClass(), templateImageName);
+					file = Configuration.get().getResourceFile(this.getClass(), templateImageName);
 				}
 				else {
-					file = configuration.createResourceFile(this.getClass(), "tmpl_", ".png");
+					file = Configuration.get()createResourceFile(this.getClass(), "tmpl_", ".png");
 					templateImageName = file.getName();
 				}
 				ImageIO.write(templateImage, "png", file);

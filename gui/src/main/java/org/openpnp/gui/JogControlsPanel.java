@@ -365,9 +365,9 @@ public class JogControlsPanel extends JPanel {
 		}
 	};
 
-	private ConfigurationListener configurationListener = new ConfigurationListener() {
+	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
-		public void configurationLoaded(Configuration configuration) throws Exception {
+		public void configurationComplete(Configuration configuration) throws Exception {
 			panelActuators.removeAll();
 
 			machine = configuration.getMachine();

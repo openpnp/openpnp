@@ -34,7 +34,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
 
-public class CamerasTableModel extends AbstractTableModel implements ConfigurationListener {
+public class CamerasTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Looking", "Head" };
@@ -42,11 +42,11 @@ public class CamerasTableModel extends AbstractTableModel implements Configurati
 
 	public CamerasTableModel(Configuration configuration) {
 		this.configuration = configuration;
-		configuration.addListener(this);
-	}
-
-	public void configurationLoaded(Configuration configuration) throws Exception {
-		refresh();
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            public void configurationComplete(Configuration configuration) throws Exception {
+                refresh();
+            }
+        });
 	}
 
 	@Override

@@ -71,7 +71,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-public class CamerasPanel extends JPanel implements ConfigurationListener, WizardContainer {
+public class CamerasPanel extends JPanel implements WizardContainer {
 	private final static Logger logger = LoggerFactory.getLogger(CamerasPanel.class);
 
 	private static final String PREF_DIVIDER_POSITION = "CamerasPanel.dividerPosition";
@@ -198,18 +198,17 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 			}
 		});
 		
-		configuration.addListener(this);
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            public void configurationComplete(Configuration configuration) throws Exception {
+                headsComboBox.removeAllItems();
+                headsComboBox.addItem(new HeadCellValue((Head) null)); 
+                for (Head head : configuration.getMachine().getHeads()) {
+                    headsComboBox.addItem(new HeadCellValue(head));
+                }
+            }
+        });
 	}
 	
-	@Override
-	public void configurationLoaded(Configuration configuration) throws Exception {
-		headsComboBox.removeAllItems();
-		headsComboBox.addItem(new HeadCellValue((Head) null)); 
-		for (Head head : configuration.getMachine().getHeads()) {
-			headsComboBox.addItem(new HeadCellValue(head));
-		}
-	}
-
 	private void search() {
 		RowFilter<CamerasTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
@@ -269,7 +268,6 @@ public class CamerasPanel extends JPanel implements ConfigurationListener, Wizar
 				}
 				
 				
-				configuration.resolve(camera);
 				configuration.getMachine().addCamera(camera);
 				
 				MainFrame.cameraPanel.addCamera(camera);

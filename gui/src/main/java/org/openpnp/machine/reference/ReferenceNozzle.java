@@ -33,7 +33,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
     private ReferenceDriver driver;
 
     public ReferenceNozzle() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
                     throws Exception {

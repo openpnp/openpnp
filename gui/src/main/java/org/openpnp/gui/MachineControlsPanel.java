@@ -676,9 +676,9 @@ public class MachineControlsPanel extends JPanel {
 		}
 	};
 	
-	private ConfigurationListener configurationListener = new ConfigurationListener() {
+	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
-		public void configurationLoaded(Configuration configuration) {
+		public void configurationComplete(Configuration configuration) {
 			if (machine != null) {
 				machine.removeListener(machineListener);
 			}

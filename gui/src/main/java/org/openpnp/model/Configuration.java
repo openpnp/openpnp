@@ -34,7 +34,6 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
 import org.simpleframework.xml.Element;
@@ -175,18 +174,6 @@ public class Configuration extends AbstractModelObject {
 		return file;
 	}
 	
-	/**
-	 * Calls resolve(this) on the Object if it implements 
-	 * RequiresConfigurationResolution. This is just a helper method to avoid
-	 * making a lot of casts throughout the program.
-	 * @param o
-	 */
-	public void resolve(Object o) throws Exception {
-		if (o instanceof RequiresConfigurationResolution) {
-			((RequiresConfigurationResolution) o).resolve(this);
-		}
-	}
-	
 	public boolean isDirty() {
 		return dirty;
 	}
@@ -200,6 +187,7 @@ public class Configuration extends AbstractModelObject {
 		if (loaded) {
 		    try {
 		        listener.configurationLoaded(this);
+		        listener.configurationComplete(this);
 		    }
 		    catch (Exception e) {
 		        // TODO: Need to find a way to raise this to the GUI
@@ -272,16 +260,21 @@ public class Configuration extends AbstractModelObject {
 			throw new Exception("Error while reading machine.xml (" + message + ")", e);
 		}
 		
-		if (forceSave) {
+        loaded = true;
+
+        for (ConfigurationListener listener : listeners) {
+            listener.configurationLoaded(this);
+        }
+
+        if (forceSave) {
 			logger.info("Defaults were loaded. Saving to configuration directory.");
 			configurationDirectory.mkdirs();
 			save();
 		}
-		dirty = false;
-		loaded = true;
+        
 		for (ConfigurationListener listener : listeners) {
-			listener.configurationLoaded(this);
-		}
+            listener.configurationComplete(this);
+        }
 	}
 	
 	public void save() throws Exception {
@@ -375,7 +368,6 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		MachineConfigurationHolder holder = serializer.read(MachineConfigurationHolder.class, file);
 		machine = holder.machine;
-		resolve(machine);
 	}
 	
 	private void saveMachine(File file) throws Exception {
@@ -406,7 +398,6 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = createSerializer();
 		PartsConfigurationHolder holder = serializer.read(PartsConfigurationHolder.class, file);
 		for (Part part : holder.parts) {
-			resolve(part);
 			addPart(part);
 		}
 	}
@@ -484,7 +475,6 @@ public class Configuration extends AbstractModelObject {
 	private Board loadBoard(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		Board board = serializer.read(Board.class, file);
-		resolve(board);
 		board.setFile(file);
 		board.setDirty(false);
 		return board;

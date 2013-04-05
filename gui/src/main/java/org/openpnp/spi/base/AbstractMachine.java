@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.ConfigurationListener;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -26,21 +24,6 @@ public abstract class AbstractMachine implements Machine {
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
     
     protected AbstractMachine() {
-        Configuration.get().addListener(new ConfigurationListener() {
-            @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
-                for (Head head : heads) {
-                    configuration.resolve(head);
-                }
-                for (Feeder feeder : feeders) {
-                    configuration.resolve(feeder);
-                }
-                for (Camera camera : cameras) {
-                    configuration.resolve(camera);
-                }
-            }
-        });
     }
     
     @Override

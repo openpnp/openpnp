@@ -26,15 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.RequiresConfigurationResolution;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.VfwCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
-
-import com.lti.civil.DefaultCaptureSystemFactorySingleton;
 
 public class VfwCamera extends ReferenceCamera implements Runnable {
 	@Attribute(required=false)
@@ -56,7 +53,7 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 	private Thread captureThread;
 	
 	public VfwCamera() {
-        Configuration.get().addListener(new ConfigurationListener() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
             
             @Override
             public void configurationLoaded(Configuration configuration)

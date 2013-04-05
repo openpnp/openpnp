@@ -32,7 +32,7 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Configuration;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.  
  */
-public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurationResolution {
+public class GrblDriver implements ReferenceDriver, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
 	private static final double minimumRequiredVersion = 0.81;
 	
@@ -65,11 +65,16 @@ public class GrblDriver implements ReferenceDriver, Runnable, RequiresConfigurat
 	private double connectedVersion;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		connect(portName, baud);
+	public GrblDriver() {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration)
+                    throws Exception {
+                connect(portName, baud);
+            }
+        });
 	}
-
+	
 	@Override
 	public void actuate(ReferenceHead head, int index, boolean on)
 			throws Exception {

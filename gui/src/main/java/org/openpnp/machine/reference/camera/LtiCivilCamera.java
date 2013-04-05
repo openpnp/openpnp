@@ -63,7 +63,7 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	private Object captureLock = new Object();
 	
 	public LtiCivilCamera() {
-		Configuration.get().addListener(new ConfigurationListener() {
+		Configuration.get().addListener(new ConfigurationListener.Adapter() {
             
             @Override
             public void configurationLoaded(Configuration configuration)
