@@ -73,6 +73,7 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 
 /**
  * The main window of the application.
@@ -435,6 +436,11 @@ public class MainFrame extends JFrame {
 		for (Camera camera : configuration.getMachine().getCameras()) {
 			cameraPanel.addCamera(camera);
 		}
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (Camera camera : head.getCameras()) {
+                cameraPanel.addCamera(camera);
+            }
+        }
 
 		jobProcessor.addListener(jobProcessorListener);
 	}

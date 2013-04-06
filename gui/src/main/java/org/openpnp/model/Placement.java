@@ -24,7 +24,6 @@ package org.openpnp.model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -57,15 +56,6 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 	public Placement(String id) {
 		this.id = id;
 		setLocation(new Location(LengthUnit.Millimeters));
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
-                if (getPart() == null) {
-                    setPart(configuration.getPart(partId));
-                }
-            }
-        });
 	}
 	
 	@SuppressWarnings("unused")
@@ -78,6 +68,10 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 	@Commit
 	private void commit() {
 		setLocation(location);
+        if (getPart() == null) {
+            System.out.println(partId);
+            setPart(Configuration.get().getPart(partId));
+        }
 	}
 	
 	public Part getPart() {
@@ -85,6 +79,7 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 	}
 
 	public void setPart(Part part) {
+	    System.out.println("setPart " + part);
 		Part oldValue = this.part;
 		this.part = part;
 		firePropertyChange("part", oldValue, part);

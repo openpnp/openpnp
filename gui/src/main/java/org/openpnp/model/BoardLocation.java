@@ -48,7 +48,8 @@ public class BoardLocation extends AbstractModelObject implements PropertyChange
 		setBoard(board);
 	}
 	
-	@Commit
+	@SuppressWarnings("unused")
+    @Commit
 	private void commit() {
 		setLocation(location);
 		setBoard(board);

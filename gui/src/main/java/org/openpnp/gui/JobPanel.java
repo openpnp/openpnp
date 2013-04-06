@@ -723,8 +723,7 @@ public class JobPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			getSelectedBoardLocation().setLocation(
-					machineControlsPanel.getCameraLocation());
+			getSelectedBoardLocation().setLocation(MainFrame.cameraPanel.getSelectedCameraLocation());
 			boardLocationsTableModel.fireTableRowsUpdated(
 					boardLocationsTable.getSelectedRow(),
 					boardLocationsTable.getSelectedRow());
@@ -744,8 +743,7 @@ public class JobPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			getSelectedBoardLocation().setLocation(
-					machineControlsPanel.getToolLocation());
+			getSelectedBoardLocation().setLocation(machineControlsPanel.getSelectedNozzle().getLocation());
 			boardLocationsTableModel.fireTableRowsUpdated(
 					boardLocationsTable.getSelectedRow(),
 					boardLocationsTable.getSelectedRow());
@@ -773,14 +771,11 @@ public class JobPanel extends JPanel {
 						Camera camera = MainFrame.cameraPanel
 								.getSelectedCamera();
 						Location location = getSelectedBoardLocation()
-								.getLocation();
-						location = location.convertToUnits(configuration
-								.getMachine().getNativeUnits());
-						location = location.subtract(camera.getLocation());
-						head.moveToSafeZ();
+								.getLocation().clone();
+						head.moveToSafeZ(1.0);
 						// Move the head to the location at Safe-Z
-						head.moveTo(location.getX(), location.getY(),
-								head.getZ(), location.getRotation());
+						location.setZ(Double.NaN);
+						camera.moveTo(location, 1.0);
 						// Move Z
 						head.moveTo(head.getX(), head.getY(), location.getZ(),
 								head.getC());

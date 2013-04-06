@@ -47,7 +47,8 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 		addPropertyChangeListener(this);
 	}
 	
-	@Commit
+	@SuppressWarnings("unused")
+    @Commit
 	private void commit() {
 		for (BoardLocation boardLocation : boardLocations) {
 			boardLocation.addPropertyChangeListener(this);

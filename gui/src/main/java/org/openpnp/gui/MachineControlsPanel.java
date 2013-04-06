@@ -32,6 +32,7 @@ import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -49,6 +50,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -60,28 +62,26 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.Movable;
+import org.openpnp.spi.Nozzle;
 
-/**
- * TODO Add a dropdown to select Head
- * TODO Lots of little bugs relating to setting absolute mode while a dro is
- * selected and managing the background color, enabled and selected state of
- * the dros.
- * @author jason
- */
+import com.jgoodies.forms.factories.FormFactory;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
+
 public class MachineControlsPanel extends JPanel {
 	private final JFrame frame;
 	private final CameraPanel cameraPanel;
 	private final Configuration configuration;
-	
-	private Machine machine;
-	private Movable movable;
+
+	private Nozzle selectedNozzle;
 
 	private JTextField textFieldX;
 	private JTextField textFieldY;
@@ -89,6 +89,8 @@ public class MachineControlsPanel extends JPanel {
 	private JTextField textFieldZ;
 	private JButton btnStartStop;
 	private JSlider sliderIncrements;
+    private JComboBox comboBoxNozzles;
+	
 	
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
@@ -124,11 +126,21 @@ public class MachineControlsPanel extends JPanel {
 	// TODO: Change this to take an interface that will pass in the Machine,
 	// Configuration, Head, etc. and handle exceptions with the proper dialog.
 	public void submitMachineTask(Runnable runnable) {
-		if (!machine.isEnabled()) {
+		if (!Configuration.get().getMachine().isEnabled()) {
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
 			return;
 		}
 		machineTaskExecutor.submit(runnable);
+	}
+	
+	public void setSelectedNozzle(Nozzle nozzle) {
+	    selectedNozzle = nozzle;
+	    comboBoxNozzles.setSelectedItem(selectedNozzle);
+	    updateDros();
+	}
+	
+	public Nozzle getSelectedNozzle() {
+	    return selectedNozzle;
 	}
 	
 	public JogControlsPanel getJogControlsPanel() {
@@ -158,37 +170,6 @@ public class MachineControlsPanel extends JPanel {
 		updateDros();
 	}
 
-	/**
-	 * Gets the current location of the tool.
-	 * TODO: Should be moved to MainFrame, or some other master controller.
-	 * @return
-	 */
-	public Location getToolLocation() {
-		return new Location(
-				machine.getNativeUnits(), 
-				head.getX(), 
-				head.getY(), 
-				head.getZ(), 
-				head.getC());
-	}
-	
-	/**
-	 * Gets the location that is currently being looked at by the selected
-	 * Camera. If no Cameras is selected, or All Cameras are selected, returns
-	 * null.
-	 * TODO: This should be moved to MainFrame, or some other master controller.
-	 * @return
-	 */
-	public Location getCameraLocation() {
-		CameraView cameraView = cameraPanel.getSelectedCameraView();
-		if (cameraView == null) {
-			return null;
-		}
-		Location toolLocation = getToolLocation();
-		Location cameraLocation = cameraView.getCamera().getLocation();
-		return toolLocation.add(cameraLocation);
-	}
-	
 	public double getJogIncrement() {
 		if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
 			return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
@@ -213,11 +194,11 @@ public class MachineControlsPanel extends JPanel {
 	}
 	
 	public void updateDros() {
-		if (machine == null || movable == null) {
+		if (selectedNozzle == null) {
 			return;
 		}
 		
-		Location l = movable.getLocation();
+		Location l = selectedNozzle.getLocation();
 		l = l.convertToUnits(configuration.getSystemUnits());
 		
 		double x, y, z, c;
@@ -248,6 +229,24 @@ public class MachineControlsPanel extends JPanel {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		ButtonGroup buttonGroup = new ButtonGroup();
+		
+		JPanel panel = new JPanel();
+		add(panel);
+		panel.setLayout(new FormLayout(new ColumnSpec[] {
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),},
+		    new RowSpec[] {
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,}));
+		
+		comboBoxNozzles = new JComboBox();
+		comboBoxNozzles.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setSelectedNozzle(((NozzleItem) comboBoxNozzles.getSelectedItem()).getNozzle());
+            }
+        });
+		panel.add(comboBoxNozzles, "2, 2, fill, default");
 		
 		JPanel panelDrosParent = new JPanel();
 		add(panelDrosParent);
@@ -414,7 +413,7 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			try {
-				machine.setEnabled(false);
+				Configuration.get().getMachine().setEnabled(false);
 				MachineControlsPanel.this.setEnabled(false);
 			}
 			catch (Exception e) {
@@ -428,7 +427,7 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			try {
-				machine.setEnabled(true);
+				Configuration.get().getMachine().setEnabled(true);
 				MachineControlsPanel.this.setEnabled(true);
 			}
 			catch (Exception e) {
@@ -474,7 +473,8 @@ public class MachineControlsPanel extends JPanel {
 //			else if (dro == textFieldC) {
 //				head.setPerceivedC(value);
 //			}
-//			btnStartStop.requestFocus();
+		    
+			btnStartStop.requestFocus();
 		}
 	};
 	
@@ -525,13 +525,13 @@ public class MachineControlsPanel extends JPanel {
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
-						head.moveToSafeZ();
+						selectedNozzle.moveToSafeZ(1.0);
 						// Move to 0, 0, 0, 0.
-						head.moveTo(0, 0, 0, 0);
+						selectedNozzle.moveTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), 1.0);
 					}
 					catch (Exception e) {
 						e.printStackTrace();
-						MessageBoxes.errorBox(frame, "Homing Failed", e);
+						MessageBoxes.errorBox(frame, "Go To Zero Failed", e);
 					}
 				}
 			});
@@ -545,7 +545,7 @@ public class MachineControlsPanel extends JPanel {
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {
-						head.home();
+						selectedNozzle.getHead().home();
 					}
 					catch (Exception e) {
 						e.printStackTrace();
@@ -594,22 +594,24 @@ public class MachineControlsPanel extends JPanel {
 	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-tool.png"))) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			final Location location = getCameraLocation();
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						head.moveToSafeZ();
-						head.moveTo(
-								location.getX(),
-								location.getY(),
-								location.getZ(),
-								head.getC());
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Move Failed", e);
-					}
-				}
-			});
+		    // TODO FIX
+            MessageBoxes.errorBox((Component) arg0.getSource(), "Temporarily Out of Service", "This function is temporarily out of service. Please check back in a few releases.");
+//			final Location location = getCameraLocation();
+//			submitMachineTask(new Runnable() {
+//				public void run() {
+//					try {
+//						head.moveToSafeZ();
+//						head.moveTo(
+//								location.getX(),
+//								location.getY(),
+//								location.getZ(),
+//								head.getC());
+//					}
+//					catch (Exception e) {
+//						MessageBoxes.errorBox(frame, "Move Failed", e);
+//					}
+//				}
+//			});
 		}
 	};
 	
@@ -621,23 +623,25 @@ public class MachineControlsPanel extends JPanel {
 			if (cameraView == null) {
 				return;
 			}
-			final Location location = getToolLocation();
-			final Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(location.getUnits());
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						head.moveToSafeZ();
-						head.moveTo(
-								location.getX() - cameraLocation.getX(),
-								location.getY() - cameraLocation.getY(),
-								location.getZ() - cameraLocation.getZ(),
-								head.getC());
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Move Failed", e);
-					}
-				}
-			});
+			// TODO FIX
+            MessageBoxes.errorBox((Component) arg0.getSource(), "Temporarily Out of Service", "This function is temporarily out of service. Please check back in a few releases.");
+//			final Location location = getToolLocation();
+//			final Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(location.getUnits());
+//			submitMachineTask(new Runnable() {
+//				public void run() {
+//					try {
+//						head.moveToSafeZ();
+//						head.moveTo(
+//								location.getX() - cameraLocation.getX(),
+//								location.getY() - cameraLocation.getY(),
+//								location.getZ() - cameraLocation.getZ(),
+//								head.getC());
+//					}
+//					catch (Exception e) {
+//						MessageBoxes.errorBox(frame, "Move Failed", e);
+//					}
+//				}
+//			});
 		}
 	};
 	
@@ -679,12 +683,18 @@ public class MachineControlsPanel extends JPanel {
 	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
 		public void configurationComplete(Configuration configuration) {
+		    Machine machine = configuration.getMachine();
 			if (machine != null) {
 				machine.removeListener(machineListener);
 			}
 			
-			machine = configuration.getMachine();
-			movable = machine.getHeads().get(0).getNozzles().get(0);
+			for (Head head : machine.getHeads()) {
+	            for (Nozzle nozzle : head.getNozzles()) {
+	                comboBoxNozzles.addItem(new NozzleItem(nozzle));
+	            }
+			}
+			setSelectedNozzle(((NozzleItem) comboBoxNozzles.getItemAt(0)).getNozzle());
+			
 			setUnits(configuration.getSystemUnits());
 			machine.addListener(machineListener);
 			

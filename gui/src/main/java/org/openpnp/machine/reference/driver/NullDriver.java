@@ -21,138 +21,164 @@
 
 package org.openpnp.machine.reference.driver;
 
-import java.util.Locale;
+import java.util.HashMap;
 
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * An example of the simplest possible driver that can support multiple heads.
+ * This driver maintains a set of coordinates for each Head that it is asked
+ * to handle and simply logs all commands sent to it.
+ */
 public class NullDriver implements ReferenceDriver {
 	private final static Logger logger = LoggerFactory.getLogger(NullDriver.class);
 	
 	@Attribute(required=false)
-	private String dummy;
+	private double feedRateMmPerMinute = 1000;
 	
-	private double x, y, z, c;
+	private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
+	
+	protected Location getHeadLocation(Head head) {
+	    Location l = headLocations.get(head);
+	    if (l == null) {
+	        l = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+	        headLocations.put(head, l);
+	    }
+	    return l;
+	}
 
 	@Override
 	public void home(ReferenceHead head)
 			throws Exception {
 		logger.info("home()");
+		Location l = getHeadLocation(head);
+        l.setX(0);
+        l.setY(0);
+        l.setZ(0);
+        l.setRotation(0);
 	}
 	
 	@Override
     public Location getLocation(ReferenceHeadMountable hm) {
-	    return new Location(LengthUnit.Millimeters);
+	    return getHeadLocation(hm.getHead()).add(hm.getHeadOffsets());
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value)
-            throws Exception {
-        // TODO Auto-generated method stub
+    // TODO: Take Double.NaN into consideration
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+        logger.info("moveTo({}, {}, {})", new Object[] { hm, location, speed });
         
+        location = location.subtract(hm.getHeadOffsets());
+
+        location = location.convertToUnits(LengthUnit.Millimeters);
+        
+        Location hl = getHeadLocation(hm.getHead());
+
+        simulateMovement(hm, location, hl, speed);
+        
+        hl.setX(location.getX());
+        hl.setY(location.getY());
+        hl.setZ(location.getZ());
+        hl.setRotation(location.getRotation());
     }
+    
+    /**
+     * Simulates true machine movement, which takes time, by tracing the
+     * required movement lines over a period of time based on the input speed. 
+     * @param hm
+     * @param location
+     * @param hl
+     * @param speed
+     * @throws Exception
+     */
+    private void simulateMovement(ReferenceHeadMountable hm, Location location, Location hl, double speed) throws Exception {
+        double x = hl.getX();
+        double y = hl.getY();
+        double z = hl.getZ();
+        double c = hl.getRotation();
+        
+        double x1 = x;
+        double y1 = y;
+        double z1 = z;
+        double c1 = c;
+        double x2 = location.getX();
+        double y2 = location.getY();
+        double z2 = location.getZ();
+        double c2 = location.getRotation();
 
-    @Override
-	public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
-		logger.info(String.format(Locale.US, "moveTo(%s, %s, %f)", hm, location, speed));
+        c2 = c2 % 360.0;
+        
+        // Calculate the linear distance to travel in each axis.
+        double vx = x2 - x1;
+        double vy = y2 - y1;
+        double vz = z2 - z1;
+        double vc = c2 - c1;
+        
+        // Calculate the linear distance to travel in each plane XY, Z and C.
+        double pxy = Math.sqrt(vx*vx + vy*vy);
+        double pz = Math.abs(vz);
+        double pc = Math.abs(vc); 
 
-		// If the angle is more than 360* we take it's modulo. No reason to
-		// travel more than a full circle.
-		c = c % 360.0;
-		
-//		// If the travel is more than 180* we go the opposite direction instead.
-//		if (c > 180) {
-//			c = (360 - c) * -1;
-//		}
-		
-		location = location.convertToUnits(LengthUnit.Millimeters);
-		
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
-        double c = location.getRotation();
-		
-		double x1 = this.x;
-		double y1 = this.y;
-		double z1 = this.z;
-		double c1 = this.c;
-		double x2 = x;
-		double y2 = y;
-		double z2 = z;
-		double c2 = c;
-		
-		// Calculate the linear distance to travel in each axis.
-		double vx = x2 - x1;
-		double vy = y2 - y1;
-		double vz = z2 - z1;
-		double vc = c2 - c1;
-		
-		// Calculate the linear distance to travel in each plane XY, Z and C.
-		double pxy = Math.sqrt(vx*vx + vy*vy);
-		double pz = Math.abs(vz);
-		double pc = Math.abs(vc); 
+        // Distance moved in each plane so far.
+        double dxy = 0, dz = 0, dc = 0;
+        
+        // The distance that we'll move each loop. 
+        double distancePerTick = (feedRateMmPerMinute * speed) / 60.0 / 10.0;
+        
+        while (dxy < pxy || dz < pz || dc < pc) {
+            if (dxy < pxy) {
+                x = x1 + (vx / pxy * dxy);
+                y = y1 + (vy / pxy * dxy);
+            }
+            else {
+                x = x1;
+                y = y1;
+            }
+            if (dz < pz) {
+                z = z1 + dz * (vz < 0 ? -1 : 1);
+            }
+            else {
+                z = z1;
+            }
+            if (dc < pc) {
+                c = c1 + dc * (vc < 0 ? -1 : 1);
+            }
+            else {
+                c = c1;
+            }
 
-		// Distance moved in each plane so far.
-		double dxy = 0, dz = 0, dc = 0;
-		
-		double feedRateMmPerMinute = 15000 * speed + 1;
-		
-		// The distance that we'll move each loop. 
-		double distancePerTick = feedRateMmPerMinute / 60.0 / 10.0;
-		
-		while (dxy < pxy || dz < pz || dc < pc) {
-			if (dxy < pxy) {
-				this.x = x1 + (vx / pxy * dxy);
-				this.y = y1 + (vy / pxy * dxy);
-			}
-			else {
-				this.x = x;
-				this.y = y;
-			}
-			if (dz < pz) {
-				this.z = z1 + dz * (vz < 0 ? -1 : 1);
-			}
-			else {
-				this.z = z;
-			}
-			if (dc < pc) {
-				this.c = c1 + dc * (vc < 0 ? -1 : 1);
-			}
-			else {
-				this.c = c;
-			}
-			
-			// TODO
-//			head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
-			
-			try {
-				Thread.sleep(100);
-			}
-			catch (Exception e) {
-				
-			}
-			
-			dxy = Math.min(pxy, dxy + distancePerTick);
-			dz = Math.min(pz, dz + distancePerTick);
-			dc = Math.min(pc, dc + distancePerTick);
-		}
-		
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.c = c;
-
-		// TODO
-//		head.updateDuringMoveTo(this.x, this.y, this.z, this.c);
-	}
+            hl.setX(x);
+            hl.setY(y);
+            hl.setZ(z);
+            hl.setRotation(c);
+            
+            // Provide live updates to the Machine as the move progresses.
+            ((ReferenceMachine) Configuration.get().getMachine()).fireMachineHeadActivity(hm.getHead());
+            
+            try {
+                Thread.sleep(100);
+            }
+            catch (Exception e) {
+                
+            }
+            
+            dxy = Math.min(pxy, dxy + distancePerTick);
+            dz = Math.min(pz, dz + distancePerTick);
+            dc = Math.min(pc, dc + distancePerTick);
+        }
+    }
 
 	@Override
 	public void pick(ReferenceNozzle nozzle) throws Exception {
@@ -165,6 +191,13 @@ public class NullDriver implements ReferenceDriver {
 		logger.info("place({})", nozzle);
 		Thread.sleep(500);
 	}
+
+    @Override
+    public void actuate(ReferenceActuator actuator, double value)
+            throws Exception {
+        logger.info("actuate({}, {})", actuator, value);
+        Thread.sleep(500);
+    }
 
 	@Override
 	public void actuate(ReferenceActuator actuator, boolean on)

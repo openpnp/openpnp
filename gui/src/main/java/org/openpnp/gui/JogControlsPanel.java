@@ -43,6 +43,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -59,8 +60,6 @@ public class JogControlsPanel extends JPanel {
 	private final Frame frame;
 	private final Configuration configuration;
 
-	private Machine machine;
-	private Head head;
 	private JToggleButton btnPickPlace;
 	private JPanel panelActuators;
 
@@ -99,14 +98,14 @@ public class JogControlsPanel extends JPanel {
 		machineControlsPanel.submitMachineTask(new Runnable() {
 			public void run() {
 				try {
-					double xPos = head.getX();
-					double yPos = head.getY();
-					double zPos = head.getZ();
-					double cPos = head.getC();
+				    Location l = machineControlsPanel.getSelectedNozzle().getLocation().convertToUnits(Configuration.get().getSystemUnits());
+					double xPos = l.getX();
+					double yPos = l.getY();
+					double zPos = l.getZ();
+					double cPos = l.getRotation();
 
 					double jogIncrement = new Length(machineControlsPanel
 							.getJogIncrement(), configuration.getSystemUnits())
-							.convertToUnits(machine.getNativeUnits())
 							.getValue();
 
 					if (x > 0) {
@@ -136,8 +135,8 @@ public class JogControlsPanel extends JPanel {
 					else if (c < 0) {
 						cPos -= jogIncrement;
 					}
-
-					head.moveTo(xPos, yPos, zPos, cPos);
+					
+					machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
 				}
 				catch (Exception e) {
 					MessageBoxes.errorBox(frame, "Jog Failed", e.getMessage());
@@ -349,10 +348,10 @@ public class JogControlsPanel extends JPanel {
 				public void run() {
 					try {
 						if (state) {
-							head.pick();
+							machineControlsPanel.getSelectedNozzle().pick();
 						}
 						else {
-							head.place();
+						    machineControlsPanel.getSelectedNozzle().place();
 						}
 					}
 					catch (Exception e) {
@@ -370,8 +369,8 @@ public class JogControlsPanel extends JPanel {
 		public void configurationComplete(Configuration configuration) throws Exception {
 			panelActuators.removeAll();
 
-			machine = configuration.getMachine();
-			head = machine.getHeads().get(0);
+			Machine machine = Configuration.get().getMachine();
+			Head head = machine.getHeads().get(0);
 
 			for (Actuator actuator : head.getActuators()) {
 				final Actuator actuator_f = actuator;

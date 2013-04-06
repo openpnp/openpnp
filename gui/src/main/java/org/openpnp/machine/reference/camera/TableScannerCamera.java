@@ -117,6 +117,8 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	private File cacheDirectory;
 	
 	public TableScannerCamera() {
+	    unitsPerPixel = new Location(LengthUnit.Inches, 0.031, 0.031, 0, 0);
+	    sourceUri = "http://openpnp.org/downloads/tablescan/1/";
 	}
 	
 	@SuppressWarnings("unused")

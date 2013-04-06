@@ -40,6 +40,13 @@ public interface Camera extends Identifiable, HeadMountable, WizardConfigurable 
 	}
 	
 	/**
+	 * Supplied so that new Cameras can be created from factories and assigned
+	 * their initial ID. ID is not intended to be changed once the Camera has
+	 * been added to a Machine or Head.
+	 */
+	void setId(String id);
+	
+	/**
 	 * Get the direction the Camera is looking. 
 	 * @return
 	 */

@@ -255,8 +255,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 			try {
 				Camera camera = cameraClass.newInstance();
 				
-				// TODO
-//				camera.setName(Helpers.createUniqueName("Camera ", Configuration.get().getMachine().getCameras(), "name"));
+				camera.setId(Helpers.createUniqueName("C", Configuration.get().getMachine().getCameras(), "id"));
 				camera.getUnitsPerPixel().setUnits(Configuration.get().getSystemUnits());
 				try {
 					if (camera.getVisionProvider() == null) {

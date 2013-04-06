@@ -79,4 +79,10 @@ public interface Head extends Identifiable, WizardConfigurable {
      * attached devices to their home positions. 
      */
     void home() throws Exception;
+    
+    public void addCamera(Camera camera) throws Exception;
+
+    public void removeCamera(Camera camera);
+    
+    public void moveToSafeZ(double speed) throws Exception;
 }

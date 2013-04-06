@@ -1,5 +1,6 @@
 package org.openpnp.spi.base;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.spi.Actuator;
@@ -44,7 +45,7 @@ public abstract class AbstractHead implements Head {
 
     @Override
     public List<Nozzle> getNozzles() {
-        return nozzles;
+        return Collections.unmodifiableList(nozzles);
     }
 
     @Override
@@ -54,7 +55,7 @@ public abstract class AbstractHead implements Head {
 
     @Override
     public List<Actuator> getActuators() {
-        return actuators;
+        return Collections.unmodifiableList(actuators);
     }
 
     @Override
@@ -64,11 +65,34 @@ public abstract class AbstractHead implements Head {
 
     @Override
     public List<Camera> getCameras() {
-        return cameras;
+        return Collections.unmodifiableList(cameras);
     }
 
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public void addCamera(Camera camera) throws Exception {
+        cameras.add(camera);
+    }
+
+    @Override
+    public void removeCamera(Camera camera) {
+        cameras.remove(camera);
+    }
+    
+    @Override
+    public void moveToSafeZ(double speed) throws Exception {
+        for (Nozzle nozzle : nozzles) {
+            nozzle.moveToSafeZ(speed);
+        }
+        for (Camera camera : cameras) {
+            camera.moveToSafeZ(speed);
+        }
+        for (Actuator actuator : actuators) {
+            actuator.moveToSafeZ(speed);
+        }
     }
 }

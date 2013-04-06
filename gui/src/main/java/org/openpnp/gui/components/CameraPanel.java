@@ -34,6 +34,7 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import org.openpnp.gui.support.CameraItem;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 
 /**
@@ -113,6 +114,14 @@ public class CameraPanel extends JPanel {
 			return selectedCameraView.getCamera();
 		}
 		return null;
+	}
+	
+	public Location getSelectedCameraLocation() {
+	    Camera camera = getSelectedCamera();
+	    if (camera == null) {
+	        return null;
+	    }
+	    return camera.getLocation();
 	}
 	
 	private AbstractAction cameraSelectedAction = new AbstractAction("") {

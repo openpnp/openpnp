@@ -23,6 +23,7 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractCamera;
 import org.simpleframework.xml.Element;
@@ -34,7 +35,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             .getLogger(ReferenceCamera.class);
     
     @Element
-    private Location headOffsets;
+    private Location headOffsets = new Location(LengthUnit.Millimeters);
     
     private ReferenceMachine machine;
     private ReferenceDriver driver;

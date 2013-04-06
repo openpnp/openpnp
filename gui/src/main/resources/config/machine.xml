@@ -1,14 +1,42 @@
-<openpnp-machine>
+<!--
+    Legend:
+        Actuator:   .
+        Nozzle:     *
+        Camera:     o
+
+    Sample Machine Head Looks like:
+        .    o
+        
+        *    *
+ -->
+ <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
-      <driver class="org.openpnp.machine.reference.driver.NullDriver2"/>
+      <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
       <heads>
         <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
             <nozzles>
                 <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1">
-                    <head-offsets x="0" y="0" z="0" rotation="0" units="Millimeters" />
-                    <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" />
+                    <head-offsets x="10" y="0" z="0" rotation="0" units="Millimeters" />
+                    <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true" />
+                </nozzle>
+                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N2">
+                    <head-offsets x="20" y="0" z="0" rotation="0" units="Millimeters" />
+                    <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="true" />
                 </nozzle>
             </nozzles>
+            <actuators>
+                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" index="0">
+                    <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
+                </actuator>
+            </actuators>
+            <cameras>
+               <camera class="org.openpnp.machine.reference.camera.TableScannerCamera" id="C1" looking="Down" fps="24">
+                  <units-per-pixel units="Inches" x="0.031" y="0.031" z="0.0" rotation="0.0"/>
+                  <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
+                  <head-offsets units="Millimeters" x="20" y="10" z="0.0" rotation="0.0"/>
+                  <source-uri>http://openpnp.org/downloads/tablescan/1/</source-uri>
+               </camera>
+            </cameras>
         </head>
       </heads>
    </machine>

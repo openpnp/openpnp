@@ -28,7 +28,7 @@ public abstract class AbstractMachine implements Machine {
     
     @Override
     public List<Head> getHeads() {
-        return heads;
+        return Collections.unmodifiableList(heads);
     }
 
     @Override
@@ -38,7 +38,7 @@ public abstract class AbstractMachine implements Machine {
 
     @Override
     public List<Feeder> getFeeders() {
-        return feeders;
+        return Collections.unmodifiableList(feeders);
     }
 
     @Override
@@ -48,7 +48,7 @@ public abstract class AbstractMachine implements Machine {
     
     @Override
     public List<Camera> getCameras() {
-        return cameras;
+        return Collections.unmodifiableList(cameras);
     }
 
     @Override

@@ -44,6 +44,14 @@ public abstract class AbstractCamera implements Camera {
             }
         });
     }
+    
+    @Override
+    public void setId(String id) {
+        if (this.id != null) {
+            throw new Error("Can't set id once it has been assigned");
+        }
+        this.id = id;
+    }
 
     @Override
     public String getId() {

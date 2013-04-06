@@ -21,21 +21,21 @@
 
 package org.openpnp.gui.support;
 
-import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 
-public class CameraItem {
-	private Camera camera;
+public class NozzleItem {
+	private Nozzle nozzle;
 	
-	public CameraItem(Camera camera) {
-		this.camera = camera;
+	public NozzleItem(Nozzle nozzle) {
+		this.nozzle = nozzle;
 	}
 	
-	public Camera getCamera() {
-		return camera;
+	public Nozzle getNozzle() {
+		return nozzle;
 	}
 	
 	@Override
 	public String toString() {
-	    return String.format("Camera: %s %s", camera.getId(), camera.getHead() != null ? String.format("(Head: %s)", camera.getHead().getId()) : "");
+        return String.format("Nozzle: %s %s", nozzle.getId(), nozzle.getHead() != null ? String.format("(Head: %s)", nozzle.getHead().getId()) : "");
 	}
 }

@@ -10,7 +10,7 @@ import org.openpnp.model.Identifiable;
  * the specified id from the list. Currently performs a simple search through
  * the list but is intended to be indexed eventually.
  * TODO: Perform indexing on insert and remove so that get(String) can perform
- * better.
+ * better. Consider what happens if an id changes out from under us.
  * @param <E>
  */
 public class IdentifiableList<E extends Identifiable> extends ArrayList<E> {

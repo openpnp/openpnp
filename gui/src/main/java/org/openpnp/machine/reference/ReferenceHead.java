@@ -51,6 +51,7 @@ public class ReferenceHead extends AbstractHead {
     public void home() throws Exception {
         logger.debug("home()");
         driver.home(this);
+        machine.fireMachineHeadActivity(this);
     }
 
     @Override

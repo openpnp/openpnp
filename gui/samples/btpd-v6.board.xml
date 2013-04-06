@@ -1,25 +1,25 @@
 <openpnp-board name="btpd-v6.board.xml">
    <fiducials/>
    <placements>
-      <placement id="C1" side="Bottom" part-id="C0805-0.1uF">
+      <placement id="C1" side="Bottom" part-id="C-0805-100nF">
          <location units="Millimeters" x="41.91" y="34.93" z="0.0" rotation="180.0"/>
       </placement>
-      <placement id="C2" side="Bottom" part-id="C0805-1uF">
+      <placement id="C2" side="Bottom" part-id="C-0805-1uF">
          <location units="Millimeters" x="8.89" y="15.24" z="0.0" rotation="0.0"/>
       </placement>
-      <placement id="C3" side="Bottom" part-id="C0805-10uF">
+      <placement id="C3" side="Bottom" part-id="C-0805-10uF">
          <location units="Millimeters" x="8.89" y="12.7" z="0.0" rotation="0.0"/>
       </placement>
-      <placement id="C4" side="Bottom" part-id="C0805-1uF">
+      <placement id="C4" side="Bottom" part-id="C-0805-1uF">
          <location units="Millimeters" x="4.45" y="12.7" z="0.0" rotation="0.0"/>
       </placement>
-      <placement id="C5" side="Bottom" part-id="C0805-10uF">
+      <placement id="C5" side="Bottom" part-id="C-0805-10uF">
          <location units="Millimeters" x="4.45" y="15.24" z="0.0" rotation="0.0"/>
       </placement>
-      <placement id="C6" side="Bottom" part-id="C0805-0.1uF">
+      <placement id="C6" side="Bottom" part-id="C-0805-100nF">
          <location units="Millimeters" x="52.07" y="44.45" z="0.0" rotation="0.0"/>
       </placement>
-      <placement id="C7" side="Bottom" part-id="C0805-0.1uF">
+      <placement id="C7" side="Bottom" part-id="C-0805-0.1uF">
          <location units="Millimeters" x="59.69" y="21.59" z="0.0" rotation="180.0"/>
       </placement>
       <placement id="IC1" side="Bottom" part-id="TQFP32-08-ATMEGA168">
@@ -37,7 +37,7 @@
       <placement id="IC5" side="Bottom" part-id="SO16-74AC138D">
          <location units="Millimeters" x="51.56" y="13.97" z="0.0" rotation="0.0"/>
       </placement>
-      <placement id="R9" side="Bottom" part-id="R0805-10k">
+      <placement id="R9" side="Bottom" part-id="R-0805-10k">
          <location units="Millimeters" x="41.91" y="43.94" z="0.0" rotation="180.0"/>
       </placement>
       <placement id="RN1" side="Bottom" part-id="EXBS8V-1k">

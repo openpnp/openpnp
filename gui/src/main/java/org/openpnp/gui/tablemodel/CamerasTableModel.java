@@ -67,7 +67,10 @@ public class CamerasTableModel extends AbstractTableModel {
 	}
 	
 	public void refresh() {
-		cameras = new ArrayList<Camera>(configuration.getMachine().getCameras());
+		cameras = new ArrayList<Camera>(Configuration.get().getMachine().getCameras());
+		for (Head head : Configuration.get().getMachine().getHeads()) {
+	        cameras.addAll(head.getCameras());
+		}
 		fireTableDataChanged();
 	}
 	
@@ -92,8 +95,21 @@ public class CamerasTableModel extends AbstractTableModel {
 				camera.setLooking((Looking) aValue);
 			}
 			else if (columnIndex == 2) {
-				Head head = ((HeadCellValue) aValue).getHead();
-				camera.setHead(head);
+			    HeadCellValue value = (HeadCellValue) aValue;
+			    if (camera.getHead() == null) {
+			        Configuration.get().getMachine().removeCamera(camera);
+			    }
+			    else {
+                    camera.getHead().removeCamera(camera);
+			    }
+			    
+			    if (value.getHead() == null) {
+			        Configuration.get().getMachine().addCamera(camera);
+			    }
+			    else {
+			        value.getHead().addCamera(camera);
+			    }
+			    camera.setHead(value.getHead());
 			}
 			configuration.setDirty(true);
 		}

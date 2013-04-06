@@ -55,67 +55,11 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	private JTextField textFieldUppX;
 	private JTextField textFieldUppY;
 	private JPanel panelUpp;
-	private JPanel panelLocation;
-	private JLabel lblX_1;
-	private JLabel lblY_1;
-	private JLabel lblZ;
-	private JLabel lblRotation;
-	private JTextField textFieldLocationX;
-	private JTextField textFieldLocationY;
-	private JTextField textFieldLocationZ;
-	private JTextField textFieldLocationC;
 	private JButton btnMeasure;
 	private JButton btnCancelMeasure;
 	
 	public CameraConfigurationWizard(Camera camera) {
 		this.camera = camera;
-
-		
-		panelLocation = new JPanel();
-		panelLocation.setBorder(new TitledBorder(null, "Location / Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		contentPanel.add(panelLocation);
-		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
-			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
-		
-		lblX_1 = new JLabel("X");
-		panelLocation.add(lblX_1, "2, 2");
-		
-		lblY_1 = new JLabel("Y");
-		panelLocation.add(lblY_1, "4, 2");
-		
-		lblZ = new JLabel("Z");
-		panelLocation.add(lblZ, "6, 2");
-		
-		lblRotation = new JLabel("Rotation");
-		panelLocation.add(lblRotation, "8, 2");
-		
-		textFieldLocationX = new JTextField();
-		panelLocation.add(textFieldLocationX, "2, 4");
-		textFieldLocationX.setColumns(6);
-		
-		textFieldLocationY = new JTextField();
-		panelLocation.add(textFieldLocationY, "4, 4");
-		textFieldLocationY.setColumns(6);
-		
-		textFieldLocationZ = new JTextField();
-		panelLocation.add(textFieldLocationZ, "6, 4");
-		textFieldLocationZ.setColumns(6);
-		
-		textFieldLocationC = new JTextField();
-		panelLocation.add(textFieldLocationC, "8, 4");
-		textFieldLocationC.setColumns(6);
 
 		panelUpp = new JPanel();
 		contentPanel.add(panelUpp);
@@ -171,19 +115,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(camera, "unitsPerPixel.lengthX", textFieldUppX, "text", lengthConverter);
 		addWrappedBinding(camera, "unitsPerPixel.lengthY", textFieldUppY, "text", lengthConverter);
 		
-		addWrappedBinding(camera.getLocation(), "lengthX", textFieldLocationX, "text", lengthConverter);
-		addWrappedBinding(camera.getLocation(), "lengthY", textFieldLocationY, "text", lengthConverter);
-		addWrappedBinding(camera.getLocation(), "lengthZ", textFieldLocationZ, "text", lengthConverter);
-		addWrappedBinding(camera, "location.rotation", textFieldLocationC, "text", doubleConverter);
-		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
-
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
-		
-		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
 	}
 
 	private Action measureAction = new AbstractAction("Measure") {
