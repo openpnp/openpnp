@@ -766,10 +766,13 @@ public class JobPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
-					Head head = configuration.getMachine().getHeads().get(0);
 					try {
 						Camera camera = MainFrame.cameraPanel
 								.getSelectedCamera();
+						Head head = camera.getHead();
+						if (head == null) {
+						    throw new Exception("Camera is not movable.");
+						}
 						Location location = getSelectedBoardLocation()
 								.getLocation().clone();
 						head.moveToSafeZ(1.0);
@@ -777,8 +780,9 @@ public class JobPanel extends JPanel {
 						location.setZ(Double.NaN);
 						camera.moveTo(location, 1.0);
 						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(),
-								head.getC());
+                        location = getSelectedBoardLocation()
+                                .getLocation().clone();
+                        camera.moveTo(location, 1.0);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(),

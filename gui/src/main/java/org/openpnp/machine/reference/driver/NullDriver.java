@@ -46,7 +46,7 @@ public class NullDriver implements ReferenceDriver {
 	private final static Logger logger = LoggerFactory.getLogger(NullDriver.class);
 	
 	@Attribute(required=false)
-	private double feedRateMmPerMinute = 1000;
+	private double feedRateMmPerMinute = 250;
 	
 	private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
 	

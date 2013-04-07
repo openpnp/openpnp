@@ -422,7 +422,7 @@ public class ReferenceTapeFeeder extends AbstractFeeder {
 					file = Configuration.get().getResourceFile(this.getClass(), templateImageName);
 				}
 				else {
-					file = Configuration.get()createResourceFile(this.getClass(), "tmpl_", ".png");
+					file = Configuration.get().createResourceFile(this.getClass(), "tmpl_", ".png");
 					templateImageName = file.getName();
 				}
 				ImageIO.write(templateImage, "png", file);
