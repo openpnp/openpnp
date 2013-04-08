@@ -81,6 +81,8 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.util.MovableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -764,25 +766,16 @@ public class JobPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+            if (camera.getHead() == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", "Camera is not movable.");
+                return;
+            }
+            final Location location = getSelectedBoardLocation().getLocation().clone();
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					try {
-						Camera camera = MainFrame.cameraPanel
-								.getSelectedCamera();
-						Head head = camera.getHead();
-						if (head == null) {
-						    throw new Exception("Camera is not movable.");
-						}
-						Location location = getSelectedBoardLocation()
-								.getLocation().clone();
-						head.moveToSafeZ(1.0);
-						// Move the head to the location at Safe-Z
-						location.setZ(Double.NaN);
-						camera.moveTo(location, 1.0);
-						// Move Z
-                        location = getSelectedBoardLocation()
-                                .getLocation().clone();
-                        camera.moveTo(location, 1.0);
+						MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(),
@@ -807,20 +800,12 @@ public class JobPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                final Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                final Location location = getSelectedBoardLocation()
+                        .getLocation().clone();
 				public void run() {
-					Head head = configuration.getMachine().getHeads().get(0);
 					try {
-						Location location = getSelectedBoardLocation()
-								.getLocation();
-						location = location.convertToUnits(configuration
-								.getMachine().getNativeUnits());
-						head.moveToSafeZ();
-						// Move the head to the location at Safe-Z
-						head.moveTo(location.getX(), location.getY(),
-								head.getZ(), location.getRotation());
-						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(),
-								head.getC());
+						MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(),
@@ -878,8 +863,7 @@ public class JobPanel extends JPanel {
 			Placement placement = new Placement(id);
 
 			placement.setPart(Configuration.get().getParts().get(0));
-			placement.getLocation().setUnits(
-					configuration.getMachine().getNativeUnits());
+			placement.getLocation().setUnits(Configuration.get().getSystemUnits());
 			
 			boardLocation.getBoard().addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();

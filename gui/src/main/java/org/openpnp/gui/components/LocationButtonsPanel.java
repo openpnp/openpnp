@@ -40,6 +40,8 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.util.MovableUtils;
 
 /**
  * A JPanel of 4 small buttons that assist in setting locations. The buttons
@@ -130,7 +132,7 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.machineControlsPanel.getCameraLocation();
+			Location l = MainFrame.cameraPanel.getSelectedCameraLocation();
 			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY,
 					textFieldZ, textFieldC);
 		}
@@ -147,7 +149,7 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.machineControlsPanel.getToolLocation();
+			Location l = MainFrame.machineControlsPanel.getSelectedNozzle().getLocation();
 			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY,
 					textFieldZ, textFieldC);
 		}
@@ -169,20 +171,18 @@ public class LocationButtonsPanel extends JPanel {
 				return;
 			}
 			
-			Head head = Configuration.get().getMachine().getHeads()
-					.get(0);
+			Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+			Head head = nozzle.getHead();
 			Actuator actuator = head.getActuator(actuatorId);
 			if (actuator == null) {
 				MessageBoxes.errorBox(getTopLevelAncestor(),
 						"Error", String.format(
 								"No Actuator with ID %s on Head %s",
 								actuatorId, head.getId()));
+				return;
 			}
 			
-			Location location = MainFrame.machineControlsPanel.getToolLocation();
-			location = location.add(actuator.getLocation());
-			
-			Helpers.copyLocationIntoTextFields(location, textFieldX, textFieldY,
+			Helpers.copyLocationIntoTextFields(actuator.getLocation(), textFieldX, textFieldY,
 					textFieldZ, textFieldC);
 		}
 	};
@@ -198,22 +198,12 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+            final Location location = getParsedLocation().clone();
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
-					Head head = Configuration.get().getMachine().getHeads()
-							.get(0);
-					Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-					Location location = getParsedLocation().convertToUnits(
-							head.getMachine().getNativeUnits());
-					location = location.subtract(camera.getLocation());
 					try {
-						head.moveToSafeZ();
-						// Move the head to the right position at Safe-Z
-						head.moveTo(location.getX(), location.getY(),
-								head.getZ(), location.getRotation());
-						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(),
-								head.getC());
+					    MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(),
@@ -235,20 +225,12 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+            final Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+            final Location location = getParsedLocation();
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
-					Head head = Configuration.get().getMachine().getHeads()
-							.get(0);
-					Location location = getParsedLocation().convertToUnits(
-							head.getMachine().getNativeUnits());
 					try {
-						head.moveToSafeZ();
-						// Move the head to the right position at Safe-Z
-						head.moveTo(location.getX(), location.getY(),
-								head.getZ(), location.getRotation());
-						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(),
-								head.getC());
+					    MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(),
@@ -273,28 +255,22 @@ public class LocationButtonsPanel extends JPanel {
 			if (actuatorId == null) {
 				return;
 			}
+            Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+            Head head = nozzle.getHead();
+            final Actuator actuator = head.getActuator(actuatorId);
+            final Location location = getParsedLocation().clone();
+            if (actuator == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(),
+                        "Error", String.format(
+                                "No Actuator with ID %s on Head %s",
+                                actuatorId, head.getId()));
+                return;
+            }
+			
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
-					Head head = Configuration.get().getMachine().getHeads()
-							.get(0);
-					Actuator actuator = head.getActuator(actuatorId);
-					if (actuator == null) {
-						MessageBoxes.errorBox(getTopLevelAncestor(),
-								"Positioning Error", String.format(
-										"No Actuator with ID %s on Head %s",
-										actuatorId, head.getId()));
-					}
-					Location location = getParsedLocation().convertToUnits(
-							head.getMachine().getNativeUnits());
-					location = location.subtract(actuator.getLocation());
 					try {
-						head.moveToSafeZ();
-						// Move the head to the right position at Safe-Z
-						head.moveTo(location.getX(), location.getY(),
-								head.getZ(), location.getRotation());
-						// Move Z
-						head.moveTo(head.getX(), head.getY(), location.getZ(),
-								head.getC());
+					    MovableUtils.moveToLocationAtSafeZ(actuator, location, 1.0);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(getTopLevelAncestor(),

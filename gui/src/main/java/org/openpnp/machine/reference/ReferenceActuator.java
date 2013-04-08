@@ -84,6 +84,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         driver.moveTo(this, location, speed);
+        machine.fireMachineHeadActivity(head);
     }
 
     @Override
@@ -92,6 +93,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         Location l = new Location(getLocation().getUnits(), Double.NaN,
                 Double.NaN, 0, Double.NaN);
         driver.moveTo(this, l, speed);
+        machine.fireMachineHeadActivity(head);
     }
 
     @Override

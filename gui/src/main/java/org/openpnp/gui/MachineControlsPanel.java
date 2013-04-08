@@ -60,16 +60,17 @@ import javax.swing.JTextField;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.MovableUtils;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -594,24 +595,18 @@ public class MachineControlsPanel extends JPanel {
 	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-tool.png"))) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-		    // TODO FIX
-            MessageBoxes.errorBox((Component) arg0.getSource(), "Temporarily Out of Service", "This function is temporarily out of service. Please check back in a few releases.");
-//			final Location location = getCameraLocation();
-//			submitMachineTask(new Runnable() {
-//				public void run() {
-//					try {
-//						head.moveToSafeZ();
-//						head.moveTo(
-//								location.getX(),
-//								location.getY(),
-//								location.getZ(),
-//								head.getC());
-//					}
-//					catch (Exception e) {
-//						MessageBoxes.errorBox(frame, "Move Failed", e);
-//					}
-//				}
-//			});
+			final Location location = cameraPanel.getSelectedCameraLocation().clone();
+			final Nozzle nozzle = getSelectedNozzle();
+			submitMachineTask(new Runnable() {
+				public void run() {
+					try {
+					    MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(frame, "Move Failed", e);
+					}
+				}
+			});
 		}
 	};
 	
@@ -619,29 +614,21 @@ public class MachineControlsPanel extends JPanel {
 	public Action targetCameraAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-camera.png"))) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			CameraView cameraView = cameraPanel.getSelectedCameraView();
-			if (cameraView == null) {
+			final Camera camera = cameraPanel.getSelectedCamera();
+			if (camera == null) {
 				return;
 			}
-			// TODO FIX
-            MessageBoxes.errorBox((Component) arg0.getSource(), "Temporarily Out of Service", "This function is temporarily out of service. Please check back in a few releases.");
-//			final Location location = getToolLocation();
-//			final Location cameraLocation = cameraView.getCamera().getLocation().convertToUnits(location.getUnits());
-//			submitMachineTask(new Runnable() {
-//				public void run() {
-//					try {
-//						head.moveToSafeZ();
-//						head.moveTo(
-//								location.getX() - cameraLocation.getX(),
-//								location.getY() - cameraLocation.getY(),
-//								location.getZ() - cameraLocation.getZ(),
-//								head.getC());
-//					}
-//					catch (Exception e) {
-//						MessageBoxes.errorBox(frame, "Move Failed", e);
-//					}
-//				}
-//			});
+			final Location location = getSelectedNozzle().getLocation().clone();
+			submitMachineTask(new Runnable() {
+				public void run() {
+					try {
+					    MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(frame, "Move Failed", e);
+					}
+				}
+			});
 		}
 	};
 	

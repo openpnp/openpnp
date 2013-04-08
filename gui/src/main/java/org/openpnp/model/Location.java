@@ -172,8 +172,9 @@ public class Location extends AbstractModelObject implements Cloneable {
 	}
 	
 	/**
-	 * Subtracts the given Location's X, Y, and Z components from this
-	 * Location's X, Y, and Z components. Rotation is left unchanged.
+	 * Returns a new Location with the given Location's X, Y, and Z components
+	 * subtracted from this Location's X, Y, and Z components. Rotation is left
+	 * unchanged.
 	 * @param l
 	 * @return
 	 */
@@ -183,14 +184,40 @@ public class Location extends AbstractModelObject implements Cloneable {
 	}
 	
 	/**
-	 * Add the given Location's X, Y, and Z components to this
-	 * Location's X, Y, and Z components. Rotation is left unchanged.
+	 * Returns a new Location with the given Location's X, Y, and Z components
+	 * added to this Location's X, Y, and Z components. Rotation is left
+	 * unchanged.
 	 * @param l
 	 * @return
 	 */
 	public Location add(Location l) {
 		l = l.convertToUnits(getUnits());
 		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), getRotation());
+	}
+
+	/**
+	 * Returns a new Location with the given Location's X, Y and Z components
+	 * multiplied by this Location's X, Y and Z components. Rotation is left
+	 * unchanged.
+	 * @param l
+	 * @return
+	 */
+	public Location multiply(Location l) {
+	    l = l.convertToUnits(getUnits());
+        return new Location(l.getUnits(), x * l.getX(), y * l.getY(), z * l.getZ(), getRotation());
+	}
+	
+	/**
+	 * Returns a new Location based on this Location with values multiplied by
+	 * the specified values. Units are the same as this Location.
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param rotation
+	 * @return
+	 */
+	public Location multiply(double x, double y, double z, double rotation) {
+        return new Location(getUnits(), x * getX(), y * getY(), z * getZ(), rotation * getRotation());
 	}
 	
 	public Location invert(boolean x, boolean y, boolean z, boolean rotation) {
@@ -205,12 +232,31 @@ public class Location extends AbstractModelObject implements Cloneable {
 	}
 	
 	public Location clone() {
-	    try {
-	        return (Location) super.clone();
-	    }
-	    catch (CloneNotSupportedException e) {
-	        throw new Error(e);
-	    }
+        return new Location(units, x, y, z, rotation);
+	}
+	
+	/**
+	 * Returns a new Location with the same units as this one but with values
+	 * updated to the passed in values. A caveat is that if a specified value
+	 * is null, the new Location will contain the value from this object
+	 * instead of the new value.
+	 * 
+	 * This is intended as a utility method, useful for creating new Locations
+	 * based on existing ones with one or more values changed.
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param rotation
+	 * @return
+	 */
+	public Location derive(Double x, Double y, Double z, Double rotation) {
+	    return new Location(
+	            units,
+                x == null ? this.x : x,
+                y == null ? this.y : y,
+                z == null ? this.z : z,
+                rotation == null ? this.rotation : rotation
+	            );
 	}
 	
 	@Override

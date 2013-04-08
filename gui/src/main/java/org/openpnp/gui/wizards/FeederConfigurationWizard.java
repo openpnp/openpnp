@@ -84,14 +84,11 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 						FormFactory.DEFAULT_ROWSPEC, }));
 
 		comboBoxPart = new JComboBox(new PartsComboBoxModel());
-		comboBoxPart.setRenderer(new IdentifiableListCellRenderer());
+		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
 		panelPart.add(comboBoxPart, "2, 2, left, default");
 
 		panelLocation = new JPanel();
-		panelLocation.setBorder(new TitledBorder(new EtchedBorder(
-				EtchedBorder.LOWERED, null, null), "Pickup Location",
-				TitledBorder.LEADING, TitledBorder.TOP, null,
-				new Color(0, 0, 0)));
+		panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Pick Location", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPanel.add(panelLocation);
 		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -148,10 +145,10 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		DoubleConverter doubleConverter = new DoubleConverter(
 				configuration.getLengthDisplayFormat());
 
-		addWrappedBinding(feeder, "location.lengthX", textFieldLocationX, "text", lengthConverter);
-		addWrappedBinding(feeder, "location.lengthY", textFieldLocationY, "text", lengthConverter);
-		addWrappedBinding(feeder, "location.lengthZ", textFieldLocationZ, "text", lengthConverter);
-		addWrappedBinding(feeder, "location.rotation", textFieldLocationC, "text", doubleConverter);
+		addWrappedBinding(feeder, "pickLocation.lengthX", textFieldLocationX, "text", lengthConverter);
+		addWrappedBinding(feeder, "pickLocation.lengthY", textFieldLocationY, "text", lengthConverter);
+		addWrappedBinding(feeder, "pickLocation.lengthZ", textFieldLocationZ, "text", lengthConverter);
+		addWrappedBinding(feeder, "pickLocation.rotation", textFieldLocationC, "text", doubleConverter);
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 
 		ComponentDecorators

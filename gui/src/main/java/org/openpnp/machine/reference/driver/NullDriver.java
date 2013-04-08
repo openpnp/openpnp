@@ -76,7 +76,6 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
-    // TODO: Take Double.NaN into consideration
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
         logger.info("moveTo({}, {}, {})", new Object[] { hm, location, speed });
         
@@ -88,10 +87,18 @@ public class NullDriver implements ReferenceDriver {
 
         simulateMovement(hm, location, hl, speed);
         
-        hl.setX(location.getX());
-        hl.setY(location.getY());
-        hl.setZ(location.getZ());
-        hl.setRotation(location.getRotation());
+        if (!Double.isNaN(location.getX())) {
+            hl.setX(location.getX());
+        }
+        if (!Double.isNaN(location.getY())) {
+            hl.setY(location.getY());
+        }
+        if (!Double.isNaN(location.getZ())) {
+            hl.setZ(location.getZ());
+        }
+        if (!Double.isNaN(location.getRotation())) {
+            hl.setRotation(location.getRotation());
+        }
     }
     
     /**
@@ -113,10 +120,10 @@ public class NullDriver implements ReferenceDriver {
         double y1 = y;
         double z1 = z;
         double c1 = c;
-        double x2 = location.getX();
-        double y2 = location.getY();
-        double z2 = location.getZ();
-        double c2 = location.getRotation();
+        double x2 = Double.isNaN(location.getX()) ? x : location.getX();
+        double y2 = Double.isNaN(location.getY()) ? y : location.getY();
+        double z2 = Double.isNaN(location.getZ()) ? z : location.getZ();
+        double c2 = Double.isNaN(location.getRotation()) ? c : location.getRotation();
 
         c2 = c2 % 360.0;
         

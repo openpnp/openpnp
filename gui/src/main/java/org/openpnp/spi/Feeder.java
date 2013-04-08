@@ -33,6 +33,8 @@ import org.openpnp.model.Part;
  * specific location or anything else that can be used as a pick source.
  */
 public interface Feeder extends Identifiable, WizardConfigurable {
+    public void setId(String id);
+    
     /**
      * Return true is the Feeder is currently enabled and can be considered
      * in Job planning.
@@ -64,10 +66,11 @@ public interface Feeder extends Identifiable, WizardConfigurable {
 	
 	/**
 	 * Gets the Location from which the currently available Part should be
-	 * picked from. 
+	 * picked from. This value may not be valid until after a feed has been
+	 * performed for Feeders who update the pick location.
 	 * @return
 	 */
-	public Location getPickLocation();
+	public Location getPickLocation() throws Exception;
 	
 	/**
 	 * Commands the Feeder to do anything it needs to do to prepare the part

@@ -24,12 +24,11 @@ package org.openpnp.machine.reference.feeder;
 
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.base.AbstractFeeder;
+import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -41,57 +40,59 @@ import org.slf4j.LoggerFactory;
  * parts to be picked from without moving any tape. Can handle trays of
  * arbitrary X and Y count.
  */
-public class ReferenceTrayFeeder extends AbstractFeeder {
+public class ReferenceTrayFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTrayFeeder.class);
 	
 	@Attribute
-	private int trayCountX;
+	private int trayCountX = 1;
 	@Attribute
-	private int trayCountY;
+	private int trayCountY = 1;
 	@Element
 	private Location offsets = new Location(LengthUnit.Millimeters);
-
-	private int pickCount;
+	@Attribute
+	private int feedCount = 0;
+	
+	private Location nextPickLocation;
 
 	@Override
-	public boolean canFeedForHead(Head head) {
-		return (pickCount < (trayCountX * trayCountY));
+	public boolean canFeedToNozzle(Nozzle nozzle) {
+		return (feedCount < (trayCountX * trayCountY));
 	}
+	
+	@Override
+    public Location getPickLocation() throws Exception {
+	    if (nextPickLocation == null) {
+	        nextPickLocation = pickLocation;
+	    }
+	    return nextPickLocation;
+    }
 
-	public Location feed(Head head_, Location pickLocation)
+    public void feed(Nozzle nozzle)
 			throws Exception {
-		ReferenceHead head = (ReferenceHead) head_;
+        int partX, partY;
+        
+        if (trayCountX >= trayCountY) {
+            // X major axis.
+            partX = feedCount / trayCountY;
+            partY = feedCount % trayCountY;
+        }
+        else {
+            // Y major axis.
+            partX = feedCount % trayCountX;
+            partY = feedCount / trayCountX;
+        }
+        
+        // Multiply the offsets by the X/Y part indexes to get the total offsets
+        // and then add the pickLocation to offset the final value.
+        nextPickLocation = offsets
+                .multiply(partX, partY, 0.0, 0.0)
+                .add(pickLocation);
 
-		// Convert all the Locations we'll be dealing with
-		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
-		
-		int partX, partY;
-		
-		if (trayCountX >= trayCountY) {
-			// X major axis.
-			partX = pickCount / trayCountY;
-			partY = pickCount % trayCountY;
-		}
-		else {
-			// Y major axis.
-			partX = pickCount % trayCountX;
-			partY = pickCount / trayCountX;
-		}
-
-		Location l = new Location();
-		l.setX(pickLocation.getX() + (partX * offsets.getX()));
-		l.setY(pickLocation.getY() + (partY * offsets.getY()));
-		l.setZ(pickLocation.getZ());
-		l.setRotation(pickLocation.getRotation());
-		l.setUnits(pickLocation.getUnits());
-
-		logger.debug(String.format(
-				"Feeding part # %d, x %d, y %d, xPos %f, yPos %f", pickCount,
-				partX, partY, l.getX(), l.getY()));
-
-		pickCount++;
-
-		return l;
+        logger.debug(String.format(
+                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f", feedCount,
+                partX, partY, nextPickLocation.getX(), nextPickLocation.getY()));
+        
+        feedCount++;
 	}
 
 	@Override
@@ -123,11 +124,11 @@ public class ReferenceTrayFeeder extends AbstractFeeder {
 		this.offsets = offsets;
 	}
 
-	public int getPickCount() {
-		return pickCount;
+	public int getFeedCount() {
+		return feedCount;
 	}
 
-	public void setPickCount(int pickCount) {
-		this.pickCount = pickCount;
+	public void setFeedCount(int feedCount) {
+		this.feedCount = feedCount;
 	}
 }

@@ -64,7 +64,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Outline;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,11 +274,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			try {
 				Feeder feeder = feederClass.newInstance();
 
-				feeder.setName(Helpers.createUniqueName("F", Configuration.get().getMachine().getFeeders(), "name"));
+				feeder.setId(Helpers.createUniqueName("F", Configuration.get().getMachine().getFeeders(), "id"));
 				feeder.setPart(Configuration.get().getParts().get(0));
-				feeder.getLocation().setUnits(Configuration.get().getSystemUnits());
 				
-				configuration.resolve(feeder);
 				configuration.getMachine().addFeeder(feeder);
 				tableModel.refresh();
 				Helpers.selectLastTableRow(table);
@@ -321,9 +319,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			new Thread() {
 				public void run() {
 					Feeder feeder = getSelectedFeeder();
-					Head head = configuration.getMachine().getHeads().get(0);
+					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
 					try {
-						feeder.feed(head, feeder.getLocation());
+						feeder.feed(nozzle);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(FeedersPanel.this, "Feed Error",
