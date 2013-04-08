@@ -50,6 +50,7 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JSeparator;
 
 public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wizard {
 	private final ReferenceTrayFeeder feeder;
@@ -69,45 +70,45 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		JPanel panelFields = new JPanel();
 		
 		panelFields.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,},
-			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("default:grow"),
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,},
+		    new RowSpec[] {
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,}));
 
 		JLabel lblX = new JLabel("X");
 		panelFields.add(lblX, "4, 2");
@@ -141,6 +142,16 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPane = new JScrollPane(panelFields);
+		
+		JSeparator separator = new JSeparator();
+		panelFields.add(separator, "4, 8, 3, 1");
+		
+		JLabel lblFeedCount = new JLabel("Feed Count");
+		panelFields.add(lblFeedCount, "2, 10, right, default");
+		
+		textFieldFeedCount = new JTextField();
+		panelFields.add(textFieldFeedCount, "4, 10, fill, default");
+		textFieldFeedCount.setColumns(10);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
 		scrollPane.setBorder(null);
 		add(scrollPane, BorderLayout.CENTER);
@@ -170,11 +181,14 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 		wrappedBindings.add(JBindings.bind(feeder, "trayCountX", textFielTrayCountX, "text", integerConverter, listener));
 		wrappedBindings.add(JBindings.bind(feeder, "trayCountY", textFieldTrayCountY, "text", integerConverter, listener));
 		
+        wrappedBindings.add(JBindings.bind(feeder, "feedCount", textFieldFeedCount, "text", integerConverter, listener));
+
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
 		
 		ComponentDecorators.decorateWithAutoSelect(textFielTrayCountX);
-		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountY);
+        ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountY);
+        ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
 	}
 	
 	private void loadFromModel() {
@@ -223,4 +237,5 @@ public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wi
 			loadFromModel();
 		}
 	};
+	private JTextField textFieldFeedCount;
 }

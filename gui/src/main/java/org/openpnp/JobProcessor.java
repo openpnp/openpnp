@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.openpnp.model.Board;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -34,10 +35,10 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
-import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,7 +200,7 @@ public class JobProcessor implements Runnable {
 			}
 	
 			try {
-				head.moveToSafeZ();
+				head.moveToSafeZ(1.0);
 			}
 			catch (Exception e) {
 				fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -227,20 +228,13 @@ public class JobProcessor implements Runnable {
 					return;
 				}
 
-				// Get the Location of the pick point from the feeder
-				Location pickLocation = feeder.getLocation();
-
-				// Convert the Location to the machine's native units if
-				// necessary
-				pickLocation = pickLocation.convertToUnits(machine.getNativeUnits());
-
 				// Determine where we will place the part
-				Location boardLocation = jobBoard.getLocation();
-				Location placementLocation = placement.getLocation();
+				Location boardLocation = jobBoard.getLocation().clone();
+				Location placementLocation = placement.getLocation().clone();
 
-				// Convert the locations to machine native units
-				boardLocation = boardLocation.convertToUnits(machine.getNativeUnits());
-				placementLocation = placementLocation.convertToUnits(machine.getNativeUnits());
+				// We will work in the units of the placementLocation, so convert
+				// anything that isn't in those units to it.
+				boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
 				
 				// If we are placing the bottom of the board we need to invert
 				// the placement location.
@@ -273,47 +267,40 @@ public class JobProcessor implements Runnable {
 				// Update the placementLocation with the proper Z value. This is
 				// the distance to the top of the board plus the height of 
 				// the part.
-				double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
+				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
 				placementLocation.setZ(boardLocation.getZ() + partHeight);
 
-				// At this point the important data is pickLocation along with
-				// it's rotation, which determines
-				// where we will obtain the part and placementLocation and it's
-				// rotation plus board rotation,
-				// which determines where we will place the part
-
-				// Get a list of Heads that can service both the pick and place
-				// operations. This is not
-				// always going to be # of heads because some heads may be
+				// Get a list of Nozzles that can service both the pick and place
+				// operations. This is not always going to be # of heads because some heads may be
 				// limited in their ability to reach
 				// certain parts of the machine.
-				List<Head> candidateHeads = machine.getHeads();
-				List<Head> heads = new ArrayList<Head>();
-				for (Head candidateHead : candidateHeads) {
-					if (candidateHead.canPickAndPlace(feeder, pickLocation,
-							placementLocation)) {
-						heads.add(candidateHead);
-					}
+				List<Nozzle> nozzles = new ArrayList<Nozzle>();
+				for (Head head : machine.getHeads()) {
+				    for (Nozzle nozzle : head.getNozzles()) {
+				        if (nozzle.canPickAndPlace(feeder, placementLocation)) {
+				            nozzles.add(nozzle);
+				        }
+				    }
 				}
 
-				if (heads.size() < 1) {
-					fireJobEncounteredError(JobError.HeadError, "No Head available to service Placement " + placement);
+				if (nozzles.size() < 1) {
+					fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
 					return;
 				}
 
-				// Choose the Head that will service the operation, can be
+				// Choose the Nozzle that will service the operation, can be
 				// optimized
-				// Currently we just take the first available Head
-				Head head = heads.get(0);
+				// Currently we just take the first available Nozzle
+				Nozzle nozzle = nozzles.get(0);
 
-				fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getId(), head.getX(), head.getY(), (double) 0, head.getC()));		
+				fireDetailedStatusUpdated(String.format("Move nozzle %s to Safe-Z at (%s).", nozzle.getId(), nozzle.getLocation()));		
 
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
 
 				try {
-					head.moveToSafeZ();
+					nozzle.moveToSafeZ(1.0);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -321,7 +308,7 @@ public class JobProcessor implements Runnable {
 				}
 
 				// TODO: Need to be able to see the thing that caused an error, but we also want to see what is about to happen when paused. Figure it out.
-				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getName()));
+				fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getId()));
 				
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -329,43 +316,69 @@ public class JobProcessor implements Runnable {
 
 				// Request that the Feeder feeds the part
 				try {
-					pickLocation = feeder.feed(head, pickLocation);
+					feeder.feed(nozzle);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.FeederError, e.getMessage());
 					return;
 				}
+				
+				// Now that the Feeder has done it's feed operation we can get
+				// the pick location from it.
+				Location pickLocation;
+				try {
+				    pickLocation = feeder.getPickLocation().clone();
+				}
+				catch (Exception e) {
+                    fireJobEncounteredError(JobError.FeederError, e.getMessage());
+                    return;
+				}
 
-				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (%s).", nozzle.getLocation()));
 				
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
 
 				try {
-					head.moveToSafeZ();
+					nozzle.moveToSafeZ(1.0);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 					return;
 				}
 
-				fireDetailedStatusUpdated(String.format("Move to pick location, safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", pickLocation.getX(), pickLocation.getY(), (double) 0, pickLocation.getRotation()));
+                fireDetailedStatusUpdated(String.format("Move to pick location, safe Z at (%s).", pickLocation));
 
-				if (!shouldJobProcessingContinue()) {
-					return;
-				}
-				
-				// Move the nozzle to the pick Location at safe Z
-				try {
-					head.moveTo(pickLocation.getX(), pickLocation.getY(), head.getZ(), pickLocation.getRotation());
-				}
-				catch (Exception e) {
-					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-					return;
-				}
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+                
+                // Move the Nozzle to the pick Location at safe Z
+                try {
+                    nozzle.moveTo(pickLocation.derive(null, null, Double.NaN, null), 1.0);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
 
-				fireDetailedStatusUpdated(String.format("Request part pick at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", pickLocation.getX(), pickLocation.getY(), pickLocation.getZ(), pickLocation.getRotation()));
+                fireDetailedStatusUpdated(String.format("Move to pick location Z at (%s).", pickLocation));
+
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+
+                // Move the Nozzle to the pick Location 
+                try {
+                    nozzle.moveTo(pickLocation, 1.0);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
+
+				fireDetailedStatusUpdated(String.format("Request part pick at (%s).", pickLocation));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -377,7 +390,7 @@ public class JobProcessor implements Runnable {
 					// failed to pick, use the delegate to notify and potentially retry
 					// We now have the delegate for this, just need to use it and 
 					// implement the logic for it's potential responses
-					head.pick(part, feeder, pickLocation);
+					nozzle.pick();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.PickError, e.getMessage());
@@ -386,38 +399,49 @@ public class JobProcessor implements Runnable {
 				
 				firePartPicked(jobBoard, placement);
 
-				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (%s).", nozzle.getLocation()));
 
 				if (!shouldJobProcessingContinue()) {
 					return;
 				}
 
 				try {
-					head.moveToSafeZ();
+					nozzle.moveToSafeZ(1.0);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
 					return;
 				}
 
-				fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", 
-						placementLocation.getX(), 
-						placementLocation.getY(), 
-						(double) 0, 
-						placementLocation.getRotation()));
+                fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (%s).", placementLocation));
 
-				if (!shouldJobProcessingContinue()) {
-					return;
-				}
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
 
-				// Move the nozzle to the placement Location at safe Z
-				try {
-					head.moveTo(placementLocation.getX(), placementLocation.getY(), head.getZ(), placementLocation.getRotation());
-				}
-				catch (Exception e) {
-					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-					return;
-				}
+                // Move the nozzle to the placement Location at safe Z
+                try {
+                    nozzle.moveTo(placementLocation.derive(null, null, Double.NaN, null), 1.0);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
+
+                fireDetailedStatusUpdated(String.format("Move to placement location Z at (%s).", placementLocation));
+
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+
+                // Move the nozzle to the placement Location at safe Z
+                try {
+                    nozzle.moveTo(placementLocation, 1.0);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
 
 				fireDetailedStatusUpdated(String.format("Request part place. at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", 
 						placementLocation.getX(), 
@@ -431,7 +455,7 @@ public class JobProcessor implements Runnable {
 				
 				// Place the part
 				try {
-					head.place(part, placementLocation);
+					nozzle.place();
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.PlaceError, e.getMessage());
@@ -440,7 +464,7 @@ public class JobProcessor implements Runnable {
 				
 				firePartPlaced(jobBoard, placement);
 				
-				fireDetailedStatusUpdated(String.format("Move to safe Z at (X %2.3f, Y %2.3f, Z %2.3f, C %2.3f).", head.getX(), head.getY(), (double) 0, head.getC()));		
+				fireDetailedStatusUpdated(String.format("Move to safe Z at (%s).", nozzle.getLocation()));		
 
 				if (!shouldJobProcessingContinue()) {
 					return;
@@ -448,7 +472,7 @@ public class JobProcessor implements Runnable {
 
 				// Return to Safe-Z above the board. 
 				try {
-					head.moveToSafeZ();
+					nozzle.moveToSafeZ(1.0);
 				}
 				catch (Exception e) {
 					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -513,17 +537,18 @@ public class JobProcessor implements Runnable {
 					fireJobEncounteredError(JobError.FeederError, String.format("No viable Feeders found for Board %s, Part %s)", board.getName(), part.getId()));
 					return;
 				}
-				
-				Location boardLocation = jobBoard.getLocation().convertToUnits(machine.getNativeUnits());
-				double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
-				double placementZ = boardLocation.getZ() + partHeight;
-				safeZ = Math.max(safeZ, placementZ);
-				
-				// Determine which feeder to pick the part from. This can be
-				// optimized to handle
-				// distance, capacity, etc.
-				Location pickLocation = feeder.getLocation().convertToUnits(machine.getNativeUnits());
-				safeZ = Math.max(safeZ, pickLocation.getZ());
+
+				// TODO: Safe-Z stuff temporarily disabled
+//				Location boardLocation = jobBoard.getLocation().convertToUnits(machine.getNativeUnits());
+//				double partHeight = part.getHeight().convertToUnits(machine.getNativeUnits()).getValue();
+//				double placementZ = boardLocation.getZ() + partHeight;
+//				safeZ = Math.max(safeZ, placementZ);
+//				
+//				// Determine which feeder to pick the part from. This can be
+//				// optimized to handle
+//				// distance, capacity, etc.
+//				Location pickLocation = feeder.getLocation().convertToUnits(machine.getNativeUnits());
+//				safeZ = Math.max(safeZ, pickLocation.getZ());
 				
 				placementCount++;
 			}
@@ -548,7 +573,7 @@ public class JobProcessor implements Runnable {
 		List<Feeder> feeders = new ArrayList<Feeder>();
 		for (Feeder feeder : machine.getFeeders()) {
 			// TODO: currently passing null till we determine if we'll pass head or change this system
-			if (feeder.getPart() == part && feeder.canFeedForHead(null) && feeder.isEnabled()) {
+			if (feeder.getPart() == part && feeder.canFeedToNozzle(null) && feeder.isEnabled()) {
 				feeders.add(feeder);
 			}
 		}

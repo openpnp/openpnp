@@ -220,6 +220,18 @@ public class Location extends AbstractModelObject implements Cloneable {
         return new Location(getUnits(), x * getX(), y * getY(), z * getZ(), rotation * getRotation());
 	}
 	
+	/**
+	 * Returns a new Location with the same units as this one and with any of
+	 * fields specified as true inverted from the values of this one.
+	 * Specifically, if one of the x, y, z or rotation fields are specified
+	 * true in the method call, that field will be multipled by -1 in the
+	 * returned Location.
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param rotation
+	 * @return
+	 */
 	public Location invert(boolean x, boolean y, boolean z, boolean rotation) {
 		Location l = new Location(getUnits());
 

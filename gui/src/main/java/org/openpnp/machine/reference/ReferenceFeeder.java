@@ -7,10 +7,13 @@ import org.simpleframework.xml.Element;
 
 public abstract class ReferenceFeeder extends AbstractFeeder {
     @Element
-    protected Location pickLocation = new Location(LengthUnit.Millimeters);
+    protected Location location = new Location(LengthUnit.Millimeters);
     
-    @Override
-    public Location getPickLocation() throws Exception{
-        return pickLocation;
+    public Location getLocation() {
+        return location;
+    }
+    
+    public void setLocation(Location location) {
+        this.location = location;
     }
 }

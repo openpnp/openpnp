@@ -145,10 +145,11 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		DoubleConverter doubleConverter = new DoubleConverter(
 				configuration.getLengthDisplayFormat());
 
-		addWrappedBinding(feeder, "pickLocation.lengthX", textFieldLocationX, "text", lengthConverter);
-		addWrappedBinding(feeder, "pickLocation.lengthY", textFieldLocationY, "text", lengthConverter);
-		addWrappedBinding(feeder, "pickLocation.lengthZ", textFieldLocationZ, "text", lengthConverter);
-		addWrappedBinding(feeder, "pickLocation.rotation", textFieldLocationC, "text", doubleConverter);
+		// TODO: location is only valid for reference feeders
+		addWrappedBinding(feeder, "location.lengthX", textFieldLocationX, "text", lengthConverter);
+		addWrappedBinding(feeder, "location.lengthY", textFieldLocationY, "text", lengthConverter);
+		addWrappedBinding(feeder, "location.lengthZ", textFieldLocationZ, "text", lengthConverter);
+		addWrappedBinding(feeder, "location.rotation", textFieldLocationC, "text", doubleConverter);
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 
 		ComponentDecorators
