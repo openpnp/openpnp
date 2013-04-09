@@ -48,8 +48,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,9 +205,7 @@ public class TableScanner extends JDialog implements Runnable {
 	// TODO: This needs to happen on the machine executor, or just die completely.
 	public void run() {
 		try {
-			Machine machine = configuration.getMachine();
-			Camera camera = ((CameraItem) cmbCameras.getSelectedItem()).getCamera();
-			Head head = camera.getHead();
+			Camera camera = MainFrame.cameraPanel.getSelectedCamera();
 			// TODO: Make sure the units are native
 			double startX = Double.parseDouble(txtStartX.getText());
 			double startY = Double.parseDouble(txtStartY.getText());
@@ -222,7 +218,7 @@ public class TableScanner extends JDialog implements Runnable {
 			BufferedImage image = camera.capture();
 			// Figure out how many units per image we are getting
 			Location unitsPerPixel = camera.getUnitsPerPixel();
-			unitsPerPixel = unitsPerPixel.convertToUnits(machine.getNativeUnits());
+			unitsPerPixel = unitsPerPixel.convertToUnits(Configuration.get().getSystemUnits());
 			double imageWidthInUnits = unitsPerPixel.getX() * image.getWidth();
 			double imageHeightInUnits = unitsPerPixel.getY() * image.getHeight();
 			logger.info(String.format("Images are %d, %d pixels, %2.3f, %2.3f %s", 
@@ -254,11 +250,13 @@ public class TableScanner extends JDialog implements Runnable {
 			progressBar.setValue(0);
 			int currentImageX = 0, currentImageY = 0, currentImage = 0;
 			while (!cancelled) {
-				head.moveTo(
-						startX + ((imageWidthInUnits / 2) * currentImageX), 
-						startY + ((imageHeightInUnits / 2) * currentImageY), 
-						head.getZ(), 
-						head.getC());
+			    Location location = camera.getLocation();
+			    location = location.derive(
+			            startX + ((imageWidthInUnits / 2) * currentImageX),
+			            startY + ((imageHeightInUnits / 2) * currentImageY),
+			            null,
+			            null);
+			    camera.moveTo(location, 1.0);
 				// Give the head and camera 500ms to settle
 				Thread.sleep(500);
 				// We capture two images to make sure that the one we save is
@@ -266,7 +264,7 @@ public class TableScanner extends JDialog implements Runnable {
 				image = camera.capture();
 				image = camera.capture();
 				File outputFile = new File(outputDirectory,
-						String.format(Locale.US, "%2.3f,%2.3f.png", head.getX(), head.getY()));
+						String.format(Locale.US, "%2.3f,%2.3f.png", location.getX(), location.getY()));
 				ImageIO.write(image, "png",outputFile);
 				progressBar.setValue(currentImage);
 				currentImage++;
@@ -321,20 +319,18 @@ public class TableScanner extends JDialog implements Runnable {
 	private Action setStartAction = new AbstractAction("Set") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Camera camera = ((CameraItem) cmbCameras.getSelectedItem()).getCamera();
-			Head head = camera.getHead();
-			txtStartX.setText(String.format("%2.3f", head.getX()));
-			txtStartY.setText(String.format("%2.3f", head.getY()));
+			Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+			txtStartX.setText(String.format("%2.3f", camera.getLocation().getX()));
+			txtStartY.setText(String.format("%2.3f", camera.getLocation().getY()));
 		}
 	};
 	
 	private Action setEndAction = new AbstractAction("Set") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Camera camera = ((CameraItem) cmbCameras.getSelectedItem()).getCamera();
-			Head head = camera.getHead();
-			txtEndX.setText(String.format("%2.3f", head.getX()));
-			txtEndY.setText(String.format("%2.3f", head.getY()));
+            Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+			txtEndX.setText(String.format("%2.3f", camera.getLocation().getX()));
+			txtEndY.setText(String.format("%2.3f", camera.getLocation().getY()));
 		}
 	};
 	

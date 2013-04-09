@@ -52,7 +52,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	@Attribute
 	private int feedCount = 0;
 	
-	private Location nextPickLocation;
+	private Location pickLocation;
 
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
@@ -61,10 +61,10 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	
 	@Override
     public Location getPickLocation() throws Exception {
-	    if (nextPickLocation == null) {
-	        nextPickLocation = location;
+	    if (pickLocation == null) {
+	        pickLocation = location;
 	    }
-	    return nextPickLocation;
+	    return pickLocation;
     }
 
     public void feed(Nozzle nozzle)
@@ -84,13 +84,13 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
-        nextPickLocation = offsets
+        pickLocation = offsets
                 .multiply(partX, partY, 0.0, 0.0)
                 .add(location);
 
         logger.debug(String.format(
                 "Feeding part # %d, x %d, y %d, xPos %f, yPos %f", feedCount,
-                partX, partY, nextPickLocation.getX(), nextPickLocation.getY()));
+                partX, partY, pickLocation.getX(), pickLocation.getY()));
         
         feedCount++;
 	}

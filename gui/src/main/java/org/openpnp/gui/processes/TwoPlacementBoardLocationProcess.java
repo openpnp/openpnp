@@ -34,6 +34,7 @@ import org.openpnp.model.Point;
 import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +108,7 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step1() {
-		placementLocationA = MainFrame.machineControlsPanel.getCameraLocation();
+		placementLocationA = MainFrame.cameraPanel.getSelectedCameraLocation();
 		if (placementLocationA == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
@@ -125,7 +126,7 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step3() {
-		placementLocationB = MainFrame.machineControlsPanel.getCameraLocation();
+		placementLocationB = MainFrame.cameraPanel.getSelectedCameraLocation();
 		if (placementLocationB == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
@@ -293,15 +294,7 @@ public class TwoPlacementBoardLocationProcess {
 							.getSelectedCamera();
 					Location location = jobPanel.getSelectedBoardLocation()
 							.getLocation();
-					location = location.convertToUnits(Configuration.get().getMachine().getNativeUnits());
-					location = location.subtract(camera.getLocation());
-					head.moveToSafeZ();
-					// Move the head to the location at Safe-Z
-					head.moveTo(location.getX(), location.getY(),
-							head.getZ(), location.getRotation());
-					// Move Z
-					head.moveTo(head.getX(), head.getY(), location.getZ(),
-							head.getC());
+					MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 				}
 				catch (Exception e) {
 					MessageBoxes.errorBox(mainFrame,

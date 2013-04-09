@@ -41,10 +41,14 @@ import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Part;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,8 +65,10 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     private String serverIp;
     @Attribute
     private int port;
+    @Attribute
+    private double feedRateMmPerMinute;
 
-    private double x, y, z, a;
+    private double x, y, z, c;
     private Socket socket;
     private InputStream input;
     private OutputStream output;
@@ -87,9 +93,80 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
             }
         });
     }
+    
+    @Override
+    public void home(ReferenceHead head) throws Exception {
+        sendCommand("set mdi G0 Z-20"); // SafeZ
+        sendCommand("set mdi G0 X0 Y0");
+        sendCommand("set mdi G1 F200 Z0");
+        x = y = z = c = 0;
+    }
+
+
 
     @Override
-    public void actuate(ReferenceHead head, int index, boolean on)
+    public void moveTo(ReferenceHeadMountable hm, Location location,
+            double speed) throws Exception {
+        location = location.subtract(hm.getHeadOffsets());
+
+        location = location.convertToUnits(LengthUnit.Millimeters);
+        
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        double c = location.getRotation();
+        
+        StringBuffer sb = new StringBuffer();
+        if (!Double.isNaN(x) && x != this.x) {
+            sb.append(String.format(Locale.US, "X%2.2f ", x));
+        }
+        if (!Double.isNaN(y) && y != this.y) {
+            sb.append(String.format(Locale.US, "Y%2.2f ", y));
+        }
+        if (!Double.isNaN(z) && z != this.z) {
+            sb.append(String.format(Locale.US, "Z%2.2f ", z));
+        }
+        if (!Double.isNaN(c) && c != this.c) {
+            sb.append(String.format(Locale.US, "A%2.2f ", c));
+        }
+        if (sb.length() > 0) {
+            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute * speed));
+            sendCommand("set mdi G1 " + sb.toString());
+            dwell();
+        }
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.c = c;
+    }
+
+
+
+    @Override
+    public Location getLocation(ReferenceHeadMountable hm) {
+        return new Location(LengthUnit.Millimeters, x, y, z, c);
+    }
+
+
+
+    @Override
+    public void pick(ReferenceNozzle nozzle) throws Exception {
+        sendCommand("set mdi m3 s100");
+        dwell();
+    }
+
+
+
+    @Override
+    public void place(ReferenceNozzle nozzle) throws Exception {
+        sendCommand("set mdi m5");
+        dwell();
+    }
+
+
+
+    @Override
+    public void actuate(ReferenceActuator actuator, boolean on)
             throws Exception {
         // if (index == 0) {
         // sendCommand(on ? "M8" : "M9");
@@ -97,71 +174,19 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         // }
     }
 
+
+
     @Override
-    public void home(ReferenceHead head, double feedRateMmPerMinute)
+    public void actuate(ReferenceActuator actuator, double value)
             throws Exception {
-        sendCommand("set mdi G0 Z-20"); // SafeZ
-        sendCommand("set mdi G0 X0 Y0");
-        sendCommand("set mdi G1 F200 Z0");
-        x = y = z = a = 0;
-    }
-
-    @Override
-    public void moveTo(ReferenceHead head, double x, double y, double z,
-            double a, double feedRateMmPerMinute) throws Exception {
-        // TODO: Due to a bug (of my creating) in Grbl, C movements are
-        // included in the linear movements, and since they are much slower
-        // than X, Y movements they end up slowing the whole thing down.
-        // So, as a temporary hack, if there is a C move to be made we'll
-        // make it first.
-        // Also, since C is so slow in comparison, we just increase it
-        // by a factor of 10.
-
-        // if (a != this.a && (x != this.x || y != this.y || z != this.z)) {
-        // moveTo(head, this.x, this.y, this.z, a, feedRateMmPerMinute);
-        // }
-        StringBuffer sb = new StringBuffer();
-        if (x != this.x) {
-            sb.append(String.format(Locale.US, "X%2.2f ", x));
-        }
-        if (y != this.y) {
-            sb.append(String.format(Locale.US, "Y%2.2f ", y));
-        }
-        if (z != this.z) {
-            sb.append(String.format(Locale.US, "Z%2.2f ", z));
-        }
-        if (a != this.a) {
-            // TODO see above bug note, and remove this when fixed.
-            // feedRateMmPerMinute *= 10;
-            sb.append(String.format(Locale.US, "A%2.2f ", a));
-        }
-        if (sb.length() > 0) {
-            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
-            sendCommand("set mdi G1 " + sb.toString());
-            dwell();
-        }
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.a = a;
+        // TODO Auto-generated method stub
+        
     }
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
 
         sendCommand("set machine " + (enabled ? "on" : "off"));
-    }
-
-    @Override
-    public void pick(ReferenceHead head, Part part) throws Exception {
-        sendCommand("set mdi m3 s100");
-        dwell();
-    }
-
-    @Override
-    public void place(ReferenceHead head) throws Exception {
-        sendCommand("set mdi m5");
-        dwell();
     }
 
     public synchronized void connect(String serverIp, int port)

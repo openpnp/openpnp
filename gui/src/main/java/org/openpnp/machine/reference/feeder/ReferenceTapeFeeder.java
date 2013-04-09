@@ -32,6 +32,7 @@ import javax.imageio.ImageIO;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -42,8 +43,8 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.base.AbstractFeeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
@@ -72,7 +73,7 @@ import org.slf4j.LoggerFactory;
  * then used in the next feed operation to be sure to hit the tape at the
  * right position.
  */
-public class ReferenceTapeFeeder extends AbstractFeeder {
+public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
@@ -82,11 +83,13 @@ public class ReferenceTapeFeeder extends AbstractFeeder {
 	@Element
 	private Location feedEndLocation = new Location(LengthUnit.Millimeters);
 	@Element(required=false)
-	private Length feedRate;
+	private double feedSpeed = 1.0;
 	@Attribute(required=false)
 	private String actuatorId; 
 	@Element(required=false)
 	private Vision vision = new Vision();
+	
+	private Location pickLocation;
 	
 
 	/*
@@ -99,21 +102,29 @@ public class ReferenceTapeFeeder extends AbstractFeeder {
 	private Location visionOffset;
 	
 	@Override
-	public boolean canFeedForHead(Head head) {
-		return true;
+	public boolean canFeedToNozzle(Nozzle nozzle) {
+	    return nozzle.getNozzleTip().canHandle(part);
 	}
 	
-	public Location feed(Head head, Location pickLocation)
+	@Override
+    public Location getPickLocation() throws Exception {
+	    if (pickLocation == null) {
+	        pickLocation = location;
+	    }
+	    return pickLocation;
+    }
+
+    @Override
+	public void feed(Nozzle nozzle)
 			throws Exception {
-		logger.debug("feed({}, {})", head, pickLocation);
-		
-		if (feedRate == null) {
-			throw new Exception("No feed rate set."); 
-		}
+		logger.debug("feed({})", nozzle);
 		
 		if (actuatorId == null) {
 			throw new Exception("No actuator ID set.");
 		}
+		
+		
+		Head head = nozzle.getHead();
 		
 		/*
 		 * TODO: We can optimize the feed process:
@@ -130,78 +141,58 @@ public class ReferenceTapeFeeder extends AbstractFeeder {
 		}
 		
 		// Convert all the Locations we'll be dealing with to machine native units
-		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
-		Location feedStartLocation = this.feedStartLocation.convertToUnits(head.getMachine().getNativeUnits());
-		Location feedEndLocation = this.feedEndLocation.convertToUnits(head.getMachine().getNativeUnits());
-		Location actuatorOffsets = actuator.getLocation().convertToUnits(head.getMachine().getNativeUnits());
-		Length feedRate = this.feedRate.convertToUnits(head.getMachine().getNativeUnits());
+//		pickLocation = pickLocation.convertToUnits(head.getMachine().getNativeUnits());
+//		Location feedStartLocation = this.feedStartLocation.convertToUnits(head.getMachine().getNativeUnits());
+//		Location feedEndLocation = this.feedEndLocation.convertToUnits(head.getMachine().getNativeUnits());
+//		Location actuatorOffsets = actuator.getLocation().convertToUnits(head.getMachine().getNativeUnits());
+//		Length feedRate = this.feedRate.convertToUnits(head.getMachine().getNativeUnits());
 		
-		logger.debug("Converted inputs: pickLocation {}, feedStartLocation {}, feedEndLocation {}, actuatorOffsets {}, feedRate {}", new Object[] {
-				pickLocation, 
-				feedStartLocation, 
-				feedEndLocation, 
-				actuatorOffsets,
-				feedRate});
+//		logger.debug("Converted inputs: pickLocation {}, feedStartLocation {}, feedEndLocation {}, actuatorOffsets {}, feedRate {}", new Object[] {
+//				pickLocation, 
+//				feedStartLocation, 
+//				feedEndLocation, 
+//				actuatorOffsets,
+//				feedRate});
 		
-		head.moveToSafeZ();
+		head.moveToSafeZ(1.0);
 		
 		double offsetX = 0;
 		double offsetY = 0;
 		
-		if (vision.isEnabled()) {
-			if (visionOffset == null) {
-				// This is the first feed with vision, or the offset has
-				// been invalidated for some reason. We need to get an offset,
-				// complete the feed operation and then get a new offset
-				// for the next operation. By front loading this we make sure
-				// that all future calls can go directly to the feed operation
-				// and skip checking the vision first.
-				logger.debug("First feed, running vision pre-flight.");
-				
-				visionOffset = getVisionOffsets(head, pickLocation);
-			}
-			
-			logger.debug("visionOffsets " + visionOffset);
-			
-			offsetX = visionOffset.getX();
-			offsetY = visionOffset.getY();
-		}
+//		if (vision.isEnabled()) {
+//			if (visionOffset == null) {
+//				// This is the first feed with vision, or the offset has
+//				// been invalidated for some reason. We need to get an offset,
+//				// complete the feed operation and then get a new offset
+//				// for the next operation. By front loading this we make sure
+//				// that all future calls can go directly to the feed operation
+//				// and skip checking the vision first.
+//				logger.debug("First feed, running vision pre-flight.");
+//				
+//				visionOffset = getVisionOffsets(head, pickLocation);
+//			}
+//			
+//			logger.debug("visionOffsets " + visionOffset);
+//			
+//			offsetX = visionOffset.getX();
+//			offsetY = visionOffset.getY();
+//		}
 		
-		// Apply the actuator offsets. We subtract instead of adding because we
-		// want to position the actuator over the location versus wanting to know
-		// where the actuator is in relation to the location.
-		feedStartLocation = feedStartLocation.subtract(actuatorOffsets);
-		feedEndLocation = feedEndLocation.subtract(actuatorOffsets);
-		
-		logger.debug("Modified Locations: feedStartLocation {}, feedEndLocation {}", 
-				feedStartLocation, 
-				feedEndLocation);
-
 		// Move the head so that the pin is positioned above the feed hole
 		// feedStartLocation is the position of the hole in the tool's coordinate
 		// system, so we need to offset that by the actuator offsets.
-		head.moveTo(
-				feedStartLocation.getX() - offsetX, 
-				feedStartLocation.getY() - offsetY,
-				head.getZ(), 
-				head.getC());
+		actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN), 1.0);
 
 		// extend the pin
 		actuator.actuate(true);
 
 		// insert the pin
-		head.moveTo(head.getX(), head.getY(), feedStartLocation.getZ(),
-				head.getC());
+		actuator.moveTo(feedStartLocation, 1.0);
 
 		// drag the tape
-		head.moveTo(
-				feedEndLocation.getX() - offsetX, 
-				feedEndLocation.getY() - offsetY,
-				feedEndLocation.getZ(), 
-				head.getC(), 
-				feedRate.getValue());
+		actuator.moveTo(feedEndLocation, feedSpeed);
 
-		head.moveToSafeZ();
+		head.moveToSafeZ(1.0);
 
 		// retract the pin
 		actuator.actuate(false);
@@ -217,102 +208,101 @@ public class ReferenceTapeFeeder extends AbstractFeeder {
 		
 		logger.debug("Modified pickLocation {}", pickLocation);
 		
-		if (vision.isEnabled()) {
-			visionOffset = getVisionOffsets(head, pickLocation);
-			
-			logger.debug("final visionOffsets " + visionOffset);
-		}
-
-		return pickLocation;
+//		if (vision.isEnabled()) {
+//			visionOffset = getVisionOffsets(head, pickLocation);
+//			
+//			logger.debug("final visionOffsets " + visionOffset);
+//		}
 	}
 	
 	// TODO: Throw an Exception if vision fails.
-	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-		Machine machine = head.getMachine();
-
-		// Find the Camera to be used for homing
-		// TODO: Consider caching this
-		Camera camera = null;
-		for (Camera c : machine.getCameras()) {
-			if (c.getHead() == head && c.getVisionProvider() != null) {
-				camera = c;
-			}
-		}
-		
-		if (camera == null) {
-			throw new Exception("No vision capable camera found on head.");
-		}
-		
-		// Get the camera offsets and convert to native units.
-		Location cameraOffsets = camera.getLocation().convertToUnits(machine.getNativeUnits());
-		
-		// Apply the camera offsets. We subtract instead of adding because we
-		// want to position the camera over the location versus wanting to know
-		// where the camera is in relation to the location.
-		double x = pickLocation.getX() - cameraOffsets.getX();
-		double y = pickLocation.getY() - cameraOffsets.getY();
-		double z = pickLocation.getZ() - cameraOffsets.getZ();
-		
-		head.moveToSafeZ();
-		
-		// Position the camera over the pick location.
-		head.moveTo(x, y, head.getZ(), head.getC());
-		
-		// Move the camera to be in focus over the pick location.
-		head.moveTo(head.getX(), head.getY(), z, head.getC());
-		
-		// Settle the camera
-		Thread.sleep(200);
-		
-		VisionProvider visionProvider = camera.getVisionProvider();
-		
-		Rectangle aoi = getVision().getAreaOfInterest();
-		
-		// Perform the template match
-		Point[] matchingPoints = visionProvider.locateTemplateMatches(
-				aoi.getX(), 
-				aoi.getY(), 
-				aoi.getWidth(), 
-				aoi.getHeight(), 
-				0, 
-				0, 
-				vision.getTemplateImage());
-		
-		// Get the best match from the array
-		Point match = matchingPoints[0];
-		
-		// match now contains the position, in pixels, from the top left corner
-		// of the image to the top left corner of the match. We are interested in
-		// knowing how far from the center of the image the center of the match is.
-		BufferedImage image = camera.capture();
-		double imageWidth = image.getWidth();
-		double imageHeight = image.getHeight();
-		double templateWidth = vision.getTemplateImage().getWidth();
-		double templateHeight = vision.getTemplateImage().getHeight();
-		double matchX = match.x;
-		double matchY = match.y;
-		
-		// Adjust the match x and y to be at the center of the match instead of
-		// the top left corner.
-		matchX += (templateWidth / 2);
-		matchY += (templateHeight / 2);
-		
-		// Calculate the difference between the center of the image to the
-		// center of the match.
-		double offsetX = (imageWidth / 2) - matchX;
-		double offsetY = (imageHeight / 2) - matchY;
-		
-		// Invert the Y offset because images count top to bottom and the Y
-		// axis of the machine counts bottom to top.
-		offsetY *= -1;
-		
-		// And convert pixels to units
-		Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(machine.getNativeUnits());
-		offsetX *= unitsPerPixel.getX();
-		offsetY *= unitsPerPixel.getY();
-		
-		return new Location(pickLocation.getUnits(), offsetX, offsetY, 0, 0);
-	}
+    // TODO: Vision temporarily disabled due to refactoring
+//	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
+//		Machine machine = head.getMachine();
+//
+//		// Find the Camera to be used for homing
+//		// TODO: Consider caching this
+//		Camera camera = null;
+//		for (Camera c : machine.getCameras()) {
+//			if (c.getHead() == head && c.getVisionProvider() != null) {
+//				camera = c;
+//			}
+//		}
+//		
+//		if (camera == null) {
+//			throw new Exception("No vision capable camera found on head.");
+//		}
+//		
+//		// Get the camera offsets and convert to native units.
+//		Location cameraOffsets = camera.getLocation().convertToUnits(machine.getNativeUnits());
+//		
+//		// Apply the camera offsets. We subtract instead of adding because we
+//		// want to position the camera over the location versus wanting to know
+//		// where the camera is in relation to the location.
+//		double x = pickLocation.getX() - cameraOffsets.getX();
+//		double y = pickLocation.getY() - cameraOffsets.getY();
+//		double z = pickLocation.getZ() - cameraOffsets.getZ();
+//		
+//		head.moveToSafeZ();
+//		
+//		// Position the camera over the pick location.
+//		head.moveTo(x, y, head.getZ(), head.getC());
+//		
+//		// Move the camera to be in focus over the pick location.
+//		head.moveTo(head.getX(), head.getY(), z, head.getC());
+//		
+//		// Settle the camera
+//		Thread.sleep(200);
+//		
+//		VisionProvider visionProvider = camera.getVisionProvider();
+//		
+//		Rectangle aoi = getVision().getAreaOfInterest();
+//		
+//		// Perform the template match
+//		Point[] matchingPoints = visionProvider.locateTemplateMatches(
+//				aoi.getX(), 
+//				aoi.getY(), 
+//				aoi.getWidth(), 
+//				aoi.getHeight(), 
+//				0, 
+//				0, 
+//				vision.getTemplateImage());
+//		
+//		// Get the best match from the array
+//		Point match = matchingPoints[0];
+//		
+//		// match now contains the position, in pixels, from the top left corner
+//		// of the image to the top left corner of the match. We are interested in
+//		// knowing how far from the center of the image the center of the match is.
+//		BufferedImage image = camera.capture();
+//		double imageWidth = image.getWidth();
+//		double imageHeight = image.getHeight();
+//		double templateWidth = vision.getTemplateImage().getWidth();
+//		double templateHeight = vision.getTemplateImage().getHeight();
+//		double matchX = match.x;
+//		double matchY = match.y;
+//		
+//		// Adjust the match x and y to be at the center of the match instead of
+//		// the top left corner.
+//		matchX += (templateWidth / 2);
+//		matchY += (templateHeight / 2);
+//		
+//		// Calculate the difference between the center of the image to the
+//		// center of the match.
+//		double offsetX = (imageWidth / 2) - matchX;
+//		double offsetY = (imageHeight / 2) - matchY;
+//		
+//		// Invert the Y offset because images count top to bottom and the Y
+//		// axis of the machine counts bottom to top.
+//		offsetY *= -1;
+//		
+//		// And convert pixels to units
+//		Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(machine.getNativeUnits());
+//		offsetX *= unitsPerPixel.getX();
+//		offsetY *= unitsPerPixel.getY();
+//		
+//		return new Location(pickLocation.getUnits(), offsetX, offsetY, 0, 0);
+//	}
 
 	@Override
 	public String toString() {
@@ -340,12 +330,12 @@ public class ReferenceTapeFeeder extends AbstractFeeder {
 		this.feedEndLocation = feedEndLocation;
 	}
 
-	public Length getFeedRate() {
-		return feedRate;
+	public Double getFeedSpeed() {
+		return feedSpeed;
 	}
 
-	public void setFeedRate(Length feedRate) {
-		this.feedRate = feedRate;
+	public void setFeedSpeed(double feedSpeed) {
+		this.feedSpeed = feedSpeed;
 	}
 	
 	public String getActuatorId() {

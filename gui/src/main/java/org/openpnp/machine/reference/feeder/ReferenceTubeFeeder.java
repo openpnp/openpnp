@@ -22,9 +22,9 @@
 package org.openpnp.machine.reference.feeder;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.base.AbstractFeeder;
+import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,17 +32,21 @@ import org.slf4j.LoggerFactory;
  * Implementation of Feeder that always picks from the same location. This
  * can be used with a gravity feed or vibratory tube feeder.
  */
-public class ReferenceTubeFeeder extends AbstractFeeder {
+public class ReferenceTubeFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTubeFeeder.class);
 	
 	@Override
-	public boolean canFeedForHead(Head head) {
-		return true;
-	}
+    public Location getPickLocation() throws Exception {
+	    return location.clone();
+    }
 
-	public Location feed(Head head_, Location pickLocation)
-			throws Exception {
-		return pickLocation;
+    @Override
+    public void feed(Nozzle nozzle) throws Exception {
+    }
+
+    @Override
+	public boolean canFeedToNozzle(Nozzle nozzle) {
+		return true;
 	}
 
 	@Override

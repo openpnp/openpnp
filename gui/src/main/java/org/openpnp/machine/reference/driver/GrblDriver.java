@@ -33,10 +33,14 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Part;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +56,8 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	private String portName;
 	@Attribute
 	private int baud;
+	@Attribute
+	private double feedRateMmPerMinute;
 	
 	
 	private double x, y, z, c;
@@ -76,23 +82,46 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	}
 	
 	@Override
-	public void actuate(ReferenceHead head, int index, boolean on)
+	public void actuate(ReferenceActuator actuator, boolean on)
 			throws Exception {
-		if (index == 0) {
+		if (actuator.getIndex() == 0) {
 			sendCommand(on ? "M8" : "M9");
 			dwell();
 		}
 	}
 	
+	
+	
 	@Override
-	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
+	public void home(ReferenceHead head) throws Exception {
 		sendCommand("G28");
 		x = y = z= c = 0;
 	}
 	
 	@Override
-	public void moveTo(ReferenceHead head, double x, double y, double z, double c, double feedRateMmPerMinute)
+    public Location getLocation(ReferenceHeadMountable hm) {
+	    return new Location(LengthUnit.Millimeters, x, y, z, c);
+    }
+
+    @Override
+    public void actuate(ReferenceActuator actuator, double value)
+            throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+	public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
 			throws Exception {
+        location = location.subtract(hm.getHeadOffsets());
+
+        location = location.convertToUnits(LengthUnit.Millimeters);
+        
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        double c = location.getRotation();
+        
 		// TODO: Due to a bug (of my creating) in Grbl, C movements are
 		// included in the linear movements, and since they are much slower
 		// than X, Y movements they end up slowing the whole thing down.
@@ -101,19 +130,19 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		// Also, since C is so slow in comparison, we just increase it
 		// by a factor of 10.
 		if (c != this.c && (x != this.x || y != this.y || z != this.z)) {
-			moveTo(head, this.x, this.y, this.z, c, feedRateMmPerMinute);
+			moveTo(hm, location.derive(Double.NaN, Double.NaN, Double.NaN, null), speed);
 		}
 		StringBuffer sb = new StringBuffer();
-		if (x != this.x) {
+		if (!Double.isNaN(x) && x != this.x) {
 			sb.append(String.format(Locale.US, "X%2.2f ", x));
 		}
-		if (y != this.y) {
+		if (!Double.isNaN(y) && y != this.y) {
 			sb.append(String.format(Locale.US, "Y%2.2f ", y));
 		}
-		if (z != this.z) {
+		if (!Double.isNaN(z) && z != this.z) {
 			sb.append(String.format(Locale.US, "Z%2.2f ", z));
 		}
-		if (c != this.c) {
+		if (!Double.isNaN(c) && c != this.c) {
 			// TODO see above bug note, and remove this when fixed.
 			feedRateMmPerMinute *= 10;
 			sb.append(String.format(Locale.US, "C%2.2f ", c));
@@ -135,13 +164,13 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	}
 
 	@Override
-	public void pick(ReferenceHead head, Part part) throws Exception {
+	public void pick(ReferenceNozzle nozzle) throws Exception {
 		sendCommand("M4");
 		dwell();
 	}
 
 	@Override
-	public void place(ReferenceHead head) throws Exception {
+	public void place(ReferenceNozzle nozzle) throws Exception {
 		sendCommand("M5");
 		dwell();
 	}
