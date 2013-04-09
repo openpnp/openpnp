@@ -58,7 +58,7 @@ public class NullDriver implements ReferenceDriver {
 	    }
 	    return l;
 	}
-
+	
 	@Override
 	public void home(ReferenceHead head)
 			throws Exception {
@@ -150,20 +150,20 @@ public class NullDriver implements ReferenceDriver {
                 y = y1 + (vy / pxy * dxy);
             }
             else {
-                x = x1;
-                y = y1;
+                x = x2;
+                y = y2;
             }
             if (dz < pz) {
                 z = z1 + dz * (vz < 0 ? -1 : 1);
             }
             else {
-                z = z1;
+                z = z2;
             }
             if (dc < pc) {
                 c = c1 + dc * (vc < 0 ? -1 : 1);
             }
             else {
-                c = c1;
+                c = c2;
             }
 
             hl.setX(x);
