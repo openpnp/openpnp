@@ -33,7 +33,6 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -47,7 +46,14 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 /**
- * TODO: Consider adding some type of heartbeat to the firmware.  
+ * TODO: Consider adding some type of heartbeat to the firmware.
+ * TODO: Sometimes we fail to get a final status report when rapidly jogging
+ * 10mm at a time. It looks like this:
+ * 01:59:47,582 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - Status report: {"posx":91.009}
+01:59:47,678 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - {"sr":{"posx":90.000,"vel":7.81}}
+01:59:47,678 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - Status report: {"posx":90.000,"vel":7.81}
+
+  This causes everything to lock up.
  */
 public class TinygDriver implements ReferenceDriver, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(TinygDriver.class);
@@ -67,6 +73,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 	private OutputStream output;
 	private Thread readerThread;
 	private Object commandLock = new Object();
+	private Object movementWaitLock = new Object();
 	private JsonObject lastResponse;
 	private boolean connected;
 	private double connectedVersion;
@@ -87,7 +94,6 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 			throws Exception {
 		if (actuator.getIndex() == 0) {
 			sendCommand(on ? "M8" : "M9");
-			waitForMovementComplete();
 		}
 	}
 	
@@ -138,8 +144,12 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		}
 		if (sb.length() > 0) {
 			sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute * speed));
-			sendCommand("G1 " + sb.toString());
-			waitForMovementComplete();
+            // TODO: Move this type of op into it's own method
+            // sendCommandAndWaitForMovementComplete()
+			synchronized (movementWaitLock) {
+			    sendCommand("G1 " + sb.toString());
+			    waitForMovementComplete();
+			}
 		}
 		this.x = x;
 		this.y = y;
@@ -155,13 +165,11 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 	@Override
 	public void pick(ReferenceNozzle nozzle) throws Exception {
 		sendCommand("M4");
-		waitForMovementComplete();
 	}
 
 	@Override
 	public void place(ReferenceNozzle nozzle) throws Exception {
 		sendCommand("M5");
-		waitForMovementComplete();
 	}
 
 	public synchronized void connect(String portName, int baud)
@@ -222,6 +230,11 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		// Turn off the stepper drivers
 		setEnabled(false);
 		
+		// Make sure we are in absolute mode
+		// TODO returns a status code 60 which throws an error, need to account
+		// for error code 60 when neccesary and re-enable this
+//		sendCommand("G90");
+		
 		// Reset all axes to 0, in case the firmware was not reset on
 		// connect.
 		sendCommand("G92 X0 Y0 Z0 C0");
@@ -248,7 +261,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		}
 	}
 
-	private JsonObject sendCommand(String command) throws Exception {
+    private JsonObject sendCommand(String command) throws Exception {
 		return sendCommand(command, -1);
 	}
 	
@@ -279,26 +292,29 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		return response;
 	}
 	
-	
 	public void run() {
 		while (!Thread.interrupted()) {
 			String line = readLine().trim();
 			logger.debug(line);
 			try {
 			    JsonObject o = (JsonObject) parser.parse(line);
-			    if (o.get("sr") != null) {
+			    if (o.has("sr")) {
 			        // this is an async status report
-			        //{"sr":{"posx":0.000,"vel":7.75,"stat":3}} 
+			        //{"sr":{"posx":0.000,"vel":7.75,"stat":3}}
+			        processStatusReport(o.get("sr").getAsJsonObject());
 			    }
-			    else if (o.get("r") != null) {
-                    lastResponse = (JsonObject) o.get("r");;
+			    else if (o.has("r")) {
+                    lastResponse = o.get("r").getAsJsonObject();
                     synchronized (commandLock) {
-                        commandLock.notify();
+                        commandLock.notifyAll();
                     }
 			    }
-			    else if (o.get("er") != null) {
+			    else if (o.has("er")) {
 			        // this is an error / shutdown, handle it somehow
 			        logger.error(o.toString());
+			    }
+			    else {
+			        logger.error("Unknown JSON response: " + o);
 			    }
 			}
 			catch (JsonSyntaxException e) {
@@ -307,12 +323,26 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 			}
 		}
 	}
+	
+	private void processStatusReport(JsonObject o) {
+	    logger.debug("Status report: " + o);
+	    if (o.has("stat")) {
+	        int stat = o.get("stat").getAsInt();
+	        if (stat == 3) {
+	            synchronized(movementWaitLock) {
+	                movementWaitLock.notifyAll();
+	            }
+	        }
+	    }
+	}
 
 	// TODO: If no movement is happening this will never return. We may want to
 	// have it issue a status report request now and then so it doesn't sit
 	// forever.
 	private void waitForMovementComplete() throws Exception {
-//		sendCommand("G4 P0");
+	    synchronized(movementWaitLock) {
+            movementWaitLock.wait();
+	    }
 	}
 	
 	private String readLine() {
