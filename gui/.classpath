@@ -56,4 +56,9 @@
   <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-macosx-x86_64.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-windows-x86.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-windows-x86_64.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.2.3/gson-2.2.3.jar" sourcepath="M2_REPO/com/google/code/gson/gson/2.2.3/gson-2.2.3-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/Users/jason/.m2/repository/com/google/code/gson/gson/2.2.3/gson-2.2.3-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
 </classpath>
