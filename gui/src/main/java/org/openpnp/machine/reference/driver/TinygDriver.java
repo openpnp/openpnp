@@ -107,7 +107,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 	
 	@Override
     public Location getLocation(ReferenceHeadMountable hm) {
-	    return new Location(LengthUnit.Millimeters, x, y, z, c);
+	    return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm.getHeadOffsets());
     }
 
     @Override
@@ -151,10 +151,18 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 			    waitForMovementComplete();
 			}
 		}
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.c = c;
+        if (!Double.isNaN(x)) {
+            this.x = x;
+        }
+        if (!Double.isNaN(y)) {
+            this.y = y;
+        }
+        if (!Double.isNaN(z)) {
+            this.z = z;
+        }
+        if (!Double.isNaN(c)) {
+            this.c = c;
+        }
 	}
 	
 	@Override
@@ -286,7 +294,10 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		    throw new Exception("Command did not return a response");
 		}
 		int responseStatusCode = getResponseStatusCode(response);
-		if (responseStatusCode != 0) {
+		// TODO: Checking for 60 here (no movement) is a hack, but it gets the
+		// job done for now. Later we should make it up to the sending command
+		// to determine what to accept and what to fail.
+		if (responseStatusCode != 0 && responseStatusCode != 60) {
 		    throw new Exception("Command failed. Status code: " + responseStatusCode);
 		}
 		return response;
