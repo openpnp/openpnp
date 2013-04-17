@@ -17,7 +17,7 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.machine.reference.driver;
 
@@ -39,54 +39,85 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An example of the simplest possible driver that can support multiple heads.
- * This driver maintains a set of coordinates for each Head that it is asked
- * to handle and simply logs all commands sent to it.
+ * This driver maintains a set of coordinates for each Head that it is asked to
+ * handle and simply logs all commands sent to it.
  */
 public class NullDriver implements ReferenceDriver {
-	private final static Logger logger = LoggerFactory.getLogger(NullDriver.class);
-	
-	@Attribute(required=false)
-	private double feedRateMmPerMinute = 250;
-	
-	private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
-	
-	protected Location getHeadLocation(Head head) {
-	    Location l = headLocations.get(head);
-	    if (l == null) {
-	        l = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-	        headLocations.put(head, l);
-	    }
-	    return l;
-	}
-	
-	@Override
-	public void home(ReferenceHead head)
-			throws Exception {
-		logger.info("home()");
-		Location l = getHeadLocation(head);
+    private final static Logger logger = LoggerFactory
+            .getLogger(NullDriver.class);
+
+    @Attribute(required = false)
+    private double feedRateMmPerMinute = 250;
+
+    private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
+
+    /**
+     * Gets the Location object being tracked for a specific Head. This is the
+     * absolute coordinates of a virtual Head on the machine.
+     * 
+     * @param head
+     * @return
+     */
+    protected Location getHeadLocation(Head head) {
+        Location l = headLocations.get(head);
+        if (l == null) {
+            l = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+            headLocations.put(head, l);
+        }
+        return l;
+    }
+
+    @Override
+    public void home(ReferenceHead head) throws Exception {
+        logger.info("home()");
+        Location l = getHeadLocation(head);
         l.setX(0);
         l.setY(0);
         l.setZ(0);
         l.setRotation(0);
-	}
-	
-	@Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-	    return getHeadLocation(hm.getHead()).add(hm.getHeadOffsets());
     }
 
+    /**
+     * Return the Location of a specific ReferenceHeadMountable on the machine.
+     * We get the coordinates for the Head the object is attached to, and then
+     * we add the offsets assigned to the object to make the coordinates correct
+     * for that object.
+     */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed) throws Exception {
+    public Location getLocation(ReferenceHeadMountable hm) {
+        return getHeadLocation(hm.getHead()).add(hm.getHeadOffsets());
+    }
+
+    /**
+     * Commands the driver to move the given ReferenceHeadMountable to the
+     * specified Location at the given speed. Please see the comments for this
+     * method in the code for some important considerations when writing your
+     * own driver.
+     */
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, Location location,
+            double speed) throws Exception {
         logger.info("moveTo({}, {}, {})", new Object[] { hm, location, speed });
-        
+
+        // Subtract the offsets from the incoming Location. This converts the
+        // offset coordinates to driver / absolute coordinates.
         location = location.subtract(hm.getHeadOffsets());
 
+        // Convert the Location to millimeters, since that's the unit that
+        // this driver works in natively.
         location = location.convertToUnits(LengthUnit.Millimeters);
-        
+
+        // Get the current location of the Head that we'll move
         Location hl = getHeadLocation(hm.getHead());
 
+        // Simulate the movement, taking the proper amount of time and providing
+        // updates along the way.
         simulateMovement(hm, location, hl, speed);
-        
+
+        // Now that movement is complete, update the stored Location to the new
+        // Location, unless the incoming Location specified an axis with a value
+        // of NaN. NaN is interpreted to mean "Don't move this axis" so we don't
+        // update the value, either.
         if (!Double.isNaN(location.getX())) {
             hl.setX(location.getX());
         }
@@ -100,22 +131,24 @@ public class NullDriver implements ReferenceDriver {
             hl.setRotation(location.getRotation());
         }
     }
-    
+
     /**
      * Simulates true machine movement, which takes time, by tracing the
-     * required movement lines over a period of time based on the input speed. 
+     * required movement lines over a period of time based on the input speed.
+     * 
      * @param hm
      * @param location
      * @param hl
      * @param speed
      * @throws Exception
      */
-    private void simulateMovement(ReferenceHeadMountable hm, Location location, Location hl, double speed) throws Exception {
+    private void simulateMovement(ReferenceHeadMountable hm, Location location,
+            Location hl, double speed) throws Exception {
         double x = hl.getX();
         double y = hl.getY();
         double z = hl.getZ();
         double c = hl.getRotation();
-        
+
         double x1 = x;
         double y1 = y;
         double z1 = z;
@@ -123,27 +156,28 @@ public class NullDriver implements ReferenceDriver {
         double x2 = Double.isNaN(location.getX()) ? x : location.getX();
         double y2 = Double.isNaN(location.getY()) ? y : location.getY();
         double z2 = Double.isNaN(location.getZ()) ? z : location.getZ();
-        double c2 = Double.isNaN(location.getRotation()) ? c : location.getRotation();
+        double c2 = Double.isNaN(location.getRotation()) ? c : location
+                .getRotation();
 
         c2 = c2 % 360.0;
-        
+
         // Calculate the linear distance to travel in each axis.
         double vx = x2 - x1;
         double vy = y2 - y1;
         double vz = z2 - z1;
         double vc = c2 - c1;
-        
+
         // Calculate the linear distance to travel in each plane XY, Z and C.
-        double pxy = Math.sqrt(vx*vx + vy*vy);
+        double pxy = Math.sqrt(vx * vx + vy * vy);
         double pz = Math.abs(vz);
-        double pc = Math.abs(vc); 
+        double pc = Math.abs(vc);
 
         // Distance moved in each plane so far.
         double dxy = 0, dz = 0, dc = 0;
-        
-        // The distance that we'll move each loop. 
+
+        // The distance that we'll move each loop.
         double distancePerTick = (feedRateMmPerMinute * speed) / 60.0 / 10.0;
-        
+
         while (dxy < pxy || dz < pz || dc < pc) {
             if (dxy < pxy) {
                 x = x1 + (vx / pxy * dxy);
@@ -170,34 +204,35 @@ public class NullDriver implements ReferenceDriver {
             hl.setY(y);
             hl.setZ(z);
             hl.setRotation(c);
-            
+
             // Provide live updates to the Machine as the move progresses.
-            ((ReferenceMachine) Configuration.get().getMachine()).fireMachineHeadActivity(hm.getHead());
-            
+            ((ReferenceMachine) Configuration.get().getMachine())
+                    .fireMachineHeadActivity(hm.getHead());
+
             try {
                 Thread.sleep(100);
             }
             catch (Exception e) {
-                
+
             }
-            
+
             dxy = Math.min(pxy, dxy + distancePerTick);
             dz = Math.min(pz, dz + distancePerTick);
             dc = Math.min(pc, dc + distancePerTick);
         }
     }
 
-	@Override
-	public void pick(ReferenceNozzle nozzle) throws Exception {
-		logger.info("pick({})", nozzle);
-		Thread.sleep(500);
-	}
+    @Override
+    public void pick(ReferenceNozzle nozzle) throws Exception {
+        logger.info("pick({})", nozzle);
+        Thread.sleep(500);
+    }
 
-	@Override
-	public void place(ReferenceNozzle nozzle) throws Exception {
-		logger.info("place({})", nozzle);
-		Thread.sleep(500);
-	}
+    @Override
+    public void place(ReferenceNozzle nozzle) throws Exception {
+        logger.info("place({})", nozzle);
+        Thread.sleep(500);
+    }
 
     @Override
     public void actuate(ReferenceActuator actuator, double value)
@@ -206,15 +241,15 @@ public class NullDriver implements ReferenceDriver {
         Thread.sleep(500);
     }
 
-	@Override
-	public void actuate(ReferenceActuator actuator, boolean on)
-			throws Exception {
-		logger.info("actuate({}, {})", actuator, on);
-		Thread.sleep(500);
-	}
+    @Override
+    public void actuate(ReferenceActuator actuator, boolean on)
+            throws Exception {
+        logger.info("actuate({}, {})", actuator, on);
+        Thread.sleep(500);
+    }
 
-	@Override
-	public void setEnabled(boolean enabled) throws Exception {
-		logger.info("setEnabled({})", enabled);
-	}
+    @Override
+    public void setEnabled(boolean enabled) throws Exception {
+        logger.info("setEnabled({})", enabled);
+    }
 }
