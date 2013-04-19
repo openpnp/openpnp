@@ -21,9 +21,8 @@
 
 package org.openpnp;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.openpnp.model.Board;
@@ -214,6 +213,7 @@ public class JobProcessor implements Runnable {
 
         Set<PlacementSolution> solutions;
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
+		    LinkedHashMap<PlacementSolution, Location> placementSolutionLocations = new LinkedHashMap<PlacementSolution, Location>();
 		    for (PlacementSolution solution : solutions) {
 				firePartProcessingStarted(solution.boardLocation, solution.placement);
 				
@@ -278,8 +278,17 @@ public class JobProcessor implements Runnable {
 				placementLocation.setZ(boardLocation.getZ() + partHeight);
 
 				pick(nozzle, feeder, bl, placement);
-				place(nozzle, bl, placementLocation, placement);
+				placementSolutionLocations.put(solution, placementLocation);
 			}
+		    
+            // TODO: a lot of the event fires are broken
+		    for (PlacementSolution solution : solutions) {
+                Nozzle nozzle = solution.nozzle;
+                BoardLocation bl = solution.boardLocation;
+                Placement placement = solution.placement;
+                Location placementLocation = placementSolutionLocations.get(solution);
+                place(nozzle, bl, placementLocation, placement);
+            }
 		}
 		
 		fireDetailedStatusUpdated("Job complete.");

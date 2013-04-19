@@ -16,8 +16,12 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimpleJobPlanner extends AbstractJobPlanner {
+    private final static Logger logger = LoggerFactory.getLogger(SimpleJobPlanner.class);
+    
     @SuppressWarnings("unused")
     @Attribute(required = false)
     private String placeHolder;
@@ -36,6 +40,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 solutions.add(new PlacementSolution(placement, boardLocation, head, null, null, null));
             }
         }
+        logger.debug("Planned {} solutions", solutions.size());
     }
 
     @Override
