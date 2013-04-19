@@ -8,9 +8,11 @@ import java.util.Set;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.IdentifiableList;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
 public abstract class AbstractMachine implements Machine {
@@ -20,6 +22,8 @@ public abstract class AbstractMachine implements Machine {
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<Feeder>();
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
+    @Element
+    protected JobPlanner jobPlanner;
     
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
     
@@ -91,6 +95,11 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public void removeCamera(Camera camera) {
         cameras.remove(camera);
+    }
+    
+    @Override
+    public JobPlanner getJobPlanner() {
+        return jobPlanner;
     }
 
     public void fireMachineHeadActivity(Head head) {

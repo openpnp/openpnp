@@ -107,4 +107,6 @@ public interface Machine extends WizardConfigurable {
 	public void addCamera(Camera camera) throws Exception;
 
 	public void removeCamera(Camera camera);
+	
+	public JobPlanner getJobPlanner();
 }
