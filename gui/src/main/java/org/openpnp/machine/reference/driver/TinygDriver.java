@@ -207,9 +207,9 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		readerThread = new Thread(this);
 		readerThread.start();
 
-		for (int i = 0; i < 5 && !connected; i++) {
+		for (int i = 0; i < 10 && !connected; i++) {
 		    try {
-		        JsonObject response = sendCommand("{\"fv\":\"\"}", 5000);
+		        JsonObject response = sendCommand("{\"fv\":\"\"}", 500);
 	            //{"r":{"fv":0.950,"f":[1,0,10,2853]}}
                 connectedVersion = response.get("fv").getAsDouble();
                 connected = true;
