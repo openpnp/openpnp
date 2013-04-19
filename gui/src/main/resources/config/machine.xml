@@ -39,5 +39,6 @@
             </cameras>
         </head>
       </heads>
+      <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
    </machine>
 </openpnp-machine>

@@ -3,7 +3,7 @@ package org.openpnp.spi;
 import java.util.Set;
 
 import org.openpnp.model.BoardLocation;
-import org.openpnp.model.JobSession;
+import org.openpnp.model.Job;
 import org.openpnp.model.Placement;
 
 
@@ -16,7 +16,7 @@ import org.openpnp.model.Placement;
 public interface JobPlanner {
     /**
      * Represents one solution from the planner for a particular Placement.
-     * Include the Head, Nozzle, NozzleTip and Feeder that should be used
+     * Includes the Head, Nozzle, NozzleTip and Feeder that should be used
      * to service the Placement. 
      */
     public static class PlacementSolution {
@@ -37,13 +37,7 @@ public interface JobPlanner {
         }
     }
     
-    /**
-     * Set the JobSession that planning should happen for. This will be called
-     * when the Job is started and indicates to the JobPlanner that it
-     * should clear any previous state and prepare to issue solutions
-     * for the given Job. 
-     */
-    void setJob(JobSession jobSession);
+    public void setJob(Job job);
     
     /**
      * Gets a Set of the next available PlacementSolutions for the

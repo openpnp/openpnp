@@ -1,13 +1,13 @@
 package org.openpnp.planner;
 
-import org.openpnp.model.JobSession;
+import org.openpnp.model.Job;
 import org.openpnp.spi.JobPlanner;
 
 public abstract class AbstractJobPlanner implements JobPlanner {
-    protected JobSession jobSession;
+    protected Job job;
     
     @Override
-    public void setJob(JobSession jobSession) {
-        this.jobSession = jobSession;
+    public void setJob(Job job) {
+        this.job = job;
     }
 }
