@@ -40,6 +40,14 @@ OpenPnP is primarily a single window interface, broken up into multiple sections
 ## The Tabs
 ## Shortcuts
 
+There are a few important keyboard shortcuts that are critical to know to use OpenPnP. All of the shortcuts use Ctrl + another key. They are:
+
+* Ctrl+Tab: Open the jog controls window which gives you visible buttons for most of the other shortcuts.
+* Ctrl+Arrow Key: Jog the currently selected Nozzle in X and Y. Up and Down arrows jog in Y and Left and Right arrows jog in X.
+* Ctrl+PageDn, PageUp: Jog the currently selected Nozzle up and down in Z.
+* Ctrl+>, Ctrl+<: Rotate the currently selected Nozzle clockwise and counterclockwise.
+* Ctrl+Plus, Ctrl+Minus: Change the jog increment slider. This changes how far each jog key will move the Nozzle.
+
 # Setup
 ## The Driver
 ## Heads
