@@ -25,7 +25,7 @@ Last weekend I made two bearing blocks for the Y lead screw, the Y stepper mount
 
 Here's a short video showing the half Y axis test: http://www.youtube.com/watch?v=LVPcsuYy4oA
 
-This is running at 250mm per second and in a later test I measured it's repeatability to < 0.001" with a dial test indicator.
+This is running at 250mm per second and in a later test I measured it's repeatability to > 0.001" with a dial test indicator.
 
 This weekend's goals are:
 
