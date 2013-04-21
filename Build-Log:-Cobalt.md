@@ -8,6 +8,8 @@ I figured out a way to quickly bolt a hunk of 80/20 to service as a temporary ga
 
 Also did quite a bit of design work today, fleshing out a lot of the next steps.
 
+[[Build Log:-Cobalt/2013-04-21-00.jpg]]
+
 ## April 19, 2013
 
 This is the first entry in this build log, so I will detail where things stand now and then future updates will just talk about progress.
