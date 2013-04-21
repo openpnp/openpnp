@@ -2,7 +2,7 @@ Cobalt is the name of the first OpenPnP machine. It's a work in progress and thi
 
 ## April 20, 2013
 
-Lots of progress today. Got the frame built from 80/20 and squared up very nicely. Built two 100x50mm joining plates for 80/20 on the mill, which went really quick. Used a DTI to get the first Y rail parallel to the 80/20 within a mil and then used the DTI on the first rail to do the same to the second rail. Mounted the lead screw, bearings and Y stepper back up and the base is looking pretty nice.
+Lots of progress today. Got the frame built from 80/20 and squared up very nicely. Built four 100x50mm joining plates for 80/20 on the mill, which went really quick. Used a DTI to get the first Y rail parallel to the 80/20 within a mil and then used the DTI on the first rail to do the same to the second rail. Mounted the lead screw, bearings and Y stepper back up and the base is looking pretty nice.
 
 I figured out a way to quickly bolt a hunk of 80/20 to service as a temporary gantry so I can test the single sided drive. Tomorrow I'll cut a piece from my stock, bolt it up and test. If that does the trick I have two more plates to make to bolt the gantry to the Y axis and then I'll start on the X axis bearing blocks.
 
