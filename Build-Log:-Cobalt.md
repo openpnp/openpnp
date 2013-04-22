@@ -8,6 +8,10 @@ Today I built two new parts. They are the gantry adapter plates that couple the 
 
 Goals for this coming week are to finish up the design of the X axis and start building the parts for it. There's less parts in the X axis, and they are less complex, so my hope is that by the start of next weekend I'll have the X axis mostly built and ready to start working on the X to head interface. Then things get interesting!
 
+Here's a video showing the Y gantry running a short job in OpenPnP: http://www.youtube.com/watch?v=6J69JoVtv-o
+
+![](images/IMG_0947.png)
+
 ## April 20, 2013
 
 Lots of progress today. Got the frame built from 80/20 and squared up very nicely. Built four 100x50mm joining plates for 80/20 on the mill, which went really quick. Used a DTI to get the first Y rail parallel to the 80/20 within a mil and then used the DTI on the first rail to do the same to the second rail. Mounted the lead screw, bearings and Y stepper back up and the base is looking pretty nice.
