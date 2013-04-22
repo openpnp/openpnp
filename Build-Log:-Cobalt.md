@@ -1,5 +1,13 @@
 Cobalt is the name of the first OpenPnP machine. It's a work in progress and this document will chronicle it's design and build.
 
+## April 21, 2013
+
+Another good day for OpenPnP. The Y gantry is complete and is moving under power. I've decided to use a hunk of 80/20 25-5050 for the Y gantry, which I don't have at the moment, so for the time being I am using a piece of 2550. Gotta order more 80/20.
+
+Today I built two new parts. They are the gantry adapter plates that couple the 80/20 gantry to the Y axis linear bearings. Easy parts. They are just 1/2" aluminum bar stock with 8 holes drilled and 4 holes countersunk.
+
+Goals for this coming week are to finish up the design of the X axis and start building the parts for it. There's less parts in the X axis, and they are less complex, so my hope is that by the start of next weekend I'll have the X axis mostly built and ready to start working on the X to head interface. Then things get interesting!
+
 ## April 20, 2013
 
 Lots of progress today. Got the frame built from 80/20 and squared up very nicely. Built four 100x50mm joining plates for 80/20 on the mill, which went really quick. Used a DTI to get the first Y rail parallel to the 80/20 within a mil and then used the DTI on the first rail to do the same to the second rail. Mounted the lead screw, bearings and Y stepper back up and the base is looking pretty nice.
