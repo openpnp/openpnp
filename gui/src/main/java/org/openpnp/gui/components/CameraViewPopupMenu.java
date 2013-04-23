@@ -37,6 +37,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
+import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
 import org.openpnp.model.LengthUnit;
 
@@ -118,29 +119,31 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		
 		JRadioButtonMenuItem menuItem;
 		
+		Reticle reticle = cameraView.getDefaultReticle();
+		
 		menuItem = new JRadioButtonMenuItem(noReticleAction);
-		if (cameraView.getDefaultReticle() == null) {
+		if (reticle == null) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		
 		menuItem = new JRadioButtonMenuItem(crosshairReticleAction);
-		if (cameraView.getDefaultReticle().getClass() == CrosshairReticle.class) {
+		if (reticle != null && reticle.getClass() == CrosshairReticle.class) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		
 		menuItem = new JRadioButtonMenuItem(rulerReticleAction);
-		if (cameraView.getDefaultReticle().getClass() == RulerReticle.class) {
+		if (reticle != null && reticle.getClass() == RulerReticle.class) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
 		menu.add(menuItem);
 		
 		menuItem = new JRadioButtonMenuItem(fiducialReticleAction);
-		if (cameraView.getDefaultReticle().getClass() == FiducialReticle.class) {
+		if (reticle != null && reticle.getClass() == FiducialReticle.class) {
 			menuItem.setSelected(true);
 		}
 		buttonGroup.add(menuItem);
