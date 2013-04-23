@@ -216,12 +216,13 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		synchronized (buffer) {
 			// Grab these values only once since the head may continue to move
 			// while we are rendering.
-			Location l = getLocation();
+			Location l = getLocation().convertToUnits(LengthUnit.Millimeters);
 			double headX = l.getX();
 			double headY = l.getY();
 			if (lastX != headX || lastY != headY) {
 				// Find the closest tile to the head's current position.
 				Tile closestTile = getClosestTile(headX, headY);
+				logger.debug("closestTile {}", closestTile);
 				
 				// If it has changed we need to render the entire buffer.
 				if (closestTile != lastCenterTile) {
@@ -246,8 +247,9 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 			/*
 			 * Get the distance in pixels from the center tile to the head.
 			 */
-			double deltaX = unitsDeltaX / getUnitsPerPixel().getX();
-			double deltaY = unitsDeltaY / getUnitsPerPixel().getY();
+            Location unitsPerPixel = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
+			double deltaX = unitsDeltaX / unitsPerPixel.getX();
+			double deltaY = unitsDeltaY / unitsPerPixel.getY();
 			
 			/*
 			 * Get the position within the buffer of the top left pixel of the
@@ -390,8 +392,6 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		// Parse the filenames of the all the files and add their coordinates
 		// to the sets and map.
 		for (File file : files) {
-			Location location = new Location();
-			location.setUnits(LengthUnit.Millimeters);
 			String filename = file.getName();
 			filename = filename.substring(0, filename.indexOf(".png"));
 			String[] xy = filename.split(",");
