@@ -80,10 +80,10 @@ public class RulerReticle extends CrosshairReticle {
         g2d.translate(viewPortCenterX, viewPortCenterY);
         g2d.rotate(Math.toRadians(rotation));
 
-        double uppX = new Length(cameraUnitsPerPixelX, units).convertToUnits(
-                this.units).getValue();
-        double uppY = new Length(cameraUnitsPerPixelY, units).convertToUnits(
-                this.units).getValue();
+        double uppX = new Length(cameraUnitsPerPixelX, cameraUnitsPerPixelUnits)
+                .convertToUnits(this.units).getValue();
+        double uppY = new Length(cameraUnitsPerPixelY, cameraUnitsPerPixelUnits)
+                .convertToUnits(this.units).getValue();
         double pixelsPerTickX = unitsPerTick / uppX;
         double pixelsPerTickY = unitsPerTick / uppY;
         int tickLength = 10;

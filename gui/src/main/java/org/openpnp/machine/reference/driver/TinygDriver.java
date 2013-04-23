@@ -84,7 +84,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
             @Override
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-                connect(portName, baud);
+                connect();
             }
         });
 	}
@@ -180,19 +180,18 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		sendCommand("M5");
 	}
 
-	public synchronized void connect(String portName, int baud)
-			throws Exception {
-		connect(CommPortIdentifier.getPortIdentifier(portName), baud);
-	}
-
-	public synchronized void connect(CommPortIdentifier commPortId, int baud)
-			throws Exception {
+	public synchronized void connect() throws Exception {
 		disconnect();
+
+		CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier(portName);
+		
+		if (commPortId == null) {
+		    throw new Exception("Port not found: " + portName);
+		}
 
 		if (commPortId.isCurrentlyOwned()) {
 			throw new Exception("Port is in use.");
 		}
-		this.baud = baud;
 		serialPort = (SerialPort) commPortId.open(this.getClass().getName(),
 				2000);
 		serialPort.setSerialPortParams(baud, SerialPort.DATABITS_8,
@@ -239,9 +238,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		setEnabled(false);
 		
 		// Make sure we are in absolute mode
-		// TODO returns a status code 60 which throws an error, need to account
-		// for error code 60 when neccesary and re-enable this
-//		sendCommand("G90");
+		sendCommand("G90");
 		
 		// Reset all axes to 0, in case the firmware was not reset on
 		// connect.

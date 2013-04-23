@@ -3,5 +3,11 @@
       <board-location side="Top" board-file="simple.board.xml">
          <location units="Millimeters" x="100.0" y="100.0" z="0.0" rotation="0.0"/>
       </board-location>
+      <board-location side="Top" board-file="simple.board.xml">
+         <location units="Millimeters" x="120.0" y="120.0" z="0.0" rotation="45.0"/>
+      </board-location>
+      <board-location side="Top" board-file="simple.board.xml">
+         <location units="Millimeters" x="200.0" y="200.0" z="0.0" rotation="90.0"/>
+      </board-location>
    </board-locations>
 </openpnp-job>
