@@ -78,7 +78,6 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
@@ -771,7 +770,7 @@ public class JobPanel extends JPanel {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", "Camera is not movable.");
                 return;
             }
-            final Location location = getSelectedBoardLocation().getLocation().clone();
+            final Location location = getSelectedBoardLocation().getLocation();
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					try {
@@ -801,8 +800,7 @@ public class JobPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
                 final Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                final Location location = getSelectedBoardLocation()
-                        .getLocation().clone();
+                final Location location = getSelectedBoardLocation().getLocation();
 				public void run() {
 					try {
 						MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
@@ -863,7 +861,7 @@ public class JobPanel extends JPanel {
 			Placement placement = new Placement(id);
 
 			placement.setPart(Configuration.get().getParts().get(0));
-			placement.getLocation().setUnits(Configuration.get().getSystemUnits());
+			placement.setLocation(new Location(Configuration.get().getSystemUnits()));
 			
 			boardLocation.getBoard().addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();

@@ -37,7 +37,7 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
 	
 	@Override
     public Location getPickLocation() throws Exception {
-	    return location.clone();
+	    return location;
     }
 
     @Override

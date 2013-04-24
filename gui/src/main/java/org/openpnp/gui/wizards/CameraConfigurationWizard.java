@@ -38,7 +38,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
@@ -110,7 +109,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	@Override
 	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
-		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		
 		addWrappedBinding(camera, "unitsPerPixel.lengthX", textFieldUppX, "text", lengthConverter);
 		addWrappedBinding(camera, "unitsPerPixel.lengthY", textFieldUppY, "text", lengthConverter);

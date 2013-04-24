@@ -41,14 +41,11 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.ApplyResetBindingListener;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
-import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -123,8 +120,6 @@ public class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard 
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
-		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 		
 		// The order of the properties is important. We want all the booleans
