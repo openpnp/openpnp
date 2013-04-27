@@ -105,20 +105,20 @@ public class LocationButtonsPanel extends JPanel {
 	}
 
 	private Location getParsedLocation() {
-		Location location = new Location(Configuration.get().getSystemUnits());
+	    double x = 0, y = 0, z = 0, rotation = 0;
 		if (textFieldX != null) {
-			location.setX(Length.parse(textFieldX.getText()).getValue());
+			x = Length.parse(textFieldX.getText()).getValue();
 		}
 		if (textFieldY != null) {
-			location.setY(Length.parse(textFieldY.getText()).getValue());
+			y = Length.parse(textFieldY.getText()).getValue();
 		}
 		if (textFieldZ != null) {
-			location.setZ(Length.parse(textFieldZ.getText()).getValue());
+			z = Length.parse(textFieldZ.getText()).getValue();
 		}
 		if (textFieldC != null) {
-			location.setRotation(Double.parseDouble(textFieldC.getText()));
+			rotation = Double.parseDouble(textFieldC.getText());
 		}
-		return location;
+		return new Location(Configuration.get().getSystemUnits(), x, y, z, rotation);
 	}
 
 	private Action captureCameraCoordinatesAction = new AbstractAction(
@@ -199,7 +199,7 @@ public class LocationButtonsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
             final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            final Location location = getParsedLocation().clone();
+            final Location location = getParsedLocation();
 			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
 				public void run() {
 					try {
@@ -258,7 +258,7 @@ public class LocationButtonsPanel extends JPanel {
             Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
             Head head = nozzle.getHead();
             final Actuator actuator = head.getActuator(actuatorId);
-            final Location location = getParsedLocation().clone();
+            final Location location = getParsedLocation();
             if (actuator == null) {
                 MessageBoxes.errorBox(getTopLevelAncestor(),
                         "Error", String.format(

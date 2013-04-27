@@ -112,7 +112,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 				placement.setLocation(location);
 			}
 			else if (columnIndex == 5) {
-				placement.getLocation().setRotation(Double.parseDouble(aValue.toString()));
+				placement.setLocation(placement.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
 			}
 		}
 		catch (Exception e) {

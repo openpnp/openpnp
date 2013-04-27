@@ -64,6 +64,7 @@ import org.openpnp.gui.tablemodel.CamerasTableModel;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.vision.OpenCvVisionProvider;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
@@ -266,7 +267,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				Camera camera = cameraClass.newInstance();
 				
 				camera.setId(Helpers.createUniqueName("C", Configuration.get().getMachine().getCameras(), "id"));
-				camera.getUnitsPerPixel().setUnits(Configuration.get().getSystemUnits());
+				camera.setUnitsPerPixel(new Location(Configuration.get().getSystemUnits()));
 				try {
 					if (camera.getVisionProvider() == null) {
 						camera.setVisionProvider(new OpenCvVisionProvider());

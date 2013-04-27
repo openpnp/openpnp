@@ -111,6 +111,10 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	
 	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
 	
+	// TODO: Most of what this class did is deprecated and has been moved into
+	// Nozzles, Actuators and Cameras. We may still want to do softlimits, but
+	// these will likely move to the driver. Revisit this and see what is and
+	// isn't needed.
 	public ReferenceHeadConfigurationWizard(ReferenceHead head) {
 		this.head = head;
 		
@@ -378,35 +382,35 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	}
 	
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		LengthConverter lengthConverter = new LengthConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		IntegerConverter integerConverter = new IntegerConverter();
 		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
-		wrappedBindings.add(JBindings.bind(head, "safeZ", textFieldSafeZ, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "pickDwellMilliseconds", textFieldPickDwell, "text", integerConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "placeDwellMilliseconds", textFieldPlaceDwell, "text", integerConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "safeZ", textFieldSafeZ, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "feedRate", textFieldFeedRate, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "pickDwellMilliseconds", textFieldPickDwell, "text", integerConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "placeDwellMilliseconds", textFieldPlaceDwell, "text", integerConverter, listener));
 
-		wrappedBindings.add(JBindings.bind(head, "softLimits.enabled", chckbxSoftLimitsEnabled, "selected", listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthX", textFieldSoftLimitsXMin, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthX", textFieldSoftLimitsXMax, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthY", textFieldSoftLimitsYMin, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthY", textFieldSoftLimitsYMax, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthZ", textFieldSoftLimitsZMin, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthZ", textFieldSoftLimitsZMax, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.rotation", textFieldSoftLimitsCMin, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.rotation", textFieldSoftLimitsCMax, "text", doubleConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.enabled", chckbxSoftLimitsEnabled, "selected", listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthX", textFieldSoftLimitsXMin, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthX", textFieldSoftLimitsXMax, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthY", textFieldSoftLimitsYMin, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthY", textFieldSoftLimitsYMax, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.lengthZ", textFieldSoftLimitsZMin, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.lengthZ", textFieldSoftLimitsZMax, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.minimums.rotation", textFieldSoftLimitsCMin, "text", doubleConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "softLimits.maximums.rotation", textFieldSoftLimitsCMax, "text", doubleConverter, listener));
 		
-		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthX", textFieldHomeLocationX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthY", textFieldHomeLocationY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthZ", textFieldHomeLocationZ, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.location.rotation", textFieldHomeLocationC, "text", doubleConverter, listener));
-		
-		wrappedBindings.add(JBindings.bind(head, "homing.vision.enabled", chckbxVisionEnabled, "selected", listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotDiameter", textFieldHomingDotDiameter, "text", doubleConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthX", textFieldHomingDotX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthY", textFieldHomingDotY, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthZ", textFieldHomingDotZ, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthX", textFieldHomeLocationX, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthY", textFieldHomeLocationY, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.location.lengthZ", textFieldHomeLocationZ, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.location.rotation", textFieldHomeLocationC, "text", doubleConverter, listener));
+//		
+//		wrappedBindings.add(JBindings.bind(head, "homing.vision.enabled", chckbxVisionEnabled, "selected", listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotDiameter", textFieldHomingDotDiameter, "text", doubleConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthX", textFieldHomingDotX, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthY", textFieldHomingDotY, "text", lengthConverter, listener));
+//		wrappedBindings.add(JBindings.bind(head, "homing.vision.homingDotLocation.lengthZ", textFieldHomingDotZ, "text", lengthConverter, listener));
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
 		ComponentDecorators.decorateWithAutoSelect(textFieldPickDwell);

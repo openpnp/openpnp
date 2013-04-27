@@ -34,13 +34,14 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
@@ -109,16 +110,17 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
 	@Override
 	public void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
-		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+		LengthConverter lengthConverter = new LengthConverter();
 		
-		addWrappedBinding(camera, "unitsPerPixel.lengthX", textFieldUppX, "text", lengthConverter);
-		addWrappedBinding(camera, "unitsPerPixel.lengthY", textFieldUppY, "text", lengthConverter);
+		MutableLocationProxy unitsPerPixel = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
+        addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
+        addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
 		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
 	}
-
+	
 	private Action measureAction = new AbstractAction("Measure") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

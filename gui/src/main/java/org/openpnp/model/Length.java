@@ -215,19 +215,19 @@ public class Length {
 			}
 		}
 		if (location.getUnits() == null) {
-			location.setUnits(length.getUnits());
+		    throw new Error("This can't happen!");
 		}
 		else {
 			location = location.convertToUnits(length.getUnits());
 		}
 		if (field == Field.X) {
-			location.setX(length.getValue());
+		    location = location.derive(length.getValue(), null, null,null);
 		}
 		else if (field == Field.Y) {
-			location.setY(length.getValue());
+            location = location.derive(null, length.getValue(), null,null);
 		}
 		else if (field == Field.Z) {
-			location.setZ(length.getValue());
+            location = location.derive(null, null, length.getValue(), null);
 		}
 		return location;
 	}

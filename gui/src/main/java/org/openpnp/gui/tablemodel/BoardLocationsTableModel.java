@@ -122,7 +122,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 				boardLocation.setLocation(location);
 			}
 			else if (columnIndex == 5) {
-				boardLocation.getLocation().setRotation(Double.parseDouble(aValue.toString()));
+                boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
 			}
 		}
 		catch (Exception e) {

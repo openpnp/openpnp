@@ -17,30 +17,18 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
-package org.openpnp.gui.support;
+package org.openpnp.machine.reference.feeder.wizards;
 
-import org.jdesktop.beansbinding.Converter;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
+import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 
-public class LengthConverter extends Converter<Length, String> {
-	@Override
-	public String convertForward(Length length) {
-		length = length.convertToUnits(Configuration.get().getSystemUnits());
-		return String.format(Configuration.get().getLengthDisplayFormat(), length.getValue());
-	}
-	
-	@Override
-	public Length convertReverse(String s) {
-		Length length = Length.parse(s, false);
-		if (length == null) {
-			throw new RuntimeException("Unable to parse " + s);
-		}
-		if (length.getUnits() == null) {
-			length.setUnits(Configuration.get().getSystemUnits());
-		}
-		return length;
-	}
+public class ReferenceTubeFeederConfigurationWizard extends
+        AbstractReferenceFeederConfigurationWizard {
+    private final ReferenceTubeFeeder feeder;
+
+    public ReferenceTubeFeederConfigurationWizard(ReferenceTubeFeeder feeder) {
+        super(feeder);
+        this.feeder = feeder;
+    }
 }

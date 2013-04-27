@@ -595,7 +595,7 @@ public class MachineControlsPanel extends JPanel {
 	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-tool.png"))) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			final Location location = cameraPanel.getSelectedCameraLocation().clone();
+			final Location location = cameraPanel.getSelectedCameraLocation();
 			final Nozzle nozzle = getSelectedNozzle();
 			submitMachineTask(new Runnable() {
 				public void run() {
@@ -618,7 +618,7 @@ public class MachineControlsPanel extends JPanel {
 			if (camera == null) {
 				return;
 			}
-			final Location location = getSelectedNozzle().getLocation().clone();
+			final Location location = getSelectedNozzle().getLocation();
 			submitMachineTask(new Runnable() {
 				public void run() {
 					try {

@@ -277,7 +277,7 @@ public class TwoPlacementBoardLocationProcess {
 		Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
 		oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());
 		
-		boardLocation.setZ(oldBoardLocation.getZ());
+		boardLocation = boardLocation.derive(null, null, oldBoardLocation.getZ(), null);
 
 		jobPanel.getSelectedBoardLocation().setLocation(boardLocation);
 		jobPanel.refreshSelectedBoardRow();

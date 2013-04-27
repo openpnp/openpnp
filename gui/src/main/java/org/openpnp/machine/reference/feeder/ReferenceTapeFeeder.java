@@ -21,7 +21,6 @@
 
 package org.openpnp.machine.reference.feeder;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -35,16 +34,12 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
@@ -334,7 +329,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		return feedSpeed;
 	}
 
-	public void setFeedSpeed(double feedSpeed) {
+	public void setFeedSpeed(Double feedSpeed) {
 		this.feedSpeed = feedSpeed;
 	}
 	
@@ -393,10 +388,10 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		public Vision() {
 	        Configuration.get().addListener(new ConfigurationListener.Adapter() {
 	            @Override
-	            public void configurationLoaded(Configuration configuration)
+	            public void configurationComplete(Configuration configuration)
 	                    throws Exception {
 	                if (templateImageName != null) {
-	                    File file = configuration.getResourceFile(this.getClass(), templateImageName);
+	                    File file = configuration.getResourceFile(Vision.this.getClass(), templateImageName);
 	                    templateImage = ImageIO.read(file);
 	                }
 	            }

@@ -449,7 +449,7 @@ public class FourPlacementBoardLocationProcess {
 		Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
 		oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());
 		
-		boardLocation.setZ(oldBoardLocation.getZ());
+        boardLocation = boardLocation.derive(null, null, oldBoardLocation.getZ(), null);
 
 		jobPanel.getSelectedBoardLocation().setLocation(boardLocation);
 		// TODO: Set Board center point when center points are finished.
