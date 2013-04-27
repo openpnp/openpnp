@@ -24,8 +24,6 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
@@ -48,6 +46,8 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
@@ -120,12 +120,22 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		panel_1.add(lblSearch);
 
 		searchTextField = new JTextField();
-		searchTextField.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyTyped(KeyEvent arg0) {
-				search();
-			}
-		});
+        searchTextField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                search();
+            }
+            
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                search();
+            }
+            
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                search();
+            }
+        });
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
 
