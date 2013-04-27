@@ -47,8 +47,6 @@ import com.google.gson.JsonSyntaxException;
 
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.
- * TODO: Sometimes we fail to get a final status report when rapidly jogging
- * 10mm at a time. It looks like this:
  * 01:59:47,582 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - Status report: {"posx":91.009}
 01:59:47,678 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - {"sr":{"posx":90.000,"vel":7.81}}
 01:59:47,678 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - Status report: {"posx":90.000,"vel":7.81}
