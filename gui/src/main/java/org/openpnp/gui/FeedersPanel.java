@@ -39,7 +39,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -66,6 +65,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.swing.border.TitledBorder;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
@@ -82,8 +82,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private FeedersTableModel tableModel;
 	private TableRowSorter<FeedersTableModel> tableSorter;
 	private JTextField searchTextField;
-	private JPanel generalConfigPanel;
-	private JPanel feederSpecificConfigPanel;
+    private JPanel configurationPanel;
 
 	private ActionGroup feederSelectedActionGroup;
 
@@ -148,22 +147,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				});
 		add(splitPane, BorderLayout.CENTER);
 
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-
-		generalConfigPanel = new JPanel();
-		tabbedPane.addTab("General Configuration", null, generalConfigPanel,
-				null);
-		generalConfigPanel.setLayout(new BorderLayout(0, 0));
-
-		feederSpecificConfigPanel = new JPanel();
-		tabbedPane.addTab("Feeder Specific", null, feederSpecificConfigPanel,
-				null);
-		feederSpecificConfigPanel.setLayout(new BorderLayout(0, 0));
-
-		splitPane.setLeftComponent(new JScrollPane(table));
-		splitPane.setRightComponent(tabbedPane);
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		configurationPanel = new JPanel();
+		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		feederSelectedActionGroup = new ActionGroup(deleteFeederAction,
 				feedFeederAction, showPartAction);
@@ -180,24 +168,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 						feederSelectedActionGroup.setEnabled(feeder != null);
 
-						generalConfigPanel.removeAll();
-						feederSpecificConfigPanel.removeAll();
+						configurationPanel.removeAll();
 						if (feeder != null) {
-						    // TODO remove this and it's tab
-//							Wizard generalConfigWizard = new FeederConfigurationWizard(
-//									feeder, FeedersPanel.this.configuration);
-//							if (generalConfigWizard != null) {
-//								generalConfigWizard
-//										.setWizardContainer(FeedersPanel.this);
-//								JPanel panel = generalConfigWizard
-//										.getWizardPanel();
-//								generalConfigPanel.add(panel);
-//							}
 							Wizard wizard = feeder.getConfigurationWizard();
 							if (wizard != null) {
 								wizard.setWizardContainer(FeedersPanel.this);
 								JPanel panel = wizard.getWizardPanel();
-								feederSpecificConfigPanel.add(panel);
+								configurationPanel.add(panel);
 							}
 						}
 						revalidate();
@@ -206,6 +183,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				});
 
 		feederSelectedActionGroup.setEnabled(false);
+		
+        splitPane.setLeftComponent(new JScrollPane(table));
+        splitPane.setRightComponent(configurationPanel);
+        configurationPanel.setLayout(new BorderLayout(0, 0));
 	}
 
 	private Feeder getSelectedFeeder() {
@@ -365,5 +346,4 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			}
 		}
 	};
-
 }
