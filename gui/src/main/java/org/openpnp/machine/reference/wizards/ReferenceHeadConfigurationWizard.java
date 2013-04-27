@@ -378,7 +378,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	}
 	
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		LengthConverter lengthConverter = new LengthConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 		IntegerConverter integerConverter = new IntegerConverter();
 		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);

@@ -19,10 +19,9 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.wizards;
+package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
-import java.util.Vector;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -31,18 +30,18 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.PartConverter;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Feeder;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -50,9 +49,8 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class FeederConfigurationWizard extends AbstractConfigurationWizard {
-	private final Feeder feeder;
-	private final Configuration configuration;
+public abstract class AbstractReferenceFeederConfigurationWizard extends AbstractConfigurationWizard {
+    private final ReferenceFeeder feeder;
 
 	private JPanel panelLocation;
 	private JLabel lblX_1;
@@ -65,10 +63,12 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private JTextField textFieldLocationC;
 	private JPanel panelPart;
 
-	public FeederConfigurationWizard(Feeder feeder,
-			Configuration configuration) {
+	private JComboBox comboBoxPart;
+	private LocationButtonsPanel locationButtonsPanel;
+	
+
+	public AbstractReferenceFeederConfigurationWizard(ReferenceFeeder feeder) {
 		this.feeder = feeder;
-		this.configuration = configuration;
 
 		panelPart = new JPanel();
 		panelPart.setBorder(new TitledBorder(null, "Part",
@@ -83,7 +83,14 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 						FormFactory.RELATED_GAP_ROWSPEC,
 						FormFactory.DEFAULT_ROWSPEC, }));
 
-		comboBoxPart = new JComboBox(new PartsComboBoxModel());
+		comboBoxPart = new JComboBox();
+		try {
+		    comboBoxPart.setModel(new PartsComboBoxModel());
+		}
+		catch (Error e) {
+		    // Swallow this error. This happens during parsing in
+		    // in WindowBuilder but doesn't happen during normal run.
+		}
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
 		panelPart.add(comboBoxPart, "2, 2, left, default");
 
@@ -141,15 +148,16 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
 	@Override
 	public void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(configuration);
-		DoubleConverter doubleConverter = new DoubleConverter(
-				configuration.getLengthDisplayFormat());
-
-		// TODO: location is only valid for reference feeders
-		addWrappedBinding(feeder, "location.lengthX", textFieldLocationX, "text", lengthConverter);
-		addWrappedBinding(feeder, "location.lengthY", textFieldLocationY, "text", lengthConverter);
-		addWrappedBinding(feeder, "location.lengthZ", textFieldLocationZ, "text", lengthConverter);
-		addWrappedBinding(feeder, "location.rotation", textFieldLocationC, "text", doubleConverter);
+		LengthConverter lengthConverter = new LengthConverter();
+		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+		
+        MutableLocationProxy location = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
+        addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
+        addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
+        addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
+        addWrappedBinding(location, "rotation", textFieldLocationC, "text", doubleConverter);
+        
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 
 		ComponentDecorators
@@ -160,7 +168,4 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
 		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
 	}
-
-	private JComboBox comboBoxPart;
-	private LocationButtonsPanel locationButtonsPanel;
 }

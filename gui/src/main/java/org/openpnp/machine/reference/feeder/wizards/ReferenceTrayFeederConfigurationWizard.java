@@ -17,225 +17,153 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.support.ApplyResetBindingListener;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
-import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JSeparator;
 
-public class ReferenceTrayFeederConfigurationWizard extends JPanel implements Wizard {
-	private final ReferenceTrayFeeder feeder;
+public class ReferenceTrayFeederConfigurationWizard extends
+        AbstractReferenceFeederConfigurationWizard {
+    private final ReferenceTrayFeeder feeder;
 
-	private WizardContainer wizardContainer;
-	
-	private JTextField textFieldOffsetsX;
-	private JTextField textFieldOffsetsY;
-	private JTextField textFielTrayCountX;
-	private JTextField textFieldTrayCountY;
-	
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
+    private JTextField textFieldOffsetsX;
+    private JTextField textFieldOffsetsY;
+    private JTextField textFieldTrayCountX;
+    private JTextField textFieldTrayCountY;
+    private JTextField textFieldFeedCount;
 
-	public ReferenceTrayFeederConfigurationWizard(ReferenceTrayFeeder referenceTrayFeeder) {
-		feeder = referenceTrayFeeder;
-		
-		JPanel panelFields = new JPanel();
-		
-		panelFields.setLayout(new FormLayout(new ColumnSpec[] {
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        ColumnSpec.decode("default:grow"),
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        ColumnSpec.decode("default:grow"),
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        ColumnSpec.decode("default:grow"),
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,},
-		    new RowSpec[] {
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,}));
+    public ReferenceTrayFeederConfigurationWizard(ReferenceTrayFeeder feeder) {
+        super(feeder);
+        this.feeder = feeder;
 
-		JLabel lblX = new JLabel("X");
-		panelFields.add(lblX, "4, 2");
+        JPanel panelFields = new JPanel();
 
-		JLabel lblY = new JLabel("Y");
-		panelFields.add(lblY, "6, 2");
+        panelFields.setLayout(new FormLayout(
+                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"),
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"),
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"),
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC, }));
 
-		JLabel lblFeedStartLocation = new JLabel("Offsets");
-		panelFields.add(lblFeedStartLocation, "2, 4, right, default");
+        JLabel lblX = new JLabel("X");
+        panelFields.add(lblX, "4, 2");
 
-		textFieldOffsetsX = new JTextField();
-		panelFields.add(textFieldOffsetsX, "4, 4, fill, default");
-		textFieldOffsetsX.setColumns(10);
+        JLabel lblY = new JLabel("Y");
+        panelFields.add(lblY, "6, 2");
 
-		textFieldOffsetsY = new JTextField();
-		panelFields.add(textFieldOffsetsY, "6, 4, fill, default");
-		textFieldOffsetsY.setColumns(10);
+        JLabel lblFeedStartLocation = new JLabel("Offsets");
+        panelFields.add(lblFeedStartLocation, "2, 4, right, default");
 
-		JLabel lblTrayCount = new JLabel("Tray Count");
-		panelFields.add(lblTrayCount, "2, 6, right, default");
+        textFieldOffsetsX = new JTextField();
+        panelFields.add(textFieldOffsetsX, "4, 4, fill, default");
+        textFieldOffsetsX.setColumns(10);
 
-		textFielTrayCountX = new JTextField();
-		panelFields.add(textFielTrayCountX, "4, 6, fill, default");
-		textFielTrayCountX.setColumns(10);
+        textFieldOffsetsY = new JTextField();
+        panelFields.add(textFieldOffsetsY, "6, 4, fill, default");
+        textFieldOffsetsY.setColumns(10);
 
-		textFieldTrayCountY = new JTextField();
-		panelFields.add(textFieldTrayCountY, "6, 6, fill, default");
-		textFieldTrayCountY.setColumns(10);
+        JLabel lblTrayCount = new JLabel("Tray Count");
+        panelFields.add(lblTrayCount, "2, 6, right, default");
 
-		JButton btnSave = new JButton(saveAction);
-		setLayout(new BorderLayout(0, 0));
-		
-		JScrollPane scrollPane = new JScrollPane(panelFields);
-		
-		JSeparator separator = new JSeparator();
-		panelFields.add(separator, "4, 8, 3, 1");
-		
-		JLabel lblFeedCount = new JLabel("Feed Count");
-		panelFields.add(lblFeedCount, "2, 10, right, default");
-		
-		textFieldFeedCount = new JTextField();
-		panelFields.add(textFieldFeedCount, "4, 10, fill, default");
-		textFieldFeedCount.setColumns(10);
-		scrollPane.getVerticalScrollBar().setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
-		
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		
-		JButton btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
-		
-		panelActions.add(btnSave, "8, 26");
-		
-		add(panelActions, BorderLayout.SOUTH);
+        textFieldTrayCountX = new JTextField();
+        panelFields.add(textFieldTrayCountX, "4, 6, fill, default");
+        textFieldTrayCountX.setColumns(10);
 
-		createBindings();
-		loadFromModel();
-	}
-	
-	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
-		IntegerConverter integerConverter = new IntegerConverter();
-		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
-		
-		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthX", textFieldOffsetsX, "text", lengthConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "offsets.lengthY", textFieldOffsetsY, "text", lengthConverter, listener));
-		
-		wrappedBindings.add(JBindings.bind(feeder, "trayCountX", textFielTrayCountX, "text", integerConverter, listener));
-		wrappedBindings.add(JBindings.bind(feeder, "trayCountY", textFieldTrayCountY, "text", integerConverter, listener));
-		
-        wrappedBindings.add(JBindings.bind(feeder, "feedCount", textFieldFeedCount, "text", integerConverter, listener));
+        textFieldTrayCountY = new JTextField();
+        panelFields.add(textFieldTrayCountY, "6, 6, fill, default");
+        textFieldTrayCountY.setColumns(10);
 
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
-		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
-		
-		ComponentDecorators.decorateWithAutoSelect(textFielTrayCountX);
+        JSeparator separator = new JSeparator();
+        panelFields.add(separator, "4, 8, 3, 1");
+
+        JLabel lblFeedCount = new JLabel("Feed Count");
+        panelFields.add(lblFeedCount, "2, 10, right, default");
+
+        textFieldFeedCount = new JTextField();
+        panelFields.add(textFieldFeedCount, "4, 10, fill, default");
+        textFieldFeedCount.setColumns(10);
+
+        contentPanel.add(panelFields);
+    }
+
+    @Override
+    public void createBindings() {
+        super.createBindings();
+        LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter integerConverter = new IntegerConverter();
+
+        
+        MutableLocationProxy offsets = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "offsets", offsets, "location");
+        addWrappedBinding(offsets, "lengthX", textFieldOffsetsX, "text",
+                lengthConverter);
+        addWrappedBinding(offsets, "lengthY", textFieldOffsetsY, "text",
+                lengthConverter);
+
+        addWrappedBinding(feeder, "trayCountX", textFieldTrayCountX, "text",
+                integerConverter);
+        addWrappedBinding(feeder, "trayCountY", textFieldTrayCountY, "text",
+                integerConverter);
+
+        addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text",
+                integerConverter);
+
+        ComponentDecorators
+                .decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
+        ComponentDecorators
+                .decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
+
+        ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountX);
         ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountY);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
-	}
-	
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-	
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-	
-	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
-	}
-
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer.wizardCompleted(ReferenceTrayFeederConfigurationWizard.this);
-		}
-	};
-	
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
-	private JTextField textFieldFeedCount;
+    }
 }

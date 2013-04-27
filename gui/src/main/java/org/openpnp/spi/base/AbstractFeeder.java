@@ -2,12 +2,9 @@ package org.openpnp.spi.base;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 
 public abstract class AbstractFeeder implements Feeder {
     @Attribute

@@ -59,7 +59,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
-import org.openpnp.gui.wizards.FeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Outline;
 import org.openpnp.model.Part;
@@ -184,15 +183,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 						generalConfigPanel.removeAll();
 						feederSpecificConfigPanel.removeAll();
 						if (feeder != null) {
-							Wizard generalConfigWizard = new FeederConfigurationWizard(
-									feeder, FeedersPanel.this.configuration);
-							if (generalConfigWizard != null) {
-								generalConfigWizard
-										.setWizardContainer(FeedersPanel.this);
-								JPanel panel = generalConfigWizard
-										.getWizardPanel();
-								generalConfigPanel.add(panel);
-							}
+						    // TODO remove this and it's tab
+//							Wizard generalConfigWizard = new FeederConfigurationWizard(
+//									feeder, FeedersPanel.this.configuration);
+//							if (generalConfigWizard != null) {
+//								generalConfigWizard
+//										.setWizardContainer(FeedersPanel.this);
+//								JPanel panel = generalConfigWizard
+//										.getWizardPanel();
+//								generalConfigPanel.add(panel);
+//							}
 							Wizard wizard = feeder.getConfigurationWizard();
 							if (wizard != null) {
 								wizard.setWizardContainer(FeedersPanel.this);

@@ -135,7 +135,7 @@ public class ReferenceActuatorConfigurationWizard extends JPanel implements Wiza
 	}
 
 	private void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter(Configuration.get());
+		LengthConverter lengthConverter = new LengthConverter();
 		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
 
 		wrappedBindings.add(JBindings.bind(actuator, "location.lengthX",

@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.feeder;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceTubeFeederConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
@@ -51,6 +52,6 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new ReferenceTubeFeederConfigurationWizard(this);
 	}
 }
