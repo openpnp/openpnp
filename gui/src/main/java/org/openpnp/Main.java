@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class Main {
-	private static final Logger logger = LoggerFactory.getLogger(Main.class);
+	private static Logger logger;
 	
 	public static String getVersion() {
 		String version = Main.class.getPackage().getImplementationVersion();
@@ -77,6 +77,10 @@ public class Main {
 		if (log4jConfigurationFile.exists()) {
 			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
 		}
+		
+		// We don't create a logger until log4j has been configured or it tries
+		// to configure itself.
+		logger = LoggerFactory.getLogger(Main.class);
 		
 		logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
 		

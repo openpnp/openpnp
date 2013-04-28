@@ -66,7 +66,6 @@ public class Placement extends AbstractModelObject {
 	private void commit() {
 		setLocation(location);
         if (getPart() == null) {
-            System.out.println(partId);
             setPart(Configuration.get().getPart(partId));
         }
 	}
@@ -76,7 +75,6 @@ public class Placement extends AbstractModelObject {
 	}
 
 	public void setPart(Part part) {
-	    System.out.println("setPart " + part);
 		Part oldValue = this.part;
 		this.part = part;
 		firePropertyChange("part", oldValue, part);

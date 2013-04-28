@@ -138,7 +138,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 			sb.append(String.format(Locale.US, "Z%2.2f ", z));
 		}
 		if (!Double.isNaN(c) && c != this.c) {
-			sb.append(String.format(Locale.US, "C%2.2f ", c));
+			sb.append(String.format(Locale.US, "A%2.2f ", c));
 		}
 		if (sb.length() > 0) {
 			sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute * speed));
@@ -240,7 +240,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 		
 		// Reset all axes to 0, in case the firmware was not reset on
 		// connect.
-		sendCommand("G92 X0 Y0 Z0 C0");
+		sendCommand("G92 X0 Y0 Z0 A0");
 	}
 	
 	private int getResponseStatusCode(JsonObject o) {

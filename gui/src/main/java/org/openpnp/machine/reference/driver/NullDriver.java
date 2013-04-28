@@ -97,7 +97,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location,
             double speed) throws Exception {
-        logger.info("moveTo({}, {}, {})", new Object[] { hm, location, speed });
+        logger.debug("moveTo({}, {}, {})", new Object[] { hm, location, speed });
         
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
@@ -218,7 +218,7 @@ public class NullDriver implements ReferenceDriver {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        logger.info("pick({})", nozzle);
+        logger.debug("pick({})", nozzle);
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -226,7 +226,7 @@ public class NullDriver implements ReferenceDriver {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        logger.info("place({})", nozzle);
+        logger.debug("place({})", nozzle);
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -235,7 +235,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void actuate(ReferenceActuator actuator, double value)
             throws Exception {
-        logger.info("actuate({}, {})", actuator, value);
+        logger.debug("actuate({}, {})", actuator, value);
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -244,7 +244,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void actuate(ReferenceActuator actuator, boolean on)
             throws Exception {
-        logger.info("actuate({}, {})", actuator, on);
+        logger.debug("actuate({}, {})", actuator, on);
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -252,7 +252,7 @@ public class NullDriver implements ReferenceDriver {
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        logger.info("setEnabled({})", enabled);
+        logger.debug("setEnabled({})", enabled);
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
