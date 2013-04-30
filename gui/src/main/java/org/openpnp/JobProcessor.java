@@ -586,20 +586,6 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	private void fireBoardProcessingStarted(BoardLocation board) {
-		logger.debug("fireBoardProcessingStarted({})", board);
-		for (JobProcessorListener listener : listeners) {
-			listener.boardProcessingStarted(board);
-		}
-	}
-	
-	private void fireBoardProcessingCompleted(BoardLocation board) {
-		logger.debug("fireBoardProcessingCompleted({})", board);
-		for (JobProcessorListener listener : listeners) {
-			listener.boardProcessingCompleted(board);
-		}
-	}
-	
 	private void firePartProcessingStarted(BoardLocation board, Placement placement) {
 		logger.debug("firePartProcessingStarted({}, {})", board, placement);
 		for (JobProcessorListener listener : listeners) {
