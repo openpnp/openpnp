@@ -301,7 +301,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 	public void run() {
 		while (!Thread.interrupted()) {
 			String line = readLine().trim();
-			logger.debug(line);
+			logger.trace(line);
 			try {
 			    JsonObject o = (JsonObject) parser.parse(line);
 			    if (o.has("sr")) {
@@ -331,7 +331,6 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 	}
 	
 	private void processStatusReport(JsonObject o) {
-	    logger.debug("Status report: " + o);
 	    if (o.has("stat")) {
 	        int stat = o.get("stat").getAsInt();
 	        if (stat == 3) {

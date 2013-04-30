@@ -51,7 +51,7 @@ import org.openpnp.spi.Machine;
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left,
  * X + / -, Y + / -, Z + / -, stop, pause, slider for jog increment DROs: X, Y,
- * Z, C Radio buttons to select mm or inch. TODO add a dropdown to select Head
+ * Z, C Radio buttons to select mm or inch.
  * 
  * @author jason
  */
@@ -59,8 +59,6 @@ public class JogControlsPanel extends JPanel {
 	private final MachineControlsPanel machineControlsPanel;
 	private final Frame frame;
 	private final Configuration configuration;
-
-	private JToggleButton btnPickPlace;
 	private JPanel panelActuators;
 
 	/**
@@ -88,7 +86,8 @@ public class JogControlsPanel extends JPanel {
 		zMinusAction.setEnabled(enabled);
 		cPlusAction.setEnabled(enabled);
 		cMinusAction.setEnabled(enabled);
-		pickPlaceAction.setEnabled(enabled);
+		pickAction.setEnabled(enabled);
+		placeAction.setEnabled(enabled);
 		for (Component c : panelActuators.getComponents()) {
 			c.setEnabled(enabled);
 		}
@@ -187,21 +186,6 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnXMinus.gridy = 2;
 		panelControls.add(btnXMinus, gbc_btnXMinus);
 
-		btnPickPlace = new JToggleButton(pickPlaceAction);
-		btnPickPlace.setFocusable(false);
-		btnPickPlace.setPreferredSize(new Dimension(55, 50));
-		btnPickPlace.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-			}
-		});
-		GridBagConstraints gbc_btnPickPlace = new GridBagConstraints();
-		gbc_btnPickPlace.insets = new Insets(0, 0, 5, 0);
-		gbc_btnPickPlace.fill = GridBagConstraints.BOTH;
-		gbc_btnPickPlace.gridheight = 2;
-		gbc_btnPickPlace.gridx = 3;
-		gbc_btnPickPlace.gridy = 2;
-		panelControls.add(btnPickPlace, gbc_btnPickPlace);
-
 		JButton btnXPlus = new JButton(xPlusAction);
 		btnXPlus.setFocusable(false);
 		btnXPlus.setPreferredSize(new Dimension(55, 50));
@@ -273,6 +257,12 @@ public class JogControlsPanel extends JPanel {
 		JButton btnNewButton = new JButton(machineControlsPanel.homeAction);
 		btnNewButton.setFocusable(false);
 		panelSpecial.add(btnNewButton);
+		
+		JButton btnPick = new JButton(pickAction);
+		panelSpecial.add(btnPick);
+		
+		JButton btnPlace = new JButton(placeAction);
+		panelSpecial.add(btnPlace);
 	}
 
 	@SuppressWarnings("serial")
@@ -339,30 +329,43 @@ public class JogControlsPanel extends JPanel {
 		}
 	};
 
-	@SuppressWarnings("serial")
-	public Action pickPlaceAction = new AbstractAction("O") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			final boolean state = btnPickPlace.isSelected();
-			machineControlsPanel.submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						if (state) {
-							machineControlsPanel.getSelectedNozzle().pick();
-						}
-						else {
-						    machineControlsPanel.getSelectedNozzle().place();
-						}
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-						MessageBoxes.errorBox(frame,
-								"Pick/Place Operation Failed", e.getMessage());
-					}
-				}
-			});
-		}
-	};
+    @SuppressWarnings("serial")
+    public Action pickAction = new AbstractAction("Pick") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        machineControlsPanel.getSelectedNozzle().pick();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        MessageBoxes.errorBox(frame,
+                                "Pick Operation Failed", e.getMessage());
+                    }
+                }
+            });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action placeAction = new AbstractAction("Place") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        machineControlsPanel.getSelectedNozzle().place();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        MessageBoxes.errorBox(frame,
+                                "Place Operation Failed", e.getMessage());
+                    }
+                }
+            });
+        }
+    };
 
 	private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
 		@Override
@@ -370,34 +373,36 @@ public class JogControlsPanel extends JPanel {
 			panelActuators.removeAll();
 
 			Machine machine = Configuration.get().getMachine();
-			Head head = machine.getHeads().get(0);
-
-			for (Actuator actuator : head.getActuators()) {
-				final Actuator actuator_f = actuator;
-				final JToggleButton actuatorButton = new JToggleButton(
-						actuator_f.getId());
-				actuatorButton.setFocusable(false);
-				actuatorButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						final boolean state = actuatorButton.isSelected();
-						machineControlsPanel.submitMachineTask(
-								new Runnable() {
-									@Override
-									public void run() {
-										try {
-											actuator_f.actuate(state);
-										}
-										catch (Exception e) {
-											MessageBoxes.errorBox(frame,
-													"Actuator Command Failed",
-													e.getMessage());
-										}
-									}
-								});
-					}
-				});
-				panelActuators.add(actuatorButton);
+			
+			for (Head head : machine.getHeads()) {
+			    final Head head_f = head;
+	            for (Actuator actuator : head.getActuators()) {
+	                final Actuator actuator_f = actuator;
+	                final JToggleButton actuatorButton = new JToggleButton(
+	                        head_f.getId() + ":" + actuator_f.getId());
+	                actuatorButton.setFocusable(false);
+	                actuatorButton.addActionListener(new ActionListener() {
+	                    @Override
+	                    public void actionPerformed(ActionEvent e) {
+	                        final boolean state = actuatorButton.isSelected();
+	                        machineControlsPanel.submitMachineTask(
+	                                new Runnable() {
+	                                    @Override
+	                                    public void run() {
+	                                        try {
+	                                            actuator_f.actuate(state);
+	                                        }
+	                                        catch (Exception e) {
+	                                            MessageBoxes.errorBox(frame,
+	                                                    "Actuator Command Failed",
+	                                                    e.getMessage());
+	                                        }
+	                                    }
+	                                });
+	                    }
+	                });
+	                panelActuators.add(actuatorButton);
+	            }
 			}
 
 			setEnabled(machineControlsPanel.isEnabled());

@@ -32,7 +32,9 @@ public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable 
      * Commands the Nozzle to perform it's pick operation. Generally this just
      * consists of turning on the vacuum. When this is called during job
      * processing the processor will have already positioned the nozzle over the
-     * part to be picked and lowered it to the correct height.
+     * part to be picked and lowered it to the correct height. Some
+     * implementations may choose to do further work in pick(), such as firing
+     * air cylinders, monitoring pressure sensors, etc.
      * 
      * @throws Exception
      */
