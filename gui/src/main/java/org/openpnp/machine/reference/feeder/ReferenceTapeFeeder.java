@@ -192,6 +192,9 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		// retract the pin
 		actuator.actuate(false);
 		
+		// TODO: temporary bug fix for null location
+		getPickLocation();
+		
 		// Create a new pickLocation with the offsets included.
 		pickLocation = new Location(
 				pickLocation.getUnits(),
