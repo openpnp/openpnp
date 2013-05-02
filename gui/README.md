@@ -79,3 +79,6 @@ command.
 To build the entire package so that it can be run from the command line or distributed,
 run the command `mvn package`. Once this is complete you can use the `openpnp.sh` or
 `openpnp.bat` scripts to start the program.
+
+For more information about developing OpenPnP, especially regarding contributing, please see
+https://github.com/openpnp/openpnp/wiki/Developers-Guide.
