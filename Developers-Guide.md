@@ -32,6 +32,23 @@ The GUI is the core user facing component of OpenPnP. OpenPnP is, for all intent
 
 The GUI is meant to be generally useful for a variety of PnP machines and users. When making changes, consider how those changes will affect other users and other machines.
 
+## Building OpenPnP
+
+OpenPnP is written in Java and is built with Maven. To begin hacking on OpenPnP you
+should make sure you have the Java JDK 6 or greater installed, along with
+Maven which you can get at http://maven.apache.org/download.cgi#Installation. You should
+be able to run `mvn --version` from your command line to make sure everything is working
+as expected.
+
+OpenPnP is developed in Eclipse, but you can use any environment you like. If you do want
+to use Eclipse you can generate an Eclipse compatible project file using the command
+`mvn eclipse:eclipse` and then open the project using Eclipse's "Import Existing Project"
+command.
+
+To build the entire package so that it can be run from the command line or distributed,
+run the command `mvn package`. Once this is complete you can use the `openpnp.sh` or
+`openpnp.bat` scripts to start the program.
+
 ## Architecture
 
 ### Framework
