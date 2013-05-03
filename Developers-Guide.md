@@ -34,10 +34,32 @@ The GUI is meant to be generally useful for a variety of PnP machines and users.
 
 ## Building OpenPnP
 
-OpenPnP is written in Java and is built with Maven. To begin hacking on OpenPnP you
-should make sure you have the Java JDK 6 or greater installed, along with
-Maven which you can get at http://maven.apache.org/download.cgi#Installation. You should
-be able to run `mvn --version` from your command line to make sure everything is working
+### Prerequisites
+
+#### JDK or JRE 6
+
+OpenPnP is written in Java and requires Java to run. Currently only version 6
+of the Java runtime is supported. If you want to do development on OpenPnP or
+recompile it, you should install the JDK. If you just want to run it you can
+install the smaller JRE.
+
+You can download the latest revision of the JDK or JRE 6 at:
+
+http://www.oracle.com/technetwork/java/javasebusiness/downloads/java-archive-downloads-javase6-419409.html
+
+#### OpenCV
+
+OpenCV 2.4.2+ is required for some features of OpenPnP. Binaries should be
+installed and accessible to Java. This usually means making sure the libraries
+are in your path.
+
+http://opencv.willowgarage.com/wiki/
+
+### Building
+
+OpenPnP is built with Maven. To begin hacking on OpenPnP you should make sure you have
+the Java JDK 6 or greater installed, along with Maven which you can get at http://maven.apache.org/download.cgi#Installation. You should be able to run
+`mvn --version` from your command line to make sure everything is working
 as expected.
 
 OpenPnP is developed in Eclipse, but you can use any environment you like. If you do want
