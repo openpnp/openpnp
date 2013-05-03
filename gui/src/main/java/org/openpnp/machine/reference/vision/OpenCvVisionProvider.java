@@ -37,6 +37,8 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
@@ -51,6 +53,9 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.javacv.cpp.opencv_core.CvPoint;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 import com.googlecode.javacv.cpp.opencv_imgproc;
+
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 public class OpenCvVisionProvider implements VisionProvider {
 	private final static Logger logger = LoggerFactory.getLogger(OpenCvVisionProvider.class);
@@ -72,14 +77,68 @@ public class OpenCvVisionProvider implements VisionProvider {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	private IplImage getCameraImage()
+	{
+		BufferedImage image_ = camera.capture();
+        IplImage image = IplImage.createFrom(image_);
+        return image;
+	}
+	
+	private void setROI(IplImage image, ROI roi)
+	{
+		cvSetImageROI(image, cvRect(roi.getX(), roi.getY(), roi.getLength(), roi.getHeight()));
+	}
 
 	@Override
 	public Circle[] locateCircles(int roiX, int roiY, int roiWidth, int roiHeight,
 			int coiX, int coiY, int minimumDiameter, int diameter,
 			int maximumDiameter) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		
+		ROI roi = new ROI(roiX, roiY, roiWidth, roiHeight);
+		return locateCircles(roi, minimumDiameter, maximumDiameter);
 	}
+	
+	public Circle[] locateCircles(ROI roi, int minimumDiameter, int maximumDiameter)
+	{
+		
+		IplImage image = getCameraImage();
+        //cvSetImageROI(image, cvRect(roiX, roiY, roiWidth, roiHeight));
+		setROI(image, roi);
+        
+        int minRadius = minimumDiameter/2;
+        int maxRadius = maximumDiameter/2;
+        
+        //the accuracy of these numbers is questionable as I just made them up to get this working
+        int minDistance = 20;
+        int edgeThreshold = 20;
+        int circleThreshold = 20;
+        
+        return locateCircles(image, minDistance, edgeThreshold, circleThreshold, minRadius, maxRadius);
+		
+	}
+	
+	private Circle[] locateCircles(IplImage image, int minRadius, int maxRadius, int minDist, int edgeThreshold, int circleThreshold)
+	{
+		CvMemStorage mem = CvMemStorage.create();
+        
+        CvSeq circles = cvHoughCircles(image, mem, CV_HOUGH_GRADIENT, 1, minDist, edgeThreshold, circleThreshold, minRadius, maxRadius);
+        
+        List<Circle> circleList = new ArrayList<Circle>();
+        
+        for(int i = 0; i < circles.total(); i++)
+        {
+        	CvPoint3D32f circle = new CvPoint3D32f(cvGetSeqElem(circles, i));
+        	Circle temp = new Circle(circle.x(), circle.y(), circle.z());
+        	circleList.add(temp);
+        }
+        
+        mem.release();
+        
+        Circle[] returnCircles = new Circle[circles.total()];
+        return circleList.toArray(returnCircles);
+	}
+	
 
 	@Override
 	public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
