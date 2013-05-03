@@ -66,7 +66,7 @@ in `machine.xml`.
 # Development
 
 OpenPnP is written in Java and is built with Maven. To begin hacking on OpenPnP you
-shoudl make sure you have the Java JDK 6 or greater installed, along with
+should make sure you have the Java JDK 6 or greater installed, along with
 Maven which you can get at http://maven.apache.org/download.cgi#Installation. You should
 be able to run `mvn --version` from your command line to make sure everything is working
 as expected.
