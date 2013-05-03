@@ -26,7 +26,7 @@ Try to commit as little as possible in a given commit. A single small feature, a
 
 Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it.
 
-# GUI Module
+# The GUI
 
 The GUI is the core user facing component of OpenPnP. OpenPnP is, for all intents and purposes, the GUI. When the term "OpenPnP" is used without referencing the hardware or firmware it should be taken to mean the GUI and the rest of this document will refer to it in that manner.
 
@@ -34,11 +34,11 @@ The GUI is meant to be generally useful for a variety of PnP machines and users.
 
 Everything below assumes you are working in the `gui/` subdirectory of the repository.
 
-## Building OpenPnP
+# Building OpenPnP
 
-### Prerequisites
+## Prerequisites
 
-#### JDK or JRE 6
+### JDK or JRE 6
 
 OpenPnP is written in Java and requires Java to run. Currently only version 6
 of the Java runtime is supported. If you want to do development on OpenPnP or
@@ -49,7 +49,7 @@ You can download the latest revision of the JDK or JRE 6 at:
 
 http://www.oracle.com/technetwork/java/javasebusiness/downloads/java-archive-downloads-javase6-419409.html
 
-#### OpenCV
+### OpenCV
 
 OpenCV 2.4.2+ is required for some features of OpenPnP. Binaries should be
 installed and accessible to Java. This usually means making sure the libraries
@@ -57,37 +57,37 @@ are in your path.
 
 http://opencv.willowgarage.com/wiki/
 
-#### Maven
+### Maven
 
 OpenPnP uses Maven for dependencies and building. You can get it at http://maven.apache.org/download.cgi#Installation. Once installed, make sure
 you can run `mvn --version` from your command line with no errors.
 
-### Building
+## Compiling
 
 To build the entire package so that it can be run from the command line or distributed,
 run the command `mvn package`. Once this is complete you can use the `openpnp.sh` or
 `openpnp.bat` scripts to start the program.
 
-### IDEs
+## IDEs
 
 OpenPnP is developed in Eclipse, but you can use any environment you like. If you do want
 to use Eclipse you can generate an Eclipse compatible project file using the command
 `mvn eclipse:eclipse` and then open the project using Eclipse's "Import Existing Project"
 command.
 
-## Architecture
+# System Architecture
 
-### Framework
+## Framework
 
 OpenPnP is written in Java using Swing and WindowBuilder. Dependency and build management are performed using Maven. The majority of the code has been written using the Eclipse IDE but the system uses no Eclipse specific components and any IDE can be used.
 
 Bindings and property change listeners are used extensively wherever possible. Bindings are provided by JBindings with some custom helper code that is part of OpenPnP.
 
-### System Overview
+## System Overview
 
 OpenPnP is made up of 5 core components: Configuration, Service Provider Interface, Model, User Interface and Reference Implementation.
 
-#### Configuration
+### Configuration
 
 Configuration of OpenPnP is managed with the [Configuration class](http://openpnp.org/doc/javadoc/org/openpnp/model/Configuration.html). The Configuration class is used to query and store to two configuration stores.
 
@@ -98,7 +98,7 @@ The second configuration store is the user specific Java preferences data store.
 The Configuration class is a singleton accessed with Configuration.get() throughout the system. It has a listener system that can be used to be notified of configuration state changes.
 
 
-#### Service Provider Interface
+### Service Provider Interface
 
 The [Service Provider Interface (SPI)](http://openpnp.org/doc/javadoc/org/openpnp/spi/package-frame.html) is a set of Java interfaces that specify OpenPnP's interface to the real world. Examples of things in the SPI are things like Machine definitions, Camera drivers, Vision Providers, Nozzles, Actuators, etc.
 
@@ -106,7 +106,7 @@ In general, unless you are adding a new type of hardware to OpenPnP you don't ne
 
 The Reference Implementation, discussed later, is the core implementation of the OpenPnP SPI.
 
-#### Model
+### Model
 
 Like most MVC based systems, [The Model](http://openpnp.org/doc/javadoc/org/openpnp/model/package-frame.html) makes up the domain for data storage in OpenPnP.
 
@@ -114,7 +114,7 @@ The model includes all of the classes that users use to store their data such as
 
 The root of the model in OpenPnP is the Configuration object and it is responsible for creating all of the rest of the models in the application.
 
-#### User Interface
+### User Interface
 
 The user interface is the heart of OpenPnP. It starts with `MainFrame` in [the gui package](http://openpnp.org/doc/javadoc/org/openpnp/gui/package-frame.html) and branches out from there.
 
@@ -122,7 +122,7 @@ The user interface is primarily a single window application with 3 main content 
 
 It should be noted that the user interface is in transition. I am not very happy with the currently model driven user interface and will be working to make it more of a workflow based interface in the future. For the time being, most of the things you see in the user interface map very closely to one of the model classes.
 
-#### Reference Implementation
+### Reference Implementation
 
 The reference implementation is the default implementation of the SPI. It has two main purposes. The most important one is to be the implementation that runs the actual OpenPnP machine and the second is to serve as an example for people wanting to write their own custom implementations.
 
@@ -130,9 +130,9 @@ Whenever possible, the reference implementation is written to be compatible with
 
 The core of the reference implementation is the [ReferenceMachine class](http://openpnp.org/doc/javadoc/org/openpnp/machine/reference/ReferenceMachine.html). Serialization of this class and all it's children becomes the `machine.xml` configuration file. If you want to add hardware to the system you will want to become intimately familiar with this class and the classes it references.
 
-### Component Specifics
+## Component Specifics
 
-#### Vision
+### Vision
 
 Vision tasks in OpenPnP are specified by the [VisionProvider SPI class](http://openpnp.org/doc/javadoc/org/openpnp/spi/VisionProvider.html). This area is still in it's infancy and suggestions on it's architecture are welcome.
 
@@ -143,11 +143,17 @@ The VisionProvider interface specifies a few methods that are used by existing v
 For the time being, if you are adding vision capabilities to OpenPnP you will need to add methods to the VisionProvider SPI and then implement those methods in the reference classes.
 
 
-#### Wizards
+### Wizards
 
 The concept of a "wizard" is used quite often in OpenPnP. A wizard in OpenPnP is a simple interface that provides a JPanel for display to the user and allows a class to communicate back to a caller. Wizards are typically used for providing user interfaces to configuration tasks and many SPI and Model classes will implement WizardConfigurable, showing that they are able to provide a wizard to be configured.
 
 The Wizard and WizardConfigurable interfaces are provided so that SPI providers can supply user interface without having to modify the core OpenPnP system.
+
+### Job Processing
+
+The [Job Processor](http://openpnp.org/doc/javadoc/org/openpnp/JobProcessor.html) is the part of OpenPnP that actually does all the work of picking and placing. When the user starts a Job, the Job Processor takes over and controls the machine until the job is complete.
+
+Job Processor is a bit of a black box from a programming point of view. To learn more about how it works it's best to examine the source code.
 
 
 # FAQ
