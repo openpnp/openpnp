@@ -32,105 +32,59 @@ import org.openpnp.gui.support.Wizard;
  * by the system to perform a variety of vision tasks.
  */
 public interface VisionProvider {
-	/**
-	 * Sets the Camera that the VisionProvider should use for image capture.
-	 * This is called during setup and will only be called once.
-	 * 
-	 * @param camera
-	 */
-	public void setCamera(Camera camera);
+    /**
+     * Sets the Camera that the VisionProvider should use for image capture.
+     * This is called during setup and will only be called once.
+     * 
+     * @param camera
+     */
+    public void setCamera(Camera camera);
 
-	public Wizard getConfigurationWizard();
+    public Wizard getConfigurationWizard();
 
-	// TODO: decide if results are measured from top or bottom left and
-	// standardize on it
-	public Circle[] locateCircles(int roiX, int roiY, int roiWidth, int roiHeight,
-			int coiX, int coiY, int minimumDiameter, int diameter,
-			int maximumDiameter) throws Exception;
+    // TODO: decide if results are measured from top or bottom left and
+    // standardize on it
+    public Circle[] locateCircles(int roiX, int roiY, int roiWidth,
+            int roiHeight, int coiX, int coiY, int minimumDiameter,
+            int diameter, int maximumDiameter) throws Exception;
 
-	public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
-			int roiHeight, int coiX, int coiY, BufferedImage templateImage)
-			throws Exception;
+    public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
+            int roiHeight, int coiX, int coiY, BufferedImage templateImage)
+            throws Exception;
 
-	public class Circle {
-		private double x;
-		private double y;
-		private double diameter;
+    public class Circle {
+        private double x;
+        private double y;
+        private double diameter;
 
-		public Circle(double x, double y, double diameter) {
-			this.x = x;
-			this.y = y;
-			this.diameter = diameter;
-		}
+        public Circle(double x, double y, double diameter) {
+            this.x = x;
+            this.y = y;
+            this.diameter = diameter;
+        }
 
-		public double getX() {
-			return x;
-		}
+        public double getX() {
+            return x;
+        }
 
-		public void setX(double x) {
-			this.x = x;
-		}
+        public void setX(double x) {
+            this.x = x;
+        }
 
-		public double getY() {
-			return y;
-		}
+        public double getY() {
+            return y;
+        }
 
-		public void setY(double y) {
-			this.y = y;
-		}
+        public void setY(double y) {
+            this.y = y;
+        }
 
-		public double getDiameter() {
-			return diameter;
-		}
+        public double getDiameter() {
+            return diameter;
+        }
 
-		public void setDiameter(double diameter) {
-			this.diameter = diameter;
-		}
-	}
-	
-	public class ROI {
-		private int x;
-		private int y;
-		private int length;
-		private int height;
-
-		public ROI(int x, int y, int length, int height) {
-			this.x = x;
-			this.y = y;
-			this.length = length;
-			this.height = height;
-		}
-
-		public int getX() {
-			return x;
-		}
-
-		public void setX(int x) {
-			this.x = x;
-		}
-
-		public int getY() {
-			return y;
-		}
-
-		public void setY(int y) {
-			this.y = y;
-		}
-
-		public int getLength() {
-			return length;
-		}
-
-		public void setLength(int length) {
-			this.length = length;
-		}
-		
-		public int getHeight() {
-			return height;
-		}
-
-		public void setHeight(int height) {
-			this.height = height;
-		}
-	}
+        public void setDiameter(double diameter) {
+            this.diameter = diameter;
+        }
+    }
 }
