@@ -145,8 +145,10 @@ public class TinygDriver implements ReferenceDriver, Runnable {
             // TODO: Move this type of op into it's own method
             // sendCommandAndWaitForMovementComplete()
 			synchronized (movementWaitLock) {
-			    sendCommand("G1 " + sb.toString());
-			    waitForMovementComplete();
+			    JsonObject response = sendCommand("G1 " + sb.toString());
+			    if (getResponseStatusCode(response) == 0) {
+			        waitForMovementComplete();
+			    }
 			}
 		}
         if (!Double.isNaN(x)) {
