@@ -47,11 +47,6 @@ import com.google.gson.JsonSyntaxException;
 
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.
- * 01:59:47,582 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - Status report: {"posx":91.009}
-01:59:47,678 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - {"sr":{"posx":90.000,"vel":7.81}}
-01:59:47,678 [Thread-6] DEBUG org.openpnp.machine.reference.driver.TinygDriver  - Status report: {"posx":90.000,"vel":7.81}
-
-  This causes everything to lock up.
  */
 public class TinygDriver implements ReferenceDriver, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(TinygDriver.class);
