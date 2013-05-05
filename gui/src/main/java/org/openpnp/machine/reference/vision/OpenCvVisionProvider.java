@@ -89,7 +89,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         return image;
     }
 
-    private void setROI(IplImage image, Rectangle roi) {
+    private static void setROI(IplImage image, Rectangle roi) {
         cvSetImageROI(
                 image,
                 cvRect(roi.getX(), roi.getY(), roi.getWidth(), roi.getHeight()));
@@ -104,7 +104,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         return locateCircles(roi, minimumDiameter, maximumDiameter);
     }
 
-    public Circle[] locateCircles(Rectangle roi, int minimumDiameter,
+    private Circle[] locateCircles(Rectangle roi, int minimumDiameter,
             int maximumDiameter) {
 
         IplImage image = getCameraImage();
