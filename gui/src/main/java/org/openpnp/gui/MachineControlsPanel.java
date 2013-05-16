@@ -154,7 +154,8 @@ public class MachineControlsPanel extends JPanel {
 			incrementsLabels.put(1, new JLabel("0.01"));
 			incrementsLabels.put(2, new JLabel("0.1"));
 			incrementsLabels.put(3, new JLabel("1.0"));
-			incrementsLabels.put(4, new JLabel("10"));
+            incrementsLabels.put(4, new JLabel("10"));
+            incrementsLabels.put(5, new JLabel("100"));
 			sliderIncrements.setLabelTable(incrementsLabels);
 		}
 		else if (units == LengthUnit.Inches) {
@@ -162,7 +163,8 @@ public class MachineControlsPanel extends JPanel {
 			incrementsLabels.put(1, new JLabel("0.001"));
 			incrementsLabels.put(2, new JLabel("0.01"));
 			incrementsLabels.put(3, new JLabel("0.1"));
-			incrementsLabels.put(4, new JLabel("1.0"));
+            incrementsLabels.put(4, new JLabel("1.0"));
+            incrementsLabels.put(5, new JLabel("10.0"));
 			sliderIncrements.setLabelTable(incrementsLabels);
 		}
 		else {
@@ -358,7 +360,7 @@ public class MachineControlsPanel extends JPanel {
 		sliderIncrements.setPaintLabels(true);
 		sliderIncrements.setPaintTicks(true);
 		sliderIncrements.setMinimum(1);
-		sliderIncrements.setMaximum(4);
+		sliderIncrements.setMaximum(5);
 		
 		JPanel panelStartStop = new JPanel();
 		add(panelStartStop);

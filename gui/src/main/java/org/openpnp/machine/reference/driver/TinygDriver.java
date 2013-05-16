@@ -153,6 +153,10 @@ public class TinygDriver implements ReferenceDriver, Runnable {
 
         // Make sure we are in absolute mode
         sendCommand("G90");
+        
+        // Reset all axes to 0, in case the firmware was not reset on
+        // connect.
+        sendCommand(String.format(Locale.US, "G92 X0 Y0 Z0 A0"));
     }
 
     @Override
