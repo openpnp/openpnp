@@ -147,7 +147,7 @@ public class MainFrame extends JFrame {
 		cameraPanel = new CameraPanel();
 		machineControlsPanel = new MachineControlsPanel(configuration, this,
 				cameraPanel);
-		machinePanel = new MachinePanel(configuration);
+		machinePanel = new MachinePanel();
 		jobPanel = new JobPanel(configuration, jobProcessor, this,
 				machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
