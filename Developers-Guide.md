@@ -73,7 +73,7 @@ run the command `mvn package`. Once this is complete you can use the `openpnp.sh
 OpenPnP is developed in Eclipse, but you can use any environment you like. If you do want
 to use Eclipse you can generate an Eclipse compatible project file using the command
 `mvn eclipse:eclipse` and then open the project using Eclipse's "Import Existing Project"
-command.
+command. If you are using IntellijIDEA version 12 or above, simply import the gui folder as a Maven project.
 
 # System Architecture
 
