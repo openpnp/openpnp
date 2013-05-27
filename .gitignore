@@ -1,2 +1,4 @@
 .DS_Store*
 gui/installers
+*.iml
+.idea/
