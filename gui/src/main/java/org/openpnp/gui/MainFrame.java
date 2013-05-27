@@ -200,8 +200,6 @@ public class MainFrame extends JFrame {
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 
-		mnView.add(new JCheckBoxMenuItem(
-				machineControlsPanel.showAbsoluteCoordinatesAction));
 		ButtonGroup buttonGroup = new ButtonGroup();
 
 		JMenu mnUnits = new JMenu("System Units");
