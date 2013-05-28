@@ -37,66 +37,65 @@ import java.io.File;
  * @author jason
  */
 public class Main {
-    private static Logger logger; // See initalizeLog4JEnvironment
+	private static Logger logger; // See initalizeLog4JEnvironment
 
-    public static String getVersion() {
-        String version = Main.class.getPackage().getImplementationVersion();
-        if (version == null) {
-            version = "INTERNAL BUILD";
-        }
-        return version;
-    }
+	public static String getVersion() {
+		String version = Main.class.getPackage().getImplementationVersion();
+		if (version == null) {
+			version = "INTERNAL BUILD";
+		}
+		return version;
+	}
 
-    public static void main(String[] args) {
-        // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            throw new Error(e);
-        }
+	public static void main(String[] args) {
+		// http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			throw new Error(e);
+		}
 
-        File configurationDirectory = new File(System.getProperty("user.home"));
-        configurationDirectory = new File(configurationDirectory, ".openpnp");
+		File configurationDirectory = new File(System.getProperty("user.home"));
+		configurationDirectory = new File(configurationDirectory, ".openpnp");
 
-        initializeLog4JEnvironment(configurationDirectory);
+		initializeLog4JEnvironment(configurationDirectory);
+		logger = LoggerFactory.getLogger(Main.class);
+		logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
 
-        logger = LoggerFactory.getLogger(Main.class);
-        logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
+		Configuration.initialize(configurationDirectory);
+		final Configuration configuration = Configuration.get();
+		final JobProcessor jobProcessor = new JobProcessor(configuration);
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					MainFrame frame = new MainFrame(configuration, jobProcessor);
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 
-        Configuration.initialize(configurationDirectory);
-        final Configuration configuration = Configuration.get();
-        final JobProcessor jobProcessor = new JobProcessor(configuration);
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    MainFrame frame = new MainFrame(configuration, jobProcessor);
-                    frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
+	/**
+	 * IMPORTANT! Call this BEFORE ANY LoggerFactory call.
+	 * If the log4j.properties is not in the configuration directory, copy
+	 * the default from log4j.properties.template.
+	 */
+	private static void initializeLog4JEnvironment(File configurationDirectory) {
+		File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
+		if (!log4jConfigurationFile.exists()) {
+			try {
+				FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties.template"), log4jConfigurationFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 
-    /**
-     * IMPORTANT! Call this BEFORE ANY LoggerFactory call.
-     * If the log4j.properties is not in the configuration directory, copy
-     * the default from log4j.properties.template.
-     */
-    private static void initializeLog4JEnvironment(File configurationDirectory) {
-        File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
-        if (!log4jConfigurationFile.exists()) {
-            try {
-                FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties.template"), log4jConfigurationFile);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Use the local configuration if it exists.
-        if (log4jConfigurationFile.exists()) {
-            System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
-        }
-    }
+		// Use the local configuration if it exists.
+		if (log4jConfigurationFile.exists()) {
+			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
+		}
+	}
 }
