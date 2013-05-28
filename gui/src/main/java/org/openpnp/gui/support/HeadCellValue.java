@@ -17,7 +17,7 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui.support;
 
@@ -27,15 +27,15 @@ import org.openpnp.spi.Head;
 public class HeadCellValue {
 	private static Configuration configuration;
 	private Head head;
-	
+
 	public static void setConfiguration(Configuration configuration) {
 		HeadCellValue.configuration = configuration;
 	}
-	
+
 	public HeadCellValue(Head head) {
 		this.head = head;
 	}
-	
+
 	public HeadCellValue(String value) {
 		Head head = configuration.getMachine().getHead(value);
 		if (head == null) {
@@ -51,9 +51,17 @@ public class HeadCellValue {
 	public void setHead(Head head) {
 		this.head = head;
 	}
-	
+
 	@Override
 	public String toString() {
 		return head == null ? "NONE" : head.getId();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (! (obj instanceof HeadCellValue)) {
+			return false;
+		}
+		return ((HeadCellValue) obj).head == this.head;
 	}
 }
