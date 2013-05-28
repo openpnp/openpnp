@@ -56,6 +56,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -184,10 +185,12 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			Matcher matcher = pattern.matcher(line);
 			matcher.matches();
 			Placement placement = new Placement(matcher.group(1));
-			placement.getLocation().setUnits(LengthUnit.Millimeters);
-			placement.getLocation().setX(Double.parseDouble(matcher.group(2)));
-			placement.getLocation().setY(Double.parseDouble(matcher.group(3)));
-			placement.getLocation().setRotation(Double.parseDouble(matcher.group(4)));
+			placement.setLocation(new Location(
+			        LengthUnit.Millimeters,
+			        Double.parseDouble(matcher.group(2)),
+			        Double.parseDouble(matcher.group(3)),
+			        0,
+			        Double.parseDouble(matcher.group(4))));
 			Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
                 String packageId = matcher.group(6);

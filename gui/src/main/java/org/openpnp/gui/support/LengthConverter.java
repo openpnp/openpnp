@@ -26,16 +26,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 
 public class LengthConverter extends Converter<Length, String> {
-	private Configuration configuration;
-	
-	public LengthConverter(Configuration configuration) {
-		this.configuration = configuration;
-	}
-	
 	@Override
 	public String convertForward(Length length) {
-		length = length.convertToUnits(configuration.getSystemUnits());
-		return String.format(configuration.getLengthDisplayFormat(), length.getValue());
+		length = length.convertToUnits(Configuration.get().getSystemUnits());
+		return String.format(Configuration.get().getLengthDisplayFormat(), length.getValue());
 	}
 	
 	@Override
@@ -45,7 +39,7 @@ public class LengthConverter extends Converter<Length, String> {
 			throw new RuntimeException("Unable to parse " + s);
 		}
 		if (length.getUnits() == null) {
-			length.setUnits(configuration.getSystemUnits());
+			length.setUnits(Configuration.get().getSystemUnits());
 		}
 		return length;
 	}

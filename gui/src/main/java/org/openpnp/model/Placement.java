@@ -21,9 +21,6 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -36,7 +33,7 @@ import org.simpleframework.xml.core.Persist;
  * along with information about how to place it. 
  * @author jason
  */
-public class Placement extends AbstractModelObject implements PropertyChangeListener {
+public class Placement extends AbstractModelObject {
 	@Attribute
 	private String id;
 	@Element
@@ -69,7 +66,6 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 	private void commit() {
 		setLocation(location);
         if (getPart() == null) {
-            System.out.println(partId);
             setPart(Configuration.get().getPart(partId));
         }
 	}
@@ -79,7 +75,6 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 	}
 
 	public void setPart(Part part) {
-	    System.out.println("setPart " + part);
 		Part oldValue = this.part;
 		this.part = part;
 		firePropertyChange("part", oldValue, part);
@@ -97,12 +92,6 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 		Location oldValue = this.location;
 		this.location = location;
 		firePropertyChange("location", oldValue, location);
-		if (oldValue != null) {
-			oldValue.removePropertyChangeListener(this);
-		}
-		if (location != null) {
-			location.addPropertyChangeListener(this);
-		}
 	}
 
 	public Side getSide() {
@@ -113,11 +102,6 @@ public class Placement extends AbstractModelObject implements PropertyChangeList
 		Object oldValue = this.side;
 		this.side = side;
 		firePropertyChange("side", oldValue, side);
-	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		propertyChangeSupport.firePropertyChange(evt);
 	}
 
 	@Override

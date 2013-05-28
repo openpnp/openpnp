@@ -50,9 +50,9 @@ and they will be recreated.
 
 # Integration
 
-If you are interested in having OpenPnP work with your machine you will need
-an OpenPnP driver that can talk to your hardware and you will need to
-configure it in the machine.xml.
+If you are interested in having OpenPnP work with a machine that is not currently supported
+you will need an OpenPnP driver that can talk to your hardware and you will need to
+configure it in the `machine.xml`.
 
 To get started, look at the documentation in the package below to see what drivers are
 available and determine if one will meet your needs.
@@ -63,12 +63,13 @@ If none of those will work for your machine, you will need to write one. Once
 you have a driver, you can specify it's classname and configuration parameters
 in `machine.xml`.
 
+See the Development section for more information if you decide you need to write code.
+
 # Development
 
-OpenPnP is written in Java and is built with Maven. There is an included
-`pom.xml` that should build the project and will build a proper Eclipse
-project using the command mvn `eclipse:eclipse`.
+To build the entire package so that it can be run from the command line or distributed,
+run the command `mvn package`. Once this is complete you can use the `openpnp.sh` or
+`openpnp.bat` scripts to start the program.
 
-The startup scripts (openpnp.sh, openpnp.bat) use the jar package built by
-Maven, so if you want to use those scripts you'll need to use the command
-`mvn package` to rebuild the jar package.
+For more information about developing OpenPnP, especially regarding contributing, please see
+https://github.com/openpnp/openpnp/wiki/Developers-Guide.

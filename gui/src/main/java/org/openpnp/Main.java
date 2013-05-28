@@ -37,7 +37,7 @@ import java.io.File;
  * @author jason
  */
 public class Main {
-	private static Logger logger; // See initalizeLog4JEnvironment
+	private static Logger logger;
 
 	public static String getVersion() {
 		String version = Main.class.getPackage().getImplementationVersion();
@@ -59,8 +59,26 @@ public class Main {
 		File configurationDirectory = new File(System.getProperty("user.home"));
 		configurationDirectory = new File(configurationDirectory, ".openpnp");
 
-		initializeLog4JEnvironment(configurationDirectory);
+		// If the log4j.properties is not in the configuration directory, copy
+		// the default over.
+		File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
+		if (!log4jConfigurationFile.exists()) {
+			try {
+				FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties"), log4jConfigurationFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		// Use the local configuration if it exists.
+		if (log4jConfigurationFile.exists()) {
+			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
+		}
+
+		// We don't create a logger until log4j has been configured or it tries
+		// to configure itself.
 		logger = LoggerFactory.getLogger(Main.class);
+
 		logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
 
 		Configuration.initialize(configurationDirectory);
@@ -76,26 +94,5 @@ public class Main {
 				}
 			}
 		});
-	}
-
-	/**
-	 * IMPORTANT! Call this BEFORE ANY LoggerFactory call.
-	 * If the log4j.properties is not in the configuration directory, copy
-	 * the default from log4j.properties.template.
-	 */
-	private static void initializeLog4JEnvironment(File configurationDirectory) {
-		File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
-		if (!log4jConfigurationFile.exists()) {
-			try {
-				FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties.template"), log4jConfigurationFile);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		// Use the local configuration if it exists.
-		if (log4jConfigurationFile.exists()) {
-			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
-		}
 	}
 }

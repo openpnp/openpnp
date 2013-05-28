@@ -31,7 +31,7 @@
             </actuators>
             <cameras>
                <camera class="org.openpnp.machine.reference.camera.TableScannerCamera" id="C1" looking="Down" fps="24">
-                  <units-per-pixel units="Inches" x="0.031" y="0.031" z="0.0" rotation="0.0"/>
+                  <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
                   <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
                   <head-offsets units="Millimeters" x="20" y="10" z="0.0" rotation="0.0"/>
                   <source-uri>http://openpnp.org/downloads/tablescan/1/</source-uri>

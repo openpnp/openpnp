@@ -45,20 +45,48 @@ public interface JobProcessorListener {
 	
 	public void jobEncounteredError(JobError error, String description);
 	
-	public void boardProcessingStarted(BoardLocation board);
-	
-	public void boardProcessingCompleted(BoardLocation board);
-	
+	/**
+	 * Fired when the JobProcessor has begun operations that include the
+	 * given Placement.
+	 * @param board
+	 * @param placement
+	 */
 	public void partProcessingStarted(BoardLocation board, Placement placement);
 	
+	/**
+	 * Fired when the JobProcessor has completed the pick operation for the
+	 * given Placement.
+	 * @param board
+	 * @param placement
+	 */
 	public void partPicked(BoardLocation board, Placement placement);
 	
+	/**
+	 * Fired when the JobProcessor has completed the place operation for the
+	 * given Placement.
+	 * @param board
+	 * @param placement
+	 */
 	public void partPlaced(BoardLocation board, Placement placement);
 	
+	/**
+	 * Fired when the JobProcessor has completed all operations regarding the
+	 * given Placement.
+	 * @param board
+	 * @param placement
+	 */
 	public void partProcessingCompleted(BoardLocation board, Placement placement);
 	
-	// TODO maybe partProcessingFailed with a reason
+	// TODO Maybe partProcessingFailed with a reason
 	
+	// TODO Add job progress information, especially after pre-processing
+	// so that listeners can know the total placement count to be processed.
+	
+	/**
+	 * Fired when the JobProcessor is able to report detailed, human readable
+	 * status information about the Job's progress.
+	 * @param status
+	 */
 	public void detailedStatusUpdated(String status);
 	
 	static public class Adapter implements JobProcessorListener {
@@ -73,14 +101,6 @@ public interface JobProcessorListener {
 
 		@Override
 		public void jobEncounteredError(JobError error, String description) {
-		}
-
-		@Override
-		public void boardProcessingStarted(BoardLocation board) {
-		}
-
-		@Override
-		public void boardProcessingCompleted(BoardLocation board) {
 		}
 
 		@Override

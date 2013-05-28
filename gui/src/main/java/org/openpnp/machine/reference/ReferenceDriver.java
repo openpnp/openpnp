@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference;
 
 import org.openpnp.model.Location;
+import org.openpnp.spi.WizardConfigurable;
 
 /**
  * Defines the interface for a simple driver that the ReferenceMachine can
@@ -38,7 +39,7 @@ import org.openpnp.model.Location;
  * the driver to make decisions as to what axes should be moved to accomplish a
  * specific task.
  */
-public interface ReferenceDriver {
+public interface ReferenceDriver extends WizardConfigurable {
     /**
      * Performing the hardware homing operation for the given Head. When this
      * call completes the Head should be at it's 0,0,0,0 position.

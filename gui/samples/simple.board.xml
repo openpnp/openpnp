@@ -5,7 +5,13 @@
          <location units="Millimeters" x="2.0" y="2.0" z="0.0" rotation="0.0"/>
       </placement>
       <placement id="R2" side="Top" part-id="R-0805-10K">
-         <location units="Millimeters" x="10.0" y="10.0" z="0.0" rotation="0.0"/>
+         <location units="Millimeters" x="10.0" y="10.0" z="0.0" rotation="10.0"/>
+      </placement>
+      <placement id="R3" side="Top" part-id="R-0805-10K">
+         <location units="Millimeters" x="3.0" y="7.0" z="0.0" rotation="20.0"/>
+      </placement>
+      <placement id="R4" side="Top" part-id="R-0805-10K">
+         <location units="Millimeters" x="7.0" y="4.0" z="0.0" rotation="67.0"/>
       </placement>
    </placements>
 </openpnp-board>

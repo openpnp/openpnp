@@ -236,8 +236,8 @@ public class JobProcessor implements Runnable {
 				}
 
 				// Determine where we will place the part
-				Location boardLocation = bl.getLocation().clone();
-				Location placementLocation = placement.getLocation().clone();
+				Location boardLocation = bl.getLocation();
+				Location placementLocation = placement.getLocation();
 
 				// We will work in the units of the placementLocation, so convert
 				// anything that isn't in those units to it.
@@ -260,22 +260,23 @@ public class JobProcessor implements Runnable {
 						.getY(), 1.0, 1.0);
 
 				// Update the placementLocation with the transformed point
-				placementLocation.setX(p.getX());
-				placementLocation.setY(p.getY());
+				placementLocation = placementLocation.derive(p.getX(), p.getY(), null, null);
 
 				// Update the placementLocation with the board's rotation and
 				// the placement's rotation
 				// This sets the rotation of the part itself when it will be
 				// placed
-				placementLocation
-						.setRotation((placementLocation.getRotation() + boardLocation
-								.getRotation()) % 360.0);
+				placementLocation = placementLocation.derive(
+				        null, 
+				        null, 
+				        null,
+				        (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
 
 				// Update the placementLocation with the proper Z value. This is
 				// the distance to the top of the board plus the height of 
 				// the part.
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
-				placementLocation.setZ(boardLocation.getZ() + partHeight);
+				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
 
 				pick(nozzle, feeder, bl, placement);
 				placementSolutionLocations.put(solution, placementLocation);
@@ -332,7 +333,7 @@ public class JobProcessor implements Runnable {
         // the pick location from it.
         Location pickLocation;
         try {
-            pickLocation = feeder.getPickLocation().clone();
+            pickLocation = feeder.getPickLocation();
         }
         catch (Exception e) {
             fireJobEncounteredError(JobError.FeederError, e.getMessage());
@@ -582,20 +583,6 @@ public class JobProcessor implements Runnable {
 		logger.debug("fireJobStateChanged({})", state);
 		for (JobProcessorListener listener : listeners) {
 			listener.jobStateChanged(state);
-		}
-	}
-	
-	private void fireBoardProcessingStarted(BoardLocation board) {
-		logger.debug("fireBoardProcessingStarted({})", board);
-		for (JobProcessorListener listener : listeners) {
-			listener.boardProcessingStarted(board);
-		}
-	}
-	
-	private void fireBoardProcessingCompleted(BoardLocation board) {
-		logger.debug("fireBoardProcessingCompleted({})", board);
-		for (JobProcessorListener listener : listeners) {
-			listener.boardProcessingCompleted(board);
 		}
 	}
 	

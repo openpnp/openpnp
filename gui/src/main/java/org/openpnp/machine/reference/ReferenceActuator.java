@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
     private final static Logger logger = LoggerFactory
-            .getLogger(ReferenceNozzle.class);
+            .getLogger(ReferenceActuator.class);
     
     @Element
     private Location headOffsets;
@@ -54,6 +54,10 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
                 driver = machine.getDriver();
             }
         });
+    }
+    
+    public void setHeadOffsets(Location headOffsets) {
+        this.headOffsets = headOffsets;
     }
     
     public Location getHeadOffsets() {

@@ -57,7 +57,7 @@ public class AboutDialog extends JDialog {
 		lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
 		contentPanel.add(lblOpenpnp);
 		JLabel lblCopyright = new JLabel(
-				"Copyright © 2011, 2012 Jason von Nieda");
+				"Copyright © 2011, 2012, 2013 Jason von Nieda");
 		lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
 		lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
 		contentPanel.add(lblCopyright);

@@ -147,7 +147,7 @@ public class MainFrame extends JFrame {
 		cameraPanel = new CameraPanel();
 		machineControlsPanel = new MachineControlsPanel(configuration, this,
 				cameraPanel);
-		machinePanel = new MachinePanel(configuration);
+		machinePanel = new MachinePanel();
 		jobPanel = new JobPanel(configuration, jobProcessor, this,
 				machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
@@ -200,8 +200,6 @@ public class MainFrame extends JFrame {
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 
-		mnView.add(new JCheckBoxMenuItem(
-				machineControlsPanel.showAbsoluteCoordinatesAction));
 		ButtonGroup buttonGroup = new ButtonGroup();
 
 		JMenu mnUnits = new JMenu("System Units");

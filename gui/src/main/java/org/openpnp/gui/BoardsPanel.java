@@ -44,24 +44,25 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import javax.swing.border.TitledBorder;
 
 @SuppressWarnings("serial")
 public class BoardsPanel extends JPanel {
@@ -372,7 +373,7 @@ public class BoardsPanel extends JPanel {
 			Placement placement = new Placement(id);
 
 			placement.setPart(Configuration.get().getParts().get(0));
-			placement.getLocation().setUnits(configuration.getSystemUnits());
+			placement.setLocation(new Location(configuration.getSystemUnits()));
 			
 			board.addPlacement(placement);
 			placementsTableModel.fireTableDataChanged();
