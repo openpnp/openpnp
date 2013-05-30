@@ -21,20 +21,21 @@
 
 package org.openpnp;
 
+import java.awt.EventQueue;
+import java.io.File;
+
+import javax.swing.UIManager;
+
 import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-
 /**
  * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
- *
  * @author jason
+ *
  */
 public class Main {
 	private static Logger logger;
@@ -52,7 +53,8 @@ public class Main {
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new Error(e);
 		}
 
@@ -65,7 +67,8 @@ public class Main {
 		if (!log4jConfigurationFile.exists()) {
 			try {
 				FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties"), log4jConfigurationFile);
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -89,7 +92,8 @@ public class Main {
 				try {
 					MainFrame frame = new MainFrame(configuration, jobProcessor);
 					frame.setVisible(true);
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
