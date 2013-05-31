@@ -177,6 +177,7 @@ public class MainFrame extends JFrame {
 		JMenu mnImport = new JMenu("Import Board");
 		mnFile.add(mnImport);
 		mnImport.add(new JMenuItem(jobPanel.importMountsmdUlpAction));
+		mnImport.add(new JMenuItem(jobPanel.importMountsmdPosAction));
 		
 		
 		if (!macOsXMenus) {
