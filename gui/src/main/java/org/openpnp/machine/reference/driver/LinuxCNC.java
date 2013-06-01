@@ -283,9 +283,12 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         // Turn off the stepper drivers
         setEnabled(false);
 
+	// Force into miillmeter mode:
+	sendCommand("set mdi G21");
+
         // Reset all axes to 0, in case the firmware was not reset on
         // connect.
-        sendCommand("set mdi G21 G92 X0 Y0 Z0 A0");
+        sendCommand("set mdi G92 X0 Y0 Z0 A0");
     }
 
     private void processConnectionResponses(List<String> responses) {
