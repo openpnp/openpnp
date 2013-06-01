@@ -28,6 +28,7 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -56,7 +57,9 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
-		return (feedCount < (trayCountX * trayCountY));
+		boolean result = (feedCount < (trayCountX * trayCountY));
+		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getId(), nozzle, result});
+		return result;
 	}
 	
 	@Override
@@ -64,12 +67,14 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	    if (pickLocation == null) {
 	        pickLocation = location;
 	    }
-	    return pickLocation;
+		logger.debug("{}.getPickLocation => {}", getId(), pickLocation);
+		return pickLocation;
     }
 
     public void feed(Nozzle nozzle)
 			throws Exception {
-        int partX, partY;
+		logger.debug("{}.feed({})", getId(), nozzle);
+		int partX, partY;
         
         if (trayCountX >= trayCountY) {
             // X major axis.
@@ -131,4 +136,10 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	public void setFeedCount(int feedCount) {
 		this.feedCount = feedCount;
 	}
+
+	@Override
+	public String toString() {
+		return getId();
+	}
+
 }

@@ -49,13 +49,24 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public void home() throws Exception {
-        logger.debug("home()");
+		logger.debug("{}.home()", getId());
         driver.home(this);
         machine.fireMachineHeadActivity(this);
     }
 
-    @Override
+	@Override
     public Wizard getConfigurationWizard() {
         return new ReferenceHeadConfigurationWizard(this);
     }
+
+	@Override
+	public void moveToSafeZ(double speed) throws Exception {
+		logger.debug("{}.moveToSafeZ({})", getId(), speed);
+		super.moveToSafeZ(speed);
+	}
+
+	@Override
+	public String toString() {
+		return getId();
+	}
 }

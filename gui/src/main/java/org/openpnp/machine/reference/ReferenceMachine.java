@@ -36,8 +36,12 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReferenceMachine extends AbstractMachine {
+	private static Logger logger = LoggerFactory.getLogger(ReferenceMachine.class);
+
 	@Element
 	private ReferenceDriver driver;
 	
@@ -54,6 +58,7 @@ public class ReferenceMachine extends AbstractMachine {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
+		logger.debug("setEnabled({})", enabled);
 		if (enabled) {
 			try {
 				driver.setEnabled(true);
@@ -100,5 +105,11 @@ public class ReferenceMachine extends AbstractMachine {
 		l.add(TableScannerCamera.class);
 		l.add(OpenCvCamera.class);
 		return l;
+	}
+
+	@Override
+	public void home() throws Exception {
+		logger.debug("home");
+		super.home();
 	}
 }
