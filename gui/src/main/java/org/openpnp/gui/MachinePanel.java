@@ -17,18 +17,47 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui;
 
 import javax.swing.JPanel;
 
+import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
+import java.awt.BorderLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 
-public class MachinePanel extends JPanel {
-	private final Configuration configuration;
-	
-	public MachinePanel(Configuration configuration) {
-		this.configuration = configuration;
-	}
+public class MachinePanel extends JPanel implements WizardContainer {
+    public MachinePanel() {
+        setLayout(new BorderLayout(0, 0));
+        addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				removeAll();
+                Wizard wizard = Configuration.get().getMachine()
+                        .getConfigurationWizard();
+                if (wizard != null) {
+                    wizard.setWizardContainer(MachinePanel.this);
+                    JPanel panel = wizard.getWizardPanel();
+                    add(panel);
+                }
+                revalidate();
+                repaint();
+			}
+		});
+    }
+
+    @Override
+    public void wizardCompleted(Wizard wizard) {
+        Configuration.get().setDirty(true);
+    }
+
+    @Override
+    public void wizardCancelled(Wizard wizard) {
+    }
 }

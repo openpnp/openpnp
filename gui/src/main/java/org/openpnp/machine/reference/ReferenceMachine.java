@@ -80,7 +80,7 @@ public class ReferenceMachine extends AbstractMachine {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return driver.getConfigurationWizard();
 	}
 
 	@Override

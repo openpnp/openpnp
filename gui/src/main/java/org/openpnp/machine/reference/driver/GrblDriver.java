@@ -33,6 +33,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -367,4 +368,10 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			return -1;
 		}
 	}
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

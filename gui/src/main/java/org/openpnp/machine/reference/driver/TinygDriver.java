@@ -29,11 +29,13 @@ import java.io.OutputStream;
 import java.util.Locale;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.driver.wizards.TinygDriverConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -286,11 +288,11 @@ public class TinygDriver implements ReferenceDriver, Runnable {
         }
     }
 
-    private JsonObject sendCommand(String command) throws Exception {
+    public JsonObject sendCommand(String command) throws Exception {
         return sendCommand(command, -1);
     }
 
-    private synchronized JsonObject sendCommand(String command, long timeout)
+    public synchronized JsonObject sendCommand(String command, long timeout)
             throws Exception {
         JsonObject response;
         synchronized (commandLock) {
@@ -475,5 +477,11 @@ public class TinygDriver implements ReferenceDriver, Runnable {
         // 70-79 | TG_ERROR_70 - TG_ERROR_79 | reserved
         // 80-99 | Expansion | Expansion ranges
         // 100-119 | Expansion |
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        // TODO Auto-generated method stub
+        return new TinygDriverConfigurationWizard(this);
     }
 }

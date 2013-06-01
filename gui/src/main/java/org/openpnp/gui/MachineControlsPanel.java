@@ -30,15 +30,10 @@ import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -188,7 +183,6 @@ public class MachineControlsPanel extends JPanel {
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
-		droAction.setEnabled(enabled);
 		homeAction.setEnabled(enabled);
 		goToZeroAction.setEnabled(enabled);
 		jogControlsPanel.setEnabled(enabled);
@@ -227,8 +221,6 @@ public class MachineControlsPanel extends JPanel {
 	}
 	
 	private void createUi() {
-		showAbsoluteCoordinatesAction.putValue(Action.SELECTED_KEY, false);
-		
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -268,6 +260,7 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosFirstLine.add(lblX);
 		
 		textFieldX = new JTextField();
+		textFieldX.setEditable(false);
 		textFieldX.setFocusTraversalKeysEnabled(false);
 		textFieldX.setSelectionColor(droEditingColor);
 		textFieldX.setDisabledTextColor(Color.BLACK);
@@ -276,9 +269,6 @@ public class MachineControlsPanel extends JPanel {
 		textFieldX.setText("0000.0000");
 		panelDrosFirstLine.add(textFieldX);
 		textFieldX.setColumns(6);
-		textFieldX.addFocusListener(droFocusListener);
-		textFieldX.setAction(droAction);
-		textFieldX.addMouseListener(droMouseListener);
 		
 		Component horizontalStrut = Box.createHorizontalStrut(15);
 		panelDrosFirstLine.add(horizontalStrut);
@@ -288,6 +278,7 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosFirstLine.add(lblY);
 		
 		textFieldY = new JTextField();
+		textFieldY.setEditable(false);
 		textFieldY.setFocusTraversalKeysEnabled(false);
 		textFieldY.setSelectionColor(droEditingColor);
 		textFieldY.setDisabledTextColor(Color.BLACK);
@@ -296,13 +287,10 @@ public class MachineControlsPanel extends JPanel {
 		textFieldY.setText("0000.0000");
 		panelDrosFirstLine.add(textFieldY);
 		textFieldY.setColumns(6);
-		textFieldY.addFocusListener(droFocusListener);
-		textFieldY.setAction(droAction);
 		
 		JButton btnTargetTool = new JButton(targetToolAction);
 		panelDrosFirstLine.add(btnTargetTool);
 		btnTargetTool.setToolTipText("Position the tool at the camera's current location.");
-		textFieldY.addMouseListener(droMouseListener);
 		
 		JPanel panelDrosSecondLine = new JPanel();
 		panelDros.add(panelDrosSecondLine);
@@ -313,6 +301,7 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosSecondLine.add(lblC);
 		
 		textFieldC = new JTextField();
+		textFieldC.setEditable(false);
 		textFieldC.setFocusTraversalKeysEnabled(false);
 		textFieldC.setSelectionColor(droEditingColor);
 		textFieldC.setDisabledTextColor(Color.BLACK);
@@ -320,9 +309,6 @@ public class MachineControlsPanel extends JPanel {
 		textFieldC.setText("0000.0000");
 		textFieldC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldC.setColumns(6);
-		textFieldC.addFocusListener(droFocusListener);
-		textFieldC.setAction(droAction);
-		textFieldC.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldC);
 		
 		Component horizontalStrut_1 = Box.createHorizontalStrut(15);
@@ -333,6 +319,7 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosSecondLine.add(lblZ);
 		
 		textFieldZ = new JTextField();
+		textFieldZ.setEditable(false);
 		textFieldZ.setFocusTraversalKeysEnabled(false);
 		textFieldZ.setSelectionColor(droEditingColor);
 		textFieldZ.setDisabledTextColor(Color.BLACK);
@@ -340,9 +327,6 @@ public class MachineControlsPanel extends JPanel {
 		textFieldZ.setText("0000.0000");
 		textFieldZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldZ.setColumns(6);
-		textFieldZ.addFocusListener(droFocusListener);
-		textFieldZ.setAction(droAction);
-		textFieldZ.addMouseListener(droMouseListener);
 		panelDrosSecondLine.add(textFieldZ);
 		
 		JButton btnTargetCamera = new JButton(targetCameraAction);
@@ -436,88 +420,6 @@ public class MachineControlsPanel extends JPanel {
 			catch (Exception e) {
 				MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", e.getMessage());
 			}
-		}
-	};
-	
-	private MouseListener droMouseListener = new MouseAdapter() {
-		private boolean hadFocus;
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-			JTextField dro = (JTextField) e.getComponent();
-			hadFocus = dro.hasFocus();
-		}
-		
-		public void mouseClicked(MouseEvent e) {
-			JTextField dro = (JTextField) e.getComponent();
-			if (hadFocus) {
-				dro.transferFocus();
-			}
-		}
-	};
-	
-	@SuppressWarnings("serial")
-	private Action droAction = new AbstractAction() {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-		    // TODO: Remove
-//			JTextField dro = (JTextField) e.getSource();
-//			double value = Double.parseDouble(dro.getText());
-//
-//			if (dro == textFieldX) {
-//				head.setPerceivedX(value);
-//			}
-//			else if (dro == textFieldY) {
-//				head.setPerceivedY(value);
-//			}
-//			else if (dro == textFieldZ) {
-//				head.setPerceivedZ(value);
-//			}
-//			else if (dro == textFieldC) {
-//				head.setPerceivedC(value);
-//			}
-		    
-			btnStartStop.requestFocus();
-		}
-	};
-	
-	private FocusListener droFocusListener = new FocusAdapter() {
-		@Override
-		public void focusGained(FocusEvent e) {
-			JTextField dro = (JTextField) e.getComponent();
-			dro.setBackground(droEditingColor);
-			dro.setSelectionStart(0);
-			dro.setSelectionEnd(dro.getText().length());
-		}
-
-		@Override
-		public void focusLost(FocusEvent e) {
-			JTextField dro = (JTextField) e.getComponent();
-			dro.setBackground(droNormalColor);
-			dro.setSelectionEnd(0);
-			dro.setSelectionEnd(0);
-			updateDros();
-		}
-	};
-	
-	public Action showAbsoluteCoordinatesAction = new AbstractAction("Show Absolute Coordinates") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (getValue(Action.SELECTED_KEY).equals(true)) {
-				droAction.setEnabled(false);
-				textFieldX.setBackground(droWarningColor);
-				textFieldY.setBackground(droWarningColor);
-				textFieldZ.setBackground(droWarningColor);
-				textFieldC.setBackground(droWarningColor);
-			}
-			else {
-				droAction.setEnabled(MachineControlsPanel.this.isEnabled());
-				textFieldX.setBackground(droNormalColor);
-				textFieldY.setBackground(droNormalColor);
-				textFieldZ.setBackground(droNormalColor);
-				textFieldC.setBackground(droNormalColor);
-			}
-			updateDros();
 		}
 	};
 	

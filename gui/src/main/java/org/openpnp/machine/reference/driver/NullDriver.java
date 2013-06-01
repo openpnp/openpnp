@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.driver;
 
 import java.util.HashMap;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -256,5 +257,11 @@ public class NullDriver implements ReferenceDriver {
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
