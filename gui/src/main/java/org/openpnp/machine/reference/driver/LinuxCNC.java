@@ -25,6 +25,41 @@
  * ready to run, then the OpenPNP can take over.
  */
 
+/*
+ * Below is a slightly edited E-mail from Ami on the OpenPNP mail list dated
+ * 27May2013 that describes how to bring up the LinuxCNC driver:
+ *
+ * Step1: Run emc2 until it's configured well.
+ * Step2. Put emc2 in MDI mode (F5) (it won't respond to external gcode
+ *        if in jog mode)
+ * Step3: Run the remote shell (emcrsh)
+ *
+ *        You're using ubuntu 10.04, so I guess it's the older version called
+ *        emc2. The newer version is called linuxcnc.
+ *
+ *        Open a terminal window,
+ *        You must go to the folder where you have the config of your cnc,
+ *        for example: /emc2/configs/mycnc/
+ *        There must be a file named emc.nml overthere.
+ *
+ *        Then on the terminal window, type : emcrsh.
+ *
+ *        This is the program that opens the port so we can control emc2
+ *        from a distance.  (There is a way to do this automatically,
+ *        in mycnc.ini file but for starting up it's better to do it manually)
+ *
+ * Step4: in openpnp:  on machine.xml you must have something like this:
+ *
+ *            <driver class="org.openpnp.machine.reference.driver.LinuxCNC" server-ip="192.168.1.6" port="5007"/>
+ *
+ *        Port 5007 is the default used by linuxcnc.
+ *        server-ip is the address of the machine where emc2 is running.
+ *        It doesn't have to be on the same machine where openpnp runs.
+ *
+ * Step5: Run openpnp, it should connect to the emc2,
+ *        in emcrsh window it sould show : "Connected to x"
+ */
+
 package org.openpnp.machine.reference.driver;
 
 import java.io.InputStream;
@@ -256,6 +291,9 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
         // Turn off the stepper drivers
         setEnabled(false);
+
+	// Force into miillmeter mode:
+	sendCommand("set mdi G21");
 
         // Reset all axes to 0, in case the firmware was not reset on
         // connect.
