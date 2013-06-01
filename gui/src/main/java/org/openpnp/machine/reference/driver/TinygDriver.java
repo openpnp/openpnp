@@ -171,8 +171,7 @@ public class TinygDriver implements ReferenceDriver, Runnable {
         // TODO: figure out how to home
         // sendCommand("G28.2");
 
-        // Reset all axes to 0, in case the firmware was not reset on
-        // connect.
+        // TODO: This homeLocation really needs to be Head specific.
         Location homeLocation = this.homeLocation
                 .convertToUnits(LengthUnit.Millimeters);
         sendCommand(String.format(Locale.US, "G92 X%2.2f Y%2.2f Z%2.2f A%2.2f",
