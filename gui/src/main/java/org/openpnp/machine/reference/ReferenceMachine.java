@@ -32,12 +32,15 @@ import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReferenceMachine extends AbstractMachine {
+	private static Logger logger = LoggerFactory.getLogger(ReferenceMachine.class);
+
 	@Element
 	private ReferenceDriver driver;
 	
@@ -54,6 +57,7 @@ public class ReferenceMachine extends AbstractMachine {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
+		logger.debug("setEnabled({})", enabled);
 		if (enabled) {
 			try {
 				driver.setEnabled(true);
@@ -101,4 +105,93 @@ public class ReferenceMachine extends AbstractMachine {
 		l.add(OpenCvCamera.class);
 		return l;
 	}
+
+	@Override
+	public List<Head> getHeads() {
+		logger.trace("getHeads");
+		return super.getHeads();
+	}
+
+	@Override
+	public Head getHead(String s) {
+		Head result = super.getHead(s);
+		logger.debug("getHead({}) => {}", s, result);
+		return result;
+	}
+
+	@Override
+	public List<Feeder> getFeeders() {
+		logger.trace("getFeeders");
+		return super.getFeeders();
+	}
+
+	@Override
+	public Feeder getFeeder(String s) {
+		Feeder result = super.getFeeder(s);
+		logger.debug("getFeeder({}) => {}", s, result);
+		return result;
+	}
+
+	@Override
+	public List<Camera> getCameras() {
+		logger.trace("getCameras");
+		return super.getCameras();
+	}
+
+	@Override
+	public Camera getCamera(String s) {
+		Camera result = super.getCamera(s);
+		logger.debug("getCamera({}) => ", s, result);
+		return result;
+	}
+
+	@Override
+	public void home() throws Exception {
+		logger.debug("home");
+		super.home();
+	}
+
+	@Override
+	public void addListener(MachineListener machineListener) {
+		logger.trace("addListener({})", machineListener);
+		super.addListener(machineListener);
+	}
+
+	@Override
+	public void removeListener(MachineListener machineListener) {
+		logger.trace("removeListener({})", machineListener);
+		super.removeListener(machineListener);
+	}
+
+	@Override
+	public void addFeeder(Feeder feeder) throws Exception {
+		logger.debug("addFeeder({})", feeder);
+		super.addFeeder(feeder);
+	}
+
+	@Override
+	public void removeFeeder(Feeder feeder) {
+		logger.debug("removeFeeder({})", feeder);
+		super.removeFeeder(feeder);
+	}
+
+	@Override
+	public void addCamera(Camera camera) throws Exception {
+		logger.debug("addCamera({})", camera);
+		super.addCamera(camera);
+	}
+
+	@Override
+	public void removeCamera(Camera camera) {
+		logger.debug("removeCamera({})", camera);
+		super.removeCamera(camera);
+	}
+
+	@Override
+	public JobPlanner getJobPlanner() {
+		JobPlanner result = super.getJobPlanner();
+		logger.debug("getJobPlanner => {}", result);
+		return result;
+	}
+
 }

@@ -25,6 +25,9 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractHead;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,13 +52,57 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public void home() throws Exception {
-        logger.debug("home()");
+		logger.debug("{}.home()", getId());
         driver.home(this);
         machine.fireMachineHeadActivity(this);
     }
 
-    @Override
+	@Override
     public Wizard getConfigurationWizard() {
         return new ReferenceHeadConfigurationWizard(this);
     }
+
+	@Override
+	public Nozzle getNozzle(String id) {
+		Nozzle result = super.getNozzle(id);
+		logger.debug("{}.getNozzle({}) => {}", new Object[]{getId(), id, result});
+		return result;
+	}
+
+	@Override
+	public Actuator getActuator(String id) {
+		Actuator result = super.getActuator(id);
+		logger.debug("{}.getActuator({}) => {}", new Object[]{getId(), id, result});
+		return result;
+	}
+
+	@Override
+	public Camera getCamera(String id) {
+		Camera result = super.getCamera(id);
+		logger.debug("{}.getCamera({}) => {}", new Object[]{getId(), id, result});
+		return result;
+	}
+
+	@Override
+	public void addCamera(Camera camera) throws Exception {
+		logger.debug("{}.addCamera({})", getId(), id);
+		super.addCamera(camera);
+	}
+
+	@Override
+	public void removeCamera(Camera camera) {
+		logger.debug("{}.removeCamera({})", getId(), id);
+		super.removeCamera(camera);
+	}
+
+	@Override
+	public void moveToSafeZ(double speed) throws Exception {
+		logger.debug("{}.moveToSafeZ({})", getId(), speed);
+		super.moveToSafeZ(speed);
+	}
+
+	@Override
+	public String toString() {
+		return getId();
+	}
 }

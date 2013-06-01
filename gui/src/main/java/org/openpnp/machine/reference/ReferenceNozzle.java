@@ -5,6 +5,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.simpleframework.xml.Attribute;
@@ -48,7 +49,8 @@ public class ReferenceNozzle extends AbstractNozzle implements
     }
 
     public void setPickDwellMilliseconds(int pickDwellMilliseconds) {
-        this.pickDwellMilliseconds = pickDwellMilliseconds;
+		logger.debug("{}.setPickDwellMilliseconds({})", getId(), pickDwellMilliseconds);
+		this.pickDwellMilliseconds = pickDwellMilliseconds;
     }
 
     public int getPlaceDwellMilliseconds() {
@@ -56,7 +58,8 @@ public class ReferenceNozzle extends AbstractNozzle implements
     }
 
     public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
-        this.placeDwellMilliseconds = placeDwellMilliseconds;
+		logger.debug("{}.setPlaceDwellMilliseconds({})", getId(), placeDwellMilliseconds);
+		this.placeDwellMilliseconds = placeDwellMilliseconds;
     }
 
     @Override
@@ -66,40 +69,43 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public NozzleTip getNozzleTip() {
-        return nozzleTip;
+		logger.debug("{}.getNozzleTip => {}", getId(), nozzleTip);
+		return nozzleTip;
     }
 
     @Override
     public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
-        return nozzleTip.canHandle(feeder.getPart());
-    }
+		boolean result = nozzleTip.canHandle(feeder.getPart());
+		logger.debug("{}.canPickAndPlace({},{}) => {}", new Object[]{getId(), feeder, placeLocation, result});
+    	return result;
+	}
 
     @Override
     public void pick() throws Exception {
-        logger.debug("pick()");
-        driver.pick(this);
+		logger.debug("{}.pick()", getId());
+		driver.pick(this);
         machine.fireMachineHeadActivity(head);
         Thread.sleep(pickDwellMilliseconds);
     }
 
     @Override
     public void place() throws Exception {
-        logger.debug("place()");
-        driver.place(this);
+		logger.debug("{}.place()", getId());
+		driver.place(this);
         machine.fireMachineHeadActivity(head);
         Thread.sleep(placeDwellMilliseconds);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("moveTo({}, {})", new Object[] { location, speed } );
+        logger.debug("{}.moveTo({}, {})", new Object[] { id, location, speed } );
         driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("moveToSafeZ({})", new Object[] { speed } );
+		logger.debug("{}.moveToSafeZ({})", new Object[]{getId(), speed});
         Location l = new Location(getLocation().getUnits(), Double.NaN,
                 Double.NaN, 0, Double.NaN);
         driver.moveTo(this, l, speed);
@@ -108,12 +114,25 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public Location getLocation() {
-        return driver.getLocation(this);
-    }
+		Location result = driver.getLocation(this);
+		logger.trace("{}.getLocation => {}", getId(), result);
+		return result;
+	}
 
     @Override
     public Wizard getConfigurationWizard() {
         // TODO Auto-generated method stub
         return null;
     }
+
+	@Override
+	public String toString() {
+		return getId();
+	}
+
+	public void setHead(Head head) {
+		logger.debug("{}.setHead({})", getId(), head);
+		super.setHead(head);
+	}
+
 }

@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Main {
 	private static Logger logger;
-	
+
 	public static String getVersion() {
 		String version = Main.class.getPackage().getImplementationVersion();
 		if (version == null) {
@@ -47,7 +47,7 @@ public class Main {
 		}
 		return version;
 	}
-	
+
 	public static void main(String[] args) {
 		// http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
@@ -57,10 +57,10 @@ public class Main {
 		catch (Exception e) {
 			throw new Error(e);
 		}
-		
+
 		File configurationDirectory = new File(System.getProperty("user.home"));
 		configurationDirectory = new File(configurationDirectory, ".openpnp");
-		
+
 		// If the log4j.properties is not in the configuration directory, copy
 		// the default over.
 		File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
@@ -72,18 +72,18 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		
+
 		// Use the local configuration if it exists.
 		if (log4jConfigurationFile.exists()) {
 			System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
 		}
-		
+
 		// We don't create a logger until log4j has been configured or it tries
 		// to configure itself.
 		logger = LoggerFactory.getLogger(Main.class);
-		
+
 		logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
-		
+
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();
 		final JobProcessor jobProcessor = new JobProcessor(configuration);
