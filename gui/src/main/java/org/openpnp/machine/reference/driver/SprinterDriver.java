@@ -32,11 +32,16 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.openpnp.RequiresConfigurationResolution;
+import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Part;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +121,7 @@ import org.slf4j.LoggerFactory;
 //M602 - Reset Temp jitter from Extruder (min / max val) --> Don't use it while Printing
 //M603 - Show Free Ram
 
-public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfigurationResolution {
+public class SprinterDriver implements ReferenceDriver, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(SprinterDriver.class);
 //	private static final double minimumRequiredVersion = 0.75;
 	
@@ -150,6 +155,9 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	@Attribute(required=false)
 	private boolean homeC;
 	
+    @Attribute
+    private double feedRateMmPerMinute;
+	
 	private double x, y, z, c;
 	private SerialPort serialPort;
 	private InputStream input;
@@ -161,79 +169,119 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 //	private double connectedVersion;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
-	@Override
-	public void resolve(Configuration configuration) throws Exception {
-		connect(portName, baud);
+	public SprinterDriver() {
+	    Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration)
+                    throws Exception {
+                connect(portName, baud);
+            }
+	    });
 	}
+	
+	@Override
+    public Wizard getConfigurationWizard() {
+        return null;
+    }
 
-	@Override
-	public void actuate(ReferenceHead head, int index, boolean on)
-			throws Exception {
-		if (index == 0) {
-			sendCommand(String.format("M42 P%d S%d", actuatorPin, on ^ invertActuator ? 255 : 0));
-			dwell();
-		}
-	}
-	
-	@Override
-	public void home(ReferenceHead head, double feedRateMmPerMinute) throws Exception {
-		if (homeX || homeY || homeZ || homeC) {
-			sendCommand(String.format("G28 %s %s %s %s", homeX ? "X" : "", homeY ? "Y" : "", homeZ ? "Z" : "", homeC ? "E" : ""));
-			dwell();
-		}
-		else {
-			throw new Exception("No homing axes defined. See the homeX, homeY, homeZ and homeC parameters.");
-		}
-		// Reset all axes to 0. This is required so that the Head and Driver
-		// stay in sync.
-		sendCommand("G92 X0 Y0 Z0 E0");
-		x = y = z= c = 0;
-	}
-	
-	@Override
-	public void moveTo(ReferenceHead head, double x, double y, double z, double c, double feedRateMmPerMinute)
-			throws Exception {
-		StringBuffer sb = new StringBuffer();
-		if (x != this.x) {
-			sb.append(String.format(Locale.US, "X%2.4f ", x));
-		}
-		if (y != this.y) {
-			sb.append(String.format(Locale.US, "Y%2.4f ", y));
-		}
-		if (z != this.z) {
-			sb.append(String.format(Locale.US, "Z%2.4f ", z));
-		}
-		if (c != this.c) {
-			sb.append(String.format(Locale.US, "E%2.4f ", c));
-		}
-		if (sb.length() > 0) {
-			sb.append(String.format(Locale.US, "F%2.4f ", feedRateMmPerMinute));
-			sendCommand("G1" + sb.toString());
-			dwell();
-		}
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.c = c;
-	}
-	
-	@Override
+    @Override
+    public void home(ReferenceHead head) throws Exception {
+        if (homeX || homeY || homeZ || homeC) {
+            sendCommand(String.format("G28 %s %s %s %s", homeX ? "X" : "", homeY ? "Y" : "", homeZ ? "Z" : "", homeC ? "E" : ""));
+            dwell();
+        }
+        else {
+            throw new Exception("No homing axes defined. See the homeX, homeY, homeZ and homeC parameters.");
+        }
+        // Reset all axes to 0. This is required so that the Head and Driver
+        // stay in sync.
+        sendCommand("G92 X0 Y0 Z0 E0");
+        x = y = z= c = 0;
+    }
+
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, Location location,
+            double speed) throws Exception {
+        location = location.subtract(hm.getHeadOffsets());
+
+        location = location.convertToUnits(LengthUnit.Millimeters);
+
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        double c = location.getRotation();
+
+        StringBuffer sb = new StringBuffer();
+        if (!Double.isNaN(x) && x != this.x) {
+            sb.append(String.format(Locale.US, "X%2.4f ", x));
+        }
+        if (!Double.isNaN(y) && y != this.y) {
+            sb.append(String.format(Locale.US, "Y%2.4f ", y));
+        }
+        if (!Double.isNaN(z) && z != this.z) {
+            sb.append(String.format(Locale.US, "Z%2.4f ", z));
+        }
+        if (!Double.isNaN(c) && c != this.c) {
+            sb.append(String.format(Locale.US, "A%2.4f ", c));
+        }
+        if (sb.length() > 0) {
+            sb.append(String.format(Locale.US, "F%2.4f ", feedRateMmPerMinute
+                    * speed));
+            sendCommand("G1" + sb.toString());
+            dwell();
+        }
+        if (!Double.isNaN(x)) {
+            this.x = x;
+        }
+        if (!Double.isNaN(y)) {
+            this.y = y;
+        }
+        if (!Double.isNaN(z)) {
+            this.z = z;
+        }
+        if (!Double.isNaN(c)) {
+            this.c = c;
+        }
+    }
+
+    @Override
+    public Location getLocation(ReferenceHeadMountable hm) {
+        return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm.getHeadOffsets());
+    }
+
+    @Override
+    public void pick(ReferenceNozzle nozzle) throws Exception {
+        sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 0 : 255));
+        dwell();
+    }
+
+    @Override
+    public void place(ReferenceNozzle nozzle) throws Exception {
+        sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 255 : 0));
+        dwell();
+    }
+
+    @Override
+    public void actuate(ReferenceActuator actuator, boolean on)
+            throws Exception {
+        if (actuator.getIndex() == 0) {
+            sendCommand(String.format("M42 P%d S%d", actuatorPin, on ^ invertActuator ? 255 : 0));
+            dwell();
+        }
+    }
+
+    @Override
+    public void actuate(ReferenceActuator actuator, double value)
+            throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
 	public void setEnabled(boolean enabled) throws Exception {
 		sendCommand(String.format("M84 %s", enabled ? "T" : ""));
 		place(null);
-		actuate(null, 0, false);
-	}
-
-	@Override
-	public void pick(ReferenceHead head, Part part) throws Exception {
-		sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 0 : 255));
-		dwell();
-	}
-
-	@Override
-	public void place(ReferenceHead head) throws Exception {
-		sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 255 : 0));
-		dwell();
+		actuate(null, false);
 	}
 
 	public synchronized void connect(String portName, int baud)
@@ -387,8 +435,6 @@ public class SprinterDriver implements ReferenceDriver, Runnable, RequiresConfig
 	 * @throws Exception
 	 */
 	private void dwell() throws Exception {
-		// TODO: Might be better to use M400 here. It is a simple
-		// sync without sleep.
 		sendCommand("M400");
 	}
 
