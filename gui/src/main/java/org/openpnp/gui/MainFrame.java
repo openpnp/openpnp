@@ -138,7 +138,15 @@ public class MainFrame extends JFrame {
 				quit();
 			}
 		});
-
+		
+        if (prefs.getInt(PREF_WINDOW_WIDTH, 50) < 50) {
+            prefs.putInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF);
+        }
+        
+        if (prefs.getInt(PREF_WINDOW_HEIGHT, 50) < 50) {
+            prefs.putInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF);
+        }
+		        
 		setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
 				prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
 				prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
