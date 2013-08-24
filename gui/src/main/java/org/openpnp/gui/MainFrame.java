@@ -66,6 +66,9 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.importer.KicadPosImporter;
+import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -121,6 +124,8 @@ public class MainFrame extends JFrame {
 	
 	private ActionListener instructionsCancelActionListener;
 	private ActionListener instructionsProceedActionListener;
+	
+	private JMenu mnImport;
 
 	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
 		this.configuration = configuration;
@@ -182,10 +187,8 @@ public class MainFrame extends JFrame {
 		// File -> Import
 		//////////////////////////////////////////////////////////////////////
 		mnFile.addSeparator();
-		JMenu mnImport = new JMenu("Import Board");
+		mnImport = new JMenu("Import Board");
 		mnFile.add(mnImport);
-		mnImport.add(new JMenuItem(jobPanel.importMountsmdUlpAction));
-		mnImport.add(new JMenuItem(jobPanel.importMountsmdPosAction));
 		
 		
 		if (!macOsXMenus) {
@@ -422,6 +425,8 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
+		
+		registerBoardImporters();
 
 		addComponentListener(componentListener);
 
@@ -452,6 +457,38 @@ public class MainFrame extends JFrame {
 		jobProcessor.addListener(jobProcessorListener);
 	}
 	
+	private void registerBoardImporters() {
+//        registerBoardImporter(EagleMountsmdUlpImporter.class);
+//        registerBoardImporter(KicadPosImporter.class);
+	}
+	
+    /**
+     * Register a BoardImporter with the system, causing it to gain a menu
+     * location in the File->Import menu.
+     * @param importer
+     */
+    public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
+        final BoardImporter boardImporter;
+        try {
+            boardImporter = boardImporterClass.newInstance();
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+        JMenuItem menuItem = new JMenuItem(new AbstractAction() {
+            {
+                putValue(NAME, boardImporter.getImporterName());
+                putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jobPanel.importBoard(boardImporterClass);
+            }
+        });
+        mnImport.add(menuItem);
+    }
+    
 	public void showInstructions(
 			String title,
 			String instructions, 

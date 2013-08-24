@@ -58,8 +58,6 @@ import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.MountsmdUlpImporter;
-import org.openpnp.gui.importer.MountsmdPosImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -478,6 +476,52 @@ public class JobPanel extends JPanel {
 						.getName()));
 		frame.setTitle(title);
 	}
+	
+	public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
+	    
+	}
+//  public final Action importMountsmdUlpAction = new AbstractAction("EAGLE mountsmd.ulp") {
+//  @Override
+//  public void actionPerformed(ActionEvent arg0) {
+//      if (getSelectedBoardLocation() == null) {
+//          return;
+//      }
+//      BoardImporter importer = new EagleMountsmdUlpImporter(JOptionPane.getFrameForComponent(JobPanel.this));
+//      try {
+//          Board importedBoard = importer.importBoard();
+//          Board existingBoard = getSelectedBoardLocation().getBoard();
+//          for (Placement placement : importedBoard.getPlacements()) {
+//              existingBoard.addPlacement(placement);
+//          }
+//          placementsTableModel.fireTableDataChanged();
+//      }
+//      catch (Exception e) {
+//          MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+//      }
+//  }
+//};
+//
+//public final Action importMountsmdPosAction = new AbstractAction("KiCAD mountsmd.pos") {
+//  @Override
+//  public void actionPerformed(ActionEvent arg0) {
+//      if (getSelectedBoardLocation() == null) {
+//          return;
+//      }
+//      BoardImporter importer = new KicadPosImporter(JOptionPane.getFrameForComponent(JobPanel.this));
+//      try {
+//          Board importedBoard = importer.importBoard();
+//          Board existingBoard = getSelectedBoardLocation().getBoard();
+//          for (Placement placement : importedBoard.getPlacements()) {
+//              existingBoard.addPlacement(placement);
+//          }
+//          placementsTableModel.fireTableDataChanged();
+//      }
+//      catch (Exception e) {
+//          MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+//      }
+//  }
+//};
+
 
 	public final Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
@@ -921,48 +965,6 @@ public class JobPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			MessageBoxes.notYetImplemented(getTopLevelAncestor());
-		}
-	};
-	
-	public final Action importMountsmdUlpAction = new AbstractAction("EAGLE mountsmd.ulp") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (getSelectedBoardLocation() == null) {
-				return;
-			}
-			BoardImporter importer = new MountsmdUlpImporter(JOptionPane.getFrameForComponent(JobPanel.this));
-			try {
-				Board importedBoard = importer.importBoard();
-				Board existingBoard = getSelectedBoardLocation().getBoard();
-				for (Placement placement : importedBoard.getPlacements()) {
-					existingBoard.addPlacement(placement);
-				}
-				placementsTableModel.fireTableDataChanged();
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
-			}
-		}
-	};
-	
-	public final Action importMountsmdPosAction = new AbstractAction("KiCAD  mountsmd.pos") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (getSelectedBoardLocation() == null) {
-				return;
-			}
-			BoardImporter importer = new MountsmdPosImporter(JOptionPane.getFrameForComponent(JobPanel.this));
-			try {
-				Board importedBoard = importer.importBoard();
-				Board existingBoard = getSelectedBoardLocation().getBoard();
-				for (Placement placement : importedBoard.getPlacements()) {
-					existingBoard.addPlacement(placement);
-				}
-				placementsTableModel.fireTableDataChanged();
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
-			}
 		}
 	};
 	

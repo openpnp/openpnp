@@ -67,8 +67,11 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class MountsmdUlpImporter extends JDialog implements BoardImporter {
-	private Board board;
+public class KicadPosImporter extends JDialog implements BoardImporter {
+    private final static String NAME = "KiCAD .pos";
+    private final static String DESCRIPTION = "Import KiCAD .pos Files.";
+
+    private Board board;
 	private File topFile, bottomFile;
 	private JTextField textFieldTopFile;
 	private JTextField textFieldBottomFile;
@@ -78,8 +81,8 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 	private final Action cancelAction = new SwingAction_3();
 	private JCheckBox chckbxCreateMissingParts;
 	
-	public MountsmdUlpImporter(Frame parent) {
-		super(parent, "Import EAGLE mountsmd.ulp Files", true);
+	public KicadPosImporter(Frame parent) {
+		super(parent, DESCRIPTION, true);
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		
 		JPanel panel = new JPanel();
@@ -98,7 +101,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		JLabel lblTopFilemnt = new JLabel("Top File (.mnt)");
+		JLabel lblTopFilemnt = new JLabel("Top File (.pos)");
 		panel.add(lblTopFilemnt, "2, 2, right, default");
 		
 		textFieldTopFile = new JTextField();
@@ -109,7 +112,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 		btnBrowse.setAction(browseTopFileAction);
 		panel.add(btnBrowse, "6, 2");
 		
-		JLabel lblBottomFilemnb = new JLabel("Bottom File (.mnb)");
+		JLabel lblBottomFilemnb = new JLabel("Bottom File (.pos)");
 		panel.add(lblBottomFilemnb, "2, 4, right, default");
 		
 		textFieldBottomFile = new JTextField();
@@ -162,6 +165,16 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 	}
 	
 	@Override
+    public String getImporterName() {
+	    return NAME;
+    }
+
+    @Override
+    public String getImporterDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
 	public Board importBoard() throws Exception {
 		setVisible(true);
 		return board;
@@ -173,7 +186,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 		String line;
 		while ((line = reader.readLine()) != null) {
 			line = line.trim();
-			if (line.length() == 0) {
+			if (line.length() == 0 || line.charAt(0) == '#') {
 				continue;
 			}
 
@@ -181,21 +194,24 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			// T10 21.59 14.22  90  SOT23-BEC
 			// printf("%s %5.2f %5.2f %3.0f %s %s\n",
 
-			Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
+			//Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
+			Pattern pattern = Pattern.compile("(\\S+)\\s+(.*?)\\s(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s(.*)");
+
 			Matcher matcher = pattern.matcher(line);
 			matcher.matches();
 			Placement placement = new Placement(matcher.group(1));
 			placement.setLocation(new Location(
 			        LengthUnit.Millimeters,
-			        Double.parseDouble(matcher.group(2)),
 			        Double.parseDouble(matcher.group(3)),
+			        Double.parseDouble(matcher.group(4)),
 			        0,
-			        Double.parseDouble(matcher.group(4))));
+			        Double.parseDouble(matcher.group(5))));
 			Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
-                String packageId = matcher.group(6);
-
-                String partId = packageId + "-" + matcher.group(5);
+                //String packageId = matcher.group(6);
+                //String partId = packageId + "-" + matcher.group(2);
+		String packageId = "";
+                String partId = matcher.group(2);
                 Part part = cfg.getPart(partId);
                 if (part == null) {
                     part = new Part(partId);
@@ -223,11 +239,11 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			putValue(SHORT_DESCRIPTION, "Browse");
 		}
 		public void actionPerformed(ActionEvent e) {
-			FileDialog fileDialog = new FileDialog(MountsmdUlpImporter.this);
+			FileDialog fileDialog = new FileDialog(KicadPosImporter.this);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					return name.toLowerCase().endsWith(".mnt");
+					return name.toLowerCase().endsWith(".pos");
 				}
 			});
 			fileDialog.setVisible(true);
@@ -245,11 +261,11 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 			putValue(SHORT_DESCRIPTION, "Browse");
 		}
 		public void actionPerformed(ActionEvent e) {
-			FileDialog fileDialog = new FileDialog(MountsmdUlpImporter.this);
+			FileDialog fileDialog = new FileDialog(KicadPosImporter.this);
 			fileDialog.setFilenameFilter(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					return name.toLowerCase().endsWith(".mnb");
+					return name.toLowerCase().endsWith(".pos");
 				}
 			});
 			fileDialog.setVisible(true);
@@ -276,7 +292,7 @@ public class MountsmdUlpImporter extends JDialog implements BoardImporter {
 				placements.addAll(parseFile(bottomFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
 			}
 			catch (Exception e1) {
-				MessageBoxes.errorBox(MountsmdUlpImporter.this, "Import Error", e1);
+				MessageBoxes.errorBox(KicadPosImporter.this, "Import Error", e1);
 				return;
 			}
 			for (Placement placement : placements) {

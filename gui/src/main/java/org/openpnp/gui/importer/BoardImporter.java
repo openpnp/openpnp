@@ -25,4 +25,6 @@ import org.openpnp.model.Board;
 
 public interface BoardImporter {
 	public Board importBoard() throws Exception;
+	public String getImporterName();
+	public String getImporterDescription();
 }
