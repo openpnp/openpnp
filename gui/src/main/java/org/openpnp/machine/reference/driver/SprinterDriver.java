@@ -264,7 +264,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
     @Override
     public void actuate(ReferenceActuator actuator, boolean on)
             throws Exception {
-        if (actuator.getIndex() == 0) {
+        if (actuator == null || actuator.getIndex() == 0) {
             sendCommand(String.format("M42 P%d S%d", actuatorPin, on ^ invertActuator ? 255 : 0));
             dwell();
         }
@@ -396,7 +396,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 	private List<String> sendCommand(String command, long timeout) throws Exception {
 		synchronized (commandLock) {
 			if (command != null) {
-				logger.debug(command);
+				logger.debug("> " + command);
 				output.write(command.getBytes());
 				output.write("\n".getBytes());
 			}
@@ -416,7 +416,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 	public void run() {
 		while (!disconnectRequested) {
 			String line = readLine().trim();
-			logger.debug(line);
+			logger.debug("< " + line);
 			responseQueue.offer(line);
 			// We have a special case of accepting "start" when we are not
 			// connected because Sprinter does not send an "ok" when it starts
