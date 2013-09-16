@@ -222,7 +222,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
             sb.append(String.format(Locale.US, "Z%2.4f ", z));
         }
         if (!Double.isNaN(c) && c != this.c) {
-            sb.append(String.format(Locale.US, "A%2.4f ", c));
+            sb.append(String.format(Locale.US, "E%2.4f ", c));
         }
         if (sb.length() > 0) {
             sb.append(String.format(Locale.US, "F%2.4f ", feedRateMmPerMinute
