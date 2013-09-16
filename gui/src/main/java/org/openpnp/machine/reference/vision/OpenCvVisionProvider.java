@@ -21,7 +21,10 @@
 
 package org.openpnp.machine.reference.vision;
 
+
+
 import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_32F;
+
 import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_8U;
 import static com.googlecode.javacv.cpp.opencv_core.cvConvertScaleAbs;
 import static com.googlecode.javacv.cpp.opencv_core.cvCreateImage;
@@ -37,6 +40,7 @@ import static com.googlecode.javacv.cpp.opencv_imgproc.cvMatchTemplate;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -157,7 +161,14 @@ public class OpenCvVisionProvider implements VisionProvider {
         CvPoint resLoc;
         double resValue;
 
+        // Ami: templateImage is 4bytesRGBA format, camera.capture() is 3bytes RGB, so matchTemplate doesn't work.
+        // So here I only convert templateImage to 3 bytes RGB
+        templateImage_ = convertBufferedImage(templateImage_,BufferedImage.TYPE_3BYTE_BGR);   
+        // end of test insert
+        
         IplImage templateImage = IplImage.createFrom(templateImage_);
+        
+        
         BufferedImage image_ = camera.capture();
         IplImage image = IplImage.createFrom(image_);
         IplImage result = cvCreateImage(
@@ -184,7 +195,17 @@ public class OpenCvVisionProvider implements VisionProvider {
 
         return new Point[] { new Point(resLoc.x() + roiX, resLoc.y() + roiY) };
     }
-
+    
+    //test function insert
+    public static BufferedImage convertBufferedImage(BufferedImage src, int bufImgType) {
+    	BufferedImage img= new BufferedImage(src.getWidth(), src.getHeight(), bufImgType);
+    	Graphics2D g2d= img.createGraphics();
+    	g2d.drawImage(src, 0, 0, null);
+    	g2d.dispose();
+    	return img;
+    	}    
+    //end of test function insert
+    
     private void locateTemplateMatchesDebug(BufferedImage image_, int roiX,
             int roiY, int roiWidth, int roiHeight,
             BufferedImage templateImage_, IplImage result, double minVal,

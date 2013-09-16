@@ -132,13 +132,19 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 	private int baud;
 	
 	@Attribute(required=false)
-	private int vacuumPin = 31;
+	private int vacuumPin = 51;
 	
 	@Attribute(required=false)
 	private boolean invertVacuum;
 	
 	@Attribute(required=false)
-	private int actuatorPin = 33;
+	private int vacpumpPin = 49;
+	
+	@Attribute(required=false)
+	private boolean invertVacpump;
+	
+	@Attribute(required=false)
+	private int actuatorPin = 47;
 	
 	@Attribute(required=false)
 	private boolean invertActuator;
@@ -195,8 +201,10 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
         }
         // Reset all axes to 0. This is required so that the Head and Driver
         // stay in sync.
-        sendCommand("G92 X0 Y0 Z0 E0");
-        x = y = z= c = 0;
+        //sendCommand(String.format("M42 P%d S%d", vacpumpPin, invertVacpump ? 0 : 255)); //turn vacuum pump on
+        sendCommand("G92 X0 Y0 Z0 E180");
+        x = y = z = 0;
+        c = 180; //testing
     }
 
     @Override
@@ -222,7 +230,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
             sb.append(String.format(Locale.US, "Z%2.4f ", z));
         }
         if (!Double.isNaN(c) && c != this.c) {
-            sb.append(String.format(Locale.US, "A%2.4f ", c));
+            sb.append(String.format(Locale.US, "E%2.4f ", c));
         }
         if (sb.length() > 0) {
             sb.append(String.format(Locale.US, "F%2.4f ", feedRateMmPerMinute
@@ -258,6 +266,18 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
         sendCommand(String.format("M42 P%d S%d", vacuumPin, invertVacuum ? 255 : 0));
+        dwell();
+    }
+ 
+    @Override
+    public void vac_on(ReferenceNozzle nozzle) throws Exception {
+        sendCommand(String.format("M42 P%d S%d", vacpumpPin, invertVacpump ? 0 : 255));
+        dwell();
+    }
+
+    @Override
+    public void vac_off(ReferenceNozzle nozzle) throws Exception {
+        sendCommand(String.format("M42 P%d S%d", vacpumpPin, invertVacpump ? 255 : 0));
         dwell();
     }
 

@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference.feeder;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -38,8 +39,12 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.VisionProvider;
+import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
@@ -85,7 +90,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private Vision vision = new Vision();
 	
 	private Location pickLocation;
-	
+	private Configuration configuration;
 
 	/*
 	 * visionOffset contains the difference between where the part was
@@ -153,25 +158,39 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		
 		double offsetX = 0;
 		double offsetY = 0;
+
+		// TODO: temporary bug fix for null location
+		getPickLocation();
 		
-//		if (vision.isEnabled()) {
-//			if (visionOffset == null) {
-//				// This is the first feed with vision, or the offset has
-//				// been invalidated for some reason. We need to get an offset,
-//				// complete the feed operation and then get a new offset
-//				// for the next operation. By front loading this we make sure
-//				// that all future calls can go directly to the feed operation
-//				// and skip checking the vision first.
-//				logger.debug("First feed, running vision pre-flight.");
-//				
-//				visionOffset = getVisionOffsets(head, pickLocation);
-//			}
-//			
-//			logger.debug("visionOffsets " + visionOffset);
-//			
-//			offsetX = visionOffset.getX();
-//			offsetY = visionOffset.getY();
-//		}
+		// Create a new pickLocation with the offsets included.
+		pickLocation = new Location(
+				pickLocation.getUnits(),
+				pickLocation.getX() - offsetX,
+				pickLocation.getY() - offsetY,
+				pickLocation.getZ(),
+				pickLocation.getRotation()
+				);
+		
+		logger.debug("Modified pickLocation {}", pickLocation);
+		
+		if (vision.isEnabled()) {
+			if (visionOffset == null) {
+				// This is the first feed with vision, or the offset has
+				// been invalidated for some reason. We need to get an offset,
+				// complete the feed operation and then get a new offset
+				// for the next operation. By front loading this we make sure
+				// that all future calls can go directly to the feed operation
+				// and skip checking the vision first.
+				logger.debug("First feed, running vision pre-flight.");
+				
+				visionOffset = getVisionOffsets(head, pickLocation);
+			}
+			
+			logger.debug("visionOffsets " + visionOffset);
+			
+			offsetX = visionOffset.getX();
+			offsetY = visionOffset.getY();
+		}
 		
 		// Move the head so that the pin is positioned above the feed hole
 		// feedStartLocation is the position of the hole in the tool's coordinate
@@ -192,115 +211,113 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		// retract the pin
 		actuator.actuate(false);
 		
-		// TODO: temporary bug fix for null location
-		getPickLocation();
 		
-		// Create a new pickLocation with the offsets included.
-		pickLocation = new Location(
-				pickLocation.getUnits(),
-				pickLocation.getX() - offsetX,
-				pickLocation.getY() - offsetY,
-				pickLocation.getZ(),
-				pickLocation.getRotation()
-				);
-		
-		logger.debug("Modified pickLocation {}", pickLocation);
-		
-//		if (vision.isEnabled()) {
-//			visionOffset = getVisionOffsets(head, pickLocation);
-//			
-//			logger.debug("final visionOffsets " + visionOffset);
-//		}
+		if (vision.isEnabled()) {
+			visionOffset = getVisionOffsets(head, pickLocation);
+			
+			logger.debug("final visionOffsets " + visionOffset);
+		}
 	}
 	
 	// TODO: Throw an Exception if vision fails.
     // TODO: Vision temporarily disabled due to refactoring
-//	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-//		Machine machine = head.getMachine();
-//
-//		// Find the Camera to be used for homing
-//		// TODO: Consider caching this
-//		Camera camera = null;
-//		for (Camera c : machine.getCameras()) {
-//			if (c.getHead() == head && c.getVisionProvider() != null) {
-//				camera = c;
-//			}
-//		}
-//		
-//		if (camera == null) {
-//			throw new Exception("No vision capable camera found on head.");
-//		}
-//		
-//		// Get the camera offsets and convert to native units.
+	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
+//		configuration = new Configuration("/home/rlspell/.openpnp"); 
+//		this.configuration = configuration;
+		Configuration configuration = Configuration.get();
+		Machine machine = configuration.getMachine();
+
+		// Find the Camera to be used for homing
+		// TODO: Consider caching this
+		Camera camera = null;
+		for (Camera c : machine.getCameras()) {
+			if (c.getHead() == head && c.getVisionProvider() != null) {
+				camera = c;
+			}
+		}
+//		camera = machine.getCameras(); //testing, returns list, fails
+		camera = head.getCamera("C2"); //testing
+		
+		if (camera == null) {
+			throw new Exception("No vision capable camera found on head.");
+		}
+		
+		// Get the camera offsets and convert to native units.
+		//assume mm for now
 //		Location cameraOffsets = camera.getLocation().convertToUnits(machine.getNativeUnits());
-//		
-//		// Apply the camera offsets. We subtract instead of adding because we
-//		// want to position the camera over the location versus wanting to know
-//		// where the camera is in relation to the location.
+	    //?	visionOffset
+
+//		Location cameraOffsets = camera.getLocation();
+		
+		// Apply the camera offsets. We subtract instead of adding because we
+		// want to position the camera over the location versus wanting to know
+		// where the camera is in relation to the location.
 //		double x = pickLocation.getX() - cameraOffsets.getX();
 //		double y = pickLocation.getY() - cameraOffsets.getY();
 //		double z = pickLocation.getZ() - cameraOffsets.getZ();
-//		
-//		head.moveToSafeZ();
-//		
-//		// Position the camera over the pick location.
-//		head.moveTo(x, y, head.getZ(), head.getC());
-//		
-//		// Move the camera to be in focus over the pick location.
+		
+		// Position the camera over the pick location.
+//		head.moveTo(x,y,z, 1.0);
+		camera.moveToSafeZ(1.0);
+		
+		// Move the camera to be in focus over the pick location.
 //		head.moveTo(head.getX(), head.getY(), z, head.getC());
-//		
-//		// Settle the camera
-//		Thread.sleep(200);
-//		
-//		VisionProvider visionProvider = camera.getVisionProvider();
-//		
-//		Rectangle aoi = getVision().getAreaOfInterest();
-//		
-//		// Perform the template match
-//		Point[] matchingPoints = visionProvider.locateTemplateMatches(
-//				aoi.getX(), 
-//				aoi.getY(), 
-//				aoi.getWidth(), 
-//				aoi.getHeight(), 
-//				0, 
-//				0, 
-//				vision.getTemplateImage());
-//		
-//		// Get the best match from the array
-//		Point match = matchingPoints[0];
-//		
-//		// match now contains the position, in pixels, from the top left corner
-//		// of the image to the top left corner of the match. We are interested in
-//		// knowing how far from the center of the image the center of the match is.
-//		BufferedImage image = camera.capture();
-//		double imageWidth = image.getWidth();
-//		double imageHeight = image.getHeight();
-//		double templateWidth = vision.getTemplateImage().getWidth();
-//		double templateHeight = vision.getTemplateImage().getHeight();
-//		double matchX = match.x;
-//		double matchY = match.y;
-//		
-//		// Adjust the match x and y to be at the center of the match instead of
-//		// the top left corner.
-//		matchX += (templateWidth / 2);
-//		matchY += (templateHeight / 2);
-//		
-//		// Calculate the difference between the center of the image to the
-//		// center of the match.
-//		double offsetX = (imageWidth / 2) - matchX;
-//		double offsetY = (imageHeight / 2) - matchY;
-//		
-//		// Invert the Y offset because images count top to bottom and the Y
-//		// axis of the machine counts bottom to top.
-//		offsetY *= -1;
-//		
-//		// And convert pixels to units
+		camera.moveTo(pickLocation, 1.0);
+		
+		// Settle the camera
+		Thread.sleep(200);
+		
+		VisionProvider visionProvider = camera.getVisionProvider();
+		
+		Rectangle aoi = getVision().getAreaOfInterest();
+		
+		// Perform the template match
+		Point[] matchingPoints = visionProvider.locateTemplateMatches(
+				aoi.getX(), 
+				aoi.getY(), 
+				aoi.getWidth(), 
+				aoi.getHeight(), 
+				0, 
+				0, 
+				vision.getTemplateImage());
+		
+		// Get the best match from the array
+		Point match = matchingPoints[0];
+		
+		// match now contains the position, in pixels, from the top left corner
+		// of the image to the top left corner of the match. We are interested in
+		// knowing how far from the center of the image the center of the match is.
+		BufferedImage image = camera.capture();
+		double imageWidth = image.getWidth();
+		double imageHeight = image.getHeight();
+		double templateWidth = vision.getTemplateImage().getWidth();
+		double templateHeight = vision.getTemplateImage().getHeight();
+		double matchX = match.x;
+		double matchY = match.y;
+		
+		// Adjust the match x and y to be at the center of the match instead of
+		// the top left corner.
+		matchX += (templateWidth / 2);
+		matchY += (templateHeight / 2);
+		
+		// Calculate the difference between the center of the image to the
+		// center of the match.
+		double offsetX = (imageWidth / 2) - matchX;
+		double offsetY = (imageHeight / 2) - matchY;
+		
+		// Invert the Y offset because images count top to bottom and the Y
+		// axis of the machine counts bottom to top.
+		offsetY *= -1;
+		
+		// And convert pixels to units
+		//assume mm for now
 //		Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(machine.getNativeUnits());
-//		offsetX *= unitsPerPixel.getX();
-//		offsetY *= unitsPerPixel.getY();
-//		
-//		return new Location(pickLocation.getUnits(), offsetX, offsetY, 0, 0);
-//	}
+		Location unitsPerPixel = camera.getUnitsPerPixel();
+		offsetX *= unitsPerPixel.getX();
+		offsetY *= unitsPerPixel.getY();
+		
+		return new Location(pickLocation.getUnits(), offsetX, offsetY, 0, 0);
+	}
 
 	@Override
 	public String toString() {
