@@ -143,9 +143,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
         // TODO: temporary bug fix for null location
         getPickLocation();
 		
-		double offsetX = 0;
-		double offsetY = 0;
-		
 		if (vision.isEnabled()) {
 			if (visionOffset == null) {
 				// This is the first feed with vision, or the offset has
@@ -158,16 +155,13 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 				
 				visionOffset = getVisionOffsets(head, pickLocation);
 			}
-			
 			logger.debug("visionOffsets " + visionOffset);
-			
-			offsetX = visionOffset.getX();
-			offsetY = visionOffset.getY();
 		}
 		
-		// Move the head so that the pin is positioned above the feed hole
-		// feedStartLocation is the position of the hole in the tool's coordinate
-		// system, so we need to offset that by the actuator offsets.
+		// TODO: Now adjust the feedStartLocation, feedEndLocation and
+		// pickLocation with the offsets.
+		
+		// Move the actuator to the feed start location.
 		actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN), 1.0);
 
 		// extend the pin
@@ -185,13 +179,13 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		actuator.actuate(false);
 		
 		// Create a new pickLocation with the offsets included.
-		pickLocation = new Location(
-				pickLocation.getUnits(),
-				pickLocation.getX() - offsetX,
-				pickLocation.getY() - offsetY,
-				pickLocation.getZ(),
-				pickLocation.getRotation()
-				);
+//		pickLocation = new Location(
+//				pickLocation.getUnits(),
+//				pickLocation.getX() - offsetX,
+//				pickLocation.getY() - offsetY,
+//				pickLocation.getZ(),
+//				pickLocation.getRotation()
+//				);
 		
 		logger.debug("Modified pickLocation {}", pickLocation);
 		
@@ -290,8 +284,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 
         logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
 		
-//        return new Location(pickLocation.getUnits(), offsetX, offsetY, 0, 0);
-        return new Location(pickLocation.getUnits(), 0, 0, 0, 0);
+        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
 	}
 
 	@Override
