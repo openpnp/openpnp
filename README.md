@@ -22,10 +22,10 @@ you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
 
 ## Branches
 
-The primary branches of interest in this project are master and develop. master is considered stable and
-at the moment is quite old. develop is the current development branch and once it is ready for use will
-be merged into master. If you are planning to do any development or integration you should use the
-develop branch.
+The primary branches of interest in this project are master and develop. master is considered stable
+and develop is the current development branch. Regular updates are made to develop and may cause
+breaking changes. When it's considered stable it's merged to master. If you are planning to do any
+development or integration you should probably use the develop branch.
 
 ## Developers
 
