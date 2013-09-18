@@ -202,9 +202,8 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
         // Reset all axes to 0. This is required so that the Head and Driver
         // stay in sync.
         //sendCommand(String.format("M42 P%d S%d", vacpumpPin, invertVacpump ? 0 : 255)); //turn vacuum pump on
-        sendCommand("G92 X0 Y0 Z0 E180");
-        x = y = z = 0;
-        c = 180; //testing
+        sendCommand("G92 X0 Y0 Z0 E0");
+        x = y = z = c = 0;
     }
 
     @Override
