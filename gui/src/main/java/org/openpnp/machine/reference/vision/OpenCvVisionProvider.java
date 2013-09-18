@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference.vision;
 
+
+
 import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_32F;
 import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_8U;
 import static com.googlecode.javacv.cpp.opencv_core.cvConvertScaleAbs;
@@ -37,6 +39,7 @@ import static com.googlecode.javacv.cpp.opencv_imgproc.cvMatchTemplate;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -157,9 +160,16 @@ public class OpenCvVisionProvider implements VisionProvider {
         CvPoint resLoc;
         double resValue;
 
-        IplImage templateImage = IplImage.createFrom(templateImage_);
         BufferedImage image_ = camera.capture();
+        
+        // Convert the camera image and template image to the same type. This
+        // is required by the cvMatchTemplate call.
+        templateImage_ = convertBufferedImage(templateImage_,BufferedImage.TYPE_INT_ARGB);   
+        image_ = convertBufferedImage(image_, BufferedImage.TYPE_INT_ARGB);
+        
+        IplImage templateImage = IplImage.createFrom(templateImage_);
         IplImage image = IplImage.createFrom(image_);
+        
         IplImage result = cvCreateImage(
                 cvSize(roiWidth - templateImage.width() + 1, roiHeight
                         - templateImage.height() + 1), IPL_DEPTH_32F, 1);
@@ -247,6 +257,27 @@ public class OpenCvVisionProvider implements VisionProvider {
                 e.printStackTrace();
             }
         }
-
+    }
+    
+    /**
+     * Convert a BufferedImage from it's current type to a new, specified
+     * type by creating a new BufferedImage and drawing the source image
+     * onto it. If the image is already of the specified type it is
+     * returned unchanged.
+     * @param src
+     * @param type
+     * @return
+     */
+    public static BufferedImage convertBufferedImage(BufferedImage src,
+            int type) {
+        if (src.getType() == type) {
+            return src;
+        }
+        BufferedImage img = new BufferedImage(src.getWidth(), src.getHeight(),
+                type);
+        Graphics2D g2d = img.createGraphics();
+        g2d.drawImage(src, 0, 0, null);
+        g2d.dispose();
+        return img;
     }
 }
