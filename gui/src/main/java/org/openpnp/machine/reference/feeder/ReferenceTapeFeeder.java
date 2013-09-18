@@ -140,9 +140,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		
 		head.moveToSafeZ(1.0);
 		
-        // TODO: temporary bug fix for null location
-        getPickLocation();
-		
 		if (vision.isEnabled()) {
 			if (visionOffset == null) {
 				// This is the first feed with vision, or the offset has
@@ -153,13 +150,24 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 				// and skip checking the vision first.
 				logger.debug("First feed, running vision pre-flight.");
 				
-				visionOffset = getVisionOffsets(head, pickLocation);
+				visionOffset = getVisionOffsets(head, location);
 			}
 			logger.debug("visionOffsets " + visionOffset);
 		}
-		
-		// TODO: Now adjust the feedStartLocation, feedEndLocation and
-		// pickLocation with the offsets.
+
+		// Now we have visionOffsets (if we're using them) so we
+		// need to create a local, offset version of the feedStartLocation,
+		// feedEndLocation and pickLocation. pickLocation will be saved
+		// for the pick operation while feed start and end are used
+		// here and then discarded.
+		Location feedStartLocation = this.feedStartLocation;
+		Location feedEndLocation = this.feedEndLocation;
+		pickLocation = this.location;
+		if (visionOffset != null) {
+            feedStartLocation = feedStartLocation.subtract(visionOffset);
+            feedEndLocation = feedEndLocation.subtract(visionOffset);
+            pickLocation = pickLocation.subtract(visionOffset);
+		}
 		
 		// Move the actuator to the feed start location.
 		actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN), 1.0);
@@ -178,22 +186,13 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		// retract the pin
 		actuator.actuate(false);
 		
-		// Create a new pickLocation with the offsets included.
-//		pickLocation = new Location(
-//				pickLocation.getUnits(),
-//				pickLocation.getX() - offsetX,
-//				pickLocation.getY() - offsetY,
-//				pickLocation.getZ(),
-//				pickLocation.getRotation()
-//				);
-		
-		logger.debug("Modified pickLocation {}", pickLocation);
-		
 		if (vision.isEnabled()) {
-			visionOffset = getVisionOffsets(head, pickLocation);
+			visionOffset = getVisionOffsets(head, location);
 			
 			logger.debug("final visionOffsets " + visionOffset);
 		}
+		
+        logger.debug("Modified pickLocation {}", pickLocation);
 	}
 	
 	// TODO: Throw an Exception if vision fails.
