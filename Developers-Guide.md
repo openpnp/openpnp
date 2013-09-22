@@ -22,6 +22,10 @@ All requests will be reviewed by the maintainers and will either be merged or co
 
 Try to commit as little as possible in a given commit. A single small feature, a single bug fix, etc. The smaller a commit is the easier it is to integrate into the project and the less likely it is to contain a looked over problem.
 
+## General Usefulness
+
+Your commits should be generally useful, not specifically useful to just your machine or your setup. If the code cannot be shown to be useful to other people, it probably doesn't belong in the main OpenPnP codebase. That's what's private forks are for. In addition, take consideration of the fact that the code will be used in many different configurations. Avoid hacks.
+
 # Code Style
 
 Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it.
