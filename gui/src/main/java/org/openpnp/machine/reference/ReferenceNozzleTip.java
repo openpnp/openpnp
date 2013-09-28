@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.base.AbstractNozzleTip;
@@ -51,6 +52,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	@Override
 	public String toString() {
 		return getId();
+	}
+
+	@Override
+	public Wizard getConfigurationWizard() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

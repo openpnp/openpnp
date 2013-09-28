@@ -1,5 +1,7 @@
 package org.openpnp.spi;
 
+import java.util.List;
+
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 
@@ -50,4 +52,10 @@ public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable 
      * @throws Exception
      */
     public void place() throws Exception;
+    /**
+     * Get a list of the NozzleTips currently attached to the Nozzle.
+     * 
+     * @return
+     */
+	public List<NozzleTip> getNozzleTips();
 }
