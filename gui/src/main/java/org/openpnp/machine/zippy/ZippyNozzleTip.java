@@ -1,13 +1,53 @@
 package org.openpnp.machine.zippy;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Head;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZippyNozzleTip extends ReferenceNozzleTip {
-	private Location offset; //X,Y at angle zero, Z=length offset from standard
-	@Attribute(required = true) private float xoffset;
-	@Attribute(required = true) private float yoffset;
-	@Attribute(required = true) private float zoffset;
+    private final static Logger logger = LoggerFactory
+            .getLogger(ZippyNozzleTip.class);
+
+    private ReferenceMachine machine;
+    private ReferenceDriver driver;
+
+    @Element
+    private Location headOffsets;
+
+    @Attribute(required=false) 
+	private int index;
+  
+    @Override
+	public Wizard getConfigurationWizard() {
+		return new ZippyNozzleTipConfigurationWizard(this);
+	}
+    public void setHeadOffsets(Location headOffsets) {
+        this.headOffsets = headOffsets;
+    }
+    
+    public Location getHeadOffsets() {
+        return headOffsets;
+    }
+
+	public int getIndex() {
+		return index;
+	}
+
+    public void moveTo(Location location, double speed) throws Exception {
+		logger.debug("{}.moveTo({}, {})", new Object[] { getId(), location, speed } );
+		driver.moveTo((ReferenceHeadMountable) this, location, speed);
+        Head head = machine.getHead(getId()); //needs work
+		machine.fireMachineHeadActivity(head);
+    }
 
 }
