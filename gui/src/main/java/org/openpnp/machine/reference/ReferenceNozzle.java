@@ -26,7 +26,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Attribute(required = false)
     private int placeDwellMilliseconds;
 
-    @Element
+    @Element(required = false) //TODO needs work, probably breaks it, need to deal with "current" nozzle tip
     private NozzleTip nozzleTip;
 
     private ReferenceMachine machine;

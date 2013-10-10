@@ -28,29 +28,35 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 
 public class NozzleTipsTableModel extends AbstractTableModel {
+	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Nozzle", "Class" };
-	private List<NozzleNozzleTip> nozzletips;
+	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };
+	private List<NozzleTip> nozzletips;
 
 	public NozzleTipsTableModel(Configuration configuration) {
-	    Configuration.get().addListener(new ConfigurationListener.Adapter() {
-	        public void configurationComplete(Configuration configuration) throws Exception {
-	        	nozzletips = new ArrayList<NozzleNozzleTip>();
-	            for (Head head : configuration.getMachine().getHeads()) {
-		            for (Nozzle nozzle : head.getNozzles()) {
-		                for (NozzleTip nozzletip : nozzle.getNozzleTips()) {
-		                    nozzletips.add(new NozzleNozzleTip(nozzle, nozzletip));
-		                }
-		            }
-	            }
-	            fireTableDataChanged();
-	        }
-	    });
+		this.configuration = configuration;
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            public void configurationComplete(Configuration configuration) throws Exception {
+                refresh();
+            }
+        });
+	}
+
+	public void refresh() { //pulls list of nozzle tips on machine
+		nozzletips = new ArrayList<NozzleTip>(); //new empty list for nozzle tips
+		for (Head head : configuration.getMachine().getHeads()) { //for each head
+			for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
+				for (NozzleTip nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
+					nozzletips.add(nozzletip); //add to list from above
+				}
+			}
+		}
+		fireTableDataChanged();
 	}
 
 	@Override
@@ -67,35 +73,47 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	}
 	
 	public NozzleTip getNozzleTip(int index) {
-		return nozzletips.get(index).nozzletip;
+		return nozzletips.get(index);
 	}
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return false;
+		return columnIndex == 2;
 	}
 	
-	public Object getValueAt(int row, int col) {
-		NozzleNozzleTip nozzletip = nozzletips.get(row);
+	@Override
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		try {
+			NozzleTip nozzletip = nozzletips.get(rowIndex);
+			if (columnIndex == 2) {
+//				nozzletip.setEnabled((Boolean) aValue);
+			}
+			configuration.setDirty(true);
+		}
+		catch (Exception e) {
+			// TODO: dialog, bad input
+		}
+	}
+	
+	@Override
+	public Class<?> getColumnClass(int columnIndex) {
+		if (columnIndex == 2) {
+			return Boolean.class;
+		}
+		return super.getColumnClass(columnIndex);
+	}
+
+	public Object getValueAt(int row, int col) { //just fills in table on left
 		switch (col) {
 		case 0:
-			return nozzletip.nozzletip.getId();
+			return nozzletips.get(row).getId();
 		case 1:
-			return nozzletip.nozzle != null ? nozzletip.nozzle.getId() : "";
+			return nozzletips.get(row).getClass().getSimpleName();
 		case 2:
-			return nozzletip.nozzletip.getClass().getSimpleName();
+//			return nozzletips.get(row).isEnabled();
 		default:
 			return null;
 		}
-	}
-	
-	private class NozzleNozzleTip {
-		public Nozzle nozzle;
-		public NozzleTip nozzletip;
 		
-		public NozzleNozzleTip(Nozzle nozzle, NozzleTip nozzletip) {
-			this.nozzle = nozzle;
-			this.nozzletip = nozzletip;
-		}
 	}
 }

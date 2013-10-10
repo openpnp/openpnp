@@ -106,14 +106,14 @@ public class ZippyNozzleTipConfigurationWizard extends
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
 
-        MutableLocationProxy headOffsets = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "headOffsets", headOffsets,
+        MutableLocationProxy nozzleOffsets = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, nozzletip, "nozzleOffsets", nozzleOffsets,
                 "location");
-        addWrappedBinding(headOffsets, "lengthX", locationX, "text",
+        addWrappedBinding(nozzleOffsets, "lengthX", locationX, "text",
                 lengthConverter);
-        addWrappedBinding(headOffsets, "lengthY", locationY, "text",
+        addWrappedBinding(nozzleOffsets, "lengthY", locationY, "text",
                 lengthConverter);
-        addWrappedBinding(headOffsets, "lengthZ", locationZ, "text",
+        addWrappedBinding(nozzleOffsets, "lengthZ", locationZ, "text",
                 lengthConverter);
 
         ComponentDecorators

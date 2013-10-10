@@ -46,11 +46,22 @@ public interface Machine extends WizardConfigurable {
 	
 	public Feeder getFeeder(String id);
 	
+	
+	/**
+	 * Gets a List of NozzleTips attached to the Machine.
+	 * @return
+	 */
+//	public List<NozzleTip> getNozzleTips();
+	
+//	public NozzleTip getNozzleTip(String id);
+
+	
 	/**
 	 * Gets a List of Cameras attached to the Machine that are not attached
 	 * to Heads.
 	 * @return
 	 */
+	
 	public List<Camera> getCameras();
 	
 	public Camera getCamera(String id);
@@ -109,4 +120,5 @@ public interface Machine extends WizardConfigurable {
 	public void removeCamera(Camera camera);
 	
 	public JobPlanner getJobPlanner();
+
 }

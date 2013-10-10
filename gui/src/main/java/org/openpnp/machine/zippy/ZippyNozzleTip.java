@@ -6,9 +6,11 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
+import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -21,26 +23,26 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
     private ReferenceMachine machine;
     private ReferenceDriver driver;
 
-    @Element
-    private Location headOffsets;
+    @Attribute(required = false)
+    private int index;
+    
+    @Element(required = false)
+    private Location nozzleOffsets;
 
-    @Attribute(required=false) 
-	private int index;
-  
     @Override
 	public Wizard getConfigurationWizard() {
 		return new ZippyNozzleTipConfigurationWizard(this);
 	}
-    public void setHeadOffsets(Location headOffsets) {
-        this.headOffsets = headOffsets;
+    public void setOffsets(Location nozzleOffsets) {
+        this.nozzleOffsets = nozzleOffsets;
     }
     
-    public Location getHeadOffsets() {
-        return headOffsets;
+    public Location getnozzleOffsets() {
+        return nozzleOffsets;
     }
 
-	public int getIndex() {
-		return index;
+	public String getId() {
+		return id;
 	}
 
     public void moveTo(Location location, double speed) throws Exception {
@@ -48,6 +50,9 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		driver.moveTo((ReferenceHeadMountable) this, location, speed);
         Head head = machine.getHead(getId()); //needs work
 		machine.fireMachineHeadActivity(head);
+    }
+    public void setId(String id) {
+        this.id = id;
     }
 
 }

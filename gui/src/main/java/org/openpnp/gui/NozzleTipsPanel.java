@@ -17,18 +17,25 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
-import javax.swing.BorderFactory;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -37,6 +44,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -44,32 +52,51 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.components.reticle.OutlineReticle;
+import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.NozzleTipsTableModel;
+import org.openpnp.machine.zippy.ZippyMachine;
+import org.openpnp.machine.zippy.ZippyNozzle;
+import org.openpnp.machine.zippy.ZippyNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Outline;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.border.TitledBorder;
+
 @SuppressWarnings("serial")
 public class NozzleTipsPanel extends JPanel implements WizardContainer {
-	private final static Logger logger = LoggerFactory.getLogger(NozzleTipsPanel.class);
-	
+	private final static Logger logger = LoggerFactory
+			.getLogger(NozzleTipsPanel.class);
+
+	private final Configuration configuration;
+
 	private static final String PREF_DIVIDER_POSITION = "NozzleTipsPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
-	
-	private final Configuration configuration;
 
 	private JTable table;
 
 	private NozzleTipsTableModel tableModel;
 	private TableRowSorter<NozzleTipsTableModel> tableSorter;
 	private JTextField searchTextField;
-	private JPanel configurationPanel;
-	
-	private Preferences prefs = Preferences.userNodeForPackage(NozzleTipsPanel.class);
-	
+    private JPanel configurationPanel;
+
+	private ActionGroup nozzletipSelectedActionGroup;
+
+	private Preferences prefs = Preferences
+			.userNodeForPackage(NozzleTipsPanel.class);
+
 	public NozzleTipsPanel(Configuration configuration) {
 		this.configuration = configuration;
 
@@ -83,6 +110,18 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
+
+		JButton btnNewNozzleTip = new JButton(newNozzleTipAction);
+		btnNewNozzleTip.setHideActionText(true);
+		toolBar.add(btnNewNozzleTip);
+
+		JButton btnDeleteNozzleTip = new JButton(deleteNozzleTipAction);
+		btnDeleteNozzleTip.setHideActionText(true);
+		toolBar.add(btnDeleteNozzleTip);
+
+		toolBar.addSeparator();
+		toolBar.add(feedNozzleTipAction);
+		toolBar.add(showPartAction);
 
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -109,13 +148,13 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
         });
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
-
 		table = new AutoSelectTextTable(tableModel);
 		tableSorter = new TableRowSorter<NozzleTipsTableModel>(tableModel);
 
 		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
+				PREF_DIVIDER_POSITION_DEF));
 		splitPane.addPropertyChangeListener("dividerLocation",
 				new PropertyChangeListener() {
 					@Override
@@ -126,14 +165,14 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 				});
 		add(splitPane, BorderLayout.CENTER);
 
-		configurationPanel = new JPanel();
-		configurationPanel.setBorder(BorderFactory.createTitledBorder("Configuration"));
-		
-		splitPane.setLeftComponent(new JScrollPane(table));
-		splitPane.setRightComponent(configurationPanel);
-		configurationPanel.setLayout(new BorderLayout(0, 0));
 		table.setRowSorter(tableSorter);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		configurationPanel = new JPanel();
+		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		nozzletipSelectedActionGroup = new ActionGroup(deleteNozzleTipAction,
+				feedNozzleTipAction, showPartAction);
 
 		table.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -144,6 +183,8 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 						}
 
 						NozzleTip nozzletip = getSelectedNozzleTip();
+
+						nozzletipSelectedActionGroup.setEnabled(nozzletip != null);
 
 						configurationPanel.removeAll();
 						if (nozzletip != null) {
@@ -159,6 +200,11 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 					}
 				});
 
+		nozzletipSelectedActionGroup.setEnabled(false);
+		
+        splitPane.setLeftComponent(new JScrollPane(table));
+        splitPane.setRightComponent(configurationPanel);
+        configurationPanel.setLayout(new BorderLayout(0, 0));
 	}
 
 	private NozzleTip getSelectedNozzleTip() {
@@ -194,4 +240,177 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 	@Override
 	public void wizardCancelled(Wizard wizard) {
 	}
+
+	public Action newNozzleTipAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(NAME, "New NozzleTip...");
+			putValue(SHORT_DESCRIPTION, "Create a new nozzletip.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+/*			if (Configuration.get().getParts().size() == 0) {
+				MessageBoxes
+						.errorBox(
+								getTopLevelAncestor(),
+								"Error",
+								"There are currently no parts defined in the system. Please create at least one part before creating a nozzletip.");
+				return;
+			}
+*/
+			ClassSelectionDialog<NozzleTip> dialog = new ClassSelectionDialog<NozzleTip>(
+					JOptionPane.getFrameForComponent(NozzleTipsPanel.this),
+					"Select NozzleTip...",
+					"Please select a NozzleTip implemention from the list below.",
+					((ZippyMachine) configuration.getMachine()).getCompatibleNozzleTipClasses()); 
+			dialog. setVisible(true); 
+			Class<? extends NozzleTip> nozzletipClass = dialog.getSelectedClass();
+			if (nozzletipClass == null) {
+				return;
+			}
+
+			//add message box her to select from list of heads on the machine
+			ArrayList<String> configured_heads = new ArrayList<String>(); //new empty list for nozzles
+			for (Head head : configuration.getMachine().getHeads()) { //for each head
+				configured_heads.add(head.getId()); //add to list from above
+			}
+		    String[] headArr = new String[configured_heads.size()];
+		    headArr = configured_heads.toArray(headArr);
+		    String selected_head_str;
+			if(configured_heads.size()>1){
+				selected_head_str = (String)JOptionPane.showInputDialog(
+						JOptionPane.getFrameForComponent(NozzleTipsPanel.this), //frame
+				        "Select Head...", //question
+	                    "Please select an Installed Nozzle from the list below.", //dialog label
+	                    JOptionPane.QUESTION_MESSAGE,
+	                    null,
+	                    headArr,
+	                    headArr[0]);
+			} else {
+				selected_head_str = headArr[0];
+			}
+
+			
+			//add message box her to select from list of nozzles on the machine
+			ArrayList<String> configured_nozzles = new ArrayList<String>(); //new empty list for nozzles
+			for (Head head : configuration.getMachine().getHeads()) { //for each head
+				for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
+					configured_nozzles.add(nozzle.getId()); //add to list from above
+				}
+			}
+		    String[] nozzleArr = new String[configured_nozzles.size()];
+		    nozzleArr = configured_nozzles.toArray(nozzleArr);
+		    String selected_nozzle_str;
+		    if(configured_nozzles.size()>1){
+				selected_nozzle_str = (String)JOptionPane.showInputDialog(
+						JOptionPane.getFrameForComponent(NozzleTipsPanel.this), //frame
+				        "Select Nozzle...", //question
+	                    "Please select an Installed Nozzle from the list below.", //dialog label
+	                    JOptionPane.QUESTION_MESSAGE,
+	                    null,
+	                    nozzleArr,
+	                    nozzleArr[0]);
+		    } else { 
+		    	selected_nozzle_str = nozzleArr [0];
+		    }
+			try {
+				NozzleTip nozzletip = nozzletipClass.newInstance();
+
+				((ZippyNozzleTip) nozzletip).setId(Helpers.createUniqueName("NT", ( ((ZippyMachine) Configuration.get().getMachine()).getNozzleTips()), "id"));
+//				nozzletip.setPart(Configuration.get().getParts().get(0));
+
+				// needs work, make it actually add nozzle tips
+				
+				((ZippyNozzle) configuration.getMachine().getHead(selected_head_str).getNozzle(selected_nozzle_str)).addNozzleTip(nozzletip);
+				tableModel.refresh();
+				Helpers.selectLastTableRow(table);
+				configuration.setDirty(true);
+			}
+			catch (Exception e) {
+				MessageBoxes.errorBox(
+						JOptionPane.getFrameForComponent(NozzleTipsPanel.this),
+						"NozzleTip Error", e);
+			}
+		}
+	};
+
+	public Action deleteNozzleTipAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(NAME, "Delete NozzleTip");
+			putValue(SHORT_DESCRIPTION, "Delete the selected nozzletip.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+//			configuration.getMachine().removeNozzleTip(getSelectedNozzleTip());
+			MessageBoxes.notYetImplemented(getTopLevelAncestor());
+		}
+	};
+
+	public Action feedNozzleTipAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass().getResource("/icons/feed.png")));
+			putValue(NAME, "Feed");
+			putValue(SHORT_DESCRIPTION,
+					"Command the selected nozzletip to perform a feed operation.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			new Thread() {
+				public void run() {
+					NozzleTip nozzletip = getSelectedNozzleTip();
+					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+					try {
+						//probably add two of these, a "load" and an "unload" to put down and pick up nozzletips
+//						nozzletip.feed(nozzle);
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(NozzleTipsPanel.this, "Feed Error",
+								e);
+					}
+				}
+			}.start();
+		}
+	};
+
+	public Action showPartAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON,
+					new ImageIcon(getClass()
+							.getResource("/icons/show-part.png")));
+			putValue(NAME, "Show Part");
+			putValue(SHORT_DESCRIPTION,
+					"Show an outline of the part for the selected nozzletip in the camera view.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			NozzleTip nozzletip = getSelectedNozzleTip();
+			if (nozzletip != null) {
+				Part part = null; //temp hack to get working
+//				Part part = nozzletip.getPart();
+				if (part != null) {
+					org.openpnp.model.Package pkg = part.getPackage();
+					if (pkg != null) {
+						Outline outline = pkg.getOutline();
+						CameraView cameraView = MainFrame.cameraPanel
+								.getSelectedCameraView();
+						if (cameraView.getReticle(this) != null) {
+							cameraView.removeReticle(this);
+						}
+						else {
+							cameraView.setReticle(this, new OutlineReticle(
+									outline));
+						}
+					}
+				}
+			}
+		}
+	};
 }
