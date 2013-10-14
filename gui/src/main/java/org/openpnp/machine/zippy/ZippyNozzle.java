@@ -12,30 +12,48 @@ import org.slf4j.LoggerFactory;
 public class ZippyNozzle extends ReferenceNozzle {
     private final static Logger logger = LoggerFactory
             .getLogger(ZippyNozzle.class);
-    private NozzleTip currentNozzleTip = nozzletips.get(0); //work with only first one till we write changer code
+    
+    private ZippyNozzleTip currentNozzleTip; 
+    
+    public ZippyNozzle(){
+    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); //work with only first one till we write changer code
+    }
     
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-    	//pull offsets from current nozzle tip
-    	Location offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
+    	//only compensate if rotating nozzle
+    	Location currentLocation = this.getLocation();
+    	if(currentLocation.getRotation() != location.getRotation()){
+	    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); //work with only first one till we write changer code
+	    	
+	    	//pull offsets from current nozzle tip
+	    	Location offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
+	
+	    	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
+			Point p = new Point(offset.getX(), 	offset.getY());
 
-    	// Create the point that represents the nozzle tip offsets (offset always for angle zero)
-		Point p = new Point(offset.getX(), 	offset.getY());
-    	
-    	// Rotate and translate the point into the same rotational coordinate space as the new location
-		p = Utils2D.rotatePoint(p, location.getRotation());
+	    	// Rotate and translate the point into the same rotational coordinate space as the old location
+			Point old_p = Utils2D.rotatePoint(p, currentLocation.getRotation());
+			
+	    	// Rotate and translate the point into the same rotational coordinate space as the new location
+			Point new_p = Utils2D.rotatePoint(p, location.getRotation());
+	
+			// Update the  offset Location with the difference between the transformed point
+			offset = offset.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), null, null);
+			
+			//subtract rotated offset 
+	    	Location adjustedLocation = location.subtract(offset);
+	   
+	    	
+	    	//log calculated offsets
+	        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
 
-		// Update the  offset Location with the transformed point
-		offset = offset.derive(p.getX(), p.getY(), null, null);
-		
-		//subtract rotated offset 
-    	Location adjustedLocation = location.subtract(offset);
-    	
-    	//log calculated offsets
-        logger.debug("{}.moveTo(adjusted,{}, original,{},  {})", new Object[] { id, adjustedLocation, location, speed } );
-        
-        //call super to move to corrected position
-    	super.moveTo(adjustedLocation, speed);
+	        //call super to move to corrected position
+	    	super.moveTo(adjustedLocation, speed);
+    	} else {
+	   		// just move
+	   		super.moveTo(location, speed);
+    	}
     }
     @Override
     public NozzleTip getNozzleTip() {
