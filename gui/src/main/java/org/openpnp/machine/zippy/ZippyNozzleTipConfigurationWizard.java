@@ -35,7 +35,6 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.spi.NozzleTip;
 
 import com.jgoodies.forms.factories.FormFactory;

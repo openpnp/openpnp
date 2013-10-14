@@ -33,11 +33,11 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 	public Wizard getConfigurationWizard() {
 		return new ZippyNozzleTipConfigurationWizard(this);
 	}
-    public void setOffsets(Location nozzleOffsets) {
+    public void setNozzleOffsets(Location nozzleOffsets) {
         this.nozzleOffsets = nozzleOffsets;
     }
     
-    public Location getnozzleOffsets() {
+    public Location getNozzleOffsets() {
         return nozzleOffsets;
     }
 
