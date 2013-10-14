@@ -65,6 +65,7 @@ import org.openpnp.machine.zippy.ZippyMachine;
 import org.openpnp.machine.zippy.ZippyNozzle;
 import org.openpnp.machine.zippy.ZippyNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Outline;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
@@ -271,8 +272,8 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 				return;
 			}
 
-			//add message box her to select from list of heads on the machine
-			ArrayList<String> configured_heads = new ArrayList<String>(); //new empty list for nozzles
+			//add message box here to select from list of heads on the machine
+			ArrayList<String> configured_heads = new ArrayList<String>(); //new empty list for heads
 			for (Head head : configuration.getMachine().getHeads()) { //for each head
 				configured_heads.add(head.getId()); //add to list from above
 			}
@@ -293,7 +294,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 			}
 
 			
-			//add message box her to select from list of nozzles on the machine
+			//add message box here to select from list of nozzles on the machine
 			ArrayList<String> configured_nozzles = new ArrayList<String>(); //new empty list for nozzles
 			for (Head head : configuration.getMachine().getHeads()) { //for each head
 				for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
@@ -313,15 +314,15 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 	                    nozzleArr,
 	                    nozzleArr[0]);
 		    } else { 
-		    	selected_nozzle_str = nozzleArr [0];
+		    	selected_nozzle_str = nozzleArr[0];
 		    }
 			try {
 				NozzleTip nozzletip = nozzletipClass.newInstance();
 
 				((ZippyNozzleTip) nozzletip).setId(Helpers.createUniqueName("NT", ( ((ZippyMachine) Configuration.get().getMachine()).getNozzleTips()), "id"));
-//				nozzletip.setPart(Configuration.get().getParts().get(0));
+				
+				((ZippyNozzleTip) nozzletip).setNozzleOffsets(new Location(Configuration.get().getSystemUnits()));
 
-				// needs work, make it actually add nozzle tips
 				
 				((ZippyNozzle) configuration.getMachine().getHead(selected_head_str).getNozzle(selected_nozzle_str)).addNozzleTip(nozzletip);
 				tableModel.refresh();

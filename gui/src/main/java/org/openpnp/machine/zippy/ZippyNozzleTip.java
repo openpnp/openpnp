@@ -20,6 +20,9 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
     private final static Logger logger = LoggerFactory
             .getLogger(ZippyNozzleTip.class);
 
+    public ZippyNozzleTip(){
+ //   	Location nozzleOffsets = new Location(); 
+    }
     private ReferenceMachine machine;
     private ReferenceDriver driver;
 
