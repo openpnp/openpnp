@@ -21,39 +21,38 @@ public class ZippyNozzle extends ReferenceNozzle {
     
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-    	//only compensate if rotating nozzle
-    	Location currentLocation = this.getLocation();
-    	if(currentLocation.getRotation() != location.getRotation()){
-	    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); //work with only first one till we write changer code
-	    	
-	    	//pull offsets from current nozzle tip
-	    	Location offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
-	
-	    	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
-			Point p = new Point(offset.getX(), 	offset.getY());
 
-	    	// Rotate and translate the point into the same rotational coordinate space as the old location
-			Point old_p = Utils2D.rotatePoint(p, currentLocation.getRotation());
-			
-	    	// Rotate and translate the point into the same rotational coordinate space as the new location
-			Point new_p = Utils2D.rotatePoint(p, location.getRotation());
-	
-			// Update the  offset Location with the difference between the transformed point
-			offset = offset.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), null, null);
-			
-			//subtract rotated offset 
-	    	Location adjustedLocation = location.subtract(offset);
-	   
-	    	
-	    	//log calculated offsets
-	        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
+    	//compensation only changes if nozzle rotations changes, so pull current position
+//    	Location currentLocation = this.getLocation();
 
-	        //call super to move to corrected position
-	    	super.moveTo(adjustedLocation, speed);
-    	} else {
-	   		// just move
-	   		super.moveTo(location, speed);
-    	}
+    	//work with only first one till we write changer code
+    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); 
+
+    	//pull offsets from current nozzle tip
+    	Location offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
+
+    	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
+		Point p = new Point(offset.getX(), 	offset.getY());
+
+    	// Rotate and translate the point into the same rotational coordinate space as the new location
+		Point new_p = Utils2D.rotatePoint(p, location.getRotation());
+
+    	// Rotate and translate the point into the same rotational coordinate space as the old location
+//		Point old_p = Utils2D.rotatePoint(p, currentLocation.getRotation());
+
+		// Update the  offset Location with the difference between the transformed points
+//		offset = offset.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), null, null);
+		offset = offset.derive(new_p.getX(), new_p.getY(), null, null);
+		
+		//subtract rotated offset 
+    	Location adjustedLocation = location.subtract(offset);
+
+    	//log calculated offsets
+        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
+    	
+        //call super to move to corrected position
+    	super.moveTo(adjustedLocation, speed);
+
     }
     @Override
     public NozzleTip getNozzleTip() {
