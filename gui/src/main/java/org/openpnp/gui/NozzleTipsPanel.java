@@ -39,6 +39,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -92,6 +93,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 	private TableRowSorter<NozzleTipsTableModel> tableSorter;
 	private JTextField searchTextField;
     private JPanel configurationPanel;
+    private JPanel changersetupPanel;
 
 	private ActionGroup nozzletipSelectedActionGroup;
 
@@ -121,8 +123,9 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		toolBar.add(btnDeleteNozzleTip);
 
 		toolBar.addSeparator();
-		toolBar.add(feedNozzleTipAction);
-		toolBar.add(showPartAction);
+		toolBar.add(loadNozzleTipAction);
+		toolBar.add(unloadNozzleTipAction);
+		toolBar.add(calibrateOffsetsAction);
 
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -173,7 +176,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		nozzletipSelectedActionGroup = new ActionGroup(deleteNozzleTipAction,
-				feedNozzleTipAction, showPartAction);
+				loadNozzleTipAction, unloadNozzleTipAction, calibrateOffsetsAction);
 
 		table.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -203,9 +206,20 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 
 		nozzletipSelectedActionGroup.setEnabled(false);
 		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		splitPane.setRightComponent(tabbedPane);
+		
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(configurationPanel);
         configurationPanel.setLayout(new BorderLayout(0, 0));
+        
+//		tabbedPane.addTab("Calibration", null, configurationPanel, null);
+//		configurationPanel.setLayout(new BorderLayout(0, 0));
+
+//		changersetupPanel = new JPanel();
+//		tabbedPane.addTab("Changer Setup", null, changersetupPanel, null);
+//		changersetupPanel.setLayout(new BorderLayout(0, 0));
+		
 	}
 
 	private NozzleTip getSelectedNozzleTip() {
@@ -352,27 +366,24 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		}
 	};
 
-	public Action feedNozzleTipAction = new AbstractAction() {
+	public Action loadNozzleTipAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/feed.png")));
-			putValue(NAME, "Feed");
-			putValue(SHORT_DESCRIPTION,
-					"Command the selected nozzletip to perform a feed operation.");
+			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/load.png")));
+			putValue(NAME, "Load");
+			putValue(SHORT_DESCRIPTION,	"Command the selected nozzletip to perform a load operation.");
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			new Thread() {
 				public void run() {
-					NozzleTip nozzletip = getSelectedNozzleTip();
+					ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
 					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
 					try {
-						//probably add two of these, a "load" and an "unload" to put down and pick up nozzletips
-//						nozzletip.feed(nozzle);
+						nozzletip.load(nozzle);
 					}
 					catch (Exception e) {
-						MessageBoxes.errorBox(NozzleTipsPanel.this, "Feed Error",
+						MessageBoxes.errorBox(NozzleTipsPanel.this, "Load Error",
 								e);
 					}
 				}
@@ -380,23 +391,51 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		}
 	};
 
-	public Action showPartAction = new AbstractAction() {
+	public Action unloadNozzleTipAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass()
-							.getResource("/icons/show-part.png")));
-			putValue(NAME, "Show Part");
-			putValue(SHORT_DESCRIPTION,
-					"Show an outline of the part for the selected nozzletip in the camera view.");
+			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/unload.png")));
+			putValue(NAME, "Unload");
+			putValue(SHORT_DESCRIPTION,	"Command the selected nozzletip to perform an unload operation.");
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			NozzleTip nozzletip = getSelectedNozzleTip();
+			new Thread() {
+				public void run() {
+					ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
+					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+					try {
+						//probably add two of these, a "load" and an "unload" to put down and pick up nozzletips
+						nozzletip.unload(nozzle);
+					}
+					catch (Exception e) {
+						MessageBoxes.errorBox(NozzleTipsPanel.this, "Unload Error",	e);
+					}
+				}
+			}.start();
+		}
+	};
+	
+	public Action calibrateOffsetsAction = new AbstractAction() {
+		{
+			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/calibrate-tip.png")));
+			putValue(NAME, "Calibrate Tip");
+			putValue(SHORT_DESCRIPTION,	"Calibrate nozzle tip offsets for the selected nozzletip.");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
+			Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
 			if (nozzletip != null) {
-				Part part = null; //temp hack to get working
-//				Part part = nozzletip.getPart();
-				if (part != null) {
+				Location currentOffsets = nozzletip.getNozzleOffsets();
+				try {
+					currentOffsets = nozzletip.calibrate(nozzle);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+/*				if (part != null) {
 					org.openpnp.model.Package pkg = part.getPackage();
 					if (pkg != null) {
 						Outline outline = pkg.getOutline();
@@ -411,7 +450,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 						}
 					}
 				}
-			}
+*/			}
 		}
 	};
 }
