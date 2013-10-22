@@ -8,6 +8,7 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder.Vision;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.LengthUnit;
@@ -21,10 +22,59 @@ import org.simpleframework.xml.ElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
+
+
+//vision stuff
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.model.Rectangle;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.VisionProvider;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Persist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Vision System Description
+ * 
+ * The Vision Operation is defined as moving the Camera to the defined Mirror
+ * Location, rotating the nozzle tip, and performing a template match against 
+ * the Template Image bound by the Area of Interest and then storing the offsets
+ * from the  Location to the matched image as Vision Offsets.
+ * 
+ * The calibration operation consists of:
+ * 1. Rotate nozzle to 0 degrees, take image and locate template.
+ * 2. Rotate nozzle to 180 degrees, take image and locate template.
+ * 		- nozzle tip offset in X is 1/2 the difference between the two offsets
+ * 3. Rotate nozzle to 90 degrees, take image and locate template.
+ * 4. Rotate nozzle to 270 degrees, take image and locate template.
+ * 		- nozzle tip offset in Y is 1/2 the difference between the two offsets
+ */
+
 public class ZippyNozzleTip extends ReferenceNozzleTip {
 
-	private final static Logger logger = LoggerFactory
-            .getLogger(ZippyNozzleTip.class);
+	private final static Logger logger = LoggerFactory.getLogger(ZippyNozzleTip.class);
 
     public ZippyNozzleTip(){
  //   	Location nozzleOffsets = new Location(); 
@@ -50,7 +100,169 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 	private Location changerMidLocation = new Location(LengthUnit.Millimeters);
 	@Element(required = false)
 	private Location changerEndLocation = new Location(LengthUnit.Millimeters);
-    
+	@Element(required=false)
+	private Vision vision = new Vision();
+	
+	/*
+	 * vision?Offset contains the difference between where the nozzle tip 
+	 * was at 0,180 and 90,270. This is used to calculate nozzle tip offset
+	 * from a perfectly strait nozzle at 0 degrees. These offsets are used 
+	 * to compensate for nozzle crookedness when moving and rotating the nozzle tip
+	 */
+
+	public Location calibrate(Nozzle nozzle) throws Exception {
+		//move to safe height
+		nozzle.moveToSafeZ(1.0);
+		
+		//create local variables 
+		Location visionX0Offset;
+		Location visionX180Offset;
+		Location visionY90Offset;
+		Location visionY270Offset;
+		
+		Location newNozzleOffsets = this.nozzleOffsets;
+
+		
+		Location mirrorStartLocation = this.mirrorStartLocation;
+		Location mirrorMidLocation = this.mirrorMidLocation;
+		Location mirrorEndLocation = this.mirrorEndLocation;
+		Location Xoffset;
+		Location Yoffset;
+		
+		//do camera magic
+		Head head = nozzle.getHead();
+		// Find the Camera to be used for vision
+		Camera camera = null;
+		for (Camera c : head.getCameras()) {
+			if (c.getVisionProvider() != null) {
+				camera = c;
+			}
+		}
+		
+		if (camera == null) {
+			throw new Exception("No vision capable camera found on head.");
+		}
+		// Position the camera over the pick location.
+		logger.debug("Move camera to mirror location.");
+
+		//move to mirror position
+		nozzle.moveTo(mirrorStartLocation, 1.0);
+		nozzle.moveTo(mirrorMidLocation, 1.0);
+		nozzle.moveTo(mirrorEndLocation, 1.0);
+
+		//do camera magic
+		visionX0Offset = getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 0.0));
+		visionX180Offset = getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 180.0));
+		visionY90Offset = getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 90.0));
+		visionY270Offset = getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 270.0));
+		
+		Xoffset = visionX0Offset.subtract(visionX180Offset);
+		Yoffset = visionY90Offset.subtract(visionY270Offset);
+		
+		//move away from mirror position
+		nozzle.moveTo(mirrorEndLocation, 1.0);
+		nozzle.moveTo(mirrorMidLocation, 1.0);
+		nozzle.moveTo(mirrorStartLocation, 1.0);
+		
+
+		return newNozzleOffsets.derive(Xoffset.getX(), Yoffset.getX(), null, null);
+	}
+	private Location getVisionOffsets(Head head, Location calibrationLocation) throws Exception {
+	    logger.debug("getVisionOffsets({}, {})", head.getId(), calibrationLocation);
+		// Find the Camera to be used for vision
+		// TODO: Consider caching this
+		Camera camera = null;
+		for (Camera c : head.getCameras()) {
+			if (c.getVisionProvider() != null) {
+				camera = c;
+			}
+		}
+		
+		if (camera == null) {
+			throw new Exception("No vision capable camera found on head.");
+		}
+		
+//		head.moveToSafeZ(1.0);
+		
+		// Position the camera over the calibration location.
+		logger.debug("Move camera to calibration location.");
+		
+		camera.moveTo(calibrationLocation, 1.0);
+		
+		
+		// Settle the camera
+		// TODO: This should be configurable, or maybe just built into
+		// the VisionProvider
+		Thread.sleep(200);
+		
+		VisionProvider visionProvider = camera.getVisionProvider();
+		
+		Rectangle aoi = getVision().getAreaOfInterest();
+		
+		// Perform the template match
+		logger.debug("Perform template match.");
+		Point[] matchingPoints = visionProvider.locateTemplateMatches(
+				aoi.getX(), 
+				aoi.getY(), 
+				aoi.getWidth(), 
+				aoi.getHeight(), 
+				0, 
+				0, 
+				vision.getTemplateImage());
+		
+		// Get the best match from the array
+		Point match = matchingPoints[0];
+		
+		// match now contains the position, in pixels, from the top left corner
+		// of the image to the top left corner of the match. We are interested in
+		// knowing how far from the center of the image the center of the match is.
+		BufferedImage image = camera.capture();
+		double imageWidth = image.getWidth();
+		double imageHeight = image.getHeight();
+		double templateWidth = vision.getTemplateImage().getWidth();
+		double templateHeight = vision.getTemplateImage().getHeight();
+		double matchX = match.x;
+		double matchY = match.y;
+
+        logger.debug("matchX {}, matchY {}", matchX, matchY);
+
+		// Adjust the match x and y to be at the center of the match instead of
+		// the top left corner.
+		matchX += (templateWidth / 2);
+		matchY += (templateHeight / 2);
+		
+        logger.debug("centered matchX {}, matchY {}", matchX, matchY);
+
+		// Calculate the difference between the center of the image to the
+		// center of the match.
+		double offsetX = (imageWidth / 2) - matchX;
+		double offsetY = (imageHeight / 2) - matchY;
+
+        logger.debug("offsetX {}, offsetY {}", offsetX, offsetY);
+		
+		// Invert the Y offset because images count top to bottom and the Y
+		// axis of the machine counts bottom to top.
+		offsetY *= -1;
+		
+        logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
+		
+		// And convert pixels to units
+		Location unitsPerPixel = camera.getUnitsPerPixel();
+		offsetX *= unitsPerPixel.getX();
+		offsetY *= unitsPerPixel.getY();
+
+        logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
+		
+        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
+	}
+
+	public Vision getVision() {
+		return vision;
+	}
+	public void setVision(Vision vision) {
+		this.vision = vision;
+	}
+	
     @Override
 	public Wizard getConfigurationWizard() {
 		return new ZippyNozzleTipConfigurationWizard(this);
@@ -157,30 +369,5 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		//move to safe height
 		nozzle.moveToSafeZ(1.0);
 	}
-	public Location calibrate(Nozzle nozzle) throws Exception {
-		//move to safe height
-		nozzle.moveToSafeZ(1.0);
-		
-		//create local variables 
-		Location newNozzleOffsets = this.nozzleOffsets;
-		
-		Location mirrorStartLocation = this.mirrorStartLocation;
-		Location mirrorMidLocation = this.mirrorMidLocation;
-		Location mirrorEndLocation = this.mirrorEndLocation;
-		
-		//move to mirror position
-		nozzle.moveTo(mirrorStartLocation, 1.0);
-		nozzle.moveTo(mirrorMidLocation, 1.0);
-		nozzle.moveTo(mirrorEndLocation, 1.0);
-		
-		//do camera magic
-		
-		//move away from mirror position
-		nozzle.moveTo(mirrorEndLocation, 1.0);
-		nozzle.moveTo(mirrorMidLocation, 1.0);
-		nozzle.moveTo(mirrorStartLocation, 1.0);
-		
 
-		return newNozzleOffsets;
-	}
 }

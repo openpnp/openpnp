@@ -22,20 +22,41 @@
 package org.openpnp.machine.zippy;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.BufferedImageIconConverter;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.spi.NozzleTip;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -80,15 +101,40 @@ public class ZippyNozzleTipConfigurationWizard extends
     private JPanel panelMirrorWaypoints;
     private JPanel panelChangerWaypoints;
 
+    private JPanel panelVision;
+    private JPanel panelLocations;
+    private JCheckBox chckbxVisionEnabled;
+    private JPanel panelVisionEnabled;
+    private JPanel panelTemplate;
+    private JLabel labelTemplateImage;
+    private JButton btnChangeTemplateImage;
+    private JSeparator separator;
+    private JPanel panelVisionTemplateAndAoe;
+    private JPanel panelAoE;
+    private JLabel lblX_1;
+    private JLabel lblY_1;
+    private JTextField textFieldAoiX;
+    private JTextField textFieldAoiY;
+    private JTextField textFieldAoiWidth;
+    private JTextField textFieldAoiHeight;
+    private LocationButtonsPanel locationButtonsPanelFeedStart;
+    private LocationButtonsPanel locationButtonsPanelFeedEnd;
+    private JLabel lblWidth;
+    private JLabel lblHeight;
+    private JButton btnChangeAoi;
+    private JButton btnCancelChangeAoi;
+    private JPanel panel;
+    private JButton btnCancelChangeTemplateImage;
+
     public ZippyNozzleTipConfigurationWizard(NozzleTip nozzletip) {
         this.nozzletip = nozzletip;
 
         //setup panel for nozzle offsets (crookedness)
-//        JPanel panelFields = new JPanel();
-//        panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
+        JPanel panelFields = new JPanel();
+        panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
         panelOffsets = new JPanel();
-//        panelFields.add(panelOffsets);
+        panelFields.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(new EtchedBorder(
                 EtchedBorder.LOWERED, null, null), "Offsets",
                 TitledBorder.LEADING, TitledBorder.TOP, null,
@@ -326,18 +372,141 @@ public class ZippyNozzleTipConfigurationWizard extends
                 textFieldChangerEndX, textFieldChangerEndY, textFieldChangerEndZ, null);
         panelChangerWaypoints.add(locationButtonsPanelChangerEnd, "10, 10");
         
+        //vision panel
+        panelVision = new JPanel();
+        panelVision.setBorder(new TitledBorder(null, "Vision",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelFields.add(panelVision);
+        panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
+
+        panelVisionEnabled = new JPanel();
+        FlowLayout fl_panelVisionEnabled = (FlowLayout) panelVisionEnabled
+                .getLayout();
+        fl_panelVisionEnabled.setAlignment(FlowLayout.LEFT);
+        panelVision.add(panelVisionEnabled);
+
+        chckbxVisionEnabled = new JCheckBox("Vision Enabled?");
+        panelVisionEnabled.add(chckbxVisionEnabled);
+
+        separator = new JSeparator();
+        panelVision.add(separator);
+
+        panelVisionTemplateAndAoe = new JPanel();
+        panelVision.add(panelVisionTemplateAndAoe);
+        panelVisionTemplateAndAoe
+                .setLayout(new FormLayout(new ColumnSpec[] {
+                        FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC, }));
         
+        panelTemplate = new JPanel();
+        panelTemplate.setBorder(new TitledBorder(new EtchedBorder(
+                EtchedBorder.LOWERED, null, null), "Template Image",
+                TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
+        panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
+        panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));
+
+        labelTemplateImage = new JLabel("");
+        labelTemplateImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelTemplate.add(labelTemplateImage);
+        labelTemplateImage.setBorder(new BevelBorder(BevelBorder.LOWERED, null,
+                null, null, null));
+        labelTemplateImage.setMinimumSize(new Dimension(150, 150));
+        labelTemplateImage.setMaximumSize(new Dimension(150, 150));
+        labelTemplateImage.setHorizontalAlignment(SwingConstants.CENTER);
+        labelTemplateImage.setSize(new Dimension(150, 150));
+        labelTemplateImage.setPreferredSize(new Dimension(150, 150));
+
+        panel = new JPanel();
+        panelTemplate.add(panel);
+
+        btnChangeTemplateImage = new JButton(selectTemplateImageAction);
+        panel.add(btnChangeTemplateImage);
+        btnChangeTemplateImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        btnCancelChangeTemplateImage = new JButton(
+                cancelSelectTemplateImageAction);
+        panel.add(btnCancelChangeTemplateImage);
+
+        panelAoE = new JPanel();
+        panelAoE.setBorder(new TitledBorder(null, "Area of Interest",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
+        panelAoE.setLayout(new FormLayout(
+                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"),
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"),
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC, }));
+
+        lblX_1 = new JLabel("X");
+        panelAoE.add(lblX_1, "2, 2");
+
+        lblY_1 = new JLabel("Y");
+        panelAoE.add(lblY_1, "4, 2");
+
+        lblWidth = new JLabel("Width");
+        panelAoE.add(lblWidth, "6, 2");
+
+        lblHeight = new JLabel("Height");
+        panelAoE.add(lblHeight, "8, 2");
+
+        textFieldAoiX = new JTextField();
+        panelAoE.add(textFieldAoiX, "2, 4, fill, default");
+        textFieldAoiX.setColumns(5);
+
+        textFieldAoiY = new JTextField();
+        panelAoE.add(textFieldAoiY, "4, 4, fill, default");
+        textFieldAoiY.setColumns(5);
+
+        textFieldAoiWidth = new JTextField();
+        panelAoE.add(textFieldAoiWidth, "6, 4, fill, default");
+        textFieldAoiWidth.setColumns(5);
+
+        textFieldAoiHeight = new JTextField();
+        panelAoE.add(textFieldAoiHeight, "8, 4, fill, default");
+        textFieldAoiHeight.setColumns(5);
+
+        btnChangeAoi = new JButton("Change");
+        btnChangeAoi.setAction(selectAoiAction);
+        panelAoE.add(btnChangeAoi, "10, 4");
+
+        btnCancelChangeAoi = new JButton("Cancel");
+        btnCancelChangeAoi.setAction(cancelSelectAoiAction);
+        panelAoE.add(btnCancelChangeAoi, "12, 4");
+
+        cancelSelectTemplateImageAction.setEnabled(false);
+        cancelSelectAoiAction.setEnabled(false);
+
         
         //add panels to wizard content
-         contentPanel.add(panelOffsets);
-         contentPanel.add(panelMirrorWaypoints);
-         contentPanel.add(panelChangerWaypoints);
-   }
+        panelFields.add(panelOffsets);
+        panelFields.add(panelMirrorWaypoints);
+        panelFields.add(panelChangerWaypoints);
+        contentPanel.add(panelFields);
+  }
 
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
-
+        IntegerConverter intConverter = new IntegerConverter();
+        BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
+        
         MutableLocationProxy nozzleOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzletip, "nozzleOffsets", nozzleOffsets, "location");
         addWrappedBinding(nozzleOffsets, "lengthX", locationX, "text", lengthConverter);
@@ -401,5 +570,147 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
 
+        addWrappedBinding(nozzletip, "vision.enabled", chckbxVisionEnabled, "selected");
+        addWrappedBinding(nozzletip, "vision.templateImage", labelTemplateImage, "icon", imageConverter);
+        addWrappedBinding(nozzletip, "vision.areaOfInterest.x", textFieldAoiX, "text", intConverter);
+        addWrappedBinding(nozzletip, "vision.areaOfInterest.y", textFieldAoiY, "text", intConverter);
+        addWrappedBinding(nozzletip, "vision.areaOfInterest.width", textFieldAoiWidth, "text", intConverter);
+        addWrappedBinding(nozzletip, "vision.areaOfInterest.height", textFieldAoiHeight, "text", intConverter);
+        ComponentDecorators.decorateWithAutoSelect(textFieldAoiX);
+        ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
+        ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
+        ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
+
+
     }
+    @SuppressWarnings("serial")
+    private Action selectTemplateImageAction = new AbstractAction("Select") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            CameraView cameraView = MainFrame.cameraPanel
+                    .getSelectedCameraView();
+            cameraView.setSelectionEnabled(true);
+            // org.openpnp.model.Rectangle r =
+            // feeder.getVision().getTemplateImageCoordinates();
+            org.openpnp.model.Rectangle r = null;
+            if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+                cameraView.setSelection(0, 0, 100, 100);
+            }
+            else {
+                // cameraView.setSelection(r.getLeft(), r.getTop(),
+                // r.getWidth(), r.getHeight());
+            }
+            btnChangeTemplateImage.setAction(confirmSelectTemplateImageAction);
+            cancelSelectTemplateImageAction.setEnabled(true);
+        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action confirmSelectTemplateImageAction = new AbstractAction(
+            "Confirm") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new Thread() {
+                public void run() {
+                    CameraView cameraView = MainFrame.cameraPanel
+                            .getSelectedCameraView();
+                    BufferedImage image = cameraView.captureSelectionImage();
+                    if (image == null) {
+                        MessageBoxes
+                                .errorBox(
+                                        ZippyNozzleTipConfigurationWizard.this,
+                                        "No Image Selected",
+                                        "Please select an area of the camera image using the mouse.");
+                    }
+                    else {
+                        labelTemplateImage.setIcon(new ImageIcon(image));
+                    }
+                    cameraView.setSelectionEnabled(false);
+                    btnChangeTemplateImage.setAction(selectTemplateImageAction);
+                    cancelSelectTemplateImageAction.setEnabled(false);
+                }
+            }.start();
+        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action cancelSelectTemplateImageAction = new AbstractAction(
+            "Cancel") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            btnChangeTemplateImage.setAction(selectTemplateImageAction);
+            cancelSelectTemplateImageAction.setEnabled(false);
+            CameraView cameraView = MainFrame.cameraPanel
+                    .getSelectedCameraView();
+            if (cameraView == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                        "Unable to locate Camera.");
+            }
+            cameraView.setSelectionEnabled(false);
+        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action selectAoiAction = new AbstractAction("Select") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            btnChangeAoi.setAction(confirmSelectAoiAction);
+            cancelSelectAoiAction.setEnabled(true);
+
+            CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+            cameraView.setSelectionEnabled(true);
+/*            org.openpnp.model.Rectangle r = nozzletip.getVision().getAreaOfInterest();
+            if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+                cameraView.setSelection(0, 0, 100, 100);
+            }
+            else {
+                cameraView.setSelection(r.getX(), r.getY(), r.getWidth(),
+                        r.getHeight());
+            }
+*/        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action confirmSelectAoiAction = new AbstractAction("Confirm") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new Thread() {
+                public void run() {
+                    btnChangeAoi.setAction(selectAoiAction);
+                    cancelSelectAoiAction.setEnabled(false);
+
+                    CameraView cameraView = MainFrame.cameraPanel
+                            .getSelectedCameraView();
+                    cameraView.setSelectionEnabled(false);
+                    final Rectangle rect = cameraView.getSelection();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            textFieldAoiX.setText(Integer.toString(rect.x));
+                            textFieldAoiY.setText(Integer.toString(rect.y));
+                            textFieldAoiWidth.setText(Integer
+                                    .toString(rect.width));
+                            textFieldAoiHeight.setText(Integer
+                                    .toString(rect.height));
+                        }
+                    });
+                }
+            }.start();
+        }
+    };
+
+    @SuppressWarnings("serial")
+    private Action cancelSelectAoiAction = new AbstractAction("Cancel") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            btnChangeAoi.setAction(selectAoiAction);
+            cancelSelectAoiAction.setEnabled(false);
+            CameraView cameraView = MainFrame.cameraPanel
+                    .getSelectedCameraView();
+            if (cameraView == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                        "Unable to locate Camera.");
+            }
+            cameraView.setSelectionEnabled(false);
+        }
+    };
 }
