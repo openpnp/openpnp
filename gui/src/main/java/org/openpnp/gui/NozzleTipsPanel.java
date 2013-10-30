@@ -1,5 +1,5 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ 	Copyright (C) 2013 Richard Spelling <openpnp@chebacco.com>
  	
  	This file is part of OpenPnP.
  	
@@ -336,7 +336,6 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 				((ZippyNozzleTip) nozzletip).setId(Helpers.createUniqueName("NT", ( ((ZippyMachine) Configuration.get().getMachine()).getNozzleTips()), "id"));
 				
 				((ZippyNozzleTip) nozzletip).setNozzleOffsets(new Location(Configuration.get().getSystemUnits()));
-
 				
 				((ZippyNozzle) configuration.getMachine().getHead(selected_head_str).getNozzle(selected_nozzle_str)).addNozzleTip(nozzletip);
 				tableModel.refresh();

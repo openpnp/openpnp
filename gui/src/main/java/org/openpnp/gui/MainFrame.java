@@ -103,6 +103,7 @@ public class MainFrame extends JFrame {
 	// for now.
 	public static MachineControlsPanel machineControlsPanel;
 	public static PartsPanel partsPanel;
+	public static PackagesPanel packagesPanel;
 	public static FeedersPanel feedersPanel;
 	public static JobPanel jobPanel;
 	public static MachinePanel machinePanel;
@@ -161,6 +162,7 @@ public class MainFrame extends JFrame {
 		jobPanel = new JobPanel(configuration, jobProcessor, this,
 				machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
+		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration);
 		camerasPanel = new CamerasPanel(this, configuration);
 		boardsPanel = new BoardsPanel(configuration);
@@ -420,6 +422,7 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
+		panelBottom.addTab("Packages", null, packagesPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
 		panelBottom.addTab("Machine", null, machinePanel, null);

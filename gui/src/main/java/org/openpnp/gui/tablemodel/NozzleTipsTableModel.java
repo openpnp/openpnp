@@ -1,5 +1,5 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ 	Copyright (C) 2013 Richard Spelling <openpnp@chebacco.com>
  	
  	This file is part of OpenPnP.
  	
@@ -17,7 +17,8 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
+
 
 package org.openpnp.gui.tablemodel;
 
@@ -31,12 +32,14 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.machine.zippy.ZippyMachine;
+import org.openpnp.machine.zippy.ZippyNozzleTip;
 
 public class NozzleTipsTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };
-	private List<NozzleTip> nozzletips;
+	private String[] columnNames = new String[] { "Id", "Type", "Loaded" };
+	private List<ZippyNozzleTip> nozzletips;
 
 	public NozzleTipsTableModel(Configuration configuration) {
 		this.configuration = configuration;
@@ -48,11 +51,11 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	}
 
 	public void refresh() { //pulls list of nozzle tips on machine
-		nozzletips = new ArrayList<NozzleTip>(); //new empty list for nozzle tips
+		nozzletips = new ArrayList<ZippyNozzleTip>(); //new empty list for nozzle tips
 		for (Head head : configuration.getMachine().getHeads()) { //for each head
 			for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
 				for (NozzleTip nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
-					nozzletips.add(nozzletip); //add to list from above
+					nozzletips.add((ZippyNozzleTip) nozzletip); //add to list from above
 				}
 			}
 		}
@@ -84,9 +87,39 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
-			NozzleTip nozzletip = nozzletips.get(rowIndex);
 			if (columnIndex == 2) {
-//				nozzletip.setEnabled((Boolean) aValue);
+				//find already loaded nozzletip
+				for(ZippyNozzleTip nt : nozzletips){ //for each nozzletip in the list
+					if(nt.isLoaded()){
+						Nozzle parent_nozzle = null;
+						for (Head head : configuration.getMachine().getHeads()) { //for each head
+							for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
+								for (NozzleTip temp_nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
+									if(temp_nozzletip.getId() == nt.getId()) //get parent nozzle object
+										parent_nozzle = nozzle;
+								}
+							}
+						}
+						nt.unload(parent_nozzle);
+						nt.setLoaded(false);
+						
+					}
+				}
+				ZippyNozzleTip nt = nozzletips.get(rowIndex);
+				//iterate through config and find parent nozzle.
+				//assumes unique nozzle tip name
+				Nozzle parent_nozzle = null;
+				for (Head head : configuration.getMachine().getHeads()) { //for each head
+					for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
+						for (NozzleTip temp_nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
+							if(temp_nozzletip.getId() == nt.getId())
+								parent_nozzle = nozzle;
+						}
+					}
+				}
+				//load this nozzletip
+				nt.load(parent_nozzle);
+				nt.setLoaded(true);
 			}
 			configuration.setDirty(true);
 		}
@@ -110,7 +143,7 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 		case 1:
 			return nozzletips.get(row).getClass().getSimpleName();
 		case 2:
-//			return nozzletips.get(row).isEnabled();
+			return ((ZippyNozzleTip) nozzletips.get(row)).isLoaded();
 		default:
 			return null;
 		}

@@ -1,5 +1,5 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ 	Copyright (C) 2013 Richard Spelling <openpnp@chebacco.com>
  	
  	This file is part of OpenPnP.
  	

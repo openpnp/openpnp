@@ -21,17 +21,16 @@
 
 package org.openpnp.model;
 
+import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 
 public class Package implements Identifiable {
-	@Attribute
-	private String id;
-	@Attribute(required=false)
-	private String name;
-	@Element(required=false)
-	private Outline outline;
+	@Attribute					private String id;
+	@Attribute(required=false)	private String name;
+	@Element(required=false)	private Outline outline;
+	@Element(required=false)	private String nozzletip;
 	
 	private Package() {
 		this(null);
@@ -52,6 +51,14 @@ public class Package implements Identifiable {
 	
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public String getNozzleTip() {
+		return nozzletip;
+	}
+	
+	public void setNozzleTip(String nozzletip) {
+		this.nozzletip = nozzletip;
 	}
 
 	public Outline getOutline() {
