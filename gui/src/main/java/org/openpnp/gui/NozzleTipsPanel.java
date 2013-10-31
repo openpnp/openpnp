@@ -70,6 +70,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Outline;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
@@ -83,6 +84,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 			.getLogger(NozzleTipsPanel.class);
 
 	private final Configuration configuration;
+	private Machine machine;
 
 	private static final String PREF_DIVIDER_POSITION = "NozzleTipsPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -102,6 +104,8 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 
 	public NozzleTipsPanel(Configuration configuration) {
 		this.configuration = configuration;
+		this.machine = configuration.getMachine();
+
 
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new NozzleTipsTableModel(configuration);
@@ -331,7 +335,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		    	selected_nozzle_str = nozzleArr[0];
 		    }
 			try {
-				NozzleTip nozzletip = nozzletipClass.newInstance();
+				ZippyNozzleTip nozzletip = (ZippyNozzleTip) nozzletipClass.newInstance();
 
 				((ZippyNozzleTip) nozzletip).setId(Helpers.createUniqueName("NT", ( ((ZippyMachine) Configuration.get().getMachine()).getNozzleTips()), "id"));
 				
@@ -377,9 +381,12 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 			new Thread() {
 				public void run() {
 					ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
-					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+					ZippyNozzle nozzle = (ZippyNozzle) MainFrame.machineControlsPanel.getSelectedNozzle();
 					try {
-						nozzletip.load(nozzle);
+						if(machine.isEnabled()){
+							nozzletip.load(nozzle);
+							nozzletip.calibrate(nozzle);
+						}
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(NozzleTipsPanel.this, "Load Error",
@@ -402,10 +409,10 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 			new Thread() {
 				public void run() {
 					ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
-					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+					ZippyNozzle nozzle = (ZippyNozzle) MainFrame.machineControlsPanel.getSelectedNozzle();
 					try {
-						//probably add two of these, a "load" and an "unload" to put down and pick up nozzletips
-						nozzletip.unload(nozzle);
+						if(machine.isEnabled())
+							nozzletip.unload(nozzle);
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(NozzleTipsPanel.this, "Unload Error",	e);

@@ -53,7 +53,7 @@ public class Package implements Identifiable {
 		this.name = name;
 	}
 	
-	public String getNozzleTip() {
+	public String getNozzleTipId() {
 		return nozzletip;
 	}
 	

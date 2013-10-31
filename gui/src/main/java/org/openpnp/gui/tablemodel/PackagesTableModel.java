@@ -133,7 +133,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 		case 2:
 			return this_package.getOutline().toString();
 		case 3:
-			 return this_package.getNozzleTip();
+			 return this_package.getNozzleTipId();
 		default:
 			return null;
 		}

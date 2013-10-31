@@ -33,13 +33,14 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.machine.zippy.ZippyMachine;
+import org.openpnp.machine.zippy.ZippyNozzle;
 import org.openpnp.machine.zippy.ZippyNozzleTip;
 
 public class NozzleTipsTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
 	private String[] columnNames = new String[] { "Id", "Type", "Loaded" };
-	private List<ZippyNozzleTip> nozzletips;
+	private List<ZippyNozzleTip> zippynozzletips;
 
 	public NozzleTipsTableModel(Configuration configuration) {
 		this.configuration = configuration;
@@ -51,11 +52,11 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	}
 
 	public void refresh() { //pulls list of nozzle tips on machine
-		nozzletips = new ArrayList<ZippyNozzleTip>(); //new empty list for nozzle tips
+		zippynozzletips = new ArrayList<ZippyNozzleTip>(); //new empty list for nozzle tips
 		for (Head head : configuration.getMachine().getHeads()) { //for each head
 			for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
 				for (NozzleTip nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
-					nozzletips.add((ZippyNozzleTip) nozzletip); //add to list from above
+					zippynozzletips.add((ZippyNozzleTip) nozzletip); //add to list from above
 				}
 			}
 		}
@@ -72,11 +73,11 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	}
 
 	public int getRowCount() {
-		return (nozzletips == null) ? 0 : nozzletips.size();
+		return (zippynozzletips == null) ? 0 : zippynozzletips.size();
 	}
 	
 	public NozzleTip getNozzleTip(int index) {
-		return nozzletips.get(index);
+		return zippynozzletips.get(index);
 	}
 	
 	@Override
@@ -89,37 +90,37 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 		try {
 			if (columnIndex == 2) {
 				//find already loaded nozzletip
-				for(ZippyNozzleTip nt : nozzletips){ //for each nozzletip in the list
+				for(ZippyNozzleTip nt : zippynozzletips){ //for each nozzletip in the list
 					if(nt.isLoaded()){
-						Nozzle parent_nozzle = null;
+						ZippyNozzle parent_nozzle = null;
 						for (Head head : configuration.getMachine().getHeads()) { //for each head
 							for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
 								for (NozzleTip temp_nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
 									if(temp_nozzletip.getId() == nt.getId()) //get parent nozzle object
-										parent_nozzle = nozzle;
+										parent_nozzle = (ZippyNozzle) nozzle;
 								}
 							}
 						}
 						nt.unload(parent_nozzle);
-						nt.setLoaded(false);
+//						nt.setLoaded(false);
 						
 					}
 				}
-				ZippyNozzleTip nt = nozzletips.get(rowIndex);
+				ZippyNozzleTip nt = zippynozzletips.get(rowIndex);
 				//iterate through config and find parent nozzle.
 				//assumes unique nozzle tip name
-				Nozzle parent_nozzle = null;
+				ZippyNozzle parent_nozzle = null;
 				for (Head head : configuration.getMachine().getHeads()) { //for each head
 					for (Nozzle nozzle : head.getNozzles()) { //for each nozzle
 						for (NozzleTip temp_nozzletip : nozzle.getNozzleTips()) { //for each nozzletip
 							if(temp_nozzletip.getId() == nt.getId())
-								parent_nozzle = nozzle;
+								parent_nozzle = (ZippyNozzle) nozzle;
 						}
 					}
 				}
 				//load this nozzletip
 				nt.load(parent_nozzle);
-				nt.setLoaded(true);
+//				nt.setLoaded(true);
 			}
 			configuration.setDirty(true);
 		}
@@ -139,11 +140,11 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	public Object getValueAt(int row, int col) { //just fills in table on left
 		switch (col) {
 		case 0:
-			return nozzletips.get(row).getId();
+			return zippynozzletips.get(row).getId();
 		case 1:
-			return nozzletips.get(row).getClass().getSimpleName();
+			return zippynozzletips.get(row).getClass().getSimpleName();
 		case 2:
-			return ((ZippyNozzleTip) nozzletips.get(row)).isLoaded();
+			return ((ZippyNozzleTip) zippynozzletips.get(row)).isLoaded();
 		default:
 			return null;
 		}

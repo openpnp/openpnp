@@ -57,7 +57,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
-import org.openpnp.spi.NozzleTip;
+import org.openpnp.machine.zippy.ZippyNozzleTip;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -66,7 +66,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ZippyNozzleTipConfigurationWizard extends
         AbstractConfigurationWizard {
-    private final NozzleTip nozzletip;
+    private final ZippyNozzleTip zippynozzletip;
 
     private JTextField textFieldMirrorStartX;
     private JTextField textFieldMirrorStartY;
@@ -126,8 +126,8 @@ public class ZippyNozzleTipConfigurationWizard extends
     private JPanel panel;
     private JButton btnCancelChangeTemplateImage;
 
-    public ZippyNozzleTipConfigurationWizard(NozzleTip nozzletip) {
-        this.nozzletip = nozzletip;
+    public ZippyNozzleTipConfigurationWizard(ZippyNozzleTip zippynozzletip) {
+        this.zippynozzletip = zippynozzletip;
 
         //setup panel for nozzle offsets (crookedness)
         JPanel panelFields = new JPanel();
@@ -508,7 +508,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
         
         MutableLocationProxy nozzleOffsets = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "nozzleOffsets", nozzleOffsets, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "nozzleOffsets", nozzleOffsets, "location");
         addWrappedBinding(nozzleOffsets, "lengthX", locationX, "text", lengthConverter);
         addWrappedBinding(nozzleOffsets, "lengthY", locationY, "text", lengthConverter);
         addWrappedBinding(nozzleOffsets, "lengthZ", locationZ, "text", lengthConverter);
@@ -517,7 +517,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
 
         MutableLocationProxy mirrorStartLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "mirrorStartLocation", mirrorStartLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "mirrorStartLocation", mirrorStartLocation, "location");
         addWrappedBinding(mirrorStartLocation, "lengthX", textFieldMirrorStartX, "text", lengthConverter);
         addWrappedBinding(mirrorStartLocation, "lengthY", textFieldMirrorStartY, "text", lengthConverter);
         addWrappedBinding(mirrorStartLocation, "lengthZ", textFieldMirrorStartZ, "text", lengthConverter);
@@ -526,7 +526,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMirrorStartZ);
 
         MutableLocationProxy mirrorMidLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "mirrorMidLocation", mirrorMidLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "mirrorMidLocation", mirrorMidLocation, "location");
         addWrappedBinding(mirrorMidLocation, "lengthX", textFieldMirrorMidX, "text", lengthConverter);
         addWrappedBinding(mirrorMidLocation, "lengthY", textFieldMirrorMidY, "text", lengthConverter);
         addWrappedBinding(mirrorMidLocation, "lengthZ", textFieldMirrorMidZ, "text", lengthConverter);
@@ -535,7 +535,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMirrorMidZ);
 
         MutableLocationProxy mirrorEndLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "mirrorEndLocation", mirrorEndLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "mirrorEndLocation", mirrorEndLocation, "location");
         addWrappedBinding(mirrorEndLocation, "lengthX", textFieldMirrorEndX, "text", lengthConverter);
         addWrappedBinding(mirrorEndLocation, "lengthY", textFieldMirrorEndY, "text", lengthConverter);
         addWrappedBinding(mirrorEndLocation, "lengthZ", textFieldMirrorEndZ, "text", lengthConverter);
@@ -544,7 +544,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMirrorEndZ);
 
         MutableLocationProxy changerStartLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "changerStartLocation", changerStartLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "changerStartLocation", changerStartLocation, "location");
         addWrappedBinding(changerStartLocation, "lengthX", textFieldChangerStartX, "text", lengthConverter);
         addWrappedBinding(changerStartLocation, "lengthY", textFieldChangerStartY, "text", lengthConverter);
         addWrappedBinding(changerStartLocation, "lengthZ", textFieldChangerStartZ, "text", lengthConverter);
@@ -553,7 +553,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartZ);
 
         MutableLocationProxy changerMidLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "changerMidLocation", changerMidLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "changerMidLocation", changerMidLocation, "location");
         addWrappedBinding(changerMidLocation, "lengthX", textFieldChangerMidX, "text", lengthConverter);
         addWrappedBinding(changerMidLocation, "lengthY", textFieldChangerMidY, "text", lengthConverter);
         addWrappedBinding(changerMidLocation, "lengthZ", textFieldChangerMidZ, "text", lengthConverter);
@@ -562,7 +562,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidZ);
 
         MutableLocationProxy changerEndLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, nozzletip, "changerEndLocation", changerEndLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "changerEndLocation", changerEndLocation, "location");
         addWrappedBinding(changerEndLocation, "lengthX", textFieldChangerEndX, "text", lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthY", textFieldChangerEndY, "text", lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text", lengthConverter);
@@ -570,12 +570,12 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
 
-        addWrappedBinding(nozzletip, "vision.enabled", chckbxVisionEnabled, "selected");
-        addWrappedBinding(nozzletip, "vision.templateImage", labelTemplateImage, "icon", imageConverter);
-        addWrappedBinding(nozzletip, "vision.areaOfInterest.x", textFieldAoiX, "text", intConverter);
-        addWrappedBinding(nozzletip, "vision.areaOfInterest.y", textFieldAoiY, "text", intConverter);
-        addWrappedBinding(nozzletip, "vision.areaOfInterest.width", textFieldAoiWidth, "text", intConverter);
-        addWrappedBinding(nozzletip, "vision.areaOfInterest.height", textFieldAoiHeight, "text", intConverter);
+        addWrappedBinding(zippynozzletip, "vision.enabled", chckbxVisionEnabled, "selected");
+        addWrappedBinding(zippynozzletip, "vision.templateImage", labelTemplateImage, "icon", imageConverter);
+        addWrappedBinding(zippynozzletip, "vision.areaOfInterest.x", textFieldAoiX, "text", intConverter);
+        addWrappedBinding(zippynozzletip, "vision.areaOfInterest.y", textFieldAoiY, "text", intConverter);
+        addWrappedBinding(zippynozzletip, "vision.areaOfInterest.width", textFieldAoiWidth, "text", intConverter);
+        addWrappedBinding(zippynozzletip, "vision.areaOfInterest.height", textFieldAoiHeight, "text", intConverter);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiX);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
@@ -659,7 +659,7 @@ public class ZippyNozzleTipConfigurationWizard extends
 
             CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
             cameraView.setSelectionEnabled(true);
-/*            org.openpnp.model.Rectangle r = nozzletip.getVision().getAreaOfInterest();
+/*            org.openpnp.model.Rectangle r = zippynozzletip.getVision().getAreaOfInterest();
             if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
                 cameraView.setSelection(0, 0, 100, 100);
             }

@@ -22,28 +22,36 @@ package org.openpnp.machine.zippy;
 
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ZippyNozzle extends ReferenceNozzle {
-
 	
 	private final static Logger logger = LoggerFactory
             .getLogger(ZippyNozzle.class);
     
-    private ZippyNozzleTip currentNozzleTip; 
+    //private ZippyNozzleTip currentNozzleTip; 
+	@Attribute(required=false) protected String currentNozzleTipid;
     private boolean alreadyCompensatedNozzleTip;
+    private ZippyNozzleTip currentNozzleTip;
     
-    public ZippyNozzle(){
-    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); //work with only first one till we write changer code
+/*    public ZippyNozzle(){
+    	
+    	for(NozzleTip nt : nozzletips){
+    		ZippyNozzleTip znt = (ZippyNozzleTip)nt;
+    		if(znt.isLoaded())
+    			currentNozzleTip = znt;
+    	}
     }
-    
+*/    
     @Override
     public void moveTo(Location location, double speed) throws Exception {
 
@@ -51,10 +59,14 @@ public class ZippyNozzle extends ReferenceNozzle {
     	Location currentLocation = this.getLocation();
 
     	//work with only first one till we write changer code
-    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); 
+//    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); 
 
     	//pull offsets from current nozzle tip
-    	Location offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
+    	Location offset;
+    	if(currentNozzleTip == null)
+    		offset = location.derive(0.0, 0.0, null, null);
+    	else
+    		offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
 
     	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
 		Point p = new Point(offset.getX(), 	offset.getY());
@@ -89,11 +101,26 @@ public class ZippyNozzle extends ReferenceNozzle {
         }
 	       
     }
+//    @Override
+    public boolean canHandle(Part part) {
+    	ZippyNozzleTip nt = (ZippyNozzleTip) this.getNozzleTip();
+    	boolean result = part.getPackage().getNozzleTipId() == nt.getId();
+    	logger.debug("{}.canHandle({}) => {}", new Object[]{getId(), part.getId(), result});
+		return result;
+	}
+
     @Override
     public NozzleTip getNozzleTip() {
         return currentNozzleTip;
     }
 
+//    @Override
+    public void setNozzleTip(ZippyNozzleTip nozzletip) {
+        this.currentNozzleTip = nozzletip;
+        currentNozzleTipid = nozzletip.getId();
+    }
+
+    
     @Override
     public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
 		boolean result = currentNozzleTip.canHandle(feeder.getPart());
@@ -102,7 +129,7 @@ public class ZippyNozzle extends ReferenceNozzle {
 	}
 
     //    @Override
-    public void addNozzleTip(NozzleTip nozzletip) throws Exception {
+    public void addNozzleTip(ZippyNozzleTip nozzletip) throws Exception {
         nozzletips.add(nozzletip);
    }
     @Override
