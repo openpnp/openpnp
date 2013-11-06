@@ -40,20 +40,26 @@ public class ZippyNozzle extends ReferenceNozzle {
     
     //private ZippyNozzleTip currentNozzleTip; 
 	@Attribute(required=false) protected String currentNozzleTipid;
+	
     private boolean alreadyCompensatedNozzleTip;
+    
     private ZippyNozzleTip currentNozzleTip;
     
-/*    public ZippyNozzle(){
-    	
+    public ZippyNozzle(){
     	for(NozzleTip nt : nozzletips){
     		ZippyNozzleTip znt = (ZippyNozzleTip)nt;
     		if(znt.isLoaded())
     			currentNozzleTip = znt;
     	}
     }
-*/    
+    
     @Override
     public void moveTo(Location location, double speed) throws Exception {
+    	for(NozzleTip nt : nozzletips){
+    		ZippyNozzleTip znt = (ZippyNozzleTip)nt;
+    		if(znt.isLoaded())
+    			currentNozzleTip = znt;
+    	}
 
     	//compensation only changes if nozzle rotations changes, so pull current position
     	Location currentLocation = this.getLocation();
@@ -64,7 +70,7 @@ public class ZippyNozzle extends ReferenceNozzle {
     	//pull offsets from current nozzle tip
     	Location offset;
     	if(currentNozzleTip == null)
-    		offset = location.derive(0.0, 0.0, null, null);
+    		offset = location.derive(0.0, 0.0, 0.0, null);
     	else
     		offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
 
@@ -98,6 +104,7 @@ public class ZippyNozzle extends ReferenceNozzle {
         } else {
         	//call super to move to original position
         	super.moveTo(location, speed);
+        	alreadyCompensatedNozzleTip = false;
         }
 	       
     }

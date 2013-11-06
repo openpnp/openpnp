@@ -296,6 +296,12 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		machine.fireMachineHeadActivity(head);
     }
 */	public void load(ZippyNozzle nozzle) throws Exception {
+		if(nozzle.currentNozzleTipid.equals(this.id)){
+			//just return if this is already the right one
+			return;
+		} 
+		//unload currently loaded nozzle tip
+//		((ZippyNozzleTip) nozzle.getNozzleTip()).unload(nozzle);
 		//move to safe height
 		nozzle.moveToSafeZ(1.1);
 		//create local variables for movement
@@ -305,7 +311,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		
 		//perform load operation
 		nozzle.moveTo(changerStartLocation, 1.0);
-		nozzle.moveTo(changerMidLocation, 1.0);
+		nozzle.moveTo(changerMidLocation, .5);
 		nozzle.moveTo(changerEndLocation, 1.0);
 		
 		nozzle.setNozzleTip(this);
@@ -327,7 +333,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		//perform unload operation
 		nozzle.moveTo(changerEndLocation, 1.0);
 		nozzle.moveTo(changerMidLocation, 1.0);
-		nozzle.moveTo(changerStartLocation, 1.0);
+		nozzle.moveTo(changerStartLocation, .5);
 
 //		nozzle.setNozzleTip(null);
 		this.loaded=false;

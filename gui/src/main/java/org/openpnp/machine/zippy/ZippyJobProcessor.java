@@ -23,11 +23,13 @@
 package org.openpnp.machine.zippy;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.openpnp.JobProcessor;
 import org.openpnp.JobProcessor.JobError;
 import org.openpnp.JobProcessor.JobState;
+import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -41,32 +43,114 @@ import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.JobPlanner.PlacementSolution;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.Utils2D;
 
 public class ZippyJobProcessor extends JobProcessor {
-
+	
 	public ZippyJobProcessor(Configuration configuration) {
 		super(configuration);
 		// TODO Auto-generated constructor stub
 	}
+	/*
+	 * Pre-process the Job. We will:
+	 * 	Look for setup errors.
+	 * 	Look for missing parts.
+	 * 	Look for missing feeders.
+	 * 	Look for feeders that cannot feed the number of parts that
+	 * 		will be needed.
+	 *  Look for nozzletips for each part //TODO
+	 * 	Calculate the base Safe-Z for the job.
+	 * 	Calculate the number of parts that need to be placed.
+	 * 	Calculate the total distance that will need to be traveled.
+	 * 	Calculate the total time it should take to place the job.
+	 * 
+	 * Time calculation is tough unless we also ask the feeders to simulate
+	 * their work. Otherwise we can just calculate the total distance *
+	 * the feed rate to get close. This doesn't include acceleration and
+	 * such. 
+	 * 
+	 * The base Safe-Z is the maximum of:
+	 * 		Highest placement location.
+	 * 		Highest pick location.
+	 */
+
+	@Override
+	protected void preProcessJob(Machine machine) {
+		Set<PlacementSolution> solutions;
+//		Machine machine = configuration.getMachine();
+		Head head = machine.getHeads().get(0);
+		JobPlanner jobPlanner = machine.getJobPlanner();
+
+		for (BoardLocation jobBoard : job.getBoardLocations()) {
+			Board board = jobBoard.getBoard();
+			
+			for (Placement placement : board.getPlacements()) {
+				if (placement.getSide() != jobBoard.getSide()) {
+					continue;
+				}
+				
+				Part part = placement.getPart();
+				if (part == null) {
+					fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", board.getName(), placement.getId()));
+					return;
+				}
+			}	
+            // Dry run of solutions to look for errors
+			jobPlanner.setJob(job);
+			while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
+			    for (PlacementSolution solution : solutions) {
+					
+					BoardLocation bl = solution.boardLocation;
+					Part part = solution.placement.getPart();
+					Feeder feeder = solution.feeder;
+					Placement placement = solution.placement;
+					Nozzle nozzle = solution.nozzle;
+					NozzleTip nozzletip = solution.nozzleTip;
+
+					if (nozzle == null) {
+	                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
+	                    return;
+	                }
+	
+					if (nozzletip == null) {
+	                    fireJobEncounteredError(JobError.HeadError, "No NozzleTip available to service Placement " + placement);
+	                    return;
+	                }
+	
+					if (feeder == null) {
+						fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
+						return;
+					}
+			    }
+			}
+			
+		}
+	}
+	
 	@Override
 	public void run() {
+		Set<PlacementSolution> solutions;
+		Machine machine = configuration.getMachine();
+		Head head = machine.getHeads().get(0);
+		JobPlanner jobPlanner = machine.getJobPlanner();
+
 		state = JobState.Running;
 		fireJobStateChanged();
 		
-		Machine machine = configuration.getMachine();
+		
 		
 		preProcessJob(machine);
 		
-		for (Head head : machine.getHeads()) {
-			fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getId()));		
+		for (Head xhead : machine.getHeads()) {
+			fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", xhead.getId()));		
 	
 			if (!shouldJobProcessingContinue()) {
 				return;
 			}
 	
 			try {
-				head.moveToSafeZ(1.0);
+				xhead.moveToSafeZ(1.0);
 			}
 			catch (Exception e) {
 				fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -74,12 +158,11 @@ public class ZippyJobProcessor extends JobProcessor {
 			}
 		}
 		
-		JobPlanner jobPlanner = machine.getJobPlanner();
-		Head head = machine.getHeads().get(0);
+		
+
 		
 		jobPlanner.setJob(job);
-
-        Set<PlacementSolution> solutions;
+        
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
 		    LinkedHashMap<PlacementSolution, Location> placementSolutionLocations = new LinkedHashMap<PlacementSolution, Location>();
 		    for (PlacementSolution solution : solutions) {
@@ -90,18 +173,7 @@ public class ZippyJobProcessor extends JobProcessor {
 				Feeder feeder = solution.feeder;
 				Placement placement = solution.placement;
 				Nozzle nozzle = solution.nozzle;
-				
-                // TODO: do this work and the one below in preProcess, just
-				// have the JobPlanner plan the job twice.
-				if (nozzle == null) {
-                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
-                    return;
-                }
-
-				if (feeder == null) {
-					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
-					return;
-				}
+				NozzleTip nozzletip = solution.nozzleTip;
 
 				// Determine where we will place the part
 				Location boardLocation = bl.getLocation();
@@ -146,6 +218,13 @@ public class ZippyJobProcessor extends JobProcessor {
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
 				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
 
+				try {
+					((ZippyNozzleTip) nozzletip).load((ZippyNozzle) nozzle);
+				}
+				catch (Exception e) {
+					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+					return;
+				}
 				pick(nozzle, feeder, bl, placement);
 				placementSolutionLocations.put(solution, placementLocation);
 			}
@@ -159,5 +238,6 @@ public class ZippyJobProcessor extends JobProcessor {
                 place(nozzle, bl, placementLocation, placement);
             }
 		}
+	}
 
 }
