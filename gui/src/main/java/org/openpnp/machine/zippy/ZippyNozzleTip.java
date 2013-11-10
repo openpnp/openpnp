@@ -176,6 +176,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		Location mirrorEndLocation = this.mirrorEndLocation;
 		Location Xoffset;
 		Location Yoffset;
+		double Zoffset;
 		
 		//do camera magic
 		Head head = nozzle.getHead();
@@ -194,9 +195,9 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		logger.debug("Move camera to mirror location.");
 
 		//move to mirror position
-		nozzle.moveTo(mirrorStartLocation, 1.0);
-		nozzle.moveTo(mirrorMidLocation, 1.0);
-		nozzle.moveTo(mirrorEndLocation, 1.0);
+		camera.moveTo(mirrorStartLocation, 1.0);
+		camera.moveTo(mirrorMidLocation, 1.0);
+		camera.moveTo(mirrorEndLocation, 1.0);
 
 		//do camera magic
 		visionX0Offset = visionMgr.getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 0.0),vision);
@@ -206,14 +207,19 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		
 		Xoffset = visionX0Offset.subtract(visionX180Offset);
 		Yoffset = visionY90Offset.subtract(visionY270Offset);
+//		Zoffset = visionX0Offset.getY();
+		Zoffset = 0.0; //TODO: fix Z offset
 		
 		//move away from mirror position
-		nozzle.moveTo(mirrorEndLocation, 1.0);
-		nozzle.moveTo(mirrorMidLocation, 1.0);
-		nozzle.moveTo(mirrorStartLocation, 1.0);
+		camera.moveTo(mirrorEndLocation, 1.0);
+		camera.moveTo(mirrorMidLocation, 1.0);
+		camera.moveTo(mirrorStartLocation, 1.0);
 		
-		this.nozzleOffsets = newNozzleOffsets.derive(Xoffset.getX(), Yoffset.getX(), null, null);
-		return newNozzleOffsets.derive(Xoffset.getX(), Yoffset.getX(), null, null);
+		logger.debug("final nozzletip calibration, at angle zero, offsetX {}, offsetY {}", Xoffset.getX(), Yoffset.getX());
+		
+		newNozzleOffsets = newNozzleOffsets.derive(Xoffset.getX(), Yoffset.getX(), Zoffset, null);
+		this.nozzleOffsets = newNozzleOffsets;
+		return newNozzleOffsets;
 	}
 
 	public Vision getVision() {
@@ -310,9 +316,9 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		Location changerEndLocation = this.changerEndLocation;
 		
 		//perform load operation
-		nozzle.moveTo(changerStartLocation, 1.0);
-		nozzle.moveTo(changerMidLocation, .5);
-		nozzle.moveTo(changerEndLocation, 1.0);
+		nozzle.uncompMoveTo(changerStartLocation, 1.0);
+		nozzle.uncompMoveTo(changerMidLocation, .5);
+		nozzle.uncompMoveTo(changerEndLocation, 1.0);
 		
 		nozzle.setNozzleTip(this);
 		this.loaded=true;
@@ -331,9 +337,9 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		Location changerEndLocation = this.changerEndLocation;
 		
 		//perform unload operation
-		nozzle.moveTo(changerEndLocation, 1.0);
-		nozzle.moveTo(changerMidLocation, 1.0);
-		nozzle.moveTo(changerStartLocation, .5);
+		nozzle.uncompMoveTo(changerEndLocation, 1.0);
+		nozzle.uncompMoveTo(changerMidLocation, 1.0);
+		nozzle.uncompMoveTo(changerStartLocation, .5);
 
 //		nozzle.setNozzleTip(null);
 		this.loaded=false;

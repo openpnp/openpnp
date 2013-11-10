@@ -383,10 +383,8 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 					ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
 					ZippyNozzle nozzle = (ZippyNozzle) MainFrame.machineControlsPanel.getSelectedNozzle();
 					try {
-						if(machine.isEnabled()){
+//						if(machine.isEnabled())
 							nozzletip.load(nozzle);
-							nozzletip.calibrate(nozzle);
-						}
 					}
 					catch (Exception e) {
 						MessageBoxes.errorBox(NozzleTipsPanel.this, "Load Error",
@@ -411,7 +409,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 					ZippyNozzleTip nozzletip = (ZippyNozzleTip) getSelectedNozzleTip();
 					ZippyNozzle nozzle = (ZippyNozzle) MainFrame.machineControlsPanel.getSelectedNozzle();
 					try {
-						if(machine.isEnabled())
+//						if(machine.isEnabled())
 							nozzletip.unload(nozzle);
 					}
 					catch (Exception e) {
@@ -441,22 +439,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-/*				if (part != null) {
-					org.openpnp.model.Package pkg = part.getPackage();
-					if (pkg != null) {
-						Outline outline = pkg.getOutline();
-						CameraView cameraView = MainFrame.cameraPanel
-								.getSelectedCameraView();
-						if (cameraView.getReticle(this) != null) {
-							cameraView.removeReticle(this);
-						}
-						else {
-							cameraView.setReticle(this, new OutlineReticle(
-									outline));
-						}
-					}
-				}
-*/			}
+			}
 		}
 	};
 }

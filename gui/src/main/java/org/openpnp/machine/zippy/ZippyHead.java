@@ -21,8 +21,26 @@
 
 package org.openpnp.machine.zippy;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.spi.Nozzle;
 
 public class ZippyHead extends ReferenceHead {
+
+	@Override
+	public void home() throws Exception {
+		logger.debug("{}.home()", getId());
+	    driver.home(this);
+	    ((ZippyNozzle) nozzles.get(0)).setAlreadyCompensatedNozzleTip(false);
+	    
+	    machine.fireMachineHeadActivity(this);
+	}
+    @Override
+    public List<Nozzle> getNozzles() {
+        return Collections.unmodifiableList(nozzles);
+    }
 
 }

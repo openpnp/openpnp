@@ -52,7 +52,10 @@ public class ZippyNozzle extends ReferenceNozzle {
     			currentNozzleTip = znt;
     	}
     }
-    
+    //uncompensated move 
+    public void uncompMoveTo(Location location, double speed) throws Exception {
+    	super.moveTo(location, speed);
+    }
     @Override
     public void moveTo(Location location, double speed) throws Exception {
     	for(NozzleTip nt : nozzletips){
@@ -86,7 +89,7 @@ public class ZippyNozzle extends ReferenceNozzle {
 		// Update the  offset Location with the difference between the transformed points
 		// first move add full compensation, rest of moves only add compensation if nozzle rotates
 		if(alreadyCompensatedNozzleTip){
-			offset = offset.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), null, null);
+			offset = offset.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), 0.0, null);
 		} else {
 			offset = offset.derive(old_p.getX(), old_p.getY(), null, null);
 			alreadyCompensatedNozzleTip = true;
@@ -127,6 +130,9 @@ public class ZippyNozzle extends ReferenceNozzle {
         currentNozzleTipid = nozzletip.getId();
     }
 
+    public void setAlreadyCompensatedNozzleTip(boolean value){
+    	this.alreadyCompensatedNozzleTip = value;
+    }
     
     @Override
     public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
