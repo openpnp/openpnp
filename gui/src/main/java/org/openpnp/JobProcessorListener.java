@@ -21,11 +21,11 @@
 
 package org.openpnp;
 
-import org.openpnp.JobProcessor.JobError;
-import org.openpnp.JobProcessor.JobState;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.JobProcessor.JobError;
+import org.openpnp.spi.JobProcessor.JobState;
 
 /**
  * Allows an interested listener to receive events as the JobProcessor does it's work. Methods in

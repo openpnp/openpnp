@@ -23,35 +23,31 @@
 package org.openpnp.machine.zippy;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Set;
 
-import org.openpnp.JobProcessor;
-import org.openpnp.JobProcessor.JobError;
-import org.openpnp.JobProcessor.JobState;
+import org.openpnp.machine.reference.ReferenceJobProcessor;
 import org.openpnp.model.Board;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
-import org.openpnp.model.Board.Side;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
+import org.openpnp.spi.JobPlanner.PlacementSolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.JobPlanner.PlacementSolution;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.Utils2D;
 
-public class ZippyJobProcessor extends JobProcessor {
+public class ZippyJobProcessor extends ReferenceJobProcessor {
 	
-	public ZippyJobProcessor(Configuration configuration) {
-		super(configuration);
-		// TODO Auto-generated constructor stub
+	public ZippyJobProcessor() {
 	}
+	
 	/*
 	 * Pre-process the Job. We will:
 	 * 	Look for setup errors.
@@ -131,7 +127,7 @@ public class ZippyJobProcessor extends JobProcessor {
 	@Override
 	public void run() {
 		Set<PlacementSolution> solutions;
-		Machine machine = configuration.getMachine();
+		Machine machine = Configuration.get().getMachine();
 		Head head = machine.getHeads().get(0);
 		JobPlanner jobPlanner = machine.getJobPlanner();
 

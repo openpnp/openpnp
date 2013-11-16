@@ -63,14 +63,13 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.JobProcessor;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
-import org.openpnp.gui.NozzleTipsPanel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -125,7 +124,7 @@ public class MainFrame extends JFrame {
 	private ActionListener instructionsCancelActionListener;
 	private ActionListener instructionsProceedActionListener;
 
-	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
+	public MainFrame(Configuration configuration) {
 		this.configuration = configuration;
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);
@@ -159,8 +158,7 @@ public class MainFrame extends JFrame {
 		machineControlsPanel = new MachineControlsPanel(configuration, this,
 				cameraPanel);
 		machinePanel = new MachinePanel();
-		jobPanel = new JobPanel(configuration, jobProcessor, this,
-				machineControlsPanel);
+		jobPanel = new JobPanel(configuration, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
 		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration);
@@ -456,7 +454,13 @@ public class MainFrame extends JFrame {
             }
         }
 
-		jobProcessor.addListener(jobProcessorListener);
+		configuration.addListener(new ConfigurationListener.Adapter() {
+		    @Override
+            public void configurationComplete(Configuration configuration)
+                    throws Exception {
+		        configuration.getMachine().getJobProcessor().addListener(jobProcessorListener);
+            }
+		});
 	}
 	
 	public void showInstructions(
