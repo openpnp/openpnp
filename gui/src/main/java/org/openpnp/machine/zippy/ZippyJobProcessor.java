@@ -142,23 +142,6 @@ public class ZippyJobProcessor extends JobProcessor {
 		
 		preProcessJob(machine);
 		
-		for (Head xhead : machine.getHeads()) {
-			fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", xhead.getId()));		
-	
-			if (!shouldJobProcessingContinue()) {
-				return;
-			}
-	
-			try {
-				xhead.moveToSafeZ(1.0);
-			}
-			catch (Exception e) {
-				fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-				return;
-			}
-		}
-		
-		
 
 		
 		jobPlanner.setJob(job);
@@ -218,12 +201,16 @@ public class ZippyJobProcessor extends JobProcessor {
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
 				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
 
-				try {
-					((ZippyNozzleTip) nozzletip).load((ZippyNozzle) nozzle);
-				}
-				catch (Exception e) {
-					fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-					return;
+				if( !nozzle.getNozzleTip().getId().equals(nozzletip.getId())){
+					try {
+						((ZippyNozzleTip) nozzle.getNozzleTip()).unload((ZippyNozzle) nozzle);
+						((ZippyNozzleTip) nozzletip).load((ZippyNozzle) nozzle);
+						((ZippyNozzleTip) nozzletip).calibrate((ZippyNozzle) nozzle);
+					}
+					catch (Exception e) {
+						fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+						return;
+					}
 				}
 				pick(nozzle, feeder, bl, placement);
 				placementSolutionLocations.put(solution, placementLocation);

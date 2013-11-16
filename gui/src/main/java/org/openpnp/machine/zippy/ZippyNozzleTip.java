@@ -20,67 +20,20 @@
  */
 package org.openpnp.machine.zippy;
 
-import java.util.List;
-
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-//import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder.Vision;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
-import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
-
-
-
-
-
-
-
-//vision stuff
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
-
-import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Rectangle;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.VisionProvider;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Persist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.openpnp.machine.zippy.VisionManager;
 import org.openpnp.machine.zippy.VisionManager.Vision;
 
@@ -114,6 +67,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 */
     @Attribute(required = false) private int index;
     @Attribute protected boolean loaded;
+    @Attribute protected double pixelComp;
        
     @Element(required = false)
     private Location nozzleOffsets;
@@ -201,11 +155,11 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 
 		//do camera magic
 		visionX0Offset = visionMgr.getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 0.0),vision);
-		visionX180Offset = visionMgr.getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 180.0),vision);
 		visionY90Offset = visionMgr.getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 90.0),vision);
+		visionX180Offset = visionMgr.getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 180.0),vision);
 		visionY270Offset = visionMgr.getVisionOffsets(head, mirrorEndLocation.derive(null, null, null, 270.0),vision);
 		
-		Xoffset = visionX0Offset.subtract(visionX180Offset);
+		Xoffset = visionX180Offset.subtract(visionX0Offset);
 		Yoffset = visionY90Offset.subtract(visionY270Offset);
 //		Zoffset = visionX0Offset.getY();
 		Zoffset = 0.0; //TODO: fix Z offset
@@ -215,9 +169,15 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		camera.moveTo(mirrorMidLocation, 1.0);
 		camera.moveTo(mirrorStartLocation, 1.0);
 		
-		logger.debug("final nozzletip calibration, at angle zero, offsetX {}, offsetY {}", Xoffset.getX(), Yoffset.getX());
+		double offsetX = Xoffset.getX()/2;
+		double offsetY = Yoffset.getX()/2;
 		
-		newNozzleOffsets = newNozzleOffsets.derive(Xoffset.getX(), Yoffset.getX(), Zoffset, null);
+		offsetX *= this.pixelComp; //compensate for calibration distance being different than pick distance
+		offsetY *= this.pixelComp; //TODO: make this more elegant and configurable
+		
+		logger.debug("final nozzletip calibration, at angle zero, offsetX {}, offsetY {}", offsetX, offsetY);
+		
+		newNozzleOffsets = newNozzleOffsets.derive(offsetX, offsetY, Zoffset, null);
 		this.nozzleOffsets = newNozzleOffsets;
 		return newNozzleOffsets;
 	}
@@ -322,7 +282,9 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		
 		nozzle.setNozzleTip(this);
 		this.loaded=true;
-
+		
+//		this.calibrate(nozzle);
+		
 		//move to safe height
 		nozzle.moveToSafeZ(1.0);
 		

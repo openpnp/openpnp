@@ -63,6 +63,10 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.ObjectProperty;
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.Bindings;
 
 public class ZippyNozzleTipConfigurationWizard extends
         AbstractConfigurationWizard {
@@ -97,6 +101,7 @@ public class ZippyNozzleTipConfigurationWizard extends
     private JTextField locationX;
     private JTextField locationY;
     private JTextField locationZ;
+    private JTextField pixelCompJTF;
     private JPanel panelOffsets;
     private JPanel panelMirrorWaypoints;
     private JPanel panelChangerWaypoints;
@@ -162,6 +167,9 @@ public class ZippyNozzleTipConfigurationWizard extends
         JLabel lblZ = new JLabel("Z");
         panelOffsets.add(lblZ, "6, 2");
 
+        JLabel lblC = new JLabel("comp");
+        panelOffsets.add(lblC, "8, 2");
+
         locationX = new JTextField();
         panelOffsets.add(locationX, "2, 4");
         locationX.setColumns(5);
@@ -173,6 +181,10 @@ public class ZippyNozzleTipConfigurationWizard extends
         locationZ = new JTextField();
         panelOffsets.add(locationZ, "6, 4");
         locationZ.setColumns(5);
+        
+        pixelCompJTF = new JTextField();
+        panelOffsets.add(pixelCompJTF, "8, 4");
+        pixelCompJTF.setColumns(5);
         
         // setup panel for mirror waypoints
         panelMirrorWaypoints = new JPanel();
@@ -433,9 +445,9 @@ public class ZippyNozzleTipConfigurationWizard extends
         panel.add(btnCancelChangeTemplateImage);
 
         panelAoE = new JPanel();
+        panel.add(panelAoE);
         panelAoE.setBorder(new TitledBorder(null, "Area of Interest",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
         panelAoE.setLayout(new FormLayout(
                 new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
                         ColumnSpec.decode("default:grow"),
@@ -507,6 +519,8 @@ public class ZippyNozzleTipConfigurationWizard extends
         IntegerConverter intConverter = new IntegerConverter();
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
         
+//        bind(UpdateStrategy.READ_WRITE, zippynozzletip, "pixelComp", pixelCompJTF, "location");
+        
         MutableLocationProxy nozzleOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, zippynozzletip, "nozzleOffsets", nozzleOffsets, "location");
         addWrappedBinding(nozzleOffsets, "lengthX", locationX, "text", lengthConverter);
@@ -515,7 +529,8 @@ public class ZippyNozzleTipConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
-
+     
+        
         MutableLocationProxy mirrorStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, zippynozzletip, "mirrorStartLocation", mirrorStartLocation, "location");
         addWrappedBinding(mirrorStartLocation, "lengthX", textFieldMirrorStartX, "text", lengthConverter);
@@ -656,7 +671,7 @@ public class ZippyNozzleTipConfigurationWizard extends
         public void actionPerformed(ActionEvent arg0) {
             btnChangeAoi.setAction(confirmSelectAoiAction);
             cancelSelectAoiAction.setEnabled(true);
-
+ 
             CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
             cameraView.setSelectionEnabled(true);
 /*            org.openpnp.model.Rectangle r = zippynozzletip.getVision().getAreaOfInterest();
@@ -713,4 +728,5 @@ public class ZippyNozzleTipConfigurationWizard extends
             cameraView.setSelectionEnabled(false);
         }
     };
+
 }
