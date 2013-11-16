@@ -36,13 +36,13 @@ public class ActuatorsTableModel extends AbstractTableModel {
 	private String[] columnNames = new String[] { "Id", "Head", "Class" };
 	private List<HeadActuator> actuators;
 
-	public ActuatorsTableModel(Configuration configuration) {
-	    Configuration.get().addListener(new ConfigurationListener.Adapter() {
+	public ActuatorsTableModel(Configuration configuration) { //constructor
+	    Configuration.get().addListener(new ConfigurationListener.Adapter() { //add listener?
 	        public void configurationComplete(Configuration configuration) throws Exception {
-	            actuators = new ArrayList<HeadActuator>();
-	            for (Head head : configuration.getMachine().getHeads()) {
-	                for (Actuator actuator : head.getActuators()) {
-	                    actuators.add(new HeadActuator(head, actuator));
+	            actuators = new ArrayList<HeadActuator>(); //new empty list for actuators
+	            for (Head head : configuration.getMachine().getHeads()) { //for each head
+	                for (Actuator actuator : head.getActuators()) { //for each actuator
+	                    actuators.add(new HeadActuator(head, actuator)); //add to list from above
 	                }
 	            }
 	            fireTableDataChanged();

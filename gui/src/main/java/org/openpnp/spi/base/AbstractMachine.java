@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.Machine;
@@ -18,10 +19,16 @@ import org.simpleframework.xml.ElementList;
 public abstract class AbstractMachine implements Machine {
     @ElementList
     protected IdentifiableList<Head> heads = new IdentifiableList<Head>();
+    
     @ElementList(required=false)
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<Feeder>();
+    
+//    @ElementList(required=true)
+//    protected IdentifiableList<NozzleTip> nozzletips = new IdentifiableList<NozzleTip>();
+    
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
+    
     @Element
     protected JobPlanner jobPlanner;
     
@@ -44,6 +51,11 @@ public abstract class AbstractMachine implements Machine {
     public List<Feeder> getFeeders() {
         return Collections.unmodifiableList(feeders);
     }
+    
+//    @Override
+//    public List<NozzleTip> getNozzleTips() {
+//        return Collections.unmodifiableList(nozzletips);
+//    }
 
     @Override
     public Feeder getFeeder(String id) {

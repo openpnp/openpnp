@@ -72,11 +72,11 @@ public class JobProcessor implements Runnable {
 		SkipAndContinue,
 	}
 	
-	private Configuration configuration;
-	private Job job;
+	protected Configuration configuration;
+	protected Job job;
 	private Set<JobProcessorListener> listeners = new HashSet<JobProcessorListener>();
 	private JobProcessorDelegate delegate = new DefaultJobProcessorDelegate();
-	private JobState state;
+	protected JobState state;
 	private Thread thread;
 	private Object runLock = new Object();
 	
@@ -298,7 +298,7 @@ public class JobProcessor implements Runnable {
 		fireJobStateChanged();
 	}
 	
-	private boolean pick(Nozzle nozzle, Feeder feeder, BoardLocation bl, Placement placement) {
+	protected boolean pick(Nozzle nozzle, Feeder feeder, BoardLocation bl, Placement placement) {
         fireDetailedStatusUpdated(String.format("Move nozzle %s to Safe-Z at (%s).", nozzle.getId(), nozzle.getLocation()));        
 
         if (!shouldJobProcessingContinue()) {
@@ -422,7 +422,7 @@ public class JobProcessor implements Runnable {
         return true;
 	}
 	
-	private boolean place(Nozzle nozzle, BoardLocation bl, Location placementLocation, Placement placement) {
+	protected boolean place(Nozzle nozzle, BoardLocation bl, Location placementLocation, Placement placement) {
         fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (%s).", placementLocation));
 
         if (!shouldJobProcessingContinue()) {
@@ -515,7 +515,7 @@ public class JobProcessor implements Runnable {
 	 * 		Highest placement location.
 	 * 		Highest pick location.
 	 */
-	private void preProcessJob(Machine machine) {
+	protected void preProcessJob(Machine machine) {
 		for (BoardLocation jobBoard : job.getBoardLocations()) {
 			Board board = jobBoard.getBoard();
 			
@@ -539,7 +539,7 @@ public class JobProcessor implements Runnable {
 	 * blocks until the Job is Resumed. If the Job has been Stopped it returns false and
 	 * the loop should break.
 	 */
-	private boolean shouldJobProcessingContinue() {
+	protected boolean shouldJobProcessingContinue() {
 		if (pauseAtNextStep) {
 			pauseAtNextStep = false;
 			pause();
@@ -565,7 +565,7 @@ public class JobProcessor implements Runnable {
 		return true;
 	}
 	
-	private void fireJobEncounteredError(JobError error, String description) {
+	protected void fireJobEncounteredError(JobError error, String description) {
 		logger.debug("fireJobEncounteredError({}, {})", error, description);
 		for (JobProcessorListener listener : listeners) {
 			listener.jobEncounteredError(error, description);
@@ -579,14 +579,14 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	private void fireJobStateChanged() {
+	protected void fireJobStateChanged() {
 		logger.debug("fireJobStateChanged({})", state);
 		for (JobProcessorListener listener : listeners) {
 			listener.jobStateChanged(state);
 		}
 	}
 	
-	private void firePartProcessingStarted(BoardLocation board, Placement placement) {
+	protected void firePartProcessingStarted(BoardLocation board, Placement placement) {
 		logger.debug("firePartProcessingStarted({}, {})", board, placement);
 		for (JobProcessorListener listener : listeners) {
 			listener.partProcessingStarted(board, placement);
@@ -614,7 +614,7 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	private void fireDetailedStatusUpdated(String status) {
+	protected void fireDetailedStatusUpdated(String status) {
 		logger.debug("fireDetailedStatusUpdated({})", status);
 		for (JobProcessorListener listener : listeners) {
 			listener.detailedStatusUpdated(status);

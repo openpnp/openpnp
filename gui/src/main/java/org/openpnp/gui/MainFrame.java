@@ -70,6 +70,7 @@ import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.NozzleTipsPanel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -102,6 +103,7 @@ public class MainFrame extends JFrame {
 	// for now.
 	public static MachineControlsPanel machineControlsPanel;
 	public static PartsPanel partsPanel;
+	public static PackagesPanel packagesPanel;
 	public static FeedersPanel feedersPanel;
 	public static JobPanel jobPanel;
 	public static MachinePanel machinePanel;
@@ -109,6 +111,7 @@ public class MainFrame extends JFrame {
 	public static BoardsPanel boardsPanel;
 	public static HeadsPanel headsPanel;
 	public static ActuatorsPanel actuatorsPanel;
+	public static NozzleTipsPanel nozzletipPanel;
 	public static CameraPanel cameraPanel;
 
 	private JPanel contentPane;
@@ -159,11 +162,13 @@ public class MainFrame extends JFrame {
 		jobPanel = new JobPanel(configuration, jobProcessor, this,
 				machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
+		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration);
 		camerasPanel = new CamerasPanel(this, configuration);
 		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(configuration);
+		nozzletipPanel = new NozzleTipsPanel(configuration);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -417,11 +422,13 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
+		panelBottom.addTab("Packages", null, packagesPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
+		panelBottom.addTab("NozzleTips", null, nozzletipPanel, null);
 
 		addComponentListener(componentListener);
 

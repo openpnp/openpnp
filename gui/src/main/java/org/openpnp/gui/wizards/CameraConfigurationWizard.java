@@ -55,7 +55,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
 	private JTextField textFieldUppX;
 	private JTextField textFieldUppY;
-	private JPanel panelUpp;
+	private JTextField textFieldOffX;
+	private JTextField textFieldOffY;
+	private JTextField textFieldOffZ;
+	private JPanel panelUpp, panelOff;
 	private JButton btnMeasure;
 	private JButton btnCancelMeasure;
 	
@@ -99,13 +102,57 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		btnMeasure = new JButton("Measure");
 		btnMeasure.setAction(measureAction);
 		panelUpp.add(btnMeasure, "6, 4");
-		
+
 		btnCancelMeasure = new JButton("Cancel");
 		btnCancelMeasure.setAction(cancelMeasureAction);
 		panelUpp.add(btnCancelMeasure, "8, 4");
 		
 		lblNewLabel = new JLabel("<html>\n<ol>\n<li>Place an object that is 1 unit by 1 unit square onto the table. Graphing paper is a good, easy choice for this.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Use the camera selection rectangle to measure the object and press the Confirm button.\n</ol>\n</html>");
 		panelUpp.add(lblNewLabel, "2, 6, 6, 1, default, fill");
+
+		panelOff = new JPanel();
+		contentPanel.add(panelOff);
+		panelOff.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Head Offset", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelOff.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
+
+		JLabel olblX = new JLabel("X");
+		panelOff.add(olblX, "2, 2");
+
+		JLabel olblY = new JLabel("Y");
+		panelOff.add(olblY, "4, 2");
+
+		JLabel olblZ = new JLabel("Z");
+		panelOff.add(olblZ, "6, 2");
+		
+		
+		textFieldOffX = new JTextField();
+		panelOff.add(textFieldOffX, "2, 4");
+		textFieldOffX.setColumns(8);
+
+		textFieldOffY = new JTextField();
+		panelOff.add(textFieldOffY, "4, 4");
+		textFieldOffY.setColumns(8);
+
+		textFieldOffZ = new JTextField();
+		panelOff.add(textFieldOffZ, "6, 4");
+		textFieldOffZ.setColumns(8);
+		
+		
 	}
 
 	@Override
@@ -116,9 +163,19 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
-		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
+		
+
+		MutableLocationProxy headOffsets = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, camera, "headOffsets", headOffsets, "location");
+        addWrappedBinding(headOffsets, "lengthX", textFieldOffX, "text", lengthConverter);
+        addWrappedBinding(headOffsets, "lengthY", textFieldOffY, "text", lengthConverter);
+        addWrappedBinding(headOffsets, "lengthZ", textFieldOffZ, "text", lengthConverter);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
+		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
+		
 	}
 	
 	private Action measureAction = new AbstractAction("Measure") {
