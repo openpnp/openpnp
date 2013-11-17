@@ -34,7 +34,7 @@ public class ZippyHead extends ReferenceHead {
 	public void home() throws Exception {
 		logger.debug("{}.home()", getId());
 	    driver.home(this);
-	    ((ZippyNozzle) nozzles.get(0)).setAlreadyCompensatedNozzleTip(false);
+	    ((ZippyNozzle) nozzles.get(0)).clearAppliedOffset();
 	    
 	    machine.fireMachineHeadActivity(this);
 	}

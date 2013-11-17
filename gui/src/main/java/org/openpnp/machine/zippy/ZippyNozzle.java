@@ -21,6 +21,7 @@
 package org.openpnp.machine.zippy;
 
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Point;
@@ -41,9 +42,9 @@ public class ZippyNozzle extends ReferenceNozzle {
     //private ZippyNozzleTip currentNozzleTip; 
 	@Attribute(required=false) protected String currentNozzleTipid;
 	
-    private boolean alreadyCompensatedNozzleTip;
-    
     private ZippyNozzleTip currentNozzleTip;
+    private Location appliedOffset;
+    
     
     public ZippyNozzle(){
     	for(NozzleTip nt : nozzletips){
@@ -51,6 +52,8 @@ public class ZippyNozzle extends ReferenceNozzle {
     		if(znt.isLoaded())
     			currentNozzleTip = znt;
     	}
+    	appliedOffset = new Location(LengthUnit.Millimeters,0.0,0.0,0.0,0.0);
+    	
     }
     //uncompensated move 
     public void uncompMoveTo(Location location, double speed) throws Exception {
@@ -58,6 +61,10 @@ public class ZippyNozzle extends ReferenceNozzle {
     }
     @Override
     public void moveTo(Location location, double speed) throws Exception {
+    	Location ntOffset; //nozzle tip offset from xml file
+    	Location deltaOffset = null; //new calculated offset
+    	Location adjustedLocation; //compensated location
+    	
     	for(NozzleTip nt : nozzletips){
     		ZippyNozzleTip znt = (ZippyNozzleTip)nt;
     		if(znt.isLoaded())
@@ -67,48 +74,53 @@ public class ZippyNozzle extends ReferenceNozzle {
     	//compensation only changes if nozzle rotations changes, so pull current position
     	Location currentLocation = this.getLocation();
 
-    	//work with only first one till we write changer code
-//    	currentNozzleTip = (ZippyNozzleTip) nozzletips.get("NT1"); 
-
     	//pull offsets from current nozzle tip
-    	Location offset;
     	if(currentNozzleTip == null)
-    		offset = location.derive(0.0, 0.0, 0.0, null);
+    		ntOffset = location.derive(0.0, 0.0, 0.0, null);
     	else
-    		offset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
+    		ntOffset = ((ZippyNozzleTip) currentNozzleTip).getNozzleOffsets();
 
     	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
-		Point p = new Point(offset.getX(), 	offset.getY());
+		Point nt_p = new Point(ntOffset.getX(), ntOffset.getY());
+		// Create the point that represents the currently applied offsets (stored offset always for angle zero)
+		Point ao_p = new Point(appliedOffset.getX(), appliedOffset.getY());
 
     	// Rotate and translate the point into the same rotational coordinate space as the new location
-		Point new_p = Utils2D.rotatePoint(p, location.getRotation());
+		// use point derived from offsets stored in xml
+		Point new_p = Utils2D.rotatePoint(nt_p, location.getRotation());
 
     	// Rotate and translate the point into the same rotational coordinate space as the old location
-		Point old_p = Utils2D.rotatePoint(p, currentLocation.getRotation());
+		// use point derived from offset already applied (same as above if no change in xml)
+		Point old_p = Utils2D.rotatePoint(ao_p, currentLocation.getRotation());
 
-		// Update the  offset Location with the difference between the transformed points
-		// first move add full compensation, rest of moves only add compensation if nozzle rotates
-		if(alreadyCompensatedNozzleTip){
-			offset = offset.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), 0.0, null);
-		} else {
-			offset = offset.derive(old_p.getX(), old_p.getY(), null, null);
-			alreadyCompensatedNozzleTip = true;
-		}
-		//subtract rotated offset 
-    	Location adjustedLocation = location.subtract(offset);
+		//calculate change in offset based on rotational change
+		//if no change in rotation and no change in xml this is zero
+		//this changes each time from data stored in xml, so will be updated each time this changes
+		//due to calibration, etc, however it won't change 
+		deltaOffset = location.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), 0.0, null);
 
+		//each time, subtract out change in offset
+		adjustedLocation = location.subtract(deltaOffset);
+		
     	//log calculated offsets
-        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
+        logger.debug("{}.moveTo( applied_off {})", new Object[] { id, appliedOffset } );
+        logger.debug("{}.moveTo( stored_off {})", new Object[] { id, ntOffset } );
+        logger.debug("{}.moveTo( delta_off {})", new Object[] { id, deltaOffset } );
+        logger.debug("{}.moveTo( original {})", new Object[] { id, location } );
+        logger.debug("{}.moveTo( adjusted {})", new Object[] { id, adjustedLocation } );
+//        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
     	
         //don't compensate if it would move past zero
         if(adjustedLocation.getX()>0.0 && adjustedLocation.getY()>0.0){ 
-	        //call super to move to corrected position
+	        //above zero, so call super to move to corrected position
 	        super.moveTo(adjustedLocation, speed);
+	        appliedOffset = ntOffset;
         } else {
         	//call super to move to original position
+        	// and clear currently applied offset
         	super.moveTo(location, speed);
-        	alreadyCompensatedNozzleTip = false;
-        }
+        	appliedOffset=appliedOffset.derive(0.0, 0.0, 0.0, 0.0);
+         }
 	       
     }
 //    @Override
@@ -130,8 +142,8 @@ public class ZippyNozzle extends ReferenceNozzle {
         currentNozzleTipid = nozzletip.getId();
     }
 
-    public void setAlreadyCompensatedNozzleTip(boolean value){
-    	this.alreadyCompensatedNozzleTip = value;
+    public void clearAppliedOffset(){
+    	appliedOffset=appliedOffset.derive(0.0, 0.0, 0.0, 0.0);
     }
     
     @Override
