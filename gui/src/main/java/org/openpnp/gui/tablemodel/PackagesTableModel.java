@@ -82,7 +82,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex != 0;
+		return columnIndex == 1 || columnIndex == 3;
 	}
 	
 	public Package getPackage(int index) {
@@ -97,22 +97,22 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 				this_package.setName((String) aValue);
 			}
 			else if (columnIndex == 2) {
-/*				//figure out setting of outline
-				LengthCellValue value = (LengthCellValue) aValue;
-				value.setDisplayNativeUnits(true);
-				Length length = value.getLength();
-				Length oldLength = packages.getHeight();
-				if (length.getUnits() == null) {
-					if (oldLength != null) {
-						length.setUnits(oldLength.getUnits());
-					}
-					if (length.getUnits() == null) {
-						length.setUnits(configuration.getSystemUnits());
-					}
-				}
-				this_package.setHeight(length);
-				this_package.setOutline(outline);
-*/			}
+				// TODO: figure out setting of outline
+//				LengthCellValue value = (LengthCellValue) aValue;
+//				value.setDisplayNativeUnits(true);
+//				Length length = value.getLength();
+//				Length oldLength = packages.getHeight();
+//				if (length.getUnits() == null) {
+//					if (oldLength != null) {
+//						length.setUnits(oldLength.getUnits());
+//					}
+//					if (length.getUnits() == null) {
+//						length.setUnits(configuration.getSystemUnits());
+//					}
+//				}
+//				this_package.setHeight(length);
+//				this_package.setOutline(outline);
+			}
 			else if (columnIndex == 3) {
 				this_package.setNozzleTip((String)aValue);
 			}

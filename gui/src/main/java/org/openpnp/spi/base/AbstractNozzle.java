@@ -3,7 +3,6 @@ package org.openpnp.spi.base;
 import java.util.Collections;
 import java.util.List;
 
-import org.openpnp.machine.zippy.ZippyNozzleTip;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;

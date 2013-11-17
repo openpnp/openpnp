@@ -49,15 +49,6 @@ public interface Machine extends WizardConfigurable {
 	
 	
 	/**
-	 * Gets a List of NozzleTips attached to the Machine.
-	 * @return
-	 */
-//	public List<NozzleTip> getNozzleTips();
-	
-//	public NozzleTip getNozzleTip(String id);
-
-	
-	/**
 	 * Gets a List of Cameras attached to the Machine that are not attached
 	 * to Heads.
 	 * @return

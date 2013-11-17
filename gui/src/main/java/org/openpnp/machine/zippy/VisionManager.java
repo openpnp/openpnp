@@ -23,22 +23,13 @@ package org.openpnp.machine.zippy;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
-
-import org.openpnp.ConfigurationListener;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
+import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder.Vision;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Persist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,93 +123,5 @@ public class VisionManager {
         logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
 		
         return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
-	}
-	public static class Vision {
-		@Attribute(required=false)
-		private boolean enabled;
-		@Attribute(required=false)
-		private String templateImageName;
-		@Element(required=false)
-		private Rectangle areaOfInterest = new Rectangle();
-		@Element(required=false)
-		private Location templateImageTopLeft = new Location(LengthUnit.Millimeters);
-		@Element(required=false)
-		private Location templateImageBottomRight = new Location(LengthUnit.Millimeters);
-		
-		private BufferedImage templateImage;
-		private boolean templateImageDirty;
-		
-		public Vision() {
-	        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-	            @Override
-	            public void configurationComplete(Configuration configuration)
-	                    throws Exception {
-	                if (templateImageName != null) {
-	                    File file = configuration.getResourceFile(Vision.this.getClass(), templateImageName);
-	                    templateImage = ImageIO.read(file);
-	                }
-	            }
-	        });
-		}
-		
-		@SuppressWarnings("unused")
-		@Persist
-		private void persist() throws IOException {
-			if (templateImageDirty) {
-				File file = null;
-				if (templateImageName != null) {
-					file = Configuration.get().getResourceFile(this.getClass(), templateImageName);
-				}
-				else {
-					file = Configuration.get().createResourceFile(this.getClass(), "tmpl_", ".png");
-					templateImageName = file.getName();
-				}
-				ImageIO.write(templateImage, "png", file);
-				templateImageDirty = false;
-			}
-		}
-		
-		public boolean isEnabled() {
-			return enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
-		
-		public BufferedImage getTemplateImage() {
-			return templateImage;
-		}
-		
-		public void setTemplateImage(BufferedImage templateImage) {
-			if (templateImage != this.templateImage) {
-				this.templateImage = templateImage;
-				templateImageDirty = true;
-			}
-		}
-		
-		public Rectangle getAreaOfInterest() {
-			return areaOfInterest;
-		}
-
-		public void setAreaOfInterest(Rectangle areaOfInterest) {
-			this.areaOfInterest = areaOfInterest;
-		}
-
-		public Location getTemplateImageTopLeft() {
-			return templateImageTopLeft;
-		}
-
-		public void setTemplateImageTopLeft(Location templateImageTopLeft) {
-			this.templateImageTopLeft = templateImageTopLeft;
-		}
-
-		public Location getTemplateImageBottomRight() {
-			return templateImageBottomRight;
-		}
-
-		public void setTemplateImageBottomRight(Location templateImageBottomRight) {
-			this.templateImageBottomRight = templateImageBottomRight;
-		}
 	}
 }

@@ -23,9 +23,6 @@ public abstract class AbstractMachine implements Machine {
     @ElementList(required=false)
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<Feeder>();
     
-//    @ElementList(required=true)
-//    protected IdentifiableList<NozzleTip> nozzletips = new IdentifiableList<NozzleTip>();
-    
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
     
@@ -55,11 +52,6 @@ public abstract class AbstractMachine implements Machine {
         return Collections.unmodifiableList(feeders);
     }
     
-//    @Override
-//    public List<NozzleTip> getNozzleTips() {
-//        return Collections.unmodifiableList(nozzletips);
-//    }
-
     @Override
     public Feeder getFeeder(String id) {
         return feeders.get(id);
