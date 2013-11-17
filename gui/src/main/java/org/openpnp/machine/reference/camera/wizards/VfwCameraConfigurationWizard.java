@@ -17,183 +17,96 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
-*/
+ */
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.support.ApplyResetBindingListener;
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.VfwCamera;
+import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class VfwCameraConfigurationWizard extends JPanel implements Wizard {
-	private final VfwCamera camera;
+public class VfwCameraConfigurationWizard extends
+        ReferenceCameraConfigurationWizard {
+    private final VfwCamera camera;
 
-	private WizardContainer wizardContainer;
-	private JButton btnSave;
-	private JButton btnCancel;
-	private JPanel panelGeneral;
+    private JPanel panelGeneral;
+    private JComboBox comboBoxDriver;
+    private JCheckBox chckbxShowVideoSource;
+    private JCheckBox chckbxShowVideoFormat;
+    private JCheckBox chckbxShowVideoDisplay;
 
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
+    public VfwCameraConfigurationWizard(VfwCamera camera) {
+        super(camera);
 
-	public VfwCameraConfigurationWizard(
-			VfwCamera camera) {
-		this.camera = camera;
+        this.camera = camera;
 
-		setLayout(new BorderLayout());
+        panelGeneral = new JPanel();
+        contentPanel.add(panelGeneral);
+        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(
+                EtchedBorder.LOWERED, null, null), "General",
+                TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
+        panelGeneral
+                .setLayout(new FormLayout(new ColumnSpec[] {
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"), }, new RowSpec[] {
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC, }));
 
-		JPanel panelFields = new JPanel();
-		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
+        JLabel lblDeviceId = new JLabel("Driver");
+        panelGeneral.add(lblDeviceId, "2, 2, right, default");
 
-		JScrollPane scrollPane = new JScrollPane(panelFields);
+        Object[] deviceIds = null;
+        try {
+            deviceIds = camera.getDrivers().toArray(new String[] {});
+        }
+        catch (Exception e) {
+            // TODO:
+        }
+        
+        comboBoxDriver = new JComboBox(deviceIds);
+        panelGeneral.add(comboBoxDriver, "4, 2, left, default");
 
-		panelGeneral = new JPanel();
-		panelFields.add(panelGeneral);
-		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
-			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
-		
-		JLabel lblDeviceId = new JLabel("Driver");
-		panelGeneral.add(lblDeviceId, "2, 2, right, default");
-		
-		Object[] deviceIds = null;
-		try {
-			deviceIds = camera.getDrivers().toArray(new String[] {});
-		}
-		catch (Exception e) {
-			// TODO:
-		}
-		comboBoxDriver = new JComboBox(deviceIds);
-		panelGeneral.add(comboBoxDriver, "4, 2, left, default");
-		
-		chckbxShowVideoSource = new JCheckBox("Show Video Source Dialog?");
-		panelGeneral.add(chckbxShowVideoSource, "2, 4, 3, 1");
-		
-		chckbxShowVideoFormat = new JCheckBox("Show Video Format Dialog?");
-		panelGeneral.add(chckbxShowVideoFormat, "2, 6, 3, 1");
-		
-		chckbxShowVideoDisplay = new JCheckBox("Show Video Display Dialog?");
-		panelGeneral.add(chckbxShowVideoDisplay, "2, 8, 3, 1");
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
+        chckbxShowVideoSource = new JCheckBox("Show Video Source Dialog?");
+        panelGeneral.add(chckbxShowVideoSource, "2, 4, 3, 1");
 
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panelActions, BorderLayout.SOUTH);
+        chckbxShowVideoFormat = new JCheckBox("Show Video Format Dialog?");
+        panelGeneral.add(chckbxShowVideoFormat, "2, 6, 3, 1");
 
-		btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
-		
-		btnSave = new JButton(saveAction);
-		panelActions.add(btnSave);
+        chckbxShowVideoDisplay = new JCheckBox("Show Video Display Dialog?");
+        panelGeneral.add(chckbxShowVideoDisplay, "2, 8, 3, 1");
+    }
 
-		createBindings();
-		loadFromModel();
-	}
+    @Override
+    public void createBindings() {
+        // The order of the properties is important. We want all the booleans
+        // to be set before we set the driver because setting the driver
+        // applies all the settings.
+        addWrappedBinding(camera, "showVideoSourceDialog", chckbxShowVideoSource, "selected");
+        addWrappedBinding(camera, "showVideoFormatDialog", chckbxShowVideoFormat, "selected");
+        addWrappedBinding(camera, "showVideoDisplayDialog", chckbxShowVideoDisplay, "selected");
+        addWrappedBinding(camera, "driver", comboBoxDriver, "selectedItem");
+    }
 
-	private void createBindings() {
-		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
-		
-		// The order of the properties is important. We want all the booleans
-		// to be set before we set the driver because setting the driver
-		// applies all the settings.
-		wrappedBindings.add(JBindings.bind(camera, "showVideoSourceDialog",
-				chckbxShowVideoSource, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "showVideoFormatDialog",
-				chckbxShowVideoFormat, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "showVideoDisplayDialog",
-				chckbxShowVideoDisplay, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "driver",
-				comboBoxDriver, "selectedItem", listener));
-	}
-
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
-	}
-
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer
-					.wizardCompleted(VfwCameraConfigurationWizard.this);
-		}
-	};
-
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
-	private JComboBox comboBoxDriver;
-	private JCheckBox chckbxShowVideoSource;
-	private JCheckBox chckbxShowVideoFormat;
-	private JCheckBox chckbxShowVideoDisplay;
 }
