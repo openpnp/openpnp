@@ -31,14 +31,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
-    private final static Logger logger = LoggerFactory
+    protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceCamera.class);
     
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
     
-    private ReferenceMachine machine;
-    private ReferenceDriver driver;
+    protected ReferenceMachine machine;
+    protected ReferenceDriver driver;
 
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {

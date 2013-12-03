@@ -20,11 +20,15 @@
  */
 package org.openpnp.machine.zippy;
 
+import org.openpnp.gui.MainFrame;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Point;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.IdentifiableList;
@@ -44,6 +48,9 @@ public class ZippyNozzle extends ReferenceNozzle {
 	
     private ZippyNozzleTip currentNozzleTip;
     private Location appliedOffset;
+    private Location original_camera_offsets;
+    private Location stored_camera_offsets;
+    private ZippyCamera camera;
     
     
     public ZippyNozzle(){
@@ -59,10 +66,45 @@ public class ZippyNozzle extends ReferenceNozzle {
     public void uncompMoveTo(Location location, double speed) throws Exception {
     	super.moveTo(location, speed);
     }
+    
+    //@Override
+    public Location xxgetLocation() {
+    	Location currentLocation = driver.getLocation(this);
+    	Location offset = this.appliedOffset;
+    	
+		// Create the point that represents the currently applied offsets (stored offset always for angle zero)
+		Point ao_p = new Point(appliedOffset.getX(), appliedOffset.getY());
+
+    	// Rotate and translate the point into the same rotational coordinate space as the current location
+		Point actual_p = Utils2D.rotatePoint(ao_p, currentLocation.getRotation());
+
+		offset = offset.derive(actual_p.getX(), actual_p.getY(), 0.0, 0.0);
+		
+		//invert offset so we can remove it and return uncompenstated coordinates
+    	Location inv_offset = offset.derive(offset.getX()*-1, offset.getY()*-1,0.0,0.0);
+
+    	Location uncompensated_location = currentLocation.subtract(inv_offset);
+    	
+    	return uncompensated_location; 
+    }
+
+	
+	
     @Override
     public void moveTo(Location location, double speed) throws Exception {
+    	Configuration configuration = Configuration.get();
+    	if(this.camera==null){
+//			heads = new ArrayList<Head>(configuration.getMachine().getHeads());
+//			cameras = new ArrayList<Camera>((ReferenceCamera)heads[0].getCameras());
+//			camera = cameras[0];
+	    	camera = (ZippyCamera) configuration.getMachine().getHead("H1").getCamera("C2");
+	    	
+    	}
+		stored_camera_offsets = camera.getHeadOffsets();
+    	
     	Location ntOffset; //nozzle tip offset from xml file
-    	Location deltaOffset = null; //new calculated offset
+    	Location deltaOffset = null; //new change in offset
+    	Location currentOffset = null; //new calculated offset
     	Location adjustedLocation; //compensated location
     	
     	for(NozzleTip nt : nozzletips){
@@ -96,8 +138,11 @@ public class ZippyNozzle extends ReferenceNozzle {
 		//calculate change in offset based on rotational change
 		//if no change in rotation and no change in xml this is zero
 		//this changes each time from data stored in xml, so will be updated each time this changes
-		//due to calibration, etc, however it won't change 
+		//due to calibration, etc
 		deltaOffset = location.derive(new_p.getX()-old_p.getX(), new_p.getY()-old_p.getY(), 0.0, null);
+		
+		//calculate actual (not the change in) new offset. this is used to calibrate camera head-offset
+		currentOffset = location.derive(new_p.getX(), new_p.getY(), 0.0, null);
 
 		//each time, subtract out change in offset
 		adjustedLocation = location.subtract(deltaOffset);
@@ -115,11 +160,19 @@ public class ZippyNozzle extends ReferenceNozzle {
 	        //above zero, so call super to move to corrected position
 	        super.moveTo(adjustedLocation, speed);
 	        appliedOffset = ntOffset;
+	        if(deltaOffset.getX()!=0.0 || deltaOffset.getY()!=0.0){ //only tweek camera head offset if there is change
+//				Location current_offsets = this.camera.getHeadOffsets();
+				this.camera.setCurrentOffset(currentOffset);
+//	        	this.camera.setHeadOffsets(stored_camera_offsets.subtract(currentOffset));
+//	        	configuration.setDirty(true);
+//	        	configuration.save();
+	        }
+	        
         } else {
-        	//call super to move to original position
+        	//call super to move to original positionoriginal_camera_offsets = camera.getHeadOffsets();
         	// and clear currently applied offset
         	super.moveTo(location, speed);
-        	appliedOffset=appliedOffset.derive(0.0, 0.0, 0.0, 0.0);
+        	this.clearAppliedOffset();
          }
 	       
     }
@@ -144,6 +197,10 @@ public class ZippyNozzle extends ReferenceNozzle {
 
     public void clearAppliedOffset(){
     	appliedOffset=appliedOffset.derive(0.0, 0.0, 0.0, 0.0);
+//    	this.camera.setHeadOffsets(original_camera_offsets);
+    }
+    public Location getAppliedOffset(){
+    	return appliedOffset;
     }
     
     @Override

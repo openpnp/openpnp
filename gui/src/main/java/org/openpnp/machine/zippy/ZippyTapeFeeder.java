@@ -91,6 +91,7 @@ public class ZippyTapeFeeder extends ReferenceTapeFeeder {
 
 		// flash the laser
 		actuator.actuate(true);
+		Thread.sleep(2000);
 		actuator.actuate(false);
 
 		//move back to safeZ
