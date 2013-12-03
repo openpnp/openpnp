@@ -67,29 +67,6 @@ public class ZippyNozzle extends ReferenceNozzle {
     	super.moveTo(location, speed);
     }
     
-    //@Override
-    public Location xxgetLocation() {
-    	Location currentLocation = driver.getLocation(this);
-    	Location offset = this.appliedOffset;
-    	
-		// Create the point that represents the currently applied offsets (stored offset always for angle zero)
-		Point ao_p = new Point(appliedOffset.getX(), appliedOffset.getY());
-
-    	// Rotate and translate the point into the same rotational coordinate space as the current location
-		Point actual_p = Utils2D.rotatePoint(ao_p, currentLocation.getRotation());
-
-		offset = offset.derive(actual_p.getX(), actual_p.getY(), 0.0, 0.0);
-		
-		//invert offset so we can remove it and return uncompenstated coordinates
-    	Location inv_offset = offset.derive(offset.getX()*-1, offset.getY()*-1,0.0,0.0);
-
-    	Location uncompensated_location = currentLocation.subtract(inv_offset);
-    	
-    	return uncompensated_location; 
-    }
-
-	
-	
     @Override
     public void moveTo(Location location, double speed) throws Exception {
     	Configuration configuration = Configuration.get();
