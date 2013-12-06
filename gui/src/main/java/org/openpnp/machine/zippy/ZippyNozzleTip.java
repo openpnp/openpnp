@@ -22,18 +22,20 @@ package org.openpnp.machine.zippy;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.Utils2D;
 import org.openpnp.machine.zippy.VisionManager;
 import org.openpnp.machine.zippy.VisionManager.Vision;
 
@@ -110,7 +112,31 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		logger.debug("{}.canHandle({}) => {}", new Object[]{getId(), part.getId(), result});
 		return result;
 	}
+    public Location calculateOffset(Location location){
+    	
+    	Location ntOffset = this.nozzleOffsets; //nozzle tip offset from xml file
+    	Location calculatedOffset = null; //new calculated offset
 
+
+    	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
+		Point nt_p = new Point(ntOffset.getX(), ntOffset.getY());
+
+    	// Rotate and translate the point into the same rotational coordinate space as the new location
+		// use point derived from offsets stored in xml
+		Point new_p = Utils2D.rotatePoint(nt_p, location.getRotation());
+
+		//calculate actual (not the change in) new offset. this is used to calibrate camera head-offset
+		calculatedOffset = location.derive(new_p.getX(), new_p.getY(), 0.0, null);
+
+		
+    	//log calculated offsets
+        logger.debug("{}.moveTo( stored_off {})", new Object[] { id, ntOffset } );
+        logger.debug("{}.moveTo( calculated_off {})", new Object[] { id, calculatedOffset } );
+//        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
+        
+        return calculatedOffset;
+
+    }
 	public Location calibrate(Nozzle nozzle) throws Exception {
 
 		//move to safe height

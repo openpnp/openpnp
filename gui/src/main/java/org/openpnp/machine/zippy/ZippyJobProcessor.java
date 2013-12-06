@@ -32,6 +32,7 @@ import org.openpnp.JobProcessor.JobState;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -135,15 +136,23 @@ public class ZippyJobProcessor extends JobProcessor {
 		Head head = machine.getHeads().get(0);
 		JobPlanner jobPlanner = machine.getJobPlanner();
 
+		//pre job stuff
 		state = JobState.Running;
 		fireJobStateChanged();
+		try {
+			head.home();
+			Nozzle nozzle = head.getNozzles().get(0);
+			Location l = new Location(LengthUnit.Millimeters, 5.0, 20.0, 1.0, 0.0);
+			nozzle.moveTo(l, 1.0);
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+			return;
+		}
 		
 		
-		
+		//pre-test for we have feeders, etc
 		preProcessJob(machine);
-		
-
-		
 		jobPlanner.setJob(job);
         
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
@@ -224,6 +233,21 @@ public class ZippyJobProcessor extends JobProcessor {
                 Location placementLocation = placementSolutionLocations.get(solution);
                 place(nozzle, bl, placementLocation, placement);
             }
+		    
+		}
+		//post job clean up
+		state = JobState.Stopped;
+		fireJobStateChanged();
+		//park
+		try {
+			head.home();
+			Nozzle nozzle = head.getNozzles().get(0);
+			Location l = new Location(LengthUnit.Millimeters, 0.0, 0.0, 8.5, 0.0);
+			nozzle.moveTo(l, 1.0);
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+			return;
 		}
 	}
 

@@ -24,6 +24,7 @@ package org.openpnp.machine.zippy;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.NozzleTip;
 
 public class ZippyCamera extends OpenCvCamera {
 
@@ -35,14 +36,14 @@ public class ZippyCamera extends OpenCvCamera {
     public void setCurrentOffset(Location currentOffset) {
         this.currentOffset = currentOffset;
     }
-   
+
+    
     @Override
-    public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("moveTo({}, {})", new Object[] { location, speed } );
-        Location l = currentOffset.derive(currentOffset.getX()*-1, currentOffset.getY()*-1, 0.0, 0.0);
-        driver.moveTo(this, location.subtract(l), speed);
+    public void moveToSafeZ(double speed) throws Exception {
+		logger.debug("{}.moveToSafeZ({})", new Object[]{getId(), speed});
+        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN, 10, Double.NaN);
+        driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
-
 
 }

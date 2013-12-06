@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
-    private final static Logger logger = LoggerFactory
+    protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceActuator.class);
     
     @Element
@@ -42,8 +42,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 	@Attribute
 	private int index;
 	
-    private ReferenceMachine machine;
-    private ReferenceDriver driver;
+    protected ReferenceMachine machine;
+    protected ReferenceDriver driver;
 
     public ReferenceActuator() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
