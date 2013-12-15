@@ -46,6 +46,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.prefs.Preferences;
 
 import javax.swing.JComponent;
@@ -53,6 +54,7 @@ import javax.swing.JPopupMenu;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
@@ -893,7 +895,40 @@ public class CameraView extends JComponent implements CameraListener {
 			int x = e.getX();
 			int y = e.getY();
 
-			if (selectionEnabled) {
+                        if (e.isControlDown()) {
+
+                            double offsetX = (scaledWidth / 2) - (x-imageX);
+                            double offsetY = (scaledHeight / 2) - (y-imageY);
+
+                            System.out.println("offsetX "+ offsetX + " offsetY "+ offsetY);
+
+//                            offsetX *= lastWidth/scaledWidth;
+//                            offsetY *= lastWidth/scaledWidth;lastHeight/scaledHeight;
+                            
+  //                          System.out.println("scaled offsetX "+ offsetX + " offsetY "+ offsetY);
+                            
+                                    // Invert the Y offset because images count top to bottom and the Y
+                                    // axis of the machine counts bottom to top.
+                                    offsetY *= -1;
+
+                            System.out.println("negated offsetX "+ offsetX + " offsetY "+ offsetY);
+
+                                    // And convert pixels to units
+//                                    Location unitsPerPixel = camera.getUnitsPerPixel();
+                                    offsetX *= scaledUnitsPerPixelX;
+                                    offsetY *= scaledUnitsPerPixelY;
+
+                                    
+                                    try {
+                                camera.moveTo(camera.getLocation().add(
+                                        new Location(camera.getLocation().getUnits(),
+                                        offsetX, offsetY, 0, 0)), 100);
+                            } catch (Exception ex) {
+                                java.util.logging.Logger.getLogger(CameraView.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                            
+                        } else if (selectionEnabled) {
 				// If we're not doing anything currently, we can start
 				// a new operation.
 				if (selectionMode == null) {
@@ -941,7 +976,7 @@ public class CameraView extends JComponent implements CameraListener {
 		public void mouseMoved(MouseEvent e) {
 			updateCursor();
 		}
-
+                
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (selectionEnabled) {

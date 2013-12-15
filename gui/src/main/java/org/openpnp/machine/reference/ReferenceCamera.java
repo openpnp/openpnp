@@ -73,6 +73,6 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public Location getLocation() {
-        return driver.getLocation(this);
+        return driver.getLocation(this).add(headOffsets);
     }
 }
