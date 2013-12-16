@@ -46,16 +46,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.prefs.Preferences;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
 import org.openpnp.CameraListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -885,79 +887,85 @@ public class CameraView extends JComponent implements CameraListener {
 			}
 		}
 		
-		@Override
-		public void mousePressed(MouseEvent e) {
-			if (e.isPopupTrigger()) {
-				popupMenu.show(e.getComponent(), e.getX(), e.getY());
-				return;
-			}
-			
-			int x = e.getX();
-			int y = e.getY();
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                return;
+            }
 
-                        if (e.isControlDown()) {
+            int x = e.getX();
+            int y = e.getY();
 
-                            double offsetX = (scaledWidth / 2) - (x-imageX);
-                            double offsetY = (scaledHeight / 2) - (y-imageY);
+            if (e.isShiftDown()) {
+                // Find the difference in X and Y from the center of the image
+                // to the mouse click.
+                double offsetX = (scaledWidth / 2) - (x - imageX);
+                double offsetY = (scaledHeight / 2) - (y - imageY);
 
-                            System.out.println("offsetX "+ offsetX + " offsetY "+ offsetY);
+                // Invert the X so that the offsets represent a bottom left to
+                // top right coordinate system.
+                offsetX = -offsetX;
 
-//                            offsetX *= lastWidth/scaledWidth;
-//                            offsetY *= lastWidth/scaledWidth;lastHeight/scaledHeight;
-                            
-  //                          System.out.println("scaled offsetX "+ offsetX + " offsetY "+ offsetY);
-                            
-                                    // Invert the Y offset because images count top to bottom and the Y
-                                    // axis of the machine counts bottom to top.
-                                    offsetY *= -1;
+                // Scale the offsets by the units per pixel for the camera.
+                offsetX *= scaledUnitsPerPixelX;
+                offsetY *= scaledUnitsPerPixelY;
 
-                            System.out.println("negated offsetX "+ offsetX + " offsetY "+ offsetY);
+                // The offsets now represent the distance to move the camera
+                // in the Camera's units per pixel's units.
 
-                                    // And convert pixels to units
-//                                    Location unitsPerPixel = camera.getUnitsPerPixel();
-                                    offsetX *= scaledUnitsPerPixelX;
-                                    offsetY *= scaledUnitsPerPixelY;
-
-                                    
-                                    try {
-                                camera.moveTo(camera.getLocation().add(
-                                        new Location(camera.getLocation().getUnits(),
-                                        offsetX, offsetY, 0, 0)), 100);
-                            } catch (Exception ex) {
-                                java.util.logging.Logger.getLogger(CameraView.class.getName()).log(Level.SEVERE, null, ex);
+                // Create a location in the Camera's units per pixel's units
+                // and with the values of the offsets.
+                Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                        offsetY, 0.0, 0.0);
+                // Add the offsets to the Camera's position.
+                final Location location = camera.getLocation().add(offsets);
+                // And move there.
+                MainFrame.machineControlsPanel
+                        .submitMachineTask(new Runnable() {
+                            public void run() {
+                                try {
+                                    MovableUtils.moveToLocationAtSafeZ(camera,
+                                            location, 1.0);
+                                }
+                                catch (Exception e) {
+                                    MessageBoxes.errorBox(
+                                            getTopLevelAncestor(),
+                                            "Movement Error", e);
+                                }
                             }
+                        });
+            }
+            else if (selectionEnabled) {
+                // If we're not doing anything currently, we can start
+                // a new operation.
+                if (selectionMode == null) {
+                    // See if there is a handle under the cursor.
+                    HandlePosition handlePosition = getSelectionHandleAtPosition(
+                            x, y);
+                    if (handlePosition != null) {
+                        selectionMode = SelectionMode.Resizing;
+                        selectionActiveHandle = handlePosition;
+                    }
+                    // If not, perhaps they want to move the rectangle
+                    else if (selection != null
+                            && selectionScaled.contains(x, y)) {
 
-                            
-                        } else if (selectionEnabled) {
-				// If we're not doing anything currently, we can start
-				// a new operation.
-				if (selectionMode == null) {
-					// See if there is a handle under the cursor.
-					HandlePosition handlePosition = getSelectionHandleAtPosition(
-							x, y);
-					if (handlePosition != null) {
-						selectionMode = SelectionMode.Resizing;
-						selectionActiveHandle = handlePosition;
-					}
-					// If not, perhaps they want to move the rectangle
-					else if (selection != null
-							&& selectionScaled.contains(x, y)) {
-
-						selectionMode = SelectionMode.Moving;
-						// Store the distance between the rectangle's origin and
-						// where they started moving it from.
-						selectionStartX = x - selectionScaled.x;
-						selectionStartY = y - selectionScaled.y;
-					}
-					// If not those, it's time to create a rectangle
-					else {
-						selectionMode = SelectionMode.Creating;
-						selectionStartX = x;
-						selectionStartY = y;
-					}
-				}
-			}
-		}
+                        selectionMode = SelectionMode.Moving;
+                        // Store the distance between the rectangle's origin and
+                        // where they started moving it from.
+                        selectionStartX = x - selectionScaled.x;
+                        selectionStartY = y - selectionScaled.y;
+                    }
+                    // If not those, it's time to create a rectangle
+                    else {
+                        selectionMode = SelectionMode.Creating;
+                        selectionStartX = x;
+                        selectionStartY = y;
+                    }
+                }
+            }
+        }
 
 		@Override
 		public void mouseReleased(MouseEvent e) {
