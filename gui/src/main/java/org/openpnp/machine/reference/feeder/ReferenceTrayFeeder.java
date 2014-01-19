@@ -89,13 +89,14 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
-        pickLocation = offsets
-                .multiply(partX, partY, 0.0, 0.0)
-                .add(location);
+//        pickLocation = offsets
+//        		.multiply(partX, partY, 0.0, 0.0)
+//                .add(location);
+        pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
 
         logger.debug(String.format(
-                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f", feedCount,
-                partX, partY, pickLocation.getX(), pickLocation.getY()));
+                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
+                partX, partY, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
         
         feedCount++;
 	}

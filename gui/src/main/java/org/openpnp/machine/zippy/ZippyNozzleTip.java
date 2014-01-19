@@ -295,7 +295,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		//unload currently loaded nozzle tip
 //		((ZippyNozzleTip) nozzle.getNozzleTip()).unload(nozzle);
 		//move to safe height
-		nozzle.moveToSafeZ(1.1);
+		nozzle.moveToSafeZ(1);
 		//create local variables for movement
 		Location changerStartLocation = this.changerStartLocation;
 		Location changerMidLocation = this.changerMidLocation;
@@ -303,7 +303,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		
 		//perform load operation
 		nozzle.uncompMoveTo(changerStartLocation, 1.0);
-		nozzle.uncompMoveTo(changerMidLocation, .5);
+		nozzle.uncompMoveTo(changerMidLocation, .25);
 		nozzle.uncompMoveTo(changerEndLocation, 1.0);
 		
 		nozzle.setNozzleTip(this);
@@ -317,7 +317,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 	}
 	public void unload(ZippyNozzle nozzle) throws Exception {
 		//move to safe height
-		nozzle.moveToSafeZ(1.2);
+		nozzle.moveToSafeZ(1);
 		
 		//create local variables for movement
 		Location changerStartLocation = this.changerStartLocation;
@@ -327,7 +327,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 		//perform unload operation
 		nozzle.uncompMoveTo(changerEndLocation, 1.0);
 		nozzle.uncompMoveTo(changerMidLocation, 1.0);
-		nozzle.uncompMoveTo(changerStartLocation, .5);
+		nozzle.uncompMoveTo(changerStartLocation, .25);
 
 //		nozzle.setNozzleTip(null);
 		this.loaded=false;

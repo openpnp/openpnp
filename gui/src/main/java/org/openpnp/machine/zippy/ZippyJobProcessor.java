@@ -205,10 +205,10 @@ public class ZippyJobProcessor extends JobProcessor {
 				        (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
 
 				// Update the placementLocation with the proper Z value. This is
-				// the distance to the top of the board plus the height of 
+				// the distance to the top of the board minus the height of 
 				// the part.
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
-				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
+				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() - partHeight, null);
 
 				if( !nozzle.getNozzleTip().getId().equals(nozzletip.getId())){
 					try {

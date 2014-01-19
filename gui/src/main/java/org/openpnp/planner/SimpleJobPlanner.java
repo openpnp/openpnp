@@ -40,6 +40,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 solutions.add(new PlacementSolution(placement, boardLocation, head, null, null, null));
             }
         }
+        
         logger.debug("Planned {} solutions", solutions.size());
     }
 
