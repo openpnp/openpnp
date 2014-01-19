@@ -29,11 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReferenceHead extends AbstractHead {
-    private final static Logger logger = LoggerFactory
+    protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceHead.class);
 
-    private ReferenceMachine machine;
-    private ReferenceDriver driver;
+    protected ReferenceMachine machine;
+    protected ReferenceDriver driver;
 
     public ReferenceHead() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {

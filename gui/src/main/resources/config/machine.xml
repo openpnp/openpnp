@@ -40,5 +40,6 @@
         </head>
       </heads>
       <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
+      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" />
    </machine>
 </openpnp-machine>

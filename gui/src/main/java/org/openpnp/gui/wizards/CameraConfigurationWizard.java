@@ -58,6 +58,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	private JPanel panelUpp;
 	private JButton btnMeasure;
 	private JButton btnCancelMeasure;
+    private JLabel lblUppInstructions;
 	
 	public CameraConfigurationWizard(Camera camera) {
 		this.camera = camera;
@@ -99,13 +100,13 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		btnMeasure = new JButton("Measure");
 		btnMeasure.setAction(measureAction);
 		panelUpp.add(btnMeasure, "6, 4");
-		
+
 		btnCancelMeasure = new JButton("Cancel");
 		btnCancelMeasure.setAction(cancelMeasureAction);
 		panelUpp.add(btnCancelMeasure, "8, 4");
 		
-		lblNewLabel = new JLabel("<html>\n<ol>\n<li>Place an object that is 1 unit by 1 unit square onto the table. Graphing paper is a good, easy choice for this.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Use the camera selection rectangle to measure the object and press the Confirm button.\n</ol>\n</html>");
-		panelUpp.add(lblNewLabel, "2, 6, 6, 1, default, fill");
+		lblUppInstructions = new JLabel("<html>\n<ol>\n<li>Place an object that is 1 unit by 1 unit square onto the table. Graphing paper is a good, easy choice for this.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Use the camera selection rectangle to measure the object and press the Confirm button.\n</ol>\n</html>");
+		panelUpp.add(lblUppInstructions, "2, 6, 6, 1, default, fill");
 	}
 
 	@Override
@@ -116,7 +117,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
-		
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
 	}
@@ -163,5 +163,4 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 			cameraView.setSelectionEnabled(false);
 		}
 	};
-	private JLabel lblNewLabel;
 }

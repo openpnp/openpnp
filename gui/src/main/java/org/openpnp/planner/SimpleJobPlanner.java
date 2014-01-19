@@ -26,7 +26,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     @Attribute(required = false)
     private String placeHolder;
     
-    private Set<PlacementSolution> solutions = new LinkedHashSet<PlacementSolution>();
+    protected Set<PlacementSolution> solutions = new LinkedHashSet<PlacementSolution>();
     
     @Override
     public void setJob(Job job) {
@@ -65,7 +65,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         return results.size() > 0 ? results : null;
     }
     
-    private static Feeder getFeederSolution(Machine machine, Nozzle nozzle, Part part) {
+    protected static Feeder getFeederSolution(Machine machine, Nozzle nozzle, Part part) {
         // Get a list of Feeders that can source the part
         List<Feeder> feeders = new ArrayList<Feeder>();
         for (Feeder feeder : machine.getFeeders()) {

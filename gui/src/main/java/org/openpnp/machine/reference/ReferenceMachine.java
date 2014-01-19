@@ -47,7 +47,7 @@ public class ReferenceMachine extends AbstractMachine {
 	
 	private boolean enabled;
 	
-	ReferenceDriver getDriver() {
+	public ReferenceDriver getDriver() {
 		return driver;
 	}
 

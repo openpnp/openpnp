@@ -24,46 +24,55 @@ package org.openpnp.model;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-
 public class Package implements Identifiable {
-	@Attribute
-	private String id;
-	@Attribute(required=false)
-	private String name;
-	@Element(required=false)
-	private Outline outline;
-	
-	private Package() {
-		this(null);
-	}
-	
-	public  Package(String id) { 
-		this.id = id;
-	}
-	
-	@Override
-	public String getId() {
-		return id;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
+    @Attribute
+    private String id;
+    @Attribute(required = false)
+    private String name;
+    @Element(required = false)
+    private Outline outline;
+    @Element(required = false)
+    private String nozzletip;
 
-	public Outline getOutline() {
-		return outline;
-	}
+    private Package() {
+        this(null);
+    }
 
-	public void setOutline(Outline outline) {
-		this.outline = outline;
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("id %s, outline (%s)", id, outline);
-	}
+    public Package(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNozzleTipId() {
+        return nozzletip;
+    }
+
+    public void setNozzleTip(String nozzletip) {
+        this.nozzletip = nozzletip;
+    }
+
+    public Outline getOutline() {
+        return outline;
+    }
+
+    public void setOutline(Outline outline) {
+        this.outline = outline;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("id %s, outline (%s)", id, outline);
+    }
 }

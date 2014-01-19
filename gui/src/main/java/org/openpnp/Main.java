@@ -86,11 +86,10 @@ public class Main {
 		
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();
-		final JobProcessor jobProcessor = new JobProcessor(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MainFrame frame = new MainFrame(configuration, jobProcessor);
+					MainFrame frame = new MainFrame(configuration);
 					frame.setVisible(true);
 				}
 				catch (Exception e) {

@@ -63,7 +63,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.JobProcessor;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.support.HeadCellValue;
@@ -102,6 +102,7 @@ public class MainFrame extends JFrame {
 	// for now.
 	public static MachineControlsPanel machineControlsPanel;
 	public static PartsPanel partsPanel;
+	public static PackagesPanel packagesPanel;
 	public static FeedersPanel feedersPanel;
 	public static JobPanel jobPanel;
 	public static MachinePanel machinePanel;
@@ -109,6 +110,7 @@ public class MainFrame extends JFrame {
 	public static BoardsPanel boardsPanel;
 	public static HeadsPanel headsPanel;
 	public static ActuatorsPanel actuatorsPanel;
+	public static NozzleTipsPanel nozzletipPanel;
 	public static CameraPanel cameraPanel;
 
 	private JPanel contentPane;
@@ -122,7 +124,7 @@ public class MainFrame extends JFrame {
 	private ActionListener instructionsCancelActionListener;
 	private ActionListener instructionsProceedActionListener;
 
-	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
+	public MainFrame(Configuration configuration) {
 		this.configuration = configuration;
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);
@@ -156,14 +158,15 @@ public class MainFrame extends JFrame {
 		machineControlsPanel = new MachineControlsPanel(configuration, this,
 				cameraPanel);
 		machinePanel = new MachinePanel();
-		jobPanel = new JobPanel(configuration, jobProcessor, this,
-				machineControlsPanel);
+		jobPanel = new JobPanel(configuration, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
+		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration);
 		camerasPanel = new CamerasPanel(this, configuration);
 		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(configuration);
+		nozzletipPanel = new NozzleTipsPanel(configuration);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -417,11 +420,13 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
+		panelBottom.addTab("Packages", null, packagesPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
+		panelBottom.addTab("NozzleTips", null, nozzletipPanel, null);
 
 		addComponentListener(componentListener);
 
@@ -449,7 +454,13 @@ public class MainFrame extends JFrame {
             }
         }
 
-		jobProcessor.addListener(jobProcessorListener);
+		configuration.addListener(new ConfigurationListener.Adapter() {
+		    @Override
+            public void configurationComplete(Configuration configuration)
+                    throws Exception {
+		        configuration.getMachine().getJobProcessor().addListener(jobProcessorListener);
+            }
+		});
 	}
 	
 	public void showInstructions(

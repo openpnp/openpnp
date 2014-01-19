@@ -55,7 +55,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public Location getHeadOffsets() {
         return headOffsets;
     }
-    
+    public void setHeadOffsets(Location headOffsets) {
+        this.headOffsets = headOffsets;
+    }
+   
     @Override
     public void setHeadOffsets(Location headOffsets) {
         this.headOffsets = headOffsets;
