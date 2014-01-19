@@ -439,9 +439,12 @@ public class MainFrame extends JFrame {
 					.errorBox(
 							this,
 							"Configuration Load Error",
-							"There was a problem loading the configuration. The reason was:\n\n"
-									+ e.getMessage()
-									+ "\n\nPlease check your configuration files and try again. The program will now exit.");
+							"There was a problem loading the configuration. The reason was:<br/><br/>"
+									+ e.getMessage() + "<br/><br/>"
+									+ "Please check your configuration files and try again. They are located at: " 
+									+ configuration.getConfigurationDirectory().getAbsolutePath() + "<br/><br/>"
+									+ "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>"
+									+ "OpenPnP will now exit.");
 			System.exit(1);
 		}
 

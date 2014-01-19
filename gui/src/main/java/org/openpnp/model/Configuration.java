@@ -93,6 +93,10 @@ public class Configuration extends AbstractModelObject {
 		this.prefs = Preferences.userNodeForPackage(Configuration.class);
 	}
 	
+	public File getConfigurationDirectory() {
+	    return configurationDirectory;
+	}
+	
 	public LengthUnit getSystemUnits() {
 		return LengthUnit.valueOf(prefs.get(PREF_UNITS, PREF_UNITS_DEF));
 	}
