@@ -23,6 +23,7 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.base.AbstractHead;
 import org.slf4j.Logger;
@@ -55,8 +56,7 @@ public class ReferenceHead extends AbstractHead {
 
 	@Override
     public Wizard getConfigurationWizard() {
-//        return new ReferenceHeadConfigurationWizard(this);
-	    return null;
+        return new ReferenceHeadConfigurationWizard(this);
     }
 
 	@Override
