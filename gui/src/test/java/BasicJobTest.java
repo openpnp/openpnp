@@ -30,16 +30,24 @@ import org.openpnp.spi.JobProcessor.JobState;
 import org.openpnp.spi.JobProcessor.PickRetryAction;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class BasicJobTest {
+    private final static Logger logger = LoggerFactory
+            .getLogger(TestDriver.class);
+
     /**
      * Creates a basic job in memory and attempts to run it. The Driver is
      * monitored to make sure it performs a pre-defined set of expected moves.
      * This test is intended to test the primary motions and operation of the
      * entire system, including feeding, picking, placing and basic job
      * processing.
+     * 
+     * TODO: Don't ignore additional movements after the expected movements
+     * complete. This should cause the test to fail and it does not currently.
      * 
      * @throws Exception
      */
@@ -65,22 +73,27 @@ public class BasicJobTest {
         jobProcessor.setDelegate(new BasicJobTestJobProcessorDelegate());
 
         Job job = createSimpleJob();
-        
+
         Head h1 = machine.getHead("H1");
-        Nozzle n1 = h1.getNozzle("N1"); 
-        Nozzle n2 = h1.getNozzle("N2"); 
+        Nozzle n1 = h1.getNozzle("N1");
+        Nozzle n2 = h1.getNozzle("N2");
 
-        delegate.expectMove(n1, new Location(LengthUnit.Millimeters, -10, 0,
-                0, 0), 1.0);
+        delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0), 1.0);
         delegate.expectPick(n1);
-        delegate.expectMove(n1, new Location(LengthUnit.Millimeters, 0, 10,
-                0, 45), 1.0);
-        delegate.expectMove(n1, new Location(LengthUnit.Millimeters, 0, 10,
-                0.825500, 45), 1.0);
+        
+        delegate.expectMove("Move N2 to F1", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0), 1.0);
+        delegate.expectPick(n2);
+        
+        delegate.expectMove("Move N1 to R1, Safe-Z", n1, new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
+        delegate.expectMove("Move N1 to R1, Z", n1, new Location(LengthUnit.Millimeters, 0, 10, 0.825500, 45), 1.0);
         delegate.expectPlace(n1);
-        delegate.expectMove(n1, new Location(LengthUnit.Millimeters, 0, 10,
-                0, 45), 1.0);
-
+        delegate.expectMove("Move N1 to R1, Safe-Z", n1, new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
+        
+        delegate.expectMove("Move N2 to R2, Safe-Z", n2, new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+        delegate.expectMove("Move N2 to R2, Z", n2, new Location(LengthUnit.Millimeters, 00, 20, 0.825500, 90), 1.0);
+        delegate.expectPlace(n2);
+        delegate.expectMove("Move N2 to R2, Safe-Z", n2, new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+        
         jobProcessor.load(job);
         machine.setEnabled(true);
         synchronized (notifier) {
@@ -99,12 +112,10 @@ public class BasicJobTest {
         board.setName("test");
         board.setOutline(new PolygonOutline());
 
-        Placement placement = new Placement("R1");
-        placement.setPart(Configuration.get().getPart("R-0805-10K"));
-        placement.setLocation(new Location(LengthUnit.Millimeters, 10, 10, 0,
-                45));
-        placement.setSide(Side.Top);
-        board.addPlacement(placement);
+        board.addPlacement(createPlacement("R1", "R-0805-10K", 10, 10, 0, 45,
+                Side.Top));
+        board.addPlacement(createPlacement("R2", "R-0805-10K", 20, 20, 0, 90,
+                Side.Top));
 
         BoardLocation boardLocation = new BoardLocation(board);
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0,
@@ -114,6 +125,16 @@ public class BasicJobTest {
         job.addBoardLocation(boardLocation);
 
         return job;
+    }
+
+    public static Placement createPlacement(String id, String partId, double x,
+            double y, double z, double rotation, Side side) {
+        Placement placement = new Placement(id);
+        placement.setPart(Configuration.get().getPart(partId));
+        placement.setLocation(new Location(LengthUnit.Millimeters, x, y, z,
+                rotation));
+        placement.setSide(side);
+        return placement;
     }
 
     public static class BasicJobTestJobProcessorDelegate implements
@@ -158,6 +179,7 @@ public class BasicJobTest {
         @Override
         public void partProcessingStarted(BoardLocation board,
                 Placement placement) {
+            logger.info("Start " + placement.getId());
         }
 
         @Override
@@ -171,6 +193,7 @@ public class BasicJobTest {
         @Override
         public void partProcessingCompleted(BoardLocation board,
                 Placement placement) {
+            logger.info("Finish " + placement.getId());
         }
 
         @Override
@@ -180,14 +203,13 @@ public class BasicJobTest {
 
     /**
      * TODO: Allow passing of null for the expect methods to ignore a particular
-     * field. 
+     * field.
      */
     public static class BasicJobTestDriverDelegate extends TestDriverDelegate {
         private Queue<ExpectedOp> expectedOps = new LinkedList<ExpectedOp>();
 
-        public void expectMove(HeadMountable hm, Location location,
-                double speed) {
-            ExpectedMove o = new ExpectedMove(hm, location, speed);
+        public void expectMove(String description, HeadMountable hm, Location location, double speed) {
+            ExpectedMove o = new ExpectedMove(description, hm, location, speed);
             expectedOps.add(o);
         }
 
@@ -218,7 +240,7 @@ public class BasicJobTest {
                 }
 
                 ExpectedMove move = (ExpectedMove) op;
-                
+
                 if (!move.location.equals(location) || hm != move.headMountable) {
                     throw new Exception("Unexpected Move " + location
                             + ". Expected " + op);
@@ -237,9 +259,9 @@ public class BasicJobTest {
                     throw new Exception("Unexpected Pick " + nozzle
                             + ". Expected " + op);
                 }
-                
+
                 ExpectedPick pick = (ExpectedPick) op;
-                
+
                 if (pick.nozzle != nozzle) {
                     throw new Exception("Unexpected Pick " + nozzle
                             + ". Expected " + op);
@@ -258,9 +280,9 @@ public class BasicJobTest {
                     throw new Exception("Unexpected Place " + nozzle
                             + ". Expected " + op);
                 }
-                
+
                 ExpectedPlace place = (ExpectedPlace) op;
-                
+
                 if (place.nozzle != nozzle) {
                     throw new Exception("Unexpected Place " + nozzle
                             + ". Expected " + op);
@@ -287,11 +309,11 @@ public class BasicJobTest {
 
         class ExpectedPick extends ExpectedOp {
             public Nozzle nozzle;
-            
+
             public ExpectedPick(Nozzle nozzle) {
                 this.nozzle = nozzle;
             }
-            
+
             @Override
             public String toString() {
                 return "Pick " + nozzle;
@@ -300,11 +322,11 @@ public class BasicJobTest {
 
         class ExpectedPlace extends ExpectedOp {
             public Nozzle nozzle;
-            
+
             public ExpectedPlace(Nozzle nozzle) {
                 this.nozzle = nozzle;
             }
-            
+
             @Override
             public String toString() {
                 return "Place " + nozzle;
@@ -322,17 +344,19 @@ public class BasicJobTest {
             public HeadMountable headMountable;
             public Location location;
             public double speed;
+            public String description;
 
-            public ExpectedMove(HeadMountable headMountable, Location location,
+            public ExpectedMove(String description, HeadMountable headMountable, Location location,
                     double speed) {
                 this.headMountable = headMountable;
                 this.location = location;
                 this.speed = speed;
+                this.description = description;
             }
 
             @Override
             public String toString() {
-                return "Move " + headMountable + " " + location.toString();
+                return "Move (" + description + ") "+ headMountable + " " + location.toString();
             }
         }
     }
