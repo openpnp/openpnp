@@ -101,7 +101,8 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	@Override
     public Location getLocation(ReferenceHeadMountable hm) {
-	    return new Location(LengthUnit.Millimeters, x, y, z, c);
+        return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm
+                .getHeadOffsets());
     }
 
     @Override
@@ -153,10 +154,18 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			sendCommand("G1 " + sb.toString());
 			dwell();
 		}
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.c = c;
+        if (!Double.isNaN(x)) {
+            this.x = x;
+        }
+        if (!Double.isNaN(y)) {
+            this.y = y;
+        }
+        if (!Double.isNaN(z)) {
+            this.z = z;
+        }
+        if (!Double.isNaN(c)) {
+            this.c = c;
+        }
 	}
 	
 	@Override
