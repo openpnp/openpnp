@@ -206,11 +206,21 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		}
 	}
 	
+	/**
+	 * Renders a single frame for the camera based on the camera's position
+	 * over the entire array. First renders a tilesWide * tilesHigh hidden
+	 * buffer and then copies a templateImage.width * templateImage.height
+	 * chunk from that buffer based on the position of the camera within
+	 * the buffer.
+	 * @return
+	 */
 	private BufferedImage renderFrame() {
 		if (buffer == null) {
 			return null;
 		}
 		if (head == null) {
+		    // TODO: Render an error image saying that it must be attached
+		    // to a head.
 			return null;
 		}
 		synchronized (buffer) {
@@ -219,7 +229,14 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 			Location l = getLocation().convertToUnits(LengthUnit.Millimeters);
 			double headX = l.getX();
 			double headY = l.getY();
+			
+			/*
+			 * If the head position has not changed we don't need to re-render.
+			 * TODO: Doesn't that mean we can skip everything below
+			 * this block aside from on the first render, too?
+			 */
 			if (lastX != headX || lastY != headY) {
+			    
 				// Find the closest tile to the head's current position.
 				Tile closestTile = getClosestTile(headX, headY);
 				logger.debug("closestTile {}", closestTile);
