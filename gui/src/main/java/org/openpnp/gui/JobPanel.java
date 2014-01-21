@@ -24,6 +24,7 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -480,51 +481,33 @@ public class JobPanel extends JPanel {
 	}
 	
 	public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
-	    
+	      if (getSelectedBoardLocation() == null) {
+              MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", "Please select a board in the Jobs tab to import into.");
+	          return;
+	      }
+	      
+	      BoardImporter boardImporter;
+          try {
+              boardImporter = boardImporterClass.newInstance();
+          }
+          catch (Exception e) {
+              MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+              return;
+          }
+          
+	      try {
+	          Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
+	          Board existingBoard = getSelectedBoardLocation().getBoard();
+	          for (Placement placement : importedBoard.getPlacements()) {
+	              existingBoard.addPlacement(placement);
+	          }
+	          placementsTableModel.fireTableDataChanged();
+	      }
+	      catch (Exception e) {
+	          MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+	      }
 	}
-//  public final Action importMountsmdUlpAction = new AbstractAction("EAGLE mountsmd.ulp") {
-//  @Override
-//  public void actionPerformed(ActionEvent arg0) {
-//      if (getSelectedBoardLocation() == null) {
-//          return;
-//      }
-//      BoardImporter importer = new EagleMountsmdUlpImporter(JOptionPane.getFrameForComponent(JobPanel.this));
-//      try {
-//          Board importedBoard = importer.importBoard();
-//          Board existingBoard = getSelectedBoardLocation().getBoard();
-//          for (Placement placement : importedBoard.getPlacements()) {
-//              existingBoard.addPlacement(placement);
-//          }
-//          placementsTableModel.fireTableDataChanged();
-//      }
-//      catch (Exception e) {
-//          MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
-//      }
-//  }
-//};
-//
-//public final Action importMountsmdPosAction = new AbstractAction("KiCAD mountsmd.pos") {
-//  @Override
-//  public void actionPerformed(ActionEvent arg0) {
-//      if (getSelectedBoardLocation() == null) {
-//          return;
-//      }
-//      BoardImporter importer = new KicadPosImporter(JOptionPane.getFrameForComponent(JobPanel.this));
-//      try {
-//          Board importedBoard = importer.importBoard();
-//          Board existingBoard = getSelectedBoardLocation().getBoard();
-//          for (Placement placement : importedBoard.getPlacements()) {
-//              existingBoard.addPlacement(placement);
-//          }
-//          placementsTableModel.fireTableDataChanged();
-//      }
-//      catch (Exception e) {
-//          MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
-//      }
-//  }
-//};
-
-
+	
 	public final Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
