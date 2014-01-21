@@ -83,7 +83,36 @@ There are three primary configuration files. They are:
 2. `parts.xml`: A portable parts database. As you define parts (components) in OpenPnP they are stored here.
 3. `packages.xml`: A portable packages database. Component package information including shape and dimensions are stored here.
 
-## Custom Implementations
+## Custom Implementations and Integration
+
+If you are interested in having OpenPnP work with a machine that is not currently supported
+you will need an OpenPnP driver that can talk to your hardware and you will need to
+configure it in the `machine.xml`.
+
+To get started, look at the documentation in the package below to see what drivers are
+available and determine if one will meet your needs.
+
+http://openpnp.org/doc/javadoc/org/openpnp/machine/reference/driver/package-summary.html
+
+If none of those will work for your machine, you will need to write one. Once
+you have a driver, you can specify it's classname and configuration parameters
+in `machine.xml`.
+
+See the Development section for more information if you decide you need to write code.
+
+## Development
+
+For more information about developing OpenPnP, especially regarding contributing, please see
+https://github.com/openpnp/openpnp/wiki/Developers-Guide.
+
 ## Debugging
 
 # Getting Help
+
+## Discussion Group
+
+There is an active discussion group at http://groups.google.com/group/openpnp. This will typically be the best place to get help.
+
+## IRC
+
+We also have an IRC channel on Freenode IRC at #openpnp. If you don't have an IRC client, you can use [this web based one](http://webchat.freenode.net/?channels=openpnp).
