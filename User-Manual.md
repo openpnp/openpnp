@@ -68,6 +68,21 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 
 # Advanced Topics
 ## Configuration Files
+
+Configuration files are located in your home directory, under a subdirectory called `.openpnp`.
+
+* On Mac this will typically be `/Users/[username]/.openpnp`.
+* On Windows 2000, XP and 2003 it will be `C:\Documents and Settings\[username]\.openpnp`.
+* On Windows Vista and above it's `C:\Users\[username]\.openpnp`.
+
+Configuration files are in XML format and can be edited by hand in a text editor. You should shutdown OpenPnP before editing files by hand as OpenPnP will rewrite the configuration files on exit.
+
+There are three primary configuration files. They are:
+
+1. `machine.xml`: Contains the primary configuration for the entire system, including information about the machine, cameras, feeders, nozzles, etc.
+2. `parts.xml`: A portable parts database. As you define parts (components) in OpenPnP they are stored here.
+3. `packages.xml`: A portable packages database. Component package information including shape and dimensions are stored here.
+
 ## Custom Implementations
 ## Debugging
 
