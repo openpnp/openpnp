@@ -63,12 +63,10 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.JobProcessor;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.KicadPosImporter;
-import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -105,6 +103,7 @@ public class MainFrame extends JFrame {
 	// for now.
 	public static MachineControlsPanel machineControlsPanel;
 	public static PartsPanel partsPanel;
+	public static PackagesPanel packagesPanel;
 	public static FeedersPanel feedersPanel;
 	public static JobPanel jobPanel;
 	public static MachinePanel machinePanel;
@@ -112,6 +111,7 @@ public class MainFrame extends JFrame {
 	public static BoardsPanel boardsPanel;
 	public static HeadsPanel headsPanel;
 	public static ActuatorsPanel actuatorsPanel;
+	public static NozzleTipsPanel nozzletipPanel;
 	public static CameraPanel cameraPanel;
 
 	private JPanel contentPane;
@@ -127,7 +127,7 @@ public class MainFrame extends JFrame {
 	
 	private JMenu mnImport;
 
-	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
+	public MainFrame(Configuration configuration) {
 		this.configuration = configuration;
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);
@@ -161,14 +161,15 @@ public class MainFrame extends JFrame {
 		machineControlsPanel = new MachineControlsPanel(configuration, this,
 				cameraPanel);
 		machinePanel = new MachinePanel();
-		jobPanel = new JobPanel(configuration, jobProcessor, this,
-				machineControlsPanel);
+		jobPanel = new JobPanel(configuration, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
+		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration);
 		camerasPanel = new CamerasPanel(this, configuration);
 		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(configuration);
+		nozzletipPanel = new NozzleTipsPanel(configuration);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -420,12 +421,14 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Job", null, jobPanel, null);
 		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
+		panelBottom.addTab("Packages", null, packagesPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
-		
+		panelBottom.addTab("NozzleTips", null, nozzletipPanel, null);
+
 		registerBoardImporters();
 
 		addComponentListener(componentListener);
@@ -439,9 +442,12 @@ public class MainFrame extends JFrame {
 					.errorBox(
 							this,
 							"Configuration Load Error",
-							"There was a problem loading the configuration. The reason was:\n\n"
-									+ e.getMessage()
-									+ "\n\nPlease check your configuration files and try again. The program will now exit.");
+							"There was a problem loading the configuration. The reason was:<br/><br/>"
+									+ e.getMessage() + "<br/><br/>"
+									+ "Please check your configuration files and try again. They are located at: " 
+									+ configuration.getConfigurationDirectory().getAbsolutePath() + "<br/><br/>"
+									+ "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>"
+									+ "OpenPnP will now exit.");
 			System.exit(1);
 		}
 
@@ -454,7 +460,13 @@ public class MainFrame extends JFrame {
             }
         }
 
-		jobProcessor.addListener(jobProcessorListener);
+		configuration.addListener(new ConfigurationListener.Adapter() {
+		    @Override
+            public void configurationComplete(Configuration configuration)
+                    throws Exception {
+		        configuration.getMachine().getJobProcessor().addListener(jobProcessorListener);
+            }
+		});
 	}
 	
 	private void registerBoardImporters() {

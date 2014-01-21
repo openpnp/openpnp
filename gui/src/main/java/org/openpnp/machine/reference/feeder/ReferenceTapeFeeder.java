@@ -75,20 +75,19 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-	
-	@Element
-	private Location feedStartLocation = new Location(LengthUnit.Millimeters);
-	@Element
-	private Location feedEndLocation = new Location(LengthUnit.Millimeters);
-	@Element(required=false)
-	private double feedSpeed = 1.0;
-	@Attribute(required=false)
-	private String actuatorId; 
-	@Element(required=false)
-	private Vision vision = new Vision();
-	
-	private Location pickLocation;
-	
+
+    @Element
+    protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
+    @Element
+    protected Location feedEndLocation = new Location(LengthUnit.Millimeters);
+    @Element(required = false)
+    protected double feedSpeed = 1.0;
+    @Attribute(required = false)
+    protected String actuatorId;
+    @Element(required = false)
+    protected Vision vision = new Vision();
+
+    protected Location pickLocation;	
 
 	/*
 	 * visionOffset contains the difference between where the part was
@@ -97,7 +96,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	 * subtracting the offsets from the feedStart and feedEndLocations 
 	 * should produce the correct feed locations.
 	 */
-	private Location visionOffset;
+	protected Location visionOffset;
 	
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {

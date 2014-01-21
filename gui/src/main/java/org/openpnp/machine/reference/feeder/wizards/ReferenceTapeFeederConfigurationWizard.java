@@ -214,7 +214,7 @@ public class ReferenceTapeFeederConfigurationWizard extends
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(
                 textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ, null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
-
+//
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));

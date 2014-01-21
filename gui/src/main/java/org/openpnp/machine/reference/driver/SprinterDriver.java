@@ -122,6 +122,14 @@ import org.slf4j.LoggerFactory;
 //M603 - Show Free Ram
 
 public class SprinterDriver implements ReferenceDriver, Runnable {
+
+/*	@Attribute(required=false) 
+    private int vacpumpPin;
+ 
+    @Attribute(required=false) 
+    private boolean invertVacpump;
+
+*/	
 	private static final Logger logger = LoggerFactory.getLogger(SprinterDriver.class);
 //	private static final double minimumRequiredVersion = 0.75;
 	
@@ -137,7 +145,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 	@Attribute(required=false)
 	private boolean invertVacuum;
 	
-	@Attribute(required=false)
+    @Attribute(required=false)
 	private int actuatorPin = 33;
 	
 	@Attribute(required=false)
@@ -155,7 +163,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 	@Attribute(required=false)
 	private boolean homeC;
 	
-    @Attribute
+	@Attribute
     private double feedRateMmPerMinute;
 	
 	private double x, y, z, c;
@@ -196,7 +204,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
         // Reset all axes to 0. This is required so that the Head and Driver
         // stay in sync.
         sendCommand("G92 X0 Y0 Z0 E0");
-        x = y = z= c = 0;
+        x = y = z = c = 0;
     }
 
     @Override
@@ -389,7 +397,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 		disconnectRequested = false;
 	}
 
-	private List<String> sendCommand(String command) throws Exception {
+	protected List<String> sendCommand(String command) throws Exception {
 		return sendCommand(command, -1);
 	}
 	
@@ -434,7 +442,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 	 * Causes Sprinter to block until all commands are complete.
 	 * @throws Exception
 	 */
-	private void dwell() throws Exception {
+	protected void dwell() throws Exception {
 		sendCommand("M400");
 	}
 

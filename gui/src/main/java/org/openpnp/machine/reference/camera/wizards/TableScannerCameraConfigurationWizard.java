@@ -34,10 +34,10 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
+import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -45,7 +45,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class TableScannerCameraConfigurationWizard extends AbstractConfigurationWizard {
+public class TableScannerCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
 	private final TableScannerCamera camera;
 
 	private JPanel panelGeneral;
@@ -54,6 +54,8 @@ public class TableScannerCameraConfigurationWizard extends AbstractConfiguration
 
 	public TableScannerCameraConfigurationWizard(
 			TableScannerCamera camera) {
+	    super(camera);
+	    
 		this.camera = camera;
 		
 		panelGeneral = new JPanel();
@@ -92,12 +94,16 @@ public class TableScannerCameraConfigurationWizard extends AbstractConfiguration
 
 	@Override
 	public void createBindings() {
+	    super.createBindings();
+	    
 		sourceUriBinding = addWrappedBinding(camera, "sourceUri", textFieldUrl, "text");
 		bind(UpdateStrategy.READ, camera, "cacheSizeDescription", lblCacheInfo, "text");
 	}
 	
 	@Override
 	public void validateInput() throws Exception {
+	    super.validateInput();
+	    
 		if (sourceUriBinding.getWrapper().getValue() != null) {
 			String sourceUri = sourceUriBinding.getWrapper().getValue().trim();
 			if (!sourceUri.endsWith("/")) {

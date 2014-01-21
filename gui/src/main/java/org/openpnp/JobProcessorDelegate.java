@@ -21,10 +21,10 @@
 
 package org.openpnp;
 
-import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.JobProcessor.PickRetryAction;
 
 public interface JobProcessorDelegate {
 	/**

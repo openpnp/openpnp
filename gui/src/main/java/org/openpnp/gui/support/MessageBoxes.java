@@ -25,7 +25,6 @@ import java.awt.Component;
 
 import javax.swing.JOptionPane;
 
-import org.openpnp.util.LineBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +41,11 @@ public class MessageBoxes {
 			message = "";
 		}
 		logger.debug(title, cause);
-		JOptionPane.showMessageDialog(parent,
-				LineBreaker.formatLines(message, 60), title,
-				JOptionPane.ERROR_MESSAGE);
-		// message = message.replaceAll("\n", "<br/>");
-		// message = message.replaceAll("\r", "");
-		// message = "<html><body>" + message + "</body></html>";
-		// JOptionPane.showMessageDialog(parent, message, title,
-		// JOptionPane.ERROR_MESSAGE);
+		 message = message.replaceAll("\n", "<br/>");
+		 message = message.replaceAll("\r", "");
+         message = "<html><body width=\"400\">" + message + "</body></html>";
+		 JOptionPane.showMessageDialog(parent, message, title,
+		 JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void errorBox(Component parent, String title, String message) {
@@ -57,14 +53,11 @@ public class MessageBoxes {
 			message = "";
 		}
 		logger.debug("{}: {}", title, message);
-		JOptionPane.showMessageDialog(parent,
-				LineBreaker.formatLines(message, 60), title,
-				JOptionPane.ERROR_MESSAGE);
-		// message = message.replaceAll("\n", "<br/>");
-		// message = message.replaceAll("\r", "");
-		// message = "<html><body>" + message + "</body></html>";
-		// JOptionPane.showMessageDialog(parent, message, title,
-		// JOptionPane.ERROR_MESSAGE);
+		 message = message.replaceAll("\n", "<br/>");
+		 message = message.replaceAll("\r", "");
+         message = "<html><body width=\"400\">" + message + "</body></html>";
+		 JOptionPane.showMessageDialog(parent, message, title,
+		 JOptionPane.ERROR_MESSAGE);
 	}
 	
 	public static void notYetImplemented(Component parent) {

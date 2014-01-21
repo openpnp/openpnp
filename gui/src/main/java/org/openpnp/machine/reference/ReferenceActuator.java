@@ -56,10 +56,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         });
     }
     
+    @Override
     public void setHeadOffsets(Location headOffsets) {
         this.headOffsets = headOffsets;
     }
     
+    @Override
     public Location getHeadOffsets() {
         return headOffsets;
     }

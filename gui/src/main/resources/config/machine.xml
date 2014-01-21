@@ -11,7 +11,7 @@
  -->
  <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
-      <driver class="org.openpnp.machine.reference.driver.NullDriver"/>
+      <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="3500.0"/>
       <heads>
         <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
             <nozzles>
@@ -40,5 +40,6 @@
         </head>
       </heads>
       <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
+      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" />
    </machine>
 </openpnp-machine>

@@ -51,6 +51,8 @@ public class NullDriver implements ReferenceDriver {
     private double feedRateMmPerMinute;
     
     private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
+    
+    private boolean enabled;
 
     /**
      * Gets the Location object being tracked for a specific Head. This is the
@@ -75,6 +77,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void home(ReferenceHead head) throws Exception {
         logger.debug("home()");
+        checkEnabled();
         setHeadLocation(head, getHeadLocation(head).derive(0.0, 0.0, 0.0, 0.0));
     }
 
@@ -99,6 +102,7 @@ public class NullDriver implements ReferenceDriver {
     public void moveTo(ReferenceHeadMountable hm, Location location,
             double speed) throws Exception {
         logger.debug("moveTo({}, {}, {})", new Object[] { hm, location, speed });
+        checkEnabled();
         
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
@@ -220,6 +224,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         logger.debug("pick({})", nozzle);
+        checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -228,6 +233,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
         logger.debug("place({})", nozzle);
+        checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -237,6 +243,7 @@ public class NullDriver implements ReferenceDriver {
     public void actuate(ReferenceActuator actuator, double value)
             throws Exception {
         logger.debug("actuate({}, {})", actuator, value);
+        checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -246,6 +253,7 @@ public class NullDriver implements ReferenceDriver {
     public void actuate(ReferenceActuator actuator, boolean on)
             throws Exception {
         logger.debug("actuate({}, {})", actuator, on);
+        checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
@@ -254,14 +262,18 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         logger.debug("setEnabled({})", enabled);
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(500);
-        }
+        this.enabled = enabled;
     }
 
     @Override
     public Wizard getConfigurationWizard() {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    private void checkEnabled() throws Exception {
+        if (!enabled) {
+            throw new Exception("Driver is not yet enabled!");
+        }
     }
 }

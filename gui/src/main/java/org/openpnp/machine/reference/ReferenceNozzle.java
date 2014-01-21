@@ -26,11 +26,11 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Attribute(required = false)
     private int placeDwellMilliseconds;
 
-    @Element
+    @Element(required = false) //TODO needs work, probably breaks it, need to deal with "current" nozzle tip
     private NozzleTip nozzleTip;
 
-    private ReferenceMachine machine;
-    private ReferenceDriver driver;
+    protected ReferenceMachine machine;
+    protected ReferenceDriver driver;
 
     public ReferenceNozzle() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -62,6 +62,11 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public Location getHeadOffsets() {
         return headOffsets;
+    }
+    
+    @Override
+    public void setHeadOffsets(Location headOffsets) {
+        this.headOffsets = headOffsets;
     }
 
     @Override

@@ -21,60 +21,38 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.support.ApplyResetBindingListener;
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
+import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard {
+public class LtiCivilCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
 	private final LtiCivilCamera camera;
 
-	private WizardContainer wizardContainer;
-	private JButton btnSave;
-	private JButton btnCancel;
 	private JPanel panelGeneral;
-
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
+    private JComboBox comboBoxDeviceId;
+    private JCheckBox chckbxForceGrayscale;
 
 	public LtiCivilCameraConfigurationWizard(
 			LtiCivilCamera camera) {
+	    super(camera);
+	    
 		this.camera = camera;
 
-		setLayout(new BorderLayout());
-
-		JPanel panelFields = new JPanel();
-		panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
-		JScrollPane scrollPane = new JScrollPane(panelFields);
-
 		panelGeneral = new JPanel();
-		panelFields.add(panelGeneral);
+		contentPanel.add(panelGeneral);
 		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -102,82 +80,16 @@ public class LtiCivilCameraConfigurationWizard extends JPanel implements Wizard 
 		
 		chckbxForceGrayscale = new JCheckBox("Force Grayscale?");
 		panelGeneral.add(chckbxForceGrayscale, "2, 4, 3, 1");
-		scrollPane.setBorder(null);
-		add(scrollPane, BorderLayout.CENTER);
-
-		JPanel panelActions = new JPanel();
-		panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		add(panelActions, BorderLayout.SOUTH);
-
-		btnCancel = new JButton(cancelAction);
-		panelActions.add(btnCancel);
-		
-		btnSave = new JButton(saveAction);
-		panelActions.add(btnSave);
-
-		createBindings();
-		loadFromModel();
 	}
 
-	private void createBindings() {
-		ApplyResetBindingListener listener = new ApplyResetBindingListener(saveAction, cancelAction);
-		
+	@Override
+	public void createBindings() {
+	    super.createBindings();
 		// The order of the properties is important. We want all the booleans
 		// to be set before we set the driver because setting the driver
 		// applies all the settings.
-		wrappedBindings.add(JBindings.bind(camera, "forceGrayscale",
-				chckbxForceGrayscale, "selected", listener));
-		wrappedBindings.add(JBindings.bind(camera, "deviceId",
-				comboBoxDeviceId, "selectedItem", listener));
+        addWrappedBinding(camera, "forceGrayscale", chckbxForceGrayscale, "selected");
+        addWrappedBinding(camera, "deviceId", comboBoxDeviceId, "selectedItem");
 	}
 
-	private void loadFromModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.reset();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	private void saveToModel() {
-		for (WrappedBinding wrappedBinding : wrappedBindings) {
-			wrappedBinding.save();
-		}
-		saveAction.setEnabled(false);
-		cancelAction.setEnabled(false);
-	}
-
-	@Override
-	public void setWizardContainer(WizardContainer wizardContainer) {
-		this.wizardContainer = wizardContainer;
-	}
-
-	@Override
-	public JPanel getWizardPanel() {
-		return this;
-	}
-
-	@Override
-	public String getWizardName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Action saveAction = new AbstractAction("Apply") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveToModel();
-			wizardContainer
-					.wizardCompleted(LtiCivilCameraConfigurationWizard.this);
-		}
-	};
-
-	private Action cancelAction = new AbstractAction("Reset") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			loadFromModel();
-		}
-	};
-	private JComboBox comboBoxDeviceId;
-	private JCheckBox chckbxForceGrayscale;
 }

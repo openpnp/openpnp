@@ -212,4 +212,21 @@ public class Location {
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units, x, y, z, rotation);
 	}
+
+    /**
+     * Performs a unit agnostic equality check. If the Object being
+     * tested is a Location in a different unit, it is first converted to
+     * the units of this Location and then each value field is compared.
+     */
+	@Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Location)) {
+            return false;
+        }
+        Location that = (Location) obj;
+        that = that.convertToUnits(this.units);
+        return this.units == that.units && this.x == that.x && 
+                this.y == that.y && this.z == that.z && 
+                this.rotation == that.rotation; 
+    }
 }
