@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="5.1.5" transformSequenceNumber="4">
+<install4j version="5.1.8" transformSequenceNumber="4">
   <directoryPresets config="/Users/jason/Projects/openpnp/openpnp-public/logo" />
   <application name="OpenPnP" distributionSourceDir="" applicationId="9204-4030-0867-1434" mediaDir="/Users/jason/Projects/openpnp/openpnp-public/gui/installers" mediaFilePattern="${compiler:sys.shortName}_${compiler:sys.platform}_${compiler:sys.version}" compression="6" lzmaCompression="false" pack200Compression="false" excludeSignedFromPacking="true" commonExternalFiles="false" createMd5Sums="true" shrinkRuntime="true" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="0.0.1" allPathsRelative="false" backupOnSave="false" autoSave="false" convertDotsToUnderscores="true" macSignature="????" installerName="" javaMinVersion="1.6" javaMaxVersion="" allowBetaVM="false" jdkMode="runtimeJre" jdkName="">
     <languages skipLanguageSelection="false" languageSelectionInPrincipalLanguage="false">
@@ -72,7 +72,6 @@
       <iconImageFiles>
         <file path="/Users/jason/Projects/openpnp/openpnp-public/logo/OpenPnP-logo.iconset/icon_32x32.png" />
         <file path="/Users/jason/Projects/openpnp/openpnp-public/logo/OpenPnP-logo.iconset/icon_128x128.png" />
-        <file path="/Users/jason/Projects/openpnp/openpnp-public/logo/OpenPnP-logo.iconset/icon_512x512.png" />
       </iconImageFiles>
     </launcher>
   </launchers>
@@ -374,7 +373,7 @@
     </applications>
   </installerGui>
   <mediaSets>
-    <windows name="Windows_32" id="24" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="32" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-x86-1.7.0_05" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
+    <windows name="Windows_32" id="24" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="32" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-x86-1.7.0_51" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
       <excludedLaunchers />
       <excludedBeans />
       <overriddenPrincipalLanguage id="en" customLocalizationFile="" />
@@ -389,7 +388,7 @@
       <excludedComponents />
       <includedDownloadableComponents />
     </windows>
-    <windows name="Windows_64" id="28" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="64" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-amd64-1.7.0_05" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
+    <windows name="Windows_64" id="28" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="64" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-amd64-1.7.0_51" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
       <excludedLaunchers />
       <excludedBeans />
       <overriddenPrincipalLanguage id="en" customLocalizationFile="" />
@@ -404,7 +403,7 @@
       <excludedComponents />
       <includedDownloadableComponents />
     </windows>
-    <macosFolder name="Mac OS X Folder" id="119" customizedId="" mediaFileName="" installDir="OpenPnP" overridePrincipalLanguage="false" jreBitType="all" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="" manualJREEntry="false" bundleType="2" jreURL="http://openpnp.org" jreShared="false" directDownload="false" installOnlyIfNecessary="false" appleJre="true" customInstallBaseDir="" contentFilesType="1" downloadURL="" signLaunchers="false">
+    <macosFolder name="Mac OS X Folder" id="119" customizedId="" mediaFileName="" installDir="OpenPnP" overridePrincipalLanguage="false" jreBitType="all" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="macosx-amd64-1.7.0_51" manualJREEntry="false" bundleType="1" jreURL="http://openpnp.org" jreShared="false" directDownload="false" installOnlyIfNecessary="false" appleJre="false" requiredVmIdPrefix="" customInstallBaseDir="" contentFilesType="1" downloadURL="" signLaunchers="false">
       <excludedLaunchers />
       <excludedBeans />
       <overriddenPrincipalLanguage id="en" customLocalizationFile="" />
@@ -420,7 +419,7 @@
       <includedDownloadableComponents />
     </macosFolder>
   </mediaSets>
-  <buildIds buildAll="false">
+  <buildIds buildAll="true">
     <mediaSet refId="119" />
   </buildIds>
   <buildOptions verbose="false" faster="false" disableSigning="false" debug="false" />
