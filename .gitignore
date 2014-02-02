@@ -5,3 +5,4 @@ gui/installers
 *.iml
 .idea/
 gui/.settings
+simulator/build
