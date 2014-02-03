@@ -7,6 +7,7 @@ package org.openpnp.machine.reference.simulator;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -37,13 +38,20 @@ import com.jme3.scene.shape.Cylinder;
  * </pre>
  */
 public class Machine {
+    
+    public enum Movable {
+        Camera,
+        Nozzle1,
+        Nozzle2,
+        Actuator
+    };
 
     private final AssetManager assetManager;
-    private final Node machineNode;
-    private final Node gantryNode;
-    private final Node headNode;
-    private final Spatial z1Stepper;
-    private final Spatial z2Stepper;
+    private final Node machine;
+    private final Node gantry;
+    private final Node head;
+    private final Spatial n1;
+    private final Spatial n2;
     private final Spatial camera;
     private final Spatial actuatorPin;
     private final Material polishedStainlessTexture;
@@ -51,31 +59,132 @@ public class Machine {
     private final Material roughAluminumTexture;
     private final Material rawAluminumTexture;
     private final Material blackAluminumTexture;
+    
+    private double x = 0, y = 0, z1 = 0, z2 = 0, c1 = 0, c2 = 0;
+    
+    private Vector3f n1Offsets, n2Offsets, actuatorPinOffsets, cameraOffsets = Vector3f.ZERO;
+    
+    private Vector3f gantryZero, headZero;
 
     public Machine(AssetManager assetManager) {
         this.assetManager = assetManager;
+        
+        // Load textures
         polishedStainlessTexture = basicTexture("Textures/radial-stainless-steel.jpg");
         brushedAluminumTexture = basicTexture("Textures/brushed_aluminum.jpg");
         rawAluminumTexture = basicTexture("Textures/raw-aluminum.jpg");
         roughAluminumTexture = basicTexture("Textures/rough-metal.jpg");
         blackAluminumTexture = basicTexture("Textures/black-aluminum.jpg");
-        machineNode = createMachineNode();
-        gantryNode = (Node) machineNode.getChild("gantry");
-        headNode = (Node) gantryNode.getChild("head");
-        Node z1Node = (Node) headNode.getChild("z1");
-        Node z2Node = (Node) headNode.getChild("z2");
-        z1Stepper = z1Node.getChild("stepper");
-        z2Stepper = z2Node.getChild("stepper");
-        camera = headNode.getChild("camera");
-        Node actuator = (Node) headNode.getChild("actuator");
+        
+        // Create spatials
+        machine = createMachineNode();
+        machine.scale(0.001f);
+        gantry = (Node) machine.getChild("gantry");
+        head = (Node) gantry.getChild("head");
+        Node z1Node = (Node) head.getChild("z1");
+        Node z2Node = (Node) head.getChild("z2");
+        n1 = z1Node.getChild("stepper");
+        n2 = z2Node.getChild("stepper");
+        camera = head.getChild("camera");
+        Node actuator = (Node) head.getChild("actuator");
         actuatorPin = actuator.getChild("pin");
+        
+        // Calculate offsets of machine elements
+        // Camera is basis fors all offsets
+        // z1, z2, actuatorPin
+        n1Offsets = getOffsets(camera, n1);
+        n2Offsets = getOffsets(camera, n2);
+        actuatorPinOffsets = getOffsets(camera, actuatorPin);
+        
+        System.out.println("cameraOffsets " + cameraOffsets);
+        System.out.println("n1Offsets " + n1Offsets);
+        System.out.println("n2Offsets " + n2Offsets);
+        System.out.println("actuatorOffsets " + actuatorPinOffsets);
+        
+        gantry.move(0, 0, 230);
+        head.move(-250, 0, 0);
+        n1.move(0, 25, 0);
+        n2.move(0, 25, 0);
+        
+        gantryZero = gantry.getLocalTranslation();
+        headZero = head.getLocalTranslation();
+        
+        System.out.println("gantryZero " + gantryZero);
+        System.out.println("headZero " + headZero);
     }
-
+    
+    public void moveTo(Movable movable, double x, double y, double z, double c) throws Exception {
+        /**
+         * Movements of any of the four Movable are made up of a movement in
+         * machine Y of gantry, machine X of head, machine Z of n1 or n2 and
+         * machine C of the nozzle tip, not yet defined.
+         */
+        
+        // A point on the table can be defined as cameraZero + (x, y, z) / 1000
+        // To move an object to a position we need to know the distance between
+        // the object to move and the thing that moves it. 
+        
+        // TODO: gantryZero and headZero are changing between calls, it seems like
+        
+        System.out.println();
+        System.out.println("moveTo " + x + ", " + y + ", " + z);
+        System.out.println("gantryZero " + gantryZero);
+        System.out.println("headZero " + headZero);
+        Vector3f gantryTarget = gantryZero.add(0f, 0f, (float) -y);
+        Vector3f headTarget = headZero.add((float) x, 0, 0);
+        gantry.setLocalTranslation(gantryTarget);
+        head.setLocalTranslation(headTarget);
+    }
+    
+    public void pick(Movable movable) throws Exception {
+        
+    }
+    
+    public void place(Movable movable) throws Exception {
+        
+    }
+    
+    public void actuate(boolean on) throws Exception {
+        
+    }
+    
+    private Vector3f getOffsets(Spatial from, Spatial to) {
+        Vector3f offsets = from.getWorldTranslation();
+        offsets = offsets.subtract(to.getWorldTranslation());
+        return offsets;
+    }
+    
     public Node getNode() {
-        return machineNode;
+        return machine;
     }
 
+    long t = 0;
     public void update(float tpf) {
+        if (t == 1000) {
+            try {
+                moveTo(Movable.Camera, 0, 0, 0, 0);
+            }
+            catch (Exception e) {
+
+            }
+        }
+        else if (t == 2000) {
+            try {
+                moveTo(Movable.Camera, 0, 100, 0, 0);
+            }
+            catch (Exception e) {
+
+            }
+        }
+        else if (t == 3000) {
+            try {
+                moveTo(Movable.Camera, 100, 100, 0, 0);
+            }
+            catch (Exception e) {
+
+            }
+        }
+        t++;
     }
 
     private Node createMachineNode() {
@@ -99,8 +208,6 @@ public class Machine {
         gantry.move(0, 50 / 2 + 12.7f + 6, 0);
         machine.attachChild(gantry);;
 
-        machine.scale(0.001f);
-
         return machine;
     }
 
@@ -117,7 +224,7 @@ public class Machine {
         gantry.attachChild(xRail);
 
         Node head = createHeadNode();
-        head.move(0, 0, 25 + 12 + 3);
+        head.move(0, 10, 25 + 12 + 3);
         gantry.attachChild(head);
 
         return gantry;
@@ -138,7 +245,7 @@ public class Machine {
 
         Node actuator = createActuatorAssmNode("actuator");
         actuator.rotate((float) Math.PI / 2, 0f, 0f);
-        actuator.move(8, -50 / 2 + 25 / 2, 8 + 3);
+        actuator.move(8, -50 / 2 + 25 / 2, 4 + 3);
         head.attachChild(actuator);
 
         Node z1 = createZAssmNode("z1");
@@ -199,5 +306,23 @@ public class Machine {
 
     private ColorRGBA createColor(int r, int g, int b) {
         return new ColorRGBA(1.0f / 255f * r, 1.0f / 255f * g, 1.0f / 255f * b, 1.0f);
+    }
+    
+    class Movable_ {
+        private final Spatial spatial;
+        private final Vector3f zero;
+        
+        public Movable_(Spatial spatial, Vector3f zero) {
+            this.spatial = spatial;
+            this.zero = zero;
+        }
+        
+        public Spatial getSpatial() {
+            return spatial;
+        }
+        
+        public Vector3f getZero() {
+            return zero;
+        }
     }
 }

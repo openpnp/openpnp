@@ -32,8 +32,11 @@ public class Main extends SimpleApplication {
 //        cam.setLocation(new Vector3f(0.9789996f, 0.6054432f, 0.9655635f));
 //        cam.setRotation(new Quaternion(-0.08566449f, 0.9023052f, -0.21124944f, -0.36589697f));
         
-        cam.setLocation(new Vector3f(0.07781982f, 0.27936003f, 2.0324063f));
-        cam.setRotation(new Quaternion(-0.0011174536f, 0.9975934f, -0.06732103f, -0.01655898f));
+//        cam.setLocation(new Vector3f(0.07781982f, 0.27936003f, 2.0324063f));
+//        cam.setRotation(new Quaternion(-0.0011174536f, 0.9975934f, -0.06732103f, -0.01655898f));
+        
+        cam.setLocation(new Vector3f(-1.3480331f, 1.098075f, 1.3006098f));
+        cam.setRotation(new Quaternion(0.107952856f, 0.8841834f, -0.25264242f, 0.37780634f));
     }
 
     @Override
