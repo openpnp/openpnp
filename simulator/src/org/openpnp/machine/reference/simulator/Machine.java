@@ -62,7 +62,8 @@ public class Machine {
     
     private Vector3f n1Offsets, n2Offsets, actuatorPinOffsets, cameraOffsets = Vector3f.ZERO;
     
-    private Vector3f gantryZero, headZero, gantryTarget, headTarget;
+    private Vector3f gantryZero, headZero, n1Zero, n2Zero, actuatorPinZero;
+    private Vector3f gantryTarget, headTarget;
 
     private long lastFrameTime;
     
@@ -102,15 +103,19 @@ public class Machine {
         System.out.println("actuatorOffsets " + actuatorPinOffsets);
         
         // Position everything at zero
-        gantry.move(0, 0, 230);
+        gantry.move(0, 0, 240);
         head.move(-250, 0, 0);
         n1.move(0, 25, 0);
         n2.move(0, 25, 0);
+        actuatorPin.move(0, -2, 0);
         
         // Grab the zero location so that we have a reference from here on.
         // We clone because these will change as we move things.
         gantryZero = gantry.getLocalTranslation().clone();
         headZero = head.getLocalTranslation().clone();
+        n1Zero = n1.getLocalTranslation().clone();
+        n2Zero = n2.getLocalTranslation().clone();
+        actuatorPinZero = actuatorPin.getLocalTranslation().clone();
     }
     
     public void moveTo(Movable movable, double x, double y, double z, double c) throws Exception {
@@ -251,7 +256,6 @@ public class Machine {
         head.attachChild(camera);
 
         Node actuator = createActuatorAssmNode("actuator");
-        actuator.rotate((float) Math.PI / 2, 0f, 0f);
         actuator.move(8, -50 / 2 + 25 / 2, 4 + 3);
         head.attachChild(actuator);
 
@@ -272,10 +276,11 @@ public class Machine {
 
         Geometry actuatorBody = new Geometry("body", new Cylinder(12, 12, 4, 25, true));
         actuatorBody.setMaterial(brushedAluminumTexture);
+        actuatorBody.rotate((float) Math.PI / 2, 0f, 0f);
         actuator.attachChild(actuatorBody);
 
-        Geometry actuatorPin = new Geometry("pin", new Cylinder(12, 12, 0.5f, 10, true));
-        actuatorPin.move(0, 0, 25 / 2);
+        Geometry actuatorPin = new Geometry("pin", new Cylinder(12, 12, 0.5f, 25, true));
+        actuatorPin.rotate((float) Math.PI / 2, 0f, 0f);
         actuatorPin.setMaterial(polishedStainlessTexture);
         actuator.attachChild(actuatorPin);
 
