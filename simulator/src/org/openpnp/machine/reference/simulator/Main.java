@@ -37,6 +37,21 @@ public class Main extends SimpleApplication {
         
         cam.setLocation(new Vector3f(-1.3480331f, 1.098075f, 1.3006098f));
         cam.setRotation(new Quaternion(0.107952856f, 0.8841834f, -0.25264242f, 0.37780634f));
+        Thread t = new Thread() {
+            public void run() {
+                while (true) {
+                    try {
+                        machine.moveTo(Machine.Movable.Camera, Math.random() * 500, Math.random() * 500, 0, 0);
+                        Thread.sleep(4000);
+                    }
+                    catch (Exception e) {
+
+                    }
+                }
+            }
+        };
+        t.setDaemon(true);
+        t.start();
     }
 
     @Override

@@ -60,12 +60,12 @@ public class Machine {
     private final Material rawAluminumTexture;
     private final Material blackAluminumTexture;
     
-    private double x = 0, y = 0, z1 = 0, z2 = 0, c1 = 0, c2 = 0;
-    
     private Vector3f n1Offsets, n2Offsets, actuatorPinOffsets, cameraOffsets = Vector3f.ZERO;
     
-    private Vector3f gantryZero, headZero;
+    private Vector3f gantryZero, headZero, gantryTarget, headTarget;
 
+    private long lastFrameTime;
+    
     public Machine(AssetManager assetManager) {
         this.assetManager = assetManager;
         
@@ -101,16 +101,16 @@ public class Machine {
         System.out.println("n2Offsets " + n2Offsets);
         System.out.println("actuatorOffsets " + actuatorPinOffsets);
         
+        // Position everything at zero
         gantry.move(0, 0, 230);
         head.move(-250, 0, 0);
         n1.move(0, 25, 0);
         n2.move(0, 25, 0);
         
-        gantryZero = gantry.getLocalTranslation();
-        headZero = head.getLocalTranslation();
-        
-        System.out.println("gantryZero " + gantryZero);
-        System.out.println("headZero " + headZero);
+        // Grab the zero location so that we have a reference from here on.
+        // We clone because these will change as we move things.
+        gantryZero = gantry.getLocalTranslation().clone();
+        headZero = head.getLocalTranslation().clone();
     }
     
     public void moveTo(Movable movable, double x, double y, double z, double c) throws Exception {
@@ -120,20 +120,13 @@ public class Machine {
          * machine C of the nozzle tip, not yet defined.
          */
         
-        // A point on the table can be defined as cameraZero + (x, y, z) / 1000
-        // To move an object to a position we need to know the distance between
-        // the object to move and the thing that moves it. 
+        System.out.println("moveTo(" + x + ", " + y + ", " + z + ", " + c + ")");
         
-        // TODO: gantryZero and headZero are changing between calls, it seems like
-        
-        System.out.println();
-        System.out.println("moveTo " + x + ", " + y + ", " + z);
-        System.out.println("gantryZero " + gantryZero);
-        System.out.println("headZero " + headZero);
-        Vector3f gantryTarget = gantryZero.add(0f, 0f, (float) -y);
-        Vector3f headTarget = headZero.add((float) x, 0, 0);
-        gantry.setLocalTranslation(gantryTarget);
-        head.setLocalTranslation(headTarget);
+        if (gantryTarget != null || headTarget != null) {
+            throw new Exception("Movement not complete!");
+        }
+        gantryTarget = gantryZero.add(0f, 0f, (float) -y);
+        headTarget = headZero.add((float) x, 0, 0);
     }
     
     public void pick(Movable movable) throws Exception {
@@ -148,6 +141,49 @@ public class Machine {
         
     }
     
+    public void update(float tpf) {
+        if (lastFrameTime == 0) {
+            lastFrameTime = System.currentTimeMillis();
+        }
+        long t = System.currentTimeMillis() - lastFrameTime;
+        
+        if (headTarget != null) {
+            // Determine the distance we can move based on the amount of
+            // time elapsed since the last frame.
+            float xDist = 250f / 1000 * t;
+            // The distance left to move before reaching the target.
+            float xDelta = headTarget.subtract(head.getLocalTranslation()).x;
+            // If we've moving in the negative direction, invert the distance
+            // we'll move.
+            if (xDelta < 0) {
+                xDist = -xDist;
+            }
+            // Make the movement.
+            head.move(xDist, 0, 0);
+            // If the distance moved is greater than or equal to the distance
+            // to move we're done with this move.
+            if (Math.abs(xDist) >= Math.abs(xDelta)) {
+                head.setLocalTranslation(headTarget);
+                headTarget = null;
+            }
+        }
+        
+        if (gantryTarget != null) {
+            float yDist = 250f / 1000 * t;
+            float yDelta = gantryTarget.subtract(gantry.getLocalTranslation()).z;
+            if (yDelta < 0) {
+                yDist = -yDist;
+            }
+            gantry.move(0, 0, yDist);
+            if (Math.abs(yDist) >= Math.abs(yDelta)) {
+                gantry.setLocalTranslation(gantryTarget);
+                gantryTarget = null;
+            }
+        }
+        
+        lastFrameTime = System.currentTimeMillis();
+    }
+
     private Vector3f getOffsets(Spatial from, Spatial to) {
         Vector3f offsets = from.getWorldTranslation();
         offsets = offsets.subtract(to.getWorldTranslation());
@@ -156,35 +192,6 @@ public class Machine {
     
     public Node getNode() {
         return machine;
-    }
-
-    long t = 0;
-    public void update(float tpf) {
-        if (t == 1000) {
-            try {
-                moveTo(Movable.Camera, 0, 0, 0, 0);
-            }
-            catch (Exception e) {
-
-            }
-        }
-        else if (t == 2000) {
-            try {
-                moveTo(Movable.Camera, 0, 100, 0, 0);
-            }
-            catch (Exception e) {
-
-            }
-        }
-        else if (t == 3000) {
-            try {
-                moveTo(Movable.Camera, 100, 100, 0, 0);
-            }
-            catch (Exception e) {
-
-            }
-        }
-        t++;
     }
 
     private Node createMachineNode() {
