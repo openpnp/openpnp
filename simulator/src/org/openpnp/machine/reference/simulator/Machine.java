@@ -31,10 +31,14 @@ import com.jme3.scene.shape.Cylinder;
  *                      pin
  *                  z1
  *                      rail
- *                      stepper
+ *                      nozzle
+ *                          body
+ *                          tip
  *                  z2
  *                      rail
- *                      stepper
+ *                      nozzle
+ *                          body
+ *                          tip
  * </pre>
  */
 public class Machine {
@@ -63,7 +67,7 @@ public class Machine {
     private Vector3f n1Offsets, n2Offsets, actuatorPinOffsets, cameraOffsets = Vector3f.ZERO;
     
     private Vector3f gantryZero, headZero, n1Zero, n2Zero, actuatorPinZero;
-    private Vector3f gantryTarget, headTarget;
+    private Vector3f gantryTarget, headTarget, n1Target, n2Target, actuatorPinTarget;
 
     private long lastFrameTime;
     
@@ -84,8 +88,8 @@ public class Machine {
         head = (Node) gantry.getChild("head");
         Node z1Node = (Node) head.getChild("z1");
         Node z2Node = (Node) head.getChild("z2");
-        n1 = z1Node.getChild("stepper");
-        n2 = z2Node.getChild("stepper");
+        n1 = z1Node.getChild("nozzle");
+        n2 = z2Node.getChild("nozzle");
         camera = head.getChild("camera");
         Node actuator = (Node) head.getChild("actuator");
         actuatorPin = actuator.getChild("pin");
@@ -125,13 +129,50 @@ public class Machine {
          * machine C of the nozzle tip, not yet defined.
          */
         
-        System.out.println("moveTo(" + x + ", " + y + ", " + z + ", " + c + ")");
+//        System.out.println("moveTo(" + movable.toString() + ", " + x + ", " + y + ", " + z + ", " + c + ")");
         
+        // TODO
         if (gantryTarget != null || headTarget != null) {
             throw new Exception("Movement not complete!");
         }
-        gantryTarget = gantryZero.add(0f, 0f, (float) -y);
-        headTarget = headZero.add((float) x, 0, 0);
+        // A move in X and Y is always required, no matter which Movable is
+        // called for
+        if (!Double.isNaN(y)) {
+            gantryTarget = gantryZero.add(0f, 0f, (float) -y);
+        }
+        if (!Double.isNaN(x)) {
+            headTarget = headZero.add((float) x, 0, 0);
+        }
+        
+        // And we only move in Z if it's a Nozzle
+        if (movable == Movable.Nozzle1) {
+            if (!Double.isNaN(z)) {
+                n1Target = n1Zero.add(0, (float) z, 0);
+            }
+        }
+        else if (movable == Movable.Nozzle2) {
+            if (!Double.isNaN(z)) {
+                n2Target = n2Zero.add(0, (float) z, 0);
+            }
+        }
+        
+        if (gantryTarget == null && headTarget == null && n1Target == null && n2Target == null) {
+            return;
+        }
+        
+        synchronized(this) {
+            this.wait();
+        }
+    }
+    
+    public void home() throws Exception {
+        gantryTarget = gantryZero;
+        headTarget = headZero;
+        n1Target = n1Zero;
+        n2Target = n2Zero;
+        synchronized(this) {
+            this.wait();
+        }
     }
     
     public void pick(Movable movable) throws Exception {
@@ -143,7 +184,20 @@ public class Machine {
     }
     
     public void actuate(boolean on) throws Exception {
-        
+        if (on) {
+            actuatorPinTarget = actuatorPinZero.add(0, -10, 0);
+        }
+        else {
+            actuatorPinTarget = actuatorPinZero;
+        }
+    }
+    
+    private void notifyIfMoveComplete() {
+        if (gantryTarget == null && headTarget == null && n1Target == null && n2Target == null) {
+            synchronized(this) {
+                this.notifyAll();
+            }
+        }
     }
     
     public void update(float tpf) {
@@ -170,6 +224,7 @@ public class Machine {
             if (Math.abs(xDist) >= Math.abs(xDelta)) {
                 head.setLocalTranslation(headTarget);
                 headTarget = null;
+                notifyIfMoveComplete();
             }
         }
         
@@ -183,7 +238,42 @@ public class Machine {
             if (Math.abs(yDist) >= Math.abs(yDelta)) {
                 gantry.setLocalTranslation(gantryTarget);
                 gantryTarget = null;
+                notifyIfMoveComplete();
             }
+        }
+        
+        if (n1Target != null) {
+            float zDist = 100f / 1000 * t;
+            float zDelta = n1Target.subtract(n1.getLocalTranslation()).y;
+            if (zDelta < 0) {
+                zDist = -zDist;
+            }
+            n1.move(0, zDist, 0);
+            if (Math.abs(zDist) >= Math.abs(zDelta)) {
+                n1.setLocalTranslation(n1Target);
+                n1Target = null;
+                notifyIfMoveComplete();
+            }
+        }
+        
+        if (n2Target != null) {
+            float zDist = 100f / 1000 * t;
+            float zDelta = n2Target.subtract(n2.getLocalTranslation()).y;
+            if (zDelta < 0) {
+                zDist = -zDist;
+            }
+            n2.move(0, zDist, 0);
+            if (Math.abs(zDist) >= Math.abs(zDelta)) {
+                n2.setLocalTranslation(n2Target);
+                n2Target = null;
+                notifyIfMoveComplete();
+            }
+        }
+        
+        if (actuatorPinTarget != null) {
+            actuatorPin.setLocalTranslation(actuatorPinTarget);
+            actuatorPinTarget = null;
+            notifyIfMoveComplete();
         }
         
         lastFrameTime = System.currentTimeMillis();
@@ -293,12 +383,24 @@ public class Machine {
         Geometry rail = new Geometry("rail", new Box(4 / 2, 50 / 2, 4 / 2));
         rail.setMaterial(polishedStainlessTexture);
         zAssm.attachChild(rail);
+        
+        Node nozzle = new Node("nozzle");
 
-        Geometry stepper = new Geometry("stepper", new Box(15 / 2, 25 / 2, 15 / 2));
-        stepper.setMaterial(blackAluminumTexture);
-        stepper.move(0, 0, 2 + 15 / 2);
-        zAssm.attachChild(stepper);
+        Geometry body = new Geometry("body", new Box(15 / 2, 25 / 2, 15 / 2));
+        body.setMaterial(blackAluminumTexture);
+        nozzle.attachChild(body);
+        
+        Geometry tip = new Geometry("tip", new Cylinder(12, 12, 0.5f, 10, true));
+        tip.setMaterial(polishedStainlessTexture);
+        tip.rotate((float) Math.PI / 2, 0f, 0f);
+        tip.move(0, -15, 0);
+        nozzle.attachChild(tip);
 
+        // move the nozzle assembly in front of the rail
+        nozzle.move(0, 0, 2 + 15 / 2);
+        
+        zAssm.attachChild(nozzle);
+        
         return zAssm;
     }
 

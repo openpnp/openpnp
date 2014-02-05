@@ -18,7 +18,15 @@ public class Main extends SimpleApplication {
     
     @Override
     public void simpleInitApp() {
+        setPauseOnLostFocus(false);
+        
         machine = new Machine(assetManager);
+        try {
+            Server server = new Server(machine);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
         
         flyCam.setDragToRotate(true);
 
@@ -29,29 +37,34 @@ public class Main extends SimpleApplication {
         sun.setColor(ColorRGBA.White.mult(2f));
         rootNode.addLight(sun);
 
-//        cam.setLocation(new Vector3f(0.9789996f, 0.6054432f, 0.9655635f));
-//        cam.setRotation(new Quaternion(-0.08566449f, 0.9023052f, -0.21124944f, -0.36589697f));
-        
-//        cam.setLocation(new Vector3f(0.07781982f, 0.27936003f, 2.0324063f));
-//        cam.setRotation(new Quaternion(-0.0011174536f, 0.9975934f, -0.06732103f, -0.01655898f));
-        
         cam.setLocation(new Vector3f(-1.3480331f, 1.098075f, 1.3006098f));
         cam.setRotation(new Quaternion(0.107952856f, 0.8841834f, -0.25264242f, 0.37780634f));
-        Thread t = new Thread() {
-            public void run() {
-                while (true) {
-                    try {
-                        machine.moveTo(Machine.Movable.Camera, Math.random() * 500, Math.random() * 500, 0, 0);
-                        Thread.sleep(4000);
-                    }
-                    catch (Exception e) {
-
-                    }
-                }
-            }
-        };
-        t.setDaemon(true);
-        t.start();
+        
+//        cam.setLocation(new Vector3f(-0.100799635f, 0.10030662f, 1.7509058f));
+//        cam.setRotation(new Quaternion(-0.0012744298f, 0.998338f, -0.024377229f, -0.052204806f));        
+        
+//        Thread t = new Thread() {
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        machine.moveTo(
+//                                Math.random() > 0.5 ? Movable.Nozzle1 : Movable.Nozzle2, 
+//                                Math.random() * 500, 
+//                                Math.random() * 500, 
+//                                Math.random() * -50, 
+//                                0);
+//                        machine.actuate(true);
+//                        machine.home();
+//                        machine.actuate(false);
+//                    }
+//                    catch (Exception e) {
+//
+//                    }
+//                }
+//            }
+//        };
+//        t.setDaemon(true);
+//        t.start();
     }
 
     @Override
@@ -66,7 +79,7 @@ public class Main extends SimpleApplication {
     
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
-        settings.setResolution(1920, 1080);
+        settings.setResolution(1024, 768);
         Main app = new Main();
         app.setShowSettings(false);
         app.setSettings(settings);
