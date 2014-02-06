@@ -6,7 +6,9 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.ViewPort;
 import com.jme3.system.AppSettings;
+import org.openpnp.machine.reference.simulator.Machine.Movable;
 
 /**
  * test
@@ -19,8 +21,10 @@ public class Main extends SimpleApplication {
     @Override
     public void simpleInitApp() {
         setPauseOnLostFocus(false);
+//        flyCam.setEnabled(false);
+        flyCam.setMoveSpeed(1000);
         
-        machine = new Machine(assetManager);
+        machine = new Machine(cam, assetManager);
         try {
             Server server = new Server(machine);
         }
@@ -37,8 +41,17 @@ public class Main extends SimpleApplication {
         sun.setColor(ColorRGBA.White.mult(2f));
         rootNode.addLight(sun);
 
-        cam.setLocation(new Vector3f(-1.3480331f, 1.098075f, 1.3006098f));
+        cam.setViewPort(0.5f, 1f, 0f, 0.5f);
+        cam.setLocation(new Vector3f(-1.3480331f * 1000, 1.098075f * 1000, 1.3006098f * 1000));
         cam.setRotation(new Quaternion(0.107952856f, 0.8841834f, -0.25264242f, 0.37780634f));
+        cam.setFrustumFar(5000);
+        cam.update();
+        
+        ViewPort view_1 = renderManager.createMainView("View of camera #n", machine.getCamera());
+        view_1.setEnabled(true);
+        view_1.setClearFlags(true, true, true);
+        view_1.attachScene(rootNode);
+        view_1.setBackgroundColor(ColorRGBA.Blue);
         
 //        cam.setLocation(new Vector3f(-0.100799635f, 0.10030662f, 1.7509058f));
 //        cam.setRotation(new Quaternion(-0.0012744298f, 0.998338f, -0.024377229f, -0.052204806f));        
@@ -53,9 +66,7 @@ public class Main extends SimpleApplication {
 //                                Math.random() * 500, 
 //                                Math.random() * -50, 
 //                                0);
-//                        machine.actuate(true);
-//                        machine.home();
-//                        machine.actuate(false);
+//                        Thread.sleep(1000);
 //                    }
 //                    catch (Exception e) {
 //

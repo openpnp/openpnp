@@ -7,10 +7,15 @@ package org.openpnp.machine.reference.simulator;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Matrix3f;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
+import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Cylinder;
 
@@ -51,18 +56,24 @@ public class Machine {
     };
 
     private final AssetManager assetManager;
-    private final Node machine;
-    private final Node gantry;
-    private final Node head;
-    private final Spatial n1;
-    private final Spatial n2;
-    private final Spatial camera;
-    private final Spatial actuatorPin;
+    private final Camera defaultCamera;
+
     private final Material polishedStainlessTexture;
     private final Material brushedAluminumTexture;
     private final Material roughAluminumTexture;
     private final Material rawAluminumTexture;
     private final Material blackAluminumTexture;
+    private final Material pcbTexture;
+    
+    private final Node machine;
+    private final Node gantry;
+    private final Node head;
+    private final Spatial n1;
+    private final Spatial n2;
+    private final Spatial actuatorPin;
+    private final Spatial cameraBody;
+    private CameraNode cameraNode;
+    private Camera camera;
     
     private Vector3f n1Offsets, n2Offsets, actuatorPinOffsets, cameraOffsets = Vector3f.ZERO;
     
@@ -71,8 +82,9 @@ public class Machine {
 
     private long lastFrameTime;
     
-    public Machine(AssetManager assetManager) {
+    public Machine(Camera defaultCamera, AssetManager assetManager) {
         this.assetManager = assetManager;
+        this.defaultCamera = defaultCamera;
         
         // Load textures
         polishedStainlessTexture = basicTexture("Textures/radial-stainless-steel.jpg");
@@ -80,31 +92,33 @@ public class Machine {
         rawAluminumTexture = basicTexture("Textures/raw-aluminum.jpg");
         roughAluminumTexture = basicTexture("Textures/rough-metal.jpg");
         blackAluminumTexture = basicTexture("Textures/black-aluminum.jpg");
+        pcbTexture = basicTexture("Textures/pcb.jpg");
         
         // Create spatials
         machine = createMachineNode();
-        machine.scale(0.001f);
         gantry = (Node) machine.getChild("gantry");
         head = (Node) gantry.getChild("head");
         Node z1Node = (Node) head.getChild("z1");
         Node z2Node = (Node) head.getChild("z2");
         n1 = z1Node.getChild("nozzle");
         n2 = z2Node.getChild("nozzle");
-        camera = head.getChild("camera");
+        cameraBody = head.getChild("camera_body");
+        cameraNode = (CameraNode) head.getChild("camera");
+        camera = cameraNode.getCamera();
         Node actuator = (Node) head.getChild("actuator");
         actuatorPin = actuator.getChild("pin");
         
         // Calculate offsets of machine elements
         // Camera is basis fors all offsets
         // z1, z2, actuatorPin
-        n1Offsets = getOffsets(camera, n1);
-        n2Offsets = getOffsets(camera, n2);
-        actuatorPinOffsets = getOffsets(camera, actuatorPin);
+//        n1Offsets = getOffsets(cameraNode, n1);
+//        n2Offsets = getOffsets(cameraNode, n2);
+//        actuatorPinOffsets = getOffsets(cameraNode, actuatorPin);
         
-        System.out.println("cameraOffsets " + cameraOffsets);
-        System.out.println("n1Offsets " + n1Offsets);
-        System.out.println("n2Offsets " + n2Offsets);
-        System.out.println("actuatorOffsets " + actuatorPinOffsets);
+//        System.out.println("cameraOffsets " + cameraOffsets);
+//        System.out.println("n1Offsets " + n1Offsets);
+//        System.out.println("n2Offsets " + n2Offsets);
+//        System.out.println("actuatorOffsets " + actuatorPinOffsets);
         
         // Position everything at zero
         gantry.move(0, 0, 240);
@@ -197,6 +211,8 @@ public class Machine {
             synchronized(this) {
                 this.notifyAll();
             }
+            System.out.println(cameraBody.getWorldTranslation());
+            System.out.println(camera.getLocation());
         }
     }
     
@@ -277,6 +293,9 @@ public class Machine {
         }
         
         lastFrameTime = System.currentTimeMillis();
+        
+//        System.out.println("cameraBody.getWorldTranslation() " + cameraBody.getWorldTranslation());
+//        System.out.println("cameraBody.getWorldRotation() " + cameraBody.getWorldRotation());
     }
 
     private Vector3f getOffsets(Spatial from, Spatial to) {
@@ -288,6 +307,10 @@ public class Machine {
     public Node getNode() {
         return machine;
     }
+    
+    public Camera getCamera() {
+        return camera;
+    }
 
     private Node createMachineNode() {
         Node machine = new Node("machine");
@@ -295,6 +318,11 @@ public class Machine {
         Geometry table = new Geometry("table", new Box(600 / 2, 12.7f / 2, 600 / 2));
         table.setMaterial(roughAluminumTexture);
         machine.attachChild(table);
+        
+        Geometry pcb = new Geometry("pcb", new Box(20, 1.57f / 2, 20));
+        pcb.setMaterial(pcbTexture);
+        pcb.move(-100, 12.7f / 2 + 1.57f / 2, 100);
+        machine.attachChild(pcb);
 
         Geometry yRailLeft = new Geometry("y_rail_left", new Box(6, 6, 600 / 2));
         yRailLeft.setMaterial(polishedStainlessTexture);
@@ -339,11 +367,22 @@ public class Machine {
         basePlate.setMaterial(rawAluminumTexture);
         head.attachChild(basePlate);
 
-        Geometry camera = new Geometry("camera", new Cylinder(12, 12, 8, 15, true));
-        camera.setMaterial(blackAluminumTexture);
-        camera.rotate((float) Math.PI / 2, 0f, 0f);
-        camera.move(-6, -50 / 2 + 15 / 2, 8 + 3);
-        head.attachChild(camera);
+        Geometry cameraBody = new Geometry("camera_body", new Cylinder(12, 12, 8, 15, true));
+        cameraBody.setMaterial(blackAluminumTexture);
+        cameraBody.rotate((float) Math.PI / 2, 0f, 0f);
+        cameraBody.move(-6, -50 / 2 + 15 / 2, 8 + 3);
+        head.attachChild(cameraBody);
+        
+        Camera cam = defaultCamera.clone();
+        cam.setViewPort(0f, 0.5f, 0.5f, 1.0f);
+        cam.setFrustumFar(500);
+        cam.update();
+        
+        CameraNode camNode = new CameraNode("camera", cam);
+        camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
+        camNode.rotate((float) Math.PI / 2, (float) Math.PI, 0);
+        camNode.move(-6, -50 / 2 + 15 / 2, 8 + 3);
+        head.attachChild(camNode);
 
         Node actuator = createActuatorAssmNode("actuator");
         actuator.move(8, -50 / 2 + 25 / 2, 4 + 3);

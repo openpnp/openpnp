@@ -31,9 +31,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
@@ -52,13 +50,12 @@ public class SimulatorDriver implements ReferenceDriver {
     
     private boolean enabled;
     
+    private Socket socket;
     private DataInputStream in;
     private PrintStream out;
     
     public SimulatorDriver() throws Exception {
-        Socket socket = new Socket("localhost", 9037);
-        in = new DataInputStream(socket.getInputStream());
-        out = new PrintStream(socket.getOutputStream());
+        connect();
     }
 
     /**
@@ -85,8 +82,7 @@ public class SimulatorDriver implements ReferenceDriver {
     public void home(ReferenceHead head) throws Exception {
         logger.debug("home()");
         checkEnabled();
-        out.print("h\n");
-        waitForOk();
+        send("h");
         setHeadLocation(head, getHeadLocation(head).derive(0.0, 0.0, 0.0, 0.0));
     }
 
@@ -141,8 +137,7 @@ public class SimulatorDriver implements ReferenceDriver {
             throw new Exception("Don't know what " + hm.toString() + " is.");
         }
         
-        out.print(String.format("m,%s,%f,%f,%f,%f\n", movable, location.getX(), location.getY(), location.getZ(), location.getRotation()));
-        waitForOk();
+        send(String.format("m,%s,%f,%f,%f,%f", movable, location.getX(), location.getY(), location.getZ(), location.getRotation()));
         
         // Now that movement is complete, update the stored Location to the new
         // Location, unless the incoming Location specified an axis with a value
@@ -214,10 +209,36 @@ public class SimulatorDriver implements ReferenceDriver {
         }
     }
     
-    private void waitForOk() throws Exception {
-        String line = in.readLine();
-        if (!line.trim().equals("ok")) {
-            throw new Exception("Didn't expect: " + line);
+    // TODO: This reconnect stuff totally doesn't work
+    private void connect() {
+        if (socket == null || !socket.isConnected()) {
+            System.out.println("Connecting to simulator...");
+        }
+        while (socket == null || !socket.isConnected()) {
+            try {
+                socket = new Socket("localhost", 9037);
+                in = new DataInputStream(socket.getInputStream());
+                out = new PrintStream(socket.getOutputStream());
+                System.out.println("Connected!");
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private void send(String s) {
+        try {
+            connect();
+            out.print(s);
+            out.print("\n");
+            String line = in.readLine();
+            if (!line.trim().equals("ok")) {
+                throw new Exception("Didn't expect: " + line);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
