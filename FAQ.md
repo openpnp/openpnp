@@ -20,16 +20,16 @@ Log files are under the `log` subdirectory and the current file is always called
 
 ## How do I reset my configuration?
 
-Sometimes it's easiest just to completely reset your configuration and start over. To do that, just delete the whole OpenPnP configuration directory. See the above question for it's location.
+Sometimes it's easiest just to completely reset your configuration and start over. To do that, just delete the whole OpenPnP configuration directory. See [Where are configuration and log files located?](#where-are-configuration-and-log-files-located) for it's location.
 
 ## How do I turn on debug logging?
 
 First, make sure OpenPnP is not running.
 
-Next, find your log configuration file. See "Where are configuration and log files located?" to do that.
+Next, find your log configuration file. See [Where are configuration and log files located?](#where-are-configuration-and-log-files-located) to do that.
 
 Edit the file in any basic text editor and follow the instructions within.
 
-For instance, if you wanted to turn on driver debug logging, you would find the line that says "### change to debug to log low-level driver activity" and change the "info" string to "debug".
+For instance, if you wanted to turn on driver debug logging, you would find the line that says `### change to debug to log low-level driver activity` and change the `info` string to `debug`.
 
 Save the file and start OpenPnP.
