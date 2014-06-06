@@ -96,40 +96,54 @@ public class KicadPosImporter implements BoardImporter {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 		ArrayList<Placement> placements = new ArrayList<Placement>();
 		String line;
+
+//		See: http://bazaar.launchpad.net/~kicad-product-committers/kicad/product/view/head:/pcbnew/exporters/gen_modules_placefile.cpp
+//		### Module positions - created on Tue 25 Mar 2014 03:42:43 PM PDT ###
+//		### Printed by Pcbnew version pcbnew (2014-01-24 BZR 4632)-product
+//		## Unit = mm, Angle = deg.
+//		## Side : F.Cu
+//		# Ref    Val                  Package         PosX       PosY        Rot     Side
+//		C1       100u             Capacitors_SMD:c  128.9050   -52.0700       0.0    F.Cu
+//		C2       100u             Capacitors_SMD:c   93.3450   -77.4700     180.0    F.Cu
+//		C3       100u             Capacitors_SMD:c   67.9450   -77.4700     180.0    F.Cu
+		
+		Pattern pattern = Pattern.compile("(\\S+)\\s+(.*?)\\s+(.*?)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s(.*?)");
+		
 		while ((line = reader.readLine()) != null) {
 			line = line.trim();
 			if (line.length() == 0 || line.charAt(0) == '#') {
 				continue;
 			}
 
-			// C1 41.91 34.93 180 0.1uF C0805
-			// T10 21.59 14.22  90  SOT23-BEC
-			// printf("%s %5.2f %5.2f %3.0f %s %s\n",
 
-			//Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
-			Pattern pattern = Pattern.compile("(\\S+)\\s+(.*?)\\s(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s(.*)");
 
 			Matcher matcher = pattern.matcher(line);
 			matcher.matches();
-			Placement placement = new Placement(matcher.group(1));
+			
+			String placementId = matcher.group(1);
+			String partValue = matcher.group(2);
+			String pkgName = matcher.group(3);
+			double placementX = Double.parseDouble(matcher.group(4));
+			double placementY = Double.parseDouble(matcher.group(5));
+			double placementRotation = Double.parseDouble(matcher.group(6));
+			String placementLayer = matcher.group(7);
+			
+			Placement placement = new Placement(placementId);
 			placement.setLocation(new Location(
 			        LengthUnit.Millimeters,
-			        Double.parseDouble(matcher.group(3)),
-			        Double.parseDouble(matcher.group(4)),
+			        placementX,
+			        placementY,
 			        0,
-			        Double.parseDouble(matcher.group(5))));
+			        placementRotation));
 			Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
-                //String packageId = matcher.group(6);
-                //String partId = packageId + "-" + matcher.group(2);
-		String packageId = "";
-                String partId = matcher.group(2);
+                String partId = pkgName + "-" + partValue;
                 Part part = cfg.getPart(partId);
                 if (part == null) {
                     part = new Part(partId);
-                    Package pkg = cfg.getPackage(packageId);
+                    Package pkg = cfg.getPackage(pkgName);
                     if (pkg == null) {
-                        pkg = new Package(packageId);
+                        pkg = new Package(pkgName);
                         cfg.addPackage(pkg);
                     }
                     part.setPackage(pkg);
@@ -293,8 +307,12 @@ public class KicadPosImporter implements BoardImporter {
 	            board = new Board();
 	            List<Placement> placements = new ArrayList<Placement>();
 	            try {
-	                placements.addAll(parseFile(topFile, Side.Top, chckbxCreateMissingParts.isSelected()));
-	                placements.addAll(parseFile(bottomFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
+	                if (topFile.exists()) {
+	                    placements.addAll(parseFile(topFile, Side.Top, chckbxCreateMissingParts.isSelected()));
+	                }
+	                if (bottomFile.exists()) {
+	                    placements.addAll(parseFile(bottomFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
+	                }
 	            }
 	            catch (Exception e1) {
 	                MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
