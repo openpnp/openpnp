@@ -7,9 +7,9 @@ import java.util.Set;
 
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
+import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.IdentifiableList;
@@ -23,14 +23,14 @@ public abstract class AbstractMachine implements Machine {
     @ElementList(required=false)
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<Feeder>();
     
-//    @ElementList(required=true)
-//    protected IdentifiableList<NozzleTip> nozzletips = new IdentifiableList<NozzleTip>();
-    
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
     
     @Element
     protected JobPlanner jobPlanner;
+    
+    @Element
+    protected JobProcessor jobProcessor;
     
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
     
@@ -52,11 +52,6 @@ public abstract class AbstractMachine implements Machine {
         return Collections.unmodifiableList(feeders);
     }
     
-//    @Override
-//    public List<NozzleTip> getNozzleTips() {
-//        return Collections.unmodifiableList(nozzletips);
-//    }
-
     @Override
     public Feeder getFeeder(String id) {
         return feeders.get(id);
@@ -112,6 +107,11 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public JobPlanner getJobPlanner() {
         return jobPlanner;
+    }
+    
+    @Override
+    public JobProcessor getJobProcessor() {
+        return jobProcessor;
     }
 
     public void fireMachineHeadActivity(Head head) {

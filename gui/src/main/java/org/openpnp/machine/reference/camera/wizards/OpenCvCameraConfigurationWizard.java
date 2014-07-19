@@ -29,8 +29,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
+import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -38,13 +38,15 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard {
+public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
 	private final OpenCvCamera camera;
 
 	private JPanel panelGeneral;
 
 	public OpenCvCameraConfigurationWizard(
 			OpenCvCamera camera) {
+	    super(camera);
+	    
 		this.camera = camera;
 
 		panelGeneral = new JPanel();
@@ -73,6 +75,7 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
 
 	@Override
 	public void createBindings() {
+	    super.createBindings();
 		addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 	}
 

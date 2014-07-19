@@ -24,6 +24,7 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -50,16 +51,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.JobProcessor;
-import org.openpnp.JobProcessor.JobError;
-import org.openpnp.JobProcessor.JobState;
-import org.openpnp.JobProcessor.PickRetryAction;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.MountsmdUlpImporter;
-import org.openpnp.gui.importer.MountsmdPosImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -79,6 +74,10 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.JobProcessor;
+import org.openpnp.spi.JobProcessor.JobError;
+import org.openpnp.spi.JobProcessor.JobState;
+import org.openpnp.spi.JobProcessor.PickRetryAction;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
@@ -93,7 +92,6 @@ public class JobPanel extends JPanel {
 			.getLogger(JobPanel.class);
 
 	final private Configuration configuration;
-	final private JobProcessor jobProcessor;
 	final private MainFrame frame;
 	final private MachineControlsPanel machineControlsPanel;
 
@@ -102,7 +100,9 @@ public class JobPanel extends JPanel {
 
 	final private static String UNTITLED_JOB_FILENAME = "Untitled.job.xml";
 
-	private BoardLocationsTableModel boardLocationsTableModel;
+    private JobProcessor jobProcessor;
+
+    private BoardLocationsTableModel boardLocationsTableModel;
 	private PlacementsTableModel placementsTableModel;
 	private JTable boardLocationsTable;
 	private JTable placementsTable;
@@ -113,11 +113,10 @@ public class JobPanel extends JPanel {
 	private ActionGroup placementSelectionActionGroup;
 
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
+	
 
-	public JobPanel(Configuration configuration, JobProcessor jobProcessor,
-			MainFrame frame, MachineControlsPanel machineControlsPanel) {
+	public JobPanel(Configuration configuration, MainFrame frame, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
-		this.jobProcessor = jobProcessor;
 		this.frame = frame;
 		this.machineControlsPanel = machineControlsPanel;
 
@@ -301,12 +300,14 @@ public class JobPanel extends JPanel {
 
 		add(splitPane);
 
-		jobProcessor.addListener(jobProcessorListener);
-		jobProcessor.setDelegate(jobProcessorDelegate);
-
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
                 configuration.getMachine().addListener(machineListener);
+
+                jobProcessor = configuration.getMachine().getJobProcessor();
+                jobProcessor.addListener(jobProcessorListener);
+                jobProcessor.setDelegate(jobProcessorDelegate);
+
                 updateJobActions();
 
                 // Create an empty Job if one is not loaded
@@ -478,7 +479,35 @@ public class JobPanel extends JPanel {
 						.getName()));
 		frame.setTitle(title);
 	}
-
+	
+	public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
+	      if (getSelectedBoardLocation() == null) {
+              MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", "Please select a board in the Jobs tab to import into.");
+	          return;
+	      }
+	      
+	      BoardImporter boardImporter;
+          try {
+              boardImporter = boardImporterClass.newInstance();
+          }
+          catch (Exception e) {
+              MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+              return;
+          }
+          
+	      try {
+	          Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
+	          Board existingBoard = getSelectedBoardLocation().getBoard();
+	          for (Placement placement : importedBoard.getPlacements()) {
+	              existingBoard.addPlacement(placement);
+	          }
+	          placementsTableModel.fireTableDataChanged();
+	      }
+	      catch (Exception e) {
+	          MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
+	      }
+	}
+	
 	public final Action openJobAction = new AbstractAction("Open Job...") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -921,48 +950,6 @@ public class JobPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			MessageBoxes.notYetImplemented(getTopLevelAncestor());
-		}
-	};
-	
-	public final Action importMountsmdUlpAction = new AbstractAction("EAGLE mountsmd.ulp") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (getSelectedBoardLocation() == null) {
-				return;
-			}
-			BoardImporter importer = new MountsmdUlpImporter(JOptionPane.getFrameForComponent(JobPanel.this));
-			try {
-				Board importedBoard = importer.importBoard();
-				Board existingBoard = getSelectedBoardLocation().getBoard();
-				for (Placement placement : importedBoard.getPlacements()) {
-					existingBoard.addPlacement(placement);
-				}
-				placementsTableModel.fireTableDataChanged();
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
-			}
-		}
-	};
-	
-	public final Action importMountsmdPosAction = new AbstractAction("KiCAD  mountsmd.pos") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (getSelectedBoardLocation() == null) {
-				return;
-			}
-			BoardImporter importer = new MountsmdPosImporter(JOptionPane.getFrameForComponent(JobPanel.this));
-			try {
-				Board importedBoard = importer.importBoard();
-				Board existingBoard = getSelectedBoardLocation().getBoard();
-				for (Placement placement : importedBoard.getPlacements()) {
-					existingBoard.addPlacement(placement);
-				}
-				placementsTableModel.fireTableDataChanged();
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
-			}
 		}
 	};
 	

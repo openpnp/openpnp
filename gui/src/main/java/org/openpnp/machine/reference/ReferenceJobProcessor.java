@@ -19,12 +19,14 @@
  	For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp;
+package org.openpnp.machine.reference;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import org.openpnp.JobProcessorDelegate;
+import org.openpnp.JobProcessorListener;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -38,41 +40,19 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.JobPlanner.PlacementSolution;
+import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
 // possible to make things faster.
-public class JobProcessor implements Runnable {
-	private static final Logger logger = LoggerFactory.getLogger(JobProcessor.class);
+public class ReferenceJobProcessor implements Runnable, JobProcessor {
+	private static final Logger logger = LoggerFactory.getLogger(ReferenceJobProcessor.class);
 	
-	public enum JobState {
-		Stopped,
-		Running,
-		Paused,
-	}
-	
-	public enum JobError {
-		MachineHomingError,
-		MachineMovementError,
-		MachineRejectedJobError,
-		FeederError,
-		HeadError,
-		PickError,
-		PlaceError,
-		PartError
-	}
-	
-	public enum PickRetryAction {
-		RetryWithFeed,
-		RetryWithoutFeed,
-		SkipAndContinue,
-	}
-	
-	protected Configuration configuration;
 	protected Job job;
 	private Set<JobProcessorListener> listeners = new HashSet<JobProcessorListener>();
 	private JobProcessorDelegate delegate = new DefaultJobProcessorDelegate();
@@ -82,43 +62,52 @@ public class JobProcessor implements Runnable {
 	
 	private boolean pauseAtNextStep;
 	
-	public JobProcessor(Configuration configuration) {
-		this.configuration = configuration;
+	/**
+	 * Required for XML serialization. Ignore.
+	 */
+	@Attribute(required=false)
+	private String dummy;
+	
+	public ReferenceJobProcessor() {
 	}
 	
-	public void setDelegate(JobProcessorDelegate delegate) {
+	@Override
+    public void setDelegate(JobProcessorDelegate delegate) {
 		this.delegate = delegate;
 	}
 	
-	public void addListener(JobProcessorListener listener) {
+	@Override
+    public void addListener(JobProcessorListener listener) {
 		listeners.add(listener);
 	}
 	
-	public void removeListener(JobProcessorListener listener) {
+	@Override
+    public void removeListener(JobProcessorListener listener) {
 		listeners.remove(listener);
 	}
 	
-	public Job getJob() {
+	@Override
+    public Job getJob() {
 		return job;
 	}
 	
-	public JobState getState() {
+	@Override
+    public JobState getState() {
 		return state;
 	}
 	
 	// TODO: Change this, and most of the other properties on here to bound
 	// properties.
-	public void load(Job job) {
+	@Override
+    public void load(Job job) {
 		stop();
 		this.job = job;
 		
 		fireJobLoaded();
 	}
-	
-	/**
-	 * Start the Job. The Job must be in the Stopped state.
-	 */
-	public void start() throws Exception {
+
+	@Override
+    public void start() throws Exception {
 		logger.debug("start()");
 		if (state != JobState.Stopped) {
 			throw new Exception("Invalid state. Cannot start new job while state is " + state);
@@ -130,22 +119,15 @@ public class JobProcessor implements Runnable {
 		thread.start();
 	}
 	
-	/**
-	 * Pause a running Job. The Job will stop running at the next opportunity and retain
-	 * it's state so that it can be resumed. 
-	 */
-	public void pause() {
+	@Override
+    public void pause() {
 		logger.debug("pause()");
 		state = JobState.Paused;
 		fireJobStateChanged();
 	}
 	
-	/**
-	 * Advances the Job one step. If the Job is not currently started this will
-	 * start the Job first.
-	 * @throws Exception
-	 */
-	public void step() throws Exception {
+	@Override
+    public void step() throws Exception {
 		logger.debug("step()");
 		if (state == JobState.Stopped) {
 			pauseAtNextStep = true;
@@ -157,10 +139,8 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	/**
-	 * Resume a running Job. The Job will resume from where it was paused.
-	 */
-	public void resume() {
+	@Override
+    public void resume() {
 		logger.debug("resume()");
 		state = JobState.Running;
 		fireJobStateChanged();
@@ -169,11 +149,8 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	/**
-	 * Stop a running Job. The Job will stop immediately and will reset to it's 
-	 * freshly loaded state. All state about parts already placed will be lost.
-	 */
-	public void stop() {
+	@Override
+    public void stop() {
 		logger.debug("stop()");
 		state = JobState.Stopped;
 		fireJobStateChanged();
@@ -182,11 +159,12 @@ public class JobProcessor implements Runnable {
 		}
 	}
 	
-	public void run() {
+	@Override
+    public void run() {
 		state = JobState.Running;
 		fireJobStateChanged();
 		
-		Machine machine = configuration.getMachine();
+		Machine machine = Configuration.get().getMachine();
 		
 		preProcessJob(machine);
 		

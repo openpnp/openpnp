@@ -21,8 +21,12 @@
 
 package org.openpnp.gui.importer;
 
+import java.awt.Frame;
+
 import org.openpnp.model.Board;
 
 public interface BoardImporter {
-	public Board importBoard() throws Exception;
+	public Board importBoard(Frame parent) throws Exception;
+	public String getImporterName();
+	public String getImporterDescription();
 }

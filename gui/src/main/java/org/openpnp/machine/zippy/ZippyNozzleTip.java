@@ -22,22 +22,19 @@ package org.openpnp.machine.zippy;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.model.Configuration;
+import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder.Vision;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Point;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.openpnp.model.Part;
-import org.openpnp.spi.Camera;
-import org.openpnp.util.Utils2D;
-import org.openpnp.machine.zippy.VisionManager;
-import org.openpnp.machine.zippy.VisionManager.Vision;
 
 /**
  * Vision System Description

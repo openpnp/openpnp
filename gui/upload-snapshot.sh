@@ -6,6 +6,7 @@ if [ $? -eq 0 ]; then
 fi
 echo "Checking for files without a license header."
 grep -Lr "OpenPnP is free software: you can redistribute it and/or modify" --include='*.java' .
+rm -rf doc/javadoc
 javadoc -sourcepath src/main/java -subpackages org.openpnp -d doc/javadoc
 scp -r doc/javadoc/* jason@vonnieda.org:openpnp.org/htdocs/doc/javadoc
 DATE=`date +%F-%H-%M-%S`

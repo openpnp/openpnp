@@ -48,8 +48,6 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.openpnp.machine.zippy.VisionManager;
-import org.openpnp.machine.zippy.VisionManager.Vision;
 
 /**
  * Vision System Description
@@ -77,19 +75,19 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
 	
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-	
-	@Element
-	protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
-	@Element
-	protected Location feedEndLocation = new Location(LengthUnit.Millimeters);
-	@Element(required=false)
-	protected double feedSpeed = 1.0;
-	@Attribute(required=false)
-	protected String actuatorId; 
-	@Element(required=false) protected VisionManager.Vision vision = new VisionManager.Vision();
-	
-	protected Location pickLocation;
-	
+
+    @Element
+    protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
+    @Element
+    protected Location feedEndLocation = new Location(LengthUnit.Millimeters);
+    @Element(required = false)
+    protected double feedSpeed = 1.0;
+    @Attribute(required = false)
+    protected String actuatorId;
+    @Element(required = false)
+    protected Vision vision = new Vision();
+
+    protected Location pickLocation;	
 
 	/*
 	 * visionOffset contains the difference between where the part was
@@ -98,7 +96,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	 * subtracting the offsets from the feedStart and feedEndLocations 
 	 * should produce the correct feed locations.
 	 */
-	private Location visionOffset;
+	protected Location visionOffset;
 	
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
@@ -331,11 +329,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		propertyChangeSupport.firePropertyChange("actuatorId", oldValue, actuatorId);
 	}
 
-	public VisionManager.Vision getVision() {
+	public Vision getVision() {
 		return vision;
 	}
 
-	public void setVision(VisionManager.Vision vision) {
+	public void setVision(Vision vision) {
 		this.vision = vision;
 	}
 	

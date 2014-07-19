@@ -4,3 +4,5 @@ gui/installers
 ##### IntelliJ IDEA project files/directories
 *.iml
 .idea/
+gui/.settings
+simulator/build

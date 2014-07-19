@@ -63,6 +63,11 @@ public class ReferenceNozzle extends AbstractNozzle implements
     public Location getHeadOffsets() {
         return headOffsets;
     }
+    
+    @Override
+    public void setHeadOffsets(Location headOffsets) {
+        this.headOffsets = headOffsets;
+    }
 
     @Override
     public NozzleTip getNozzleTip() {

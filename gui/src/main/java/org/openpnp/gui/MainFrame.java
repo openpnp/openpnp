@@ -63,14 +63,16 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.JobProcessor;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
+import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
-import org.openpnp.gui.NozzleTipsPanel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -124,8 +126,10 @@ public class MainFrame extends JFrame {
 	
 	private ActionListener instructionsCancelActionListener;
 	private ActionListener instructionsProceedActionListener;
+	
+	private JMenu mnImport;
 
-	public MainFrame(Configuration configuration, JobProcessor jobProcessor) {
+	public MainFrame(Configuration configuration) {
 		this.configuration = configuration;
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);
@@ -159,8 +163,7 @@ public class MainFrame extends JFrame {
 		machineControlsPanel = new MachineControlsPanel(configuration, this,
 				cameraPanel);
 		machinePanel = new MachinePanel();
-		jobPanel = new JobPanel(configuration, jobProcessor, this,
-				machineControlsPanel);
+		jobPanel = new JobPanel(configuration, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
 		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration);
@@ -187,10 +190,8 @@ public class MainFrame extends JFrame {
 		// File -> Import
 		//////////////////////////////////////////////////////////////////////
 		mnFile.addSeparator();
-		JMenu mnImport = new JMenu("Import Board");
+		mnImport = new JMenu("Import Board");
 		mnFile.add(mnImport);
-		mnImport.add(new JMenuItem(jobPanel.importMountsmdUlpAction));
-		mnImport.add(new JMenuItem(jobPanel.importMountsmdPosAction));
 		
 		
 		if (!macOsXMenus) {
@@ -430,6 +431,8 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
 		panelBottom.addTab("NozzleTips", null, nozzletipPanel, null);
 
+		registerBoardImporters();
+
 		addComponentListener(componentListener);
 
 		try {
@@ -441,9 +444,12 @@ public class MainFrame extends JFrame {
 					.errorBox(
 							this,
 							"Configuration Load Error",
-							"There was a problem loading the configuration. The reason was:\n\n"
-									+ e.getMessage()
-									+ "\n\nPlease check your configuration files and try again. The program will now exit.");
+							"There was a problem loading the configuration. The reason was:<br/><br/>"
+									+ e.getMessage() + "<br/><br/>"
+									+ "Please check your configuration files and try again. They are located at: " 
+									+ configuration.getConfigurationDirectory().getAbsolutePath() + "<br/><br/>"
+									+ "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>"
+									+ "OpenPnP will now exit.");
 			System.exit(1);
 		}
 
@@ -456,9 +462,47 @@ public class MainFrame extends JFrame {
             }
         }
 
-		jobProcessor.addListener(jobProcessorListener);
+		configuration.addListener(new ConfigurationListener.Adapter() {
+		    @Override
+            public void configurationComplete(Configuration configuration)
+                    throws Exception {
+		        configuration.getMachine().getJobProcessor().addListener(jobProcessorListener);
+            }
+		});
 	}
 	
+	private void registerBoardImporters() {
+        registerBoardImporter(EagleMountsmdUlpImporter.class);
+        registerBoardImporter(KicadPosImporter.class);
+	}
+	
+    /**
+     * Register a BoardImporter with the system, causing it to gain a menu
+     * location in the File->Import menu.
+     * @param importer
+     */
+    public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
+        final BoardImporter boardImporter;
+        try {
+            boardImporter = boardImporterClass.newInstance();
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+        JMenuItem menuItem = new JMenuItem(new AbstractAction() {
+            {
+                putValue(NAME, boardImporter.getImporterName());
+                putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+            }
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jobPanel.importBoard(boardImporterClass);
+            }
+        });
+        mnImport.add(menuItem);
+    }
+    
 	public void showInstructions(
 			String title,
 			String instructions, 

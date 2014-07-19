@@ -24,6 +24,7 @@ package org.openpnp.spi;
 import java.util.List;
 
 
+
 /**
  * Machine represents the pick and place machine itself. It provides the information and interface needed to
  * cause the machine to do work. A Machine has one or more Heads.
@@ -46,15 +47,6 @@ public interface Machine extends WizardConfigurable {
 	
 	public Feeder getFeeder(String id);
 	
-	
-	/**
-	 * Gets a List of NozzleTips attached to the Machine.
-	 * @return
-	 */
-//	public List<NozzleTip> getNozzleTips();
-	
-//	public NozzleTip getNozzleTip(String id);
-
 	
 	/**
 	 * Gets a List of Cameras attached to the Machine that are not attached
@@ -120,5 +112,7 @@ public interface Machine extends WizardConfigurable {
 	public void removeCamera(Camera camera);
 	
 	public JobPlanner getJobPlanner();
+	
+	public JobProcessor getJobProcessor();
 
 }

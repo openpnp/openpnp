@@ -28,7 +28,6 @@ import javax.swing.UIManager;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.machine.zippy.ZippyJobProcessor;
 import org.openpnp.model.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,11 +86,10 @@ public class Main {
 		
 		Configuration.initialize(configurationDirectory);
 		final Configuration configuration = Configuration.get();
-		final JobProcessor jobProcessor = new ZippyJobProcessor(configuration);
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MainFrame frame = new MainFrame(configuration, jobProcessor);
+					MainFrame frame = new MainFrame(configuration);
 					frame.setVisible(true);
 				}
 				catch (Exception e) {

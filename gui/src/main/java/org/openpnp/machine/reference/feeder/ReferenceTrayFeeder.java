@@ -28,7 +28,6 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -89,10 +88,9 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
-//        pickLocation = offsets
-//        		.multiply(partX, partY, 0.0, 0.0)
-//                .add(location);
-        pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
+        // and then add them to the location to get the final pickLocation.
+        pickLocation = location.add(
+                offsets.multiply(partX, partY, 0.0, 0.0));
 
         logger.debug(String.format(
                 "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,

@@ -21,32 +21,17 @@
 
 package org.openpnp.machine.zippy;
 
-import org.openpnp.machine.zippy.VisionManager;
-import org.openpnp.machine.zippy.VisionManager.Vision;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ZippyTapeFeeder extends ReferenceTapeFeeder {
-//	@Element(required=false) private VMVision vmvision = new VMVision();
-//	@Element(required=false) private Vision vmvision = new Vision();
-//	VisionManager.Vision vmvision = vision;
-	
-	
-	 
-
 	private final static Logger logger = LoggerFactory.getLogger(ZippyTapeFeeder.class);
-	private Location visionOffset;
-	VisionManager visionMgr = new VisionManager();
-
-	
+	private VisionManager visionMgr = new VisionManager();
 	
     @Override
 	public void feed(Nozzle nozzle)
