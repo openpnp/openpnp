@@ -34,7 +34,6 @@ import javax.swing.JTextField;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.machine.zippy.ZippyNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
