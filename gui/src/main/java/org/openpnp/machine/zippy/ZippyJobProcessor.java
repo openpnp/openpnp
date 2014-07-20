@@ -161,7 +161,7 @@ public class ZippyJobProcessor extends ReferenceJobProcessor {
 				Feeder feeder = solution.feeder;
 				Placement placement = solution.placement;
 				Nozzle nozzle = solution.nozzle;
-				NozzleTip nozzletip = solution.nozzleTip;
+				NozzleTip nozzleTip = solution.nozzleTip;
 
 				// Determine where we will place the part
 				Location boardLocation = bl.getLocation();
@@ -206,17 +206,57 @@ public class ZippyJobProcessor extends ReferenceJobProcessor {
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
 				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() - partHeight, null);
 
-				if( !nozzle.getNozzleTip().getId().equals(nozzletip.getId())){
-					try {
-						((ZippyNozzleTip) nozzle.getNozzleTip()).unload((ZippyNozzle) nozzle);
-						((ZippyNozzleTip) nozzletip).load((ZippyNozzle) nozzle);
-						((ZippyNozzleTip) nozzletip).calibrate((ZippyNozzle) nozzle);
-					}
-					catch (Exception e) {
-						fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-						return;
-					}
-				}
+
+				
+                // NozzleTip Changer
+                if (nozzle.getNozzleTip() != nozzleTip) {
+                    fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getId()));        
+
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    
+                    try {
+                        nozzle.unloadNozzleTip();
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                    
+                    fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getId(), nozzle.getId()));        
+
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                                        
+                    try {
+                        nozzle.loadNozzleTip(nozzleTip);
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                    
+                    if (nozzle.getNozzleTip() != nozzleTip) {
+                        fireJobEncounteredError(JobError.PickError, "Failed to load correct nozzle tip");
+                        return;
+                    }
+                    
+                    try {
+                        ((ZippyNozzleTip) nozzleTip).calibrate((ZippyNozzle) nozzle);                    
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                }
+                // End NozzleTip Changer
+                
+                if (!nozzle.getNozzleTip().canHandle(part)) {
+                    fireJobEncounteredError(JobError.PickError, "Selected nozzle tip is not compatible with part");
+                }
+                
 				pick(nozzle, feeder, bl, placement);
 				placementSolutionLocations.put(solution, placementLocation);
 			}

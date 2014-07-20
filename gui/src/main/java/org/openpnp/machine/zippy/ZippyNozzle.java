@@ -20,21 +20,9 @@
  */
 package org.openpnp.machine.zippy;
 
-import org.openpnp.gui.MainFrame;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
-import org.openpnp.model.Point;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.util.IdentifiableList;
-import org.openpnp.util.Utils2D;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.ElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,49 +31,31 @@ public class ZippyNozzle extends ReferenceNozzle {
 	private final static Logger logger = LoggerFactory
             .getLogger(ZippyNozzle.class);
     
-    //private ZippyNozzleTip currentNozzleTip; 
-	@Attribute(required=false) protected String currentNozzleTipid;
-	
-    private ZippyNozzleTip currentNozzleTip;
     private Location appliedOffset;
-    private ZippyCamera camera;
-    
     
     public ZippyNozzle(){
-    	for(NozzleTip nt : nozzletips){
-    		ZippyNozzleTip znt = (ZippyNozzleTip)nt;
-    		if(znt.isLoaded())
-    			currentNozzleTip = znt;
-    	}
-    	appliedOffset = new Location(LengthUnit.Millimeters,0.0,0.0,0.0,0.0);
-    	
+    	appliedOffset = new Location(LengthUnit.Millimeters,0.0,0.0,0.0,0.0);    	
     }
+    
     //uncompensated move 
     public void uncompMoveTo(Location location, double speed) throws Exception {
     	super.moveTo(location, speed);
     }
+    
     @Override
     public Location getLocation() {
         return driver.getLocation(this).add(appliedOffset);
     }
-
     
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-    	
+    	ZippyNozzleTip nozzleTip = (ZippyNozzleTip) getNozzleTip();
+        
     	Location calculatedOffset; //new calculated offset
     	Location adjustedLocation; //compensated location
     	
-    	if(currentNozzleTip==null){
-	    	for(NozzleTip nt : nozzletips){
-	    		ZippyNozzleTip znt = (ZippyNozzleTip)nt;
-	    		if(znt.isLoaded())
-	    			currentNozzleTip = znt;
-	    	}
-    	}
-
     	// pull calculated offsets for new location
-    	calculatedOffset = currentNozzleTip.calculateOffset(location);
+    	calculatedOffset = nozzleTip.calculateOffset(location);
     	
 		//each time, add in applied offsets, then subtract out new offset
     	//this way if rotation doesn't change applied offset and calculated offset cancel out
@@ -108,44 +78,20 @@ public class ZippyNozzle extends ReferenceNozzle {
 	       
     }
    
-//    @Override
-    public boolean canHandle(Part part) {
-    	ZippyNozzleTip nt = (ZippyNozzleTip) this.getNozzleTip();
-    	boolean result = part.getPackage().getNozzleTipId() == nt.getId();
-    	logger.debug("{}.canHandle({}) => {}", new Object[]{getId(), part.getId(), result});
-		return result;
-	}
-
-    @Override
-    public NozzleTip getNozzleTip() {
-        return currentNozzleTip;
-    }
-
-//    @Override
-    public void setNozzleTip(ZippyNozzleTip nozzletip) {
-        this.currentNozzleTip = nozzletip;
-        currentNozzleTipid = nozzletip.getId();
-    }
-
     public void clearAppliedOffset(){
     	appliedOffset=appliedOffset.derive(0.0, 0.0, 0.0, 0.0);
 //    	this.camera.setHeadOffsets(original_camera_offsets);
     }
+    
     public Location getAppliedOffset(){
     	return appliedOffset;
     }
     
-    @Override
-    public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
-		boolean result = currentNozzleTip.canHandle(feeder.getPart());
-		logger.debug("{}.canPickAndPlace({},{}) => {}", new Object[]{getId(), feeder, placeLocation, result});
-    	return result;
-	}
-
     //    @Override
     public void addNozzleTip(ZippyNozzleTip nozzletip) throws Exception {
-        nozzletips.add(nozzletip);
-   }
+        nozzleTips.add(nozzletip);
+    }
+    
     @Override
     public void moveToSafeZ(double speed) throws Exception {
 		logger.debug("{}.moveToSafeZ({})", new Object[]{getId(), speed});
@@ -153,5 +99,4 @@ public class ZippyNozzle extends ReferenceNozzle {
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
-
 }
