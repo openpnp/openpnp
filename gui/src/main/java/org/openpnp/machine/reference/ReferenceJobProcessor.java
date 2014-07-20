@@ -43,6 +43,7 @@ import org.openpnp.spi.JobPlanner.PlacementSolution;
 import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -200,6 +201,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 				Feeder feeder = solution.feeder;
 				Placement placement = solution.placement;
 				Nozzle nozzle = solution.nozzle;
+				NozzleTip nozzleTip = solution.nozzleTip;
 				
                 // TODO: do this work and the one below in preProcess, just
 				// have the JobPlanner plan the job twice.
@@ -208,10 +210,15 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                     return;
                 }
 
-				if (feeder == null) {
-					fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
-					return;
-				}
+                if (feeder == null) {
+                    fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
+                    return;
+                }
+
+                if (nozzleTip == null) {
+                    fireJobEncounteredError(JobError.HeadError, "No viable NozzleTips found for Part / Feeder " + part.getId());
+                    return;
+                }
 
 				// Determine where we will place the part
 				Location boardLocation = bl.getLocation();
@@ -256,6 +263,47 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
 				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
 
+				// NozzleTip Changer
+				if (nozzle.getNozzleTip() != nozzleTip) {
+			        fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getId()));        
+
+			        if (!shouldJobProcessingContinue()) {
+			            return;
+			        }
+			        
+                    try {
+                        nozzle.unloadNozzleTip();
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                    
+                    fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getId(), nozzle.getId()));        
+
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                                        
+			        try {
+	                    nozzle.loadNozzleTip(nozzleTip);
+			        }
+			        catch (Exception e) {
+			            fireJobEncounteredError(JobError.PickError, e.getMessage());
+			            return;
+			        }
+			        
+			        if (nozzle.getNozzleTip() != nozzleTip) {
+                        fireJobEncounteredError(JobError.PickError, "Failed to load correct nozzle tip");
+                        return;
+			        }
+				}
+				// End NozzleTip Changer
+				
+				if (!nozzle.getNozzleTip().canHandle(part)) {
+                    fireJobEncounteredError(JobError.PickError, "Selected nozzle tip is not compatible with part");
+				}
+				
 				pick(nozzle, feeder, bl, placement);
 				placementSolutionLocations.put(solution, placementLocation);
 			}

@@ -75,13 +75,13 @@ public class TestDriver implements ReferenceDriver {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("pick({})", nozzle);
+        logger.debug("pick({} {})", nozzle, nozzle.getNozzleTip());
         delegate.pick(nozzle);
     }
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("place({})", nozzle);
+        logger.debug("place({} {})", nozzle, nozzle.getNozzleTip());
         delegate.place(nozzle);
     }
 

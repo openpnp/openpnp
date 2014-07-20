@@ -316,7 +316,7 @@ public class BasicJobTest {
 
             @Override
             public String toString() {
-                return "Pick " + nozzle;
+                return "Pick " + nozzle + " " + nozzle.getNozzleTip().getId();
             }
         }
 
@@ -329,7 +329,7 @@ public class BasicJobTest {
 
             @Override
             public String toString() {
-                return "Place " + nozzle;
+                return "Place " + nozzle + " " + nozzle.getNozzleTip().getId();
             }
         }
 

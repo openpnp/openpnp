@@ -58,4 +58,31 @@ public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable 
      * @return
      */
 	public List<NozzleTip> getNozzleTips();
+	
+	/**
+	 * Changer interface:
+	 * 
+	 * Command the Nozzle to load the given NozzleTip as it's current
+	 * NozzleTip. If this returns without Exception then subsequently calling
+	 * getNozzleTip() should return the same NozzleTip as was passed to
+	 * this call.
+	 * 
+	 * If the specified NozzleTip is already loaded this method
+	 * should do nothing.
+	 * 
+	 * @param nozzleTip
+	 * @throws Exception
+	 */
+	public void loadNozzleTip(NozzleTip nozzleTip) throws Exception;
+	
+	/**
+	 * Changer interface:
+	 * 
+	 * Unload the current NozzleTip from the Nozzle, leaving it empty.
+	 * 
+	 * After this call getNozzleTip() should return null.
+	 *  
+	 * @throws Exception
+	 */
+	public void unloadNozzleTip() throws Exception;
 }

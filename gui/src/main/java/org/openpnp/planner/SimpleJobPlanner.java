@@ -9,12 +9,14 @@ import java.util.Set;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,10 +59,11 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
             }
             PlacementSolution solution = i.next();
             i.remove();
+            // Feeder can be null if no applicable Feeder was found. 
             Feeder feeder = getFeederSolution(Configuration.get().getMachine(), nozzle, solution.placement.getPart());
-            // We potentially return null here for Feeder, which lets the JobProcessor know that no applicable
-            // Feeder was found. 
-            solution = new PlacementSolution(solution.placement, solution.boardLocation, solution.head, nozzle, nozzle.getNozzleTip(), feeder);
+            // NozzleTip can be null if no applicable NozzleTip was found.
+            NozzleTip nozzleTip = getNozzleTipSolution(Configuration.get().getMachine(), nozzle, solution.placement.getPart(), feeder);
+            solution = new PlacementSolution(solution.placement, solution.boardLocation, solution.head, nozzle, nozzleTip, feeder);
             results.add(solution);
         }
         return results.size() > 0 ? results : null;
@@ -81,4 +84,20 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         Feeder feeder = feeders.get(0);
         return feeder;
     }
+    
+    protected static NozzleTip getNozzleTipSolution(Machine machine, Nozzle nozzle, Part part, Feeder feeder) {
+        // Get a list of NozzleTips that can service the Part and the Feeder
+        List<NozzleTip> nozzleTips = new ArrayList<NozzleTip>();
+        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+            if (nozzleTip.canHandle(part) && feeder.canFeedToNozzle(nozzle)) {
+                nozzleTips.add(nozzleTip);
+            }
+        }
+        if (nozzleTips.size() < 1) {
+            return null;
+        }
+        // For now we just take the first NozzleTip that works.
+        NozzleTip nozzletip = nozzleTips.get(0);
+        return nozzletip;
+    }    
 }

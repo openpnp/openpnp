@@ -12,11 +12,11 @@ import org.simpleframework.xml.ElementList;
 
 public abstract class AbstractNozzle implements Nozzle {
     @ElementList(required=false)
-    	protected IdentifiableList<NozzleTip> nozzletips = new IdentifiableList<NozzleTip>();
+    	protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<NozzleTip>();
 
     @Override
     public List<NozzleTip> getNozzleTips() {
-        return Collections.unmodifiableList(nozzletips);
+        return Collections.unmodifiableList(nozzleTips);
     }
 	
 	@Attribute
