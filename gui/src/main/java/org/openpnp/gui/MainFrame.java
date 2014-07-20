@@ -114,6 +114,8 @@ public class MainFrame extends JFrame {
 	public static HeadsPanel headsPanel;
 	public static ActuatorsPanel actuatorsPanel;
 	public static CameraPanel cameraPanel;
+    public static NozzlesPanel nozzlesPanel;
+    public static NozzleTipsPanel nozzleTipsPanel;
 
 	private JPanel contentPane;
 	private JLabel lblStatus;
@@ -170,6 +172,8 @@ public class MainFrame extends JFrame {
 		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(configuration);
+        nozzlesPanel = new NozzlesPanel(this, configuration);
+        nozzleTipsPanel = new NozzleTipsPanel(this, configuration);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -426,7 +430,9 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
 		panelBottom.addTab("Machine", null, machinePanel, null);
 		panelBottom.addTab("Heads", null, headsPanel, null);
-		panelBottom.addTab("Actuators", null, actuatorsPanel, null);
+        panelBottom.addTab("Actuators", null, actuatorsPanel, null);
+        panelBottom.addTab("Nozzles", null, nozzlesPanel, null);
+        panelBottom.addTab("NozzleTips", null, nozzleTipsPanel, null);
 
 		registerBoardImporters();
 
