@@ -198,8 +198,6 @@ public class PackagesPanel extends JPanel {
 				}
 				Package this_package = new Package(id);
 				
-//				this_package.setNozzleTip(Configuration.get().getPackages().get(0));
-				
 				configuration.addPackage(this_package);
 				packagesTableModel.fireTableDataChanged();
 				Helpers.selectLastTableRow(packagesTable);
