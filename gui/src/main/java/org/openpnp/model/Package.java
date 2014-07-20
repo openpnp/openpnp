@@ -31,8 +31,6 @@ public class Package implements Identifiable {
     private String name;
     @Element(required = false)
     private Outline outline;
-    @Element(required = false)
-    private String nozzletip;
 
     private Package() {
         this(null);
@@ -53,14 +51,6 @@ public class Package implements Identifiable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getNozzleTipId() {
-        return nozzletip;
-    }
-
-    public void setNozzleTip(String nozzletip) {
-        this.nozzletip = nozzletip;
     }
 
     public Outline getOutline() {
