@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -67,8 +68,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		// TODO Auto-generated method stub
-		return null;
+	    return new ReferenceNozzleTipConfigurationWizard(this);
 	}
 
     public Location getChangerStartLocation() {

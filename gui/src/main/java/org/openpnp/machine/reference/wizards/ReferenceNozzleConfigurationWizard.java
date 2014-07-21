@@ -115,14 +115,6 @@ public class ReferenceNozzleConfigurationWizard extends
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
                 FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
                 FormFactory.DEFAULT_ROWSPEC,}));
         
         chckbxChangerEnabled = new JCheckBox("Changer Enabled?");
