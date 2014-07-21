@@ -34,7 +34,7 @@ import org.openpnp.model.Identifiable;
  * expected that all components attached to the Head also move in the same
  * axes.
  */
-public interface Head extends Identifiable, WizardConfigurable {
+public interface Head extends Identifiable, WizardConfigurable, PropertySheetConfigurable {
     /**
      * Get a list of Nozzles that are attached to this head.
      * @return

@@ -34,6 +34,7 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.PropertySheetConfigurable;
 import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -87,8 +88,28 @@ public class ReferenceMachine extends AbstractMachine {
 	public Wizard getConfigurationWizard() {
 		return driver.getConfigurationWizard();
 	}
-
+	
 	@Override
+    public String getPropertySheetConfigurableTitle() {
+	    return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+        ArrayList<PropertySheetConfigurable> children = new ArrayList<PropertySheetConfigurable>();
+        children.addAll(getFeeders());
+        children.addAll(getHeads());
+        children.addAll(getCameras());
+        children.add(getDriver());
+        return children.toArray(new PropertySheetConfigurable[]{});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return null;
+    }
+
+    @Override
 	public List<Class<? extends Feeder>> getCompatibleFeederClasses() {
 		List<Class<? extends Feeder>> l = new ArrayList<Class<? extends Feeder>>();
 		l.add(ReferenceTrayFeeder.class);

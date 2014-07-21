@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.driver.wizards.TinygDriverConfigurationWiza
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetConfigurable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -482,5 +483,22 @@ public class TinygDriver implements ReferenceDriver, Runnable {
     public Wizard getConfigurationWizard() {
         // TODO Auto-generated method stub
         return new TinygDriverConfigurationWizard(this);
+    }
+
+    @Override
+    public String getPropertySheetConfigurableTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

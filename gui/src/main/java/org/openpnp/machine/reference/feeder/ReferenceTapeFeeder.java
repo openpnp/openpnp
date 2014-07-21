@@ -42,6 +42,8 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
 import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -294,8 +296,25 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	public Wizard getConfigurationWizard() {
 		return new ReferenceTapeFeederConfigurationWizard(this);
 	}
+	
+	@Override
+    public String getPropertySheetConfigurableTitle() {
+	    return getClass().getSimpleName() + " " + getId();
+    }
 
-	public Location getFeedStartLocation() {
+    @Override
+    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Location getFeedStartLocation() {
 		return feedStartLocation;
 	}
 

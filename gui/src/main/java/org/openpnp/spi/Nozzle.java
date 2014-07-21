@@ -12,7 +12,7 @@ import org.openpnp.model.Location;
  * of Packages it can handle and it may have the capability of changing it's
  * NozzleTip.
  */
-public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable {
+public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable, PropertySheetConfigurable {
     /**
      * Get the NozzleTip currently attached to the Nozzle.
      * 

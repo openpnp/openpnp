@@ -1,12 +1,14 @@
 package org.openpnp.machine.reference;
 
+import java.util.ArrayList;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PropertySheetConfigurable;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -187,8 +189,26 @@ public class ReferenceNozzle extends AbstractNozzle implements
         // TODO Auto-generated method stub
         return null;
     }
-
+    
 	@Override
+    public String getPropertySheetConfigurableTitle() {
+	    return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+        ArrayList<PropertySheetConfigurable> children = new ArrayList<PropertySheetConfigurable>();
+        children.addAll(getNozzleTips());
+        return children.toArray(new PropertySheetConfigurable[]{});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
 	public String toString() {
 		return getId();
 	}

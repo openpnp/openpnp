@@ -85,6 +85,8 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -427,6 +429,23 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public Wizard getConfigurationWizard() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPropertySheetConfigurableTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
         // TODO Auto-generated method stub
         return null;
     }

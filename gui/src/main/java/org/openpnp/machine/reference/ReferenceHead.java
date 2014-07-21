@@ -21,10 +21,13 @@
 
 package org.openpnp.machine.reference;
 
+import java.util.ArrayList;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.PropertySheetConfigurable;
 import org.openpnp.spi.base.AbstractHead;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +61,27 @@ public class ReferenceHead extends AbstractHead {
     public Wizard getConfigurationWizard() {
         return new ReferenceHeadConfigurationWizard(this);
     }
-
+	
 	@Override
+    public String getPropertySheetConfigurableTitle() {
+	    return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+        ArrayList<PropertySheetConfigurable> children = new ArrayList<PropertySheetConfigurable>();
+        children.addAll(getNozzles());
+        children.addAll(getCameras());
+        children.addAll(getActuators());
+        return children.toArray(new PropertySheetConfigurable[]{});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return null;
+    }
+
+    @Override
 	public void moveToSafeZ(double speed) throws Exception {
 		logger.debug("{}.moveToSafeZ({})", getId(), speed);
 		super.moveToSafeZ(speed);
