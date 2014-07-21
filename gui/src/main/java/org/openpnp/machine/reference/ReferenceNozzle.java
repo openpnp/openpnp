@@ -2,9 +2,9 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -181,11 +181,18 @@ public class ReferenceNozzle extends AbstractNozzle implements
     public Location getLocation() {
         return driver.getLocation(this);
     }
+    
+    public boolean isChangerEnabled() {
+        return changerEnabled;
+    }
+
+    public void setChangerEnabled(boolean changerEnabled) {
+        this.changerEnabled = changerEnabled;
+    }
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
-        return null;
+        return new ReferenceNozzleConfigurationWizard(this);
     }
 
 	@Override
