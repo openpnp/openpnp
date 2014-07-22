@@ -31,7 +31,9 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -310,10 +312,11 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
     }
-
+    
     public Location getFeedStartLocation() {
 		return feedStartLocation;
 	}

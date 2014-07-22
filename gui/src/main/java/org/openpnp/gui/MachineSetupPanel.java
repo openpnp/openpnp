@@ -39,16 +39,23 @@ import javax.swing.JTree;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.WizardConfigurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.JTabbedPane;
 
 @SuppressWarnings("serial")
 public class MachineSetupPanel extends JPanel implements WizardContainer {
@@ -59,11 +66,11 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
 	private JTextField searchTextField;
-    private JPanel configurationPanel;
 
 	private Preferences prefs = Preferences
 			.userNodeForPackage(MachineSetupPanel.class);
 	private JTree tree;
+	private JTabbedPane tabbedPane;
 
 	public MachineSetupPanel() {
 		setLayout(new BorderLayout(0, 0));
@@ -115,17 +122,44 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 					}
 				});
 		add(splitPane, BorderLayout.CENTER);
-		
-		configurationPanel = new JPanel();
-		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         JScrollPane scrollPane = new JScrollPane();
         splitPane.setLeftComponent(scrollPane);
         
         tree = new JTree();
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         scrollPane.setViewportView(tree);
-        splitPane.setRightComponent(configurationPanel);
-        configurationPanel.setLayout(new BorderLayout(0, 0));
+        
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        splitPane.setRightComponent(tabbedPane);
+        
+        tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                PropertySheetConfigurableTreeNode node = (PropertySheetConfigurableTreeNode) tree.getLastSelectedPathComponent();
+
+                tabbedPane.removeAll();
+                
+                if (node != null) {
+                    PropertySheet[] propertySheets = node.obj.getPropertySheets();
+                    if (propertySheets != null) {
+                        for (PropertySheet propertySheet : propertySheets) {
+                            String title = propertySheet.getPropertySheetTitle();
+                            JPanel panel = propertySheet.getPropertySheetPanel();
+                            if (title == null) {
+                                title = "Untitled";
+                            }
+                            if (panel != null) {
+                                tabbedPane.add(title, panel);
+                            }
+                        }
+                    }
+                }
+                
+                revalidate();
+                repaint();
+            }
+        });
         
         Configuration.get().addListener(new ConfigurationListener() {
             @Override

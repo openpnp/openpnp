@@ -3,7 +3,9 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
@@ -183,11 +185,18 @@ public class ReferenceNozzle extends AbstractNozzle implements
     public Location getLocation() {
         return driver.getLocation(this);
     }
+    
+    public boolean isChangerEnabled() {
+        return changerEnabled;
+    }
+
+    public void setChangerEnabled(boolean changerEnabled) {
+        this.changerEnabled = changerEnabled;
+    }
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
-        return null;
+        return new ReferenceNozzleConfigurationWizard(this);
     }
     
 	@Override
@@ -204,8 +213,9 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
     }
 
     @Override

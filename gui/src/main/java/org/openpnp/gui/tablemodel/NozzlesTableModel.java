@@ -74,7 +74,7 @@ public class NozzlesTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex == 1;
+	    return false;
 	}
 	
 	@Override
@@ -87,30 +87,6 @@ public class NozzlesTableModel extends AbstractTableModel {
 
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-		try {
-			Nozzle nozzle = nozzles.get(rowIndex);
-			if (columnIndex == 1) {
-			    HeadCellValue value = (HeadCellValue) aValue;
-			    if (nozzle.getHead() == null) {
-//			        Configuration.get().getMachine().removeCamera(camera);
-			    }
-			    else {
-//                    camera.getHead().removeCamera(camera);
-			    }
-			    
-			    if (value.getHead() == null) {
-//			        Configuration.get().getMachine().addCamera(camera);
-			    }
-			    else {
-//			        value.getHead().addCamera(camera);
-			    }
-//			    camera.setHead(value.getHead());
-			}
-			configuration.setDirty(true);
-		}
-		catch (Exception e) {
-			// TODO: dialog, bad input
-		}
 	}
 	
 	public Object getValueAt(int row, int col) {

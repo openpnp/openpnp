@@ -24,6 +24,7 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -35,6 +36,7 @@ import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
 import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -106,7 +108,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
     }
 
     @Override

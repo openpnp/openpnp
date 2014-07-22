@@ -23,7 +23,9 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetConfigurable;
@@ -143,7 +145,9 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
-    }	
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }    
 }

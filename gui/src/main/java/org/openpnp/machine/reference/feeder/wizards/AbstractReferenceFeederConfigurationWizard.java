@@ -49,6 +49,9 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
+/**
+ * TODO: This should become it's own property sheet which the feeders can include.
+ */
 public abstract class AbstractReferenceFeederConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFeeder feeder;
 

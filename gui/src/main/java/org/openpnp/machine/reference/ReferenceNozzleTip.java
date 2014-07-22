@@ -1,15 +1,18 @@
 package org.openpnp.machine.reference;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -22,7 +25,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             .getLogger(ReferenceNozzleTip.class);
 
     @ElementList(required = false, entry = "id")
-    private List<String> compatiblePackageIds = new ArrayList<String>();
+    private Set<String> compatiblePackageIds = new HashSet<String>();
     
     @Attribute(required = false)
     private boolean allowIncompatiblePackages;
@@ -34,7 +37,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
 
-    private List<org.openpnp.model.Package> compatiblePackages = new ArrayList<org.openpnp.model.Package>();
+    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<org.openpnp.model.Package>();
     
     public ReferenceNozzleTip() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -60,16 +63,29 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 		logger.debug("{}.canHandle({}) => {}", new Object[]{getId(), part.getId(), result});
 		return result;
 	}
+    
+	public Set<org.openpnp.model.Package> getCompatiblePackages() {
+        return new HashSet<org.openpnp.model.Package>(compatiblePackages);
+    }
 
-	@Override
+    public void setCompatiblePackages(
+            Set<org.openpnp.model.Package> compatiblePackages) {
+        this.compatiblePackages.clear();
+        this.compatiblePackages.addAll(compatiblePackages);
+        compatiblePackageIds.clear();
+        for (org.openpnp.model.Package pkg : compatiblePackages) {
+            compatiblePackageIds.add(pkg.getId());
+        }
+    }
+
+    @Override
 	public String toString() {
 		return getId();
 	}
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		// TODO Auto-generated method stub
-		return null;
+	    return new ReferenceNozzleTipConfigurationWizard(this);
 	}
 
     @Override
@@ -85,8 +101,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+
+    public boolean isAllowIncompatiblePackages() {
+        return allowIncompatiblePackages;
+    }
+
+    public void setAllowIncompatiblePackages(boolean allowIncompatiblePackages) {
+        this.allowIncompatiblePackages = allowIncompatiblePackages;
     }
 
     public Location getChangerStartLocation() {

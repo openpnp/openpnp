@@ -24,10 +24,12 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
 import org.openpnp.spi.base.AbstractHead;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +80,9 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
     }
 
     @Override

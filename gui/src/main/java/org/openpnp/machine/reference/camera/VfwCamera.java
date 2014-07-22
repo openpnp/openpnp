@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.VfwCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -196,7 +198,9 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
-    }	
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }    
 }

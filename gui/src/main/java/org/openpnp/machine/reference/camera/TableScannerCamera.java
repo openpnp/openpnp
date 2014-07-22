@@ -43,7 +43,9 @@ import javax.imageio.ImageIO;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.openpnp.CameraListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.TableScannerCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -520,9 +522,11 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
-    }	
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
 	
 	public class Tile {
 		private File file;
