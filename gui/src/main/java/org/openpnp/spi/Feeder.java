@@ -32,7 +32,7 @@ import org.openpnp.model.Part;
  * It can be a tape and reel feeder, a tray handler, a single part in a 
  * specific location or anything else that can be used as a pick source.
  */
-public interface Feeder extends Identifiable, WizardConfigurable, PropertySheetConfigurable {
+public interface Feeder extends Identifiable, WizardConfigurable, PropertySheetHolder {
     public void setId(String id);
     
     /**

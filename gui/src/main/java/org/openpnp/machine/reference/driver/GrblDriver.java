@@ -32,6 +32,8 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -43,7 +45,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -387,12 +389,18 @@ public class GrblDriver implements ReferenceDriver, Runnable {
     }
 
     @Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

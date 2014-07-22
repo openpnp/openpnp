@@ -49,8 +49,8 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.WizardConfigurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -191,16 +191,16 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 	}
 	
     public class PropertySheetConfigurableTreeNode implements TreeNode {
-        private final PropertySheetConfigurable obj;
+        private final PropertySheetHolder obj;
         private final TreeNode parent;
         private final ArrayList<PropertySheetConfigurableTreeNode> children = new ArrayList<PropertySheetConfigurableTreeNode>();
         
-        public PropertySheetConfigurableTreeNode(PropertySheetConfigurable obj, TreeNode parent) {
+        public PropertySheetConfigurableTreeNode(PropertySheetHolder obj, TreeNode parent) {
             this.obj = obj;
             this.parent = parent;
-            PropertySheetConfigurable[] children = obj.getPropertySheetConfigurableChildren();
+            PropertySheetHolder[] children = obj.getChildPropertySheetHolders();
             if (children != null) {
-                for (PropertySheetConfigurable child : children) {
+                for (PropertySheetHolder child : children) {
                     this.children.add(new PropertySheetConfigurableTreeNode(child, this));
                 }
             }
@@ -243,7 +243,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
         @Override
         public String toString() {
-            return obj.getPropertySheetConfigurableTitle();
+            return obj.getPropertySheetHolderTitle();
         }
     }	
 }

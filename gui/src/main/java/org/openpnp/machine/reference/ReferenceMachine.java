@@ -24,6 +24,8 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Action;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
@@ -35,8 +37,7 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -92,18 +93,24 @@ public class ReferenceMachine extends AbstractMachine {
 	}
 	
 	@Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
 	    return getClass().getSimpleName();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
-        ArrayList<PropertySheetConfigurable> children = new ArrayList<PropertySheetConfigurable>();
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
         children.addAll(getFeeders());
         children.addAll(getHeads());
         children.addAll(getCameras());
         children.add(getDriver());
-        return children.toArray(new PropertySheetConfigurable[]{});
+        return children.toArray(new PropertySheetHolder[]{});
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

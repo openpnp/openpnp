@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Locale;
 
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -40,7 +42,7 @@ import org.openpnp.machine.reference.driver.wizards.TinygDriverConfigurationWiza
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -487,12 +489,12 @@ public class TinygDriver implements ReferenceDriver, Runnable {
     }
 
     @Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -502,5 +504,11 @@ public class TinygDriver implements ReferenceDriver, Runnable {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard())
         };
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
     }    
 }

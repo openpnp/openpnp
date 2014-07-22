@@ -21,14 +21,16 @@
 
 package org.openpnp.machine.reference.feeder;
 
+import javax.swing.Action;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTubeFeederConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,12 +61,12 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
 	}
     
     @Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getId();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -74,5 +76,11 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard())
         };
-    }    
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }      
 }

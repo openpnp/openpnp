@@ -23,13 +23,15 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
+import javax.swing.Action;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
 
@@ -133,12 +135,18 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	}
 	
     @Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getId();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

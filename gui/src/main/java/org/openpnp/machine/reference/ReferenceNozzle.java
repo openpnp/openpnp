@@ -2,6 +2,8 @@ package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
 
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -10,7 +12,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PropertySheetConfigurable;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -200,15 +202,15 @@ public class ReferenceNozzle extends AbstractNozzle implements
     }
     
 	@Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
 	    return getClass().getSimpleName() + " " + getId();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
-        ArrayList<PropertySheetConfigurable> children = new ArrayList<PropertySheetConfigurable>();
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
         children.addAll(getNozzleTips());
-        return children.toArray(new PropertySheetConfigurable[]{});
+        return children.toArray(new PropertySheetHolder[]{});
     }
 
     @Override
@@ -216,6 +218,12 @@ public class ReferenceNozzle extends AbstractNozzle implements
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard())
         };
+    }
+        
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

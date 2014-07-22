@@ -25,6 +25,8 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -32,8 +34,8 @@ import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.VfwCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.vonnieda.vfw.CaptureDevice;
 
@@ -186,12 +188,18 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 	}
 	
     @Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getId();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

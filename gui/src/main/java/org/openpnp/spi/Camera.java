@@ -33,7 +33,7 @@ import org.openpnp.model.Location;
  * and details about the returned image. The Camera is expected to return all
  * future images using the same dimensions and type. 
  */
-public interface Camera extends Identifiable, HeadMountable, WizardConfigurable, PropertySheetConfigurable {
+public interface Camera extends Identifiable, HeadMountable, WizardConfigurable, PropertySheetHolder {
 	public enum Looking {
 		Down,
 		Up

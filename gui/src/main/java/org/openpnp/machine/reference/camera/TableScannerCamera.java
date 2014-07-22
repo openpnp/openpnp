@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
+import javax.swing.Action;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -51,8 +52,8 @@ import org.openpnp.machine.reference.camera.wizards.TableScannerCameraConfigurat
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -510,12 +511,12 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 	}
 	
     @Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName() + " " + getId();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -528,6 +529,12 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
         };
     }
 	
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 	public class Tile {
 		private File file;
 		private double x, y;

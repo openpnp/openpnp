@@ -21,15 +21,15 @@
 
 package org.openpnp.machine.reference;
 
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetConfigurable;
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
-import org.openpnp.spi.WizardConfigurable;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -115,12 +115,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 	}
     
 	@Override
-    public String getPropertySheetConfigurableTitle() {
+    public String getPropertySheetHolderTitle() {
 	    return getClass().getSimpleName() + " " + getId();
     }
 
     @Override
-    public PropertySheetConfigurable[] getPropertySheetConfigurableChildren() {
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -130,6 +130,12 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard())
         };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

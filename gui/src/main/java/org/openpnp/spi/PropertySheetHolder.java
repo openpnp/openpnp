@@ -1,5 +1,6 @@
 package org.openpnp.spi;
 
+import javax.swing.Action;
 import javax.swing.JPanel;
 
 /**
@@ -8,15 +9,14 @@ import javax.swing.JPanel;
  * that item. By descending through the children with
  * getChildPropertySheetProviders() a tree can be built.
  */
-public interface PropertySheetConfigurable {
+public interface PropertySheetHolder {
     public interface PropertySheet {
         String getPropertySheetTitle();
         JPanel getPropertySheetPanel();
     }
     
-    String getPropertySheetConfigurableTitle();
-    PropertySheetConfigurable[] getPropertySheetConfigurableChildren();
+    String getPropertySheetHolderTitle();
+    PropertySheetHolder[] getChildPropertySheetHolders();
     PropertySheet[] getPropertySheets();
-    // TODO: Maybe use this for toolbar actions for when the item is selected
-//    Action[] getPropertySheetConfigurableToolbarActions();
+    Action[] getPropertySheetHolderActions();
 }

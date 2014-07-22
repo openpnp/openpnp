@@ -2,7 +2,7 @@ package org.openpnp.gui.support;
 
 import javax.swing.JPanel;
 
-import org.openpnp.spi.PropertySheetConfigurable.PropertySheet;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 
 public class PropertySheetWizardAdapter implements PropertySheet, WizardContainer {
     private final Wizard wizard;
