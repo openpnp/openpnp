@@ -173,7 +173,7 @@ public class MainFrame extends JFrame {
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(configuration);
         nozzlesPanel = new NozzlesPanel(this, configuration);
-        nozzleTipsPanel = new NozzleTipsPanel(this, configuration);
+        nozzleTipsPanel = new NozzleTipsPanel();
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);

@@ -22,13 +22,17 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Frame;
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -49,12 +53,13 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.HeadCellValue;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.NozzleTipsTableModel;
-import org.openpnp.gui.tablemodel.NozzlesTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,9 +71,6 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 	private static final String PREF_DIVIDER_POSITION = "NozzleTipsPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
 	
-	private final Frame frame;
-	private final Configuration configuration;
-	
 	private JTable table;
 
 	private NozzleTipsTableModel tableModel;
@@ -78,12 +80,9 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 
 	private Preferences prefs = Preferences.userNodeForPackage(NozzleTipsPanel.class);
 
-	public NozzleTipsPanel(Frame frame, Configuration configuration) {
-		this.frame = frame;
-		this.configuration = configuration;
-		
+	public NozzleTipsPanel() {		
 		setLayout(new BorderLayout(0, 0));
-		tableModel = new NozzleTipsTableModel(configuration);
+		tableModel = new NozzleTipsTableModel(Configuration.get());
 
 		JPanel panel = new JPanel();
 		add(panel, BorderLayout.NORTH);
@@ -93,13 +92,13 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
 		
-//		JButton btnNewCamera = new JButton(newCameraAction);
-//		btnNewCamera.setHideActionText(true);
-//		toolBar.add(btnNewCamera);
+		JButton btnLoad = new JButton(loadAction);
+		btnLoad.setHideActionText(true);
+		toolBar.add(btnLoad);
 		
-//		JButton btnDeleteCamera = new JButton(deleteCameraAction);
-//		btnDeleteCamera.setHideActionText(true);
-//		toolBar.add(btnDeleteCamera);
+		JButton btnUnload = new JButton(unloadAction);
+		btnUnload.setHideActionText(true);
+		toolBar.add(btnUnload);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -209,6 +208,28 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
         });
 	}
 	
+    private NozzleTip getSelectedNozzleTip() {
+        int index = table.getSelectedRow();
+
+        if (index == -1) {
+            return null;
+        }
+
+        index = table.convertRowIndexToModel(index);
+        return tableModel.getNozzleTip(index);
+    }
+    
+    private Nozzle getSelectedNozzle() {
+        int index = table.getSelectedRow();
+
+        if (index == -1) {
+            return null;
+        }
+
+        index = table.convertRowIndexToModel(index);
+        return tableModel.getNozzle(index);
+    }
+    
 	private void search() {
 		RowFilter<NozzleTipsTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
@@ -224,88 +245,63 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 
 	@Override
 	public void wizardCompleted(Wizard wizard) {
-		configuration.setDirty(true);
+		Configuration.get().setDirty(true);
 	}
 
 	@Override
 	public void wizardCancelled(Wizard wizard) {
 	}
 	
-//	public Action newCameraAction = new AbstractAction() {
-//		{
-//			putValue(SMALL_ICON,
-//					new ImageIcon(getClass().getResource("/icons/new.png")));
-//			putValue(NAME, "New Camera...");
-//			putValue(SHORT_DESCRIPTION,
-//					"Create a new camera.");
-//		}
-//		
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			ClassSelectionDialog<Camera> dialog = new ClassSelectionDialog<Camera>(
-//					JOptionPane.getFrameForComponent(NozzlesPanel.this), 
-//					"Select Camera...", 
-//					"Please select a Camera implemention from the list below.", 
-//					configuration.getMachine().getCompatibleCameraClasses());
-//			dialog.setVisible(true);
-//			Class<? extends Camera> cameraClass = dialog.getSelectedClass();
-//			if (cameraClass == null) {
-//				return;
-//			}
-//			try {
-//				Camera camera = cameraClass.newInstance();
-//				
-//				camera.setId(Helpers.createUniqueName("C", Configuration.get().getMachine().getCameras(), "id"));
-//				camera.setUnitsPerPixel(new Location(Configuration.get().getSystemUnits()));
-//				try {
-//					if (camera.getVisionProvider() == null) {
-//						camera.setVisionProvider(new OpenCvVisionProvider());
-//					}
-//				}
-//				catch (Exception e) {
-//					logger.debug("Couldn't set default vision provider. Meh.");
-//				}
-//				
-//				
-//				configuration.getMachine().addCamera(camera);
-//				
-//				MainFrame.cameraPanel.addCamera(camera);
-//				tableModel.refresh();
-//				Helpers.selectLastTableRow(table);
-//				configuration.setDirty(true);
-//			}
-//			catch (Exception e) {
-//				MessageBoxes.errorBox(
-//						JOptionPane.getFrameForComponent(NozzlesPanel.this), 
-//						"Camera Error", 
-//						e);
-//			}
-//		}
-//	};
-
-//	public Action deleteCameraAction = new AbstractAction("Delete Camera") {
-//		{
-//			putValue(SMALL_ICON,
-//					new ImageIcon(getClass().getResource("/icons/delete.png")));
-//			putValue(NAME, "Delete Camera");
-//			putValue(SHORT_DESCRIPTION,
-//					"Delete the currently selected camera.");
-//		}
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			MessageBoxes.notYetImplemented(getTopLevelAncestor());
-//		}
-//	};
-	
-	
-//	private Action tableScannerAction = new AbstractAction("Table Scanner") {
-//		@Override
-//		public void actionPerformed(ActionEvent arg0) {
-//			TableScanner tableScanner = new TableScanner(frame, configuration);
-//			tableScanner.pack();
-//			tableScanner.setVisible(true);
-//		}
-//	};
+    public Action loadAction = new AbstractAction("Load") {
+        {
+            putValue(SMALL_ICON,
+                    new ImageIcon(getClass().getResource("/icons/load.png")));
+            putValue(NAME, "Load");
+            putValue(SHORT_DESCRIPTION,
+                    "Load the currently selected nozzle tip.");
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        getSelectedNozzle().loadNozzleTip(getSelectedNozzleTip());
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(getTopLevelAncestor(),
+                                "Movement Error", e);
+                    }
+                }
+            });
+        }
+    };
+    
+    public Action unloadAction = new AbstractAction("Unoad") {
+        {
+            putValue(SMALL_ICON,
+                    new ImageIcon(getClass().getResource("/icons/unload.png")));
+            putValue(NAME, "Unload");
+            putValue(SHORT_DESCRIPTION,
+                    "Unoad the currently loaded nozzle tip.");
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        getSelectedNozzle().unloadNozzleTip();
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(getTopLevelAncestor(),
+                                "Movement Error", e);
+                    }
+                }
+            });
+        }
+    };
+    
 	private JPanel generalConfigPanel;
 	private JPanel nozzleTipSpecificConfigPanel;
 }

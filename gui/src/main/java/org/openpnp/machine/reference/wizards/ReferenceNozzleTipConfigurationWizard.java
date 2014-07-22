@@ -21,18 +21,29 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.AbstractTableModel;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -46,7 +57,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
     private JLabel lblX_1;
     private JLabel lblY_1;
     private JLabel lblZ_1;
-    private LocationButtonsPanel locationButtonsPanel;
+    private LocationButtonsPanel changerStartLocationButtonsPanel;
     private JLabel lblStartLocation;
     private JTextField textFieldChangerStartX;
     private JTextField textFieldChangerStartY;
@@ -59,11 +70,39 @@ public class ReferenceNozzleTipConfigurationWizard extends
     private JTextField textFieldChangerEndX;
     private JTextField textFieldChangerEndY;
     private JTextField textFieldChangerEndZ;
-    private LocationButtonsPanel locationButtonsPanel_1;
-    private LocationButtonsPanel locationButtonsPanel_2;
-
+    private LocationButtonsPanel changerMidLocationButtonsPanel;
+    private LocationButtonsPanel changerEndLocationButtonsPanel;
+    private JPanel panelPackageCompat;
+    private JCheckBox chckbxAllowIncompatiblePackages;
+    private JScrollPane scrollPane;
+    private JTable table;
+    private PackagesTableModel tableModel;
+    
+    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<org.openpnp.model.Package>();
+    
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
+        
+        panelPackageCompat = new JPanel();
+        panelPackageCompat.setBorder(new TitledBorder(null, "Package Compatibility", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelPackageCompat);
+        panelPackageCompat.setLayout(new FormLayout(new ColumnSpec[] {
+                FormFactory.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(100dlu;min)"),}));
+        
+        chckbxAllowIncompatiblePackages = new JCheckBox("Allow Incompatible Packages?");
+        panelPackageCompat.add(chckbxAllowIncompatiblePackages, "2, 2");
+        
+        scrollPane = new JScrollPane();
+        panelPackageCompat.add(scrollPane, "2, 4, fill, default");
+        
+        table = new JTable(tableModel = new PackagesTableModel());
+        scrollPane.setViewportView(table);
         
         panelChanger = new JPanel();
         panelChanger.setBorder(new TitledBorder(null, "Nozzle Tip Changer", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -113,8 +152,8 @@ public class ReferenceNozzleTipConfigurationWizard extends
         panelChanger.add(textFieldChangerStartZ, "8, 4, fill, default");
         textFieldChangerStartZ.setColumns(5);
         
-        locationButtonsPanel = new LocationButtonsPanel((JTextField) null, (JTextField) null, (JTextField) null, (JTextField) null);
-        panelChanger.add(locationButtonsPanel, "10, 4, fill, default");
+        changerStartLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerStartX, textFieldChangerStartY, textFieldChangerStartZ, (JTextField) null);
+        panelChanger.add(changerStartLocationButtonsPanel, "10, 4, fill, default");
         
         lblMiddleLocation = new JLabel("Middle Location");
         panelChanger.add(lblMiddleLocation, "2, 6, right, default");
@@ -131,8 +170,8 @@ public class ReferenceNozzleTipConfigurationWizard extends
         panelChanger.add(textFieldChangerMidZ, "8, 6, fill, default");
         textFieldChangerMidZ.setColumns(5);
         
-        locationButtonsPanel_1 = new LocationButtonsPanel((JTextField) null, (JTextField) null, (JTextField) null, (JTextField) null);
-        panelChanger.add(locationButtonsPanel_1, "10, 6, fill, default");
+        changerMidLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerMidX, textFieldChangerMidY, textFieldChangerMidZ, (JTextField) null);
+        panelChanger.add(changerMidLocationButtonsPanel, "10, 6, fill, default");
         
         lblEndLocation = new JLabel("End Location");
         panelChanger.add(lblEndLocation, "2, 8, right, default");
@@ -149,13 +188,16 @@ public class ReferenceNozzleTipConfigurationWizard extends
         panelChanger.add(textFieldChangerEndZ, "8, 8, fill, default");
         textFieldChangerEndZ.setColumns(5);
         
-        locationButtonsPanel_2 = new LocationButtonsPanel((JTextField) null, (JTextField) null, (JTextField) null, (JTextField) null);
-        panelChanger.add(locationButtonsPanel_2, "10, 8, fill, default");
+        changerEndLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerEndX, textFieldChangerEndY, textFieldChangerEndZ, (JTextField) null);
+        panelChanger.add(changerEndLocationButtonsPanel, "10, 8, fill, default");
     }
-
+    
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
+
+        addWrappedBinding(nozzleTip, "allowIncompatiblePackages",
+                chckbxAllowIncompatiblePackages, "selected");
 
         MutableLocationProxy changerStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerStartLocation",
@@ -207,6 +249,97 @@ public class ReferenceNozzleTipConfigurationWizard extends
             .decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators
             .decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
-
     }
+    
+    @Override
+    protected void loadFromModel() {
+        compatiblePackages.clear();
+        compatiblePackages.addAll(nozzleTip.getCompatiblePackages());
+        tableModel.refresh();
+        super.loadFromModel();
+    }
+
+    @Override
+    protected void saveToModel() {
+        nozzleTip.setCompatiblePackages(compatiblePackages);
+        super.saveToModel();
+    }
+
+    public class PackagesTableModel extends AbstractTableModel {
+        private String[] columnNames = new String[] { "Package Id", "Compatible?" };
+        private List<org.openpnp.model.Package> packages;
+
+        public PackagesTableModel() {
+            Configuration.get().addListener(new ConfigurationListener.Adapter() {
+                public void configurationComplete(Configuration configuration) throws Exception {
+                    refresh();
+                }
+            });
+        }
+
+        public void refresh() {
+            packages = new ArrayList<org.openpnp.model.Package>(Configuration.get().getPackages());
+            fireTableDataChanged();
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
+
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        public int getRowCount() {
+            return (packages == null) ? 0 : packages.size();
+        }
+        
+        public org.openpnp.model.Package getPackage(int index) {
+            return packages.get(index);
+        }
+        
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return columnIndex == 1;
+        }
+        
+        @Override
+        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+            try {
+                org.openpnp.model.Package pkg = packages.get(rowIndex);
+                if (columnIndex == 1) {
+                    if ((Boolean) aValue) {
+                        compatiblePackages.add(pkg);
+                    }
+                    else {
+                        compatiblePackages.remove(pkg);
+                    }
+                    notifyChange();
+                }
+            }
+            catch (Exception e) {
+                // TODO: dialog, bad input
+            }
+        }
+        
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            if (columnIndex == 1) {
+                return Boolean.class;
+            }
+            return super.getColumnClass(columnIndex);
+        }
+
+        public Object getValueAt(int row, int col) {
+            switch (col) {
+            case 0:
+                return packages.get(row).getId();
+            case 1:
+                return compatiblePackages.contains(packages.get(row));
+            default:
+                return null;
+            }
+        }
+    }        
 }

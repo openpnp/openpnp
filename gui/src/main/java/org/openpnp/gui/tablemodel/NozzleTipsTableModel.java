@@ -36,7 +36,7 @@ import org.openpnp.spi.NozzleTip;
 public class NozzleTipsTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Head", "Nozzle" };
+	private String[] columnNames = new String[] { "Id", "Nozzle", "Head" };
 	private List<NozzleTipWrapper> nozzleTips;
 
 	public NozzleTipsTableModel(Configuration configuration) {
@@ -61,9 +61,13 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 		return (nozzleTips == null) ? 0 : nozzleTips.size();
 	}
 	
-	public NozzleTip getNozzleTip(int index) {
-		return nozzleTips.get(index).nozzleTip;
-	}
+    public NozzleTip getNozzleTip(int index) {
+        return nozzleTips.get(index).nozzleTip;
+    }
+    
+    public Nozzle getNozzle(int index) {
+        return nozzleTips.get(index).nozzle;
+    }
 	
 	public void refresh() {
 	    nozzleTips = new ArrayList<NozzleTipWrapper>();
@@ -79,7 +83,7 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex == 1;
+	    return false;
 	}
 	
 	@Override
@@ -92,30 +96,6 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-		try {
-			NozzleTipWrapper nozzleTipWrapper = nozzleTips.get(rowIndex);
-			if (columnIndex == 1) {
-			    HeadCellValue value = (HeadCellValue) aValue;
-			    if (nozzleTipWrapper.nozzle.getHead() == null) {
-//			        Configuration.get().getMachine().removeCamera(camera);
-			    }
-			    else {
-//                    camera.getHead().removeCamera(camera);
-			    }
-			    
-			    if (value.getHead() == null) {
-//			        Configuration.get().getMachine().addCamera(camera);
-			    }
-			    else {
-//			        value.getHead().addCamera(camera);
-			    }
-//			    camera.setHead(value.getHead());
-			}
-			configuration.setDirty(true);
-		}
-		catch (Exception e) {
-			// TODO: dialog, bad input
-		}
 	}
 	
 	public Object getValueAt(int row, int col) {
@@ -124,9 +104,9 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 		case 0:
 			return nozzleTipWrapper.nozzleTip.getId();
 		case 1:
-            return new HeadCellValue(nozzleTipWrapper.nozzle.getHead());
-		case 2:
 		    return nozzleTipWrapper.nozzle.getId();
+        case 2:
+            return new HeadCellValue(nozzleTipWrapper.nozzle.getHead());
 			
 		default:
 			return null;
