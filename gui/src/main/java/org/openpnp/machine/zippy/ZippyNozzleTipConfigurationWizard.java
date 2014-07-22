@@ -56,17 +56,11 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
-import org.openpnp.machine.zippy.ZippyNozzleTip;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.ObjectProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
 
 public class ZippyNozzleTipConfigurationWizard extends
         AbstractConfigurationWizard {

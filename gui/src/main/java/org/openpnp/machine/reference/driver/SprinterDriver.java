@@ -46,7 +46,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

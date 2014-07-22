@@ -51,7 +51,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;

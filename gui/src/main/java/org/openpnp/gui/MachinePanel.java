@@ -21,16 +21,15 @@
 
 package org.openpnp.gui;
 
-import javax.swing.JPanel;
-
-import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
-import org.openpnp.model.Configuration;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+
+import javax.swing.JPanel;
+
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.model.Configuration;
 
 public class MachinePanel extends JPanel implements WizardContainer {
     public MachinePanel() {

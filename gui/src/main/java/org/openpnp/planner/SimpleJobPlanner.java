@@ -9,7 +9,6 @@ import java.util.Set;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;

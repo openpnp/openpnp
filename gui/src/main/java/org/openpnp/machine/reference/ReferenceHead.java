@@ -31,7 +31,6 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.base.AbstractHead;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

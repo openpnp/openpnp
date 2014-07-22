@@ -36,7 +36,6 @@ import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.LtiCivilCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 
 import com.lti.civil.CaptureDeviceInfo;

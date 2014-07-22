@@ -21,14 +21,13 @@
 package org.openpnp.machine.zippy;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.model.Configuration;
 
 public class ZippyMachine extends ReferenceMachine {
 //	@Override

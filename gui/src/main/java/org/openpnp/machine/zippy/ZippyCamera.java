@@ -24,7 +24,6 @@ package org.openpnp.machine.zippy;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.NozzleTip;
 
 public class ZippyCamera extends OpenCvCamera {
 

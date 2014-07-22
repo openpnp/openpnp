@@ -31,7 +31,6 @@ import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
 

@@ -25,6 +25,8 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -45,8 +47,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 @SuppressWarnings("serial")
 public class ClassSelectionDialog<T> extends JDialog {

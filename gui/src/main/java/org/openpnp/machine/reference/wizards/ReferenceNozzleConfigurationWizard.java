@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
 
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -40,8 +41,6 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
-import org.openpnp.gui.components.LocationButtonsPanel;
 
 public class ReferenceNozzleConfigurationWizard extends
         AbstractConfigurationWizard {

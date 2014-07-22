@@ -21,13 +21,10 @@
 
 package org.openpnp.machine.zippy;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 
 public class ZippyHead extends ReferenceHead {

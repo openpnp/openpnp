@@ -34,7 +34,6 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
 import org.simpleframework.xml.Element;

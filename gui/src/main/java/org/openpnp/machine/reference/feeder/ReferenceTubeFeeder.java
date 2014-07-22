@@ -30,7 +30,6 @@ import org.openpnp.machine.reference.feeder.wizards.ReferenceTubeFeederConfigura
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

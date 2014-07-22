@@ -33,10 +33,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -51,11 +51,8 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
-import org.openpnp.spi.WizardConfigurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.JTabbedPane;
 
 @SuppressWarnings("serial")
 public class MachineSetupPanel extends JPanel implements WizardContainer {

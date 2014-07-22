@@ -8,7 +8,6 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerListModel;
-import javax.swing.SpinnerModel;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
