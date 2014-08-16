@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.prefs.Preferences;
 
+import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -43,6 +44,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
@@ -68,6 +70,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 			.userNodeForPackage(MachineSetupPanel.class);
 	private JTree tree;
 	private JTabbedPane tabbedPane;
+	private JToolBar toolBar;
 
 	public MachineSetupPanel() {
 		setLayout(new BorderLayout(0, 0));
@@ -76,7 +79,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 		add(panel, BorderLayout.NORTH);
 		panel.setLayout(new BorderLayout(0, 0));
 
-		JToolBar toolBar = new JToolBar();
+		toolBar = new JToolBar();
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
 
@@ -133,10 +136,24 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
-                PropertySheetConfigurableTreeNode node = (PropertySheetConfigurableTreeNode) tree.getLastSelectedPathComponent();
-
                 tabbedPane.removeAll();
+                toolBar.removeAll();
                 
+                TreePath path = tree.getSelectionPath();
+                for (Object o : path.getPath()) {
+                    PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
+                    Action[] actions = node.obj.getPropertySheetHolderActions();
+                    if (actions != null) {
+                        if (toolBar.getComponentCount() > 0) {
+                            toolBar.addSeparator();
+                        }
+                        for (Action action : actions) {
+                            toolBar.add(action);
+                        }
+                    }
+                }
+                
+                PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) path.getLastPathComponent();
                 if (node != null) {
                     PropertySheet[] propertySheets = node.obj.getPropertySheets();
                     if (propertySheets != null) {
@@ -167,7 +184,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             @Override
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-                tree.setModel(new DefaultTreeModel(new PropertySheetConfigurableTreeNode(Configuration.get().getMachine(), null)));
+                tree.setModel(new DefaultTreeModel(new PropertySheetHolderTreeNode(Configuration.get().getMachine(), null)));
                 for (int i = 0; i < tree.getRowCount(); i++) {
                     tree.expandRow(i);
                 }
@@ -187,18 +204,18 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 	public void wizardCancelled(Wizard wizard) {
 	}
 	
-    public class PropertySheetConfigurableTreeNode implements TreeNode {
+    public class PropertySheetHolderTreeNode implements TreeNode {
         private final PropertySheetHolder obj;
         private final TreeNode parent;
-        private final ArrayList<PropertySheetConfigurableTreeNode> children = new ArrayList<PropertySheetConfigurableTreeNode>();
+        private final ArrayList<PropertySheetHolderTreeNode> children = new ArrayList<PropertySheetHolderTreeNode>();
         
-        public PropertySheetConfigurableTreeNode(PropertySheetHolder obj, TreeNode parent) {
+        public PropertySheetHolderTreeNode(PropertySheetHolder obj, TreeNode parent) {
             this.obj = obj;
             this.parent = parent;
             PropertySheetHolder[] children = obj.getChildPropertySheetHolders();
             if (children != null) {
                 for (PropertySheetHolder child : children) {
-                    this.children.add(new PropertySheetConfigurableTreeNode(child, this));
+                    this.children.add(new PropertySheetHolderTreeNode(child, this));
                 }
             }
         }

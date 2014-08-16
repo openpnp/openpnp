@@ -32,6 +32,7 @@ import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,9 +74,9 @@ public class ReferenceHead extends AbstractHead {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
-        children.addAll(getNozzles());
-        children.addAll(getCameras());
-        children.addAll(getActuators());
+        children.add(new SimplePropertySheetHolder("Nozzles", getNozzles()));
+        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
         return children.toArray(new PropertySheetHolder[]{});
     }
 

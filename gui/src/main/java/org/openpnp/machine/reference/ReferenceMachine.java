@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Action;
@@ -39,6 +40,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,10 +102,10 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
-        children.addAll(getFeeders());
-        children.addAll(getHeads());
-        children.addAll(getCameras());
-        children.add(getDriver());
+        children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
+        children.add(new SimplePropertySheetHolder("Heads", getHeads()));
+        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         return children.toArray(new PropertySheetHolder[]{});
     }
     

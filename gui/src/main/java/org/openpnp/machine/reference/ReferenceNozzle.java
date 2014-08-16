@@ -14,6 +14,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -209,7 +210,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
-        children.addAll(getNozzleTips());
+        children.add(new SimplePropertySheetHolder("Nozzles", getNozzleTips()));
         return children.toArray(new PropertySheetHolder[]{});
     }
 
