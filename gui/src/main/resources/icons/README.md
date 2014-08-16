@@ -3,7 +3,7 @@ OpenPnP Icon Specifications
 
 
 Common Themes
--------------0
+-------------
 The current icon set has some common elements that are used across multiple
 icons. It is not necessary to use these exact same elements, but some thought
 should be given to maintaining a set of common elements across sets of features
@@ -118,3 +118,7 @@ the left.
  Use two points to define the location and rotation of an object.
  
  
+Sources
+-------
+
+Many of the icons used in OpenPnP come from "Soft Scraps" by deleket. The original URL for these icons no longer exists. Currently the best URL for them seems to be http://deleket.deviantart.com/art/Soft-Scraps-150451162. For protection against future loss, the ZIP file at that URL is included in the icons/src directory.
