@@ -87,12 +87,12 @@ public class Machine {
         this.defaultCamera = defaultCamera;
         
         // Load textures
-        polishedStainlessTexture = basicTexture("Textures/radial-stainless-steel.jpg");
-        brushedAluminumTexture = basicTexture("Textures/brushed_aluminum.jpg");
-        rawAluminumTexture = basicTexture("Textures/raw-aluminum.jpg");
-        roughAluminumTexture = basicTexture("Textures/rough-metal.jpg");
-        blackAluminumTexture = basicTexture("Textures/black-aluminum.jpg");
-        pcbTexture = basicTexture("Textures/pcb.jpg");
+        polishedStainlessTexture = basicTexture("Textures/MetalBare0144_1_S.jpg");
+        brushedAluminumTexture = basicTexture("Textures/MetalBare0191_16_M.jpg");
+        rawAluminumTexture = basicTexture("Textures/MetalBare0191_23_M.jpg");
+        roughAluminumTexture = basicTexture("Textures/MetalGalvanized0037_3_S.jpg");
+        blackAluminumTexture = basicTexture("Textures/MetalBare0144_2_S.jpg");
+        pcbTexture = basicTexture("Textures/Electronics0060_1_M.jpg");
         
         // Create spatials
         machine = createMachineNode();
