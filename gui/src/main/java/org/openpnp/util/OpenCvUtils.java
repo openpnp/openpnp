@@ -8,6 +8,11 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 public class OpenCvUtils {
+    static {
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }
+    
     /*
      * Notes
      * cvtColor(src,src,CV_8UC1); may come in handy later
@@ -30,7 +35,7 @@ public class OpenCvUtils {
     
     public static Mat toMat(BufferedImage img) {
         img = convertBufferedImage(img, BufferedImage.TYPE_3BYTE_BGR);
-        Mat mat = new Mat(img.getWidth(), img.getHeight(), CvType.CV_8UC3);
+        Mat mat = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
         byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
         mat.put(0, 0, data);
         return mat;
@@ -56,4 +61,12 @@ public class OpenCvUtils {
         g2d.dispose();
         return img;
     }
+    
+//    public static void main(String[] args) throws Exception {
+//        BufferedImage image = ImageIO.read(new File("/Users/jason/Pictures/Mario_Love_5.jpg"));
+//        image = convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
+//        Mat mat = toMat(image);
+//        image = toBufferedImage(mat);
+//        ImageIO.write(image, "PNG", new File("/Users/jason/Desktop/Mario_Love_5.jpg"));
+//    }
 }

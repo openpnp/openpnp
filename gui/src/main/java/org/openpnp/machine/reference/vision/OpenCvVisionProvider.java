@@ -168,7 +168,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         logger.debug(String.format(
                 "locateTemplateMatches certainty %f at %f, %f", matchValue,
                 matchLoc.x, matchLoc.y));
-        locateTemplateMatchesDebug(cameraImage, templateImage, matchLoc);
+        locateTemplateMatchesDebug(roiImage, templateImage, matchLoc);
 
         return new Point[] { new Point(((int) matchLoc.x) + roiX, ((int) matchLoc.y) + roiY) };
     }
@@ -176,8 +176,8 @@ public class OpenCvVisionProvider implements VisionProvider {
     private void locateTemplateMatchesDebug(Mat roiImage, Mat templateImage, org.opencv.core.Point matchLoc) {
         if (logger.isDebugEnabled()) {
             try {
-//                Core.rectangle(roiImage, matchLoc, new org.opencv.core.Point(matchLoc.x + templateImage.cols(),
-//                        matchLoc.y + templateImage.rows()), new Scalar(0, 255, 0));                
+                Core.rectangle(roiImage, matchLoc, new org.opencv.core.Point(matchLoc.x + templateImage.cols(),
+                        matchLoc.y + templateImage.rows()), new Scalar(0, 255, 0));                
                 
                 BufferedImage debugImage = OpenCvUtils.toBufferedImage(roiImage);
                 File file = Configuration.get().createResourceFile(
