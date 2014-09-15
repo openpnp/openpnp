@@ -23,14 +23,25 @@ package org.openpnp.machine.reference.vision;
 
 
 
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.File;
 
+import javax.imageio.ImageIO;
+
+import org.opencv.core.Core;
+import org.opencv.core.Core.MinMaxLocResult;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +49,11 @@ import org.slf4j.LoggerFactory;
 public class OpenCvVisionProvider implements VisionProvider {
     private final static Logger logger = LoggerFactory
             .getLogger(OpenCvVisionProvider.class);
+
+    static {
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }    
 
     // SimpleXML requires at least one attribute or element on a class before
     // it will recognize it.
@@ -57,13 +73,13 @@ public class OpenCvVisionProvider implements VisionProvider {
         return null;
     }
 
-//    private IplImage getCameraImage() {
-//        BufferedImage image_ = camera.capture();
-//        IplImage image = IplImage.createFrom(image_);
-//        return image;
-//    }
+    private Mat getCameraImage() {
+        BufferedImage image_ = camera.capture();
+        Mat image = OpenCvUtils.toMat(image_);
+        return image;
+    }
 
-//    private static void setROI(IplImage image, Rectangle roi) {
+//    private static void setROI(Mat image, Rectangle roi) {
 //        cvSetImageROI(
 //                image,
 //                cvRect(roi.getX(), roi.getY(), roi.getWidth(), roi.getHeight()));
@@ -81,8 +97,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     private Circle[] locateCircles(Rectangle roi, int minimumDiameter,
             int maximumDiameter) {
 //
-//        IplImage image = getCameraImage();
-//        // cvSetImageROI(image, cvRect(roiX, roiY, roiWidth, roiHeight));
+//        Mat image = getCameraImage();
 //        setROI(image, roi);
 //
 //        int minRadius = minimumDiameter / 2;
@@ -96,12 +111,11 @@ public class OpenCvVisionProvider implements VisionProvider {
 //
 //        return locateCircles(image, minDistance, edgeThreshold,
 //                circleThreshold, minRadius, maxRadius);
-//
         return new Circle[0];
     }
 
-//    private Circle[] locateCircles(IplImage image, int minRadius,
-//            int maxRadius, int minDist, int edgeThreshold, int circleThreshold) {
+    private Circle[] locateCircles(Mat image, int minRadius,
+            int maxRadius, int minDist, int edgeThreshold, int circleThreshold) {
 //        CvMemStorage mem = CvMemStorage.create();
 //
 //        CvSeq circles = cvHoughCircles(image, mem, CV_HOUGH_GRADIENT, 1,
@@ -119,117 +133,61 @@ public class OpenCvVisionProvider implements VisionProvider {
 //
 //        Circle[] returnCircles = new Circle[circles.total()];
 //        return circleList.toArray(returnCircles);
-//        return new Circle[0];
-//    }
+        return new Circle[0];
+    }
 
     @Override
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
             int roiHeight, int coiX, int coiY, BufferedImage templateImage_)
             throws Exception {
-//        double minVal[] = new double[1];
-//        double maxVal[] = new double[1];
-//        CvPoint minLoc = new CvPoint();
-//        CvPoint maxLoc = new CvPoint();
-//        CvPoint resLoc;
-//        double resValue;
-//
-//        BufferedImage image_ = camera.capture();
-//        
-//        // Convert the camera image and template image to the same type. This
-//        // is required by the cvMatchTemplate call.
-//        templateImage_ = convertBufferedImage(templateImage_,BufferedImage.TYPE_INT_ARGB);   
-//        image_ = convertBufferedImage(image_, BufferedImage.TYPE_INT_ARGB);
-//        
-//        IplImage templateImage = IplImage.createFrom(templateImage_);
-//        IplImage image = IplImage.createFrom(image_);
-//        
-//        IplImage result = cvCreateImage(
-//                cvSize(roiWidth - templateImage.width() + 1, roiHeight
-//                        - templateImage.height() + 1), IPL_DEPTH_32F, 1);
-//
-//        cvSetImageROI(image, cvRect(roiX, roiY, roiWidth, roiHeight));
-//        cvMatchTemplate(image, templateImage, result,
-//                opencv_imgproc.CV_TM_CCOEFF);
-//        cvResetImageROI(image);
-//        cvMinMaxLoc(result, minVal, maxVal, minLoc, maxLoc, null);
-//
-//        locateTemplateMatchesDebug(image_, roiX, roiY, roiWidth, roiHeight,
-//                templateImage_, result, minVal[0], maxVal[0]);
-//
-//        resLoc = maxLoc;
-//        resValue = maxVal[0];
-//
-//        // TODO: Figure out certainty and how to filter on it.
-//
-//        logger.debug(String.format(
-//                "locateTemplateMatches certainty %f at %d, %d", resValue,
-//                resLoc.x(), resLoc.y()));
-//
-//        return new Point[] { new Point(resLoc.x() + roiX, resLoc.y() + roiY) };
-        return new Point[0];
+        BufferedImage cameraImage_ = camera.capture();
+        
+        // Convert the camera image and template image to the same type. This
+        // is required by the cvMatchTemplate call.
+        templateImage_ = OpenCvUtils.convertBufferedImage(templateImage_,BufferedImage.TYPE_INT_ARGB);   
+        cameraImage_ = OpenCvUtils.convertBufferedImage(cameraImage_, BufferedImage.TYPE_INT_ARGB);
+        
+        Mat templateImage = OpenCvUtils.toMat(templateImage_);
+        Mat cameraImage = OpenCvUtils.toMat(cameraImage_);
+        Mat roiImage = new Mat(cameraImage, new Rect(roiX, roiY, roiWidth, roiHeight));
+        
+        // http://stackoverflow.com/questions/17001083/opencv-template-matching-example-in-android
+        Mat resultImage = new Mat(
+                roiImage.cols() - templateImage.cols() + 1, 
+                roiImage.rows() - templateImage.rows() + 1, 
+                CvType.CV_32FC1);
+        Imgproc.matchTemplate(roiImage, templateImage, resultImage, Imgproc.TM_CCOEFF);
+        
+        MinMaxLocResult mmr = Core.minMaxLoc(resultImage);
+
+        org.opencv.core.Point matchLoc = mmr.maxLoc;
+        double matchValue = mmr.maxVal;
+
+        // TODO: Figure out certainty and how to filter on it.
+
+        logger.debug(String.format(
+                "locateTemplateMatches certainty %f at %f, %f", matchValue,
+                matchLoc.x, matchLoc.y));
+        locateTemplateMatchesDebug(cameraImage, templateImage, matchLoc);
+
+        return new Point[] { new Point(((int) matchLoc.x) + roiX, ((int) matchLoc.y) + roiY) };
     }
 
-//    private void locateTemplateMatchesDebug(BufferedImage image_, int roiX,
-//            int roiY, int roiWidth, int roiHeight,
-//            BufferedImage templateImage_, IplImage result, double minVal,
-//            double maxVal) {
-//        if (logger.isDebugEnabled()) {
-//            try {
-//                // Create a debug image that contains the captured image, the
-//                // template image, the roi image, and the result image.
-//
-//                int width = Math.max(image_.getWidth(), roiWidth);
-//                width = Math.max(width, result.width());
-//                width = Math.max(width, templateImage_.getWidth());
-//                int height = image_.getHeight() + roiHeight + result.height()
-//                        + templateImage_.getHeight();
-//
-//                BufferedImage debugImage = new BufferedImage(width, height,
-//                        BufferedImage.TYPE_INT_ARGB);
-//
-//                BufferedImage resultImage = new BufferedImage(result.width(),
-//                        result.height(), BufferedImage.TYPE_USHORT_GRAY);
-//
-//                Graphics g = debugImage.getGraphics();
-//
-//                g.setColor(Color.CYAN);
-//                g.fillRect(0, 0, width, height);
-//                g.setColor(Color.WHITE);
-//                g.fillRect(0, 0, width, 100);
-//
-//                g.setColor(Color.BLACK);
-//
-//                int y = 0;
-//
-//                g.drawImage(templateImage_, 0, y, null);
-//                y += templateImage_.getHeight();
-//
-//                g.drawImage(image_, 0, y, null);
-//                y += image_.getHeight();
-//
-//                g.drawImage(image_, 0, y, roiWidth, y + roiHeight, roiX, roiY,
-//                        roiX + roiWidth, roiY + roiHeight, null);
-//                y += roiHeight;
-//
-//                IplImage resultTemp = cvCreateImage(
-//                        cvSize(result.width(), result.height()), IPL_DEPTH_8U,
-//                        1);
-//                cvConvertScaleAbs(result, resultTemp,
-//                        255.0 / (maxVal - minVal), 0);
-//                resultTemp.copyTo(resultImage, 1.0);
-//                g.drawImage(resultImage, 0, y, null);
-//                y += result.height();
-//
-//                g.dispose();
-//
-//                File file = Configuration.get().createResourceFile(
-//                        OpenCvVisionProvider.class, "debug_", ".png");
-//                ImageIO.write(debugImage, "PNG", file);
-//                logger.debug("Debug image filename {}", file);
-//            }
-//            catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }    
+    private void locateTemplateMatchesDebug(Mat roiImage, Mat templateImage, org.opencv.core.Point matchLoc) {
+        if (logger.isDebugEnabled()) {
+            try {
+//                Core.rectangle(roiImage, matchLoc, new org.opencv.core.Point(matchLoc.x + templateImage.cols(),
+//                        matchLoc.y + templateImage.rows()), new Scalar(0, 255, 0));                
+                
+                BufferedImage debugImage = OpenCvUtils.toBufferedImage(roiImage);
+                File file = Configuration.get().createResourceFile(
+                        OpenCvVisionProvider.class, "debug_", ".png");
+                ImageIO.write(debugImage, "PNG", file);
+                logger.debug("Debug image filename {}", file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }    
 }

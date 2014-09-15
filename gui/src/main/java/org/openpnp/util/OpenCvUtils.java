@@ -4,9 +4,18 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 public class OpenCvUtils {
+    /*
+     * Notes
+     * cvtColor(src,src,CV_8UC1); may come in handy later
+     * 
+     *                 BufferedImage resultImage = new BufferedImage(result.width(),
+                        result.height(), BufferedImage.TYPE_USHORT_GRAY);
+     */
+    
     public static BufferedImage toBufferedImage(Mat m) {
         int type = BufferedImage.TYPE_BYTE_GRAY;
         if (m.channels() > 1) {
@@ -17,6 +26,14 @@ public class OpenCvUtils {
                 .getDataBuffer()).getData();
         m.get(0, 0, targetPixels);
         return image;
+    }
+    
+    public static Mat toMat(BufferedImage img) {
+        img = convertBufferedImage(img, BufferedImage.TYPE_3BYTE_BGR);
+        Mat mat = new Mat(img.getWidth(), img.getHeight(), CvType.CV_8UC3);
+        byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
+        mat.put(0, 0, data);
+        return mat;
     }
 
     /**
