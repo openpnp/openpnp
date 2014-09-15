@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry including="**/*.java" kind="src" output="target/test-classes" path="src/test/java"/>
+	<classpathentry excluding="**/*.java" kind="src" output="target/test-classes" path="src/test/resources"/>
 	<classpathentry including="**/*.java" kind="src" path="src/main/java"/>
 	<classpathentry excluding="**/*.java" kind="src" path="src/main/resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" sourcepath="M2_REPO/commons-codec/commons-codec/1.6/commons-codec-1.6-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:file:/Users/jason/.m2/repository/commons-codec/commons-codec/1.6/commons-codec-1.6-javadoc.jar!/"/>
@@ -52,13 +53,11 @@
 			<attribute name="javadoc_location" value="jar:file:/Users/jason/.m2/repository/org/swinglabs/swingx/swingx-all/1.6.4/swingx-all-1.6.4-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacpp/javacpp/0.2/javacpp-0.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-linux-x86.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-linux-x86_64.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-macosx-x86_64.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-windows-x86.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/googlecode/javacv/javacv/0.2/javacv-0.2-windows-x86_64.jar"/>
+	<classpathentry kind="var" path="M2_REPO/nu/pattern/opencv/2.4.9-7/opencv-2.4.9-7.jar" sourcepath="M2_REPO/nu/pattern/opencv/2.4.9-7/opencv-2.4.9-7-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/jason/.m2/repository/nu/pattern/opencv/2.4.9-7/opencv-2.4.9-7-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.2.3/gson-2.2.3.jar" sourcepath="M2_REPO/com/google/code/gson/gson/2.2.3/gson-2.2.3-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:file:/Users/jason/.m2/repository/com/google/code/gson/gson/2.2.3/gson-2.2.3-javadoc.jar!/"/>
@@ -69,5 +68,6 @@
 			<attribute name="javadoc_location" value="jar:file:/Users/jason/.m2/repository/com/google/guava/guava/r09/guava-r09-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
