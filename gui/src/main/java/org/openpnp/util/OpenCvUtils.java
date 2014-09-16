@@ -3,6 +3,9 @@ package org.openpnp.util;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
+
+import javax.imageio.ImageIO;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -21,23 +24,41 @@ public class OpenCvUtils {
                         result.height(), BufferedImage.TYPE_USHORT_GRAY);
      */
     
+    /**
+     * TODO: This probably doesn't work right on submats. Need to test and fix.
+     * @param m
+     * @return
+     */
     public static BufferedImage toBufferedImage(Mat m) {
-        int type = BufferedImage.TYPE_BYTE_GRAY;
-        if (m.channels() > 1) {
+        Integer type = null;
+        if (m.type() == CvType.CV_8UC1) {
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        }
+        else if (m.type() == CvType.CV_8UC3) {
             type = BufferedImage.TYPE_3BYTE_BGR;
         }
+        if (type == null) {
+            throw new Error(String.format("Unsupported Mat: type %d, channels %d, depth %d", m.type(), m.channels(), m.depth()));
+        }
         BufferedImage image = new BufferedImage(m.cols(), m.rows(), type);
-        final byte[] targetPixels = ((DataBufferByte) image.getRaster()
-                .getDataBuffer()).getData();
-        m.get(0, 0, targetPixels);
+        m.get(0, 0, ((DataBufferByte) image.getRaster().getDataBuffer()).getData());
         return image;
     }
     
     public static Mat toMat(BufferedImage img) {
-        img = convertBufferedImage(img, BufferedImage.TYPE_3BYTE_BGR);
-        Mat mat = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
-        byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
-        mat.put(0, 0, data);
+        Integer type = null;
+        if (img.getType() == BufferedImage.TYPE_BYTE_GRAY) {
+            type = CvType.CV_8UC1;
+        }
+        else if (img.getType() == BufferedImage.TYPE_3BYTE_BGR) {
+            type = CvType.CV_8UC3;
+        }
+        else {
+            img = convertBufferedImage(img, BufferedImage.TYPE_3BYTE_BGR);
+            type = CvType.CV_8UC3;
+        }
+        Mat mat = new Mat(img.getHeight(), img.getWidth(), type);
+        mat.put(0, 0, ((DataBufferByte) img.getRaster().getDataBuffer()).getData());
         return mat;
     }
 
@@ -62,11 +83,13 @@ public class OpenCvUtils {
         return img;
     }
     
-//    public static void main(String[] args) throws Exception {
-//        BufferedImage image = ImageIO.read(new File("/Users/jason/Pictures/Mario_Love_5.jpg"));
-//        image = convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
-//        Mat mat = toMat(image);
-//        image = toBufferedImage(mat);
-//        ImageIO.write(image, "PNG", new File("/Users/jason/Desktop/Mario_Love_5.jpg"));
-//    }
+    public static void main(String[] args) throws Exception {
+        BufferedImage image = ImageIO.read(new File("/Users/jason/Pictures/Mario_Love_5.jpg"));
+        Mat mat = toMat(image);
+        image = toBufferedImage(mat);
+        image = convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
+        mat = toMat(image);
+        image = toBufferedImage(mat);
+        ImageIO.write(image, "PNG", new File("/Users/jason/Desktop/Mario_Love_5.jpg"));
+    }
 }
