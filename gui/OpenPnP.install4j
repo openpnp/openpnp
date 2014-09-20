@@ -31,8 +31,12 @@
         <exclude>
           <entry location="classes" fileType="regular" />
           <entry location="generated-sources" fileType="regular" />
+          <entry location="generated-test-sources" fileType="regular" />
           <entry location="maven-archiver" fileType="regular" />
+          <entry location="maven-status" fileType="regular" />
           <entry location="surefire" fileType="regular" />
+          <entry location="surefire-reports" fileType="regular" />
+          <entry location="test-classes" fileType="regular" />
         </exclude>
       </dirEntry>
     </entries>
