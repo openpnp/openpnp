@@ -23,23 +23,28 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
+import org.opencv.core.Mat;
+import org.opencv.highgui.VideoCapture;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
+import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
-
-import com.googlecode.javacv.FrameGrabber;
-import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 /**
  * A Camera implementation based on the OpenCV FrameGrabbers.
  */
 public class OpenCvCamera extends ReferenceCamera implements Runnable {
+    static {
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }    
+    
 	@Attribute(required=true)
 	private int deviceIndex = 0;
 	
-	private FrameGrabber fg;
+	private VideoCapture fg = new VideoCapture();
 	private Thread thread;
 	
 	public OpenCvCamera() {
@@ -53,8 +58,11 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	@Override
 	public synchronized BufferedImage capture() {
 		try {
-			IplImage image = fg.grab();
-			return image.getBufferedImage();
+		    Mat mat = new Mat();
+		    if (!fg.read(mat)) {
+		        return null;
+		    }            
+			return OpenCvUtils.toBufferedImage(mat);
 		}
 		catch (Exception e) {
 			return null;
@@ -96,24 +104,8 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		if (fg != null) {
-			try {
-				fg.stop();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			try {
-				fg.release();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				return;
-			}
-		}
 		try {
-			fg = FrameGrabber.createDefault(deviceIndex);
-			fg.start();
+		    fg.open(deviceIndex);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
