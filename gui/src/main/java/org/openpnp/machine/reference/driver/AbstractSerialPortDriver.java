@@ -7,9 +7,7 @@ import java.io.OutputStream;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.model.Configuration;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,16 +27,6 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
     protected InputStream input;
     protected OutputStream output;
     
-    public AbstractSerialPortDriver() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect();
-            }
-        });
-    }
-    
     protected synchronized void connect() throws Exception {
         disconnect();
         serialPort = new SerialPort(portName);
@@ -51,7 +39,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
                 false, 
                 false);
         SerialInputStream input = new SerialInputStream(serialPort);
-        input.setTimeout(100);
+//        input.setTimeout(100);
         this.input = input;
         output = new SerialOutputStream(serialPort);
     }
@@ -59,6 +47,9 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
     protected synchronized void disconnect() throws Exception {
         if (serialPort != null) {
             serialPort.closePort();
+            input = null;
+            output = null;
+            serialPort = null;
         }
     }
     

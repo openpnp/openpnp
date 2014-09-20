@@ -262,6 +262,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 		synchronized (commandLock) {
 			if (command != null) {
 				logger.debug("sendCommand({}, {})", command, timeout);
+				logger.debug(">> " + command);
 				output.write(command.getBytes());
 				output.write("\n".getBytes());
 			}
@@ -279,7 +280,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	public void run() {
 		while (!disconnectRequested) {
 			String line = readLine().trim();
-			logger.debug(line);
+			logger.debug("<< " + line);
 			responseQueue.offer(line);
 			if (line.equals("ok") || line.startsWith("error: ")) {
 				// This is the end of processing for a command
