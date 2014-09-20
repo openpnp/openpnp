@@ -21,11 +21,6 @@
 
 package org.openpnp.machine.reference.driver;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -37,7 +32,6 @@ import java.util.regex.Pattern;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
@@ -51,22 +45,15 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.  
  */
-public class GrblDriver implements ReferenceDriver, Runnable {
+public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
 	private static final long minimumRequiredBuildNumber = 20140822;
 	
-	@Attribute
-	private String portName;
-	@Attribute
-	private int baud;
 	@Attribute
 	private double feedRateMmPerMinute;
 	
 	
 	private double x, y, z, c;
-	private SerialPort serialPort;
-	private InputStream input;
-	private OutputStream output;
 	private Thread readerThread;
 	private boolean disconnectRequested;
 	private Object commandLock = new Object();
@@ -79,7 +66,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
             @Override
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-                connect(portName, baud);
+                connect();
             }
         });
 	}
@@ -177,30 +164,10 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		dwell();
 	}
 
-	public synchronized void connect(String portName, int baud)
+	public synchronized void connect()
 			throws Exception {
-		connect(CommPortIdentifier.getPortIdentifier(portName), baud);
-	}
-
-	public synchronized void connect(CommPortIdentifier commPortId, int baud)
-			throws Exception {
-		disconnect();
-
-		if (commPortId.isCurrentlyOwned()) {
-			throw new Exception("Port is in use.");
-		}
-		this.baud = baud;
-		serialPort = (SerialPort) commPortId.open(this.getClass().getName(),
-				2000);
-		serialPort.setSerialPortParams(baud, SerialPort.DATABITS_8,
-				SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-		serialPort.enableReceiveTimeout(100);
-		if (!serialPort.isReceiveTimeoutEnabled()) {
-			throw new Exception("Unable to enable receive timeout.");
-		}
-		input = serialPort.getInputStream();
-		output = serialPort.getOutputStream();
-
+	    super.connect();
+	    
 		/**
 		 * Connection process notes:
 		 * 
@@ -277,9 +244,13 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		catch (Exception e) {
 			logger.error("disconnect()", e);
 		}
-		if (serialPort != null) {
-			serialPort.close();
-		}
+		
+		try {
+		    super.disconnect();
+        }
+        catch (Exception e) {
+            logger.error("disconnect()", e);
+        }
 		disconnectRequested = false;
 	}
 
@@ -336,44 +307,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		return responses;
 	}
 	
-	private String readLine() {
-		StringBuffer line = new StringBuffer();
-		try {
-			while (true) {
-				int ch = readChar();
-				if (ch == -1) {
-					return null;
-				}
-				else if (ch == '\n' || ch == '\r') {
-					if (line.length() > 0) {
-						return line.toString();
-					}
-				}
-				else {
-					line.append((char) ch);
-				}
-			}
-		}
-		catch (Exception e) {
-			logger.error("readLine()", e);
-		}
-		return null;
-	}
-
-	private int readChar() {
-		try {
-			int ch = -1;
-			while (ch == -1 && !disconnectRequested) {
-				ch = input.read();
-			}
-			return ch;
-		}
-		catch (Exception e) {
-			logger.error("readChar()", e);
-			return -1;
-		}
-	}
-
     @Override
     public Wizard getConfigurationWizard() {
         // TODO Auto-generated method stub

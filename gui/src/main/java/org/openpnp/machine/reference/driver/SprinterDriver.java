@@ -21,11 +21,6 @@
 
 package org.openpnp.machine.reference.driver;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -35,7 +30,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
@@ -121,7 +115,7 @@ import org.slf4j.LoggerFactory;
 //M602 - Reset Temp jitter from Extruder (min / max val) --> Don't use it while Printing
 //M603 - Show Free Ram
 
-public class SprinterDriver implements ReferenceDriver, Runnable {
+public class SprinterDriver extends AbstractSerialPortDriver implements Runnable {
 
 /*	@Attribute(required=false) 
     private int vacpumpPin;
@@ -132,12 +126,6 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 */	
 	private static final Logger logger = LoggerFactory.getLogger(SprinterDriver.class);
 //	private static final double minimumRequiredVersion = 0.75;
-	
-	@Attribute
-	private String portName;
-	
-	@Attribute
-	private int baud;
 	
 	@Attribute(required=false)
 	private int vacuumPin = 31;
@@ -167,9 +155,6 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
     private double feedRateMmPerMinute;
 	
 	private double x, y, z, c;
-	private SerialPort serialPort;
-	private InputStream input;
-	private OutputStream output;
 	private Thread readerThread;
 	private boolean disconnectRequested;
 	private Object commandLock = new Object();
@@ -182,7 +167,7 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
             @Override
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-                connect(portName, baud);
+                connect();
             }
 	    });
 	}
@@ -292,29 +277,10 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 		actuate(null, false);
 	}
 
-	public synchronized void connect(String portName, int baud)
+	public synchronized void connect()
 			throws Exception {
-		connect(CommPortIdentifier.getPortIdentifier(portName), baud);
-	}
+	    super.connect();
 
-	public synchronized void connect(CommPortIdentifier commPortId, int baud)
-			throws Exception {
-		disconnect();
-
-		if (commPortId.isCurrentlyOwned()) {
-			throw new Exception("Port is in use.");
-		}
-		this.baud = baud;
-		serialPort = (SerialPort) commPortId.open(this.getClass().getName(),
-				2000);
-		serialPort.setSerialPortParams(baud, SerialPort.DATABITS_8,
-				SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-		serialPort.enableReceiveTimeout(100);
-		if (!serialPort.isReceiveTimeoutEnabled()) {
-			throw new Exception("Unable to enable receive timeout.");
-		}
-		input = serialPort.getInputStream();
-		output = serialPort.getOutputStream();
 
 		/**
 		 * Connection process notes:
@@ -391,9 +357,13 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 		catch (Exception e) {
 			logger.error("disconnect()", e);
 		}
-		if (serialPort != null) {
-			serialPort.close();
-		}
+		
+        try {
+            super.disconnect();
+        }
+        catch (Exception e) {
+            logger.error("disconnect()", e);
+        }
 		disconnectRequested = false;
 	}
 
@@ -453,43 +423,5 @@ public class SprinterDriver implements ReferenceDriver, Runnable {
 			responses.add(response);
 		}
 		return responses;
-	}
-	
-	private String readLine() {
-		StringBuffer line = new StringBuffer();
-		try {
-			while (true) {
-				int ch = readChar();
-				if (ch == -1) {
-					return null;
-				}
-				else if (ch == '\n' || ch == '\r') {
-					if (line.length() > 0) {
-						return line.toString();
-					}
-				}
-				else {
-					line.append((char) ch);
-				}
-			}
-		}
-		catch (Exception e) {
-			logger.error("readLine()", e);
-		}
-		return null;
-	}
-
-	private int readChar() {
-		try {
-			int ch = -1;
-			while (ch == -1 && !disconnectRequested) {
-				ch = input.read();
-			}
-			return ch;
-		}
-		catch (Exception e) {
-			logger.error("readChar()", e);
-			return -1;
-		}
-	}
+	}	
 }
