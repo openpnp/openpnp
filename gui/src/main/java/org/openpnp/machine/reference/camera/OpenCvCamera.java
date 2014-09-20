@@ -42,12 +42,13 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     }    
     
 	@Attribute(required=true)
-	private int deviceIndex = 0;
+	private int deviceIndex = Integer.MIN_VALUE;
 	
 	private VideoCapture fg = new VideoCapture();
 	private Thread thread;
 	
 	public OpenCvCamera() {
+	    setDeviceIndex(0);
 	}
 	
 	@Commit
@@ -94,6 +95,9 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	}
 
 	public synchronized void setDeviceIndex(int deviceIndex) {
+	    if (this.deviceIndex == deviceIndex) {
+	        return;
+	    }
 		this.deviceIndex = deviceIndex;
 		if (thread != null) {
 			thread.interrupt();
@@ -103,6 +107,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 			catch (Exception e) {
 				e.printStackTrace();
 			}
+			thread = null;
 		}
 		try {
 		    fg.open(deviceIndex);
