@@ -1,4 +1,5 @@
-# Introduction
+Introduction
+============
 
 OpenPnP is an Open Source SMT pick and place system designed and built with the hobbyist in mind but with the features and power to run commercial pick and place operations. It's goal is to bring pick and place to the desktop of anyone who needs to make more than a few of something.
 
@@ -6,39 +7,55 @@ OpenPnP is made up of three components. The hardware, the firmware and the softw
 
 The purpose of this manual is to help you get the software up and running, and to teach you how to configure and operate it.
 
-# Getting Started
+Pre-Release Software Warning
+============================
 
 OpenPnP is currently considered Alpha level software. This means that it is still under heavy development, may have major bugs and may be entirely unreliable. If you are still interested in continuing...
 
-## Installation
+Installation
+============
 
-### Prerequisites
+Prerequisites
+-------------
 
 OpenPnP runs on the Java platform and requires the Java runtime version 6 or higher to run. You can download the latest version of Java from http://java.com/getjava.
 
 OpenPnP is designed to run on Mac, Windows and Linux. Other platforms may be supported due to the nature of Java, but they are not recommended. OpenPnp is written and tested on Mac and used regularly on Windows. These two platforms are recommended for the best compatibility.
 
-### Download
+Download
+--------
 
 Visit http://openpnp.org to find out how to download the latest snapshot or release of OpenPnP.
 
-### Install
+Install
+-------
 
 Unzip the software into a directory of your choosing. Typically this would be the same place you keep your other applications.
 
-## Running OpenPnP
+Running OpenPnP
+---------------
 
 Inside the folder you unzipped OpenPnP to there is an `openpnp.sh` and `openpnp.bat` script. These should work for Windows, Mac and Linux. For Mac and Linux, run `openpnp.sh` and for Windows run `openpnp.bat`. After a short wait you should see the OpenPnP Main Window. If something goes wrong, visit the Troubleshooting section of this document for help.
 
-# The User Interface
+The User Interface
+==================
 
 OpenPnP is primarily a single window interface, broken up into multiple sections. Those sections will be explained in detail below.
 
-## The Main Window
-## Machine Controls
-## The Camera Panel
-## The Tabs
-## Shortcuts
+The Main Window
+---------------
+
+Machine Controls
+----------------
+
+The Camera Panel
+----------------
+
+The Tabs
+--------
+
+Shortcuts
+---------
 
 There are a few important keyboard shortcuts that are critical to know to use OpenPnP. All of the shortcuts use Ctrl + another key. They are:
 
@@ -48,26 +65,53 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 * Ctrl+>, Ctrl+<: Rotate the currently selected Nozzle clockwise and counterclockwise.
 * Ctrl+Plus, Ctrl+Minus: Change the jog increment slider. This changes how far each jog key will move the Nozzle.
 
-# Setup
-## The Driver
-## Heads
-## Actuators
-## Cameras
-## Feeders
+Setup
+=====
 
-# Operation
-## Parts
-## Packages
-## Boards
-## Jobs
-## Your First Job
+The Driver
+----------
 
-# Troubleshooting
+Heads
+-----
 
-# FAQ
+Actuators
+---------
 
-# Advanced Topics
-## Configuration Files
+Cameras
+-------
+
+Feeders
+-------
+
+Operation
+=========
+
+Parts
+-----
+
+Packages
+--------
+
+Boards
+------
+
+Jobs
+----
+
+Your First Job
+--------------
+
+Troubleshooting
+===============
+
+FAQ
+===
+
+Advanced Topics
+===============
+
+Configuration Files
+-------------------
 
 Configuration files are located in your home directory, under a subdirectory called `.openpnp`.
 
@@ -83,7 +127,8 @@ There are three primary configuration files. They are:
 2. `parts.xml`: A portable parts database. As you define parts (components) in OpenPnP they are stored here.
 3. `packages.xml`: A portable packages database. Component package information including shape and dimensions are stored here.
 
-## Custom Implementations and Integration
+Custom Implementations and Integration
+--------------------------------------
 
 If you are interested in having OpenPnP work with a machine that is not currently supported
 you will need an OpenPnP driver that can talk to your hardware and you will need to
@@ -100,19 +145,24 @@ in `machine.xml`.
 
 See the Development section for more information if you decide you need to write code.
 
-## Development
+Development
+-----------
 
 For more information about developing OpenPnP, especially regarding contributing, please see
 https://github.com/openpnp/openpnp/wiki/Developers-Guide.
 
-## Debugging
+Debugging
+---------
 
-# Getting Help
+Getting Help
+============
 
-## Discussion Group
+Discussion Group
+----------------
 
 There is an active discussion group at http://groups.google.com/group/openpnp. This will typically be the best place to get help.
 
-## IRC
+IRC
+---
 
 We also have an IRC channel on Freenode IRC at #openpnp. If you don't have an IRC client, you can use [this web based one](http://webchat.freenode.net/?channels=openpnp).
