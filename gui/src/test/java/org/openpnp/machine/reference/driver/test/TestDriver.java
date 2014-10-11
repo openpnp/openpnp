@@ -1,5 +1,7 @@
 package org.openpnp.machine.reference.driver.test;
 
+import javax.swing.Action;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
@@ -8,6 +10,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,5 +166,53 @@ public class TestDriver implements ReferenceDriver {
             // TODO Auto-generated method stub
             
         }
+
+        @Override
+        public String getPropertySheetHolderTitle() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public PropertySheetHolder[] getChildPropertySheetHolders() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public PropertySheet[] getPropertySheets() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Action[] getPropertySheetHolderActions() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }
+
+    @Override
+    public String getPropertySheetHolderTitle() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
