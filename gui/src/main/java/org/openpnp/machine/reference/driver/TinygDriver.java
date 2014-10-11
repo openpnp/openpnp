@@ -21,17 +21,11 @@
 
 package org.openpnp.machine.reference.driver;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Locale;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
@@ -51,24 +45,17 @@ import com.google.gson.JsonSyntaxException;
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.
  */
-public class TinygDriver implements ReferenceDriver, Runnable {
+public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory
             .getLogger(TinygDriver.class);
     private static final double minimumRequiredVersion = 0.95;
 
-    @Attribute
-    private String portName;
-    @Attribute
-    private int baud;
     @Attribute
     private double feedRateMmPerMinute;
     @Element(required = false)
     private Location homeLocation = new Location(LengthUnit.Millimeters);
 
     private double x, y, z, c;
-    private SerialPort serialPort;
-    private InputStream input;
-    private OutputStream output;
     private Thread readerThread;
     private Object commandLock = new Object();
     private Object movementWaitLock = new Object();
@@ -87,29 +74,9 @@ public class TinygDriver implements ReferenceDriver, Runnable {
         });
     }
 
+    @Override
     public synchronized void connect() throws Exception {
-        disconnect();
-
-        CommPortIdentifier commPortId = CommPortIdentifier
-                .getPortIdentifier(portName);
-
-        if (commPortId == null) {
-            throw new Exception("Port not found: " + portName);
-        }
-
-        if (commPortId.isCurrentlyOwned()) {
-            throw new Exception("Port is in use.");
-        }
-        serialPort = (SerialPort) commPortId.open(this.getClass().getName(),
-                2000);
-        serialPort.setSerialPortParams(baud, SerialPort.DATABITS_8,
-                SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-        serialPort.enableReceiveTimeout(100);
-        if (!serialPort.isReceiveTimeoutEnabled()) {
-            throw new Exception("Unable to enable receive timeout.");
-        }
-        input = serialPort.getInputStream();
-        output = serialPort.getOutputStream();
+        super.connect();
 
         readerThread = new Thread(this);
         readerThread.start();
@@ -282,8 +249,12 @@ public class TinygDriver implements ReferenceDriver, Runnable {
         catch (Exception e) {
             logger.error("disconnect()", e);
         }
-        if (serialPort != null) {
-            serialPort.close();
+        
+        try {
+            super.disconnect();
+        }
+        catch (Exception e) {
+            logger.error("disconnect()", e);
         }
     }
 
@@ -372,44 +343,6 @@ public class TinygDriver implements ReferenceDriver, Runnable {
     private void waitForMovementComplete() throws Exception {
         synchronized (movementWaitLock) {
             movementWaitLock.wait();
-        }
-    }
-
-    private String readLine() {
-        StringBuffer line = new StringBuffer();
-        try {
-            while (true) {
-                int ch = readChar();
-                if (ch == -1) {
-                    return null;
-                }
-                else if (ch == '\n' || ch == '\r') {
-                    if (line.length() > 0) {
-                        return line.toString();
-                    }
-                }
-                else {
-                    line.append((char) ch);
-                }
-            }
-        }
-        catch (Exception e) {
-            logger.error("readLine()", e);
-        }
-        return null;
-    }
-
-    private int readChar() {
-        try {
-            int ch = -1;
-            while (ch == -1 && !Thread.interrupted()) {
-                ch = input.read();
-            }
-            return ch;
-        }
-        catch (Exception e) {
-            logger.error("readChar()", e);
-            return -1;
         }
     }
 
