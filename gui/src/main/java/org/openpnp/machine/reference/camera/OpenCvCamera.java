@@ -23,31 +23,32 @@ package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
 
-import javax.swing.Action;
-
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.opencv.core.Mat;
+import org.opencv.highgui.VideoCapture;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
-
-import com.googlecode.javacv.FrameGrabber;
-import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 /**
  * A Camera implementation based on the OpenCV FrameGrabbers.
  */
 public class OpenCvCamera extends ReferenceCamera implements Runnable {
+    static {
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }    
+    
 	@Attribute(required=true)
-	private int deviceIndex = 0;
+	private int deviceIndex = Integer.MIN_VALUE;
 	
-	private FrameGrabber fg;
+	private VideoCapture fg = new VideoCapture();
 	private Thread thread;
 	
 	public OpenCvCamera() {
+	    setDeviceIndex(0);
 	}
 	
 	@Commit
@@ -58,8 +59,11 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	@Override
 	public synchronized BufferedImage capture() {
 		try {
-			IplImage image = fg.grab();
-			return image.getBufferedImage();
+		    Mat mat = new Mat();
+		    if (!fg.read(mat)) {
+		        return null;
+		    }            
+			return OpenCvUtils.toBufferedImage(mat);
 		}
 		catch (Exception e) {
 			return null;
@@ -91,6 +95,9 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	}
 
 	public synchronized void setDeviceIndex(int deviceIndex) {
+	    if (this.deviceIndex == deviceIndex) {
+	        return;
+	    }
 		this.deviceIndex = deviceIndex;
 		if (thread != null) {
 			thread.interrupt();
@@ -100,25 +107,10 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 			catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
-		if (fg != null) {
-			try {
-				fg.stop();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			try {
-				fg.release();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				return;
-			}
+			thread = null;
 		}
 		try {
-			fg = FrameGrabber.createDefault(deviceIndex);
-			fg.start();
+		    fg.open(deviceIndex);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -132,29 +124,4 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	public Wizard getConfigurationWizard() {
 		return new OpenCvCameraConfigurationWizard(this);
 	}
-	
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())
-        };
-    }    
 }

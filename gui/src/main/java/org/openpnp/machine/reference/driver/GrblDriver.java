@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.Action;
 
@@ -55,7 +57,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GrblDriver implements ReferenceDriver, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
-	private static final double minimumRequiredVersion = 0.81;
+	private static final long minimumRequiredBuildNumber = 20140822;
 	
 	@Attribute
 	private String portName;
@@ -73,7 +75,7 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	private boolean disconnectRequested;
 	private Object commandLock = new Object();
 	private boolean connected;
-	private double connectedVersion;
+	private long connectedBuildNumber;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
 	public GrblDriver() {
@@ -128,16 +130,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
         double z = location.getZ();
         double c = location.getRotation();
         
-		// TODO: Due to a bug (of my creating) in Grbl, C movements are
-		// included in the linear movements, and since they are much slower
-		// than X, Y movements they end up slowing the whole thing down.
-		// So, as a temporary hack, if there is a C move to be made we'll
-		// make it first. 
-		// Also, since C is so slow in comparison, we just increase it
-		// by a factor of 10.
-		if (c != this.c && (x != this.x || y != this.y || z != this.z)) {
-			moveTo(hm, location.derive(Double.NaN, Double.NaN, Double.NaN, null), speed);
-		}
 		StringBuffer sb = new StringBuffer();
 		if (!Double.isNaN(x) && x != this.x) {
 			sb.append(String.format(Locale.US, "X%2.2f ", x));
@@ -149,8 +141,6 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 			sb.append(String.format(Locale.US, "Z%2.2f ", z));
 		}
 		if (!Double.isNaN(c) && c != this.c) {
-			// TODO see above bug note, and remove this when fixed.
-			feedRateMmPerMinute *= 10;
 			sb.append(String.format(Locale.US, "C%2.2f ", c));
 		}
 		if (sb.length() > 0) {
@@ -174,7 +164,9 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
-		sendCommand("$1000=" + (enabled ? "1" : "0"));
+	    if (enabled) {
+	        sendCommand("$X");
+	    }
 	}
 
 	@Override
@@ -237,18 +229,18 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 		processConnectionResponses(responses);
 
 		for (int i = 0; i < 5 && !connected; i++) {
-			responses = sendCommand("$", 5000);
+			responses = sendCommand("$I", 5000);
 			processConnectionResponses(responses);
 		}
 		
 		if (!connected)  {
 			throw new Error(
-				String.format("Unable to receive connection response from Grbl. Check your port and baud rate, and that you are running at least version %f of Grbl", 
-						minimumRequiredVersion));
+				String.format("Unable to receive connection response from Grbl. Check your port and baud rate, and that you are running at least build %d of Grbl", 
+						minimumRequiredBuildNumber));
 		}
 		
-		if (connectedVersion < minimumRequiredVersion) {
-			throw new Error(String.format("This driver requires Grbl version %.2f or higher. You are running version %.2f", minimumRequiredVersion, connectedVersion));
+		if (connectedBuildNumber < minimumRequiredBuildNumber) {
+			throw new Error(String.format("This driver requires Grbl build %d or higher. You are running build %d", minimumRequiredBuildNumber, connectedBuildNumber));
 		}
 		
 		// We are connected to at least the minimum required version now
@@ -264,12 +256,16 @@ public class GrblDriver implements ReferenceDriver, Runnable {
 	
 	private void processConnectionResponses(List<String> responses) {
 		for (String response : responses) {
-			if (response.startsWith("$VERSION = ")) {
-				String[] versionComponents = response.split(" ");
-				connectedVersion = Double.parseDouble(versionComponents[2]);
-				connected = true;
-				logger.debug(String.format("Connected to Grbl Version: %.2f", connectedVersion));
-			}
+		    // Expect something like: [0.9g.20140905:]
+		    Matcher matcher = Pattern.compile("\\[(\\w*)\\.(\\w*)\\.(\\d{8})\\:\\]").matcher(response);
+            if (matcher.matches()) {
+                String majorVersion = matcher.group(1);
+                String minorVersion = matcher.group(2);
+                String buildNumber = matcher.group(3);
+                connectedBuildNumber = Long.parseLong(buildNumber);
+                connected = true;
+                logger.debug(String.format("Connected to Grbl Version %s.%s, build: %d", majorVersion, minorVersion, connectedBuildNumber));
+		    }
 		}
 	}
 
