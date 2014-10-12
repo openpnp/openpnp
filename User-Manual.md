@@ -64,6 +64,7 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 * Ctrl+PageDn, PageUp: Jog the currently selected Nozzle up and down in Z.
 * Ctrl+>, Ctrl+<: Rotate the currently selected Nozzle clockwise and counterclockwise.
 * Ctrl+Plus, Ctrl+Minus: Change the jog increment slider. This changes how far each jog key will move the Nozzle.
+* Shift+Left Mouse Click: Hold Shift and left click the mouse anywhere in the camera view to move the camera to that position.
 
 Setup
 =====
