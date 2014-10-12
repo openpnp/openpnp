@@ -84,7 +84,22 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 		
 	}
 	
-	private void loadFromModel() {
+	/**
+	 * This method should be called when the caller wishes to notify the user
+	 * that there has been a change to the state of the wizard. This is done
+	 * automatically for wrapped bindings but this method is provided for
+	 * operations that do not use wrapped bindings.
+	 */
+	protected void notifyChange() {
+	    applyAction.setEnabled(true);
+	    resetAction.setEnabled(true);
+	}
+	
+	/**
+	 * When overriding this method you should call super.loadFromModel()
+	 * AFTER doing any work that you need to do, not before.
+	 */
+	protected void loadFromModel() {
 		for (WrappedBinding wrappedBinding : wrappedBindings) {
 			wrappedBinding.reset();
 		}
@@ -92,7 +107,11 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 		resetAction.setEnabled(false);
 	}
 
-	private void saveToModel() {
+    /**
+     * When overriding this method you should call super.loadFromModel()
+     * AFTER doing any work that you need to do, not before.
+     */
+	protected void saveToModel() {
 		try {
 			validateInput();
 		}

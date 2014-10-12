@@ -24,10 +24,6 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -197,8 +193,6 @@ public class PackagesPanel extends JPanel {
 					continue;
 				}
 				Package this_package = new Package(id);
-				
-//				this_package.setNozzleTip(Configuration.get().getPackages().get(0));
 				
 				configuration.addPackage(this_package);
 				packagesTableModel.fireTableDataChanged();

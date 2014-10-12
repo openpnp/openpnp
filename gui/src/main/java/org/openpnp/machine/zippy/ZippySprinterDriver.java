@@ -21,12 +21,8 @@
 
 package org.openpnp.machine.zippy;
 
-import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.driver.SprinterDriver;
 import org.simpleframework.xml.Attribute;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 

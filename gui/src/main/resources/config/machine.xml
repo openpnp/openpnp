@@ -17,11 +17,17 @@
             <nozzles>
                 <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1">
                     <head-offsets x="10" y="0" z="0" rotation="0" units="Millimeters" />
-                    <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true" />
+                    <nozzle-tips>
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true" />
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="true" />
+                    </nozzle-tips>
                 </nozzle>
                 <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N2">
                     <head-offsets x="20" y="0" z="0" rotation="0" units="Millimeters" />
-                    <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="true" />
+                    <nozzle-tips>
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true" />
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="true" />
+                    </nozzle-tips>
                 </nozzle>
             </nozzles>
             <actuators>

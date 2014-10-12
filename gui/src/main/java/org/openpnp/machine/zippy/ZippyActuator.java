@@ -22,7 +22,14 @@
 package org.openpnp.machine.zippy;
 
 import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.model.Location;
 
 public class ZippyActuator extends ReferenceActuator {
-
+    @Override
+    public void moveToSafeZ(double speed) throws Exception {
+        logger.debug("{}.moveToSafeZ({})", new Object[] { getId(), speed } );
+        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN, 10, Double.NaN);
+        driver.moveTo(this, l, speed);
+        machine.fireMachineHeadActivity(head);
+    }
 }

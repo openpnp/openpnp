@@ -29,8 +29,10 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
@@ -42,6 +44,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -289,13 +292,8 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	public String toString() {
 		return String.format("ReferenceTapeFeeder id %s", id);
 	}
-
-	@Override
-	public Wizard getConfigurationWizard() {
-		return new ReferenceTapeFeederConfigurationWizard(this);
-	}
-
-	public Location getFeedStartLocation() {
+    
+    public Location getFeedStartLocation() {
 		return feedStartLocation;
 	}
 
@@ -356,7 +354,36 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 				listener);
 	}
 
-	public static class Vision {
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceTapeFeederConfigurationWizard(this);
+    }
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public static class Vision {
 		@Attribute(required=false)
 		private boolean enabled;
 		@Attribute(required=false)

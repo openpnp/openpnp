@@ -66,7 +66,6 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.swing.border.TitledBorder;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {

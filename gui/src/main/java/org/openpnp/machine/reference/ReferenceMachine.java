@@ -22,8 +22,12 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import javax.swing.Action;
+
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
@@ -34,7 +38,9 @@ import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,8 +93,36 @@ public class ReferenceMachine extends AbstractMachine {
 	public Wizard getConfigurationWizard() {
 		return driver.getConfigurationWizard();
 	}
-
+	
 	@Override
+    public String getPropertySheetHolderTitle() {
+	    return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
+        children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
+        children.add(new SimplePropertySheetHolder("Heads", getHeads()));
+        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
+        return children.toArray(new PropertySheetHolder[]{});
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+
+    @Override
 	public List<Class<? extends Feeder>> getCompatibleFeederClasses() {
 		List<Class<? extends Feeder>> l = new ArrayList<Class<? extends Feeder>>();
 		l.add(ReferenceTrayFeeder.class);

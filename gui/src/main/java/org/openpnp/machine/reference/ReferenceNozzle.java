@@ -1,12 +1,20 @@
 package org.openpnp.machine.reference;
 
+import java.util.ArrayList;
+
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -25,9 +33,14 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Attribute(required = false)
     private int placeDwellMilliseconds;
-
-    @Element(required = false) //TODO needs work, probably breaks it, need to deal with "current" nozzle tip
-    private NozzleTip nozzleTip;
+    
+    @Attribute(required = false)
+    private String currentNozzleTipId;
+    
+    @Attribute(required = false)
+    private boolean changerEnabled = false;
+    
+    protected NozzleTip nozzleTip;
 
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
@@ -39,6 +52,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
                     throws Exception {
                 machine = (ReferenceMachine) configuration.getMachine();
                 driver = machine.getDriver();
+                nozzleTip = nozzleTips.get(currentNozzleTipId);
             }
         });
     }
@@ -76,7 +90,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
-		boolean result = nozzleTip.canHandle(feeder.getPart());
+        boolean result = true;
 		logger.debug("{}.canPickAndPlace({},{}) => {}", new Object[]{getId(), feeder, placeLocation, result});
     	return result;
 	}
@@ -84,6 +98,9 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public void pick() throws Exception {
 		logger.debug("{}.pick()", getId());
+		if (nozzleTip == null) {
+		    throw new Exception("Can't pick, no nozzle tip loaded");
+		}
 		driver.pick(this);
         machine.fireMachineHeadActivity(head);
         Thread.sleep(pickDwellMilliseconds);
@@ -92,6 +109,9 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public void place() throws Exception {
 		logger.debug("{}.place()", getId());
+        if (nozzleTip == null) {
+            throw new Exception("Can't place, no nozzle tip loaded");
+        }
 		driver.place(this);
         machine.fireMachineHeadActivity(head);
         Thread.sleep(placeDwellMilliseconds);
@@ -112,19 +132,102 @@ public class ReferenceNozzle extends AbstractNozzle implements
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
+    
+    @Override
+    public void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
+        if (this.nozzleTip == nozzleTip) {
+            return;
+        }
+        if (!changerEnabled) {
+            throw new Exception("Can't load nozzle tip, nozzle tip changer is not enabled.");
+        }
+        unloadNozzleTip();
+        logger.debug("{}.loadNozzleTip({}): Start", new Object[]{getId(), nozzleTip.getId()});
+        ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+        logger.debug("{}.loadNozzleTip({}): moveToSafeZ", new Object[]{getId(), nozzleTip.getId()});
+        moveToSafeZ(1.0);
+        logger.debug("{}.loadNozzleTip({}): moveTo Start Location", new Object[]{getId(), nozzleTip.getId()});
+        moveTo(nt.getChangerStartLocation(), 1.0);
+        logger.debug("{}.loadNozzleTip({}): moveTo Mid Location", new Object[]{getId(), nozzleTip.getId()});
+        moveTo(nt.getChangerMidLocation(), 0.25);
+        logger.debug("{}.loadNozzleTip({}): moveTo End Location", new Object[]{getId(), nozzleTip.getId()});
+        moveTo(nt.getChangerEndLocation(), 1.0);
+        moveToSafeZ(1.0);
+        logger.debug("{}.loadNozzleTip({}): Finished", new Object[]{getId(), nozzleTip.getId()});
+        this.nozzleTip = nozzleTip;
+        currentNozzleTipId = nozzleTip.getId();
+        Configuration.get().setDirty(true);
+    }
+
+    @Override
+    public void unloadNozzleTip() throws Exception {
+        if (nozzleTip == null) {
+            return;
+        }
+        if (!changerEnabled) {
+            throw new Exception("Can't unload nozzle tip, nozzle tip changer is not enabled.");
+        }
+        logger.debug("{}.unloadNozzleTip(): Start", new Object[]{getId()});
+        ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+        logger.debug("{}.unloadNozzleTip(): moveToSafeZ", new Object[]{getId()});
+        moveToSafeZ(1.0);
+        logger.debug("{}.unloadNozzleTip(): moveTo End Location", new Object[]{getId()});
+        moveTo(nt.getChangerEndLocation(), 1.0);
+        logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", new Object[]{getId()});
+        moveTo(nt.getChangerMidLocation(), 1.0);
+        logger.debug("{}.unloadNozzleTip(): moveTo Start Location", new Object[]{getId()});
+        moveTo(nt.getChangerStartLocation(), 0.25);
+        moveToSafeZ(1.0);
+        logger.debug("{}.unloadNozzleTip(): Finished", new Object[]{getId()});
+        nozzleTip = null;
+        currentNozzleTipId = null;
+        Configuration.get().setDirty(true);
+    }
 
     @Override
     public Location getLocation() {
         return driver.getLocation(this);
     }
+    
+    public boolean isChangerEnabled() {
+        return changerEnabled;
+    }
+
+    public void setChangerEnabled(boolean changerEnabled) {
+        this.changerEnabled = changerEnabled;
+    }
 
     @Override
     public Wizard getConfigurationWizard() {
+        return new ReferenceNozzleConfigurationWizard(this);
+    }
+    
+	@Override
+    public String getPropertySheetHolderTitle() {
+	    return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
+        children.add(new SimplePropertySheetHolder("Nozzles", getNozzleTips()));
+        return children.toArray(new PropertySheetHolder[]{});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+        
+    @Override
+    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }
 
-	@Override
+    @Override
 	public String toString() {
 		return getId();
 	}

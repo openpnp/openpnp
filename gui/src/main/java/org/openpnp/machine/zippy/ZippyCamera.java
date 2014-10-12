@@ -21,27 +21,28 @@
 
 package org.openpnp.machine.zippy;
 
-import java.util.Collections;
-import java.util.List;
+import org.openpnp.machine.reference.camera.OpenCvCamera;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 
-import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.spi.Nozzle;
+public class ZippyCamera extends OpenCvCamera {
 
-public class ZippyHead extends ReferenceHead {
+	private Location currentOffset = new Location(LengthUnit.Millimeters);
 
+    public Location getCurrentOffset() {
+        return currentOffset;
+    }
+    public void setCurrentOffset(Location currentOffset) {
+        this.currentOffset = currentOffset;
+    }
 
-
+    
     @Override
-	public void home() throws Exception {
-		logger.debug("{}.home()", getId());
-	    driver.home(this);
-	    ((ZippyNozzle) nozzles.get(0)).clearAppliedOffset();
-	    
-	    machine.fireMachineHeadActivity(this);
-	}
-    @Override
-    public List<Nozzle> getNozzles() {
-        return Collections.unmodifiableList(nozzles);
+    public void moveToSafeZ(double speed) throws Exception {
+		logger.debug("{}.moveToSafeZ({})", new Object[]{getId(), speed});
+        Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN, 10, Double.NaN);
+        driver.moveTo(this, l, speed);
+        machine.fireMachineHeadActivity(head);
     }
 
 }

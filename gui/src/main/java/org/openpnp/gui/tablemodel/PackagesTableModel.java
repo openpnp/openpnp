@@ -21,7 +21,6 @@
 
 package org.openpnp.gui.tablemodel;
 
-import java.awt.Point;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -29,13 +28,9 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.Outline;
 import org.openpnp.model.Package;
 //import org.openpnp.model.Package;
-import org.openpnp.spi.NozzleTip;
 
 @SuppressWarnings("serial")
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
@@ -44,8 +39,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 	private String[] columnNames = new String[] { 
 		"Id", 
 		"Description",
-		"Outline", 
-		"NozzleTip" 
+		"Outline" 
 	};
 	private Class[] columnTypes = new Class[] {
 		String.class,
@@ -82,7 +76,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex == 1 || columnIndex == 3;
+		return columnIndex == 1;
 	}
 	
 	public Package getPackage(int index) {
@@ -95,26 +89,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 			Package this_package = packages.get(rowIndex);
 			if (columnIndex == 1) {
 				this_package.setName((String) aValue);
-			}
-			else if (columnIndex == 2) {
-				// TODO: figure out setting of outline
-//				LengthCellValue value = (LengthCellValue) aValue;
-//				value.setDisplayNativeUnits(true);
-//				Length length = value.getLength();
-//				Length oldLength = packages.getHeight();
-//				if (length.getUnits() == null) {
-//					if (oldLength != null) {
-//						length.setUnits(oldLength.getUnits());
-//					}
-//					if (length.getUnits() == null) {
-//						length.setUnits(configuration.getSystemUnits());
-//					}
-//				}
-//				this_package.setHeight(length);
-//				this_package.setOutline(outline);
-			}
-			else if (columnIndex == 3) {
-				this_package.setNozzleTip((String)aValue);
 			}
 			configuration.setDirty(true);
 		}
@@ -132,8 +106,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 			 return this_package.getName();
 		case 2:
 			return this_package.getOutline().toString();
-		case 3:
-			 return this_package.getNozzleTipId();
 		default:
 			return null;
 		}

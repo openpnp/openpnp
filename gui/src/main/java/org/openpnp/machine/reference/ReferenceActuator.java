@@ -21,11 +21,15 @@
 
 package org.openpnp.machine.reference;
 
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -33,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
-    private final static Logger logger = LoggerFactory
+    protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceActuator.class);
     
     @Element
@@ -42,8 +46,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 	@Attribute
 	private int index;
 	
-    private ReferenceMachine machine;
-    private ReferenceDriver driver;
+    protected ReferenceMachine machine;
+    protected ReferenceDriver driver;
 
     public ReferenceActuator() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -109,8 +113,32 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 	public Wizard getConfigurationWizard() {
 		return new ReferenceActuatorConfigurationWizard(this);
 	}
-
+    
 	@Override
+    public String getPropertySheetHolderTitle() {
+	    return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
 	public String toString() {
 		return getId();
 	}

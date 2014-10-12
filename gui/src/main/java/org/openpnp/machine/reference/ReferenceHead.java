@@ -21,11 +21,18 @@
 
 package org.openpnp.machine.reference;
 
+import java.util.ArrayList;
+
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +65,35 @@ public class ReferenceHead extends AbstractHead {
     public Wizard getConfigurationWizard() {
         return new ReferenceHeadConfigurationWizard(this);
     }
-
+	
 	@Override
+    public String getPropertySheetHolderTitle() {
+	    return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
+        children.add(new SimplePropertySheetHolder("Nozzles", getNozzles()));
+        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
+        return children.toArray(new PropertySheetHolder[]{});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
 	public void moveToSafeZ(double speed) throws Exception {
 		logger.debug("{}.moveToSafeZ({})", getId(), speed);
 		super.moveToSafeZ(speed);

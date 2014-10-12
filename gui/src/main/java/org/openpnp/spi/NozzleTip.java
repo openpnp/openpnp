@@ -6,6 +6,6 @@ import org.openpnp.model.Part;
 /**
  * A NozzleTip is the physical interface between a Nozzle and a Part. 
  */
-public interface NozzleTip extends Identifiable, WizardConfigurable {
+public interface NozzleTip extends Identifiable, WizardConfigurable, PropertySheetHolder {
     public boolean canHandle(Part part);
 }

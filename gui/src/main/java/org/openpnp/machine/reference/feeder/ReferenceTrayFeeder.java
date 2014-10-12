@@ -23,12 +23,16 @@ package org.openpnp.machine.reference.feeder;
 
 
 
+import javax.swing.Action;
+
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -87,20 +91,16 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         }
         
         // Multiply the offsets by the X/Y part indexes to get the total offsets
+        // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
         pickLocation = location.add(
                 offsets.multiply(partX, partY, 0.0, 0.0));
 
         logger.debug(String.format(
-                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f", feedCount,
-                partX, partY, pickLocation.getX(), pickLocation.getY()));
+                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
+                partX, partY, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
         
         feedCount++;
-	}
-
-	@Override
-	public Wizard getConfigurationWizard() {
-		return new ReferenceTrayFeederConfigurationWizard(this);
 	}
 
 	public int getTrayCountX() {
@@ -140,4 +140,32 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 		return getId();
 	}
 
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceTrayFeederConfigurationWizard(this);
+    }
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName() + " " + getId();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }  
 }

@@ -30,6 +30,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -131,15 +132,23 @@ public class ZippyJobProcessor extends ReferenceJobProcessor {
 		Head head = machine.getHeads().get(0);
 		JobPlanner jobPlanner = machine.getJobPlanner();
 
+		//pre job stuff
 		state = JobState.Running;
 		fireJobStateChanged();
+		try {
+			head.home();
+			Nozzle nozzle = head.getNozzles().get(0);
+			Location l = new Location(LengthUnit.Millimeters, 5.0, 20.0, 1.0, 0.0);
+			nozzle.moveTo(l, 1.0);
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+			return;
+		}
 		
 		
-		
+		//pre-test for we have feeders, etc
 		preProcessJob(machine);
-		
-
-		
 		jobPlanner.setJob(job);
         
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
@@ -152,7 +161,7 @@ public class ZippyJobProcessor extends ReferenceJobProcessor {
 				Feeder feeder = solution.feeder;
 				Placement placement = solution.placement;
 				Nozzle nozzle = solution.nozzle;
-				NozzleTip nozzletip = solution.nozzleTip;
+				NozzleTip nozzleTip = solution.nozzleTip;
 
 				// Determine where we will place the part
 				Location boardLocation = bl.getLocation();
@@ -192,22 +201,62 @@ public class ZippyJobProcessor extends ReferenceJobProcessor {
 				        (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
 
 				// Update the placementLocation with the proper Z value. This is
-				// the distance to the top of the board plus the height of 
+				// the distance to the top of the board minus the height of 
 				// the part.
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
-				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
+				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() - partHeight, null);
 
-				if( !nozzle.getNozzleTip().getId().equals(nozzletip.getId())){
-					try {
-						((ZippyNozzleTip) nozzle.getNozzleTip()).unload((ZippyNozzle) nozzle);
-						((ZippyNozzleTip) nozzletip).load((ZippyNozzle) nozzle);
-						((ZippyNozzleTip) nozzletip).calibrate((ZippyNozzle) nozzle);
-					}
-					catch (Exception e) {
-						fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-						return;
-					}
-				}
+
+				
+                // NozzleTip Changer
+                if (nozzle.getNozzleTip() != nozzleTip) {
+                    fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getId()));        
+
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    
+                    try {
+                        nozzle.unloadNozzleTip();
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                    
+                    fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getId(), nozzle.getId()));        
+
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                                        
+                    try {
+                        nozzle.loadNozzleTip(nozzleTip);
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                    
+                    if (nozzle.getNozzleTip() != nozzleTip) {
+                        fireJobEncounteredError(JobError.PickError, "Failed to load correct nozzle tip");
+                        return;
+                    }
+                    
+                    try {
+                        ((ZippyNozzleTip) nozzleTip).calibrate((ZippyNozzle) nozzle);                    
+                    }
+                    catch (Exception e) {
+                        fireJobEncounteredError(JobError.PickError, e.getMessage());
+                        return;
+                    }
+                }
+                // End NozzleTip Changer
+                
+                if (!nozzle.getNozzleTip().canHandle(part)) {
+                    fireJobEncounteredError(JobError.PickError, "Selected nozzle tip is not compatible with part");
+                }
+                
 				pick(nozzle, feeder, bl, placement);
 				placementSolutionLocations.put(solution, placementLocation);
 			}
@@ -220,6 +269,21 @@ public class ZippyJobProcessor extends ReferenceJobProcessor {
                 Location placementLocation = placementSolutionLocations.get(solution);
                 place(nozzle, bl, placementLocation, placement);
             }
+		    
+		}
+		//post job clean up
+		state = JobState.Stopped;
+		fireJobStateChanged();
+		//park
+		try {
+			head.home();
+			Nozzle nozzle = head.getNozzles().get(0);
+			Location l = new Location(LengthUnit.Millimeters, 0.0, 0.0, 8.5, 0.0);
+			nozzle.moveTo(l, 1.0);
+		}
+		catch (Exception e) {
+			fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+			return;
 		}
 	}
 

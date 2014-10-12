@@ -30,7 +30,7 @@ import java.util.List;
  * cause the machine to do work. A Machine has one or more Heads.
  * Unless otherwise noted, the methods in this class block while performing their operations.
  */
-public interface Machine extends WizardConfigurable {
+public interface Machine extends WizardConfigurable, PropertySheetHolder {
 	/**
 	 * Gets all active heads on the machine.
 	 * @return

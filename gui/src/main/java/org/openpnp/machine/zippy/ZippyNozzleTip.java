@@ -25,10 +25,11 @@ import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder.Vision;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -55,15 +56,7 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 
 	private final static Logger logger = LoggerFactory.getLogger(ZippyNozzleTip.class);
 
-    public ZippyNozzleTip(){
-    	//set parent nozzle
-  //   	Location nozzleOffsets = new Location(); 
-    }
-/*    private ReferenceMachine machine;
-    private ReferenceDriver driver;
-*/
     @Attribute(required = false) private int index;
-    @Attribute protected boolean loaded;
     @Attribute protected double pixelComp;
        
     @Element(required = false)
@@ -75,39 +68,42 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 	private Location mirrorMidLocation = new Location(LengthUnit.Millimeters);
 	@Element(required = false)
 	private Location mirrorEndLocation = new Location(LengthUnit.Millimeters);
-	@Element(required = false)
-	private Location changerStartLocation = new Location(LengthUnit.Millimeters);
-	@Element(required = false)
-	private Location changerMidLocation = new Location(LengthUnit.Millimeters);
-	@Element(required = false)
-	private Location changerEndLocation = new Location(LengthUnit.Millimeters);
 	@Element(required=false)
 	private Vision vision = new Vision();
 	
 	VisionManager visionMgr = new VisionManager();
-	
-    public boolean isLoaded() {
-        return loaded;
-    }
-
-/*     public void setLoaded(boolean enabled) {
-        this.loaded = enabled;
-    }
-*/
-	
+		
 	/*
 	 * vision?Offset contains the difference between where the nozzle tip 
 	 * was at 0,180 and 90,270. This is used to calculate nozzle tip offset
 	 * from a perfectly strait nozzle at 0 degrees. These offsets are used 
 	 * to compensate for nozzle crookedness when moving and rotating the nozzle tip
 	 */
-    @Override
-    public boolean canHandle(Part part) {
-    	boolean result = part.getPackage().getNozzleTipId() == this.getId();
-		logger.debug("{}.canHandle({}) => {}", new Object[]{getId(), part.getId(), result});
-		return result;
-	}
+    public Location calculateOffset(Location location){
+    	
+    	Location ntOffset = this.nozzleOffsets; //nozzle tip offset from xml file
+    	Location calculatedOffset = null; //new calculated offset
 
+
+    	// Create the point that represents the nozzle tip offsets (stored offset always for angle zero)
+		Point nt_p = new Point(ntOffset.getX(), ntOffset.getY());
+
+    	// Rotate and translate the point into the same rotational coordinate space as the new location
+		// use point derived from offsets stored in xml
+		Point new_p = Utils2D.rotatePoint(nt_p, location.getRotation());
+
+		//calculate actual (not the change in) new offset. this is used to calibrate camera head-offset
+		calculatedOffset = location.derive(new_p.getX(), new_p.getY(), 0.0, null);
+
+		
+    	//log calculated offsets
+        logger.debug("{}.moveTo( stored_off {})", new Object[] { id, ntOffset } );
+        logger.debug("{}.moveTo( calculated_off {})", new Object[] { id, calculatedOffset } );
+//        logger.debug("{}.moveTo(adjusted {}, original {},  {})", new Object[] { id, adjustedLocation, location, speed } );
+        
+        return calculatedOffset;
+    }
+    
 	public Location calibrate(Nozzle nozzle) throws Exception {
 
 		//move to safe height
@@ -190,12 +186,15 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 	public Wizard getConfigurationWizard() {
 		return new ZippyNozzleTipConfigurationWizard(this);
 	}
+    
     public void setNozzleOffsets(Location nozzleOffsets) {
         this.nozzleOffsets = nozzleOffsets;
     }
+    
     public Location getNozzleOffsets() {
         return nozzleOffsets;
     }
+    
     //
     public void setmirrorStartLocation(Location mirrorStartLocation) {
         this.mirrorStartLocation = mirrorStartLocation;
@@ -220,31 +219,6 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
         return mirrorEndLocation;
     }
 
-    public void setchangerStartLocation(Location changerStartLocation) {
-        this.changerStartLocation = changerStartLocation;
-    }
-    
-    public Location getchangerStartLocation() {
-        return changerStartLocation;
-    }
-
-    public void setchangerMidLocation(Location changerMidLocation) {
-        this.changerMidLocation = changerMidLocation;
-    }
-    
-    public Location getchangerMidLocation() {
-        return changerMidLocation;
-    }
-    
-    public void setchangerEndLocation(Location changerEndLocation) {
-        this.changerEndLocation = changerEndLocation;
-    }
-    
-    public Location getchangerEndLocation() {
-        return changerEndLocation;
-    }
-
-
 	public String getId() {
 		return id;
 	}
@@ -258,53 +232,5 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
         Head head = machine.getHead(getId()); //needs work
 		machine.fireMachineHeadActivity(head);
     }
-*/	public void load(ZippyNozzle nozzle) throws Exception {
-		if(nozzle.currentNozzleTipid.equals(this.id)){
-			//just return if this is already the right one
-			return;
-		} 
-		//unload currently loaded nozzle tip
-//		((ZippyNozzleTip) nozzle.getNozzleTip()).unload(nozzle);
-		//move to safe height
-		nozzle.moveToSafeZ(1.1);
-		//create local variables for movement
-		Location changerStartLocation = this.changerStartLocation;
-		Location changerMidLocation = this.changerMidLocation;
-		Location changerEndLocation = this.changerEndLocation;
-		
-		//perform load operation
-		nozzle.uncompMoveTo(changerStartLocation, 1.0);
-		nozzle.uncompMoveTo(changerMidLocation, .5);
-		nozzle.uncompMoveTo(changerEndLocation, 1.0);
-		
-		nozzle.setNozzleTip(this);
-		this.loaded=true;
-		
-//		this.calibrate(nozzle);
-		
-		//move to safe height
-		nozzle.moveToSafeZ(1.0);
-		
-	}
-	public void unload(ZippyNozzle nozzle) throws Exception {
-		//move to safe height
-		nozzle.moveToSafeZ(1.2);
-		
-		//create local variables for movement
-		Location changerStartLocation = this.changerStartLocation;
-		Location changerMidLocation = this.changerMidLocation;
-		Location changerEndLocation = this.changerEndLocation;
-		
-		//perform unload operation
-		nozzle.uncompMoveTo(changerEndLocation, 1.0);
-		nozzle.uncompMoveTo(changerMidLocation, 1.0);
-		nozzle.uncompMoveTo(changerStartLocation, .5);
-
-//		nozzle.setNozzleTip(null);
-		this.loaded=false;
-		
-		//move to safe height
-		nozzle.moveToSafeZ(1.0);
-	}
-
+*/	
 }

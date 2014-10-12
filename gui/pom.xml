@@ -155,6 +155,11 @@
 					<source>1.7</source>
 					<target>1.7</target>
 					<mainClass>org.openpnp.app.Main</mainClass>
+                    <excludes>
+                    	<!--
+                        <exclude>**/zippy/**</exclude>
+                        -->
+                    </excludes>
 				</configuration>
 			</plugin>
 			

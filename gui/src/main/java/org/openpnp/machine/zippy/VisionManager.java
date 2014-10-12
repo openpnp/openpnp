@@ -40,10 +40,10 @@ public class VisionManager {
 	    logger.debug("getVisionOffsets({}, {})", head.getId(), calibrationLocation);
 		// Find the Camera to be used for vision
 		// TODO: Consider caching this
-		Camera camera = null;
+		ZippyCamera camera = null;
 		for (Camera c : head.getCameras()) {
 			if (c.getVisionProvider() != null) {
-				camera = c;
+				camera = (ZippyCamera) c;
 			}
 		}
 		
@@ -62,7 +62,7 @@ public class VisionManager {
 		// Settle the camera
 		// TODO: This should be configurable, or maybe just built into
 		// the VisionProvider
-		Thread.sleep(200);
+		Thread.sleep(500);
 		
 		VisionProvider visionProvider = camera.getVisionProvider();
 		

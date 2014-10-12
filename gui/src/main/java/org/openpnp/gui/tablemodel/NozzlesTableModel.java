@@ -31,15 +31,14 @@ import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 
-public class NozzleTipsTableModel extends AbstractTableModel {
+public class NozzlesTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Nozzle", "Head" };
-	private List<NozzleTipWrapper> nozzleTips;
+	private String[] columnNames = new String[] { "Id", "Head" };
+	private List<Nozzle> nozzles;
 
-	public NozzleTipsTableModel(Configuration configuration) {
+	public NozzlesTableModel(Configuration configuration) {
 		this.configuration = configuration;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
@@ -58,25 +57,17 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	}
 
 	public int getRowCount() {
-		return (nozzleTips == null) ? 0 : nozzleTips.size();
+		return (nozzles == null) ? 0 : nozzles.size();
 	}
 	
-    public NozzleTip getNozzleTip(int index) {
-        return nozzleTips.get(index).nozzleTip;
-    }
-    
-    public Nozzle getNozzle(int index) {
-        return nozzleTips.get(index).nozzle;
-    }
+	public Nozzle getNozzle(int index) {
+		return nozzles.get(index);
+	}
 	
 	public void refresh() {
-	    nozzleTips = new ArrayList<NozzleTipWrapper>();
+	    nozzles = new ArrayList<Nozzle>();
 		for (Head head : Configuration.get().getMachine().getHeads()) {
-		    for (Nozzle nozzle : head.getNozzles()) {
-		        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-	                nozzleTips.add(new NozzleTipWrapper(nozzleTip, nozzle));
-		        }
-		    }
+	        nozzles.addAll(head.getNozzles());
 		}
 		fireTableDataChanged();
 	}
@@ -99,27 +90,15 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	}
 	
 	public Object getValueAt(int row, int col) {
-	    NozzleTipWrapper nozzleTipWrapper = nozzleTips.get(row);
+	    Nozzle nozzle = nozzles.get(row);
 		switch (col) {
 		case 0:
-			return nozzleTipWrapper.nozzleTip.getId();
+			return nozzle.getId();
 		case 1:
-		    return nozzleTipWrapper.nozzle.getId();
-        case 2:
-            return new HeadCellValue(nozzleTipWrapper.nozzle.getHead());
+            return new HeadCellValue(nozzle.getHead());
 			
 		default:
 			return null;
 		}
-	}
-	
-	class NozzleTipWrapper {
-        public NozzleTip nozzleTip;
-        public Nozzle nozzle;
-        
-	    public NozzleTipWrapper(NozzleTip nozzleTip, Nozzle nozzle) {
-	        this.nozzleTip = nozzleTip;
-	        this.nozzle = nozzle;
-	    }
 	}
 }

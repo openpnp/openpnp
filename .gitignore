@@ -6,3 +6,9 @@ gui/installers
 .idea/
 gui/.settings
 simulator/build
+simulator/assets/Textures/black-aluminum.jpg
+simulator/assets/Textures/brushed_aluminum.jpg
+simulator/assets/Textures/pcb.jpg
+simulator/assets/Textures/radial-stainless-steel.jpg
+simulator/assets/Textures/raw-aluminum.jpg
+simulator/assets/Textures/rough-metal.jpg
