@@ -72,6 +72,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
@@ -82,6 +83,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +133,8 @@ public class JobPanel extends JPanel {
 		boardLocationSelectionActionGroup.setEnabled(false);
 
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
-				captureCameraPlacementLocation, captureToolPlacementLocation);
+				captureCameraPlacementLocation, captureToolPlacementLocation,
+				moveCameraToPlacementLocation, moveToolToPlacementLocation);
 		placementSelectionActionGroup.setEnabled(false);
 
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
@@ -293,6 +296,20 @@ public class JobPanel extends JPanel {
 		btnCaptureToolPlacementLocation.setText("");
 		btnCaptureToolPlacementLocation.setHideActionText(true);
 		toolBarPlacements.add(btnCaptureToolPlacementLocation);
+		
+		
+        JButton btnPositionCameraPositionLocation = new JButton(
+                moveCameraToPlacementLocation);
+        btnPositionCameraPositionLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionCameraPositionLocation);
+
+        JButton btnPositionToolPositionLocation = new JButton(
+                moveToolToPlacementLocation);
+        btnPositionToolPositionLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionToolPositionLocation);
+        
+
+		
 		pnlPlacements.add(new JScrollPane(placementsTable));
 
 		splitPane.setLeftComponent(pnlBoards);
@@ -919,40 +936,130 @@ public class JobPanel extends JPanel {
 		}
 	};
 
-	public final Action captureCameraPlacementLocation = new AbstractAction() {
-		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/capture-camera.png")));
-			putValue(NAME, "Capture Camera Placement Location");
-			putValue(SHORT_DESCRIPTION,
-					"Set the placement's location to the camera's current position.");
-		}
+    public final Action moveCameraToPlacementLocation = new AbstractAction() {
+        {
+            putValue(
+                    SMALL_ICON,
+                    new ImageIcon(JobPanel.class
+                            .getResource("/icons/center-camera.png")));
+            putValue(NAME, "Move Camera To Placement Location");
+            putValue(SHORT_DESCRIPTION,
+                    "Position the camera at the placement's location.");
+        }
 
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
-		}
-	};
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            // Determine where we will place the part
+            Location boardLocation = getSelectedBoardLocation().getLocation();
+            Location placementLocation = getSelectedPlacement().getLocation();
 
-	public final Action captureToolPlacementLocation = new AbstractAction() {
-		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/capture-tool.png")));
-			putValue(NAME, "Capture Tool Placement Location");
-			putValue(SHORT_DESCRIPTION,
-					"Set the placement's location to the tool's current position.");
-		}
+            // We will work in the units of the placementLocation, so convert
+            // anything that isn't in those units to it.
+            boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
+            
+            // If we are placing the bottom of the board we need to invert
+            // the placement location.
+            if (getSelectedBoardLocation().getSide() == Side.Bottom) {
+                placementLocation = placementLocation.invert(true, false, false, false);
+            }
 
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
-		}
-	};
-	
+            // Create the point that represents the final placement location
+            Point p = new Point(placementLocation.getX(),
+                    placementLocation.getY());
+
+            // Rotate and translate the point into the same coordinate space
+            // as the board
+            p = Utils2D.rotateTranslateScalePoint(p, boardLocation
+                    .getRotation(), boardLocation.getX(), boardLocation
+                    .getY(), 1.0, 1.0);
+
+            // Update the placementLocation with the transformed point
+            placementLocation = placementLocation.derive(p.getX(), p.getY(), null, null);
+
+            // Update the placementLocation with the board's rotation and
+            // the placement's rotation
+            // This sets the rotation of the part itself when it will be
+            // placed
+            placementLocation = placementLocation.derive(
+                    null, 
+                    null, 
+                    null,
+                    (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
+            
+            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+            if (camera.getHead() == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error", "Camera is not movable.");
+                return;
+            }
+            final Location location = placementLocation;
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(getTopLevelAncestor(),
+                                "Move Error", e);
+                    }
+                }
+            });
+        }
+    };
+
+    public final Action moveToolToPlacementLocation = new AbstractAction() {
+        {
+            putValue(
+                    SMALL_ICON,
+                    new ImageIcon(JobPanel.class
+                            .getResource("/icons/center-tool.png")));
+            putValue(NAME, "Move Tool To Placement Location");
+            putValue(SHORT_DESCRIPTION,
+                    "Position the tool at the placement's location.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            // get the selected board
+            // get the selected placement
+            // add the placement position to the board position
+            // move there
+        }
+    };
+    
+    public final Action captureCameraPlacementLocation = new AbstractAction() {
+        {
+            putValue(
+                    SMALL_ICON,
+                    new ImageIcon(JobPanel.class
+                            .getResource("/icons/capture-camera.png")));
+            putValue(NAME, "Capture Camera Placement Location");
+            putValue(SHORT_DESCRIPTION,
+                    "Set the placement's location to the camera's current position.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            MessageBoxes.notYetImplemented(getTopLevelAncestor());
+        }
+    };
+
+    public final Action captureToolPlacementLocation = new AbstractAction() {
+        {
+            putValue(
+                    SMALL_ICON,
+                    new ImageIcon(JobPanel.class
+                            .getResource("/icons/capture-tool.png")));
+            putValue(NAME, "Capture Tool Placement Location");
+            putValue(SHORT_DESCRIPTION,
+                    "Set the placement's location to the tool's current position.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            MessageBoxes.notYetImplemented(getTopLevelAncestor());
+        }
+    };
+    
 	private final JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
 		@Override
 		public void jobStateChanged(JobState state) {

@@ -298,39 +298,41 @@ public class MainFrame extends JFrame {
 		// Add global hotkeys for the arrow keys
 		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
 
+		int mask = KeyEvent.CTRL_DOWN_MASK;
+		
 		hotkeyActionMap
 				.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP,
-						KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+						mask), machineControlsPanel
 						.getJogControlsPanel().yPlusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().yMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().xMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().xPlusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().zPlusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().zMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().cMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD,
-				KeyEvent.CTRL_DOWN_MASK), machineControlsPanel
+				mask), machineControlsPanel
 				.getJogControlsPanel().cPlusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS,
-				KeyEvent.CTRL_DOWN_MASK),
+				mask),
 				machineControlsPanel.lowerIncrementAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,
-				KeyEvent.CTRL_DOWN_MASK),
+				mask),
 				machineControlsPanel.raiseIncrementAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
-				KeyEvent.CTRL_DOWN_MASK),
+				mask),
 				machineControlsPanel.showHideJogControlsWindowAction);
 
 		Toolkit.getDefaultToolkit().getSystemEventQueue()
