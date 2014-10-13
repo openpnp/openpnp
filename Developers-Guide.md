@@ -100,6 +100,14 @@ The second configuration store is the user specific Java preferences data store.
 
 The Configuration class is a singleton accessed with Configuration.get() throughout the system. It has a listener system that can be used to be notified of configuration state changes.
 
+In the various machine Java files, you will notice that parameters tagged with `@Attribute` or `@Element` will correspond to an attribute or element in the machine.xml file.  The names of these attributes and elements will vary slightly between the XML and the code.  For example, the source code might be:
+
+`	@Attribute`
+`	private double feedRateMmPerMinute;`
+
+whereas the XML would be: 
+
+`      <driver class="org.openpnp.machine.reference.driver.TinygDriver" port-name="COM5" baud="115200" feed-rate-mm-per-minute="3000.0"/>`
 
 ### Service Provider Interface
 
