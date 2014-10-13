@@ -54,6 +54,7 @@ public class Utils2D {
 		
 		// convert degrees to radians
 		c = c * Math.PI / 180.0;
+		c = -c;
 		
 		// rotate the points
 		double xn = x * Math.cos(c) - y * Math.sin(c);
