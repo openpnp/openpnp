@@ -54,11 +54,7 @@ http://java.com/getjava
 
 ### OpenCV
 
-OpenCV 2.4.2+ is required for some features of OpenPnP. Binaries should be
-installed and accessible to Java. This usually means making sure the libraries
-are in your path.
-
-http://opencv.willowgarage.com/wiki/
+OpenCV is now included with OpenPnP, so an additional installation is not required. Binaries are included for Windows (x86/x64), Mac (Universal) and Linux (x86/x64).
 
 ### Maven
 
