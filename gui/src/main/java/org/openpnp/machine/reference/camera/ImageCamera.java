@@ -139,7 +139,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         x /= getUnitsPerPixel().getX();
         y /= getUnitsPerPixel().getY();
         
-        gFrame.drawImage(source, (int) x, (int) y, null);
+        gFrame.drawImage(source, (int) (x + (width / 2)), (int) (y + (height / 2) - source.getHeight()), null);
         
         gFrame.dispose();
         
