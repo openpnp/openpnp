@@ -78,7 +78,8 @@ public class RulerReticle extends CrosshairReticle {
         AffineTransform origTx = g2d.getTransform();
 
         g2d.translate(viewPortCenterX, viewPortCenterY);
-        g2d.rotate(Math.toRadians(rotation));
+        // AffineTransform rotates positive clockwise, so we invert the value.
+        g2d.rotate(Math.toRadians(-rotation));
 
         double uppX = new Length(cameraUnitsPerPixelX, cameraUnitsPerPixelUnits)
                 .convertToUnits(this.units).getValue();

@@ -135,7 +135,6 @@ public class Location {
 	 */
 	public Location add(Location l) {
 		l = l.convertToUnits(getUnits());
-//		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), rotation + l.getRotation());
 		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), rotation);
 	}
 

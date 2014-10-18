@@ -129,10 +129,10 @@ public class JogControlsPanel extends JPanel {
 					}
 
 					if (c > 0) {
-						cPos += jogIncrement;
+						cPos -= jogIncrement;
 					}
 					else if (c < 0) {
-						cPos -= jogIncrement;
+						cPos += jogIncrement;
 					}
 					
 					machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);

@@ -85,7 +85,8 @@ public class OutlineReticle implements Reticle {
 		AffineTransform tx = new AffineTransform();
 		
         tx.translate(viewPortCenterX, viewPortCenterY);
-        tx.rotate(Math.toRadians(rotation));
+        // AffineTransform rotates positive clockwise, so we invert the value.
+        tx.rotate(Math.toRadians(-rotation));
         
         // First we scale by units to convert the units and then we scale
         // by the camera X and Y units per pixels to get pixel locations.

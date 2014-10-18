@@ -99,7 +99,8 @@ public class FiducialReticle extends CrosshairReticle {
         AffineTransform origTx = g2d.getTransform();
 
         g2d.translate(viewPortCenterX, viewPortCenterY);
-        g2d.rotate(Math.toRadians(rotation));
+        // AffineTransform rotates positive clockwise, so we invert the value.
+        g2d.rotate(Math.toRadians(-rotation));
 
         double pixelsPerUnitX = 1.0 / new Length(cameraUnitsPerPixelX,
                 cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();

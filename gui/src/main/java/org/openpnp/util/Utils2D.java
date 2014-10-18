@@ -48,12 +48,18 @@ public class Utils2D {
 		return new Point(point.getX() + x, point.getY() + y);
 	}
 	
+	/**
+	 * Rotation is counter-clockwise for positive angles.
+	 * @param point
+	 * @param c
+	 * @return
+	 */
 	public static Point rotatePoint(Point point, double c) {
 		double x = point.getX();
 		double y = point.getY();
 		
 		// convert degrees to radians
-		c = c * Math.PI / 180.0;
+		c = Math.toRadians(c);
 		
 		// rotate the points
 		double xn = x * Math.cos(c) - y * Math.sin(c);

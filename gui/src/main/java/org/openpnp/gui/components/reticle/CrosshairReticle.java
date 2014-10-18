@@ -64,7 +64,8 @@ public class CrosshairReticle implements Reticle {
         AffineTransform origTx = g2d.getTransform();
 
         g2d.translate(viewPortCenterX, viewPortCenterY);
-        g2d.rotate(Math.toRadians(rotation));
+        // AffineTransform rotates positive clockwise, so we invert the value.
+        g2d.rotate(Math.toRadians(-rotation));
         g2d.setColor(color);
         g2d.drawLine(0, 0, halfDiagonal, 0);
         g2d.drawLine(0, 0, -halfDiagonal, 0);
