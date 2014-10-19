@@ -949,42 +949,10 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // Determine where we will place the part
-            Location boardLocation = getSelectedBoardLocation().getLocation();
-            Location placementLocation = getSelectedPlacement().getLocation();
-
-            // We will work in the units of the placementLocation, so convert
-            // anything that isn't in those units to it.
-            boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-            
-            // If we are placing the bottom of the board we need to invert
-            // the placement location.
-            if (getSelectedBoardLocation().getSide() == Side.Bottom) {
-                placementLocation = placementLocation.invert(true, false, false, false);
-            }
-
-            // Create the point that represents the final placement location
-            Point p = new Point(placementLocation.getX(),
-                    placementLocation.getY());
-
-            // Rotate and translate the point into the same coordinate space
-            // as the board
-            p = Utils2D.rotateTranslateScalePoint(p, boardLocation
-                    .getRotation(), boardLocation.getX(), boardLocation
-                    .getY(), 1.0, 1.0);
-
-            // Update the placementLocation with the transformed point
-            placementLocation = placementLocation.derive(p.getX(), p.getY(), null, null);
-
-            // Update the placementLocation with the board's rotation and
-            // the placement's rotation
-            // This sets the rotation of the part itself when it will be
-            // placed
-            placementLocation = placementLocation.derive(
-                    null, 
-                    null, 
-                    null,
-                    (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
+            Location placementLocation = 
+                    Utils2D.calculateBoardPlacementLocation(
+                            getSelectedBoardLocation(), 
+                            getSelectedPlacement());
             
             final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
             if (camera.getHead() == null) {

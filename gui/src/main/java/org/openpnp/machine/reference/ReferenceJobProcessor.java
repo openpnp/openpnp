@@ -220,46 +220,13 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                     return;
                 }
 
-				// Determine where we will place the part
-				Location boardLocation = bl.getLocation();
-				Location placementLocation = placement.getLocation();
-
-				// We will work in the units of the placementLocation, so convert
-				// anything that isn't in those units to it.
-				boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-				
-				// If we are placing the bottom of the board we need to invert
-				// the placement location.
-				if (bl.getSide() == Side.Bottom) {
-					placementLocation = placementLocation.invert(true, false, false, false);
-				}
-
-				// Create the point that represents the final placement location
-				Point p = new Point(placementLocation.getX(),
-						placementLocation.getY());
-
-				// Rotate and translate the point into the same coordinate space
-				// as the board
-				p = Utils2D.rotateTranslateScalePoint(p, boardLocation
-						.getRotation(), boardLocation.getX(), boardLocation
-						.getY(), 1.0, 1.0);
-
-				// Update the placementLocation with the transformed point
-				placementLocation = placementLocation.derive(p.getX(), p.getY(), null, null);
-
-				// Update the placementLocation with the board's rotation and
-				// the placement's rotation
-				// This sets the rotation of the part itself when it will be
-				// placed
-				placementLocation = placementLocation.derive(
-				        null, 
-				        null, 
-				        null,
-				        (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
+                Location placementLocation = 
+                        Utils2D.calculateBoardPlacementLocation(bl, placement);
 
 				// Update the placementLocation with the proper Z value. This is
 				// the distance to the top of the board plus the height of 
 				// the part.
+                Location boardLocation = bl.getLocation().convertToUnits(placementLocation.getUnits());
 				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
 				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
 

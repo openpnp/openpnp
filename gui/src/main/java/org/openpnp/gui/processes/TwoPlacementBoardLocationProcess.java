@@ -272,7 +272,7 @@ public class TwoPlacementBoardLocationProcess {
 		logger.debug("Result: " + result);
 		
 		Location boardLocation = new Location(Configuration.get()
-				.getSystemUnits(), result.x, result.y, 0, angle * -1);
+				.getSystemUnits(), result.x, result.y, 0, angle);
 		
 		Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
 		oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());

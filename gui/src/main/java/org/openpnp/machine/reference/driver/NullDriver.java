@@ -182,6 +182,7 @@ public class NullDriver implements ReferenceDriver {
 
         // The distance that we'll move each loop.
         double distancePerTick = (feedRateMmPerMinute * speed) / 60.0 / 10.0;
+        double distancePerTickC = distancePerTick * 10;
 
         while (dxy < pxy || dz < pz || dc < pc) {
             if (dxy < pxy) {
@@ -221,7 +222,7 @@ public class NullDriver implements ReferenceDriver {
 
             dxy = Math.min(pxy, dxy + distancePerTick);
             dz = Math.min(pz, dz + distancePerTick);
-            dc = Math.min(pc, dc + distancePerTick);
+            dc = Math.min(pc, dc + distancePerTickC);
         }
     }
 
