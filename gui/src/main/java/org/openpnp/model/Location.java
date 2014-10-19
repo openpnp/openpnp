@@ -212,6 +212,10 @@ public class Location {
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units.getShortName(), x, y, z, rotation);
 	}
+	
+	public Point getXyPoint() {
+	    return new Point(getX(), getY());
+	}
 
     /**
      * Performs a unit agnostic equality check. If the Object being

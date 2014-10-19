@@ -62,7 +62,7 @@ public class TwoPlacementBoardLocationProcess {
 	};
 	
 	private Placement placementA, placementB;
-	private Location placementLocationA, placementLocationB;
+	private Location visionA, visionB;
 	
 	public TwoPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) {
 		this.mainFrame = mainFrame;
@@ -108,8 +108,8 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step1() {
-		placementLocationA = MainFrame.cameraPanel.getSelectedCameraLocation();
-		if (placementLocationA == null) {
+		visionA = MainFrame.cameraPanel.getSelectedCameraLocation();
+		if (visionA == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
@@ -126,12 +126,44 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step3() {
-		placementLocationB = MainFrame.cameraPanel.getSelectedCameraLocation();
-		if (placementLocationB == null) {
+		visionB = MainFrame.cameraPanel.getSelectedCameraLocation();
+		if (visionB == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Given two placements and Locations where they have been located in
+	 * machine coordinates, return the machine coordinates and angle of the
+	 * origin of the two placements.
+	 * @param placement1
+	 * @param placement2
+	 * @param vision1
+	 * @param vision2
+	 * @return
+	 */
+	private static Location calculateAngleAndOffset(Location placement1, Location placement2, Location vision1, Location vision2, boolean mirror) {
+        // If the placements are on the Bottom of the board we need to invert X
+        if (mirror) {
+            placement1 = placement1.invert(true, false, false, false);
+            placement2 = placement2.invert(true, false, false, false);
+        }
+        
+        Point pPlacement1 = placement1.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
+        Point pPlacement2 = placement2.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
+        Point pVision1 = vision1.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
+        Point pVision2 = vision2.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
+
+        double angle = Math.toDegrees(Math.atan2(pVision1.y - pVision2.y, pVision1.x - pVision2.x)
+                - Math.atan2(pPlacement1.y - pPlacement2.y, pPlacement1.x - pPlacement2.x));
+        
+        Point rotatedPlacement = Utils2D.rotatePoint(pPlacement1, angle);
+        
+        Point offset = Utils2D.translatePoint(pVision1, -rotatedPlacement.x, -rotatedPlacement.y);
+
+        return new Location(Configuration.get().getSystemUnits(), offset.getX(), offset.getY(), 0, angle);
 	}
 	
 	private boolean step4() {
@@ -146,134 +178,13 @@ public class TwoPlacementBoardLocationProcess {
 			return false;
 		}
 		
-		// Get the Locations we'll be using and convert to system units.
-		Location boardLocationA = placementLocationA.convertToUnits(Configuration.get().getSystemUnits());
-		Location placementLocationA = placementA.getLocation().convertToUnits(Configuration.get().getSystemUnits());
-		Location boardLocationB = placementLocationB.convertToUnits(Configuration.get().getSystemUnits());
-		Location placementLocationB = placementB.getLocation().convertToUnits(Configuration.get().getSystemUnits());
-		
-		// If the placements are on the Bottom of the board we need to invert X
-		if (placementA.getSide() == Side.Bottom) {
-//			boardLocationA = boardLocationA.invert(true, false, false, false);
-			placementLocationA = placementLocationA.invert(true, false, false, false);
-//			boardLocationB = boardLocationB.invert(true, false, false, false);
-			placementLocationB = placementLocationB.invert(true, false, false, false);
-		}
-	
-		logger.debug(String.format("locate"));
-		logger.debug(String.format("%s - %s", boardLocationA,
-				placementLocationA));
-		logger.debug(String.format("%s - %s", boardLocationB,
-				placementLocationB));
-	
-		double x1 = placementLocationA.getX();
-		double y1 = placementLocationA.getY();
-		double x2 = placementLocationB.getX();
-		double y2 = placementLocationB.getY();
-		
-		// Calculate the expected angle between the two coordinates, based
-		// on their locations in the placement.
-		double expectedAngle = Math.atan2(y1 - y2, x1 - x2);
-		expectedAngle = Math.toDegrees(expectedAngle);
-		logger.debug("expectedAngle " + expectedAngle);
-	
-		// Then calculate the actual angle between the two coordinates,
-		// based on the captured values.
-		x1 = boardLocationA.getX();
-		y1 = boardLocationA.getY();
-		x2 = boardLocationB.getX();
-		y2 = boardLocationB.getY();
-		double indicatedAngle = Math.atan2(y1 - y2, x1 - x2);
-		indicatedAngle = Math.toDegrees(indicatedAngle);
-		logger.debug("indicatedAngle " + indicatedAngle);
-	
-		// Subtract the difference and we have the angle that the board
-		// is rotated by.
-		double angle = indicatedAngle - expectedAngle;
-		logger.debug("angle " + angle);
-	
-		// Now we want to derive the position of 0,0 in relation to the
-		// two captured coordinates. We will use the intersection of two
-		// circles centered at the coordinates with a radius of the
-		// distance from each coordinate to 0,0.
-	
-		// Circle intersection solver borrowed from
-		// http://www.vb-helper.com/howto_circle_circle_intersection.html
-	
-		// Get the two circles center points and radius.
-		double cx0 = boardLocationA.getX();
-		double cy0 = boardLocationA.getY();
-		double radius0 = Math.sqrt(Math.pow(placementLocationA.getX(), 2)
-				+ Math.pow(placementLocationA.getY(), 2));
-	
-		double cx1 = boardLocationB.getX();
-		double cy1 = boardLocationB.getY();
-		double radius1 = Math.sqrt(Math.pow(placementLocationB.getX(), 2)
-				+ Math.pow(placementLocationB.getY(), 2));
-	
-		logger.debug(String.format("%f %f %f %f %f %f", cx0, cy0, radius0,
-				cx1, cy1, radius1));
-	
-		// Calculate the distance between the two center points.
-		double dx = cx0 - cx1;
-		double dy = cy0 - cy1;
-		double dist = Math.sqrt(dx * dx + dy * dy);
-	
-		double a = (radius0 * radius0 - radius1 * radius1 + dist * dist)
-				/ (2 * dist);
-		double h = Math.sqrt(radius0 * radius0 - a * a);
-	
-		double cx2 = cx0 + a * (cx1 - cx0) / dist;
-		double cy2 = cy0 + a * (cy1 - cy0) / dist;
-	
-		double intersectionx1 = cx2 + h * (cy1 - cy0) / dist;
-		double intersectiony1 = cy2 - h * (cx1 - cx0) / dist;
-		double intersectionx2 = cx2 - h * (cy1 - cy0) / dist;
-		double intersectiony2 = cy2 + h * (cx1 - cx0) / dist;
-	
-		// We now have the locations of the two intersecting points on
-		// the circles. Now we have to figure out which one is correct.
-		Point p0 = new Point(intersectionx1, intersectiony1);
-		Point p1 = new Point(intersectionx2, intersectiony2);
-	
-		logger.debug(String.format("p0 = %s, p1 = %s", p0, p1));
-	
-		// Create two points based on the boardLocationA.
-		Point p0r = new Point(boardLocationA.getX(), boardLocationA.getY());
-		Point p1r = new Point(boardLocationA.getX(), boardLocationA.getY());
-	
-		// Translate each point by one of the results from the circle
-		// intersection
-		p0r = Utils2D.translatePoint(p0r, p0.getX() * -1, p0.getY() * -1);
-		p1r = Utils2D.translatePoint(p1r, p1.getX() * -1, p1.getY() * -1);
-	
-		// Rotate each point by the negative of the angle previously
-		// calculated. This effectively de-rotates the point with one of the
-		// results as the origin.
-		p0r = Utils2D.rotatePoint(p0r, angle * -1);
-		p1r = Utils2D.rotatePoint(p1r, angle * -1);
-	
-		logger.debug(String.format("p0r = %s, p1r = %s", p0r, p1r));
-	
-		// Now, whichever result is closer to the value of boardLocationA
-		// is the right result. So, calculate the linear distance between
-		// the calculated point and the placementLocationA.
-		double d0 = Math.abs(Math.sqrt(Math.pow(
-				p0r.x - placementLocationA.getX(), 2)
-				+ Math.pow(p0r.y - placementLocationA.getY(), 2)));
-		double d1 = Math.abs(Math.sqrt(Math.pow(
-				p1r.x - placementLocationA.getX(), 2)
-				+ Math.pow(p1r.y - placementLocationA.getY(), 2)));
-	
-		logger.debug(String.format("d0 %f, d1 %f", d0, d1));
-	
-		Point result = ((d0 < d1) ? p0 : p1);
-	
-		logger.debug("Result: " + result);
-		
-		Location boardLocation = new Location(Configuration.get()
-				.getSystemUnits(), result.x, result.y, 0, angle);
-		
+		Location boardLocation = calculateAngleAndOffset(
+		        placementA.getLocation(), 
+		        placementB.getLocation(), 
+		        visionA,
+		        visionB,
+		        placementA.getSide() == Side.Bottom);
+        
 		Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
 		oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());
 		
