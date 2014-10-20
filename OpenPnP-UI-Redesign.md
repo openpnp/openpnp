@@ -1,0 +1,1 @@
+Here are some thoughts and ideas on how the OpenPnP UI will be redesigned in the near future.
