@@ -21,11 +21,13 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -283,7 +285,18 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	
 	public void run() {
 		while (!disconnectRequested) {
-			String line = readLine().trim();
+			String line;
+			try {
+			    line = readLine().trim();
+			}
+			catch (TimeoutException ex) {
+			    continue;
+			}
+			catch (IOException e) {
+			    logger.error("Read error", e);
+			    return;
+			}
+			line = line.trim();
 			logger.debug("<< " + line);
 			responseQueue.offer(line);
 			if (line.equals("ok") || line.startsWith("error: ")) {

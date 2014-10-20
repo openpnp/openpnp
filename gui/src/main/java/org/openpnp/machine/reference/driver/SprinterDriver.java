@@ -21,11 +21,13 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
@@ -390,7 +392,18 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 	
 	public void run() {
 		while (!disconnectRequested) {
-			String line = readLine().trim();
+            String line;
+            try {
+                line = readLine().trim();
+            }
+            catch (TimeoutException ex) {
+                continue;
+            }
+            catch (IOException e) {
+                logger.error("Read error", e);
+                return;
+            }
+            line = line.trim();
 			logger.debug("< " + line);
 			responseQueue.offer(line);
 			// We have a special case of accepting "start" when we are not

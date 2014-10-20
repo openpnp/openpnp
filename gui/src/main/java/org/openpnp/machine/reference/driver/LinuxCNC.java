@@ -62,6 +62,7 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -426,6 +427,16 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         catch (Exception e) {
             logger.error("readChar()", e);
             return -1;
+        }
+    }
+    
+    @Override
+    public void close() throws IOException {
+        try {
+            disconnect();
+        }
+        catch (Exception e) {
+            throw new IOException(e);
         }
     }
 

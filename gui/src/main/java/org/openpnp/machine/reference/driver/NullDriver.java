@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import javax.swing.Action;
@@ -305,4 +306,11 @@ public class NullDriver implements ReferenceDriver {
             throw new Exception("Driver is not yet enabled!");
         }
     }
+    
+
+    @Override
+    public void close() throws IOException {
+        // TODO Auto-generated method stub
+        
+    }  
 }

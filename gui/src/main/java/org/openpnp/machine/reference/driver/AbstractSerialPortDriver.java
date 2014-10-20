@@ -1,11 +1,14 @@
 package org.openpnp.machine.reference.driver;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.TimeoutException;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
+import jssc.SerialPortTimeoutException;
 
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.simpleframework.xml.Attribute;
@@ -15,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * A base class for basic SerialPort based Drivers. Includes functions
  * for connecting, disconnecting, reading and sending lines. 
  */
-public abstract class AbstractSerialPortDriver implements ReferenceDriver {
+public abstract class AbstractSerialPortDriver implements ReferenceDriver, Closeable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractSerialPortDriver.class);
     
     @Attribute
@@ -24,7 +27,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
     protected int baud;
     
     protected SerialPort serialPort;
-    protected InputStream input;
+    protected SerialInputStream input;
     protected OutputStream output;
     
     protected synchronized void connect() throws Exception {
@@ -38,26 +41,34 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
                 SerialPort.PARITY_NONE, 
                 false, 
                 false);
-        SerialInputStream input = new SerialInputStream(serialPort);
-//        input.setTimeout(100);
-        this.input = input;
+        input = new SerialInputStream(serialPort);
+        input.setTimeout(500);
         output = new SerialOutputStream(serialPort);
     }
     
     protected synchronized void disconnect() throws Exception {
-        if (serialPort != null) {
+        if (serialPort != null && serialPort.isOpened()) {
             serialPort.closePort();
             input = null;
             output = null;
             serialPort = null;
         }
     }
-    
-    protected String readLine() {
+
+    /**
+     * Read a line from the serial port. Blocks for the default timeout. If
+     * the read times out a TimeoutException is thrown. Any other failure
+     * to read results in an IOExeption;
+     * 
+     * @return
+     * @throws TimeoutException
+     * @throws IOException
+     */
+    protected String readLine() throws TimeoutException, IOException {
         StringBuffer line = new StringBuffer();
-        try {
-            while (true) {
-                int ch = readChar();
+        while (true) {
+            try {
+                int ch = input.read();
                 if (ch == -1) {
                     return null;
                 }
@@ -70,24 +81,22 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
                     line.append((char) ch);
                 }
             }
+            catch (IOException ex) {
+                if (ex.getCause() instanceof SerialPortTimeoutException) {
+                    throw new TimeoutException(ex.getMessage());
+                }
+                throw ex;
+            }
         }
-        catch (Exception e) {
-            logger.error("readLine()", e);
-        }
-        return null;
     }
 
-    protected int readChar() {
+    @Override
+    public void close() throws IOException {
         try {
-            int ch = -1;
-            while (ch == -1 && !Thread.interrupted()) {
-                ch = input.read();
-            }
-            return ch;
+            disconnect();
         }
         catch (Exception e) {
-            logger.error("readChar()", e);
-            return -1;
+            throw new IOException(e);
         }
     }
 
@@ -124,6 +133,8 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver {
 //            }
 //        }
 //    }
+    
+    
     
     /**
      * SerialInputStream and SerialOutputStream are from the pull request

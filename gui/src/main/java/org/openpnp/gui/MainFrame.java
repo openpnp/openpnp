@@ -600,13 +600,20 @@ public class MainFrame extends JFrame {
 		if (!jobPanel.checkForModifications()) {
 			return false;
 		}
-		// Attempt to stop the machine on quit
-		try {
-			configuration.getMachine().setEnabled(false);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+        // Attempt to stop the machine on quit
+        try {
+            configuration.getMachine().setEnabled(false);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Attempt to stop the machine on quit
+        try {
+            configuration.getMachine().close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 		System.exit(0);
 		return true;
 	}

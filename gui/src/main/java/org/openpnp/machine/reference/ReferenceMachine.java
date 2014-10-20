@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -140,10 +141,15 @@ public class ReferenceMachine extends AbstractMachine {
 		l.add(OpenCvCamera.class);
 		return l;
 	}
-
-	@Override
+	
+    @Override
 	public void home() throws Exception {
 		logger.debug("home");
 		super.home();
 	}
+    
+    @Override
+    public void close() throws IOException {
+        driver.close();
+    }
 }

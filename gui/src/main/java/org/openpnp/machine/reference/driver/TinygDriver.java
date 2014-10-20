@@ -21,7 +21,9 @@
 
 package org.openpnp.machine.reference.driver;
 
+import java.io.IOException;
 import java.util.Locale;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
@@ -300,7 +302,18 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     public void run() {
         while (!Thread.interrupted()) {
-            String line = readLine().trim();
+            String line;
+            try {
+                line = readLine().trim();
+            }
+            catch (TimeoutException ex) {
+                continue;
+            }
+            catch (IOException e) {
+                logger.error("Read error", e);
+                return;
+            }
+            line = line.trim();
             logger.trace(line);
             try {
                 JsonObject o = (JsonObject) parser.parse(line);

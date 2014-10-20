@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.Closeable;
+
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.WizardConfigurable;
@@ -40,7 +42,7 @@ import org.openpnp.spi.WizardConfigurable;
  * the driver to make decisions as to what axes should be moved to accomplish a
  * specific task.
  */
-public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder {
+public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder, Closeable {
     /**
      * Performing the hardware homing operation for the given Head. When this
      * call completes the Head should be at it's 0,0,0,0 position.

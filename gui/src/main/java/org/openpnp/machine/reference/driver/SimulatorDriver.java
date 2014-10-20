@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
@@ -268,5 +269,11 @@ public class SimulatorDriver implements ReferenceDriver {
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
-    }    
+    }
+
+    @Override
+    public void close() throws IOException {
+        // TODO Auto-generated method stub
+        
+    }  
 }
