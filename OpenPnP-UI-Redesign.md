@@ -31,6 +31,8 @@ Let's work on user stories.
 	* OpenPnP determines the definition, quantity, side and orientation of each board that is to be placed.
 	* OpenPnP shows the results of the identification step as a list of boards and orientations.
 
+_NOTE: The only thing I would be cautious of here, is that you can't always determine what job you're doing from a bare board.  Take for example three electronic assemblies that all use the same circuit board, with DNP's or different parts installed.  The best case there may be to just load the job by filename / part number, and then use the auto board finding code to find where they're at, or error if it finds a board or foreign object on there that's grossly different than what it expects. -- NJ_
+
 ## I can manually identify an unidentified board.
 	* This is dependent on the reason that OpenPnP cannot identify the board. Some considerations:
 		* The data is good but the vision system is failing for some reason.
