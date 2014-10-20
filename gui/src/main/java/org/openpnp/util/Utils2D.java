@@ -26,6 +26,7 @@ package org.openpnp.util;
 
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
@@ -121,8 +122,35 @@ public class Utils2D {
 	    
 	}
 	
-	public static void main(String[] args) {
-		Point p = new Point(0, 1);
-		System.out.println(rotatePoint(p, 90));
-	}
+   /**
+     * Given two "ideal" unrotated and unoffset Locations and two matching
+     * "actual" Locations that have been offset and rotated, calculate the
+     * angle of rotation and offset between them.
+     * 
+     * Angle is the difference between the angles between the two ideal
+     * Locations and the two actual Locations.
+     * 
+     * Offset is the difference between one of the ideal Locations having been
+     * rotated by Angle and the matching actual Location. 
+     * 
+     * @param idealA
+     * @param idealB
+     * @param actualA
+     * @param actualB
+     * @return
+     */
+    public static Location calculateAngleAndOffset(Location idealA, Location idealB, Location actualA, Location actualB) {
+        idealB = idealB.convertToUnits(idealA.getUnits());
+        actualA = actualA.convertToUnits(idealA.getUnits());
+        actualB = actualB.convertToUnits(idealA.getUnits());
+
+        double angle = Math.toDegrees(Math.atan2(actualA.getY() - actualB.getY(), actualA.getX() - actualB.getX())
+                - Math.atan2(idealA.getY() - idealB.getY(), idealA.getX() - idealB.getX()));
+        
+        Location idealARotated = idealA.rotateXy(angle);
+        
+        Location offset = actualA.subtract(idealARotated);
+        
+        return new Location(idealA.getUnits(), offset.getX(), offset.getY(), 0, angle);
+    }
 }

@@ -1,5 +1,7 @@
 package org.openpnp.machine.reference.driver.test;
 
+import java.io.IOException;
+
 import javax.swing.Action;
 
 import org.openpnp.gui.support.Wizard;
@@ -190,6 +192,12 @@ public class TestDriver implements ReferenceDriver {
             // TODO Auto-generated method stub
             return null;
         }
+        
+        @Override
+        public void close() throws IOException {
+            // TODO Auto-generated method stub
+            
+        }
     }
 
     @Override
@@ -214,5 +222,11 @@ public class TestDriver implements ReferenceDriver {
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public void close() throws IOException {
+        // TODO Auto-generated method stub
+        
     }
 }

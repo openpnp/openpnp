@@ -1,0 +1,53 @@
+<openpnp-board name="drawing.board.xml">
+   <fiducials/>
+   <placements>
+      <placement id="FID1" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="5.0" y="5.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="FID2" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="5.0" y="35.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="FID3" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="55.0" y="35.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="FID4" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="55.0" y="5.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R1" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="10.0" y="10.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R2" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="10.0" y="15.0" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="R3" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="15.0" y="15.0" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="R4" side="Top" part-id="C-0805-100NF">
+         <location units="Millimeters" x="15.0" y="10.0" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="FID1" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="5.0" y="5.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="FID2" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="5.0" y="35.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="FID3" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="55.0" y="35.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="FID4" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="55.0" y="5.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R5" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="45.0" y="10.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R6" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="45.0" y="15.0" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="R7" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="50.0" y="15.0" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="R8" side="Bottom" part-id="C-0805-100NF">
+         <location units="Millimeters" x="50.0" y="10.0" z="0.0" rotation="270.0"/>
+      </placement>
+   </placements>
+</openpnp-board>

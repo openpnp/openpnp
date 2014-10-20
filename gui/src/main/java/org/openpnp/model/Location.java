@@ -208,6 +208,24 @@ public class Location {
 	            );
 	}
 	
+	/**
+	 * Returns a new Location with this Location's X and Y rotated by angle.
+	 * Z and Rotation are unchanged.
+	 * @param angle
+	 * @return
+	 */
+	public Location rotateXy(double angle) {
+	    angle = Math.toRadians(angle);
+        
+	    return new Location(
+	            getUnits(),
+	            getX() * Math.cos(angle) - getY() * Math.sin(angle),
+	            getX() * Math.sin(angle) + getY() * Math.cos(angle),
+	            getZ(),
+	            getRotation()
+	            );
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("units %s, x %f, y %f, z %f, rotation %f", units.getShortName(), x, y, z, rotation);

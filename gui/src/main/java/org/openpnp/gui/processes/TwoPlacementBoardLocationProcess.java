@@ -134,38 +134,6 @@ public class TwoPlacementBoardLocationProcess {
 		return true;
 	}
 	
-	/**
-	 * Given two placements and Locations where they have been located in
-	 * machine coordinates, return the machine coordinates and angle of the
-	 * origin of the two placements.
-	 * @param placement1
-	 * @param placement2
-	 * @param vision1
-	 * @param vision2
-	 * @return
-	 */
-	private static Location calculateAngleAndOffset(Location placement1, Location placement2, Location vision1, Location vision2, boolean mirror) {
-        // If the placements are on the Bottom of the board we need to invert X
-        if (mirror) {
-            placement1 = placement1.invert(true, false, false, false);
-            placement2 = placement2.invert(true, false, false, false);
-        }
-        
-        Point pPlacement1 = placement1.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
-        Point pPlacement2 = placement2.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
-        Point pVision1 = vision1.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
-        Point pVision2 = vision2.convertToUnits(Configuration.get().getSystemUnits()).getXyPoint();
-
-        double angle = Math.toDegrees(Math.atan2(pVision1.y - pVision2.y, pVision1.x - pVision2.x)
-                - Math.atan2(pPlacement1.y - pPlacement2.y, pPlacement1.x - pPlacement2.x));
-        
-        Point rotatedPlacement = Utils2D.rotatePoint(pPlacement1, angle);
-        
-        Point offset = Utils2D.translatePoint(pVision1, -rotatedPlacement.x, -rotatedPlacement.y);
-
-        return new Location(Configuration.get().getSystemUnits(), offset.getX(), offset.getY(), 0, angle);
-	}
-	
 	private boolean step4() {
 		placementB = jobPanel.getSelectedPlacement();
 		if (placementB == null || placementB == placementA) {
@@ -178,12 +146,19 @@ public class TwoPlacementBoardLocationProcess {
 			return false;
 		}
 		
-		Location boardLocation = calculateAngleAndOffset(
-		        placementA.getLocation(), 
-		        placementB.getLocation(), 
+        // If the placements are on the Bottom of the board we need to invert X
+		Location placementALocation = placementA.getLocation();
+		Location placementBLocation = placementB.getLocation();
+        if (placementA.getSide() == Side.Bottom) {
+            placementALocation = placementALocation.invert(true, false, false, false);
+            placementBLocation = placementBLocation.invert(true, false, false, false);
+        }
+		
+		Location boardLocation = Utils2D.calculateAngleAndOffset(
+		        placementALocation, 
+		        placementBLocation, 
 		        visionA,
-		        visionB,
-		        placementA.getSide() == Side.Bottom);
+		        visionB);
         
 		Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
 		oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());
