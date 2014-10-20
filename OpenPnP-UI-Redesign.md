@@ -270,7 +270,9 @@ These functions will be stringed together to allow cameras to be mounted in any 
 
 ## UI improvements
 
-### Separate OpenPnP into task-based chunks, each with their own panel.  Some sort of front "home" screen would allow you to get to each of the tasks.  Ideally each would be a nice big icon, color coded with PNG/SVG graphics or whatnot.  
+### Separate OpenPnP into task-based chunks, each with their own panel.  
+
+Some sort of front "home" screen would allow you to get to each of the tasks.  Ideally each would be a nice big icon, color coded with PNG/SVG graphics or whatnot.  
 
 * Panel: CAD file import.  Making this a full panel would eventually allow you to see a preview of your job as you import it, and make changes before saving.
 * Panel: Pick and place job.  This would allow you to create, load, and save jobs and run them.  This is the screen that would have the cameras, jobs, RUN/STOP, etc... that would be used when actually in production.  I'm not sure if jobs and boards should be separate panels.  I'm leaning towards 'yes' as long as you can switch between them during a job.
