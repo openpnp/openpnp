@@ -54,6 +54,8 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.reticle.OutlineReticle;
+import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
@@ -72,7 +74,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.Point;
+import org.openpnp.model.outline.ComplexOutline;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
@@ -191,6 +193,14 @@ public class JobPanel extends JPanel {
 						}
 						placementSelectionActionGroup
 								.setEnabled(getSelectedPlacement() != null);
+						Placement placement = getSelectedPlacement();
+						if (placement != null) {
+                            Reticle reticle = new OutlineReticle(placement.getPart().getPackage().getOutline());
+						    MainFrame.cameraPanel.getSelectedCameraView().setReticle(getClass().getName(), reticle);
+						}
+						else {
+                            MainFrame.cameraPanel.getSelectedCameraView().setReticle(getClass().getName(), null);
+						}
 					}
 				});
 
