@@ -23,6 +23,8 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
@@ -191,6 +193,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 						repaint();
 					}
 				});
+		
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(FeedersPanel.this.getClass().getName());
+            }
+        });
+		
 
 		feederSelectedActionGroup.setEnabled(false);
 		
@@ -344,11 +354,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 						Outline outline = pkg.getOutline();
 						CameraView cameraView = MainFrame.cameraPanel
 								.getSelectedCameraView();
-						if (cameraView.getReticle(this) != null) {
-							cameraView.removeReticle(this);
+						if (cameraView.getReticle(FeedersPanel.this.getClass().getName()) != null) {
+							cameraView.removeReticle(FeedersPanel.this.getClass().getName());
 						}
 						else {
-							cameraView.setReticle(this, new OutlineReticle(
+							cameraView.setReticle(FeedersPanel.this.getClass().getName(), new OutlineReticle(
 									outline));
 						}
 					}

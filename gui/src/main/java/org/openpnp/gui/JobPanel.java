@@ -26,6 +26,9 @@ import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -123,7 +126,7 @@ public class JobPanel extends JPanel {
 		this.configuration = configuration;
 		this.frame = frame;
 		this.machineControlsPanel = machineControlsPanel;
-
+		
 		jobSaveActionGroup = new ActionGroup(saveJobAction, saveJobAsAction);
 		jobSaveActionGroup.setEnabled(false);
 
@@ -196,13 +199,21 @@ public class JobPanel extends JPanel {
 						Placement placement = getSelectedPlacement();
 						if (placement != null) {
                             Reticle reticle = new OutlineReticle(placement.getPart().getPackage().getOutline());
-						    MainFrame.cameraPanel.getSelectedCameraView().setReticle(getClass().getName(), reticle);
+						    MainFrame.cameraPanel.getSelectedCameraView().setReticle(JobPanel.this.getClass().getName(), reticle);
 						}
 						else {
-                            MainFrame.cameraPanel.getSelectedCameraView().setReticle(getClass().getName(), null);
+                            MainFrame.cameraPanel.getSelectedCameraView().removeReticle(JobPanel.this.getClass().getName());
 						}
 					}
 				});
+		
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(JobPanel.this.getClass().getName());
+            }
+        });
+
 
 		setLayout(new BorderLayout(0, 0));
 
