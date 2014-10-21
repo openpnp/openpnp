@@ -24,6 +24,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -48,6 +50,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.reticle.OutlineReticle;
+import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
@@ -56,6 +60,7 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,10 +139,26 @@ public class PartsPanel extends JPanel {
 				Part part = getSelectedPart();
 				
 				deletePartAction.setEnabled(part != null);
+				
+		        if (part != null) {
+		            Reticle reticle = new OutlineReticle(part.getPackage().getOutline());
+		            MainFrame.cameraPanel.getSelectedCameraView().setReticle(PartsPanel.this.getClass().getName(), reticle);
+		        }
+		        else {
+		            MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PartsPanel.this.getClass().getName());
+		        }                       				
 			}
 		});
 		
 		
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(
+                        PartsPanel.this.getClass().getName());
+            }
+        });        
+        
 		deletePartAction.setEnabled(false);
 		
 		JButton btnNewPart = toolBar.add(newPartAction);

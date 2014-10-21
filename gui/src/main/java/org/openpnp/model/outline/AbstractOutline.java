@@ -27,7 +27,7 @@ import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractOutline implements Outline {
 	@Attribute
-	protected LengthUnit units;
+	protected LengthUnit units = LengthUnit.Millimeters;
 
 	@Override
     public LengthUnit getUnits() {

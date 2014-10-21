@@ -21,6 +21,7 @@
 
 package org.openpnp.model;
 
+import org.openpnp.model.outline.ComplexOutline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -38,6 +39,7 @@ public class Package implements Identifiable {
 
     public Package(String id) {
         this.id = id;
+        outline = new ComplexOutline();
     }
 
     @Override

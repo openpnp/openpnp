@@ -15,9 +15,9 @@ public class ComplexOutline extends AbstractOutline {
     private Path2D.Double shape;
     
     @ElementListUnion({
-        @ElementList(entry="ellipse", inline=true, type=EllipseOp.class),
-        @ElementList(entry="line", inline=true, type=LineOp.class),
-        @ElementList(entry="circle", inline=true, type=CircleOp.class)
+        @ElementList(entry="ellipse", inline=true, required=false, type=EllipseOp.class),
+        @ElementList(entry="line", inline=true, required=false, type=LineOp.class),
+        @ElementList(entry="circle", inline=true, required=false, type=CircleOp.class)
     })
     private ArrayList<Op> ops = new ArrayList<Op>();
     

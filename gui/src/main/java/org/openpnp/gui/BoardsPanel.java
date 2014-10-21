@@ -25,6 +25,8 @@ import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -49,6 +51,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.reticle.OutlineReticle;
+import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -126,7 +130,7 @@ public class BoardsPanel extends JPanel {
 						}
 					}
 				});
-
+		
 		JToolBar toolBarBoards = new JToolBar();
 		panelBoards.add(toolBarBoards, BorderLayout.NORTH);
 		toolBarBoards.setFloatable(false);
@@ -167,8 +171,25 @@ public class BoardsPanel extends JPanel {
 						}
 						placementSelectionActionGroup
 								.setEnabled(getSelectedPlacement() != null);
+						
+                        Placement placement = getSelectedPlacement();
+                        if (placement != null) {
+                            Reticle reticle = new OutlineReticle(placement.getPart().getPackage().getOutline());
+                            MainFrame.cameraPanel.getSelectedCameraView().setReticle(BoardsPanel.this.getClass().getName(), reticle);
+                        }
+                        else {
+                            MainFrame.cameraPanel.getSelectedCameraView().removeReticle(BoardsPanel.this.getClass().getName());
+                        }						
 					}
 				});
+		
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(BoardsPanel.this.getClass().getName());
+            }
+        });
+        		
 		JScrollPane scrollPanePlacements = new JScrollPane(placementsTable);
 		panelPlacements.add(scrollPanePlacements, BorderLayout.CENTER);
 
