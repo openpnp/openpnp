@@ -68,6 +68,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.VisionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,10 +174,14 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		tabbedPane.addTab("General Configuration", null, generalConfigPanel, null);
 		generalConfigPanel.setLayout(new BorderLayout(0, 0));
 		
-		cameraSpecificConfigPanel = new JPanel();
-		tabbedPane.addTab("Camera Specific", null, cameraSpecificConfigPanel, null);
-		cameraSpecificConfigPanel.setLayout(new BorderLayout(0, 0));
-		
+        cameraSpecificConfigPanel = new JPanel();
+        tabbedPane.addTab("Camera Specific", null, cameraSpecificConfigPanel, null);
+        cameraSpecificConfigPanel.setLayout(new BorderLayout(0, 0));
+        
+        visionProviderConfigPanel = new JPanel();
+        tabbedPane.addTab("Vision Provider", null, visionProviderConfigPanel, null);
+        visionProviderConfigPanel.setLayout(new BorderLayout(0, 0));
+        
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -186,7 +191,9 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				int index = table.getSelectedRow();
 				
 				generalConfigPanel.removeAll();
-				cameraSpecificConfigPanel.removeAll();
+                cameraSpecificConfigPanel.removeAll();
+                visionProviderConfigPanel.removeAll();
+                
 				if (index != -1) {
 					index = table.convertRowIndexToModel(index);
 					Camera camera = tableModel.getCamera(index);
@@ -196,12 +203,23 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 						JPanel panel = generalConfigWizard.getWizardPanel();
 						generalConfigPanel.add(panel);
 					}
-					Wizard cameraSpecificConfigWizard = camera.getConfigurationWizard();
-					if (cameraSpecificConfigWizard != null) {
-						cameraSpecificConfigWizard.setWizardContainer(CamerasPanel.this);
-						JPanel panel = cameraSpecificConfigWizard.getWizardPanel();
-						cameraSpecificConfigPanel.add(panel);
-					}
+					
+                    Wizard cameraSpecificConfigWizard = camera.getConfigurationWizard();
+                    if (cameraSpecificConfigWizard != null) {
+                        cameraSpecificConfigWizard.setWizardContainer(CamerasPanel.this);
+                        JPanel panel = cameraSpecificConfigWizard.getWizardPanel();
+                        cameraSpecificConfigPanel.add(panel);
+                    }
+                    
+                    VisionProvider visionProvider = camera.getVisionProvider();
+                    if (visionProvider != null) {
+                        Wizard visionProviderConfigWizard = visionProvider.getConfigurationWizard();
+                        if (visionProviderConfigWizard != null) {
+                            visionProviderConfigWizard.setWizardContainer(CamerasPanel.this);
+                            JPanel panel = visionProviderConfigWizard.getWizardPanel();
+                            visionProviderConfigPanel.add(panel);
+                        }
+                    }
 				}
 				
 				revalidate();
@@ -318,5 +336,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		}
 	};
 	private JPanel generalConfigPanel;
-	private JPanel cameraSpecificConfigPanel;
+    private JPanel cameraSpecificConfigPanel;
+    private JPanel visionProviderConfigPanel;
 }

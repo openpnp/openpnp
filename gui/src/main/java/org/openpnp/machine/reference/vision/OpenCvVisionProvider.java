@@ -37,6 +37,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.vision.wizards.OpenCvVisionProviderConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Rectangle;
 import org.openpnp.spi.Camera;
@@ -69,8 +70,7 @@ public class OpenCvVisionProvider implements VisionProvider {
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
-        return null;
+        return new OpenCvVisionProviderConfigurationWizard(this);
     }
 
     private Mat getCameraImage() {
