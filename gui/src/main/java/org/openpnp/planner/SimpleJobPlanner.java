@@ -35,9 +35,15 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         Head head = Configuration.get().getMachine().getHeads().get(0);
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
+                if (!placement.isPlace()) {
+                    System.out.println("Skipping " + placement);
+                    continue;
+                }
+
                 if (placement.getSide() != boardLocation.getSide()) {
                     continue;
                 }
+                
                 solutions.add(new PlacementSolution(placement, boardLocation, head, null, null, null));
             }
         }
@@ -69,6 +75,9 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     }
     
     protected static Feeder getFeederSolution(Machine machine, Nozzle nozzle, Part part) {
+        if (machine == null || nozzle == null || part == null) {
+            return null;
+        }
         // Get a list of Feeders that can source the part
         List<Feeder> feeders = new ArrayList<Feeder>();
         for (Feeder feeder : machine.getFeeders()) {
@@ -85,6 +94,9 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     }
     
     protected static NozzleTip getNozzleTipSolution(Machine machine, Nozzle nozzle, Part part, Feeder feeder) {
+        if (machine == null || nozzle == null || part == null || feeder == null) {
+            return null;
+        }
         // Get a list of NozzleTips that can service the Part and the Feeder
         List<NozzleTip> nozzleTips = new ArrayList<NozzleTip>();
         for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {

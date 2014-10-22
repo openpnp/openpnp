@@ -194,32 +194,15 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
 		    LinkedHashMap<PlacementSolution, Location> placementSolutionLocations = new LinkedHashMap<PlacementSolution, Location>();
 		    for (PlacementSolution solution : solutions) {
-				firePartProcessingStarted(solution.boardLocation, solution.placement);
+                BoardLocation bl = solution.boardLocation;
+                Part part = solution.placement.getPart();
+                Feeder feeder = solution.feeder;
+                Placement placement = solution.placement;
+                Nozzle nozzle = solution.nozzle;
+                NozzleTip nozzleTip = solution.nozzleTip;
+                
+                firePartProcessingStarted(solution.boardLocation, solution.placement);
 				
-				BoardLocation bl = solution.boardLocation;
-				Part part = solution.placement.getPart();
-				Feeder feeder = solution.feeder;
-				Placement placement = solution.placement;
-				Nozzle nozzle = solution.nozzle;
-				NozzleTip nozzleTip = solution.nozzleTip;
-				
-                // TODO: do this work and the one below in preProcess, just
-				// have the JobPlanner plan the job twice.
-				if (nozzle == null) {
-                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
-                    return;
-                }
-
-                if (feeder == null) {
-                    fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
-                    return;
-                }
-
-                if (nozzleTip == null) {
-                    fireJobEncounteredError(JobError.HeadError, "No viable NozzleTips found for Part / Feeder " + part.getId());
-                    return;
-                }
-
                 Location placementLocation = 
                         Utils2D.calculateBoardPlacementLocation(bl, placement);
 
@@ -269,6 +252,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 				
 				if (!nozzle.getNozzleTip().canHandle(part)) {
                     fireJobEncounteredError(JobError.PickError, "Selected nozzle tip is not compatible with part");
+                    return;
 				}
 				
 				pick(nozzle, feeder, bl, placement);
@@ -509,18 +493,38 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	 * 		Highest pick location.
 	 */
 	protected void preProcessJob(Machine machine) {
-		for (BoardLocation jobBoard : job.getBoardLocations()) {
-			Board board = jobBoard.getBoard();
-			
-			for (Placement placement : board.getPlacements()) {
-				if (placement.getSide() != jobBoard.getSide()) {
-					continue;
-				}
-				
-				Part part = placement.getPart();
+        JobPlanner jobPlanner = machine.getJobPlanner();
+        Head head = machine.getHeads().get(0);
+        
+        jobPlanner.setJob(job);
+
+        Set<PlacementSolution> solutions;
+        while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
+            for (PlacementSolution solution : solutions) {
+                BoardLocation bl = solution.boardLocation;
+                Part part = solution.placement.getPart();
+                Feeder feeder = solution.feeder;
+                Placement placement = solution.placement;
+                Nozzle nozzle = solution.nozzle;
+                NozzleTip nozzleTip = solution.nozzleTip;
+	    
+                if (nozzle == null) {
+                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
+                    return;
+                }
+        
+                if (feeder == null) {
+                    fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
+                    return;
+                }
+        
+                if (nozzleTip == null) {
+                    fireJobEncounteredError(JobError.HeadError, "No viable NozzleTips found for Part / Feeder " + part.getId());
+                    return;
+                }
 				
 				if (part == null) {
-					fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", board.getName(), placement.getId()));
+					fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", bl.getBoard().getName(), placement.getId()));
 					return;
 				}
 			}

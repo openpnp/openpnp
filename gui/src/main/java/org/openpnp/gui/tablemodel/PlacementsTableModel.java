@@ -41,7 +41,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 		"Side", 
 		"X", 
 		"Y", 
-		"ø"
+		"ø",
+		"Place?"
 		};
 	private Class[] columnTypes = new Class[] {
 		String.class,
@@ -49,7 +50,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 		Side.class,
 		LengthCellValue.class,
 		LengthCellValue.class,
-		String.class
+		String.class,
+		Boolean.class
 	};
 	private Board board;
 
@@ -111,9 +113,12 @@ public class PlacementsTableModel extends AbstractTableModel {
 				location = Length.setLocationField(configuration, location, length, Length.Field.Y, true);
 				placement.setLocation(location);
 			}
-			else if (columnIndex == 5) {
-				placement.setLocation(placement.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
-			}
+            else if (columnIndex == 5) {
+                placement.setLocation(placement.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
+            }
+            else if (columnIndex == 6) {
+                placement.setPlace((Boolean) aValue);
+            }
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
@@ -136,6 +141,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 			return new LengthCellValue(loc.getLengthY(), true);
 		case 5:
 			return String.format(configuration.getLengthDisplayFormat(), loc.getRotation());
+		case 6:
+		    return placement.isPlace();
 		default:
 			return null;
 		}

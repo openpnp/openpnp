@@ -45,6 +45,9 @@ public class Placement extends AbstractModelObject {
 	@Attribute
 	private String partId;
 	
+	@Attribute(required=false)
+	private boolean place = true;
+	
 	@SuppressWarnings("unused")
 	private Placement() {
 		this(null);
@@ -103,9 +106,19 @@ public class Placement extends AbstractModelObject {
 		this.side = side;
 		firePropertyChange("side", oldValue, side);
 	}
+	
+	public boolean isPlace() {
+        return place;
+    }
 
-	@Override
+    public void setPlace(boolean place) {
+        Object oldValue = this.place;
+        this.place = place;
+        firePropertyChange("place", oldValue, place);
+    }
+
+    @Override
 	public String toString() {
-		return String.format("id %s, location %s, side %s, part %s", id, location, side, part);
+		return String.format("id %s, location %s, side %s, part %s, place %s", id, location, side, part, place);
 	}
 }
