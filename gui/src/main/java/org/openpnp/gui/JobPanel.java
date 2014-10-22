@@ -389,8 +389,23 @@ public class JobPanel extends JPanel {
 					.get(index);
 		}
 	}
-
+	
+	/**
+	 * Checks if there are any modifications that need to be saved. Prompts the
+	 * user if there are. Returns true if it's okay to exit. 
+	 * @return
+	 */
 	public boolean checkForModifications() {
+	    if (!checkForBoardModifications()) {
+	        return false;
+	    }
+	    if (!checkForJobModifications()) {
+	        return false;
+	    }
+	    return true;
+	}
+
+	private boolean checkForJobModifications() {
 		if (jobProcessor.getJob().isDirty()) {
 			Job job = jobProcessor.getJob();
 			String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job
@@ -408,7 +423,38 @@ public class JobPanel extends JPanel {
 		}
 		return true;
 	}
-
+	
+    private boolean checkForBoardModifications() {
+        for (Board board : configuration.getBoards()) {
+            if (board.isDirty()) {
+                int result = JOptionPane
+                        .showConfirmDialog(
+                                getTopLevelAncestor(),
+                                "Do you want to save your changes to "
+                                        + board.getFile().getName()
+                                        + "?"
+                                        + "\n"
+                                        + "If you don't save, your changes will be lost.",
+                                "Save " + board.getFile().getName() + "?",
+                                JOptionPane.YES_NO_CANCEL_OPTION);
+                if (result == JOptionPane.YES_OPTION) {
+                    try {
+                        configuration.saveBoard(board);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(getTopLevelAncestor(),
+                                "Board Save Error", e.getMessage());
+                        return false;
+                    }
+                }
+                else if (result == JOptionPane.CANCEL_OPTION) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+	
 	private boolean saveJob() {
 		if (jobProcessor.getJob().getFile() == null) {
 			return saveJobAs();
