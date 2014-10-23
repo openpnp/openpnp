@@ -28,7 +28,6 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -57,6 +56,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.importer.BoardImporter;
@@ -77,7 +77,6 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.outline.ComplexOutline;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
@@ -197,12 +196,15 @@ public class JobPanel extends JPanel {
 						placementSelectionActionGroup
 								.setEnabled(getSelectedPlacement() != null);
 						Placement placement = getSelectedPlacement();
-						if (placement != null) {
-                            Reticle reticle = new OutlineReticle(placement.getPart().getPackage().getOutline());
-						    MainFrame.cameraPanel.getSelectedCameraView().setReticle(JobPanel.this.getClass().getName(), reticle);
-						}
-						else {
-                            MainFrame.cameraPanel.getSelectedCameraView().removeReticle(JobPanel.this.getClass().getName());
+						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+						if (cameraView != null) {
+	                        if (placement != null) {
+	                            Reticle reticle = new OutlineReticle(placement.getPart().getPackage().getOutline());
+	                            cameraView.setReticle(JobPanel.this.getClass().getName(), reticle);
+	                        }
+	                        else {
+	                            cameraView.removeReticle(JobPanel.this.getClass().getName());
+	                        }
 						}
 					}
 				});
@@ -210,7 +212,10 @@ public class JobPanel extends JPanel {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentHidden(ComponentEvent e) {
-                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(JobPanel.this.getClass().getName());
+                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+                if (cameraView != null) {
+                    cameraView.removeReticle(JobPanel.this.getClass().getName());
+                }
             }
         });
 

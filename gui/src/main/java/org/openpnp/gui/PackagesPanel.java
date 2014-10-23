@@ -50,6 +50,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
@@ -139,13 +140,16 @@ public class PackagesPanel extends JPanel {
 				
 				deletePackageAction.setEnabled(this_package != null);
 				
-		        if (this_package != null) {
-		            Reticle reticle = new OutlineReticle(this_package.getOutline());
-		            MainFrame.cameraPanel.getSelectedCameraView().setReticle(PackagesPanel.this.getClass().getName(), reticle);
-		        }
-		        else {
-		            MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PackagesPanel.this.getClass().getName());
-		        }                                       
+                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+                if (cameraView != null) {
+                    if (this_package != null) {
+                        Reticle reticle = new OutlineReticle(this_package.getOutline());
+                        MainFrame.cameraPanel.getSelectedCameraView().setReticle(PackagesPanel.this.getClass().getName(), reticle);
+                    }
+                    else {
+                        MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PackagesPanel.this.getClass().getName());
+                    }                                       
+                }
 			}
 		});
 
@@ -153,8 +157,10 @@ public class PackagesPanel extends JPanel {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentHidden(ComponentEvent e) {
-                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(
-                        PackagesPanel.this.getClass().getName());
+                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+                if (cameraView != null) {
+                    cameraView.removeReticle(PackagesPanel.this.getClass().getName());
+                }
             }
         });        
 		

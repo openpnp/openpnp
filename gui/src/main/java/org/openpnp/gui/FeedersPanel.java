@@ -197,7 +197,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentHidden(ComponentEvent e) {
-                MainFrame.cameraPanel.getSelectedCameraView().removeReticle(FeedersPanel.this.getClass().getName());
+                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+                if (cameraView != null) {
+                    cameraView.removeReticle(FeedersPanel.this.getClass().getName());
+                }
             }
         });
 		
@@ -354,12 +357,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 						Outline outline = pkg.getOutline();
 						CameraView cameraView = MainFrame.cameraPanel
 								.getSelectedCameraView();
-						if (cameraView.getReticle(FeedersPanel.this.getClass().getName()) != null) {
-							cameraView.removeReticle(FeedersPanel.this.getClass().getName());
-						}
-						else {
-							cameraView.setReticle(FeedersPanel.this.getClass().getName(), new OutlineReticle(
-									outline));
+						if (cameraView != null) {
+	                        if (cameraView.getReticle(FeedersPanel.this.getClass().getName()) != null) {
+	                            cameraView.removeReticle(FeedersPanel.this.getClass().getName());
+	                        }
+	                        else {
+	                            cameraView.setReticle(FeedersPanel.this.getClass().getName(), new OutlineReticle(
+	                                    outline));
+	                        }
 						}
 					}
 				}
