@@ -513,6 +513,11 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                     return;
                 }
         
+                if (part == null) {
+                    fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", bl.getBoard().getName(), placement.getId()));
+                    return;
+                }
+
                 if (feeder == null) {
                     fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
                     return;
@@ -523,10 +528,6 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                     return;
                 }
 				
-				if (part == null) {
-					fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", bl.getBoard().getName(), placement.getId()));
-					return;
-				}
 			}
 		}
 	}

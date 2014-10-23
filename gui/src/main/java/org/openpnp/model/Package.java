@@ -32,6 +32,8 @@ public class Package implements Identifiable {
     private String name;
     @Element(required = false)
     private Outline outline;
+    @Element(required = false)
+    private Footprint footprint;
 
     private Package() {
         this(null);
@@ -61,6 +63,14 @@ public class Package implements Identifiable {
 
     public void setOutline(Outline outline) {
         this.outline = outline;
+    }
+    
+    public Footprint getFootprint() {
+        return footprint;
+    }
+
+    public void setFootprint(Footprint footprint) {
+        this.footprint = footprint;
     }
 
     @Override
