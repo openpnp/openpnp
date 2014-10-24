@@ -38,12 +38,9 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 	
 	private String[] columnNames = new String[] { 
 		"Id", 
-		"Description",
-		"Outline" 
+		"Description"
 	};
 	private Class[] columnTypes = new Class[] {
-		String.class,
-		String.class,
 		String.class,
 		String.class,
 	};
@@ -88,7 +85,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 		try {
 			Package this_package = packages.get(rowIndex);
 			if (columnIndex == 1) {
-				this_package.setName((String) aValue);
+				this_package.setDescription((String) aValue);
 			}
 			configuration.setDirty(true);
 		}
@@ -103,9 +100,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 		case 0:
 			return this_package.getId();
 		case 1:
-			 return this_package.getName();
-		case 2:
-			return this_package.getOutline().toString();
+			 return this_package.getDescription();
 		default:
 			return null;
 		}

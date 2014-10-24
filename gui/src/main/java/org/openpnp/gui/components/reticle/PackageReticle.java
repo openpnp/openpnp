@@ -31,14 +31,13 @@ import java.awt.geom.AffineTransform;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Outline;
 
-public class FootprintReticle implements Reticle {
+public class PackageReticle implements Reticle {
 	private Color color;
-	private Footprint footprint;
+	private org.openpnp.model.Package pkg;
 	
-	public FootprintReticle(Footprint footprint) {
-		setFootprint(footprint);
+	public PackageReticle(org.openpnp.model.Package pkg) {
+		setPkg(pkg);
 		setColor(Color.yellow);
 	}
 	
@@ -50,12 +49,12 @@ public class FootprintReticle implements Reticle {
 		this.color = color;
 	}
 	
-	public Footprint getFootprint() {
-        return footprint;
+    public org.openpnp.model.Package getPkg() {
+        return pkg;
     }
 
-    public void setFootprint(Footprint footprint) {
-        this.footprint = footprint;
+    public void setPkg(org.openpnp.model.Package pkg) {
+        this.pkg = pkg;
     }
 
     @Override
@@ -75,7 +74,11 @@ public class FootprintReticle implements Reticle {
 		g2d.setColor(color);
 		
 
+		Footprint footprint = pkg.getFootprint();
 		Shape shape = footprint.getShape();
+		if (shape == null) {
+		    return;
+		}
 		// Determine the scaling factor to go from Outline units to
 		// Camera units.
 		Length l = new Length(1, footprint.getUnits());
@@ -96,6 +99,6 @@ public class FootprintReticle implements Reticle {
 		
 		// Transform the Shape and draw it out.
 		shape = tx.createTransformedShape(shape);
-		g2d.draw(shape);
+		g2d.fill(shape);
 	}
 }

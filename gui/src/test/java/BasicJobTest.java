@@ -20,7 +20,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.outline.PolygonOutline;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -110,7 +109,6 @@ public class BasicJobTest {
 
         Board board = new Board();
         board.setName("test");
-        board.setOutline(new PolygonOutline());
 
         board.addPlacement(createPlacement("R1", "R-0805-10K", 10, 10, 0, 45,
                 Side.Top));
