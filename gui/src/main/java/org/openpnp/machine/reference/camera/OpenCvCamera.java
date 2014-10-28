@@ -80,6 +80,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 			try {
 				BufferedImage image = capture();
 				if (image != null) {
+				    image = applyRotation(image);
 					broadcastCapture(image);
 				}
 			}
