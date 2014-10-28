@@ -45,12 +45,16 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 		Bottom,
 		Top
 	}
+	
 	@Attribute
 	private String name;
+	
 	@Element(required=false)
 	private Outline outline;
+	
 	@ElementList(required=false)
 	private ArrayList<Fiducial> fiducials = new ArrayList<Fiducial>();
+	
 	@ElementList
 	private ArrayList<Placement> placements = new ArrayList<Placement>();
 	
@@ -63,6 +67,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	
 	public Board(File file) {
 		setFile(file);
+        setOutline(new Outline());
 		addPropertyChangeListener(this);
 	}
 	

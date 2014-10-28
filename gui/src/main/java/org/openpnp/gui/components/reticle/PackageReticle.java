@@ -28,17 +28,17 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 
+import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Outline;
 
-public class OutlineReticle implements Reticle {
+public class PackageReticle implements Reticle {
 	private Color color;
-	private Outline outline;
+	private org.openpnp.model.Package pkg;
 	
-	public OutlineReticle(Outline outline) {
-		setOutline(outline);
-		setColor(Color.red);
+	public PackageReticle(org.openpnp.model.Package pkg) {
+		setPkg(pkg);
+		setColor(Color.yellow);
 	}
 	
 	public Color getColor() {
@@ -49,15 +49,15 @@ public class OutlineReticle implements Reticle {
 		this.color = color;
 	}
 	
-	public Outline getOutline() {
-		return outline;
-	}
+    public org.openpnp.model.Package getPkg() {
+        return pkg;
+    }
 
-	public void setOutline(Outline outline) {
-		this.outline = outline;
-	}
+    public void setPkg(org.openpnp.model.Package pkg) {
+        this.pkg = pkg;
+    }
 
-	@Override
+    @Override
 	public void draw(Graphics2D g2d,
 			LengthUnit cameraUnitsPerPixelUnits,
 			double cameraUnitsPerPixelX, 
@@ -74,13 +74,14 @@ public class OutlineReticle implements Reticle {
 		g2d.setColor(color);
 		
 
-		Shape shape = outline.getShape();
+		Footprint footprint = pkg.getFootprint();
+		Shape shape = footprint.getShape();
 		if (shape == null) {
 		    return;
 		}
 		// Determine the scaling factor to go from Outline units to
 		// Camera units.
-		Length l = new Length(1, outline.getUnits());
+		Length l = new Length(1, footprint.getUnits());
 		l = l.convertToUnits(cameraUnitsPerPixelUnits);
 		double unitScale = l.getValue();
 		
@@ -98,6 +99,6 @@ public class OutlineReticle implements Reticle {
 		
 		// Transform the Shape and draw it out.
 		shape = tx.createTransformedShape(shape);
-		g2d.draw(shape);
+		g2d.fill(shape);
 	}
 }

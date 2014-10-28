@@ -21,17 +21,21 @@
 
 package org.openpnp.model;
 
-import org.openpnp.model.outline.ComplexOutline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 public class Package implements Identifiable {
     @Attribute
     private String id;
+    
     @Attribute(required = false)
-    private String name;
+    private String description;
+    
     @Element(required = false)
     private Outline outline;
+    
+    @Element(required=false)
+    private Footprint footprint;
 
     private Package() {
         this(null);
@@ -39,20 +43,21 @@ public class Package implements Identifiable {
 
     public Package(String id) {
         this.id = id;
-        outline = new ComplexOutline();
+        outline = new Outline();
+        footprint = new Footprint();
     }
 
     @Override
     public String getId() {
         return id;
     }
-
-    public String getName() {
-        return name;
+    
+    public String getDescription() {
+        return description;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Outline getOutline() {
@@ -62,9 +67,17 @@ public class Package implements Identifiable {
     public void setOutline(Outline outline) {
         this.outline = outline;
     }
+    
+    public Footprint getFootprint() {
+        return footprint;
+    }
 
+    public void setFootprint(Footprint footprint) {
+        this.footprint = footprint;
+    }
+    
     @Override
     public String toString() {
-        return String.format("id %s, outline (%s)", id, outline);
+        return String.format("id %s", id);
     }
 }

@@ -57,7 +57,7 @@ import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.OutlineReticle;
+import org.openpnp.gui.components.reticle.PackageReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
@@ -199,8 +199,8 @@ public class JobPanel extends JPanel {
 						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
 						if (cameraView != null) {
 	                        if (placement != null) {
-	                            Reticle reticle = new OutlineReticle(placement.getPart().getPackage().getOutline());
-	                            cameraView.setReticle(JobPanel.this.getClass().getName(), reticle);
+                                Reticle reticle = new PackageReticle(placement.getPart().getPackage());
+                                cameraView.setReticle(JobPanel.this.getClass().getName(), reticle);
 	                        }
 	                        else {
 	                            cameraView.removeReticle(JobPanel.this.getClass().getName());
