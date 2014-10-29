@@ -51,7 +51,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.OutlineReticle;
+import org.openpnp.gui.components.reticle.PackageReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -143,8 +143,8 @@ public class PackagesPanel extends JPanel {
                 CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
                 if (cameraView != null) {
                     if (this_package != null) {
-                        Reticle reticle = new OutlineReticle(this_package.getOutline());
-                        MainFrame.cameraPanel.getSelectedCameraView().setReticle(PackagesPanel.this.getClass().getName(), reticle);
+                        Reticle reticle = new PackageReticle(this_package);
+                        cameraView.setReticle(PackagesPanel.this.getClass().getName(), reticle);
                     }
                     else {
                         MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PackagesPanel.this.getClass().getName());

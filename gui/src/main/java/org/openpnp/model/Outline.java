@@ -1,37 +1,110 @@
-/*
-    Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
-    
-    This file is part of OpenPnP.
-    
-    OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
-    
-    For more information about OpenPnP visit http://openpnp.org
- */
-
 package org.openpnp.model;
 
 import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
+import java.util.ArrayList;
 
-/**
- * An Outline is a decorator for a Shape that provides information about
- * units along with utility methods. In addition, implementations of
- * Outline know how to be persisted to and from Configuration.
- */
-public interface Outline {
-    public LengthUnit getUnits();
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementListUnion;
 
-    public void setUnits(LengthUnit units);
+public class Outline {
+    @ElementListUnion({
+        @ElementList(entry="ellipse", inline=true, required=false, type=Outline.Ellipse.class),
+        @ElementList(entry="line", inline=true, required=false, type=Outline.Line.class),
+        @ElementList(entry="circle", inline=true, required=false, type=Outline.Circle.class)
+    })
+    private ArrayList<Outline.OutlineElement> elements = new ArrayList<Outline.OutlineElement>();
     
-    public Shape getShape();
+    @Attribute
+    private LengthUnit units = LengthUnit.Millimeters;
+    
+    public Shape getShape() {
+        if (elements.isEmpty()) {
+            return null;
+        }
+        Path2D.Double shape = new Path2D.Double();
+        for (Outline.OutlineElement element : elements) {
+            shape.append(element.getShape(), false);
+        }
+        
+        return shape;
+    }
+    
+    public LengthUnit getUnits() {
+        return units;
+    }
+
+    public void setUnits(LengthUnit units) {
+        this.units = units;
+    }
+
+    public static interface OutlineElement {
+        Shape getShape();
+    }
+    
+    public static class Line implements Outline.OutlineElement {
+        @Attribute
+        private double x1;
+        
+        @Attribute
+        private double y1;
+        
+        @Attribute
+        private double x2;
+        
+        @Attribute
+        private double y2;
+        
+        public Shape getShape() {
+            return new Line2D.Double(
+                    x1,
+                    -y1,
+                    x2,
+                    -y2);
+        }
+    }
+    
+    public static class Ellipse implements Outline.OutlineElement {
+        @Attribute
+        private double x;
+        
+        @Attribute
+        private double y;
+        
+        @Attribute
+        private double width;
+        
+        @Attribute
+        private double height;
+
+        public Shape getShape() {
+            return new Ellipse2D.Double(
+                    x - (width / 2), 
+                    y - (height / 2), 
+                    width, 
+                    height);
+        }
+    }
+    
+    public static class Circle implements Outline.OutlineElement {
+        @Attribute
+        private double x;
+        
+        @Attribute
+        private double y;
+        
+        @Attribute
+        private double radius;
+        
+        public Shape getShape() {
+            return new Ellipse2D.Double(
+                    x - radius, 
+                    y - radius, 
+                    radius * 2, 
+                    radius * 2);
+        }
+    } 
 }

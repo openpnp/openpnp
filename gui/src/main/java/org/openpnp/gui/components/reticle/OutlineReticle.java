@@ -75,6 +75,9 @@ public class OutlineReticle implements Reticle {
 		
 
 		Shape shape = outline.getShape();
+		if (shape == null) {
+		    return;
+		}
 		// Determine the scaling factor to go from Outline units to
 		// Camera units.
 		Length l = new Length(1, outline.getUnits());
