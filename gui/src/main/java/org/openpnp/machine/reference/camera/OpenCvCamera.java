@@ -101,6 +101,9 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	}
 
 	public synchronized void setDeviceIndex(int deviceIndex) {
+	    // TODO: There is bug here that causes anything other than 0
+	    // not to open properly on first open because commit calls
+	    // open with 0. Or something.
 	    if (this.deviceIndex == deviceIndex) {
 	        return;
 	    }

@@ -54,10 +54,10 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	@Element
 	private String sourceUri;
 	
-	@Attribute
+	@Attribute(required=false)
 	private int width = 640;
 	
-	@Attribute
+	@Attribute(required=false)
 	private int height = 480;
 	    
 	private BufferedImage source;

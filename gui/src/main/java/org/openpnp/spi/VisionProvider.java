@@ -25,6 +25,8 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 
 /**
  * Provides an interface for implementors of vision systems to implement. A
@@ -41,50 +43,37 @@ public interface VisionProvider {
     public void setCamera(Camera camera);
 
     public Wizard getConfigurationWizard();
-
-    // TODO: decide if results are measured from top or bottom left and
-    // standardize on it
-    public Circle[] locateCircles(int roiX, int roiY, int roiWidth,
-            int roiHeight, int coiX, int coiY, int minimumDiameter,
-            int diameter, int maximumDiameter) throws Exception;
-
+    
+    /**
+     * @deprecated This function's interface will change in the near future
+     * to return real units instead of pixels.
+     * @param roiX
+     * @param roiY
+     * @param roiWidth
+     * @param roiHeight
+     * @param coiX
+     * @param coiY
+     * @param templateImage
+     * @return
+     * @throws Exception
+     */
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
             int roiHeight, int coiX, int coiY, BufferedImage templateImage)
             throws Exception;
-
-    public class Circle {
-        private double x;
-        private double y;
-        private double diameter;
-
-        public Circle(double x, double y, double diameter) {
-            this.x = x;
-            this.y = y;
-            this.diameter = diameter;
-        }
-
-        public double getX() {
-            return x;
-        }
-
-        public void setX(double x) {
-            this.x = x;
-        }
-
-        public double getY() {
-            return y;
-        }
-
-        public void setY(double y) {
-            this.y = y;
-        }
-
-        public double getDiameter() {
-            return diameter;
-        }
-
-        public void setDiameter(double diameter) {
-            this.diameter = diameter;
-        }
-    }
+    
+    /**
+     * Given a Part and a Nozzle it is hanging off, find the Part's offsets
+     * from center. This method can be used for either Flying or Bottom vision
+     * depending on the orientation of the Camera this VisionProvider
+     * references. A fixed Camera (Camera.getHead() == null) will perform
+     * bottom vision while a Head mounted camera (Camera.getHead() != null)
+     * will perform flying vision. The two are effectively the same since
+     * both use an image of the bottom of the part.
+     * 
+     * This method is responsible for moving the Nozzle as needed, specifically
+     * it should center the Nozzle over the camera before taking a picture.
+     * @return
+     */
+    public Location getPartBottomOffsets(Part part, Nozzle nozzle) throws Exception;
+    
 }

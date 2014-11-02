@@ -39,9 +39,13 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.OpenCvVisionProviderConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Rectangle;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -77,63 +81,6 @@ public class OpenCvVisionProvider implements VisionProvider {
         BufferedImage image_ = camera.capture();
         Mat image = OpenCvUtils.toMat(image_);
         return image;
-    }
-
-//    private static void setROI(Mat image, Rectangle roi) {
-//        cvSetImageROI(
-//                image,
-//                cvRect(roi.getX(), roi.getY(), roi.getWidth(), roi.getHeight()));
-//    }
-
-    @Override
-    public Circle[] locateCircles(int roiX, int roiY, int roiWidth,
-            int roiHeight, int coiX, int coiY, int minimumDiameter,
-            int diameter, int maximumDiameter) throws Exception {
-
-        Rectangle roi = new Rectangle(roiX, roiY, roiWidth, roiHeight);
-        return locateCircles(roi, minimumDiameter, maximumDiameter);
-    }
-
-    private Circle[] locateCircles(Rectangle roi, int minimumDiameter,
-            int maximumDiameter) {
-//
-//        Mat image = getCameraImage();
-//        setROI(image, roi);
-//
-//        int minRadius = minimumDiameter / 2;
-//        int maxRadius = maximumDiameter / 2;
-//
-//        // the accuracy of these numbers is questionable as I just made them up
-//        // to get this working
-//        int minDistance = 20;
-//        int edgeThreshold = 20;
-//        int circleThreshold = 20;
-//
-//        return locateCircles(image, minDistance, edgeThreshold,
-//                circleThreshold, minRadius, maxRadius);
-        return new Circle[0];
-    }
-
-    private Circle[] locateCircles(Mat image, int minRadius,
-            int maxRadius, int minDist, int edgeThreshold, int circleThreshold) {
-//        CvMemStorage mem = CvMemStorage.create();
-//
-//        CvSeq circles = cvHoughCircles(image, mem, CV_HOUGH_GRADIENT, 1,
-//                minDist, edgeThreshold, circleThreshold, minRadius, maxRadius);
-//
-//        List<Circle> circleList = new ArrayList<Circle>();
-//
-//        for (int i = 0; i < circles.total(); i++) {
-//            CvPoint3D32f circle = new CvPoint3D32f(cvGetSeqElem(circles, i));
-//            Circle temp = new Circle(circle.x(), circle.y(), circle.z());
-//            circleList.add(temp);
-//        }
-//
-//        mem.release();
-//
-//        Circle[] returnCircles = new Circle[circles.total()];
-//        return circleList.toArray(returnCircles);
-        return new Circle[0];
     }
 
     @Override
@@ -189,5 +136,31 @@ public class OpenCvVisionProvider implements VisionProvider {
                 e.printStackTrace();
             }
         }
-    }    
+    }
+
+    @Override
+    public Location getPartBottomOffsets(Part part, Nozzle nozzle)
+            throws Exception {
+        if (camera.getLooking() != Looking.Up) {
+            throw new Exception("Bottom vision only implemented for Up looking cameras");
+        }
+
+        // Position the part above the center of the camera.
+        // First move to Safe-Z.
+        nozzle.moveToSafeZ(1.0);
+        // Then move to the camera in X, Y at Safe-Z and rotate the
+        // part to 0.
+        nozzle.moveTo(camera.getLocation().derive(null, null, Double.NaN, 0.0), 1.0);
+        // Then lower the part to the Camera's focal point in Z. Maintain the 
+        // part's rotation at 0.
+        nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN), 1.0);
+        // Grab an image.
+        BufferedImage image = camera.capture();
+        // Return to Safe-Z just to be safe.
+        nozzle.moveToSafeZ(1.0);
+        // TODO: Do OpenCV magic
+        // Return the offsets. Make sure to convert them to real units instead
+        // of pixels. Use camera.getUnitsPerPixel().
+        return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+    } 
 }

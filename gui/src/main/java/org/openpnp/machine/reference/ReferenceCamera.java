@@ -34,7 +34,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceCamera.class);
     
-    @Element
+    @Element(required=false)
     private Location headOffsets = new Location(LengthUnit.Millimeters);
     
     protected ReferenceMachine machine;
@@ -79,6 +79,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public Location getLocation() {
+        // If this is a fixed camera we just treat the head offsets as it's
+        // table location.
+        // TODO: This is prety confusing and should be cleaned up and
+        // clarified.
+        if (getHead() == null) {
+            return getHeadOffsets();
+        }
         return driver.getLocation(this);
     }
 }

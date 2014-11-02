@@ -25,10 +25,7 @@
 package org.openpnp.util;
 
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 
 
@@ -80,18 +77,14 @@ public class Utils2D {
 		return new Point(point.getX() * scaleX, point.getY() * scaleY);
 	}
 	
-	public static Location calculateBoardPlacementLocation(BoardLocation bl, Placement placement) {
-        // Determine where we will place the part
-        Location boardLocation = bl.getLocation();
-        Location placementLocation = placement.getLocation();
-
+	public static Location calculateBoardPlacementLocation(Location boardLocation, Side boardSide, Location placementLocation) {
         // We will work in the units of the placementLocation, so convert
         // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
         
         // If we are placing the bottom of the board we need to invert
         // the placement location.
-        if (bl.getSide() == Side.Bottom) {
+        if (boardSide == Side.Bottom) {
             placementLocation = placementLocation.invert(true, false, false, false);
         }
 

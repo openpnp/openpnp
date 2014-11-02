@@ -27,15 +27,14 @@ import java.util.Set;
 
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
-import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.Point;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
@@ -44,6 +43,7 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -202,61 +202,19 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                 NozzleTip nozzleTip = solution.nozzleTip;
                 
                 firePartProcessingStarted(solution.boardLocation, solution.placement);
-				
-                Location placementLocation = 
-                        Utils2D.calculateBoardPlacementLocation(bl, placement);
-
-				// Update the placementLocation with the proper Z value. This is
-				// the distance to the top of the board plus the height of 
-				// the part.
-                Location boardLocation = bl.getLocation().convertToUnits(placementLocation.getUnits());
-				double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
-				placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
-
-				// NozzleTip Changer
-				if (nozzle.getNozzleTip() != nozzleTip) {
-			        fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getId()));        
-
-			        if (!shouldJobProcessingContinue()) {
-			            return;
-			        }
-			        
-                    try {
-                        nozzle.unloadNozzleTip();
-                    }
-                    catch (Exception e) {
-                        fireJobEncounteredError(JobError.PickError, e.getMessage());
-                        return;
-                    }
-                    
-                    fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getId(), nozzle.getId()));        
-
-                    if (!shouldJobProcessingContinue()) {
-                        return;
-                    }
-                                        
-			        try {
-	                    nozzle.loadNozzleTip(nozzleTip);
-			        }
-			        catch (Exception e) {
-			            fireJobEncounteredError(JobError.PickError, e.getMessage());
-			            return;
-			        }
-			        
-			        if (nozzle.getNozzleTip() != nozzleTip) {
-                        fireJobEncounteredError(JobError.PickError, "Failed to load correct nozzle tip");
-                        return;
-			        }
-				}
-				// End NozzleTip Changer
-				
+                
+                if (!changeNozzleTip(nozzle, nozzleTip)) {
+                    return;
+                }
+								
 				if (!nozzle.getNozzleTip().canHandle(part)) {
                     fireJobEncounteredError(JobError.PickError, "Selected nozzle tip is not compatible with part");
                     return;
 				}
 				
-				pick(nozzle, feeder, bl, placement);
-				placementSolutionLocations.put(solution, placementLocation);
+				if (!pick(nozzle, feeder, bl, placement)) {
+				    return;
+				}
 			}
 		    
             // TODO: a lot of the event fires are broken
@@ -264,8 +222,40 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                 Nozzle nozzle = solution.nozzle;
                 BoardLocation bl = solution.boardLocation;
                 Placement placement = solution.placement;
-                Location placementLocation = placementSolutionLocations.get(solution);
-                place(nozzle, bl, placementLocation, placement);
+                Part part = placement.getPart();
+                
+                fireDetailedStatusUpdated(String.format("Perform bottom vision"));      
+                
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+                
+                Location bottomVisionOffsets;
+                try {
+                    bottomVisionOffsets = performBottomVision(machine, part, nozzle);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.PartError, e.getMessage());
+                    return;
+                }
+                
+                Location placementLocation = placement.getLocation();
+                if (bottomVisionOffsets != null) {
+                    placementLocation = placementLocation.subtract(bottomVisionOffsets);
+                }
+                placementLocation = 
+                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);
+
+                // Update the placementLocation with the proper Z value. This is
+                // the distance to the top of the board plus the height of 
+                // the part.
+                Location boardLocation = bl.getLocation().convertToUnits(placementLocation.getUnits());
+                double partHeight = part.getHeight().convertToUnits(placementLocation.getUnits()).getValue();
+                placementLocation = placementLocation.derive(null, null, boardLocation.getZ() + partHeight, null);
+
+                if (!place(nozzle, bl, placementLocation, placement)) {
+                    return;
+                }
             }
 		}
 		
@@ -273,6 +263,74 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 		
 		state = JobState.Stopped;
 		fireJobStateChanged();
+	}
+	
+	protected Location performBottomVision(Machine machine, Part part, Nozzle nozzle) throws Exception {
+	    // TODO: I think this stuff actually belongs in VisionProvider but
+	    // I have not yet fully thought through the API.
+	    
+	    // Find the first fixed camera
+	    if (machine.getCameras().isEmpty()) {
+	        // TODO: return null for now to indicate that no vision was
+	        // calculated. In the future we may want this to be based on
+	        // configuration.
+	        return null;
+	    }
+	    Camera camera = machine.getCameras().get(0);
+	    
+	    // Get it's vision provider
+	    VisionProvider vp = camera.getVisionProvider();
+	    if (vp == null) {
+            // TODO: return null for now to indicate that no vision was
+            // calculated. In the future we may want this to be based on
+            // configuration.
+            return null;
+	    }
+	    
+	    // Perform the operation. Note that similar to feeding and nozzle
+	    // tip changing, it is up to the VisionProvider to move the camera
+	    // and nozzle to where it needs to be.
+	    return vp.getPartBottomOffsets(part, nozzle);
+	}
+	
+	protected boolean changeNozzleTip(Nozzle nozzle, NozzleTip nozzleTip) {
+        // NozzleTip Changer
+        if (nozzle.getNozzleTip() != nozzleTip) {
+            fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getId()));        
+
+            if (!shouldJobProcessingContinue()) {
+                return false;
+            }
+            
+            try {
+                nozzle.unloadNozzleTip();
+            }
+            catch (Exception e) {
+                fireJobEncounteredError(JobError.PickError, e.getMessage());
+                return false;
+            }
+            
+            fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getId(), nozzle.getId()));        
+
+            if (!shouldJobProcessingContinue()) {
+                return false;
+            }
+                                
+            try {
+                nozzle.loadNozzleTip(nozzleTip);
+            }
+            catch (Exception e) {
+                fireJobEncounteredError(JobError.PickError, e.getMessage());
+                return false;
+            }
+            
+            if (nozzle.getNozzleTip() != nozzleTip) {
+                fireJobEncounteredError(JobError.PickError, "Failed to load correct nozzle tip");
+                return false;
+            }
+        }
+        return true;
+        // End NozzleTip Changer
 	}
 	
 	protected boolean pick(Nozzle nozzle, Feeder feeder, BoardLocation bl, Placement placement) {

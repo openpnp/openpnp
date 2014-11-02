@@ -1023,8 +1023,9 @@ public class JobPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Location placementLocation = 
                     Utils2D.calculateBoardPlacementLocation(
-                            getSelectedBoardLocation(), 
-                            getSelectedPlacement());
+                            getSelectedBoardLocation().getLocation(),
+                            getSelectedBoardLocation().getSide(),
+                            getSelectedPlacement().getLocation());
             
             final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
             if (camera.getHead() == null) {
