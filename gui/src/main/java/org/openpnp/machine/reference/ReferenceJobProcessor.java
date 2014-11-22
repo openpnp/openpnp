@@ -384,6 +384,12 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 
         fireDetailedStatusUpdated(String.format("Move to safe Z at (%s).", nozzle.getLocation()));
 
+		// Check if the feeder is empty for the next pick, then we would need to reload
+		// only one check is done, the feeder would be reloader and the feedcount set to zero
+		if (!feeder.canFeedToNozzle(nozzle)) {
+			fireJobEncounteredError(JobError.FeederError, String.format("Feeder %s is empty.", feeder.getId()));
+		}
+		
         if (!shouldJobProcessingContinue()) {
             return false;
         }
