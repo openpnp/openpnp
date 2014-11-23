@@ -27,6 +27,7 @@ import javax.swing.Action;
 
 import org.opencv.core.Mat;
 import org.opencv.highgui.VideoCapture;
+import org.openpnp.CameraListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
@@ -35,7 +36,6 @@ import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWiz
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.core.Commit;
 
 /**
  * A Camera implementation based on the OpenCV FrameGrabbers.
@@ -46,23 +46,20 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }    
     
-	@Attribute(required=true)
-	private int deviceIndex = Integer.MIN_VALUE;
+	@Attribute(name="deviceIndex", required=true)
+	private int deviceIndex = 0;
 	
 	private VideoCapture fg = new VideoCapture();
 	private Thread thread;
 	
 	public OpenCvCamera() {
-	    setDeviceIndex(0);
-	}
-	
-	@Commit
-	private void commit() {
-		setDeviceIndex(deviceIndex);
 	}
 	
 	@Override
 	public synchronized BufferedImage capture() {
+	    if (thread == null) {
+	        setDeviceIndex(deviceIndex);
+	    }
 		try {
 		    Mat mat = new Mat();
 		    if (!fg.read(mat)) {
@@ -75,7 +72,15 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		}
 	}
 	
-	public void run() {
+	@Override
+    public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
+	    if (thread == null) {
+	        setDeviceIndex(deviceIndex);
+	    }
+        super.startContinuousCapture(listener, maximumFps);
+    }
+
+    public void run() {
 		while (!Thread.interrupted()) {
 			try {
 				BufferedImage image = capture();
@@ -101,12 +106,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	}
 
 	public synchronized void setDeviceIndex(int deviceIndex) {
-	    // TODO: There is bug here that causes anything other than 0
-	    // not to open properly on first open because commit calls
-	    // open with 0. Or something.
-	    if (this.deviceIndex == deviceIndex) {
-	        return;
-	    }
 		this.deviceIndex = deviceIndex;
 		if (thread != null) {
 			thread.interrupt();
