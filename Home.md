@@ -1,1 +1,1 @@
-Welcome to the openpnp wiki!
+Welcome to the OpenPnP Wiki!
