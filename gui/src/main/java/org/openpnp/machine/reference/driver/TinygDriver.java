@@ -50,6 +50,10 @@ import com.google.gson.JsonSyntaxException;
 
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.
+ * TODO: The whole movement wait lock thing has to go. See if we can do a
+ * P4 type command like the other drivers to wait for movement to complete.
+ * Disabled axes don't send status reports, so movement wait lock never happens.
+ * Probably short moves also won't.
  */
 public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory
@@ -63,6 +67,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     private double x, y, z, c;
     private Thread readerThread;
+    private boolean disconnectRequested;
     private Object commandLock = new Object();
     private Object movementWaitLock = new Object();
     private JsonObject lastResponse;
@@ -103,14 +108,14 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         if (!connected) {
             throw new Error(
                     String.format(
-                            "Unable to receive connection response from Grbl. Check your port and baud rate, and that you are running at least version %f of Grbl",
+                            "Unable to receive connection response from TinyG. Check your port and baud rate, and that you are running at least version %f of TinyG",
                             minimumRequiredVersion));
         }
 
         if (connectedVersion < minimumRequiredVersion) {
             throw new Error(
                     String.format(
-                            "This driver requires Grbl version %.2f or higher. You are running version %.2f",
+                            "This driver requires TinyG version %.2f or higher. You are running version %.2f",
                             minimumRequiredVersion, connectedVersion));
         }
 
@@ -244,11 +249,11 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     }
 
     public synchronized void disconnect() {
+        disconnectRequested = true;
         connected = false;
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.interrupt();
                 readerThread.join();
             }
         }
@@ -262,6 +267,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         catch (Exception e) {
             logger.error("disconnect()", e);
         }
+        disconnectRequested = false;
     }
 
     public JsonObject sendCommand(String command) throws Exception {
@@ -301,7 +307,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     }
 
     public void run() {
-        while (!Thread.interrupted()) {
+        while (!disconnectRequested) {
             String line;
             try {
                 line = readLine().trim();
