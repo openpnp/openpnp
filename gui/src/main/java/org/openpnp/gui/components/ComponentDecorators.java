@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.Locale;
 
 import javax.swing.JTextField;
 
@@ -88,6 +89,6 @@ public class ComponentDecorators {
 			length.setUnits(Configuration.get().getSystemUnits());
 		}
 		length = length.convertToUnits(Configuration.get().getSystemUnits());
-		textField.setText(String.format(Configuration.get().getLengthDisplayFormat(), length.getValue()));
+		textField.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), length.getValue()));
 	}
 }

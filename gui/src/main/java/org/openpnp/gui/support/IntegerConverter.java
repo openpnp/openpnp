@@ -21,6 +21,8 @@
 
 package org.openpnp.gui.support;
 
+import java.util.Locale;
+
 import org.jdesktop.beansbinding.Converter;
 
 public class IntegerConverter extends Converter<Integer, String> {
@@ -36,7 +38,7 @@ public class IntegerConverter extends Converter<Integer, String> {
 	
 	@Override
 	public String convertForward(Integer arg0) {
-		return String.format(format, arg0);
+		return String.format(Locale.US,format, arg0);
 	}
 
 	@Override

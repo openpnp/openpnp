@@ -21,6 +21,8 @@
 
 package org.openpnp.gui.tablemodel;
 
+import java.util.Locale;
+
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
@@ -140,7 +142,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 		case 4:
 			return new LengthCellValue(loc.getLengthY(), true);
 		case 5:
-			return String.format(configuration.getLengthDisplayFormat(), loc.getRotation());
+			return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation());
 		case 6:
 		    return placement.isPlace();
 		default:

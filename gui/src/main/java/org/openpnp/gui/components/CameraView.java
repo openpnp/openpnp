@@ -42,6 +42,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -1058,7 +1059,7 @@ public class CameraView extends JComponent implements CameraListener {
 			double heightInUnits = selection.height
 					* camera.getUnitsPerPixel().getY();
 
-			String text = String.format("%dpx, %dpx\n%2.3f%s, %2.3f%s",
+			String text = String.format(Locale.US,"%dpx, %dpx\n%2.3f%s, %2.3f%s",
 					(int) selection.getWidth(), (int) selection.getHeight(),
 					widthInUnits, camera.getUnitsPerPixel().getUnits()
 							.getShortName(), heightInUnits, camera

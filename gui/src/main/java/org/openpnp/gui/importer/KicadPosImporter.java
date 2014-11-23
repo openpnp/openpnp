@@ -156,6 +156,7 @@ public class KicadPosImporter implements BoardImporter {
 			placement.setSide(side);
 			placements.add(placement);
 		}
+		reader.close();
 		return placements;
 	}
 	

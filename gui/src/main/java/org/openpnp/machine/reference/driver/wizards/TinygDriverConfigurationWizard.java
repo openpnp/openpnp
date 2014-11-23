@@ -1,5 +1,7 @@
 package org.openpnp.machine.reference.driver.wizards;
 
+import java.util.Locale;
+
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -641,21 +643,21 @@ public class TinygDriverConfigurationWizard extends AbstractConfigurationWizard 
         
         // TODO: Check for response errors in these methods.
         private int getConfigInt(String name) throws Exception {
-            JsonObject o = driver.sendCommand(String.format("{\"%s\":\"\"}", name));
+            JsonObject o = driver.sendCommand(String.format(Locale.US,"{\"%s\":\"\"}", name));
             return o.get(name).getAsInt();
         }
         
         private void setConfigInt(String name, int v) throws Exception {
-            JsonObject o = driver.sendCommand(String.format("{\"%s\":%d}", name, v));
+            JsonObject o = driver.sendCommand(String.format(Locale.US,"{\"%s\":%d}", name, v));
         }
         
         private double getConfigDouble(String name) throws Exception {
-            JsonObject o = driver.sendCommand(String.format("{\"%s\":\"\"}", name));
+            JsonObject o = driver.sendCommand(String.format(Locale.US,"{\"%s\":\"\"}", name));
             return o.get(name).getAsDouble();
         }
         
         private void setConfigDouble(String name, double v) throws Exception {
-            JsonObject o = driver.sendCommand(String.format("{\"%s\":%f}", name, v));
+            JsonObject o = driver.sendCommand(String.format(Locale.US,"{\"%s\":%f}", name, v));
         }
         
         private boolean getConfigBoolean(String name) throws Exception {
