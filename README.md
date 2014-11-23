@@ -27,12 +27,6 @@ and develop is the current development branch. Regular updates are made to devel
 breaking changes. When it's considered stable it's merged to master. If you are planning to do any
 development or integration you should probably use the develop branch.
 
-## Components
-
-There are three primary components of OpenPnP. They are the hardware, the firmware and the software. Currently the software is the primary area of development.
-
-Further information for each can be found in their respective directories of [hardware](hardware), [firmware](firmware), and [gui](gui).
-
 ## Developers
 
 If you'd like to be involved in the development of OpenPnP, please
