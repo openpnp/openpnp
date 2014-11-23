@@ -21,6 +21,8 @@
 
 package org.openpnp.model;
 
+import java.util.Locale;
+
 import org.simpleframework.xml.Attribute;
 
 
@@ -167,7 +169,7 @@ public class Length {
 	
 	@Override
 	public String toString() {
-		return String.format("%2.3f%s", value, units.getShortName());
+		return String.format(Locale.US,"%2.3f%s", value, units.getShortName());
 	}
 	
 	/**
@@ -181,7 +183,7 @@ public class Length {
 		if (fmt == null) {
 			return toString();
 		}
-		return String.format(fmt, value, units.getShortName());
+		return String.format(Locale.US,fmt, value, units.getShortName());
 	}
 	
 	@Override

@@ -35,6 +35,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -612,7 +613,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 		
 		@Override
 		public String toString() {
-			return String.format("[%2.3f, %2.3f (%d, %d)]", x, y, tileX, tileY);
+			return String.format(Locale.US,"[%2.3f, %2.3f (%d, %d)]", x, y, tileX, tileY);
 		}
 
 		@Override

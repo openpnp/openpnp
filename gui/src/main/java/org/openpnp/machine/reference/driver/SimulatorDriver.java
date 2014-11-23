@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Locale;
 
 import javax.swing.Action;
 
@@ -142,7 +143,7 @@ public class SimulatorDriver implements ReferenceDriver {
             throw new Exception("Don't know what " + hm.toString() + " is.");
         }
         
-        send(String.format("m,%s,%f,%f,%f,%f", movable, location.getX(), location.getY(), location.getZ(), location.getRotation()));
+        send(String.format(Locale.US,"m,%s,%f,%f,%f,%f", movable, location.getX(), location.getY(), location.getZ(), location.getRotation()));
         
         // Now that movement is complete, update the stored Location to the new
         // Location, unless the incoming Location specified an axis with a value

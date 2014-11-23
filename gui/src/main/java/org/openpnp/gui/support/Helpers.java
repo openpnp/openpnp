@@ -23,6 +23,7 @@ package org.openpnp.gui.support;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Locale;
 
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -38,16 +39,16 @@ public class Helpers {
 	
 	public static void copyLocationIntoTextFields(Location l, JTextField x, JTextField y, JTextField z, JTextField rotation) {
 		if (x != null) {
-			x.setText(String.format(Configuration.get().getLengthDisplayFormat(), l.getLengthX().getValue()));
+			x.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), l.getLengthX().getValue()));
 		}
 		if (y != null) {
-			y.setText(String.format(Configuration.get().getLengthDisplayFormat(), l.getLengthY().getValue()));
+			y.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), l.getLengthY().getValue()));
 		}
 		if (z != null) {
-			z.setText(String.format(Configuration.get().getLengthDisplayFormat(), l.getLengthZ().getValue()));
+			z.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), l.getLengthZ().getValue()));
 		}
 		if (rotation != null) {
-			rotation.setText(String.format(Configuration.get().getLengthDisplayFormat(), l.getRotation()));
+			rotation.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), l.getRotation()));
 		}
 	}
 	

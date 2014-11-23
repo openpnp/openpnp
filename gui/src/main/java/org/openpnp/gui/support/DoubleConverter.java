@@ -21,6 +21,8 @@
 
 package org.openpnp.gui.support;
 
+import java.util.Locale;
+
 import org.jdesktop.beansbinding.Converter;
 
 public class DoubleConverter extends Converter<Double, String> {
@@ -32,7 +34,7 @@ public class DoubleConverter extends Converter<Double, String> {
 	
 	@Override
 	public String convertForward(Double arg0) {
-		return String.format(format, arg0);
+		return String.format(Locale.US,format, arg0);
 	}
 
 	@Override

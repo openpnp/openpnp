@@ -21,6 +21,8 @@
 
 package org.openpnp.gui.support;
 
+import java.util.Locale;
+
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -29,7 +31,7 @@ public class LengthConverter extends Converter<Length, String> {
 	@Override
 	public String convertForward(Length length) {
 		length = length.convertToUnits(Configuration.get().getSystemUnits());
-		return String.format(Configuration.get().getLengthDisplayFormat(), length.getValue());
+		return String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), length.getValue());
 	}
 	
 	@Override

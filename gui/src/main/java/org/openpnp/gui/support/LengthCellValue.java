@@ -21,6 +21,8 @@
 
 package org.openpnp.gui.support;
 
+import java.util.Locale;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 
@@ -76,14 +78,14 @@ public class LengthCellValue {
 	public String toString() {
 		Length l = length;
 		if (l.getUnits() == null) {
-			return String.format(configuration.getLengthDisplayFormatWithUnits(), l.getValue(), "?");
+			return String.format(Locale.US,configuration.getLengthDisplayFormatWithUnits(), l.getValue(), "?");
 		}
 		if (displayNativeUnits && l.getUnits() != configuration.getSystemUnits()) {
-			return String.format(configuration.getLengthDisplayFormatWithUnits(), l.getValue(), l.getUnits().getShortName());
+			return String.format(Locale.US,configuration.getLengthDisplayFormatWithUnits(), l.getValue(), l.getUnits().getShortName());
 		}
 		else {
 			l = l.convertToUnits(configuration.getSystemUnits());
-			return String.format(configuration.getLengthDisplayFormat(), l.getValue());
+			return String.format(Locale.US,configuration.getLengthDisplayFormat(), l.getValue());
 		}
 	}
 }

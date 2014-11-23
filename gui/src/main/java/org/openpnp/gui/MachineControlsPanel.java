@@ -34,6 +34,7 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -206,16 +207,16 @@ public class MachineControlsPanel extends JPanel {
 		
 		
 		if (!textFieldX.hasFocus()) {
-			textFieldX.setText(String.format(configuration.getLengthDisplayFormat(), x));
+			textFieldX.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), x));
 		}
 		if (!textFieldY.hasFocus()) {
-			textFieldY.setText(String.format(configuration.getLengthDisplayFormat(), y));
+			textFieldY.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), y));
 		}
 		if (!textFieldZ.hasFocus()) {
-			textFieldZ.setText(String.format(configuration.getLengthDisplayFormat(), z));
+			textFieldZ.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), z));
 		}
 		if (!textFieldC.hasFocus()) {
-			textFieldC.setText(String.format(configuration.getLengthDisplayFormat(), c));
+			textFieldC.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), c));
 		}
 	}
 	

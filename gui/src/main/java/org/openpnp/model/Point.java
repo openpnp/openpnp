@@ -21,6 +21,8 @@
 
 package org.openpnp.model;
 
+import java.util.Locale;
+
 import org.simpleframework.xml.Attribute;
 
 public class Point {
@@ -60,6 +62,6 @@ public class Point {
 	
 	@Override
 	public String toString() {
-		return String.format("%f, %f", x, y);
+		return String.format(Locale.US,"%f, %f", x, y);
 	}
 }

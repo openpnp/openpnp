@@ -24,6 +24,7 @@ package org.openpnp.gui.wizards;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.util.Locale;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -146,8 +147,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 			}
 			cameraView.setSelectionEnabled(false);
 			Rectangle selection = cameraView.getSelection();
-			textFieldUppX.setText(String.format(Configuration.get().getLengthDisplayFormat(), (1.0 / selection.width)));
-			textFieldUppY.setText(String.format(Configuration.get().getLengthDisplayFormat(), (1.0 / selection.height)));
+			textFieldUppX.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), (1.0 / selection.width)));
+			textFieldUppY.setText(String.format(Locale.US,Configuration.get().getLengthDisplayFormat(), (1.0 / selection.height)));
 		}
 	};
 	

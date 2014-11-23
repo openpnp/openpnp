@@ -320,8 +320,8 @@ public class TableScanner extends JDialog implements Runnable {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-			txtStartX.setText(String.format("%2.3f", camera.getLocation().getX()));
-			txtStartY.setText(String.format("%2.3f", camera.getLocation().getY()));
+			txtStartX.setText(String.format(Locale.US,"%2.3f", camera.getLocation().getX()));
+			txtStartY.setText(String.format(Locale.US,"%2.3f", camera.getLocation().getY()));
 		}
 	};
 	
@@ -329,8 +329,8 @@ public class TableScanner extends JDialog implements Runnable {
 		@Override
 		public void actionPerformed(ActionEvent e) {
             Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-			txtEndX.setText(String.format("%2.3f", camera.getLocation().getX()));
-			txtEndY.setText(String.format("%2.3f", camera.getLocation().getY()));
+			txtEndX.setText(String.format(Locale.US,"%2.3f", camera.getLocation().getX()));
+			txtEndY.setText(String.format(Locale.US,"%2.3f", camera.getLocation().getY()));
 		}
 	};
 	

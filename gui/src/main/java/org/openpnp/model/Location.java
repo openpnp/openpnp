@@ -21,6 +21,8 @@
 
 package org.openpnp.model;
 
+import java.util.Locale;
+
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -228,7 +230,7 @@ public class Location {
 	
 	@Override
 	public String toString() {
-		return String.format("units %s, x %f, y %f, z %f, rotation %f", units.getShortName(), x, y, z, rotation);
+		return String.format(Locale.US,"units %s, x %f, y %f, z %f, rotation %f", units.getShortName(), x, y, z, rotation);
 	}
 	
 	public Point getXyPoint() {
