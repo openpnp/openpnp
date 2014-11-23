@@ -228,7 +228,7 @@
 	<repositories>
 		<repository>
 			<id>openpnp</id>
-			<url>https://github.com/openpnp/openpnp/raw/master/repo</url>
+			<url>https://github.com/openpnp/openpnp-maven-repo/raw/develop</url>
 		</repository>
 		<repository>
 			<id>javacv</id>
