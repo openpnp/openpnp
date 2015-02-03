@@ -56,7 +56,7 @@ public class TwoPlacementBoardLocationProcess {
         "<html><body>Select an easily identifiable placement from the table below. It should be near the left edge of the board. Click Next to continue.</body></html>",          
 		"<html><body>Now, line up the camera's crosshairs with the center of the selected placement. Click Next to continue.</body></html>",			
         "<html><body>Next, select a second placement from the table below. It should be near the right edge of the board. Click Next to continue.</body></html>",
-		"<html><body>Finally, line up the camera's crosshairs with the center of the selecter placement. Click Next to continue.</body></html>",			
+		"<html><body>Finally, line up the camera's crosshairs with the center of the selected placement. Click Next to continue.</body></html>",			
 		"<html><body>The board's location and rotation has been set. Click Finish to position the camera at the board's origin, or Cancel to quit.</body></html>",
 	};
 	
