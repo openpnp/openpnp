@@ -34,6 +34,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -65,7 +66,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	private Thread thread;
 	
 	public ImageCamera() {
-	    unitsPerPixel = new Location(LengthUnit.Inches, 0.031, 0.031, 0, 0);
+	    unitsPerPixel = new Location(LengthUnit.Inches, 0.04233, 0.04233, 0, 0);
 	}
 	
 	@SuppressWarnings("unused")
@@ -148,9 +149,14 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	
     private synchronized void initialize() throws Exception {
         stop();
-        
-        source = ImageIO.read(new URL(sourceUri));
 
+        if (sourceUri.startsWith("classpath://")) {
+            source = ImageIO.read(getClass().getClassLoader().getResourceAsStream(sourceUri.substring("classpath://".length())));
+        }
+        else {
+            source = ImageIO.read(new URL(sourceUri));
+        }
+        
         if (listeners.size() > 0) {
             start();
         }
@@ -172,7 +178,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	
 	@Override
 	public Wizard getConfigurationWizard() {
-		return null;
+		return new ReferenceCameraConfigurationWizard(this);
 	}
 	
     @Override
