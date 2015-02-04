@@ -16,7 +16,7 @@
         <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
             <nozzles>
                 <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" current-nozzle-tip-id="NT1">
-                    <head-offsets x="10" y="0" z="0" rotation="0" units="Millimeters" />
+                    <head-offsets x="0" y="0" z="0" rotation="0" units="Millimeters" />
                     <nozzle-tips>
                     	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true" />
                     </nozzle-tips>
@@ -24,22 +24,22 @@
             </nozzles>
             <actuators>
                 <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" index="0">
-                    <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
+                    <head-offsets x="0" y="10" z="0" rotation="0" units="Millimeters" />
                 </actuator>
             </actuators>
             <cameras>
-               <camera class="org.openpnp.machine.reference.camera.TableScannerCamera" id="C1" looking="Down" fps="24">
-                  <units-per-pixel units="Millimeters" x="0.030745" y="0.030813" z="0.0" rotation="0.0"/>
+               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="C1" looking="Down" fps="24">
+                  <units-per-pixel units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
                   <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
-                  <head-offsets units="Millimeters" x="20" y="10" z="0.0" rotation="0.0"/>
-                  <source-uri>http://openpnp.org/downloads/tablescan/1/</source-uri>
+                  <head-offsets units="Millimeters" x="10" y="10" z="0.0" rotation="0.0"/>
+                  <source-uri>classpath://image-camera-demo.png</source-uri>
                </camera>
             </cameras>
         </head>
       </heads>
       <feeders>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceTubeFeeder" id="F1" enabled="true" part-id="R-0805-10K">
-            <location units="Millimeters" x="30.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="30.0" y="10.0" z="0.0" rotation="0.0"/>
          </feeder>
       </feeders>
       <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
