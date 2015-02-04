@@ -1,0 +1,120 @@
+<openpnp-board name="Pick and Place Test.board.xml">
+   <outline units="Millimeters"/>
+   <fiducials/>
+   <placements>
+      <placement id="R1" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="38.1" y="38.1" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R2" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="57.15" y="38.1" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R3" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="56.5" y="43.03" z="0.0" rotation="15.0"/>
+      </placement>
+      <placement id="R4" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="54.6" y="47.62" z="0.0" rotation="30.0"/>
+      </placement>
+      <placement id="R5" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="51.57" y="51.57" z="0.0" rotation="45.0"/>
+      </placement>
+      <placement id="R6" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="47.62" y="54.6" z="0.0" rotation="60.0"/>
+      </placement>
+      <placement id="R7" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="43.03" y="56.5" z="0.0" rotation="75.0"/>
+      </placement>
+      <placement id="R8" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="38.1" y="57.15" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="R9" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="33.17" y="56.5" z="0.0" rotation="105.0"/>
+      </placement>
+      <placement id="R10" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="28.58" y="54.6" z="0.0" rotation="120.0"/>
+      </placement>
+      <placement id="R11" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="24.63" y="51.57" z="0.0" rotation="135.0"/>
+      </placement>
+      <placement id="R12" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="21.6" y="47.62" z="0.0" rotation="150.0"/>
+      </placement>
+      <placement id="R13" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="19.7" y="43.03" z="0.0" rotation="165.0"/>
+      </placement>
+      <placement id="R14" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="19.05" y="38.1" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement id="R15" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="19.7" y="33.17" z="0.0" rotation="195.0"/>
+      </placement>
+      <placement id="R16" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="21.6" y="28.58" z="0.0" rotation="210.0"/>
+      </placement>
+      <placement id="R17" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="24.63" y="24.63" z="0.0" rotation="225.0"/>
+      </placement>
+      <placement id="R18" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="28.58" y="21.6" z="0.0" rotation="240.0"/>
+      </placement>
+      <placement id="R19" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="33.17" y="19.7" z="0.0" rotation="255.0"/>
+      </placement>
+      <placement id="R20" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="38.1" y="19.05" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="R21" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="43.03" y="19.7" z="0.0" rotation="285.0"/>
+      </placement>
+      <placement id="R22" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="47.62" y="21.6" z="0.0" rotation="300.0"/>
+      </placement>
+      <placement id="R23" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="51.57" y="24.63" z="0.0" rotation="315.0"/>
+      </placement>
+      <placement id="R24" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="54.6" y="28.58" z="0.0" rotation="330.0"/>
+      </placement>
+      <placement id="R25" side="Top" part-id="R0805-" place="true">
+         <location units="Millimeters" x="56.5" y="33.17" z="0.0" rotation="345.0"/>
+      </placement>
+      <placement id="R36" side="Top" part-id="R0201-" place="true">
+         <location units="Millimeters" x="6.35" y="69.85" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R37" side="Top" part-id="R0201-" place="true">
+         <location units="Millimeters" x="11.43" y="69.85" z="0.0" rotation="315.0"/>
+      </placement>
+      <placement id="R38" side="Top" part-id="R0201-" place="true">
+         <location units="Millimeters" x="6.35" y="64.77" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="R39" side="Top" part-id="R0402-" place="true">
+         <location units="Millimeters" x="64.77" y="69.85" z="0.0" rotation="45.0"/>
+      </placement>
+      <placement id="R40" side="Top" part-id="R0402-" place="true">
+         <location units="Millimeters" x="69.85" y="69.85" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="R41" side="Top" part-id="R0402-" place="true">
+         <location units="Millimeters" x="69.85" y="64.77" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement id="R42" side="Top" part-id="R0603-" place="true">
+         <location units="Millimeters" x="6.35" y="11.43" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement id="R43" side="Top" part-id="R0603-" place="true">
+         <location units="Millimeters" x="11.43" y="6.35" z="0.0" rotation="315.0"/>
+      </placement>
+      <placement id="R44" side="Top" part-id="R0603-" place="true">
+         <location units="Millimeters" x="6.35" y="6.35" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="U$1" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" place="false">
+         <location units="Millimeters" x="2.54" y="2.54" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="U$2" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" place="false">
+         <location units="Millimeters" x="73.66" y="2.54" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="U$3" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" place="false">
+         <location units="Millimeters" x="73.66" y="73.66" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement id="U$4" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" place="false">
+         <location units="Millimeters" x="2.54" y="73.66" z="0.0" rotation="0.0"/>
+      </placement>
+   </placements>
+</openpnp-board>
