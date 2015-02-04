@@ -32,7 +32,7 @@
                   <units-per-pixel units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
                   <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
                   <head-offsets units="Millimeters" x="10" y="10" z="0.0" rotation="0.0"/>
-                  <source-uri>classpath://image-camera-demo.png</source-uri>
+                  <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
                </camera>
             </cameras>
         </head>
