@@ -30,6 +30,7 @@ import javax.swing.Action;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
@@ -138,7 +139,8 @@ public class ReferenceMachine extends AbstractMachine {
 		l.add(LtiCivilCamera.class);
 		l.add(VfwCamera.class);
 		l.add(TableScannerCamera.class);
-		l.add(OpenCvCamera.class);
+        l.add(OpenCvCamera.class);
+        l.add(ImageCamera.class);
 		return l;
 	}
 	
