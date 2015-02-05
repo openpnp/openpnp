@@ -77,6 +77,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
@@ -144,14 +145,15 @@ public class JobPanel extends JPanel {
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
 
-		JComboBox sidesComboBox = new JComboBox(Side.values());
+        JComboBox sidesComboBox = new JComboBox(Side.values());
+        JComboBox typesComboBox = new JComboBox(Type.values());
 
 		boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
 		boardLocationsTable.setAutoCreateRowSorter(true);
 		boardLocationsTable
 				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
-				sidesComboBox));
+        boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
+                sidesComboBox));
 
 		boardLocationsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -183,6 +185,8 @@ public class JobPanel extends JPanel {
 				sidesComboBox));
 		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
 				partsComboBox));
+        placementsTable.setDefaultEditor(Type.class, new DefaultCellEditor(
+                typesComboBox));
 		placementsTable.setDefaultRenderer(Part.class,
 				new IdentifiableTableCellRenderer<Part>());
 

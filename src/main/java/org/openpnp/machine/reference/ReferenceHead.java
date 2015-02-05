@@ -63,7 +63,9 @@ public class ReferenceHead extends AbstractHead {
 
 	@Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceHeadConfigurationWizard(this);
+	    // This Wizard is out of date and none of it currently works.
+//        return new ReferenceHeadConfigurationWizard(this);
+	    return null;
     }
 	
 	@Override

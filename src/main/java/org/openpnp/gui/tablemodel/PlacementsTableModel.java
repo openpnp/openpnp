@@ -33,6 +33,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 
 public class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
@@ -44,7 +45,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 		"X", 
 		"Y", 
 		"ø",
-		"Place?"
+		"Type"
 		};
 	private Class[] columnTypes = new Class[] {
 		String.class,
@@ -53,7 +54,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 		LengthCellValue.class,
 		LengthCellValue.class,
 		String.class,
-		Boolean.class
+		Type.class
 	};
 	private Board board;
 
@@ -119,7 +120,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setLocation(placement.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
             }
             else if (columnIndex == 6) {
-                placement.setPlace((Boolean) aValue);
+                placement.setType((Type) aValue);
             }
 		}
 		catch (Exception e) {
@@ -144,7 +145,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 		case 5:
 			return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation());
 		case 6:
-		    return placement.isPlace();
+		    return placement.getType();
 		default:
 			return null;
 		}

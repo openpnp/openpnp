@@ -11,6 +11,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -35,8 +36,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         Head head = Configuration.get().getMachine().getHeads().get(0);
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
-                if (!placement.isPlace()) {
-                    System.out.println("Skipping " + placement);
+                if (placement.getType() != Type.Place) {
                     continue;
                 }
 

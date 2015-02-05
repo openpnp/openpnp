@@ -35,7 +35,7 @@
             <location units="Millimeters" x="93.5" y="4.2" z="0.0" rotation="0.0"/>
             <feed-start-location units="Millimeters" x="90.03" y="6.26" z="0.0" rotation="0.0"/>
             <feed-end-location units="Millimeters" x="90.03" y="2.26" z="0.0" rotation="0.0"/>
-            <feed-speed>0.1</feed-speed>
+            <feed-speed>1.0</feed-speed>
             <vision enabled="false">
                <area-of-interest x="0" y="0" width="0" height="0"/>
                <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>

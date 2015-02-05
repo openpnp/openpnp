@@ -24,6 +24,7 @@ package org.openpnp.model;
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
@@ -34,6 +35,15 @@ import org.simpleframework.xml.core.Persist;
  * @author jason
  */
 public class Placement extends AbstractModelObject {
+    public enum Type {
+        Place,
+        Fiducial,
+        Ignore
+    }
+    
+    @Version(revision=1.1)
+    private double version;
+    
 	@Attribute
 	private String id;
 	@Element
@@ -46,7 +56,10 @@ public class Placement extends AbstractModelObject {
 	private String partId;
 	
 	@Attribute(required=false)
-	private boolean place = true;
+	private Boolean place;
+	
+	@Attribute(required=false)
+	private Type type;
 	
 	@SuppressWarnings("unused")
 	private Placement() {
@@ -55,6 +68,7 @@ public class Placement extends AbstractModelObject {
 	
 	public Placement(String id) {
 		this.id = id;
+		this.type = Type.Place;
 		setLocation(new Location(LengthUnit.Millimeters));
 	}
 	
@@ -70,6 +84,13 @@ public class Placement extends AbstractModelObject {
 		setLocation(location);
         if (getPart() == null) {
             setPart(Configuration.get().getPart(partId));
+        }
+        
+        if (version == 1.0) {
+            if (place != null && !place) {
+                type = Type.Ignore;
+            }
+            place = null;
         }
 	}
 	
@@ -97,26 +118,26 @@ public class Placement extends AbstractModelObject {
 		firePropertyChange("location", oldValue, location);
 	}
 
-	public Side getSide() {
-		return side;
-	}
-
-	public void setSide(Side side) {
-		Object oldValue = this.side;
-		this.side = side;
-		firePropertyChange("side", oldValue, side);
-	}
-	
-	public boolean isPlace() {
-        return place;
+    public Side getSide() {
+        return side;
     }
 
-    public void setPlace(boolean place) {
-        Object oldValue = this.place;
-        this.place = place;
-        firePropertyChange("place", oldValue, place);
+    public void setSide(Side side) {
+        Object oldValue = this.side;
+        this.side = side;
+        firePropertyChange("side", oldValue, side);
+    }
+    
+    public Type getType() {
+        return type;
     }
 
+    public void setType(Type type) {
+        Object oldValue = this.type;
+        this.type = type;
+        firePropertyChange("type", oldValue, type);
+    }
+    
     @Override
 	public String toString() {
 		return String.format("id %s, location %s, side %s, part %s, place %s", id, location, side, part, place);
