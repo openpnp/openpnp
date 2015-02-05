@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.025" altunitdist="inch" altunit="inch"/>
+<grid distance="1" unitdist="mm" unit="mm" style="lines" multiple="1" display="no" altdistance="0.1" altunitdist="mm" altunit="mm"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="yes"/>
@@ -14,14 +14,14 @@
 <layer number="18" name="Vias" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="19" name="Unrouted" color="6" fill="1" visible="yes" active="yes"/>
 <layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="yes"/>
-<layer number="21" name="tPlace" color="7" fill="1" visible="no" active="yes"/>
+<layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="22" name="bPlace" color="7" fill="1" visible="no" active="yes"/>
 <layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="yes"/>
 <layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="yes"/>
 <layer number="25" name="tNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="26" name="bNames" color="7" fill="1" visible="yes" active="yes"/>
-<layer number="27" name="tValues" color="7" fill="1" visible="no" active="yes"/>
-<layer number="28" name="bValues" color="7" fill="1" visible="no" active="yes"/>
+<layer number="27" name="tValues" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="28" name="bValues" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="yes"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="yes"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="yes"/>
@@ -71,6 +71,8 @@
 <layer number="110" name="fp0" color="7" fill="1" visible="no" active="yes"/>
 <layer number="111" name="LPC17xx" color="7" fill="1" visible="no" active="yes"/>
 <layer number="112" name="tSilk" color="7" fill="1" visible="no" active="yes"/>
+<layer number="113" name="OpenPnP-Tape" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="114" name="OpenPnP-Parts" color="0" fill="1" visible="yes" active="yes"/>
 <layer number="116" name="Patch_BOT" color="9" fill="4" visible="no" active="yes"/>
 <layer number="121" name="_tsilk" color="7" fill="1" visible="no" active="yes"/>
 <layer number="122" name="_bsilk" color="7" fill="1" visible="no" active="yes"/>
@@ -123,14 +125,102 @@
 </layers>
 <board>
 <plain>
-<wire x1="0" y1="0" x2="0" y2="76.2" width="0.4064" layer="20"/>
-<wire x1="0" y1="76.2" x2="76.2" y2="76.2" width="0.4064" layer="20"/>
-<wire x1="76.2" y1="76.2" x2="76.2" y2="0" width="0.4064" layer="20"/>
-<wire x1="76.2" y1="0" x2="0" y2="0" width="0.4064" layer="20"/>
-<text x="58.42" y="64.77" size="1.778" layer="25">0402</text>
-<text x="11.43" y="64.77" size="1.778" layer="25">0201</text>
-<text x="11.43" y="10.16" size="1.778" layer="25">0603</text>
-<text x="35.56" y="45.72" size="1.778" layer="25">0805</text>
+<wire x1="0" y1="0" x2="0" y2="76" width="0.4064" layer="20"/>
+<wire x1="0" y1="76" x2="76" y2="76" width="0.4064" layer="20"/>
+<wire x1="76" y1="76" x2="76" y2="0" width="0.4064" layer="20"/>
+<wire x1="76" y1="0" x2="0" y2="0" width="0.4064" layer="20"/>
+<text x="58.5" y="64.5" size="1.778" layer="25">0402</text>
+<text x="11.5" y="64.5" size="1.778" layer="25">0201</text>
+<text x="11.5" y="10" size="1.778" layer="25">0603</text>
+<text x="35.5" y="45.5" size="1.778" layer="25">0805</text>
+<text x="5.08" y="2.54" size="1.016" layer="25">FID1</text>
+<text x="68.58" y="2.54" size="1.016" layer="25">FID2</text>
+<text x="68.58" y="73.66" size="1.016" layer="25">FID3</text>
+<text x="5.08" y="73.66" size="1.016" layer="25">FID4</text>
+<rectangle x1="88" y1="0" x2="96" y2="44" layer="113"/>
+<circle x="89.75" y="2" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="6" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="10" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="14" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="18" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="22" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="26" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="30" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="34" radius="0.75" width="0" layer="114"/>
+<circle x="89.75" y="38" radius="0.75" width="0" layer="114"/>
+<rectangle x1="92.234" y1="3.365" x2="94.266" y2="4.635" layer="114"/>
+<rectangle x1="92.234" y1="7.365" x2="94.266" y2="8.635" layer="114"/>
+<rectangle x1="92.234" y1="11.365" x2="94.266" y2="12.635" layer="114"/>
+<rectangle x1="92.234" y1="15.365" x2="94.266" y2="16.635" layer="114"/>
+<rectangle x1="92.234" y1="19.365" x2="94.266" y2="20.635" layer="114"/>
+<rectangle x1="92.234" y1="23.365" x2="94.266" y2="24.635" layer="114"/>
+<rectangle x1="92.234" y1="27.365" x2="94.266" y2="28.635" layer="114"/>
+<rectangle x1="92.234" y1="31.365" x2="94.266" y2="32.635" layer="114"/>
+<rectangle x1="92.234" y1="35.365" x2="94.266" y2="36.635" layer="114"/>
+<rectangle x1="92.234" y1="39.365" x2="94.266" y2="40.635" layer="114"/>
+<rectangle x1="98" y1="0" x2="106" y2="44" layer="113"/>
+<circle x="99.75" y="2" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="6" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="10" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="14" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="18" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="22" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="26" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="30" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="34" radius="0.75" width="0" layer="114"/>
+<circle x="99.75" y="38" radius="0.75" width="0" layer="114"/>
+<rectangle x1="102.488" y1="3.619" x2="104.012" y2="4.381" layer="114"/>
+<rectangle x1="102.488" y1="7.619" x2="104.012" y2="8.381" layer="114"/>
+<rectangle x1="102.488" y1="11.619" x2="104.012" y2="12.381" layer="114"/>
+<rectangle x1="102.488" y1="15.619" x2="104.012" y2="16.381" layer="114"/>
+<rectangle x1="102.488" y1="19.619" x2="104.012" y2="20.381" layer="114"/>
+<rectangle x1="102.488" y1="23.619" x2="104.012" y2="24.381" layer="114"/>
+<rectangle x1="102.488" y1="27.619" x2="104.012" y2="28.381" layer="114"/>
+<rectangle x1="102.488" y1="31.619" x2="104.012" y2="32.381" layer="114"/>
+<rectangle x1="102.488" y1="35.619" x2="104.012" y2="36.381" layer="114"/>
+<rectangle x1="102.488" y1="39.619" x2="104.012" y2="40.381" layer="114"/>
+<rectangle x1="108" y1="0" x2="116" y2="44" layer="113"/>
+<circle x="109.75" y="2" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="6" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="10" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="14" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="18" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="22" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="26" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="30" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="34" radius="0.75" width="0" layer="114"/>
+<circle x="109.75" y="38" radius="0.75" width="0" layer="114"/>
+<rectangle x1="112.742" y1="3.746" x2="113.758" y2="4.254" layer="114"/>
+<rectangle x1="112.742" y1="7.746" x2="113.758" y2="8.254" layer="114"/>
+<rectangle x1="112.742" y1="11.746" x2="113.758" y2="12.254" layer="114"/>
+<rectangle x1="112.742" y1="15.746" x2="113.758" y2="16.254" layer="114"/>
+<rectangle x1="112.742" y1="19.746" x2="113.758" y2="20.254" layer="114"/>
+<rectangle x1="112.742" y1="23.746" x2="113.758" y2="24.254" layer="114"/>
+<rectangle x1="112.742" y1="27.746" x2="113.758" y2="28.254" layer="114"/>
+<rectangle x1="112.742" y1="31.746" x2="113.758" y2="32.254" layer="114"/>
+<rectangle x1="112.742" y1="35.746" x2="113.758" y2="36.254" layer="114"/>
+<rectangle x1="112.742" y1="39.746" x2="113.758" y2="40.254" layer="114"/>
+<rectangle x1="118" y1="0" x2="126" y2="44" layer="113"/>
+<circle x="119.75" y="2" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="6" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="10" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="14" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="18" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="22" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="26" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="30" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="34" radius="0.75" width="0" layer="114"/>
+<circle x="119.75" y="38" radius="0.75" width="0" layer="114"/>
+<rectangle x1="122.996" y1="3.873" x2="123.504" y2="4.127" layer="114"/>
+<rectangle x1="122.996" y1="7.873" x2="123.504" y2="8.127" layer="114"/>
+<rectangle x1="122.996" y1="11.873" x2="123.504" y2="12.127" layer="114"/>
+<rectangle x1="122.996" y1="15.873" x2="123.504" y2="16.127" layer="114"/>
+<rectangle x1="122.996" y1="19.873" x2="123.504" y2="20.127" layer="114"/>
+<rectangle x1="122.996" y1="23.873" x2="123.504" y2="24.127" layer="114"/>
+<rectangle x1="122.996" y1="27.873" x2="123.504" y2="28.127" layer="114"/>
+<rectangle x1="122.996" y1="31.873" x2="123.504" y2="32.127" layer="114"/>
+<rectangle x1="122.996" y1="35.873" x2="123.504" y2="36.127" layer="114"/>
+<rectangle x1="122.996" y1="39.873" x2="123.504" y2="40.127" layer="114"/>
 </plain>
 <libraries>
 <library name="rcl">
@@ -1440,44 +1530,44 @@ design rules under a new name.</description>
 </pass>
 </autorouter>
 <elements>
-<element name="R1" library="rcl" package="R0805" value="" x="38.1" y="38.1"/>
-<element name="R2" library="rcl" package="R0805" value="" x="57.15" y="38.1"/>
-<element name="R3" library="rcl" package="R0805" value="" x="56.5008875" y="43.030503125" rot="R15"/>
-<element name="R4" library="rcl" package="R0805" value="" x="54.597784375" y="47.625" rot="R30"/>
-<element name="R5" library="rcl" package="R0805" value="" x="51.570384375" y="51.570384375" rot="R45"/>
-<element name="R6" library="rcl" package="R0805" value="" x="47.625" y="54.597784375" rot="R60"/>
-<element name="R7" library="rcl" package="R0805" value="" x="43.030503125" y="56.5008875" rot="R75"/>
-<element name="R8" library="rcl" package="R0805" value="" x="38.1" y="57.15" rot="R90"/>
-<element name="R9" library="rcl" package="R0805" value="" x="33.169496875" y="56.5008875" rot="R105"/>
-<element name="R10" library="rcl" package="R0805" value="" x="28.575" y="54.597784375" rot="R120"/>
-<element name="R11" library="rcl" package="R0805" value="" x="24.629615625" y="51.570384375" rot="R135"/>
-<element name="R12" library="rcl" package="R0805" value="" x="21.602215625" y="47.625" rot="R150"/>
-<element name="R13" library="rcl" package="R0805" value="" x="19.6991125" y="43.030503125" rot="R165"/>
-<element name="R14" library="rcl" package="R0805" value="" x="19.05" y="38.1" rot="R180"/>
-<element name="R15" library="rcl" package="R0805" value="" x="19.6991125" y="33.169496875" rot="R195"/>
-<element name="R16" library="rcl" package="R0805" value="" x="21.602215625" y="28.575" rot="R210"/>
-<element name="R17" library="rcl" package="R0805" value="" x="24.629615625" y="24.629615625" rot="R225"/>
-<element name="R18" library="rcl" package="R0805" value="" x="28.575" y="21.602215625" rot="R240"/>
-<element name="R19" library="rcl" package="R0805" value="" x="33.169496875" y="19.6991125" rot="R255"/>
-<element name="R20" library="rcl" package="R0805" value="" x="38.1" y="19.05" rot="R270"/>
-<element name="R21" library="rcl" package="R0805" value="" x="43.030503125" y="19.6991125" rot="R285"/>
-<element name="R22" library="rcl" package="R0805" value="" x="47.625" y="21.602215625" rot="R300"/>
-<element name="R23" library="rcl" package="R0805" value="" x="51.570384375" y="24.629615625" rot="R315"/>
-<element name="R24" library="rcl" package="R0805" value="" x="54.597784375" y="28.575" rot="R330"/>
-<element name="R25" library="rcl" package="R0805" value="" x="56.5008875" y="33.169496875" rot="R345"/>
-<element name="R36" library="rcl" package="R0201" value="" x="6.35" y="69.85"/>
-<element name="R37" library="rcl" package="R0201" value="" x="11.43" y="69.85" rot="R315"/>
-<element name="R38" library="rcl" package="R0201" value="" x="6.35" y="64.77" rot="R270"/>
-<element name="R39" library="rcl" package="R0402" value="" x="64.77" y="69.85" rot="R45"/>
-<element name="R40" library="rcl" package="R0402" value="" x="69.85" y="69.85"/>
-<element name="R41" library="rcl" package="R0402" value="" x="69.85" y="64.77" rot="R90"/>
-<element name="R42" library="rcl" package="R0603" value="" x="6.35" y="11.43" rot="R270"/>
-<element name="R43" library="rcl" package="R0603" value="" x="11.43" y="6.35" rot="R315"/>
-<element name="R44" library="rcl" package="R0603" value="" x="6.35" y="6.35"/>
-<element name="U$1" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="2.54" y="2.54"/>
-<element name="U$2" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="73.66" y="2.54"/>
-<element name="U$3" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="73.66" y="73.66"/>
-<element name="U$4" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="2.54" y="73.66"/>
+<element name="R1" library="rcl" package="R0805" value="1K" x="38" y="38"/>
+<element name="R2" library="rcl" package="R0805" value="1K" x="62" y="38"/>
+<element name="R3" library="rcl" package="R0805" value="1K" x="61.18221875" y="44.21165625" rot="R15"/>
+<element name="R4" library="rcl" package="R0805" value="1K" x="58.784609375" y="50" rot="R30"/>
+<element name="R5" library="rcl" package="R0805" value="1K" x="54.9705625" y="54.9705625" rot="R45"/>
+<element name="R6" library="rcl" package="R0805" value="1K" x="50" y="58.784609375" rot="R60"/>
+<element name="R7" library="rcl" package="R0805" value="1K" x="44.21165625" y="61.18221875" rot="R75"/>
+<element name="R8" library="rcl" package="R0805" value="1K" x="38" y="62" rot="R90"/>
+<element name="R9" library="rcl" package="R0805" value="1K" x="31.78834375" y="61.18221875" rot="R105"/>
+<element name="R10" library="rcl" package="R0805" value="1K" x="26" y="58.784609375" rot="R120"/>
+<element name="R11" library="rcl" package="R0805" value="1K" x="21.0294375" y="54.9705625" rot="R135"/>
+<element name="R12" library="rcl" package="R0805" value="1K" x="17.215390625" y="50" rot="R150"/>
+<element name="R13" library="rcl" package="R0805" value="1K" x="14.81778125" y="44.21165625" rot="R165"/>
+<element name="R14" library="rcl" package="R0805" value="1K" x="14" y="38" rot="R180"/>
+<element name="R15" library="rcl" package="R0805" value="1K" x="14.81778125" y="31.78834375" rot="R195"/>
+<element name="R16" library="rcl" package="R0805" value="1K" x="17.215390625" y="26" rot="R210"/>
+<element name="R17" library="rcl" package="R0805" value="1K" x="21.0294375" y="21.0294375" rot="R225"/>
+<element name="R18" library="rcl" package="R0805" value="1K" x="26" y="17.215390625" rot="R240"/>
+<element name="R19" library="rcl" package="R0805" value="1K" x="31.78834375" y="14.81778125" rot="R255"/>
+<element name="R20" library="rcl" package="R0805" value="1K" x="38" y="14" rot="R270"/>
+<element name="R21" library="rcl" package="R0805" value="1K" x="44.21165625" y="14.81778125" rot="R285"/>
+<element name="R22" library="rcl" package="R0805" value="1K" x="50" y="17.215390625" rot="R300"/>
+<element name="R23" library="rcl" package="R0805" value="1K" x="54.9705625" y="21.0294375" rot="R315"/>
+<element name="R24" library="rcl" package="R0805" value="1K" x="58.784609375" y="26" rot="R330"/>
+<element name="R25" library="rcl" package="R0805" value="1K" x="61.18221875" y="31.78834375" rot="R345"/>
+<element name="R36" library="rcl" package="R0201" value="1K" x="6" y="70"/>
+<element name="R37" library="rcl" package="R0201" value="1K" x="12" y="70" rot="R315"/>
+<element name="R38" library="rcl" package="R0201" value="1K" x="6" y="64" rot="R270"/>
+<element name="R39" library="rcl" package="R0402" value="1K" x="64" y="70" rot="R45"/>
+<element name="R40" library="rcl" package="R0402" value="1K" x="70" y="70"/>
+<element name="R41" library="rcl" package="R0402" value="1K" x="70" y="64" rot="R90"/>
+<element name="R42" library="rcl" package="R0603" value="1K" x="6" y="12" rot="R270"/>
+<element name="R43" library="rcl" package="R0603" value="1K" x="12" y="6" rot="R315"/>
+<element name="R44" library="rcl" package="R0603" value="1K" x="6" y="6"/>
+<element name="FID1" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="2.5" y="2.5"/>
+<element name="FID2" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="73.5" y="2.5"/>
+<element name="FID3" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="73.5" y="73.5"/>
+<element name="FID4" library="SparkFun" package="FIDUCIAL-1X2" value="FIDUCIAL1X2" x="2.5" y="73.5"/>
 </elements>
 <signals>
 </signals>

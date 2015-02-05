@@ -3530,44 +3530,44 @@ Various fiducial points for machine vision alignment.</description>
 </class>
 </classes>
 <parts>
-<part name="R1" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R2" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R3" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R4" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R5" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R6" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R7" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R8" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R9" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R10" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R11" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R12" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R13" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R14" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R15" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R16" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R17" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R18" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R19" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R20" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R21" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R22" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R23" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R24" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R25" library="rcl" deviceset="R-US_" device="R0805"/>
-<part name="R36" library="rcl" deviceset="R-US_" device="R0201"/>
-<part name="R37" library="rcl" deviceset="R-US_" device="R0201"/>
-<part name="R38" library="rcl" deviceset="R-US_" device="R0201"/>
-<part name="R39" library="rcl" deviceset="R-US_" device="R0402"/>
-<part name="R40" library="rcl" deviceset="R-US_" device="R0402"/>
-<part name="R41" library="rcl" deviceset="R-US_" device="R0402"/>
-<part name="R42" library="rcl" deviceset="R-US_" device="R0603"/>
-<part name="R43" library="rcl" deviceset="R-US_" device="R0603"/>
-<part name="R44" library="rcl" deviceset="R-US_" device="R0603"/>
-<part name="U$1" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
-<part name="U$2" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
-<part name="U$3" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
-<part name="U$4" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
+<part name="R1" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R2" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R3" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R12" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R13" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R14" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R15" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R16" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R17" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R18" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R19" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R20" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R21" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R22" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R23" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R24" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R25" library="rcl" deviceset="R-US_" device="R0805" value="1K"/>
+<part name="R36" library="rcl" deviceset="R-US_" device="R0201" value="1K"/>
+<part name="R37" library="rcl" deviceset="R-US_" device="R0201" value="1K"/>
+<part name="R38" library="rcl" deviceset="R-US_" device="R0201" value="1K"/>
+<part name="R39" library="rcl" deviceset="R-US_" device="R0402" value="1K"/>
+<part name="R40" library="rcl" deviceset="R-US_" device="R0402" value="1K"/>
+<part name="R41" library="rcl" deviceset="R-US_" device="R0402" value="1K"/>
+<part name="R42" library="rcl" deviceset="R-US_" device="R0603" value="1K"/>
+<part name="R43" library="rcl" deviceset="R-US_" device="R0603" value="1K"/>
+<part name="R44" library="rcl" deviceset="R-US_" device="R0603" value="1K"/>
+<part name="FID1" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
+<part name="FID2" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
+<part name="FID3" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
+<part name="FID4" library="SparkFun" deviceset="FIDUCIAL" device="1X2"/>
 </parts>
 <sheets>
 <sheet>
@@ -3608,10 +3608,10 @@ Various fiducial points for machine vision alignment.</description>
 <instance part="R42" gate="G$1" x="43.18" y="143.51"/>
 <instance part="R43" gate="G$1" x="43.18" y="137.16"/>
 <instance part="R44" gate="G$1" x="43.18" y="130.81"/>
-<instance part="U$1" gate="G$1" x="-2.54" y="86.36"/>
-<instance part="U$2" gate="G$1" x="5.08" y="86.36"/>
-<instance part="U$3" gate="G$1" x="5.08" y="93.98"/>
-<instance part="U$4" gate="G$1" x="-2.54" y="93.98"/>
+<instance part="FID1" gate="G$1" x="-2.54" y="86.36"/>
+<instance part="FID2" gate="G$1" x="5.08" y="86.36"/>
+<instance part="FID3" gate="G$1" x="5.08" y="93.98"/>
+<instance part="FID4" gate="G$1" x="-2.54" y="93.98"/>
 </instances>
 <busses>
 </busses>

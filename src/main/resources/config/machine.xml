@@ -1,48 +1,84 @@
-<!--
-    Legend:
-        Actuator:   .
-        Nozzle:     *
-        Camera:     o
-
-    Sample Machine Head Looks like:
-        .    o
-        
-        *    
- -->
- <openpnp-machine>
+<openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
-      <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="3500.0"/>
       <heads>
-        <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
+         <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
             <nozzles>
-                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" current-nozzle-tip-id="NT1">
-                    <head-offsets x="0" y="0" z="0" rotation="0" units="Millimeters" />
-                    <nozzle-tips>
-                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true" />
-                    </nozzle-tips>
-                </nozzle>
+               <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" pick-dwell-milliseconds="0" place-dwell-milliseconds="0" current-nozzle-tip-id="NT1" changer-enabled="false">
+                  <nozzle-tips>
+                     <nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="true">
+                        <compatible-package-ids class="java.util.HashSet"/>
+                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                     </nozzle-tip>
+                  </nozzle-tips>
+                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               </nozzle>
             </nozzles>
             <actuators>
-                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" index="0">
-                    <head-offsets x="0" y="10" z="0" rotation="0" units="Millimeters" />
-                </actuator>
+               <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" index="0">
+                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               </actuator>
             </actuators>
             <cameras>
-               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="C1" looking="Down" fps="24">
+               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="C1" looking="Down" rotation="0.0" fps="24" width="640" height="480">
                   <units-per-pixel units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
                   <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
-                  <head-offsets units="Millimeters" x="10" y="10" z="0.0" rotation="0.0"/>
+                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
                   <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
                </camera>
             </cameras>
-        </head>
+         </head>
       </heads>
       <feeders>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTubeFeeder" id="F1" enabled="true" part-id="R-0805-10K">
-            <location units="Millimeters" x="30.0" y="10.0" z="0.0" rotation="0.0"/>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="F1" enabled="true" part-id="R0805-1K" actuator-id="A1">
+            <location units="Millimeters" x="93.5" y="4.2" z="0.0" rotation="0.0"/>
+            <feed-start-location units="Millimeters" x="90.03" y="6.26" z="0.0" rotation="0.0"/>
+            <feed-end-location units="Millimeters" x="90.03" y="2.26" z="0.0" rotation="0.0"/>
+            <feed-speed>0.1</feed-speed>
+            <vision enabled="false">
+               <area-of-interest x="0" y="0" width="0" height="0"/>
+               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            </vision>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="F2" enabled="true" part-id="R0603-1K" actuator-id="A1">
+            <location units="Millimeters" x="103.5" y="4.2" z="0.0" rotation="0.0"/>
+            <feed-start-location units="Millimeters" x="100.03" y="6.26" z="0.0" rotation="0.0"/>
+            <feed-end-location units="Millimeters" x="100.03" y="2.26" z="0.0" rotation="0.0"/>
+            <feed-speed>1.0</feed-speed>
+            <vision enabled="false">
+               <area-of-interest x="0" y="0" width="0" height="0"/>
+               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            </vision>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="F3" enabled="true" part-id="R0402-1K" actuator-id="A1">
+            <location units="Millimeters" x="113.5" y="4.2" z="0.0" rotation="0.0"/>
+            <feed-start-location units="Millimeters" x="110.03" y="6.26" z="0.0" rotation="0.0"/>
+            <feed-end-location units="Millimeters" x="110.03" y="2.26" z="0.0" rotation="0.0"/>
+            <feed-speed>1.0</feed-speed>
+            <vision enabled="false">
+               <area-of-interest x="0" y="0" width="0" height="0"/>
+               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            </vision>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="F4" enabled="true" part-id="R0201-1K" actuator-id="A1">
+            <location units="Millimeters" x="123.5" y="4.2" z="0.0" rotation="0.0"/>
+            <feed-start-location units="Millimeters" x="120.03" y="6.26" z="0.0" rotation="0.0"/>
+            <feed-end-location units="Millimeters" x="120.03" y="2.26" z="0.0" rotation="0.0"/>
+            <feed-speed>1.0</feed-speed>
+            <vision enabled="false">
+               <area-of-interest x="0" y="0" width="0" height="0"/>
+               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            </vision>
          </feeder>
       </feeders>
-      <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
-      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" />
+      <cameras/>
+      <job-planner class="org.openpnp.planner.SimpleJobPlanner"/>
+      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor"/>
+      <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="5000.0"/>
    </machine>
 </openpnp-machine>
