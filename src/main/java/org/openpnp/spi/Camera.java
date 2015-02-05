@@ -67,7 +67,23 @@ public interface Camera extends Identifiable, HeadMountable, WizardConfigurable,
 	 * Immediately captures an image from the camera and returns it in it's native format.
 	 * @return
 	 */
-	public BufferedImage capture();
+ 	public BufferedImage capture();	// raw
+	/**
+	 * Immediately view an image from the camera and returns it in it's native format.
+	 * @return
+	 */
+ 	public BufferedImage view();	// return current image
+	/**
+	 * Immediately get processed image from the camera and returns it in it's native format.
+	 * @return
+	 */
+ 	public BufferedImage image();	// return current image
+	/**
+	 * Immediately take picture from the camera and returns it in it's native format.
+	 * @return
+	 */
+ 	public BufferedImage picture(); // take snapshoot and return picture
+
 	
 	/**
 	 * Registers a listener to receive continuous images from the camera at a rate less than
