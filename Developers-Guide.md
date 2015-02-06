@@ -4,15 +4,15 @@ Important information for anyone interested in hacking on or contributing to any
 
 Before starting to develop for OpenPnP you should review the [User Manual](User Manual) to become familiar with the interface and major components of the system.
 
-# Licensing and Copyright
+# Contributing
+
+OpenPnP uses a Fork and Pull style of development. If you would like to submit changes you should fork the project, make your changes and submit a Pull Request. More information about that process is available at https://help.github.com/articles/using-pull-requests.
+
+## Licensing and Copyright
 
 OpenPnP uses different licenses for different components. Before submitting changes, please review the license for that module by looking at the LICENSE file in the root directory of the module and decide if it is acceptable to you. Changes under a different license will not be accepted for merge into the repository.
 
 Contributors submitting large pieces of functionality, i.e. whole source files, whole part designs, major rewrites, etc. may assign their own copyright to the submission as long as you are willing to license it under the existing license for that module.
-
-# Committing
-
-Aside from the project maintainers, OpenPnP uses a Fork and Pull style of development. If you would like to submit changes you should fork the project, make your changes and submit a Pull Request. More information about that process is available at https://help.github.com/articles/using-pull-requests.
 
 ## Reviews
 
@@ -20,11 +20,11 @@ All requests will be reviewed by the maintainers and will either be merged or co
 
 ## Granularity
 
-Try to commit as little as possible in a given commit. A single small feature, a single bug fix, etc. The smaller a commit is the easier it is to integrate into the project and the less likely it is to contain a looked over problem.
+Try to commit as little as possible in a given commit. A single small feature, a single bug fix, etc. The smaller a commit is the easier it is to integrate into the project and the less likely it is to contain a looked over problem. If you are changing base classes except significant discussion as to why the change is needed.
 
 ## General Usefulness
 
-Your commits should be generally useful, not specifically useful to just your machine or your setup. If the code cannot be shown to be useful to other people, it probably doesn't belong in the main OpenPnP codebase. That's what's private forks are for. In addition, take consideration of the fact that the code will be used in many different configurations. Avoid hacks.
+Your commits should be generally useful, not specifically useful to just your machine or your setup. If the code cannot be shown to be useful to other people, it probably doesn't belong in the main OpenPnP codebase. That's what's private forks are for. In addition, take consideration of the fact that the code will be used in many different configurations. Avoid quick hacks.
 
 # Code Style
 
