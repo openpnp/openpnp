@@ -14,10 +14,6 @@ OpenPnP uses different licenses for different components. Before submitting chan
 
 Contributors submitting large pieces of functionality, i.e. whole source files, whole part designs, major rewrites, etc. may assign their own copyright to the submission as long as you are willing to license it under the existing license for that module.
 
-## Describe Your Work
-
-In the pull request comments, explain what the change does. If it is new functionality, explain why it's useful and how it is to be used. If you are fixing an issue, reference the issue number.
-
 ## Code Reviews
 
 All pull requests will be reviewed by the maintainers and will either be merged or comments will be provided as to why it's not being merged. You can submit new changes to the pull request as needed if the review uncovers issues.
@@ -33,6 +29,10 @@ Your commits should be generally useful, not specifically useful to just your ma
 ## Coding Style
 
 Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it.
+
+## Describe Your Work
+
+In the pull request comments, explain what the change does. If it is new functionality, explain why it's useful and how it is to be used. If you are fixing an issue, reference the issue number.
 
 # The GUI
 
