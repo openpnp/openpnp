@@ -30,7 +30,7 @@ Try to send as little as possible in a given pull request. A single small featur
 
 Your commits should be generally useful, not specifically useful to just your machine or your setup. If the code cannot be shown to be useful to other people, it probably doesn't belong in the main OpenPnP codebase. That's what's private forks are for. In addition, take consideration of the fact that the code will be used in many different configurations. Avoid quick hacks.
 
-# Code Style
+## Coding Style
 
 Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it.
 
