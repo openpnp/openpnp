@@ -20,18 +20,17 @@ If you would like to keep up with our progress you can
 or come chat with us on Freenode IRC at #openpnp. If you don't have an IRC client,
 you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
 
-## Branches
+## Contributing
 
-The primary branches of interest in this project are master and develop. master is considered stable
-and develop is the current development branch. Regular updates are made to develop and may cause
-breaking changes. When it's considered stable it's merged to master. If you are planning to do any
-development or integration you should probably use the develop branch.
+Before starting work on a pull request, please read: https://github.com/openpnp/openpnp/wiki/Developers-Guide#contributing
 
-## Developers
+Summary of guidelines:
 
-If you'd like to be involved in the development of OpenPnP, please
-[join the discussion group](http://groups.google.com/group/openpnp), introduce yourself
-and let us know how you can help.
+* One pull request per issue.
+* Describe the change.
+* Follow the coding style.
+* Include tests and documentation.
+* Think of the big picture.
 
 ## Thanks
 
