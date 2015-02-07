@@ -4,9 +4,14 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import javax.imageio.ImageIO;
 
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
@@ -18,6 +23,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+
 
 public abstract class AbstractCamera implements Camera {
     @Attribute
@@ -50,7 +56,7 @@ public abstract class AbstractCamera implements Camera {
             }
         });
     }
-    
+
     @Override
     public void setId(String id) {
         if (this.id != null) {
@@ -67,6 +73,44 @@ public abstract class AbstractCamera implements Camera {
     @Override
     public Head getHead() {
         return head;
+    }
+
+
+    private String getChecksum(BufferedImage fileImg) {
+	byte[] inBytes = ((DataBufferByte)fileImg.getData()
+				.getDataBuffer()).getData();
+	try {
+	  MessageDigest complete = MessageDigest.getInstance("MD5");
+	  complete.update(inBytes, 0, inBytes.length);
+	  return new BigInteger(1, complete.digest()).toString(16);
+	} catch(Exception e) { int val=0xdeada1; int vals=-1;
+	  for(int i=inBytes.length;i--!=0;vals+=val+=inBytes[i]) val*=9;
+	  return new String("0-" + val+"-"+vals);
+    	}
+    }
+
+    @Override
+    public BufferedImage image() {
+	return capture();
+    }
+
+    @Override
+    public BufferedImage view() {
+	return capture();
+    }
+
+    public final BufferedImage snapshoot() {
+	BufferedImage img=image();
+    	long time= System.currentTimeMillis()+800;
+	String id;
+	for(id=getChecksum(img);id.equals(getChecksum(img=image()));)
+		if(System.currentTimeMillis()> time) break;
+	return img;
+    }
+
+    @Override
+    public BufferedImage picture() {
+	return snapshoot();
     }
 
     @Override
