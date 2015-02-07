@@ -47,6 +47,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -127,7 +128,7 @@ public class JobPanel extends JPanel {
 		this.frame = frame;
 		this.machineControlsPanel = machineControlsPanel;
 		
-		jobSaveActionGroup = new ActionGroup(saveJobAction, saveJobAsAction);
+		jobSaveActionGroup = new ActionGroup(saveJobAction);
 		jobSaveActionGroup.setEnabled(false);
 
 		boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction,
@@ -500,6 +501,17 @@ public class JobPanel extends JPanel {
 				filename = filename + ".job.xml";
 			}
 			File file = new File(new File(fileDialog.getDirectory()), filename);
+			if (file.exists()) {
+			    int ret = JOptionPane.showConfirmDialog(
+			            getTopLevelAncestor(), 
+			            file.getName() + " already exists. Do you want to replace it?", 
+			            "Replace file?", 
+			            JOptionPane.YES_NO_OPTION, 
+			            JOptionPane.WARNING_MESSAGE);
+			    if (ret != JOptionPane.YES_OPTION) {
+			        return false;
+			    }
+			}
 			configuration.saveJob(jobProcessor.getJob(), file);
 			return true;
 		}
