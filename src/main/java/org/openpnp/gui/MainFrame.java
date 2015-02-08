@@ -427,7 +427,6 @@ public class MainFrame extends JFrame {
 				});
 
 		panelBottom.addTab("Job", null, jobPanel, null);
-//		panelBottom.addTab("Boards", null, boardsPanel, null);
 		panelBottom.addTab("Parts", null, partsPanel, null);
 		panelBottom.addTab("Packages", null, packagesPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);

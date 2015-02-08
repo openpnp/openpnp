@@ -33,7 +33,7 @@ import org.openpnp.spi.Feeder;
 public class FeedersTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Type", "Enabled" };
+	private String[] columnNames = new String[] { "Name", "Type", "Enabled" };
 	private List<Feeder> feeders;
 
 	public FeedersTableModel(Configuration configuration) {
@@ -69,14 +69,17 @@ public class FeedersTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex == 2;
+		return columnIndex == 0 || columnIndex == 2;
 	}
 	
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
 			Feeder feeder = feeders.get(rowIndex);
-			if (columnIndex == 2) {
+			if (columnIndex == 0) {
+			    feeder.setName((String) aValue);
+			}
+			else if (columnIndex == 2) {
 				feeder.setEnabled((Boolean) aValue);
 			}
 			configuration.setDirty(true);
@@ -97,7 +100,7 @@ public class FeedersTableModel extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
 		switch (col) {
 		case 0:
-			return feeders.get(row).getId();
+			return feeders.get(row).getName();
 		case 1:
 			return feeders.get(row).getClass().getSimpleName();
 		case 2:

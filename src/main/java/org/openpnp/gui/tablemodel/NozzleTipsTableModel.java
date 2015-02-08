@@ -36,7 +36,7 @@ import org.openpnp.spi.NozzleTip;
 public class NozzleTipsTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Nozzle", "Head" };
+	private String[] columnNames = new String[] { "Name", "Nozzle", "Head" };
 	private List<NozzleTipWrapper> nozzleTips;
 
 	public NozzleTipsTableModel(Configuration configuration) {
@@ -102,9 +102,9 @@ public class NozzleTipsTableModel extends AbstractTableModel {
 	    NozzleTipWrapper nozzleTipWrapper = nozzleTips.get(row);
 		switch (col) {
 		case 0:
-			return nozzleTipWrapper.nozzleTip.getId();
+			return nozzleTipWrapper.nozzleTip.getName();
 		case 1:
-		    return nozzleTipWrapper.nozzle.getId();
+		    return nozzleTipWrapper.nozzle.getName();
         case 2:
             return new HeadCellValue(nozzleTipWrapper.nozzle.getHead());
 			

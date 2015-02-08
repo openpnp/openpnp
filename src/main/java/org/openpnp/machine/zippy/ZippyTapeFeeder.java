@@ -38,7 +38,7 @@ public class ZippyTapeFeeder extends ReferenceTapeFeeder {
 			throws Exception {
 		logger.debug("feed({})", nozzle);
 		
-		if (actuatorId == null) {
+		if (actuatorName == null) {
 			throw new Exception("No actuator ID set.");
 		}
 		
@@ -53,10 +53,10 @@ public class ZippyTapeFeeder extends ReferenceTapeFeeder {
 		 * pin since if the tool was going to hit it would have already hit.
 		 */
 
-		Actuator actuator = head.getActuator(actuatorId);
+		Actuator actuator = head.getActuatorByName(actuatorName);
 		
 		if (actuator == null) {
-			throw new Exception(String.format("No Actuator found with ID %s on feed Head %s", actuatorId, head.getId()));
+			throw new Exception(String.format("No Actuator found with ID %s on feed Head %s", actuatorName, head.getId()));
 		}
 		
 		nozzle.moveToSafeZ(1.0);

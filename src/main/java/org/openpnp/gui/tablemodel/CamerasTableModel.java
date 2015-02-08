@@ -37,7 +37,7 @@ import org.openpnp.spi.Head;
 public class CamerasTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Looking", "Head" };
+	private String[] columnNames = new String[] { "Name", "Type", "Looking", "Head" };
 	private List<Camera> cameras;
 
 	public CamerasTableModel(Configuration configuration) {
@@ -76,12 +76,12 @@ public class CamerasTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex == 1 || columnIndex == 2;
+		return columnIndex == 0 || columnIndex == 2 || columnIndex == 3;
 	}
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 2) {
+		if (columnIndex == 3) {
 			return HeadCellValue.class;
 		}
 		return super.getColumnClass(columnIndex);
@@ -91,10 +91,13 @@ public class CamerasTableModel extends AbstractTableModel {
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
 			Camera camera = cameras.get(rowIndex);
-			if (columnIndex == 1) {
-				camera.setLooking((Looking) aValue);
+			if (columnIndex == 0) {
+			    camera.setName((String) aValue);
 			}
 			else if (columnIndex == 2) {
+				camera.setLooking((Looking) aValue);
+			}
+			else if (columnIndex == 3) {
 			    HeadCellValue value = (HeadCellValue) aValue;
 			    if (camera.getHead() == null) {
 			        Configuration.get().getMachine().removeCamera(camera);
@@ -123,10 +126,12 @@ public class CamerasTableModel extends AbstractTableModel {
 		Location loc = camera.getLocation();
 		switch (col) {
 		case 0:
-			return camera.getId();
-		case 1:
-			return camera.getLooking();
-		case 2:
+			return camera.getName();
+        case 1:
+            return camera.getClass().getSimpleName();
+        case 2:
+            return camera.getLooking();
+		case 3:
 			return new HeadCellValue(camera.getHead());
 			
 		default:

@@ -58,7 +58,7 @@ public class Placement extends AbstractModelObject {
 	@Attribute(required=false)
 	private Boolean place;
 	
-	@Attribute(required=false)
+	@Attribute
 	private Type type;
 	
 	@SuppressWarnings("unused")

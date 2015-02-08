@@ -17,25 +17,11 @@
     along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
  	
  	For more information about OpenPnP visit http://openpnp.org
- */
+*/
 
-package org.openpnp.gui.support;
+package org.openpnp.model;
 
-import org.openpnp.spi.Actuator;
-
-public class ActuatorItem {
-	private Actuator actuator;
-	
-	public ActuatorItem(Actuator actuator) {
-		this.actuator = actuator;
-	}
-	
-	public Actuator getActuator() {
-		return actuator;
-	}
-	
-	@Override
-	public String toString() {
-		return "Actuator: " + actuator.getName();
-	}
+public interface Named {
+	public String getName();
+	public void setName(String name);
 }

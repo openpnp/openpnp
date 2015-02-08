@@ -222,9 +222,6 @@ public class ZippyNozzleTip extends ReferenceNozzleTip {
 	public String getId() {
 		return id;
 	}
-    public void setId(String id) {
-        this.id = id;
-    }
 
 /*    public void moveTo(Location location, double speed) throws Exception {
 		logger.debug("{}.moveTo({}, {})", new Object[] { getId(), location, speed } );

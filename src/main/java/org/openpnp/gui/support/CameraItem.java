@@ -36,6 +36,6 @@ public class CameraItem {
 	
 	@Override
 	public String toString() {
-	    return String.format("Camera: %s %s", camera.getId(), camera.getHead() != null ? String.format("(Head: %s)", camera.getHead().getId()) : "");
+	    return String.format("Camera: %s %s", camera.getName(), camera.getHead() != null ? String.format("(Head: %s)", camera.getHead().getName()) : "");
 	}
 }

@@ -33,7 +33,7 @@ import org.openpnp.spi.Head;
 public class HeadsTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Class" };
+	private String[] columnNames = new String[] { "Name", "Type" };
 	private List<Head> heads;
 
 	public HeadsTableModel(Configuration configuration) {
@@ -72,7 +72,7 @@ public class HeadsTableModel extends AbstractTableModel {
 		Head head = heads.get(row);
 		switch (col) {
 		case 0:
-			return head.getId();
+			return head.getName();
 		case 1:
 			return head.getClass().getSimpleName();
 		default:
