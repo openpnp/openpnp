@@ -22,6 +22,8 @@ you can [use this web based one](http://webchat.freenode.net/?channels=openpnp)
 
 ## Contributing
 
+[![Build Status](https://travis-ci.org/openpnp/openpnp.svg?branch=develop)](https://travis-ci.org/openpnp/openpnp)
+
 Before starting work on a pull request, please read: https://github.com/openpnp/openpnp/wiki/Developers-Guide#contributing
 
 Summary of guidelines:
