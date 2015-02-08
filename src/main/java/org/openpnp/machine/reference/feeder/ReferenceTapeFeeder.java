@@ -199,7 +199,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	
 	// TODO: Throw an Exception if vision fails.
 	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-	    logger.debug("getVisionOffsets({}, {})", head.getId(), pickLocation);
+	    logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
 		// Find the Camera to be used for vision
 		// TODO: Consider caching this
 		Camera camera = null;
@@ -361,7 +361,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
     
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override

@@ -91,13 +91,13 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
         boolean result = true;
-		logger.debug("{}.canPickAndPlace({},{}) => {}", new Object[]{getId(), feeder, placeLocation, result});
+		logger.debug("{}.canPickAndPlace({},{}) => {}", new Object[]{getName(), feeder, placeLocation, result});
     	return result;
 	}
 
     @Override
     public void pick() throws Exception {
-		logger.debug("{}.pick()", getId());
+		logger.debug("{}.pick()", getName());
 		if (nozzleTip == null) {
 		    throw new Exception("Can't pick, no nozzle tip loaded");
 		}
@@ -108,7 +108,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public void place() throws Exception {
-		logger.debug("{}.place()", getId());
+		logger.debug("{}.place()", getName());
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
@@ -126,7 +126,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-		logger.debug("{}.moveToSafeZ({})", new Object[]{getId(), speed});
+		logger.debug("{}.moveToSafeZ({})", new Object[]{getName(), speed});
         Location l = new Location(getLocation().getUnits(), Double.NaN,
                 Double.NaN, 0, Double.NaN);
         driver.moveTo(this, l, speed);
@@ -142,18 +142,18 @@ public class ReferenceNozzle extends AbstractNozzle implements
             throw new Exception("Can't load nozzle tip, nozzle tip changer is not enabled.");
         }
         unloadNozzleTip();
-        logger.debug("{}.loadNozzleTip({}): Start", new Object[]{getId(), nozzleTip.getId()});
+        logger.debug("{}.loadNozzleTip({}): Start", new Object[]{getName(), nozzleTip.getName()});
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        logger.debug("{}.loadNozzleTip({}): moveToSafeZ", new Object[]{getId(), nozzleTip.getId()});
+        logger.debug("{}.loadNozzleTip({}): moveToSafeZ", new Object[]{getName(), nozzleTip.getName()});
         moveToSafeZ(1.0);
-        logger.debug("{}.loadNozzleTip({}): moveTo Start Location", new Object[]{getId(), nozzleTip.getId()});
+        logger.debug("{}.loadNozzleTip({}): moveTo Start Location", new Object[]{getName(), nozzleTip.getName()});
         moveTo(nt.getChangerStartLocation(), 1.0);
-        logger.debug("{}.loadNozzleTip({}): moveTo Mid Location", new Object[]{getId(), nozzleTip.getId()});
+        logger.debug("{}.loadNozzleTip({}): moveTo Mid Location", new Object[]{getName(), nozzleTip.getName()});
         moveTo(nt.getChangerMidLocation(), 0.25);
-        logger.debug("{}.loadNozzleTip({}): moveTo End Location", new Object[]{getId(), nozzleTip.getId()});
+        logger.debug("{}.loadNozzleTip({}): moveTo End Location", new Object[]{getName(), nozzleTip.getName()});
         moveTo(nt.getChangerEndLocation(), 1.0);
         moveToSafeZ(1.0);
-        logger.debug("{}.loadNozzleTip({}): Finished", new Object[]{getId(), nozzleTip.getId()});
+        logger.debug("{}.loadNozzleTip({}): Finished", new Object[]{getName(), nozzleTip.getName()});
         this.nozzleTip = nozzleTip;
         currentNozzleTipId = nozzleTip.getId();
         Configuration.get().setDirty(true);
@@ -167,18 +167,18 @@ public class ReferenceNozzle extends AbstractNozzle implements
         if (!changerEnabled) {
             throw new Exception("Can't unload nozzle tip, nozzle tip changer is not enabled.");
         }
-        logger.debug("{}.unloadNozzleTip(): Start", new Object[]{getId()});
+        logger.debug("{}.unloadNozzleTip(): Start", new Object[]{getName()});
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        logger.debug("{}.unloadNozzleTip(): moveToSafeZ", new Object[]{getId()});
+        logger.debug("{}.unloadNozzleTip(): moveToSafeZ", new Object[]{getName()});
         moveToSafeZ(1.0);
-        logger.debug("{}.unloadNozzleTip(): moveTo End Location", new Object[]{getId()});
+        logger.debug("{}.unloadNozzleTip(): moveTo End Location", new Object[]{getName()});
         moveTo(nt.getChangerEndLocation(), 1.0);
-        logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", new Object[]{getId()});
+        logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", new Object[]{getName()});
         moveTo(nt.getChangerMidLocation(), 1.0);
-        logger.debug("{}.unloadNozzleTip(): moveTo Start Location", new Object[]{getId()});
+        logger.debug("{}.unloadNozzleTip(): moveTo Start Location", new Object[]{getName()});
         moveTo(nt.getChangerStartLocation(), 0.25);
         moveToSafeZ(1.0);
-        logger.debug("{}.unloadNozzleTip(): Finished", new Object[]{getId()});
+        logger.debug("{}.unloadNozzleTip(): Finished", new Object[]{getName()});
         nozzleTip = null;
         currentNozzleTipId = null;
         Configuration.get().setDirty(true);
@@ -204,7 +204,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
     
 	@Override
     public String getPropertySheetHolderTitle() {
-	    return getClass().getSimpleName() + " " + getId();
+	    return getClass().getSimpleName() + " " + getName();
     }
 
     @Override
@@ -229,6 +229,6 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
 	public String toString() {
-		return getId();
+		return getName();
 	}
 }

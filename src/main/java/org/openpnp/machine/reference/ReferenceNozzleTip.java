@@ -61,7 +61,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public boolean canHandle(Part part) {
         boolean result = allowIncompatiblePackages
                 || compatiblePackages.contains(part.getPackage());
-		logger.debug("{}.canHandle({}) => {}", new Object[]{getId(), part.getId(), result});
+		logger.debug("{}.canHandle({}) => {}", new Object[]{getName(), part.getId(), result});
 		return result;
 	}
     
@@ -81,7 +81,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
 	public String toString() {
-		return getId();
+		return getName();
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override
