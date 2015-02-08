@@ -16,8 +16,8 @@
 <layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="22" name="bPlace" color="7" fill="1" visible="no" active="yes"/>
-<layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="yes"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="yes"/>
+<layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="yes"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="25" name="tNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="26" name="bNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="27" name="tValues" color="7" fill="1" visible="yes" active="yes"/>
@@ -125,10 +125,10 @@
 </layers>
 <board>
 <plain>
-<wire x1="0" y1="0" x2="0" y2="76" width="0.4064" layer="20"/>
-<wire x1="0" y1="76" x2="76" y2="76" width="0.4064" layer="20"/>
-<wire x1="76" y1="76" x2="76" y2="0" width="0.4064" layer="20"/>
-<wire x1="76" y1="0" x2="0" y2="0" width="0.4064" layer="20"/>
+<wire x1="0" y1="0" x2="0" y2="76" width="0" layer="20"/>
+<wire x1="0" y1="76" x2="76" y2="76" width="0" layer="20"/>
+<wire x1="76" y1="76" x2="76" y2="0" width="0" layer="20"/>
+<wire x1="76" y1="0" x2="0" y2="0" width="0" layer="20"/>
 <text x="58.5" y="64.5" size="1.778" layer="25">0402</text>
 <text x="11.5" y="64.5" size="1.778" layer="25">0201</text>
 <text x="11.5" y="10" size="1.778" layer="25">0603</text>

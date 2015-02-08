@@ -1,7 +1,7 @@
 <openpnp-job>
    <board-locations>
       <board-location side="Top" board-file="pnp-test.board.xml">
-         <location units="Millimeters" x="0.16892939951045527" y="0.24107105193396183" z="0.0" rotation="-0.0241550489538923"/>
+         <location units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
       </board-location>
    </board-locations>
 </openpnp-job>
