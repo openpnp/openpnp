@@ -23,6 +23,7 @@ package org.openpnp.spi;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
+import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 
 
@@ -32,9 +33,7 @@ import org.openpnp.model.Part;
  * It can be a tape and reel feeder, a tray handler, a single part in a 
  * specific location or anything else that can be used as a pick source.
  */
-public interface Feeder extends Identifiable, WizardConfigurable, PropertySheetHolder {
-    public void setId(String id);
-    
+public interface Feeder extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
     /**
      * Return true is the Feeder is currently enabled and can be considered
      * in Job planning.

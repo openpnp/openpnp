@@ -90,7 +90,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends Abstrac
 		try {
 		    comboBoxPart.setModel(new PartsComboBoxModel());
 		}
-		catch (Error e) {
+		catch (Throwable t) {
 		    // Swallow this error. This happens during parsing in
 		    // in WindowBuilder but doesn't happen during normal run.
 		}

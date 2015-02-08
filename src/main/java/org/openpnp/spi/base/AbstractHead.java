@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import java.util.Collections;
 import java.util.List;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -15,14 +16,26 @@ import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractHead implements Head {
     protected Machine machine;
+
     @Attribute
     protected String id;
+    
+    @Attribute(required=false)
+    protected String name;
+    
     @ElementList(required=false)
     protected IdentifiableList<Nozzle> nozzles = new IdentifiableList<Nozzle>();
+    
     @ElementList(required=false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<Actuator>();
+    
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
+    
+    public AbstractHead() {
+        this.id = Configuration.createId();
+        this.name = getClass().getSimpleName();
+    }
     
     @SuppressWarnings("unused")
     @Commit
@@ -62,6 +75,16 @@ public abstract class AbstractHead implements Head {
     public Actuator getActuator(String id) {
         return actuators.get(id);
     }
+    
+    @Override
+    public Actuator getActuatorByName(String name) {
+        for (Actuator actuator : actuators) {
+            if (actuator.getName().equals(name)) {
+                return actuator;
+            }
+        }
+        return null;
+    }
 
     @Override
     public List<Camera> getCameras() {
@@ -95,4 +118,14 @@ public abstract class AbstractHead implements Head {
             actuator.moveToSafeZ(speed);
         }
     }
+    
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }    
 }

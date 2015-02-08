@@ -86,7 +86,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
     @Element(required = false)
     protected double feedSpeed = 1.0;
     @Attribute(required = false)
-    protected String actuatorId;
+    protected String actuatorName;
     @Element(required = false)
     protected Vision vision = new Vision();
 
@@ -119,8 +119,8 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 			throws Exception {
 		logger.debug("feed({})", nozzle);
 		
-		if (actuatorId == null) {
-			throw new Exception("No actuator ID set.");
+		if (actuatorName == null) {
+			throw new Exception("No actuator name set.");
 		}
 		
 		
@@ -134,10 +134,10 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		 * pin since if the tool was going to hit it would have already hit.
 		 */
 
-		Actuator actuator = head.getActuator(actuatorId);
+		Actuator actuator = head.getActuatorByName(actuatorName);
 		
 		if (actuator == null) {
-			throw new Exception(String.format("No Actuator found with ID %s on feed Head %s", actuatorId, head.getId()));
+			throw new Exception(String.format("No Actuator found with name %s on feed Head %s", actuatorName, head.getName()));
 		}
 		
 		head.moveToSafeZ(1.0);
@@ -199,7 +199,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	
 	// TODO: Throw an Exception if vision fails.
 	private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-	    logger.debug("getVisionOffsets({}, {})", head.getId(), pickLocation);
+	    logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
 		// Find the Camera to be used for vision
 		// TODO: Consider caching this
 		Camera camera = null;
@@ -317,14 +317,14 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 		this.feedSpeed = feedSpeed;
 	}
 	
-	public String getActuatorId() {
-		return actuatorId;
+	public String getActuatorName() {
+		return actuatorName;
 	}
 
-	public void setActuatorId(String actuatorId) {
-		String oldValue = this.actuatorId;
-		this.actuatorId = actuatorId;
-		propertyChangeSupport.firePropertyChange("actuatorId", oldValue, actuatorId);
+	public void setActuatorName(String actuatorName) {
+		String oldValue = this.actuatorName;
+		this.actuatorName = actuatorName;
+		propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
 	}
 
 	public Vision getVision() {
@@ -361,7 +361,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
     
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override

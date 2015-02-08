@@ -24,6 +24,7 @@ package org.openpnp.spi;
 import java.util.List;
 
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.Named;
 
 
 /**
@@ -34,7 +35,7 @@ import org.openpnp.model.Identifiable;
  * expected that all components attached to the Head also move in the same
  * axes.
  */
-public interface Head extends Identifiable, WizardConfigurable, PropertySheetHolder {
+public interface Head extends Identifiable, Named, WizardConfigurable, PropertySheetHolder {
     /**
      * Get a list of Nozzles that are attached to this head.
      * @return
@@ -60,6 +61,8 @@ public interface Head extends Identifiable, WizardConfigurable, PropertySheetHol
 	 * @return
 	 */
 	public Actuator getActuator(String id);
+	
+	public Actuator getActuatorByName(String name);
 	
 	/**
 	 * Get a list of Cameras that are attached to this Head.

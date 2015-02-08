@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import java.util.Collections;
 import java.util.List;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -14,16 +15,24 @@ public abstract class AbstractNozzle implements Nozzle {
     @ElementList(required=false)
     	protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<NozzleTip>();
 
+    @Attribute
+    protected String id;
+    
+    @Attribute(required=false)
+    protected String name;
+    
+    protected Head head;
+
+    public AbstractNozzle() {
+        this.id = Configuration.createId();
+        this.name = getClass().getSimpleName();
+    }
+    
     @Override
     public List<NozzleTip> getNozzleTips() {
         return Collections.unmodifiableList(nozzleTips);
     }
 	
-	@Attribute
-    protected String id;
-    
-    protected Head head;
-
     @Override
     public String getId() {
         return id;
@@ -39,4 +48,13 @@ public abstract class AbstractNozzle implements Nozzle {
         this.head = head;
     }
 
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
 }

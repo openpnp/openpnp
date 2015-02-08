@@ -379,7 +379,7 @@ public class JogControlsPanel extends JPanel {
 	            for (Actuator actuator : head.getActuators()) {
 	                final Actuator actuator_f = actuator;
 	                final JToggleButton actuatorButton = new JToggleButton(
-	                        head_f.getId() + ":" + actuator_f.getId());
+	                        head_f.getName() + ":" + actuator_f.getName());
 	                actuatorButton.setFocusable(false);
 	                actuatorButton.addActionListener(new ActionListener() {
 	                    @Override

@@ -45,7 +45,7 @@ public class OpenBuildsDriver extends MarlinDriver {
             double degrees = Math.toDegrees(Math.asin(z / zCamRadius));
             if (hm instanceof ReferenceNozzle) {
                 ReferenceNozzle nozzle = (ReferenceNozzle) hm;
-                if (nozzle.getId().equals("N2")) {
+                if (nozzle.getName().equals("N2")) {
                     degrees = -degrees;
                 }
             }

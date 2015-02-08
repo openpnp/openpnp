@@ -53,7 +53,7 @@ import org.openpnp.util.MovableUtils;
 @SuppressWarnings("serial")
 public class LocationButtonsPanel extends JPanel {
 	private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
-	private String actuatorId;
+	private String actuatorName;
 
 	private JButton buttonCenterTool;
 	private JButton buttonCaptureCamera;
@@ -85,12 +85,12 @@ public class LocationButtonsPanel extends JPanel {
 		buttonCenterTool.setHideActionText(true);
 		add(buttonCenterTool);
 
-		setActuatorId(null);
+		setActuatorName(null);
 	}
 
-	public void setActuatorId(String actuatorId) {
-		this.actuatorId = actuatorId;
-		if (actuatorId == null || actuatorId.trim().length() == 0) {
+	public void setActuatorName(String actuatorName) {
+		this.actuatorName = actuatorName;
+		if (actuatorName == null || actuatorName.trim().length() == 0) {
 			buttonCaptureTool.setAction(captureToolCoordinatesAction);
 			buttonCenterTool.setAction(positionToolAction);
 		}
@@ -100,8 +100,8 @@ public class LocationButtonsPanel extends JPanel {
 		}
 	}
 
-	public String getActuatorId() {
-		return actuatorId;
+	public String getActuatorName() {
+		return actuatorName;
 	}
 
 	private Location getParsedLocation() {
@@ -167,18 +167,18 @@ public class LocationButtonsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			
-			if (actuatorId == null) {
+			if (actuatorName == null) {
 				return;
 			}
 			
 			Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
 			Head head = nozzle.getHead();
-			Actuator actuator = head.getActuator(actuatorId);
+			Actuator actuator = head.getActuator(actuatorName);
 			if (actuator == null) {
 				MessageBoxes.errorBox(getTopLevelAncestor(),
 						"Error", String.format(
-								"No Actuator with ID %s on Head %s",
-								actuatorId, head.getId()));
+								"No Actuator with name %s on Head %s",
+								actuatorName, head.getName()));
 				return;
 			}
 			
@@ -252,18 +252,18 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if (actuatorId == null) {
+			if (actuatorName == null) {
 				return;
 			}
             Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
             Head head = nozzle.getHead();
-            final Actuator actuator = head.getActuator(actuatorId);
+            final Actuator actuator = head.getActuator(actuatorName);
             final Location location = getParsedLocation();
             if (actuator == null) {
                 MessageBoxes.errorBox(getTopLevelAncestor(),
                         "Error", String.format(
-                                "No Actuator with ID %s on Head %s",
-                                actuatorId, head.getId()));
+                                "No Actuator with name %s on Head %s",
+                                actuatorName, head.getName()));
                 return;
             }
 			

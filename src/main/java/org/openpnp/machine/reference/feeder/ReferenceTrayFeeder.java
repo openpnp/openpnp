@@ -61,7 +61,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
 		boolean result = (feedCount < (trayCountX * trayCountY));
-		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getId(), nozzle, result});
+		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getName(), nozzle, result});
 		return result;
 	}
 	
@@ -70,13 +70,13 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	    if (pickLocation == null) {
 	        pickLocation = location;
 	    }
-		logger.debug("{}.getPickLocation => {}", getId(), pickLocation);
+		logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
 		return pickLocation;
     }
 
     public void feed(Nozzle nozzle)
 			throws Exception {
-		logger.debug("{}.feed({})", getId(), nozzle);
+		logger.debug("{}.feed({})", getName(), nozzle);
 		int partX, partY;
         
         if (trayCountX >= trayCountY) {
@@ -137,7 +137,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
 	@Override
 	public String toString() {
-		return getId();
+		return getName();
 	}
 
     @Override
@@ -147,7 +147,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override

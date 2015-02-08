@@ -9,14 +9,21 @@ import org.simpleframework.xml.Attribute;
 public abstract class AbstractFeeder implements Feeder {
     @Attribute
     protected String id;
+
+    @Attribute(required=false)
+    protected String name;
+    
     @Attribute
     protected boolean enabled;
+    
     @Attribute
     protected String partId;
     
     protected Part part;
     
     public AbstractFeeder() {
+        this.id = Configuration.createId();
+        this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
@@ -24,11 +31,6 @@ public abstract class AbstractFeeder implements Feeder {
                 part = configuration.getPart(partId);
             }
         });
-    }
-    
-    @Override
-    public void setId(String id) {
-        this.id = id;
     }
     
     @Override
@@ -56,4 +58,14 @@ public abstract class AbstractFeeder implements Feeder {
     public Part getPart() {
         return part;
     }
+    
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }    
 }

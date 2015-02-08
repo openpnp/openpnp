@@ -135,7 +135,7 @@ public class ReferenceTapeFeederConfigurationWizard extends
         panelGeneral.add(textFieldFeedRate, "4, 2");
         textFieldFeedRate.setColumns(5);
 
-        lblActuatorId = new JLabel("Actuator Id");
+        lblActuatorId = new JLabel("Actuator Name");
         panelGeneral.add(lblActuatorId, "2, 4, right, default");
 
         textFieldActuatorId = new JTextField();
@@ -348,8 +348,7 @@ public class ReferenceTapeFeederConfigurationWizard extends
 
         addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text",
                 doubleConverter);
-        // TODO: change to Actuator dropdown
-        addWrappedBinding(feeder, "actuatorId", textFieldActuatorId, "text");
+        addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation",

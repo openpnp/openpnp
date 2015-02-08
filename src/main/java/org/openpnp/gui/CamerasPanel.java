@@ -145,8 +145,8 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		
 		table = new AutoSelectTextTable(tableModel);
 		tableSorter = new TableRowSorter<CamerasTableModel>(tableModel);
-		table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(lookingComboBox));
-		table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(headsComboBox));
+		table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(lookingComboBox));
+		table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(headsComboBox));
 		
 		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
@@ -284,7 +284,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 			try {
 				Camera camera = cameraClass.newInstance();
 				
-				camera.setId(Helpers.createUniqueName("C", Configuration.get().getMachine().getCameras(), "id"));
 				camera.setUnitsPerPixel(new Location(Configuration.get().getSystemUnits()));
 				try {
 					if (camera.getVisionProvider() == null) {

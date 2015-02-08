@@ -183,7 +183,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override

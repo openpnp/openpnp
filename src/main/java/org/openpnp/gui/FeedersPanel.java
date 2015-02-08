@@ -278,7 +278,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			try {
 				Feeder feeder = feederClass.newInstance();
 
-				feeder.setId(Helpers.createUniqueName("F", Configuration.get().getMachine().getFeeders(), "id"));
 				feeder.setPart(Configuration.get().getParts().get(0));
 				
 				configuration.getMachine().addFeeder(feeder);

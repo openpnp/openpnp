@@ -61,7 +61,7 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
     
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override

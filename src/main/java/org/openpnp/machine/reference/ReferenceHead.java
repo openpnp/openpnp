@@ -56,7 +56,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public void home() throws Exception {
-		logger.debug("{}.home()", getId());
+		logger.debug("{}.home()", getName());
         driver.home(this);
         machine.fireMachineHeadActivity(this);
     }
@@ -70,7 +70,7 @@ public class ReferenceHead extends AbstractHead {
 	
 	@Override
     public String getPropertySheetHolderTitle() {
-	    return getClass().getSimpleName() + " " + getId();
+	    return getClass().getSimpleName() + " " + getName();
     }
 
     @Override
@@ -97,12 +97,12 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
 	public void moveToSafeZ(double speed) throws Exception {
-		logger.debug("{}.moveToSafeZ({})", getId(), speed);
+		logger.debug("{}.moveToSafeZ({})", getName(), speed);
 		super.moveToSafeZ(speed);
 	}
 
 	@Override
 	public String toString() {
-		return getId();
+		return getName();
 	}
 }

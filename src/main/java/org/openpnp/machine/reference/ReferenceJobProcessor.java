@@ -170,7 +170,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 		preProcessJob(machine);
 		
 		for (Head head : machine.getHeads()) {
-			fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getId()));		
+			fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getName()));		
 	
 			if (!shouldJobProcessingContinue()) {
 				return;
@@ -296,7 +296,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	protected boolean changeNozzleTip(Nozzle nozzle, NozzleTip nozzleTip) {
         // NozzleTip Changer
         if (nozzle.getNozzleTip() != nozzleTip) {
-            fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getId()));        
+            fireDetailedStatusUpdated(String.format("Unload nozzle tip from nozzle %s.", nozzle.getName()));        
 
             if (!shouldJobProcessingContinue()) {
                 return false;
@@ -310,7 +310,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                 return false;
             }
             
-            fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getId(), nozzle.getId()));        
+            fireDetailedStatusUpdated(String.format("Load nozzle tip %s into nozzle %s.", nozzleTip.getName(), nozzle.getName()));        
 
             if (!shouldJobProcessingContinue()) {
                 return false;
@@ -334,7 +334,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	}
 	
 	protected boolean pick(Nozzle nozzle, Feeder feeder, BoardLocation bl, Placement placement) {
-        fireDetailedStatusUpdated(String.format("Move nozzle %s to Safe-Z at (%s).", nozzle.getId(), nozzle.getLocation()));        
+        fireDetailedStatusUpdated(String.format("Move nozzle %s to Safe-Z at (%s).", nozzle.getName(), nozzle.getLocation()));        
 
         if (!shouldJobProcessingContinue()) {
             return false;
@@ -349,7 +349,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
         }
 
         // TODO: Need to be able to see the thing that caused an error, but we also want to see what is about to happen when paused. Figure it out.
-        fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getId()));
+        fireDetailedStatusUpdated(String.format("Request part feed from feeder %s.", feeder.getName()));
         
         if (!shouldJobProcessingContinue()) {
             return false;
@@ -451,7 +451,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
         // able to (i.e. Feeder throw an error) we should offer the user the
         // chance to loop and retry at that point.
 		if (!feeder.canFeedToNozzle(nozzle)) {
-			fireJobEncounteredError(JobError.FeederError, String.format("Feeder %s is empty.", feeder.getId()));
+			fireJobEncounteredError(JobError.FeederError, String.format("Feeder %s is empty.", feeder.getName()));
 		}
 		
         if (!shouldJobProcessingContinue()) {

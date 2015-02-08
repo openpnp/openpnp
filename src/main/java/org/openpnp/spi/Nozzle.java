@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
+import org.openpnp.model.Named;
 
 /**
  * A Nozzle is a tool capable of picking up parts and releasing them. It is
@@ -12,7 +13,7 @@ import org.openpnp.model.Location;
  * of Packages it can handle and it may have the capability of changing it's
  * NozzleTip.
  */
-public interface Nozzle extends Identifiable, HeadMountable, WizardConfigurable, PropertySheetHolder {
+public interface Nozzle extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
     /**
      * Get the NozzleTip currently attached to the Nozzle.
      * 

@@ -35,7 +35,7 @@ import org.openpnp.spi.Nozzle;
 public class NozzlesTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Id", "Head" };
+	private String[] columnNames = new String[] { "Name", "Type", "Head" };
 	private List<Nozzle> nozzles;
 
 	public NozzlesTableModel(Configuration configuration) {
@@ -79,7 +79,7 @@ public class NozzlesTableModel extends AbstractTableModel {
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 1) {
+		if (columnIndex == 2) {
 			return HeadCellValue.class;
 		}
 		return super.getColumnClass(columnIndex);
@@ -92,9 +92,11 @@ public class NozzlesTableModel extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
 	    Nozzle nozzle = nozzles.get(row);
 		switch (col) {
-		case 0:
-			return nozzle.getId();
-		case 1:
+        case 0:
+            return nozzle.getName();
+        case 1:
+            return nozzle.getClass().getSimpleName();
+		case 2:
             return new HeadCellValue(nozzle.getHead());
 			
 		default:

@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
@@ -491,6 +492,10 @@ public class Configuration extends AbstractModelObject {
 		Serializer serializer = new Persister(strategy, format);
 		return serializer;
 	}
+	
+    public static String createId() {
+        return UUID.randomUUID().toString();
+    }	
 	
 	/**
 	 * Used to provide a fixed root for the Machine when serializing. 

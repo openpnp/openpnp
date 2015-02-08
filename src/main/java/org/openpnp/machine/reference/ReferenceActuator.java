@@ -76,7 +76,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
 	@Override
 	public void actuate(boolean on) throws Exception {
-		logger.debug("{}.actuate({})", new Object[] { getId(), on } );
+		logger.debug("{}.actuate({})", new Object[] { getName(), on } );
 		driver.actuate(this, on);
 		machine.fireMachineHeadActivity(head);
 	}
@@ -88,21 +88,21 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(double value) throws Exception {
-		logger.debug("{}.actuate({})", new Object[] { getId(), value } );
+		logger.debug("{}.actuate({})", new Object[] { getName(), value } );
 		driver.actuate(this, value);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-		logger.debug("{}.moveTo({}, {})", new Object[] { getId(), location, speed } );
+		logger.debug("{}.moveTo({}, {})", new Object[] { getName(), location, speed } );
 		driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", new Object[] { getId(), speed } );
+        logger.debug("{}.moveToSafeZ({})", new Object[] { getName(), speed } );
         Location l = new Location(getLocation().getUnits(), Double.NaN,
                 Double.NaN, 0, Double.NaN);
         driver.moveTo(this, l, speed);
@@ -116,7 +116,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     
 	@Override
     public String getPropertySheetHolderTitle() {
-	    return getClass().getSimpleName() + " " + getId();
+	    return getClass().getSimpleName() + " " + getName();
     }
 
     @Override
@@ -140,6 +140,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
 	public String toString() {
-		return getId();
+		return getName();
 	}
 }

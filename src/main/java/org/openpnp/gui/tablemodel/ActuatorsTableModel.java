@@ -33,7 +33,7 @@ import org.openpnp.spi.Head;
 
 public class ActuatorsTableModel extends AbstractTableModel {
 	
-	private String[] columnNames = new String[] { "Id", "Head", "Class" };
+	private String[] columnNames = new String[] { "Name", "Type", "Head" };
 	private List<HeadActuator> actuators;
 
 	public ActuatorsTableModel(Configuration configuration) { //constructor
@@ -76,11 +76,11 @@ public class ActuatorsTableModel extends AbstractTableModel {
 		HeadActuator actuator = actuators.get(row);
 		switch (col) {
 		case 0:
-			return actuator.actuator.getId();
+			return actuator.actuator.getName();
 		case 1:
-			return actuator.head != null ? actuator.head.getId() : "";
+            return actuator.actuator.getClass().getSimpleName();
 		case 2:
-			return actuator.actuator.getClass().getSimpleName();
+            return actuator.head != null ? actuator.head.getName() : "";
 		default:
 			return null;
 		}

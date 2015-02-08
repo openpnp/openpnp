@@ -54,7 +54,7 @@ public class HeadCellValue {
 
 	@Override
 	public String toString() {
-		return head == null ? "NONE" : head.getId();
+		return head == null ? "NONE" : head.getName();
 	}
 
 	@Override

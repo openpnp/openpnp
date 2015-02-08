@@ -22,6 +22,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.Named;
 
 /**
  * Defines a simple interface to some type of device that can be actuated
@@ -29,7 +30,7 @@ import org.openpnp.model.Identifiable;
  * expected that concrete implementations may have many other capabilities
  * exposed in their specific implementations. 
  */
-public interface Actuator extends Identifiable, HeadMountable, WizardConfigurable, PropertySheetHolder {
+public interface Actuator extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
 	/**
 	 * Turns the Actuator on or off.
 	 * @param on

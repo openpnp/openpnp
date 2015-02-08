@@ -26,6 +26,7 @@ import java.awt.image.BufferedImage;
 import org.openpnp.CameraListener;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
+import org.openpnp.model.Named;
 
 /**
  * Represents a Camera attached to the system and allows a caller to retrieve
@@ -33,18 +34,11 @@ import org.openpnp.model.Location;
  * and details about the returned image. The Camera is expected to return all
  * future images using the same dimensions and type. 
  */
-public interface Camera extends Identifiable, HeadMountable, WizardConfigurable, PropertySheetHolder {
+public interface Camera extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
 	public enum Looking {
 		Down,
 		Up
 	}
-	
-	/**
-	 * Supplied so that new Cameras can be created from factories and assigned
-	 * their initial ID. ID is not intended to be changed once the Camera has
-	 * been added to a Machine or Head.
-	 */
-	void setId(String id);
 	
 	/**
 	 * Get the direction the Camera is looking. 

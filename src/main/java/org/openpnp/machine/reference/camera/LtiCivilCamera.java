@@ -160,7 +160,7 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getId();
+        return getClass().getSimpleName() + " " + getName();
     }
 
     @Override

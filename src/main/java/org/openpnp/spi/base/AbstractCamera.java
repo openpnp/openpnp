@@ -23,6 +23,9 @@ public abstract class AbstractCamera implements Camera {
     @Attribute
     protected String id;
     
+    @Attribute(required=false)
+    protected String name;
+    
     @Attribute
     protected Looking looking = Looking.Down;
     
@@ -40,6 +43,8 @@ public abstract class AbstractCamera implements Camera {
     protected Head head;
     
     public AbstractCamera() {
+        this.id = Configuration.createId();
+        this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration)
@@ -52,16 +57,18 @@ public abstract class AbstractCamera implements Camera {
     }
     
     @Override
-    public void setId(String id) {
-        if (this.id != null) {
-            throw new Error("Can't set id once it has been assigned");
-        }
-        this.id = id;
+    public String getId() {
+        return id;
     }
 
     @Override
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
