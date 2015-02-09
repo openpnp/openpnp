@@ -54,6 +54,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.PackageReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
@@ -197,7 +198,7 @@ public class PackagesPanel extends JPanel {
 
 	public final Action newPackageAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Package...");
 			putValue(SHORT_DESCRIPTION, "Create a new package, specifying it's ID.");
 		}
@@ -230,7 +231,7 @@ public class PackagesPanel extends JPanel {
 	
 	public final Action deletePackageAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(SMALL_ICON, Icons.delete);
 			putValue(NAME, "Delete Package");
 			putValue(SHORT_DESCRIPTION, "Delete the currently selected package.");
 		}

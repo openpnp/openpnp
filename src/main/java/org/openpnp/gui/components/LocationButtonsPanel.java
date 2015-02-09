@@ -26,13 +26,13 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -122,9 +122,7 @@ public class LocationButtonsPanel extends JPanel {
 	}
 
 	private Action captureCameraCoordinatesAction = new AbstractAction(
-			"Get Camera Coordinates", new ImageIcon(
-					LocationButtonsPanel.class
-							.getResource("/icons/capture-camera.png"))) {
+			"Get Camera Coordinates", Icons.captureCamera) {
 		{
 			putValue(Action.SHORT_DESCRIPTION,
 					"Capture the location that the camera is centered on.");
@@ -139,9 +137,7 @@ public class LocationButtonsPanel extends JPanel {
 	};
 
 	private Action captureToolCoordinatesAction = new AbstractAction(
-			"Get Tool Coordinates", new ImageIcon(
-					LocationButtonsPanel.class
-							.getResource("/icons/capture-tool.png"))) {
+			"Get Tool Coordinates", Icons.captureTool) {
 		{
 			putValue(Action.SHORT_DESCRIPTION,
 					"Capture the location that the tool is centered on.");
@@ -156,9 +152,7 @@ public class LocationButtonsPanel extends JPanel {
 	};
 
 	private Action captureActuatorCoordinatesAction = new AbstractAction(
-			"Get Actuator Coordinates", new ImageIcon(
-					LocationButtonsPanel.class
-							.getResource("/icons/capture-pin.png"))) {
+			"Get Actuator Coordinates", Icons.capturePin) {
 		{
 			putValue(Action.SHORT_DESCRIPTION,
 					"Capture the location that the actuator is centered on.");
@@ -188,9 +182,7 @@ public class LocationButtonsPanel extends JPanel {
 	};
 
 	private Action positionCameraAction = new AbstractAction("Position Camera",
-			new ImageIcon(
-					LocationButtonsPanel.class
-							.getResource("/icons/center-camera.png"))) {
+			Icons.centerCamera) {
 		{
 			putValue(Action.SHORT_DESCRIPTION,
 					"Position the camera over the center of the location.");
@@ -215,9 +207,7 @@ public class LocationButtonsPanel extends JPanel {
 	};
 
 	private Action positionToolAction = new AbstractAction("Position Tool",
-			new ImageIcon(
-					LocationButtonsPanel.class
-							.getResource("/icons/center-tool.png"))) {
+			Icons.centerTool) {
 		{
 			putValue(Action.SHORT_DESCRIPTION,
 					"Position the tool over the center of the location.");
@@ -242,9 +232,7 @@ public class LocationButtonsPanel extends JPanel {
 	};
 
 	private Action positionActuatorAction = new AbstractAction(
-			"Position Actuator", new ImageIcon(
-					LocationButtonsPanel.class
-							.getResource("/icons/center-pin.png"))) {
+			"Position Actuator", Icons.centerPin) {
 		{
 			putValue(Action.SHORT_DESCRIPTION,
 					"Position the actuator over the center of the location.");

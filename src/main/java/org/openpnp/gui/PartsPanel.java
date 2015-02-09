@@ -31,7 +31,6 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -54,6 +53,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
@@ -197,7 +197,7 @@ public class PartsPanel extends JPanel {
 
 	public final Action newPartAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Part...");
 			putValue(SHORT_DESCRIPTION, "Create a new part, specifying it's ID.");
 		}
@@ -232,7 +232,7 @@ public class PartsPanel extends JPanel {
 	
 	public final Action deletePartAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(SMALL_ICON, Icons.delete);
 			putValue(NAME, "Delete Part");
 			putValue(SHORT_DESCRIPTION, "Delete the currently selected part.");
 		}

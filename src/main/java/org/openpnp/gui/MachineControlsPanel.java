@@ -54,6 +54,7 @@ import javax.swing.JTextField;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.model.Configuration;
@@ -473,7 +474,7 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
-	public Action targetToolAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-tool.png"))) {
+	public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			final Location location = cameraPanel.getSelectedCameraLocation();
@@ -492,7 +493,7 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
-	public Action targetCameraAction = new AbstractAction(null, new ImageIcon(MachineControlsPanel.class.getResource("/icons/center-camera.png"))) {
+	public Action targetCameraAction = new AbstractAction(null, Icons.centerCamera) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			final Camera camera = cameraPanel.getSelectedCamera();

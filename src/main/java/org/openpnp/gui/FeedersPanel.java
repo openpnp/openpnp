@@ -57,6 +57,7 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
@@ -248,8 +249,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	public Action newFeederAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Feeder...");
 			putValue(SHORT_DESCRIPTION, "Create a new feeder.");
 		}
@@ -295,8 +295,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	public Action deleteFeederAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(SMALL_ICON, Icons.delete);
 			putValue(NAME, "Delete Feeder");
 			putValue(SHORT_DESCRIPTION, "Delete the selected feeder.");
 		}
@@ -310,8 +309,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	public Action feedFeederAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/feed.png")));
+			putValue(SMALL_ICON, Icons.feed);
 			putValue(NAME, "Feed");
 			putValue(SHORT_DESCRIPTION,
 					"Command the selected feeder to perform a feed operation.");
@@ -337,9 +335,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	public Action showPartAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass()
-							.getResource("/icons/show-part.png")));
+			putValue(SMALL_ICON, Icons.showPart);
 			putValue(NAME, "Show Part");
 			putValue(SHORT_DESCRIPTION,
 					"Show an outline of the part for the selected feeder in the camera view.");

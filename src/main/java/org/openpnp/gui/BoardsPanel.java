@@ -55,6 +55,7 @@ import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
@@ -279,8 +280,7 @@ public class BoardsPanel extends JPanel {
 
 	public Action newBoardAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Board...");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new board and add it to the list.");
@@ -325,8 +325,7 @@ public class BoardsPanel extends JPanel {
 
 	public Action addBoardAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/add.png")));
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "Load Board...");
 			putValue(SHORT_DESCRIPTION, "Load an existing board.");
 		}
@@ -363,8 +362,7 @@ public class BoardsPanel extends JPanel {
 
 	public Action newPlacementAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Placement");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new placement and add it to the board.");
@@ -404,8 +402,7 @@ public class BoardsPanel extends JPanel {
 
 	public Action removePlacementAction = new AbstractAction("Remove Placement") {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(SMALL_ICON, Icons.delete);
 			putValue(NAME, "Remove Placement");
 			putValue(SHORT_DESCRIPTION,
 					"Remove the currently selected placement.");

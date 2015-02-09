@@ -32,7 +32,6 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -57,6 +56,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
@@ -262,8 +262,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	
 	public Action newCameraAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Camera...");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new camera.");
@@ -313,8 +312,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 
 	public Action deleteCameraAction = new AbstractAction("Delete Camera") {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(getClass().getResource("/icons/delete.png")));
+			putValue(SMALL_ICON, Icons.delete);
 			putValue(NAME, "Delete Camera");
 			putValue(SHORT_DESCRIPTION,
 					"Delete the currently selected camera.");
