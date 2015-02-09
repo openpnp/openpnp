@@ -47,7 +47,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -61,6 +60,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.PackageReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.processes.FiducialCheck;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -135,7 +135,8 @@ public class JobPanel extends JPanel {
 				captureCameraBoardLocationAction,
 				captureToolBoardLocationAction, newPlacementAction,
 				moveCameraToBoardLocationAction, moveToolToBoardLocationAction,
-				twoPointLocateBoardLocationAction);
+				twoPointLocateBoardLocationAction,
+				fiducialCheckAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
 		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
@@ -297,6 +298,10 @@ public class JobPanel extends JPanel {
 				twoPointLocateBoardLocationAction);
 		toolBarBoards.add(btnTwoPointBoardLocation);
 		btnTwoPointBoardLocation.setHideActionText(true);
+		
+		JButton btnFiducialCheck = new JButton(fiducialCheckAction);
+		toolBarBoards.add(btnFiducialCheck);
+		btnFiducialCheck.setHideActionText(true);
 
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
 		JPanel pnlPlacements = new JPanel();
@@ -965,6 +970,23 @@ public class JobPanel extends JPanel {
 			new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
 		}
 	};
+	
+    public final Action fiducialCheckAction = new AbstractAction() {
+        {
+            putValue(
+                    SMALL_ICON,
+                    new ImageIcon(JobPanel.class
+                            .getResource("/icons/fiducial-check.png")));
+            putValue(NAME, "Fiducial Check");
+            putValue(SHORT_DESCRIPTION,
+                    "Perform a fiducial check for the board and update it's location and rotation.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new FiducialCheck(frame, JobPanel.this);
+        }
+    };
 
 	public final Action newPlacementAction = new AbstractAction() {
 		{
