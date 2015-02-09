@@ -94,7 +94,7 @@ OpenPnP is made up of 5 core components: Configuration, Service Provider Interfa
 
 Configuration of OpenPnP is managed with the [Configuration class](http://openpnp.org/doc/javadoc/org/openpnp/model/Configuration.html). The Configuration class is used to query and store to two configuration stores.
 
-The primary one is a set of XML configuration files stored under the user's home directory in a subdirectory called `.openpnp`. These XML files are read and written using the Simple XML framework and are generally pretty transparent to developers. Reviewing the sample configuration files that come with OpenPnP is a good place to start when thinking about adding functionality.
+The primary one is a set of XML configuration files stored under the user's home directory in a subdirectory called `.openpnp`. These XML files are read and written using the [Simple XML](http://simple.sourceforge.net/) framework and are generally pretty transparent to developers. Reviewing the sample configuration files that come with OpenPnP is a good place to start when thinking about adding functionality.
 
 The second configuration store is the user specific Java preferences data store. This is used to store user preferences for the application itself such as window size, units preference, locations of split windows, etc.
 
