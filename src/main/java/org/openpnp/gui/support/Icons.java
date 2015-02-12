@@ -25,6 +25,7 @@ public class Icons {
     public static Icon unload = getIcon("/icons/material-design-icons/ic_file_download_24px.svg");
     
     public static Icon twoPointLocate = getIcon("/icons/two-point-locate.svg");
+    public static Icon fiducialCheck = getIcon("/icons/two-point-locate.svg");
 
     public static Icon feed = getIcon("/icons/material-design-icons/ic_fast_forward_24px.svg");
     public static Icon showPart = getIcon("/icons/material-design-icons/ic_search_24px.svg");

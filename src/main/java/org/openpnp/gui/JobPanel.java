@@ -955,10 +955,7 @@ public class JobPanel extends JPanel {
 	
     public final Action fiducialCheckAction = new AbstractAction() {
         {
-            putValue(
-                    SMALL_ICON,
-                    new ImageIcon(JobPanel.class
-                            .getResource("/icons/fiducial-check.png")));
+            putValue(SMALL_ICON, Icons.fiducialCheck);
             putValue(NAME, "Fiducial Check");
             putValue(SHORT_DESCRIPTION,
                     "Perform a fiducial check for the board and update it's location and rotation.");
