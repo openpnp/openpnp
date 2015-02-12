@@ -949,7 +949,7 @@ public class JobPanel extends JPanel {
 
 	public final Action newPlacementAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, Icons.neww);
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "New Placement");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new placement and add it to the board.");

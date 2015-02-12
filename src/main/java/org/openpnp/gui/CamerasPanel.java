@@ -262,7 +262,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	
 	public Action newCameraAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, Icons.neww);
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "New Camera...");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new camera.");

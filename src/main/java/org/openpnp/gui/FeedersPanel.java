@@ -249,7 +249,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	public Action newFeederAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, Icons.neww);
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "New Feeder...");
 			putValue(SHORT_DESCRIPTION, "Create a new feeder.");
 		}

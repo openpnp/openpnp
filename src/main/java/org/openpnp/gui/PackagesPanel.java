@@ -198,7 +198,7 @@ public class PackagesPanel extends JPanel {
 
 	public final Action newPackageAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, Icons.neww);
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "New Package...");
 			putValue(SHORT_DESCRIPTION, "Create a new package, specifying it's ID.");
 		}

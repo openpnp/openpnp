@@ -197,7 +197,7 @@ public class PartsPanel extends JPanel {
 
 	public final Action newPartAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON, Icons.neww);
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "New Part...");
 			putValue(SHORT_DESCRIPTION, "Create a new part, specifying it's ID.");
 		}
