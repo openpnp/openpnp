@@ -53,6 +53,7 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.HeadCellValue;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
@@ -254,8 +255,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 	
     public Action loadAction = new AbstractAction("Load") {
         {
-            putValue(SMALL_ICON,
-                    new ImageIcon(getClass().getResource("/icons/load.png")));
+            putValue(SMALL_ICON, Icons.load);
             putValue(NAME, "Load");
             putValue(SHORT_DESCRIPTION,
                     "Load the currently selected nozzle tip.");
@@ -279,8 +279,7 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
     
     public Action unloadAction = new AbstractAction("Unoad") {
         {
-            putValue(SMALL_ICON,
-                    new ImageIcon(getClass().getResource("/icons/unload.png")));
+            putValue(SMALL_ICON, Icons.unload);
             putValue(NAME, "Unload");
             putValue(SHORT_DESCRIPTION,
                     "Unoad the currently loaded nozzle tip.");

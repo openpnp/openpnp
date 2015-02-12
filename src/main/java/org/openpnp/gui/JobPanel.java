@@ -64,10 +64,12 @@ import org.openpnp.gui.processes.FiducialCheck;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.gui.support.SvgIcon;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
@@ -537,8 +539,7 @@ public class JobPanel extends JPanel {
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
 			startPauseResumeJobAction.putValue(
 					AbstractAction.SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/start.png")));
+					Icons.start);
 			startPauseResumeJobAction.putValue(
 					AbstractAction.SHORT_DESCRIPTION,
 					"Start processing the job.");
@@ -550,8 +551,7 @@ public class JobPanel extends JPanel {
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause");
 			startPauseResumeJobAction.putValue(
 					AbstractAction.SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/pause.png")));
+					Icons.pause);
 			startPauseResumeJobAction.putValue(
 					AbstractAction.SHORT_DESCRIPTION,
 					"Pause processing of the job.");
@@ -562,9 +562,7 @@ public class JobPanel extends JPanel {
 			startPauseResumeJobAction.setEnabled(true);
 			startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume");
 			startPauseResumeJobAction.putValue(
-					AbstractAction.SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/start.png")));
+					AbstractAction.SMALL_ICON, Icons.start);
 			startPauseResumeJobAction.putValue(
 					AbstractAction.SHORT_DESCRIPTION,
 					"Resume processing of the job.");
@@ -674,10 +672,7 @@ public class JobPanel extends JPanel {
 
 	public final Action startPauseResumeJobAction = new AbstractAction() {
 		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/start.png")));
+			putValue(SMALL_ICON, Icons.start);
 			putValue(NAME, "Start");
 			putValue(SHORT_DESCRIPTION, "Start processing the job.");
 		}
@@ -706,8 +701,7 @@ public class JobPanel extends JPanel {
 	public final Action stepJobAction = new AbstractAction() {
 		{
 			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class.getResource("/icons/step.png")));
+					SMALL_ICON, Icons.step);
 			putValue(NAME, "Step");
 			putValue(SHORT_DESCRIPTION,
 					"Process one step of the job and pause.");
@@ -727,8 +721,7 @@ public class JobPanel extends JPanel {
 	public final Action stopJobAction = new AbstractAction() {
 		{
 			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class.getResource("/icons/stop.png")));
+					SMALL_ICON, Icons.stop);
 			putValue(NAME, "Stop");
 			putValue(SHORT_DESCRIPTION, "Stop processing the job.");
 		}
@@ -741,8 +734,7 @@ public class JobPanel extends JPanel {
 
 	public final Action newBoardAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(JobPanel.class.getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.neww);
 			putValue(NAME, "New Board...");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new board and add it to the job.");
@@ -787,8 +779,7 @@ public class JobPanel extends JPanel {
 
 	public final Action addBoardAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(JobPanel.class.getResource("/icons/add.png")));
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "Add Board...");
 			putValue(SHORT_DESCRIPTION, "Add an existing board to the job.");
 		}
@@ -829,9 +820,7 @@ public class JobPanel extends JPanel {
 	public final Action removeBoardAction = new AbstractAction("Remove Board") {
 		{
 			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/delete.png")));
+					SMALL_ICON, Icons.delete);
 			putValue(NAME, "Remove Board");
 			putValue(SHORT_DESCRIPTION,
 					"Remove the selected board from the job.");
@@ -853,10 +842,7 @@ public class JobPanel extends JPanel {
 
 	public final Action captureCameraBoardLocationAction = new AbstractAction() {
 		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/capture-camera.png")));
+			putValue(SMALL_ICON, Icons.captureCamera);
 			putValue(NAME, "Capture Camera Location");
 			putValue(SHORT_DESCRIPTION,
 					"Set the board's location to the camera's current position.");
@@ -875,8 +861,7 @@ public class JobPanel extends JPanel {
 		{
 			putValue(
 					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/capture-tool.png")));
+					Icons.captureTool);
 			putValue(NAME, "Capture Tool Location");
 			putValue(SHORT_DESCRIPTION,
 					"Set the board's location to the tool's current position.");
@@ -896,8 +881,7 @@ public class JobPanel extends JPanel {
 		{
 			putValue(
 					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/center-camera.png")));
+					Icons.centerCamera);
 			putValue(NAME, "Move Camera To Board Location");
 			putValue(SHORT_DESCRIPTION,
 					"Position the camera at the board's location.");
@@ -929,8 +913,7 @@ public class JobPanel extends JPanel {
 		{
 			putValue(
 					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/center-tool.png")));
+					Icons.centerTool);
 			putValue(NAME, "Move Tool To Board Location");
 			putValue(SHORT_DESCRIPTION,
 					"Position the tool at the board's location.");
@@ -958,8 +941,7 @@ public class JobPanel extends JPanel {
 		{
 			putValue(
 					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/two-point-locate.png")));
+					Icons.twoPointLocate);
 			putValue(NAME, "Two Point Board Location");
 			putValue(SHORT_DESCRIPTION,
 					"Set the board's location and rotation using two placements.");
@@ -990,8 +972,7 @@ public class JobPanel extends JPanel {
 
 	public final Action newPlacementAction = new AbstractAction() {
 		{
-			putValue(SMALL_ICON,
-					new ImageIcon(JobPanel.class.getResource("/icons/new.png")));
+			putValue(SMALL_ICON, Icons.add);
 			putValue(NAME, "New Placement");
 			putValue(SHORT_DESCRIPTION,
 					"Create a new placement and add it to the board.");
@@ -1028,10 +1009,7 @@ public class JobPanel extends JPanel {
 
 	public final Action removePlacementAction = new AbstractAction() {
 		{
-			putValue(
-					SMALL_ICON,
-					new ImageIcon(JobPanel.class
-							.getResource("/icons/delete.png")));
+			putValue(SMALL_ICON, Icons.delete);
 			putValue(NAME, "Remove Placement");
 			putValue(SHORT_DESCRIPTION,
 					"Remove the currently selected placement.");
@@ -1048,10 +1026,7 @@ public class JobPanel extends JPanel {
 
     public final Action moveCameraToPlacementLocation = new AbstractAction() {
         {
-            putValue(
-                    SMALL_ICON,
-                    new ImageIcon(JobPanel.class
-                            .getResource("/icons/center-camera.png")));
+            putValue(SMALL_ICON, Icons.centerCamera);
             putValue(NAME, "Move Camera To Placement Location");
             putValue(SHORT_DESCRIPTION,
                     "Position the camera at the placement's location.");
@@ -1087,10 +1062,7 @@ public class JobPanel extends JPanel {
 
     public final Action moveToolToPlacementLocation = new AbstractAction() {
         {
-            putValue(
-                    SMALL_ICON,
-                    new ImageIcon(JobPanel.class
-                            .getResource("/icons/center-tool.png")));
+            putValue(SMALL_ICON, Icons.centerTool);
             putValue(NAME, "Move Tool To Placement Location");
             putValue(SHORT_DESCRIPTION,
                     "Position the tool at the placement's location.");
@@ -1107,10 +1079,7 @@ public class JobPanel extends JPanel {
     
     public final Action captureCameraPlacementLocation = new AbstractAction() {
         {
-            putValue(
-                    SMALL_ICON,
-                    new ImageIcon(JobPanel.class
-                            .getResource("/icons/capture-camera.png")));
+            putValue(SMALL_ICON, Icons.captureCamera);
             putValue(NAME, "Capture Camera Placement Location");
             putValue(SHORT_DESCRIPTION,
                     "Set the placement's location to the camera's current position.");
@@ -1124,10 +1093,7 @@ public class JobPanel extends JPanel {
 
     public final Action captureToolPlacementLocation = new AbstractAction() {
         {
-            putValue(
-                    SMALL_ICON,
-                    new ImageIcon(JobPanel.class
-                            .getResource("/icons/capture-tool.png")));
+            putValue(SMALL_ICON, Icons.captureTool);
             putValue(NAME, "Capture Tool Placement Location");
             putValue(SHORT_DESCRIPTION,
                     "Set the placement's location to the tool's current position.");
