@@ -3,12 +3,12 @@ package org.openpnp.util;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.File;
-
-import javax.imageio.ImageIO;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 
 public class OpenCvUtils {
     static {
@@ -36,6 +36,12 @@ public class OpenCvUtils {
         }
         else if (m.type() == CvType.CV_8UC3) {
             type = BufferedImage.TYPE_3BYTE_BGR;
+        }
+        else if (m.type() == CvType.CV_32F) {
+            type = BufferedImage.TYPE_BYTE_GRAY;
+            Mat tmp = new Mat();
+            m.convertTo(tmp, CvType.CV_8UC1, 255);
+            m = tmp;
         }
         if (type == null) {
             throw new Error(String.format("Unsupported Mat: type %d, channels %d, depth %d", m.type(), m.channels(), m.depth()));
@@ -81,15 +87,5 @@ public class OpenCvUtils {
         g2d.drawImage(src, 0, 0, null);
         g2d.dispose();
         return img;
-    }
-    
-    public static void main(String[] args) throws Exception {
-        BufferedImage image = ImageIO.read(new File("/Users/jason/Pictures/Mario_Love_5.jpg"));
-        Mat mat = toMat(image);
-        image = toBufferedImage(mat);
-        image = convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
-        mat = toMat(image);
-        image = toBufferedImage(mat);
-        ImageIO.write(image, "PNG", new File("/Users/jason/Desktop/Mario_Love_5.jpg"));
-    }
+    }    
 }

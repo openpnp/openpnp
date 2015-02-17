@@ -26,6 +26,9 @@ package org.openpnp.machine.reference.vision;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -43,9 +46,9 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -82,7 +85,60 @@ public class OpenCvVisionProvider implements VisionProvider {
         Mat image = OpenCvUtils.toMat(image_);
         return image;
     }
+    
+    public static class TemplateMatch {
+        public Location location;
+        public double score;
+        
+        @Override
+        public String toString() {
+            return location.toString() + " " + score;
+        }
+    }
+    
+    public List<TemplateMatch> matchTemplate(BufferedImage template) {
+        BufferedImage image = camera.capture();
+        
+        // Convert the camera image and template image to the same type. This
+        // is required by the cvMatchTemplate call.
+        template = OpenCvUtils.convertBufferedImage(template,BufferedImage.TYPE_INT_ARGB);   
+        image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_INT_ARGB);
+        
+        Mat templateMat = OpenCvUtils.toMat(template);
+        Mat imageMat = OpenCvUtils.toMat(image);
+        Mat resultMat = new Mat();
+        
+        Imgproc.matchTemplate(imageMat, templateMat, resultMat, Imgproc.TM_CCOEFF_NORMED);
+        
+        // TODO: Externalize
+        double threshold = 0.7f;
+        double corr = 0.85f;
 
+        MinMaxLocResult mmr = Core.minMaxLoc(resultMat);
+        double maxVal = mmr.maxVal;
+        
+        double rangeMin = Math.max(threshold, corr * maxVal);
+        double rangeMax = maxVal;
+        
+        List<TemplateMatch> matches = new ArrayList<TemplateMatch>();
+        for (Point point : matMaxima(resultMat, rangeMin, rangeMax)) {
+            TemplateMatch match = new TemplateMatch();
+            // TODO: Offset and scale to camera coordinates.
+            match.location = new Location(LengthUnit.Millimeters, point.x, point.y, 0, 0);
+            match.score = resultMat.get((int) point.y, (int) point.x)[0] / maxVal;
+            matches.add(match);
+        }
+        
+        matches.sort(new Comparator<TemplateMatch>() {
+            @Override
+            public int compare(TemplateMatch o1, TemplateMatch o2) {
+                return ((Double) o2.score).compareTo(o1.score);
+            }
+        });
+        
+        return matches;
+    }
+    
     @Override
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth,
             int roiHeight, int coiX, int coiY, BufferedImage templateImage_)
@@ -163,4 +219,121 @@ public class OpenCvVisionProvider implements VisionProvider {
         // of pixels. Use camera.getUnitsPerPixel().
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     } 
+    
+    enum MinMaxState {
+        BEFORE_INFLECTION,
+        AFTER_INFLECTION
+    }
+    
+    static List<Point> matMaxima(Mat mat, double rangeMin,
+            double rangeMax) {
+        List<Point> locations = new ArrayList<Point>();
+
+        int rEnd = mat.rows() - 1;
+        int cEnd = mat.cols() - 1;
+
+        // CHECK EACH ROW MAXIMA FOR LOCAL 2D MAXIMA
+        for (int r = 0; r <= rEnd; r++) {
+            MinMaxState state = MinMaxState.BEFORE_INFLECTION;
+            double curVal = mat.get(r, 0)[0];
+            for (int c = 1; c <= cEnd; c++) {
+                double val = mat.get(r, c)[0];
+
+                if (val == curVal) {
+                    continue;
+                }
+                else if (curVal < val) {
+                    if (state == MinMaxState.BEFORE_INFLECTION) {
+                        // n/a
+                    }
+                    else {
+                        state = MinMaxState.BEFORE_INFLECTION;
+                    }
+                }
+                else { // curVal > val
+                    if (state == MinMaxState.BEFORE_INFLECTION) {
+                        if (rangeMin <= curVal && curVal <= rangeMax) { // ROW
+                                                                        // MAXIMA
+                            if (0 < r
+                                    && (mat.get(r - 1, c - 1)[0] >= curVal || mat
+                                            .get(r - 1, c)[0] >= curVal)) {
+                                // cout << "reject:r-1 " << r << "," << c-1 <<
+                                // endl;
+                                // - x x
+                                // - - -
+                                // - - -
+                            }
+                            else if (r < rEnd
+                                    && (mat.get(r + 1, c - 1)[0] > curVal || mat
+                                            .get(r + 1, c)[0] > curVal)) {
+                                // cout << "reject:r+1 " << r << "," << c-1 <<
+                                // endl;
+                                // - - -
+                                // - - -
+                                // - x x
+                            }
+                            else if (1 < c
+                                    && (0 < r
+                                            && mat.get(r - 1, c - 2)[0] >= curVal
+                                            || mat.get(r, c - 2)[0] > curVal || r < rEnd
+                                            && mat.get(r + 1, c - 2)[0] > curVal)) {
+                                // cout << "reject:c-2 " << r << "," << c-1 <<
+                                // endl;
+                                // x - -
+                                // x - -
+                                // x - -
+                            }
+                            else {
+                                locations.add(new Point(c - 1, r));
+                            }
+                        }
+                        state = MinMaxState.AFTER_INFLECTION;
+                    }
+                    else {
+                        // n/a
+                    }
+                }
+
+                curVal = val;
+            }
+
+            // PROCESS END OF ROW
+            if (state == MinMaxState.BEFORE_INFLECTION) {
+                if (rangeMin <= curVal && curVal <= rangeMax) { // ROW MAXIMA
+                    if (0 < r
+                            && (mat.get(r - 1, cEnd - 1)[0] >= curVal || mat
+                                    .get(r - 1, cEnd)[0] >= curVal)) {
+                        // cout << "rejectEnd:r-1 " << r << "," << cEnd-1 <<
+                        // endl;
+                        // - x x
+                        // - - -
+                        // - - -
+                    }
+                    else if (r < rEnd
+                            && (mat.get(r + 1, cEnd - 1)[0] > curVal || mat
+                                    .get(r + 1, cEnd)[0] > curVal)) {
+                        // cout << "rejectEnd:r+1 " << r << "," << cEnd-1 <<
+                        // endl;
+                        // - - -
+                        // - - -
+                        // - x x
+                    }
+                    else if (1 < r && mat.get(r - 1, cEnd - 2)[0] >= curVal
+                            || mat.get(r, cEnd - 2)[0] > curVal || r < rEnd
+                            && mat.get(r + 1, cEnd - 2)[0] > curVal) {
+                        // cout << "rejectEnd:cEnd-2 " << r << "," << cEnd-1 <<
+                        // endl;
+                        // x - -
+                        // x - -
+                        // x - -
+                    }
+                    else {
+                        locations.add(new Point(cEnd, r));
+                    }
+                }
+            }
+        }
+
+        return locations;
+    }        
 }

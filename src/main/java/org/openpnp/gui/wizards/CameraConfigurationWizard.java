@@ -40,6 +40,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
@@ -60,6 +61,25 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	
 	public CameraConfigurationWizard(Camera camera) {
 		this.camera = camera;
+		
+		panelGeneral = new JPanel();
+		panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		contentPanel.add(panelGeneral);
+		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,},
+		    new RowSpec[] {
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,}));
+		
+		lblRotation = new JLabel("Rotation");
+		panelGeneral.add(lblRotation, "2, 2, right, default");
+		
+		textFieldRotation = new JTextField();
+		panelGeneral.add(textFieldRotation, "4, 2");
+		textFieldRotation.setColumns(10);
 
 		panelUpp = new JPanel();
 		contentPanel.add(panelUpp);
@@ -130,16 +150,20 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	@Override
 	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter();
-		
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        
 		MutableLocationProxy unitsPerPixel = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
+        addWrappedBinding(camera, "rotation", textFieldRotation, "text", doubleConverter);
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
         
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldHeight);
+        ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
 	}
 	
 	private Action measureAction = new AbstractAction("Measure") {
@@ -194,4 +218,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	private JLabel lblHeight;
 	private JLabel lblX;
 	private JLabel lblY;
+	private JPanel panelGeneral;
+	private JLabel lblRotation;
+	private JTextField textFieldRotation;
 }

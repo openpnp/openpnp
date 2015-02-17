@@ -121,6 +121,14 @@ public abstract class AbstractCamera implements Camera {
     public VisionProvider getVisionProvider() {
         return visionProvider;
     }
+    
+    public double getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(double rotation) {
+        this.rotation = rotation;
+    }
 
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : listeners) {
@@ -135,6 +143,10 @@ public abstract class AbstractCamera implements Camera {
         if (rotation == 0) {
             return image;
         }
+        
+        // TODO: This should just rotate in place, not change the size of the image. 
+        // Just let it cut off.
+        
         // Create a rotation transform to determine how big the resulting
         // rotated image should be.
         AffineTransform xform = new AffineTransform();

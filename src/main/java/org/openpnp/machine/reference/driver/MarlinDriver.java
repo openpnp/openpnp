@@ -87,8 +87,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
 	@Override
 	public void home(ReferenceHead head) throws Exception {
-//		sendCommand("G28");
-	    // TODO: temporary, till homing is setup
+		sendCommand("G28");
 	    sendCommand("G92 X0 Y0 Z0 E0");
 		x = y = z= c = 0;
 	}
