@@ -27,6 +27,7 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -96,6 +97,12 @@ public class OpenCvVisionProvider implements VisionProvider {
         }
     }
     
+    /**
+     * Attempt to find matches of the given template within the current camera
+     * frame. 
+     * @param template
+     * @return
+     */
     public List<TemplateMatch> matchTemplate(BufferedImage template) {
         BufferedImage image = camera.capture();
         
@@ -129,7 +136,7 @@ public class OpenCvVisionProvider implements VisionProvider {
             matches.add(match);
         }
         
-        matches.sort(new Comparator<TemplateMatch>() {
+        Collections.sort(matches, new Comparator<TemplateMatch>() {
             @Override
             public int compare(TemplateMatch o1, TemplateMatch o2) {
                 return ((Double) o2.score).compareTo(o1.score);
