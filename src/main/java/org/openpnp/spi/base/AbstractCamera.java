@@ -35,9 +35,6 @@ public abstract class AbstractCamera implements Camera {
     @Element(required=false)
     protected VisionProvider visionProvider;
     
-    @Attribute(required=false)
-    protected double rotation = 0;
-    
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
     
     protected Head head;
@@ -122,14 +119,6 @@ public abstract class AbstractCamera implements Camera {
         return visionProvider;
     }
     
-    public double getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(double rotation) {
-        this.rotation = rotation;
-    }
-
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : listeners) {
             if (listener.lastFrameSent < (System.currentTimeMillis() - (1000 / listener.maximumFps))) {
@@ -139,37 +128,6 @@ public abstract class AbstractCamera implements Camera {
         }
     }
     
-    protected BufferedImage applyRotation(BufferedImage image) {
-        if (rotation == 0) {
-            return image;
-        }
-        
-        // TODO: This should just rotate in place, not change the size of the image. 
-        // Just let it cut off.
-        
-        // Create a rotation transform to determine how big the resulting
-        // rotated image should be.
-        AffineTransform xform = new AffineTransform();
-        xform.rotate(Math.toRadians(-rotation));
-        Rectangle2D r2d = xform.createTransformedShape(new Rectangle2D.Double(0, 0, image.getWidth(), image.getHeight())).getBounds2D();
-        int width = (int) r2d.getWidth();
-        int height = (int) r2d.getHeight();
-        BufferedImage out = new BufferedImage(width, height, image.getType());
-        Graphics2D g2d = out.createGraphics();
-        // Create the transform we'll actually use to rotate the image.
-        xform = new AffineTransform();
-        // Translate the source to the center of the output.
-        xform.translate(out.getWidth() / 2, out.getHeight() / 2);
-        // Rotate the image.
-        xform.rotate(Math.toRadians(-rotation));
-        // Translate the image to it's center so the rotation happens about
-        // the centerpoint.
-        xform.translate(-image.getWidth() / 2, -image.getHeight() / 2);
-        g2d.drawImage(image, xform, null);
-        g2d.dispose();
-        return out;
-    }
-
     protected class ListenerEntry {
         public CameraListener listener;
         public int maximumFps;

@@ -11,9 +11,11 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -28,10 +30,33 @@ public class ReferenceCameraConfigurationWizard extends
     private JTextField textFieldOffY;
     private JTextField textFieldOffZ;
     private JPanel panelOff;
+    private JPanel panelGeneral;
+    private JLabel lblRotation;
+    private JTextField textFieldRotation;
+    
     
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
         
+        panelGeneral = new JPanel();
+        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelGeneral);
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
+        
+        lblRotation = new JLabel("Rotation");
+        panelGeneral.add(lblRotation, "2, 2, right, default");
+        
+        textFieldRotation = new JTextField();
+        panelGeneral.add(textFieldRotation, "4, 2");
+        textFieldRotation.setColumns(10);
+
         panelOff = new JPanel();
         contentPanel.add(panelOff);
         panelOff.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -77,12 +102,17 @@ public class ReferenceCameraConfigurationWizard extends
     
     @Override
     public void createBindings() {
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();
+        
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, referenceCamera, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", textFieldOffX, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthY", textFieldOffY, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthZ", textFieldOffZ, "text", lengthConverter);
+        addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffZ);
