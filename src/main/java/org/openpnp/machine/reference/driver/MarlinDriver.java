@@ -88,8 +88,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	@Override
 	public void home(ReferenceHead head) throws Exception {
 		sendCommand("G28");
-	    sendCommand("G92 X0 Y0 Z0 E0");
-		x = y = z= c = 0;
+		getCurrentPosition();
 	}
 	
 	@Override
@@ -218,9 +217,20 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 		sendCommand("G90");
         sendCommand("M82");
         sendCommand("M84 S0");
-		// Reset all axes to 0, in case the firmware was not reset on
-		// connect.
-		sendCommand("G92 X0 Y0 Z0 E0");
+        getCurrentPosition();
+	}
+	
+	private void getCurrentPosition() throws Exception {
+	    List<String> responses = sendCommand("M114");
+	    for (String response : responses) {
+	        if (response.startsWith("X:")) {
+	            String[] comps = response.split(" ");
+                x = Double.parseDouble(comps[0].split(":")[1]);
+                y = Double.parseDouble(comps[1].split(":")[1]);
+                z = Double.parseDouble(comps[2].split(":")[1]);
+                c = Double.parseDouble(comps[3].split(":")[1]);
+	        }
+	    }
 	}
 	
 	private void processConnectionResponses(List<String> responses) {
