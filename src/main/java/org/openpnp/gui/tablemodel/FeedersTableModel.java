@@ -28,12 +28,13 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 
 public class FeedersTableModel extends AbstractTableModel {
 	final private Configuration configuration;
 	
-	private String[] columnNames = new String[] { "Name", "Type", "Enabled" };
+	private String[] columnNames = new String[] { "Name", "Type", "Part", "Enabled" };
 	private List<Feeder> feeders;
 
 	public FeedersTableModel(Configuration configuration) {
@@ -69,7 +70,7 @@ public class FeedersTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex == 0 || columnIndex == 2;
+		return columnIndex == 0 || columnIndex == 3;
 	}
 	
 	@Override
@@ -79,7 +80,7 @@ public class FeedersTableModel extends AbstractTableModel {
 			if (columnIndex == 0) {
 			    feeder.setName((String) aValue);
 			}
-			else if (columnIndex == 2) {
+			else if (columnIndex == 3) {
 				feeder.setEnabled((Boolean) aValue);
 			}
 			configuration.setDirty(true);
@@ -91,7 +92,7 @@ public class FeedersTableModel extends AbstractTableModel {
 	
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		if (columnIndex == 2) {
+		if (columnIndex == 3) {
 			return Boolean.class;
 		}
 		return super.getColumnClass(columnIndex);
@@ -103,8 +104,15 @@ public class FeedersTableModel extends AbstractTableModel {
 			return feeders.get(row).getName();
 		case 1:
 			return feeders.get(row).getClass().getSimpleName();
-		case 2:
-			return feeders.get(row).isEnabled();
+        case 2: {
+            Part part = feeders.get(row).getPart();
+            if (part == null) {
+                return null;
+            }
+            return part.getId();
+        }
+        case 3:
+            return feeders.get(row).isEnabled();
 		default:
 			return null;
 		}
