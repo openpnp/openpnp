@@ -87,29 +87,21 @@ public class OpenCvVisionProvider implements VisionProvider {
         return image;
     }
     
-    public static class TemplateMatch {
-        public Location location;
-        public double score;
-        
-        @Override
-        public String toString() {
-            return location.toString() + " " + score;
-        }
-    }
-    
     /**
      * Attempt to find matches of the given template within the current camera
-     * frame. 
+     * frame. Matches are returned as TemplateMatch objects which contain
+     * a Location in Camera coordinates. The results are sorted best score
+     * to worst score.
      * @param template
      * @return
      */
-    public List<TemplateMatch> matchTemplate(BufferedImage template) {
+    public List<TemplateMatch> getTemplateMatches(BufferedImage template) {
         BufferedImage image = camera.capture();
         
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
-        template = OpenCvUtils.convertBufferedImage(template,BufferedImage.TYPE_INT_ARGB);   
-        image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_INT_ARGB);
+        template = OpenCvUtils.convertBufferedImage(template,BufferedImage.TYPE_3BYTE_BGR);   
+        image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_3BYTE_BGR);
         
         Mat templateMat = OpenCvUtils.toMat(template);
         Mat imageMat = OpenCvUtils.toMat(image);
@@ -117,21 +109,24 @@ public class OpenCvVisionProvider implements VisionProvider {
         
         Imgproc.matchTemplate(imageMat, templateMat, resultMat, Imgproc.TM_CCOEFF_NORMED);
         
+        saveDebugImage("template", templateMat);
+        saveDebugImage("camera", imageMat);
+        saveDebugImage("result", resultMat);
+        
+        MinMaxLocResult mmr = Core.minMaxLoc(resultMat);
+        double maxVal = mmr.maxVal;
+        
         // TODO: Externalize
         double threshold = 0.7f;
         double corr = 0.85f;
 
-        MinMaxLocResult mmr = Core.minMaxLoc(resultMat);
-        double maxVal = mmr.maxVal;
-        
         double rangeMin = Math.max(threshold, corr * maxVal);
         double rangeMax = maxVal;
         
         List<TemplateMatch> matches = new ArrayList<TemplateMatch>();
         for (Point point : matMaxima(resultMat, rangeMin, rangeMax)) {
             TemplateMatch match = new TemplateMatch();
-            // TODO: Offset and scale to camera coordinates.
-            match.location = new Location(LengthUnit.Millimeters, point.x, point.y, 0, 0);
+            match.location = camera.getLocation().add(getPixelCenterOffsets(point.x, point.y));
             match.score = resultMat.get((int) point.y, (int) point.x)[0] / maxVal;
             matches.add(match);
         }
@@ -144,6 +139,40 @@ public class OpenCvVisionProvider implements VisionProvider {
         });
         
         return matches;
+    }
+    
+    /**
+     * Given pixel coordinates within the frame of the Camera's image, get
+     * the offsets from Camera center to the coordinates in Camera space
+     * and units. The resulting value is effectively a distance the Camera
+     * can be moved to be centered over the pixel coordinates.
+     * @param x
+     * @param y
+     * @return
+     */
+    private Location getPixelCenterOffsets(int x, int y) {
+        // match now contains the position, in pixels, from the top left corner
+        // of the image to the top left corner of the match. We are interested in
+        // knowing how far from the center of the image the center of the match is.
+        BufferedImage image = camera.capture();
+        double imageWidth = image.getWidth();
+        double imageHeight = image.getHeight();
+
+        // Calculate the difference between the center of the image to the
+        // center of the match.
+        double offsetX = (imageWidth / 2) - x;
+        double offsetY = (imageHeight / 2) - y;
+
+        // Invert the Y offset because images count top to bottom and the Y
+        // axis of the machine counts bottom to top.
+        offsetY *= -1;
+        
+        // And convert pixels to units
+        Location unitsPerPixel = camera.getUnitsPerPixel();
+        offsetX *= unitsPerPixel.getX();
+        offsetY *= unitsPerPixel.getY();
+
+        return new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
     }
     
     @Override
@@ -181,6 +210,20 @@ public class OpenCvVisionProvider implements VisionProvider {
         locateTemplateMatchesDebug(roiImage, templateImage, matchLoc);
 
         return new Point[] { new Point(((int) matchLoc.x) + roiX, ((int) matchLoc.y) + roiY) };
+    }
+    
+    private void saveDebugImage(String name, Mat mat) {
+        if (logger.isDebugEnabled()) {
+            try {
+                BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
+                File file = Configuration.get().createResourceFile(
+                        OpenCvVisionProvider.class, name + "_", ".png");
+                ImageIO.write(debugImage, "PNG", file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void locateTemplateMatchesDebug(Mat roiImage, Mat templateImage, org.opencv.core.Point matchLoc) {

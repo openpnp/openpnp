@@ -9,8 +9,12 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpenBuildsDriver extends MarlinDriver {
+    private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
+
     @Attribute
     private double zCamRadius = 26; 
             
@@ -42,7 +46,10 @@ public class OpenBuildsDriver extends MarlinDriver {
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
         }
         if (!Double.isNaN(z) && z != this.z) {
+            // TODO: This fails with values larger than the radius because the
+            // input to asin must be abs(0-1). 
             double degrees = Math.toDegrees(Math.asin(z / zCamRadius));
+            logger.debug("nozzle {} {} {}", new Object[] { z, zCamRadius, degrees });
             if (hm instanceof ReferenceNozzle) {
                 ReferenceNozzle nozzle = (ReferenceNozzle) hm;
                 if (nozzle.getName().equals("N2")) {

@@ -23,6 +23,7 @@ package org.openpnp.spi;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
@@ -43,6 +44,8 @@ public interface VisionProvider {
     public void setCamera(Camera camera);
 
     public Wizard getConfigurationWizard();
+    
+    public List<TemplateMatch> getTemplateMatches(BufferedImage template);
     
     /**
      * @deprecated This function's interface will change in the near future
@@ -76,4 +79,13 @@ public interface VisionProvider {
      */
     public Location getPartBottomOffsets(Part part, Nozzle nozzle) throws Exception;
     
+    public static class TemplateMatch {
+        public Location location;
+        public double score;
+        
+        @Override
+        public String toString() {
+            return location.toString() + " " + score;
+        }
+    }
 }
