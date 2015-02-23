@@ -3,26 +3,29 @@ OpenPnP Icon Specifications
 
 
 Common Themes
--------------
+=============
 The current icon set has some common elements that are used across multiple
 icons. It is not necessary to use these exact same elements, but some thought
 should be given to maintaining a set of common elements across sets of features
 that are shared.
 
-### Capturing
+Capturing
+---------
 Several icons express the concept of capturing data from one place and storing
 it in another. For instance, there is an icon that captures the current
 coordinates of the camera and stores them in a location field.
 
 Capturing is identified by a square, blue outline as the primary design element.
 
-### Positioning
+Positioning
+-----------
 Icons that are used to indicate that the machine will perform a positioning
 movement are identified by a round, red outline. Red is used to provide a
 warning to the user that the machine will make movement in response to
 performing the action.
 
-### Tool, Actuator and Camera
+Tool, Actuator and Camera
+-------------------------
 Several of the above icons are intended to perform their action with regards
 to either the tool, actuator or camera. Where possible, these icons all use
 a common element across their different functions.
@@ -39,7 +42,7 @@ interrupted rectangle, centered within the outline.
 
 
 Icon List
----------
+=========
 This is a list of the filenames of the icons currently being used in the system
 along with descriptions of each. This can be used as a reference for designing
 a new icon set.
@@ -118,7 +121,17 @@ the left.
  Use two points to define the location and rotation of an object.
  
  
-Sources
--------
+Sources and Attributions
+========================
 
-Many of the icons used in OpenPnP come from "Soft Scraps" by deleket. The original URL for these icons no longer exists. Currently the best URL for them seems to be http://deleket.deviantart.com/art/Soft-Scraps-150451162. For protection against future loss, the ZIP file at that URL is included in the icons/src directory.
+Google Material Design Icons
+----------------------------
+https://github.com/google/material-design-icons
+
+All icons are released under an Attribution 4.0 International license.
+http://creativecommons.org/licenses/by/4.0/
+
+Freepik
+-------
+<div>Icon made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed under <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a></div>
+

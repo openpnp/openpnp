@@ -241,6 +241,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	@Override
 	public void wizardCompleted(Wizard wizard) {
 		configuration.setDirty(true);
+		// Repaint the table so that any changed fields get updated.
+		table.repaint();
 	}
 
 	@Override

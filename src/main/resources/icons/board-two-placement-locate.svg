@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
+    <title>board-two-placement-locate</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="feeder-show-part-outline" sketch:type="MSLayerGroup" transform="translate(0.250000, -23.750000)"></g>
+        <g id="board-two-placement-locate" sketch:type="MSLayerGroup">
+            <rect id="Rectangle-8" fill="#619410" sketch:type="MSShapeGroup" x="3" y="3" width="18" height="18"></rect>
+            <rect id="Rectangle-4" fill="#F1D44A" sketch:type="MSShapeGroup" x="4.10855263" y="5.06255061" width="3.125" height="2.8"></rect>
+            <rect id="Rectangle-5" fill="#F1D44A" sketch:type="MSShapeGroup" x="8.16037449" y="5.06255061" width="3.125" height="2.8"></rect>
+            <rect id="Rectangle-7" fill="#F1D44A" sketch:type="MSShapeGroup" x="11.9498482" y="15.6050607" width="3.125" height="2.8"></rect>
+            <rect id="Rectangle-6" fill="#F1D44A" sketch:type="MSShapeGroup" x="16.00167" y="15.6050607" width="3.125" height="2.8"></rect>
+        </g>
+    </g>
+</svg>
