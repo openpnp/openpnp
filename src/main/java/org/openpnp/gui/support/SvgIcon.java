@@ -15,9 +15,11 @@ package org.openpnp.gui.support;
 
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 
+import javax.swing.GrayFilter;
 import javax.swing.Icon;
 
 import org.apache.batik.transcoder.TranscoderException;
@@ -37,6 +39,8 @@ public class SvgIcon implements Icon {
      * The BufferedImage generated from the SVG document.
      */
     protected BufferedImage bufferedImage;
+    
+    protected Image bufferedImageDisabled;
 
     /**
      * The width of the rendered image.
@@ -80,8 +84,36 @@ public class SvgIcon implements Icon {
         }
         t.transcode(in, null);
         bufferedImage = t.getBufferedImage();
+        bufferedImageDisabled = GrayFilter.createDisabledImage(bufferedImage);
         width = bufferedImage.getWidth();
         height = bufferedImage.getHeight();
+    }
+
+    // Icon //////////////////////////////////////////////////////////////////
+
+    /**
+     * Returns the icon's width.
+     */
+    public int getIconWidth() {
+        return width;
+    }
+
+    /**
+     * Returns the icon's height.
+     */
+    public int getIconHeight() {
+        return height;
+    }
+
+    /**
+     * Draw the icon at the specified location.
+     */
+    public void paintIcon(Component c, Graphics g, int x, int y) {
+        Image image = bufferedImage;
+        if (c != null && !c.isEnabled()) {
+            image = bufferedImageDisabled;
+        }
+        g.drawImage(image, x, y, null);
     }
 
     /**
@@ -128,28 +160,5 @@ public class SvgIcon implements Icon {
             hints.put(KEY_WIDTH, new Float(w));
             hints.put(KEY_HEIGHT, new Float(h));
         }
-    }
-
-    // Icon //////////////////////////////////////////////////////////////////
-
-    /**
-     * Returns the icon's width.
-     */
-    public int getIconWidth() {
-        return width;
-    }
-
-    /**
-     * Returns the icon's height.
-     */
-    public int getIconHeight() {
-        return height;
-    }
-
-    /**
-     * Draw the icon at the specified location.
-     */
-    public void paintIcon(Component c, Graphics g, int x, int y) {
-        g.drawImage(bufferedImage, x, y, null);
     }
 }
