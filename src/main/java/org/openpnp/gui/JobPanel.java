@@ -37,7 +37,6 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -68,7 +67,6 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
-import org.openpnp.gui.support.SvgIcon;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.model.Board;
@@ -119,7 +117,8 @@ public class JobPanel extends JPanel {
 
 	private ActionGroup jobSaveActionGroup;
 	private ActionGroup boardLocationSelectionActionGroup;
-	private ActionGroup placementSelectionActionGroup;
+    private ActionGroup placementSelectionActionGroup;
+    private ActionGroup placementCaptureAndPositionActionGroup;
 
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
 	
@@ -139,10 +138,13 @@ public class JobPanel extends JPanel {
 				twoPointLocateBoardLocationAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
-		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
-				captureCameraPlacementLocation, captureToolPlacementLocation,
-				moveCameraToPlacementLocation, moveToolToPlacementLocation);
-		placementSelectionActionGroup.setEnabled(false);
+        placementSelectionActionGroup = new ActionGroup(removePlacementAction);
+        placementSelectionActionGroup.setEnabled(false);
+
+        placementCaptureAndPositionActionGroup = new ActionGroup(
+                captureCameraPlacementLocation, captureToolPlacementLocation,
+                moveCameraToPlacementLocation, moveToolToPlacementLocation);
+        placementCaptureAndPositionActionGroup.setEnabled(false);
 
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
@@ -201,6 +203,9 @@ public class JobPanel extends JPanel {
 						}
 						placementSelectionActionGroup
 								.setEnabled(getSelectedPlacement() != null);
+					    placementCaptureAndPositionActionGroup.setEnabled(
+					            getSelectedPlacement() != null 
+					            && getSelectedPlacement().getSide() == getSelectedBoardLocation().getSide());
 						Placement placement = getSelectedPlacement();
 						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
 						if (cameraView != null) {
@@ -1075,8 +1080,18 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("Moof");
-            MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+            if (camera.getHead() == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Camera is not movable.");
+                return;
+            }
+            Location placementLocation = 
+                    Utils2D.calculateBoardPlacementLocation(
+                            getSelectedBoardLocation().getLocation(),
+                            getSelectedPlacement().getSide(),
+                            MainFrame.cameraPanel.getSelectedCameraLocation().invert(true, true, true, true));
+            getSelectedPlacement().setLocation(placementLocation.invert(true, true, true, true));
+            placementsTable.repaint();
         }
     };
 
@@ -1090,8 +1105,14 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("Moof");
-            MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+            Location placementLocation = 
+                    Utils2D.calculateBoardPlacementLocation(
+                            getSelectedBoardLocation().getLocation(),
+                            getSelectedPlacement().getSide(),
+                            nozzle.getLocation().invert(true, true, true, true));
+            getSelectedPlacement().setLocation(placementLocation.invert(true, true, true, true));
+            placementsTable.repaint();
         }
     };
     
