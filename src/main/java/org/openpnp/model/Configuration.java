@@ -324,6 +324,12 @@ public class Configuration extends AbstractModelObject {
 		firePropertyChange("packages", null, packages);
 	}
 	
+    public void removePackage(Package pkg) {
+        packages.remove(pkg.getId());
+        dirty = true;
+        firePropertyChange("packages", null, packages);
+    }
+    
 	public Part getPart(String id) {
 		if (id == null) {
 			return null;
@@ -342,6 +348,12 @@ public class Configuration extends AbstractModelObject {
 		parts.put(part.getId().toUpperCase(), part);
 		dirty = true;
 		firePropertyChange("parts", null, parts);
+	}
+	
+	public void removePart(Part part) {
+	    parts.remove(part.getId());
+	    dirty = true;
+	    firePropertyChange("parts", null, parts);
 	}
 	
 	public List<Board> getBoards() {

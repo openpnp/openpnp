@@ -62,6 +62,7 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
+import org.openpnp.model.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,7 +238,21 @@ public class PackagesPanel extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            // Check to make sure there are no parts using this package.
+            for (Part part : Configuration.get().getParts()) {
+                if (part.getPackage() == getSelectedPackage()) {
+                    MessageBoxes.errorBox(getTopLevelAncestor(), "Error", getSelectedPackage().getId() + " cannot be deleted. It is used by " + part.getId());
+                    return;
+                }
+            }
+            int ret = JOptionPane.showConfirmDialog(
+                    getTopLevelAncestor(), 
+                    "Are you sure you want to delete " + getSelectedPackage().getId(),
+                    "Delete " + getSelectedPackage().getId() + "?",
+                    JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                Configuration.get().removePackage(getSelectedPackage());
+            }
 		}
 	};
 }
