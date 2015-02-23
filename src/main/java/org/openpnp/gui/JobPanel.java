@@ -317,15 +317,11 @@ public class JobPanel extends JPanel {
 		toolBarPlacements.addSeparator();
 		JButton btnCaptureCameraPlacementLocation = new JButton(
 				captureCameraPlacementLocation);
-		btnCaptureCameraPlacementLocation.setToolTipText("");
-		btnCaptureCameraPlacementLocation.setText("");
 		btnCaptureCameraPlacementLocation.setHideActionText(true);
 		toolBarPlacements.add(btnCaptureCameraPlacementLocation);
 
 		JButton btnCaptureToolPlacementLocation = new JButton(
 				captureToolPlacementLocation);
-		btnCaptureToolPlacementLocation.setToolTipText("");
-		btnCaptureToolPlacementLocation.setText("");
 		btnCaptureToolPlacementLocation.setHideActionText(true);
 		toolBarPlacements.add(btnCaptureToolPlacementLocation);
 		
@@ -1047,10 +1043,25 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // get the selected board
-            // get the selected placement
-            // add the placement position to the board position
-            // move there
+            Location placementLocation = 
+                    Utils2D.calculateBoardPlacementLocation(
+                            getSelectedBoardLocation().getLocation(),
+                            getSelectedBoardLocation().getSide(),
+                            getSelectedPlacement().getLocation());
+            
+            final Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+            final Location location = placementLocation;
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(getTopLevelAncestor(),
+                                "Move Error", e);
+                    }
+                }
+            });
         }
     };
     
@@ -1064,6 +1075,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            System.out.println("Moof");
             MessageBoxes.notYetImplemented(getTopLevelAncestor());
         }
     };
@@ -1078,6 +1090,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            System.out.println("Moof");
             MessageBoxes.notYetImplemented(getTopLevelAncestor());
         }
     };
