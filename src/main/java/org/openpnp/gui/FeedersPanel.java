@@ -304,8 +304,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-//			configuration.getMachine().removeFeeder(getSelectedFeeder());
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            int ret = JOptionPane.showConfirmDialog(
+                    getTopLevelAncestor(), 
+                    "Are you sure you want to delete " + getSelectedFeeder().getName(),
+                    "Delete " + getSelectedFeeder().getName() + "?",
+                    JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                configuration.getMachine().removeFeeder(getSelectedFeeder());
+                tableModel.refresh();
+                configuration.setDirty(true);
+            }
 		}
 	};
 
