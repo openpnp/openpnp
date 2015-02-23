@@ -25,9 +25,12 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -50,6 +53,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorDelegate;
@@ -69,6 +73,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
+import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -191,9 +196,9 @@ public class JobPanel extends JPanel {
 				partsComboBox));
         placementsTable.setDefaultEditor(Type.class, new DefaultCellEditor(
                 typesComboBox));
-		placementsTable.setDefaultRenderer(Part.class,
-				new IdentifiableTableCellRenderer<Part>());
-
+        placementsTable.setDefaultRenderer(Part.class,
+                new IdentifiableTableCellRenderer<Part>());
+        placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
@@ -219,6 +224,24 @@ public class JobPanel extends JPanel {
 						}
 					}
 				});
+		placementsTable.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() != 2) {
+                    return;
+                }
+                int row = placementsTable.rowAtPoint(new Point(mouseEvent.getX(),
+                        mouseEvent.getY()));
+                int col = placementsTable.columnAtPoint(new Point(mouseEvent.getX(),
+                        mouseEvent.getY()));
+                if (placementsTableModel.getColumnClass(col) == Status.class) {
+                    Status status = (Status) placementsTableModel.getValueAt(row, col);
+                    // TODO: This is some sample code for handling the user
+                    // wishing to do something with the status. Not using it
+                    // right now but leaving it here for the future.
+                    System.out.println(status);
+                }
+            }
+        });
 		
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -1169,4 +1192,26 @@ public class JobPanel extends JPanel {
 			jobSaveActionGroup.setEnabled(jobProcessor.getJob().isDirty());
 		}
 	};
+	
+	static class StatusRenderer extends DefaultTableCellRenderer {
+	    public void setValue(Object value) {
+	        Status status = (Status) value;
+	        if (status == Status.Ready) {
+	            setBackground(Color.green);
+	            setText("Ready");
+	        }
+            else if (status == Status.MissingFeeder) {
+                setBackground(Color.yellow);
+                setText("Missing Feeder");
+            }
+            else if (status == Status.MissingPart) {
+                setBackground(Color.red);
+                setText("Missing Part");
+            }
+            else if (status == Status.MissingPart) {
+                setBackground(Color.red);
+                setText(status.toString());
+            }
+	    }
+	}
 }

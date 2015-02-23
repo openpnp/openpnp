@@ -34,6 +34,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.spi.Feeder;
 
 public class PlacementsTableModel extends AbstractTableModel {
 	final Configuration configuration;
@@ -45,8 +46,10 @@ public class PlacementsTableModel extends AbstractTableModel {
 		"X", 
 		"Y", 
 		"ø",
-		"Type"
+		"Type",
+		"Status"
 		};
+	
 	private Class[] columnTypes = new Class[] {
 		String.class,
 		Part.class,
@@ -54,8 +57,16 @@ public class PlacementsTableModel extends AbstractTableModel {
 		LengthCellValue.class,
 		LengthCellValue.class,
 		String.class,
-		Type.class
+		Type.class,
+		Status.class
 	};
+	
+	public enum Status {
+	    Ready,
+	    MissingPart,
+	    MissingFeeder
+	}
+	
 	private Board board;
 
 	public PlacementsTableModel(Configuration configuration) {
@@ -82,7 +93,7 @@ public class PlacementsTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return columnIndex != 0;
+		return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4 || columnIndex == 5 || columnIndex == 6;
 	}
 	
 	@Override
@@ -127,6 +138,27 @@ public class PlacementsTableModel extends AbstractTableModel {
 			// TODO: dialog, bad input
 		}
 	}
+	
+	// TODO: Ideally this would all come from the JobPlanner, but this is a
+	// good start for now.
+	private Status getPlacementStatus(Placement placement) {
+	    if (placement.getPart() == null) {
+	        return Status.MissingPart;
+	    }
+	    if (placement.getType() == Placement.Type.Place) {
+	        boolean found = false;
+	        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+	            if (feeder.getPart() == placement.getPart()) {
+	                found = true;
+	                break;
+	            }
+	        }
+	        if (!found) {
+	            return Status.MissingFeeder;
+	        }
+	    }
+	    return Status.Ready;
+	}
 
 	public Object getValueAt(int row, int col) {
 		Placement placement = board.getPlacements().get(row);
@@ -146,6 +178,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 			return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation());
 		case 6:
 		    return placement.getType();
+		case 7:
+		    return getPlacementStatus(placement);
 		default:
 			return null;
 		}
