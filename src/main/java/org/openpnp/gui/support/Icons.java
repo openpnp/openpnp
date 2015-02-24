@@ -28,6 +28,7 @@ public class Icons {
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
+    public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {

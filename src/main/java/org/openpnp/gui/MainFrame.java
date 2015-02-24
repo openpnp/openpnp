@@ -168,7 +168,7 @@ public class MainFrame extends JFrame {
 		jobPanel = new JobPanel(configuration, this, machineControlsPanel);
 		partsPanel = new PartsPanel(configuration, this);
 		packagesPanel = new PackagesPanel(configuration, this);
-		feedersPanel = new FeedersPanel(configuration);
+		feedersPanel = new FeedersPanel(configuration, this);
 		camerasPanel = new CamerasPanel(this, configuration);
 //		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
@@ -612,6 +612,11 @@ public class MainFrame extends JFrame {
         }
 		System.exit(0);
 		return true;
+	}
+	
+	public void showTab(String title) {
+	    int index = panelBottom.indexOfTab(title);
+	    panelBottom.setSelectedIndex(index);
 	}
 
 	private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {

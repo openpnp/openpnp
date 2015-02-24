@@ -143,7 +143,8 @@ public class JobPanel extends JPanel {
 				twoPointLocateBoardLocationAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
-        placementSelectionActionGroup = new ActionGroup(removePlacementAction);
+        placementSelectionActionGroup = new ActionGroup(removePlacementAction,
+                editPlacementFeederAction);
         placementSelectionActionGroup.setEnabled(false);
 
         placementCaptureAndPositionActionGroup = new ActionGroup(
@@ -364,7 +365,11 @@ public class JobPanel extends JPanel {
         btnPositionToolPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionToolPositionLocation);
         
-
+        toolBarPlacements.addSeparator();
+        
+        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
+        btnEditFeeder.setHideActionText(true);
+        toolBarPlacements.add(btnEditFeeder);
 		
 		pnlPlacements.add(new JScrollPane(placementsTable));
 
@@ -1136,6 +1141,27 @@ public class JobPanel extends JPanel {
                             nozzle.getLocation().invert(true, true, true, true));
             getSelectedPlacement().setLocation(placementLocation.invert(true, true, true, true));
             placementsTable.repaint();
+        }
+    };
+    
+    public final Action editPlacementFeederAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.editFeeder);
+            putValue(NAME, "Edit Placement Feeder");
+            putValue(SHORT_DESCRIPTION,
+                    "Edit the placement's associated feeder definition.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Placement placement = getSelectedPlacement();
+            Feeder feeder = null;
+            for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+                if (f.getPart() == placement.getPart()) {
+                    feeder = f;
+                }
+            }
+            MainFrame.feedersPanel.showFeeder(feeder);
         }
     };
     
