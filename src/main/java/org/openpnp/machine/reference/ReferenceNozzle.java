@@ -89,13 +89,6 @@ public class ReferenceNozzle extends AbstractNozzle implements
     }
 
     @Override
-    public boolean canPickAndPlace(Feeder feeder, Location placeLocation) {
-        boolean result = true;
-		logger.debug("{}.canPickAndPlace({},{}) => {}", new Object[]{getName(), feeder, placeLocation, result});
-    	return result;
-	}
-
-    @Override
     public void pick() throws Exception {
 		logger.debug("{}.pick()", getName());
 		if (nozzleTip == null) {

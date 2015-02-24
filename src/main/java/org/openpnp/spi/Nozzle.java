@@ -3,7 +3,6 @@ package org.openpnp.spi;
 import java.util.List;
 
 import org.openpnp.model.Identifiable;
-import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 
 /**
@@ -20,16 +19,6 @@ public interface Nozzle extends Identifiable, Named, HeadMountable, WizardConfig
      * @return
      */
     NozzleTip getNozzleTip();
-
-    /**
-     * Returns true if the Nozzle is capable of picking from the specified
-     * Feeder and placing the picked Part at the specified placeLocation.
-     * 
-     * @param feeder
-     * @param placeLocation
-     * @return
-     */
-    public boolean canPickAndPlace(Feeder feeder, Location placeLocation);
 
     /**
      * Commands the Nozzle to perform it's pick operation. Generally this just
