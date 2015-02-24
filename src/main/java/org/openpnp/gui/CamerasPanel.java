@@ -67,6 +67,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
 import org.slf4j.Logger;
@@ -238,7 +239,18 @@ public class CamerasPanel extends JPanel implements WizardContainer {
         });
 	}
 	
-	private void search() {
+    private Camera getSelectedCamera() {
+        int index = table.getSelectedRow();
+
+        if (index == -1) {
+            return null;
+        }
+
+        index = table.convertRowIndexToModel(index);
+        return tableModel.getCamera(index);
+    }
+
+    private void search() {
 		RowFilter<CamerasTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
 		try {
@@ -319,7 +331,26 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
+		    Camera camera = getSelectedCamera();
+            int ret = JOptionPane.showConfirmDialog(
+                    getTopLevelAncestor(), 
+                    "Are you sure you want to delete " + camera.getName(),
+                    "Delete " + camera.getName() + "?",
+                    JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                if (camera.getHead() != null) {
+                    camera.getHead().removeCamera(camera);
+                }
+                else {
+                    configuration.getMachine().removeCamera(camera);
+                }
+                tableModel.refresh();
+                configuration.setDirty(true);
+                MessageBoxes.errorBox(
+                        getTopLevelAncestor(), 
+                        "Restart Required", 
+                        camera.getName() + " has been removed. Please restart OpenPnP for the changes to take effect.");
+            }
 		}
 	};
 	

@@ -81,7 +81,7 @@ public class PartsPanel extends JPanel {
 		this.frame = frame;
 		
 		setLayout(new BorderLayout(0, 0));
-		partsTableModel = new PartsTableModel(configuration);
+		partsTableModel = new PartsTableModel();
 		partsTableSorter = new TableRowSorter<PartsTableModel>(partsTableModel);
 
 		JPanel panel_5 = new JPanel();
@@ -238,7 +238,14 @@ public class PartsPanel extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
+		    int ret = JOptionPane.showConfirmDialog(
+		            getTopLevelAncestor(), 
+		            "Are you sure you want to delete " + getSelectedPart().getId(),
+		            "Delete " + getSelectedPart().getId() + "?",
+		            JOptionPane.YES_NO_OPTION);
+		    if (ret == JOptionPane.YES_OPTION) {
+	            Configuration.get().removePart(getSelectedPart());
+		    }
 		}
 	};
 }

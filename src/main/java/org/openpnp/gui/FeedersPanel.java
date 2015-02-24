@@ -76,6 +76,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			.getLogger(FeedersPanel.class);
 
 	private final Configuration configuration;
+	private final MainFrame mainFrame;
 
 	private static final String PREF_DIVIDER_POSITION = "FeedersPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -92,8 +93,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	private Preferences prefs = Preferences
 			.userNodeForPackage(FeedersPanel.class);
 
-	public FeedersPanel(Configuration configuration) {
+	public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
 		this.configuration = configuration;
+		this.mainFrame = mainFrame;
 
 		setLayout(new BorderLayout(0, 0));
 		tableModel = new FeedersTableModel(configuration);
@@ -212,6 +214,21 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         splitPane.setRightComponent(configurationPanel);
         configurationPanel.setLayout(new BorderLayout(0, 0));
 	}
+	
+	/**
+	 * Activate the Feeders tab and show the specified Feeder.
+	 * @param feeder
+	 */
+	public void showFeeder(Feeder feeder) {
+	    mainFrame.showTab("Feeders");
+	    table.getSelectionModel().clearSelection();
+	    for (int i = 0; i < tableModel.getRowCount(); i++) {
+	        if (tableModel.getFeeder(i) == feeder) {
+	            table.getSelectionModel().setSelectionInterval(0, i);
+	            return;
+	        }
+	    }
+	}
 
 	private Feeder getSelectedFeeder() {
 		int index = table.getSelectedRow();
@@ -304,8 +321,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-//			configuration.getMachine().removeFeeder(getSelectedFeeder());
-			MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            int ret = JOptionPane.showConfirmDialog(
+                    getTopLevelAncestor(), 
+                    "Are you sure you want to delete " + getSelectedFeeder().getName(),
+                    "Delete " + getSelectedFeeder().getName() + "?",
+                    JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                configuration.getMachine().removeFeeder(getSelectedFeeder());
+                tableModel.refresh();
+                configuration.setDirty(true);
+            }
 		}
 	};
 

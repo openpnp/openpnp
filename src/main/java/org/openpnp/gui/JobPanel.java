@@ -25,9 +25,12 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -37,7 +40,6 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -51,6 +53,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorDelegate;
@@ -69,9 +72,9 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
-import org.openpnp.gui.support.SvgIcon;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
+import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -120,7 +123,8 @@ public class JobPanel extends JPanel {
 
 	private ActionGroup jobSaveActionGroup;
 	private ActionGroup boardLocationSelectionActionGroup;
-	private ActionGroup placementSelectionActionGroup;
+    private ActionGroup placementSelectionActionGroup;
+    private ActionGroup placementCaptureAndPositionActionGroup;
 
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
 	
@@ -141,10 +145,14 @@ public class JobPanel extends JPanel {
 				fiducialCheckAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
-		placementSelectionActionGroup = new ActionGroup(removePlacementAction,
-				captureCameraPlacementLocation, captureToolPlacementLocation,
-				moveCameraToPlacementLocation, moveToolToPlacementLocation);
-		placementSelectionActionGroup.setEnabled(false);
+        placementSelectionActionGroup = new ActionGroup(removePlacementAction,
+                editPlacementFeederAction);
+        placementSelectionActionGroup.setEnabled(false);
+
+        placementCaptureAndPositionActionGroup = new ActionGroup(
+                captureCameraPlacementLocation, captureToolPlacementLocation,
+                moveCameraToPlacementLocation, moveToolToPlacementLocation);
+        placementCaptureAndPositionActionGroup.setEnabled(false);
 
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 		placementsTableModel = new PlacementsTableModel(configuration);
@@ -191,9 +199,9 @@ public class JobPanel extends JPanel {
 				partsComboBox));
         placementsTable.setDefaultEditor(Type.class, new DefaultCellEditor(
                 typesComboBox));
-		placementsTable.setDefaultRenderer(Part.class,
-				new IdentifiableTableCellRenderer<Part>());
-
+        placementsTable.setDefaultRenderer(Part.class,
+                new IdentifiableTableCellRenderer<Part>());
+        placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
@@ -203,6 +211,9 @@ public class JobPanel extends JPanel {
 						}
 						placementSelectionActionGroup
 								.setEnabled(getSelectedPlacement() != null);
+					    placementCaptureAndPositionActionGroup.setEnabled(
+					            getSelectedPlacement() != null 
+					            && getSelectedPlacement().getSide() == getSelectedBoardLocation().getSide());
 						Placement placement = getSelectedPlacement();
 						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
 						if (cameraView != null) {
@@ -216,6 +227,24 @@ public class JobPanel extends JPanel {
 						}
 					}
 				});
+		placementsTable.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() != 2) {
+                    return;
+                }
+                int row = placementsTable.rowAtPoint(new Point(mouseEvent.getX(),
+                        mouseEvent.getY()));
+                int col = placementsTable.columnAtPoint(new Point(mouseEvent.getX(),
+                        mouseEvent.getY()));
+                if (placementsTableModel.getColumnClass(col) == Status.class) {
+                    Status status = (Status) placementsTableModel.getValueAt(row, col);
+                    // TODO: This is some sample code for handling the user
+                    // wishing to do something with the status. Not using it
+                    // right now but leaving it here for the future.
+                    System.out.println(status);
+                }
+            }
+        });
 		
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -342,7 +371,11 @@ public class JobPanel extends JPanel {
         btnPositionToolPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionToolPositionLocation);
         
-
+        toolBarPlacements.addSeparator();
+        
+        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
+        btnEditFeeder.setHideActionText(true);
+        toolBarPlacements.add(btnEditFeeder);
 		
 		pnlPlacements.add(new JScrollPane(placementsTable));
 
@@ -1095,8 +1128,18 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("Moof");
-            MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+            if (camera.getHead() == null) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Camera is not movable.");
+                return;
+            }
+            Location placementLocation = 
+                    Utils2D.calculateBoardPlacementLocation(
+                            getSelectedBoardLocation().getLocation(),
+                            getSelectedPlacement().getSide(),
+                            MainFrame.cameraPanel.getSelectedCameraLocation().invert(true, true, true, true));
+            getSelectedPlacement().setLocation(placementLocation.invert(true, true, true, true));
+            placementsTable.repaint();
         }
     };
 
@@ -1110,8 +1153,35 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("Moof");
-            MessageBoxes.notYetImplemented(getTopLevelAncestor());
+            Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+            Location placementLocation = 
+                    Utils2D.calculateBoardPlacementLocation(
+                            getSelectedBoardLocation().getLocation(),
+                            getSelectedPlacement().getSide(),
+                            nozzle.getLocation().invert(true, true, true, true));
+            getSelectedPlacement().setLocation(placementLocation.invert(true, true, true, true));
+            placementsTable.repaint();
+        }
+    };
+    
+    public final Action editPlacementFeederAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.editFeeder);
+            putValue(NAME, "Edit Placement Feeder");
+            putValue(SHORT_DESCRIPTION,
+                    "Edit the placement's associated feeder definition.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Placement placement = getSelectedPlacement();
+            Feeder feeder = null;
+            for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+                if (f.getPart() == placement.getPart()) {
+                    feeder = f;
+                }
+            }
+            MainFrame.feedersPanel.showFeeder(feeder);
         }
     };
     
@@ -1168,4 +1238,26 @@ public class JobPanel extends JPanel {
 			jobSaveActionGroup.setEnabled(jobProcessor.getJob().isDirty());
 		}
 	};
+	
+	static class StatusRenderer extends DefaultTableCellRenderer {
+	    public void setValue(Object value) {
+	        Status status = (Status) value;
+	        if (status == Status.Ready) {
+	            setBackground(Color.green);
+	            setText("Ready");
+	        }
+            else if (status == Status.MissingFeeder) {
+                setBackground(Color.yellow);
+                setText("Missing Feeder");
+            }
+            else if (status == Status.MissingPart) {
+                setBackground(Color.red);
+                setText("Missing Part");
+            }
+            else if (status == Status.MissingPart) {
+                setBackground(Color.red);
+                setText(status.toString());
+            }
+	    }
+	}
 }

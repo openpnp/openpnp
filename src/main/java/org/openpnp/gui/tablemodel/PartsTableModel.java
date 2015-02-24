@@ -36,8 +36,6 @@ import org.openpnp.model.Part;
 
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
-	final private Configuration configuration;
-	
 	private String[] columnNames = new String[] { 
 		"Id", 
 		"Description",
@@ -52,10 +50,9 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 	};
 	private List<Part> parts;
 
-	public PartsTableModel(Configuration configuration) {
-		this.configuration = configuration;
-		configuration.addPropertyChangeListener("parts", this);
-		parts = new ArrayList<Part>(configuration.getParts());
+	public PartsTableModel() {
+		Configuration.get().addPropertyChangeListener("parts", this);
+		parts = new ArrayList<Part>(Configuration.get().getParts());
 	}
 
 	@Override
@@ -102,7 +99,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 						length.setUnits(oldLength.getUnits());
 					}
 					if (length.getUnits() == null) {
-						length.setUnits(configuration.getSystemUnits());
+						length.setUnits(Configuration.get().getSystemUnits());
 					}
 				}
 				part.setHeight(length);
@@ -110,7 +107,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 			else if (columnIndex == 3) {
 				part.setPackage((Package) aValue);
 			}
-			configuration.setDirty(true);
+			Configuration.get().setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
@@ -135,7 +132,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 
 	@Override
 	public void propertyChange(PropertyChangeEvent arg0) {
-		parts = new ArrayList<Part>(configuration.getParts());
+		parts = new ArrayList<Part>(Configuration.get().getParts());
 		fireTableDataChanged();
 	}
 }
