@@ -224,7 +224,7 @@ public class FiducialCheck implements Runnable {
         g2d.setStroke(new BasicStroke(1f));
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
-        g2d.setColor(Color.red);
+        g2d.setColor(Color.white);
         // center the drawing
         g2d.translate(width / 2, height / 2);
         g2d.fill(shape);

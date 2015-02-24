@@ -96,6 +96,7 @@ public class OpenCvVisionProvider implements VisionProvider {
      * @return
      */
     public List<TemplateMatch> getTemplateMatches(BufferedImage template) {
+        // TODO: ROI
         BufferedImage image = camera.capture();
         
         // Convert the camera image and template image to the same type. This

@@ -16,8 +16,20 @@ public class OpenBuildsDriver extends MarlinDriver {
     private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
 
     @Attribute
-    private double zCamRadius = 26; 
-            
+    private double zCamRadius = 26;
+    
+    @Override
+    public void setEnabled(boolean enabled) throws Exception {
+        // TODO Auto-generated method stub
+        super.setEnabled(enabled);
+        if (enabled) {
+            sendCommand("M420 R255 E0 B0");
+        }
+        else {
+            sendCommand("M420 R0 E0 B0");
+        }
+    }
+
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {

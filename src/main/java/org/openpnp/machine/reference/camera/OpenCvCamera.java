@@ -22,11 +22,16 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
 
 import javax.swing.Action;
 
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
 import org.opencv.highgui.VideoCapture;
+import org.opencv.ml.CvNormalBayesClassifier;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -64,8 +69,10 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    Mat mat = new Mat();
 		    if (!fg.read(mat)) {
 		        return null;
-		    }            
-			return applyRotation(OpenCvUtils.toBufferedImage(mat));
+		    }       
+		    Mat m = new Mat(mat.rows(), mat.cols(), CvType.CV_8U);
+		    Core.mixChannels(Collections.singletonList(mat), Collections.singletonList(m), new MatOfInt(2, 0));
+			return applyRotation(OpenCvUtils.toBufferedImage(m));
 		}
 		catch (Exception e) {
 			return null;
