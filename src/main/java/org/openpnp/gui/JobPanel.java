@@ -330,9 +330,9 @@ public class JobPanel extends JPanel {
 		toolBarBoards.add(btnTwoPointBoardLocation);
 		btnTwoPointBoardLocation.setHideActionText(true);
 		
-		JButton btnFiducialCheck = new JButton(fiducialCheckAction);
-		toolBarBoards.add(btnFiducialCheck);
-		btnFiducialCheck.setHideActionText(true);
+//		JButton btnFiducialCheck = new JButton(fiducialCheckAction);
+//		toolBarBoards.add(btnFiducialCheck);
+//		btnFiducialCheck.setHideActionText(true);
 
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
 		JPanel pnlPlacements = new JPanel();

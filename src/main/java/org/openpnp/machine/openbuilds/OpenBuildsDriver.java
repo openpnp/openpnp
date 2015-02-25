@@ -2,6 +2,7 @@ package org.openpnp.machine.openbuilds;
 
 import java.util.Locale;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.MarlinDriver;
@@ -12,24 +13,38 @@ import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.corba.se.spi.legacy.connection.GetEndPointInfoAgainException;
+
 public class OpenBuildsDriver extends MarlinDriver {
     private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
 
     @Attribute
     private double zCamRadius = 26;
     
+    @Attribute(required=false)
+    private int neoPixelRed = 0;
+    
+    @Attribute(required=false)
+    private int neoPixelGreen = 0;
+    
+    @Attribute(required=false)
+    private int neoPixelBlue = 0;
+    
+    private boolean enabled;
+    
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         // TODO Auto-generated method stub
         super.setEnabled(enabled);
         if (enabled) {
-            sendCommand("M420 R255 E0 B0");
+            sendCommand(String.format("M420 R%d E%d B%d", neoPixelRed, neoPixelGreen, neoPixelBlue));
         }
         else {
             sendCommand("M420 R0 E0 B0");
         }
+        this.enabled = enabled;
     }
-
+    
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
@@ -89,6 +104,44 @@ public class OpenBuildsDriver extends MarlinDriver {
         }
         if (!Double.isNaN(c)) {
             this.c = c;
+        }
+    }
+    
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new OpenBuildsDriverWizard(this);
+    }
+
+    public int getNeoPixelRed() {
+        return neoPixelRed;
+    }
+
+    public void setNeoPixelRed(int neoPixelRed) throws Exception {
+        this.neoPixelRed = neoPixelRed;
+        if (enabled) {
+            sendCommand(String.format("M420 R%d E%d B%d", neoPixelRed, neoPixelGreen, neoPixelBlue));
+        }
+    }
+
+    public int getNeoPixelGreen() {
+        return neoPixelGreen;
+    }
+
+    public void setNeoPixelGreen(int neoPixelGreen) throws Exception  {
+        this.neoPixelGreen = neoPixelGreen;
+        if (enabled) {
+            sendCommand(String.format("M420 R%d E%d B%d", neoPixelRed, neoPixelGreen, neoPixelBlue));
+        }
+    }
+
+    public int getNeoPixelBlue() {
+        return neoPixelBlue;
+    }
+
+    public void setNeoPixelBlue(int neoPixelBlue) throws Exception  {
+        this.neoPixelBlue = neoPixelBlue;
+        if (enabled) {
+            sendCommand(String.format("M420 R%d E%d B%d", neoPixelRed, neoPixelGreen, neoPixelBlue));
         }
     }
 }
