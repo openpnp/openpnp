@@ -70,9 +70,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    if (!fg.read(mat)) {
 		        return null;
 		    }       
-		    Mat m = new Mat(mat.rows(), mat.cols(), CvType.CV_8U);
-		    Core.mixChannels(Collections.singletonList(mat), Collections.singletonList(m), new MatOfInt(2, 0));
-			return applyRotation(OpenCvUtils.toBufferedImage(m));
+			return applyRotation(OpenCvUtils.toBufferedImage(mat));
 		}
 		catch (Exception e) {
 			return null;
