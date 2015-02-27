@@ -41,6 +41,8 @@ public class OpenBuildsDriver extends MarlinDriver {
         }
         else {
             sendCommand("M420 R0 E0 B0");
+            sendCommand("M42 P10 S0");
+            sendCommand("M107");
         }
         this.enabled = enabled;
     }
@@ -105,6 +107,28 @@ public class OpenBuildsDriver extends MarlinDriver {
         if (!Double.isNaN(c)) {
             this.c = c;
         }
+    }
+    
+    @Override
+    public void pick(ReferenceNozzle nozzle) throws Exception {
+        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
+            sendCommand("M42 P10 S255");
+        }
+        else {
+            sendCommand("M106");
+        }
+        dwell();
+    }
+
+    @Override
+    public void place(ReferenceNozzle nozzle) throws Exception {
+        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
+            sendCommand("M42 P10 S0");
+        }
+        else {
+            sendCommand("M107");
+        }
+        dwell();
     }
     
     @Override
