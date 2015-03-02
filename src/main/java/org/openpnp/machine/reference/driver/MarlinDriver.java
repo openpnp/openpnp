@@ -220,7 +220,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
         getCurrentPosition();
 	}
 	
-	private void getCurrentPosition() throws Exception {
+	protected void getCurrentPosition() throws Exception {
 	    List<String> responses = sendCommand("M114");
 	    for (String response : responses) {
 	        if (response.startsWith("X:")) {

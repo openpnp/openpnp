@@ -3,6 +3,7 @@ package org.openpnp.machine.openbuilds;
 import java.util.Locale;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.MarlinDriver;
@@ -20,6 +21,12 @@ public class OpenBuildsDriver extends MarlinDriver {
 
     @Attribute
     private double zCamRadius = 26;
+    
+    @Attribute
+    private double zCamWheelRadius = 9.5;
+    
+    @Attribute
+    private double zGap = 2;
     
     @Attribute(required=false)
     private int neoPixelRed = 0;
@@ -48,6 +55,35 @@ public class OpenBuildsDriver extends MarlinDriver {
     }
     
     @Override
+    public void home(ReferenceHead head) throws Exception {
+        super.home(head);
+        // After homing completes the Z axis is at the home switch location,
+        // which is not 0. The home switch location has been set in the firmware
+        // so the firmware's position is correct. We just need to move to zero
+        // and update the position.
+        sendCommand("G0Z0");
+        dwell();
+        getCurrentPosition();
+    }
+
+    @Override
+    public Location getLocation(ReferenceHeadMountable hm) {
+        if (hm instanceof ReferenceNozzle) {
+            double z = Math.sin(Math.toRadians(this.z)) * zCamRadius;
+            if (((ReferenceNozzle) hm).getName().equals("N2")) {
+                z = -z;
+            }
+            z += zCamWheelRadius + zGap;                
+            return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm
+                    .getHeadOffsets());
+        }
+        else {
+            return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm
+                    .getHeadOffsets());
+        }
+    }
+
+    @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
         location = location.subtract(hm.getHeadOffsets());
@@ -70,42 +106,32 @@ public class OpenBuildsDriver extends MarlinDriver {
         StringBuffer sb = new StringBuffer();
         if (!Double.isNaN(x) && x != this.x) {
             sb.append(String.format(Locale.US, "X%2.2f ", x));
+            this.x = x;
         }
         if (!Double.isNaN(y) && y != this.y) {
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
+            this.y = y;
         }
         if (!Double.isNaN(z) && z != this.z) {
-            // TODO: This fails with values larger than the radius because the
-            // input to asin must be abs(0-1). 
-            double degrees = Math.toDegrees(Math.asin(z / zCamRadius));
-            logger.debug("nozzle {} {} {}", new Object[] { z, zCamRadius, degrees });
+            double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
+            logger.debug("nozzle {} {} {}", new Object[] { z, zCamRadius, a });
             if (hm instanceof ReferenceNozzle) {
                 ReferenceNozzle nozzle = (ReferenceNozzle) hm;
                 if (nozzle.getName().equals("N2")) {
-                    degrees = -degrees;
+                    a = -a;
                 }
             }
-            sb.append(String.format(Locale.US, "Z%2.2f ", degrees));
+            sb.append(String.format(Locale.US, "Z%2.2f ", a));
+            this.z = a;
         }
         if (!Double.isNaN(c) && c != this.c) {
             sb.append(String.format(Locale.US, "E%2.2f ", c));
+            this.c = c;
         }
         if (sb.length() > 0) {
             sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
             sendCommand("G0 " + sb.toString());
             dwell();
-        }
-        if (!Double.isNaN(x)) {
-            this.x = x;
-        }
-        if (!Double.isNaN(y)) {
-            this.y = y;
-        }
-        if (!Double.isNaN(z)) {
-            this.z = z;
-        }
-        if (!Double.isNaN(c)) {
-            this.c = c;
         }
     }
     
