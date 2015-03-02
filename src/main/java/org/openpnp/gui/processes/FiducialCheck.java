@@ -24,15 +24,16 @@ package org.openpnp.gui.processes;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-
-import javax.imageio.ImageIO;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
@@ -43,9 +44,11 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
@@ -77,17 +80,47 @@ public class FiducialCheck implements Runnable {
 
     public void run() {
         try {
-            /**
-             * Steps: get the list of fiducials find the two that are furthest apart
-             * in X and Y for each of the two fids go use vision to find them run
-             * the results through the two point algorithm and do the update
-             */
+            // TODO: handle bottom
+            
             // Find the fids in the board
             IdentifiableList<Placement> fiducials = getFiducials();
-
-            for (Placement fid : fiducials) {
-                getFiducialLocation(fid);
+            
+            // Find the two that are most distant from each other
+            List<Placement> mostDistant = getMostDistantCouple(fiducials);
+            
+            Placement a = mostDistant.get(0);
+            Placement b = mostDistant.get(1);
+            
+            Location aLoc = a.getLocation();
+            Location bLoc = b.getLocation();
+                    
+            if (boardLocation.getSide() == Side.Bottom) {
+                aLoc = aLoc.invert(true, false, false, false);
+                bLoc = bLoc.invert(true, false, false, false);
             }
+
+            // Run the fiducial check on each and get their actual locations
+            Location aVisionLoc = getFiducialLocation(a);
+            Location bVisionLoc = getFiducialLocation(b);
+            
+            // Calculate the angle and offset from the results
+            Location boardLocation = Utils2D.calculateAngleAndOffset(
+                    a.getLocation(), 
+                    b.getLocation(), 
+                    aVisionLoc,
+                    bVisionLoc);
+            
+            // Set the new location
+            Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
+            oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());
+            
+            boardLocation = boardLocation.derive(null, null, oldBoardLocation.getZ(), null);
+
+            jobPanel.getSelectedBoardLocation().setLocation(boardLocation);
+            jobPanel.refreshSelectedBoardRow();
+
+            // And go there
+            MovableUtils.moveToLocationAtSafeZ(camera, boardLocation, 1.0);
         }
         catch (Exception e) {
             MessageBoxes.errorBox(mainFrame, "Process Error", e);
@@ -127,7 +160,6 @@ public class FiducialCheck implements Runnable {
             if (location == null) {
                 return null;
             }
-            location = camera.getLocation().subtract(location);
             logger.debug("fiducial located at {}", location);
             // Move to where we actually found the fid
             MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);        
@@ -136,56 +168,61 @@ public class FiducialCheck implements Runnable {
         return location;
     }
     
+    /**
+     * Given a List of Placements, find the two that are the most distant from
+     * each other.
+     * @param fiducials
+     * @return
+     */
+    private List<Placement> getMostDistantCouple(List<Placement> fiducials) {
+        if (fiducials.size() < 2) {
+            return null;
+        }
+        Placement maxA = null, maxB = null;
+        double max = 0;
+        for (Placement a : fiducials) {
+            for (Placement b : fiducials) {
+                if (a == b) {
+                    continue;
+                }
+                double d = Math.abs(a.getLocation().getLinearDistanceTo(b.getLocation()));
+                if (d > max) {
+                    maxA = a;
+                    maxB = b;
+                    max = d;
+                }
+            }
+        }
+        ArrayList<Placement> results = new ArrayList<Placement>();
+        results.add(maxA);
+        results.add(maxB);
+        System.out.println(results + " "+ max);
+        return results;
+    }
+    
     private Location getBestTemplateMatch(BufferedImage template) throws Exception {
         VisionProvider visionProvider = camera.getVisionProvider();
         
-        BufferedImage sourceImage = camera.capture();
-        // Perform the template match
-        Point[] matchingPoints = visionProvider.locateTemplateMatches(
-                0, 
-                0, 
-                sourceImage.getWidth(), 
-                sourceImage.getHeight(), 
-                0, 
-                0, 
-                template);
+        List<TemplateMatch> matches = visionProvider.getTemplateMatches(template);
         
-        // Get the best match from the array
-        Point match = matchingPoints[0];
+        if (matches.isEmpty()) {
+            return null;
+        }
         
-        // match now contains the position, in pixels, from the top left corner
-        // of the image to the top left corner of the match. We are interested in
-        // knowing how far from the center of the image the center of the match is.
-        BufferedImage image = camera.capture();
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
-        double templateWidth = template.getWidth();
-        double templateHeight = template.getHeight();
-        double matchX = match.x;
-        double matchY = match.y;
+        // getTemplateMatches returns results in order of score, but we're
+        // more interested in the result closest to the expected location
+        Collections.sort(matches, new Comparator<TemplateMatch>() {
+            @Override
+            public int compare(TemplateMatch o1, TemplateMatch o2) {
+                double d1 = o1.location.getLinearDistanceTo(camera.getLocation()); 
+                double d2 = o2.location.getLinearDistanceTo(camera.getLocation()); 
+                return Double.compare(d1, d2);
+            }
+        });
 
-        // Adjust the match x and y to be at the center of the match instead of
-        // the top left corner.
-        matchX += (templateWidth / 2);
-        matchY += (templateHeight / 2);
-        
-        // Calculate the difference between the center of the image to the
-        // center of the match.
-        double offsetX = (imageWidth / 2) - matchX;
-        double offsetY = (imageHeight / 2) - matchY;
-
-        // Invert the Y offset because images count top to bottom and the Y
-        // axis of the machine counts bottom to top.
-        offsetY *= -1;
-        
-        // And convert pixels to units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
-        offsetX *= unitsPerPixel.getX();
-        offsetY *= unitsPerPixel.getY();
-
-        return new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
+        return matches.get(0).location;
     }
-    
+        
     /**
      * Create a template image based on a Placement's footprint. The image
      * will be scaled to match the dimensions of the current camera.

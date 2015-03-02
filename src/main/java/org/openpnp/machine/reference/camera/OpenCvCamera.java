@@ -30,7 +30,9 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
+import org.opencv.core.Size;
 import org.opencv.highgui.VideoCapture;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.ml.CvNormalBayesClassifier;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -69,7 +71,11 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    Mat mat = new Mat();
 		    if (!fg.read(mat)) {
 		        return null;
-		    }       
+		    }
+		    Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+//		    Imgproc.GaussianBlur(mat, mat, new Size(7, 7), 0);
+//		    Imgproc.threshold(mat, mat, 100, 255, Imgproc.THRESH_BINARY);
+//		    Imgproc.adaptiveThreshold(mat, mat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 7, 0);
 			return applyRotation(OpenCvUtils.toBufferedImage(mat));
 		}
 		catch (Exception e) {
