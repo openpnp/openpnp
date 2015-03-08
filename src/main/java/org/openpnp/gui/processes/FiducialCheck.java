@@ -80,13 +80,21 @@ public class FiducialCheck implements Runnable {
 
     public void run() {
         try {
-            // TODO: handle bottom
+            // TODO: finish bottom code
             
             // Find the fids in the board
             IdentifiableList<Placement> fiducials = getFiducials();
             
+            if (fiducials.size() < 2) {
+                MessageBoxes.errorBox(
+                        mainFrame, 
+                        "Error", 
+                        String.format("The board side contains only %d placements marked as fiducials, but at least 2 are required.", fiducials.size()));
+                return;
+            }
+            
             // Find the two that are most distant from each other
-            List<Placement> mostDistant = getMostDistantCouple(fiducials);
+            List<Placement> mostDistant = getMostDistantPlacements(fiducials);
             
             Placement a = mostDistant.get(0);
             Placement b = mostDistant.get(1);
@@ -174,7 +182,7 @@ public class FiducialCheck implements Runnable {
      * @param fiducials
      * @return
      */
-    private List<Placement> getMostDistantCouple(List<Placement> fiducials) {
+    private List<Placement> getMostDistantPlacements(List<Placement> fiducials) {
         if (fiducials.size() < 2) {
             return null;
         }
@@ -196,7 +204,6 @@ public class FiducialCheck implements Runnable {
         ArrayList<Placement> results = new ArrayList<Placement>();
         results.add(maxA);
         results.add(maxB);
-        System.out.println(results + " "+ max);
         return results;
     }
     

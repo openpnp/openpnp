@@ -72,10 +72,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    if (!fg.read(mat)) {
 		        return null;
 		    }
-		    Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-//		    Imgproc.GaussianBlur(mat, mat, new Size(7, 7), 0);
-//		    Imgproc.threshold(mat, mat, 100, 255, Imgproc.THRESH_BINARY);
-//		    Imgproc.adaptiveThreshold(mat, mat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 7, 0);
 			return applyRotation(OpenCvUtils.toBufferedImage(mat));
 		}
 		catch (Exception e) {
