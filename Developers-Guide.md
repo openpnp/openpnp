@@ -46,9 +46,9 @@ Everything below assumes you are working in the `gui/` subdirectory of the repos
 
 ## Prerequisites
 
-### JDK or JRE 6+
+### JDK or JRE 7+
 
-OpenPnP is written in Java and requires Java 6 or higher to run. If you want
+OpenPnP is written in Java and requires Java 7 or higher to run. If you want
 to do development on OpenPnP or recompile it, you should install the JDK. 
 If you just want to run it you can install the smaller JRE.
 
