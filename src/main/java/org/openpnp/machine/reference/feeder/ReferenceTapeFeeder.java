@@ -103,7 +103,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
-	    return nozzle.getNozzleTip().canHandle(part);
+	    return nozzle.getHead().getActuatorByName(actuatorName) != null;
 	}
 	
 	@Override
