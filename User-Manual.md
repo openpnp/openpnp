@@ -162,10 +162,10 @@ If you are interested in having OpenPnP work with a machine that is not currentl
 you will need an OpenPnP driver that can talk to your hardware and you will need to
 configure it in the `machine.xml`.
 
-To get started, look at the documentation in the package below to see what drivers are
+To get started, look at the list of drivers in the package below to see what drivers are
 available and determine if one will meet your needs.
 
-http://openpnp.org/doc/javadoc/org/openpnp/machine/reference/driver/package-summary.html
+https://github.com/openpnp/openpnp/tree/develop/src/main/java/org/openpnp/machine/reference/driver
 
 If none of those will work for your machine, you will need to write one. Once
 you have a driver, you can specify it's classname and configuration parameters
