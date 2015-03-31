@@ -40,6 +40,14 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Attribute(required = false)
     private boolean changerEnabled = false;
     
+    /**
+     * If limitRotation is enabled the nozzle will reverse directions when
+     * commanded to rotate past 180 degrees. So, 190 degrees becomes -170
+     * and -190 becomes 170.
+     */
+    @Attribute(required = false)
+    private boolean limitRotation = false;
+    
     protected NozzleTip nozzleTip;
 
     protected ReferenceMachine machine;
@@ -55,6 +63,14 @@ public class ReferenceNozzle extends AbstractNozzle implements
                 nozzleTip = nozzleTips.get(currentNozzleTipId);
             }
         });
+    }
+    
+    public boolean isLimitRotation() {
+        return limitRotation;
+    }
+
+    public void setLimitRotation(boolean limitRotation) {
+        this.limitRotation = limitRotation;
     }
 
     public int getPickDwellMilliseconds() {
@@ -113,6 +129,14 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         logger.debug("{}.moveTo({}, {})", new Object[] { getName(), location, speed } );
+        if (limitRotation && !Double.isNaN(location.getRotation()) && Math.abs(location.getRotation()) > 180) {
+            if (location.getRotation() < 0) {
+                location = location.derive(null, null, null, location.getRotation() + 360);
+            }
+            else {
+                location = location.derive(null, null, null, location.getRotation() - 360);
+            }
+        }
         driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
