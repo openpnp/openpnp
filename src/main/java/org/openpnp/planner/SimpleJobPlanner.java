@@ -64,10 +64,11 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
             }
             PlacementSolution solution = i.next();
             i.remove();
+            Part part = solution.placement.getPart();
             // Feeder can be null if no applicable Feeder was found. 
-            Feeder feeder = getFeederSolution(Configuration.get().getMachine(), nozzle, solution.placement.getPart());
+            Feeder feeder = getFeederSolution(Configuration.get().getMachine(), nozzle, part);
             // NozzleTip can be null if no applicable NozzleTip was found.
-            NozzleTip nozzleTip = getNozzleTipSolution(Configuration.get().getMachine(), nozzle, solution.placement.getPart(), feeder);
+            NozzleTip nozzleTip = getNozzleTipSolution(Configuration.get().getMachine(), nozzle, part, feeder);
             solution = new PlacementSolution(solution.placement, solution.boardLocation, solution.head, nozzle, nozzleTip, feeder);
             results.add(solution);
         }
@@ -81,6 +82,9 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         // Get a list of Feeders that can source the part
         List<Feeder> feeders = new ArrayList<Feeder>();
         for (Feeder feeder : machine.getFeeders()) {
+            if (feeder.getPart() == null) {
+                continue;
+            }
             if (feeder.getPart() == part && feeder.canFeedToNozzle(nozzle) && feeder.isEnabled()) {
                 feeders.add(feeder);
             }

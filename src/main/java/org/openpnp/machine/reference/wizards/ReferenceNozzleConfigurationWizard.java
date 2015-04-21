@@ -52,6 +52,7 @@ public class ReferenceNozzleConfigurationWizard extends
     private JPanel panelOffsets;
     private JPanel panelChanger;
     private JCheckBox chckbxChangerEnabled;
+    private JCheckBox chckbxLimitRotationTo;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -99,7 +100,7 @@ public class ReferenceNozzleConfigurationWizard extends
         contentPanel.add(panelOffsets);
         
         panelChanger = new JPanel();
-        panelChanger.setBorder(new TitledBorder(null, "Nozzle Tip Changer", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelChanger.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelChanger);
         panelChanger.setLayout(new FormLayout(new ColumnSpec[] {
                 FormFactory.RELATED_GAP_COLSPEC,
@@ -114,10 +115,15 @@ public class ReferenceNozzleConfigurationWizard extends
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
                 FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
                 FormFactory.DEFAULT_ROWSPEC,}));
         
         chckbxChangerEnabled = new JCheckBox("Changer Enabled?");
         panelChanger.add(chckbxChangerEnabled, "2, 2");
+        
+        chckbxLimitRotationTo = new JCheckBox("Limit Rotation to 180º");
+        panelChanger.add(chckbxLimitRotationTo, "2, 4");
     }
 
     @Override
@@ -135,6 +141,8 @@ public class ReferenceNozzleConfigurationWizard extends
                 lengthConverter);
         
         addWrappedBinding(nozzle, "changerEnabled", chckbxChangerEnabled,
+                "selected");
+        addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo,
                 "selected");
 
         ComponentDecorators

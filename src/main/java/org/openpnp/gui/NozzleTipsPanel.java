@@ -93,13 +93,13 @@ public class NozzleTipsPanel extends JPanel implements WizardContainer {
 		toolBar.setFloatable(false);
 		panel.add(toolBar, BorderLayout.CENTER);
 		
+        JButton btnUnload = new JButton(unloadAction);
+        btnUnload.setHideActionText(true);
+        toolBar.add(btnUnload);
+        
 		JButton btnLoad = new JButton(loadAction);
 		btnLoad.setHideActionText(true);
 		toolBar.add(btnLoad);
-		
-		JButton btnUnload = new JButton(unloadAction);
-		btnUnload.setHideActionText(true);
-		toolBar.add(btnUnload);
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
