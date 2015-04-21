@@ -165,6 +165,7 @@
 <wire x1="88.9" y1="47.625" x2="85.725" y2="50.8" width="0" layer="20" curve="90"/>
 <wire x1="85.725" y1="50.8" x2="3.175" y2="50.8" width="0" layer="20"/>
 <wire x1="3.175" y1="50.8" x2="0" y2="47.625" width="0" layer="20" curve="90"/>
+<text x="1.27" y="63.5" size="1.778" layer="48">* FIDS are missing keepout</text>
 </plain>
 <libraries>
 <library name="rcl">
@@ -2373,8 +2374,8 @@ design rules under a new name.</description>
 <element name="E$12" library="ref-packages" package="TQFP48" value="" x="57.15" y="34.29" smashed="yes" rot="R270">
 <attribute name="VALUE" x="50.8" y="37.211" size="1.27" layer="27" ratio="10" rot="R270"/>
 </element>
-<element name="E$22" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="2.54" y="2.54"/>
-<element name="E$13" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="86.36" y="48.26"/>
+<element name="E$22" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="3.81" y="3.81"/>
+<element name="E$13" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="85.09" y="46.99"/>
 <element name="E$14" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="38.1" y="6.35"/>
 <element name="E$15" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="53.34" y="21.59"/>
 <element name="E$17" library="SparkFun-Aesthetics" package="FIDUCIAL-1X2" value="" x="52.07" y="29.21"/>

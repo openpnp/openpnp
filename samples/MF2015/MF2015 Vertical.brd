@@ -3973,6 +3973,7 @@
 <rectangle x1="10.8966" y1="6.8072" x2="11.2014" y2="6.8326" layer="200" rot="R90"/>
 <rectangle x1="10.8966" y1="8.0518" x2="11.2014" y2="8.0772" layer="200" rot="R90"/>
 <rectangle x1="10.9093" y1="9.3091" x2="11.1887" y2="9.3345" layer="200" rot="R90"/>
+<text x="1.27" y="60.96" size="1.778" layer="20">* FIDS are missing keepout</text>
 </plain>
 <libraries>
 <library name="adafruit">
