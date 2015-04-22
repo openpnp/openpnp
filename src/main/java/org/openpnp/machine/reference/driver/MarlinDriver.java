@@ -45,6 +45,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,24 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	@Attribute
 	protected double feedRateMmPerMinute;
 	
+    @Element(required=false)
+    protected String pickGcode = "M106 S255";
+    
+    @Element(required=false)
+    protected String placeGcode = "M107";
+    
+    @Element(required=false)
+    protected String actuatorOnGcode = "M8";
+    
+    @Element(required=false)
+    protected String actuatorOffGcode = "M9";
+    
+    @Element(required=false)
+    protected String enableGcode = "M17";
+    
+    @Element(required=false)
+    protected String disableGcode = "M18";
+    
 	
 	protected double x, y, z, c;
 	private Thread readerThread;
@@ -77,10 +96,10 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	@Override
 	public void actuate(ReferenceActuator actuator, boolean on)
 			throws Exception {
-//		if (actuator.getIndex() == 0) {
-//			sendCommand(on ? "M8" : "M9");
-//			dwell();
-//		}
+		if (actuator.getIndex() == 0) {
+			sendCommand(on ? actuatorOnGcode : actuatorOffGcode);
+			dwell();
+		}
 	}
 	
 	
@@ -150,19 +169,19 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
-	    sendCommand(enabled ? "M17" : "M18");
+	    sendCommand(enabled ? enableGcode : disableGcode);
 	}
 
 	@Override
 	public void pick(ReferenceNozzle nozzle) throws Exception {
-//		sendCommand("M4");
-//		dwell();
+		sendCommand(pickGcode);
+		dwell();
 	}
 
 	@Override
 	public void place(ReferenceNozzle nozzle) throws Exception {
-//		sendCommand("M5");
-//		dwell();
+		sendCommand(placeGcode);
+		dwell();
 	}
 
 	public synchronized void connect()
