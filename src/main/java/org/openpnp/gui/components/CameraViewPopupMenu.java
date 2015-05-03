@@ -374,19 +374,45 @@ public class CameraViewPopupMenu extends JPopupMenu {
 				cameraView.setDefaultReticle(reticle);
 			}
 		});
-		subMenu.add(menuItem);
-		menuItem = new JRadioButtonMenuItem("1");
-		buttonGroup.add(menuItem);
-		if (reticle.getUnitsPerTick() == 1) {
-			menuItem.setSelected(true);
-		}
-		menuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				reticle.setUnitsPerTick(1);
-				cameraView.setDefaultReticle(reticle);
-			}
-		});
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("1");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 1) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(1);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("2");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 2) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(2);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("5");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 5) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(5);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
 		subMenu.add(menuItem);
 		menuItem = new JRadioButtonMenuItem("10");
 		buttonGroup.add(menuItem);
