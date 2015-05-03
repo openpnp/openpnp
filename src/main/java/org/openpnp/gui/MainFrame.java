@@ -313,10 +313,10 @@ public class MainFrame extends JFrame {
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,
 				mask), machineControlsPanel
 				.getJogControlsPanel().xPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP,
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_QUOTE,
 				mask), machineControlsPanel
 				.getJogControlsPanel().zPlusAction);
-		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN,
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH,
 				mask), machineControlsPanel
 				.getJogControlsPanel().zMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA,

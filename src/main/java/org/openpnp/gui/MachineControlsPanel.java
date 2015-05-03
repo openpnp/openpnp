@@ -33,6 +33,8 @@ import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -90,13 +92,16 @@ public class MachineControlsPanel extends JPanel {
 	
 	private Color startColor = Color.green;
 	private Color stopColor = new Color(178, 34, 34);
-	private Color droNormalColor = new Color(143, 188, 143);
-	private Color droEditingColor = Color.yellow;
-	private Color droWarningColor = Color.red;
+	private Color droNormalColor = new Color(0xBDFFBE);
+	private Color droEditingColor = new Color(0xF0F0A1);
+	private Color droWarningColor = new Color(0xFF5C5C);
+	private Color droSavedColor = new Color(0x90cce0);
 	
 	private ExecutorService machineTaskExecutor = Executors.newSingleThreadExecutor();
 	
 	private JogControlsPanel jogControlsPanel;
+	
+	private volatile double savedX = Double.NaN, savedY = Double.NaN, savedZ = Double.NaN, savedC = Double.NaN; 
 	
 	/**
 	 * Create the panel.
@@ -184,14 +189,23 @@ public class MachineControlsPanel extends JPanel {
 		targetToolAction.setEnabled(enabled);
 	}
 	
+	public Location getCurrentLocation() {
+        if (selectedNozzle == null) {
+            return null;
+        }
+        
+        Location l = selectedNozzle.getLocation();
+        l = l.convertToUnits(configuration.getSystemUnits());
+        
+        return l;
+	}
+	
 	public void updateDros() {
-		if (selectedNozzle == null) {
-			return;
-		}
-		
-		Location l = selectedNozzle.getLocation();
-		l = l.convertToUnits(configuration.getSystemUnits());
-		
+	    Location l = getCurrentLocation();
+	    if (l == null) {
+	        return;
+	    }
+	    
 		double x, y, z, c;
 		
 		x = l.getX();
@@ -199,19 +213,30 @@ public class MachineControlsPanel extends JPanel {
 		z = l.getZ();
 		c = l.getRotation();
 		
-		
-		if (!textFieldX.hasFocus()) {
-			textFieldX.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), x));
-		}
-		if (!textFieldY.hasFocus()) {
-			textFieldY.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), y));
-		}
-		if (!textFieldZ.hasFocus()) {
-			textFieldZ.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), z));
-		}
-		if (!textFieldC.hasFocus()) {
-			textFieldC.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), c));
-		}
+        double savedX = this.savedX;
+		if (!Double.isNaN(savedX)) {
+            x -= savedX;
+        }
+        
+        double savedY = this.savedY;
+        if (!Double.isNaN(savedY)) {
+            y -= savedY;
+        }
+        
+        double savedZ = this.savedZ;
+        if (!Double.isNaN(savedZ)) {
+            z -= savedZ;
+        }
+        
+        double savedC = this.savedC;
+        if (!Double.isNaN(savedC)) {
+            c -= savedC;
+        }
+        
+		textFieldX.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), x));
+		textFieldY.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), y));
+		textFieldZ.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), z));
+		textFieldC.setText(String.format(Locale.US,configuration.getLengthDisplayFormat(), c));
 	}
 	
 	private void createUi() {
@@ -261,6 +286,12 @@ public class MachineControlsPanel extends JPanel {
 		textFieldX.setBackground(droNormalColor);
 		textFieldX.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldX.setText("0000.0000");
+		textFieldX.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveXAction.actionPerformed(null);
+            }
+        });
 		panelDrosFirstLine.add(textFieldX);
 		textFieldX.setColumns(6);
 		
@@ -279,6 +310,12 @@ public class MachineControlsPanel extends JPanel {
 		textFieldY.setBackground(droNormalColor);
 		textFieldY.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldY.setText("0000.0000");
+        textFieldY.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveYAction.actionPerformed(null);
+            }
+        });
 		panelDrosFirstLine.add(textFieldY);
 		textFieldY.setColumns(6);
 		
@@ -303,6 +340,12 @@ public class MachineControlsPanel extends JPanel {
 		textFieldC.setText("0000.0000");
 		textFieldC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldC.setColumns(6);
+        textFieldC.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveCAction.actionPerformed(null);
+            }
+        });
 		panelDrosSecondLine.add(textFieldC);
 		
 		Component horizontalStrut_1 = Box.createHorizontalStrut(15);
@@ -321,6 +364,12 @@ public class MachineControlsPanel extends JPanel {
 		textFieldZ.setText("0000.0000");
 		textFieldZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
 		textFieldZ.setColumns(6);
+        textFieldZ.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveZAction.actionPerformed(null);
+            }
+        });
 		panelDrosSecondLine.add(textFieldZ);
 		
 		JButton btnTargetCamera = new JButton(targetCameraAction);
@@ -492,28 +541,108 @@ public class MachineControlsPanel extends JPanel {
 		}
 	};
 	
-	@SuppressWarnings("serial")
-	public Action targetCameraAction = new AbstractAction(null, Icons.centerCamera) {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			final Camera camera = cameraPanel.getSelectedCamera();
-			if (camera == null) {
-				return;
-			}
-			final Location location = getSelectedNozzle().getLocation();
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-					    MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Move Failed", e);
-					}
-				}
-			});
-		}
-	};
-	
+    @SuppressWarnings("serial")
+    public Action targetCameraAction = new AbstractAction(null, Icons.centerCamera) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            final Camera camera = cameraPanel.getSelectedCamera();
+            if (camera == null) {
+                return;
+            }
+            final Location location = getSelectedNozzle().getLocation();
+            submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(frame, "Move Failed", e);
+                    }
+                }
+            });
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action saveXAction = new AbstractAction(null) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (Double.isNaN(savedX)) {
+                textFieldX.setBackground(droSavedColor);
+                savedX = getCurrentLocation().getX();
+            }
+            else {
+                textFieldX.setBackground(droNormalColor);
+                savedX = Double.NaN;
+            }
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    updateDros();
+                }
+            });
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action saveYAction = new AbstractAction(null) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (Double.isNaN(savedY)) {
+                textFieldY.setBackground(droSavedColor);
+                savedY = getCurrentLocation().getY();
+            }
+            else {
+                textFieldY.setBackground(droNormalColor);
+                savedY = Double.NaN;
+            }
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    updateDros();
+                }
+            });
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action saveZAction = new AbstractAction(null) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (Double.isNaN(savedZ)) {
+                textFieldZ.setBackground(droSavedColor);
+                savedZ = getCurrentLocation().getZ();
+            }
+            else {
+                textFieldZ.setBackground(droNormalColor);
+                savedZ = Double.NaN;
+            }
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    updateDros();
+                }
+            });
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action saveCAction = new AbstractAction(null) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (Double.isNaN(savedC)) {
+                textFieldC.setBackground(droSavedColor);
+                savedC = getCurrentLocation().getRotation();
+            }
+            else {
+                textFieldC.setBackground(droNormalColor);
+                savedC = Double.NaN;
+            }
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    updateDros();
+                }
+            });
+        }
+    };
+    
 	private MachineListener machineListener = new MachineListener.Adapter() {
 		@Override
 		public void machineHeadActivity(Machine machine, Head head) {
