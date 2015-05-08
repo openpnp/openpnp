@@ -29,6 +29,7 @@ import javax.swing.Action;
 
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
+import org.openpnp.gui.processes.FiducialBoardLocator;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceJobProcessorConfigurationWizard;
@@ -70,7 +71,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	private boolean pauseAtNextStep;
 	
 	@Attribute(required=false)
-	private boolean demoMode = true;
+	private boolean demoMode;
 	
 	public ReferenceJobProcessor() {
 	}
@@ -193,6 +194,20 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 			}
 		}
 		
+        fireDetailedStatusUpdated(String.format("Check fiducials."));        
+        
+        if (!shouldJobProcessingContinue()) {
+            return;
+        }
+
+        try {
+            checkFiducials();
+        }
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+            return;
+        }
+		
 		JobPlanner jobPlanner = machine.getJobPlanner();
 		Head head = machine.getHeads().get(0);
 		
@@ -299,6 +314,20 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
             }
         }
         
+        fireDetailedStatusUpdated(String.format("Check fiducials."));        
+        
+        if (!shouldJobProcessingContinue()) {
+            return;
+        }
+
+        try {
+            checkFiducials();
+        }
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+            return;
+        }
+        
         JobPlanner jobPlanner = machine.getJobPlanner();
         Head head = machine.getHeads().get(0);
         Camera camera = head.getCameras().get(0);
@@ -340,6 +369,19 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
         fireJobStateChanged();
     }
     
+    // TODO: Should not bail if there are no fids on the board. Figure out
+    // the UI for that.
+    protected void checkFiducials() throws Exception {
+        FiducialBoardLocator locator = new FiducialBoardLocator();
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (!boardLocation.isCheckFiducials()) {
+                continue;
+            }
+            Location location = locator.locateBoard(boardLocation);
+            boardLocation.setLocation(location);
+        }
+    }
+	
 	protected Location performBottomVision(Machine machine, Part part, Nozzle nozzle) throws Exception {
 	    // TODO: I think this stuff actually belongs in VisionProvider but
 	    // I have not yet fully thought through the API.
