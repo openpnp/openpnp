@@ -25,15 +25,20 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import javax.swing.Action;
+
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -43,6 +48,7 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
@@ -63,11 +69,8 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	
 	private boolean pauseAtNextStep;
 	
-	/**
-	 * Required for XML serialization. Ignore.
-	 */
 	@Attribute(required=false)
-	private String dummy;
+	private boolean demoMode = true;
 	
 	public ReferenceJobProcessor() {
 	}
@@ -162,6 +165,11 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	
 	@Override
     public void run() {
+	    if (demoMode) {
+	        runDemo();
+	        return;
+	    }
+	    
 		state = JobState.Running;
 		fireJobStateChanged();
 		
@@ -265,6 +273,73 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 		fireJobStateChanged();
 	}
 	
+    // TODO: DRY this code out from the run() method. Then break the main
+	// meat from the run() method into a runPnP method and this remains
+	// runDemo method. This opens us up for general setup and then running
+	// pnp jobs, demo jobs, soldering jobs, etc.
+	private void runDemo() {
+        state = JobState.Running;
+        fireJobStateChanged();
+        
+        Machine machine = Configuration.get().getMachine();
+        
+        for (Head head : machine.getHeads()) {
+            fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getName()));        
+    
+            if (!shouldJobProcessingContinue()) {
+                return;
+            }
+    
+            try {
+                head.moveToSafeZ(1.0);
+            }
+            catch (Exception e) {
+                fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                return;
+            }
+        }
+        
+        JobPlanner jobPlanner = machine.getJobPlanner();
+        Head head = machine.getHeads().get(0);
+        Camera camera = head.getCameras().get(0);
+        
+        for (BoardLocation bl : job.getBoardLocations()) {
+            for (Placement placement : bl.getBoard().getPlacements()) {
+                if (placement.getSide() != bl.getSide()) {
+                    continue;
+                }
+                
+                if (placement.getType() != Type.Place) {
+                    continue;
+                }
+                
+                Location placementLocation = placement.getLocation();
+                placementLocation = 
+                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);
+                
+                fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (%s).", placementLocation));
+
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+
+                try {
+                    camera.moveTo(placementLocation, 1.0);
+                    Thread.sleep(1000);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
+            }
+        }
+        
+        fireDetailedStatusUpdated("Job complete.");
+        
+        state = JobState.Stopped;
+        fireJobStateChanged();
+    }
+    
 	protected Location performBottomVision(Machine machine, Part part, Nozzle nozzle) throws Exception {
 	    // TODO: I think this stuff actually belongs in VisionProvider but
 	    // I have not yet fully thought through the API.
@@ -696,4 +771,42 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 			return PickRetryAction.SkipAndContinue;
 		}
 	}
+	
+    public boolean isDemoMode() {
+        return demoMode;
+    }
+
+    public void setDemoMode(boolean demoMode) {
+        this.demoMode = demoMode;
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceJobProcessorConfigurationWizard(this);
+    }
+    
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
