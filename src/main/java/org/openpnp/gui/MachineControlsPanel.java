@@ -48,6 +48,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -100,6 +101,7 @@ public class MachineControlsPanel extends JPanel {
 	private ExecutorService machineTaskExecutor = Executors.newSingleThreadExecutor();
 	
 	private JogControlsPanel jogControlsPanel;
+	private JDialog jogControlsWindow;
 	
 	private volatile double savedX = Double.NaN, savedY = Double.NaN, savedZ = Double.NaN, savedC = Double.NaN; 
 	
@@ -116,6 +118,11 @@ public class MachineControlsPanel extends JPanel {
 		createUi();
 		
 		configuration.addListener(configurationListener);
+
+		jogControlsWindow = new JDialog(frame, "Jog Controls");
+		jogControlsWindow.setResizable(false);
+		jogControlsWindow.getContentPane().setLayout(new BorderLayout());
+		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
 	// TODO: Change this to take an interface that will pass in the Machine,
@@ -389,8 +396,6 @@ public class MachineControlsPanel extends JPanel {
 		sliderIncrements.setMinimum(1);
 		sliderIncrements.setMaximum(5);
 		
-        add(jogControlsPanel);
-       		
 		JPanel panelStartStop = new JPanel();
 		add(panelStartStop);
 		panelStartStop.setLayout(new BorderLayout(0, 0));
@@ -503,6 +508,24 @@ public class MachineControlsPanel extends JPanel {
 					}
 				}
 			});
+		}
+	};
+	
+	public Action showHideJogControlsWindowAction = new AbstractAction("Show Jog Controls") {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if (jogControlsWindow.isVisible()) {
+				jogControlsWindow.setVisible(false);
+			}
+			else {
+				jogControlsWindow.setVisible(true);
+				jogControlsWindow.pack();
+				int x = (int) getLocationOnScreen().getX();
+				int y = (int) getLocationOnScreen().getY();
+				x += (getSize().getWidth() / 2) - (jogControlsWindow.getSize().getWidth() / 2);
+				y += getSize().getHeight();
+				jogControlsWindow.setLocation(x, y);
+			}
 		}
 	};
 	

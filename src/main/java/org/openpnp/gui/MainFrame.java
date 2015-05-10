@@ -331,6 +331,9 @@ public class MainFrame extends JFrame {
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,
 				mask),
 				machineControlsPanel.raiseIncrementAction);
+		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
+				mask),
+				machineControlsPanel.showHideJogControlsWindowAction);
 
 		Toolkit.getDefaultToolkit().getSystemEventQueue()
 				.push(new EventQueue() {
