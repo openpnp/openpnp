@@ -202,6 +202,7 @@ public class JobPanel extends JPanel {
         placementsTable.setDefaultRenderer(Part.class,
                 new IdentifiableTableCellRenderer<Part>());
         placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
+        placementsTable.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
@@ -1239,7 +1240,23 @@ public class JobPanel extends JPanel {
 		}
 	};
 	
-	static class StatusRenderer extends DefaultTableCellRenderer {
+    static class TypeRenderer extends DefaultTableCellRenderer {
+        public void setValue(Object value) {
+            Type type = (Type) value;
+            setText(type.name());
+            if (type == Type.Fiducial) {
+                setBackground(Color.cyan);
+            }
+            else if (type == Type.Ignore) {
+                setBackground(Color.yellow);
+            }
+            else if (type == Type.Place) {
+                setBackground(Color.green);
+            }
+        }
+    }
+
+    static class StatusRenderer extends DefaultTableCellRenderer {
 	    public void setValue(Object value) {
 	        Status status = (Status) value;
 	        if (status == Status.Ready) {

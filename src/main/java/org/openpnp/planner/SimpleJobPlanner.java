@@ -62,6 +62,12 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
             if (!i.hasNext()) {
                 break;
             }
+            // TODO: The problem here is that we check the placement out once we
+            // find there is an empty nozzle, but there may not be a tip on this
+            // nozzle that can serve the part, even though there may be on
+            // another nozzle. So we end up with an incomplete solution. Instead
+            // we should not check the placement out until we find the solution,
+            // although we have to be careful not to loop.
             PlacementSolution solution = i.next();
             i.remove();
             Part part = solution.placement.getPart();

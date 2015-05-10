@@ -1,4 +1,4 @@
-package org.openpnp.gui.processes;
+package org.openpnp.vision;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -36,11 +36,11 @@ import org.slf4j.LoggerFactory;
  * returning the correct orientation for the board. 
  * TODO: This needs to be integrated into the VisionProvider somehow.
  */
-public class FiducialBoardLocator {
+public class FiducialLocator {
     private static final Logger logger = LoggerFactory
-            .getLogger(FiducialBoardLocator.class);
+            .getLogger(FiducialLocator.class);
     
-    public FiducialBoardLocator() {
+    public FiducialLocator() {
         
     }
     
@@ -174,7 +174,7 @@ public class FiducialBoardLocator {
 
         return matches.get(0).location;
     }
-        
+    
     /**
      * Create a template image based on a Placement's footprint. The image
      * will be scaled to match the dimensions of the current camera.

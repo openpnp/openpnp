@@ -29,6 +29,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.vision.FiducialLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class FiducialCheck implements Runnable {
     private final BoardLocation boardLocation;
     private final Board board;
     private final Camera camera;
-    private FiducialBoardLocator locator = new FiducialBoardLocator();
+    private FiducialLocator locator = new FiducialLocator();
 
     public FiducialCheck(MainFrame mainFrame, JobPanel jobPanel) {
         this.mainFrame = mainFrame;

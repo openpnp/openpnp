@@ -29,7 +29,6 @@ import javax.swing.Action;
 
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
-import org.openpnp.gui.processes.FiducialBoardLocator;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceJobProcessorConfigurationWizard;
@@ -52,10 +51,13 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.Utils2D;
+import org.openpnp.vision.FiducialLocator;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: Rewrite this as a FSM where each place we would normally check if 
+// job should continue is just a state.
 // TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
 // possible to make things faster.
 public class ReferenceJobProcessor implements Runnable, JobProcessor {
@@ -372,7 +374,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
     // TODO: Should not bail if there are no fids on the board. Figure out
     // the UI for that.
     protected void checkFiducials() throws Exception {
-        FiducialBoardLocator locator = new FiducialBoardLocator();
+        FiducialLocator locator = new FiducialLocator();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             if (!boardLocation.isCheckFiducials()) {
                 continue;
