@@ -1,6 +1,7 @@
 package org.openpnp.planner;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -110,7 +111,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 }
             }
         }
-        weightedSolutions.sort(weightComparator);
+        Collections.sort(weightedSolutions, weightComparator);
         return weightedSolutions;
     }
     
@@ -134,6 +135,13 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         return feeders;
     }
     
+    static Comparator<WeightedPlacementSolution> weightComparator = new Comparator<WeightedPlacementSolution>() {
+        @Override
+        public int compare(WeightedPlacementSolution o1, WeightedPlacementSolution o2) {
+            return Double.compare(o1.weight, o2.weight);
+        }
+    };
+
     static class WeightedPlacementSolution extends PlacementSolution {
         public double weight;
         public PlacementSolution originalSolution;
@@ -144,11 +152,4 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
             super(placement, boardLocation, head, nozzle, nozzleTip, feeder);
         }
     }
-    
-    Comparator<WeightedPlacementSolution> weightComparator = new Comparator<WeightedPlacementSolution>() {
-        @Override
-        public int compare(WeightedPlacementSolution o1, WeightedPlacementSolution o2) {
-            return Double.compare(o1.weight, o2.weight);
-        }
-    };
 }
