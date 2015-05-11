@@ -1,6 +1,7 @@
 package org.openpnp.planner;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -110,7 +111,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 }
             }
         }
-        weightedSolutions.sort(weightComparator);
+        Collections.sort(weightedSolutions, weightComparator);
         return weightedSolutions;
     }
     
