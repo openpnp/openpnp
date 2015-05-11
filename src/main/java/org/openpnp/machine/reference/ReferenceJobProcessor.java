@@ -610,7 +610,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
             return false;
         }
 
-        // Move the nozzle to the placement Location at safe Z
+        // Lower the nozzle.
         try {
             nozzle.moveTo(placementLocation, 1.0);
         }

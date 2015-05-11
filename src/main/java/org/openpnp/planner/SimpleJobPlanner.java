@@ -1,7 +1,8 @@
 package org.openpnp.planner;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     @Override
     public void setJob(Job job) {
         super.setJob(job);
-        Head head = Configuration.get().getMachine().getHeads().get(0);
+        solutions.clear();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (placement.getType() != Type.Place) {
@@ -44,81 +45,110 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                     continue;
                 }
                 
-                solutions.add(new PlacementSolution(placement, boardLocation, head, null, null, null));
+                solutions.add(new PlacementSolution(placement, boardLocation, null, null, null, null));
             }
         }
         
         logger.debug("Planned {} solutions", solutions.size());
     }
 
+    /**
+     * For N nozzles, create a list of every possible remaining solutions
+     * along with a weight. Weight is a cost of 0 or more with things like
+     * a nozzle change increasing the weight.
+     * Once all solutions are identified. Sort each list by weight and take the
+     * N lowest weighted solutions that do not conflict with each other.
+     *
+     * TODO: This is not currently handling cases where no solution is possible
+     * for a remaining solution. i.e. no feeder, no nozzle tip, etc.
+     * 
+     * TODO: Is there a situation where the order in which we take the weighted
+     * solutions from their lists would cause successive nozzles to have to
+     * use less optimal solutions? I feel like this is a possible issue but
+     * I haven't been able to come up with an example case.
+     */
     @Override
     public synchronized Set<PlacementSolution> getNextPlacementSolutions(Head head) {
-        // TODO: Make sure the head and nozzle can reach the feeder and placement
-        // might need to actually translate everything to final coordinates first, maybe
-        // that gets weird
         Set<PlacementSolution> results = new LinkedHashSet<PlacementSolution>();
-        Iterator<PlacementSolution> i = solutions.iterator();
+        Machine machine = Configuration.get().getMachine();
         for (Nozzle nozzle : head.getNozzles()) {
-            if (!i.hasNext()) {
-                break;
+            for (WeightedPlacementSolution solution : getWeightedSolutions(machine, nozzle)) {
+                if (solutions.contains(solution.originalSolution)) {
+                    results.add((PlacementSolution) solution);
+                    solutions.remove(solution.originalSolution);
+                    break;
+                }
             }
-            // TODO: The problem here is that we check the placement out once we
-            // find there is an empty nozzle, but there may not be a tip on this
-            // nozzle that can serve the part, even though there may be on
-            // another nozzle. So we end up with an incomplete solution. Instead
-            // we should not check the placement out until we find the solution,
-            // although we have to be careful not to loop.
-            PlacementSolution solution = i.next();
-            i.remove();
-            Part part = solution.placement.getPart();
-            // Feeder can be null if no applicable Feeder was found. 
-            Feeder feeder = getFeederSolution(Configuration.get().getMachine(), nozzle, part);
-            // NozzleTip can be null if no applicable NozzleTip was found.
-            NozzleTip nozzleTip = getNozzleTipSolution(Configuration.get().getMachine(), nozzle, part, feeder);
-            solution = new PlacementSolution(solution.placement, solution.boardLocation, solution.head, nozzle, nozzleTip, feeder);
-            results.add(solution);
+        }
+        if (results.size() == 0 && solutions.size() > 0) {
+            return solutions;
         }
         return results.size() > 0 ? results : null;
     }
     
-    protected static Feeder getFeederSolution(Machine machine, Nozzle nozzle, Part part) {
-        if (machine == null || nozzle == null || part == null) {
-            return null;
-        }
-        // Get a list of Feeders that can source the part
-        List<Feeder> feeders = new ArrayList<Feeder>();
-        for (Feeder feeder : machine.getFeeders()) {
-            if (feeder.getPart() == null) {
-                continue;
+    protected List<WeightedPlacementSolution> getWeightedSolutions(Machine machine, Nozzle nozzle) {
+        List<WeightedPlacementSolution> weightedSolutions = new ArrayList<WeightedPlacementSolution>();
+        for (PlacementSolution solution : solutions) {
+            Part part = solution.placement.getPart();
+            Set<NozzleTip> compatibleNozzleTips = getCompatibleNozzleTips(nozzle, part);
+            Set<Feeder> compatibleFeeders = getCompatibleFeeders(machine, nozzle, part);
+            for (NozzleTip nozzleTip : compatibleNozzleTips) {
+                for (Feeder feeder : compatibleFeeders) {
+                    WeightedPlacementSolution weightedSolution = new WeightedPlacementSolution(
+                            solution.placement,
+                            solution.boardLocation,
+                            nozzle.getHead(),
+                            nozzle,
+                            nozzleTip,
+                            feeder);
+                    weightedSolution.weight = 1;
+                    weightedSolution.originalSolution = solution;
+                    if (nozzle.getNozzleTip() != nozzleTip) {
+                        weightedSolution.weight++;
+                    }
+                    weightedSolutions.add(weightedSolution);
+                }
             }
+        }
+        weightedSolutions.sort(weightComparator);
+        return weightedSolutions;
+    }
+    
+    private static Set<NozzleTip> getCompatibleNozzleTips(Nozzle nozzle, Part part) {
+        Set<NozzleTip> nozzleTips = new HashSet<NozzleTip>();
+        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+            if (nozzleTip.canHandle(part)) {
+                nozzleTips.add(nozzleTip);
+            }
+        }
+        return nozzleTips;
+    }
+    
+    private static Set<Feeder> getCompatibleFeeders(Machine machine, Nozzle nozzle, Part part) {
+        Set<Feeder> feeders = new HashSet<Feeder>();
+        for (Feeder feeder : machine.getFeeders()) {
             if (feeder.getPart() == part && feeder.canFeedToNozzle(nozzle) && feeder.isEnabled()) {
                 feeders.add(feeder);
             }
         }
-        if (feeders.size() < 1) {
-            return null;
-        }
-        // For now we just take the first Feeder that can feed the part.
-        Feeder feeder = feeders.get(0);
-        return feeder;
+        return feeders;
     }
     
-    protected static NozzleTip getNozzleTipSolution(Machine machine, Nozzle nozzle, Part part, Feeder feeder) {
-        if (machine == null || nozzle == null || part == null || feeder == null) {
-            return null;
+    static class WeightedPlacementSolution extends PlacementSolution {
+        public double weight;
+        public PlacementSolution originalSolution;
+        
+        public WeightedPlacementSolution(Placement placement,
+                BoardLocation boardLocation, Head head, Nozzle nozzle,
+                NozzleTip nozzleTip, Feeder feeder) {
+            super(placement, boardLocation, head, nozzle, nozzleTip, feeder);
         }
-        // Get a list of NozzleTips that can service the Part and the Feeder
-        List<NozzleTip> nozzleTips = new ArrayList<NozzleTip>();
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part) && feeder.canFeedToNozzle(nozzle)) {
-                nozzleTips.add(nozzleTip);
-            }
+    }
+    
+    Comparator<WeightedPlacementSolution> weightComparator = new Comparator<WeightedPlacementSolution>() {
+        @Override
+        public int compare(WeightedPlacementSolution o1, WeightedPlacementSolution o2) {
+            return Double.compare(o1.weight, o2.weight);
         }
-        if (nozzleTips.size() < 1) {
-            return null;
-        }
-        // For now we just take the first NozzleTip that works.
-        NozzleTip nozzletip = nozzleTips.get(0);
-        return nozzletip;
-    }    
+    };
 }
