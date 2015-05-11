@@ -25,15 +25,20 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import javax.swing.Action;
+
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -43,12 +48,16 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.Utils2D;
+import org.openpnp.vision.FiducialLocator;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: Rewrite this as a FSM where each place we would normally check if 
+// job should continue is just a state.
 // TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
 // possible to make things faster.
 public class ReferenceJobProcessor implements Runnable, JobProcessor {
@@ -63,11 +72,8 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	
 	private boolean pauseAtNextStep;
 	
-	/**
-	 * Required for XML serialization. Ignore.
-	 */
 	@Attribute(required=false)
-	private String dummy;
+	private boolean demoMode;
 	
 	public ReferenceJobProcessor() {
 	}
@@ -162,6 +168,11 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	
 	@Override
     public void run() {
+	    if (demoMode) {
+	        runDemo();
+	        return;
+	    }
+	    
 		state = JobState.Running;
 		fireJobStateChanged();
 		
@@ -184,6 +195,20 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 				return;
 			}
 		}
+		
+        fireDetailedStatusUpdated(String.format("Check fiducials."));        
+        
+        if (!shouldJobProcessingContinue()) {
+            return;
+        }
+
+        try {
+            checkFiducials();
+        }
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+            return;
+        }
 		
 		JobPlanner jobPlanner = machine.getJobPlanner();
 		Head head = machine.getHeads().get(0);
@@ -264,6 +289,100 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 		state = JobState.Stopped;
 		fireJobStateChanged();
 	}
+	
+    // TODO: DRY this code out from the run() method. Then break the main
+	// meat from the run() method into a runPnP method and this remains
+	// runDemo method. This opens us up for general setup and then running
+	// pnp jobs, demo jobs, soldering jobs, etc.
+	private void runDemo() {
+        state = JobState.Running;
+        fireJobStateChanged();
+        
+        Machine machine = Configuration.get().getMachine();
+        
+        for (Head head : machine.getHeads()) {
+            fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getName()));        
+    
+            if (!shouldJobProcessingContinue()) {
+                return;
+            }
+    
+            try {
+                head.moveToSafeZ(1.0);
+            }
+            catch (Exception e) {
+                fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                return;
+            }
+        }
+        
+        fireDetailedStatusUpdated(String.format("Check fiducials."));        
+        
+        if (!shouldJobProcessingContinue()) {
+            return;
+        }
+
+        try {
+            checkFiducials();
+        }
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+            return;
+        }
+        
+        JobPlanner jobPlanner = machine.getJobPlanner();
+        Head head = machine.getHeads().get(0);
+        Camera camera = head.getCameras().get(0);
+        
+        for (BoardLocation bl : job.getBoardLocations()) {
+            for (Placement placement : bl.getBoard().getPlacements()) {
+                if (placement.getSide() != bl.getSide()) {
+                    continue;
+                }
+                
+                if (placement.getType() != Type.Place) {
+                    continue;
+                }
+                
+                Location placementLocation = placement.getLocation();
+                placementLocation = 
+                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);
+                
+                fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (%s).", placementLocation));
+
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+
+                try {
+                    camera.moveTo(placementLocation, 1.0);
+                    Thread.sleep(1000);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
+            }
+        }
+        
+        fireDetailedStatusUpdated("Job complete.");
+        
+        state = JobState.Stopped;
+        fireJobStateChanged();
+    }
+    
+    // TODO: Should not bail if there are no fids on the board. Figure out
+    // the UI for that.
+    protected void checkFiducials() throws Exception {
+        FiducialLocator locator = new FiducialLocator();
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (!boardLocation.isCheckFiducials()) {
+                continue;
+            }
+            Location location = locator.locateBoard(boardLocation);
+            boardLocation.setLocation(location);
+        }
+    }
 	
 	protected Location performBottomVision(Machine machine, Part part, Nozzle nozzle) throws Exception {
 	    // TODO: I think this stuff actually belongs in VisionProvider but
@@ -491,7 +610,7 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
             return false;
         }
 
-        // Move the nozzle to the placement Location at safe Z
+        // Lower the nozzle.
         try {
             nozzle.moveTo(placementLocation, 1.0);
         }
@@ -696,4 +815,42 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 			return PickRetryAction.SkipAndContinue;
 		}
 	}
+	
+    public boolean isDemoMode() {
+        return demoMode;
+    }
+
+    public void setDemoMode(boolean demoMode) {
+        this.demoMode = demoMode;
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceJobProcessorConfigurationWizard(this);
+    }
+    
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard())
+        };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
