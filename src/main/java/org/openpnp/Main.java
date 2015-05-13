@@ -61,6 +61,10 @@ public class Main {
 		File configurationDirectory = new File(System.getProperty("user.home"));
 		configurationDirectory = new File(configurationDirectory, ".openpnp");
 		
+		if (System.getProperty("configDir") != null) {
+		    configurationDirectory = new File(System.getProperty("configDir"));
+		}
+		
 		// If the log4j.properties is not in the configuration directory, copy
 		// the default over.
 		File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");

@@ -23,7 +23,6 @@ package org.openpnp.machine.reference;
 
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.ConfigurationListener;
@@ -99,20 +98,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             return image;
         }
         
-        // TODO: This should just rotate in place, not change the size of the image. 
-        // Just let it cut off.
-        
-        // Create a rotation transform to determine how big the resulting
-        // rotated image should be.
-        AffineTransform xform = new AffineTransform();
-        xform.rotate(Math.toRadians(-rotation));
-        Rectangle2D r2d = xform.createTransformedShape(new Rectangle2D.Double(0, 0, image.getWidth(), image.getHeight())).getBounds2D();
-        int width = (int) r2d.getWidth();
-        int height = (int) r2d.getHeight();
-        BufferedImage out = new BufferedImage(width, height, image.getType());
+        BufferedImage out = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
         Graphics2D g2d = out.createGraphics();
         // Create the transform we'll actually use to rotate the image.
-        xform = new AffineTransform();
+        AffineTransform xform = new AffineTransform();
         // Translate the source to the center of the output.
         xform.translate(out.getWidth() / 2, out.getHeight() / 2);
         // Rotate the image.

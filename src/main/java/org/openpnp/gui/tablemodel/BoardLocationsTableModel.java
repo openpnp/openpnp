@@ -42,7 +42,8 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			"X",
 			"Y", 
 			"Z", 
-			"ø" 
+			"ø",
+			"Check Fids?"
 	};
 	
 	private Class[] columnTypes = new Class[] {
@@ -51,7 +52,8 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			LengthCellValue.class,
 			LengthCellValue.class,
 			LengthCellValue.class,
-			String.class
+			String.class,
+			Boolean.class
 	};
 	
 	private Job job;
@@ -123,9 +125,12 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 				location = Length.setLocationField(configuration, location, length, Length.Field.Z);
 				boardLocation.setLocation(location);
 			}
-			else if (columnIndex == 5) {
+            else if (columnIndex == 5) {
                 boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
-			}
+            }
+            else if (columnIndex == 6) {
+                boardLocation.setCheckFiducials((Boolean) aValue);
+            }
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
@@ -146,8 +151,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			return new LengthCellValue(loc.getLengthY());
 		case 4:
 			return new LengthCellValue(loc.getLengthZ());
-		case 5:
-			return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation(), "");
+        case 5:
+            return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation(), "");
+        case 6:
+            return boardLocation.isCheckFiducials();
 		default:
 			return null;
 		}

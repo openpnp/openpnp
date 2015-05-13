@@ -36,6 +36,9 @@ public class BoardLocation extends AbstractModelObject {
 	@Attribute
 	private String boardFile;
 	
+	@Attribute(required=false)
+	private boolean checkFiducials;
+	
 	BoardLocation() {
 		setLocation(new Location(LengthUnit.Millimeters));
 	}
@@ -89,8 +92,18 @@ public class BoardLocation extends AbstractModelObject {
 	void setBoardFile(String boardFile) {
 		this.boardFile = boardFile;
 	}
+	
+	public boolean isCheckFiducials() {
+        return checkFiducials;
+    }
 
-	@Override
+    public void setCheckFiducials(boolean checkFiducials) {
+        boolean oldValue = this.checkFiducials;
+        this.checkFiducials = checkFiducials;
+        firePropertyChange("checkFiducials", oldValue, checkFiducials);
+    }
+
+    @Override
 	public String toString() {
 		return String.format("board (%s), location (%s), side (%s)", boardFile, location, side);
 	}

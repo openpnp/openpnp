@@ -30,7 +30,9 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
+import org.opencv.core.Size;
 import org.opencv.highgui.VideoCapture;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.ml.CvNormalBayesClassifier;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -69,7 +71,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    Mat mat = new Mat();
 		    if (!fg.read(mat)) {
 		        return null;
-		    }       
+		    }
 			return applyRotation(OpenCvUtils.toBufferedImage(mat));
 		}
 		catch (Exception e) {

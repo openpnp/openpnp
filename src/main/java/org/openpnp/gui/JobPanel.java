@@ -35,6 +35,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -42,6 +44,7 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -111,7 +114,10 @@ public class JobPanel extends JPanel {
 	private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
 	private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
-	final private static String UNTITLED_JOB_FILENAME = "Untitled.job.xml";
+	private static final String UNTITLED_JOB_FILENAME = "Untitled.job.xml";
+	
+    private static final String PREF_RECENT_FILES = "JobPanel.recentFiles";
+    private static final int PREF_RECENT_FILES_MAX = 6;
 
     private JobProcessor jobProcessor;
 
@@ -128,6 +134,7 @@ public class JobPanel extends JPanel {
 
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
 	
+	public JMenu mnOpenRecent;
 
 	public JobPanel(Configuration configuration, MainFrame frame, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
@@ -202,6 +209,7 @@ public class JobPanel extends JPanel {
         placementsTable.setDefaultRenderer(Part.class,
                 new IdentifiableTableCellRenderer<Part>());
         placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
+        placementsTable.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
 		placementsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
@@ -330,9 +338,9 @@ public class JobPanel extends JPanel {
 		toolBarBoards.add(btnTwoPointBoardLocation);
 		btnTwoPointBoardLocation.setHideActionText(true);
 		
-//		JButton btnFiducialCheck = new JButton(fiducialCheckAction);
-//		toolBarBoards.add(btnFiducialCheck);
-//		btnFiducialCheck.setHideActionText(true);
+		JButton btnFiducialCheck = new JButton(fiducialCheckAction);
+		toolBarBoards.add(btnFiducialCheck);
+		btnFiducialCheck.setHideActionText(true);
 
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
 		JPanel pnlPlacements = new JPanel();
@@ -383,6 +391,11 @@ public class JobPanel extends JPanel {
 		splitPane.setRightComponent(pnlPlacements);
 
 		add(splitPane);
+		
+		mnOpenRecent = new JMenu("Open Recent Job...");
+		for (File file : loadRecentJobs()) {
+		    mnOpenRecent.add(new OpenRecentJobAction(file));
+		}
 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
@@ -401,6 +414,38 @@ public class JobPanel extends JPanel {
                 }
             }
         });
+	}
+	
+	private List<File> loadRecentJobs() {
+	    List<File> files = new ArrayList<File>();
+	    for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
+	        String filename = prefs.get(PREF_RECENT_FILES + "_" + i, null);
+	        if (filename != null) {
+	            File file = new File(filename);
+	            files.add(file);
+	        }
+	    }
+	    return files;
+	}
+	
+	private void addRecentJob(File file) {
+        for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
+            String filename = prefs.get(PREF_RECENT_FILES + "_" + i, null);
+            if (filename != null && filename.equals(file.getAbsolutePath())) {
+                return;
+            }
+        }
+	    mnOpenRecent.insert(new OpenRecentJobAction(file), 0);
+	    if (mnOpenRecent.getMenuComponentCount() > PREF_RECENT_FILES_MAX) {
+	        mnOpenRecent.remove(PREF_RECENT_FILES_MAX - 1);
+	    }
+        for (int i = PREF_RECENT_FILES_MAX - 2; i >= 0; i--) {
+            String filename = prefs.get(PREF_RECENT_FILES + "_" + i, null);
+            if (filename != null) {
+                prefs.put(PREF_RECENT_FILES + "_" + (i + 1), filename);
+            }
+        }
+        prefs.put(PREF_RECENT_FILES + "_0", file.getAbsolutePath());
 	}
 
 	public void refreshSelectedBoardRow() {
@@ -507,8 +552,9 @@ public class JobPanel extends JPanel {
 		}
 		else {
 			try {
-				configuration.saveJob(jobProcessor.getJob(), jobProcessor
-						.getJob().getFile());
+			    File file = jobProcessor.getJob().getFile();
+				configuration.saveJob(jobProcessor.getJob(), file);
+				addRecentJob(file);
 				return true;
 			}
 			catch (Exception e) {
@@ -549,6 +595,7 @@ public class JobPanel extends JPanel {
 			    }
 			}
 			configuration.saveJob(jobProcessor.getJob(), file);
+			addRecentJob(file);
 			return true;
 		}
 		catch (Exception e) {
@@ -667,6 +714,7 @@ public class JobPanel extends JPanel {
 						fileDialog.getFile());
 				Job job = configuration.loadJob(file);
 				jobProcessor.load(job);
+				addRecentJob(file);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -1185,6 +1233,31 @@ public class JobPanel extends JPanel {
         }
     };
     
+    public class OpenRecentJobAction extends AbstractAction {
+        private final File file;
+        
+        public OpenRecentJobAction(File file) {
+            this.file = file;
+            putValue(NAME, file.getName());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (!checkForModifications()) {
+                return;
+            }
+            try {
+                Job job = configuration.loadJob(file);
+                jobProcessor.load(job);
+                addRecentJob(file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, "Job Load Error", e.getMessage());
+            }
+        }
+    }
+    
 	private final JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
 		@Override
 		public void jobStateChanged(JobState state) {
@@ -1239,7 +1312,23 @@ public class JobPanel extends JPanel {
 		}
 	};
 	
-	static class StatusRenderer extends DefaultTableCellRenderer {
+    static class TypeRenderer extends DefaultTableCellRenderer {
+        public void setValue(Object value) {
+            Type type = (Type) value;
+            setText(type.name());
+            if (type == Type.Fiducial) {
+                setBackground(Color.cyan);
+            }
+            else if (type == Type.Ignore) {
+                setBackground(Color.yellow);
+            }
+            else if (type == Type.Place) {
+                setBackground(Color.green);
+            }
+        }
+    }
+
+    static class StatusRenderer extends DefaultTableCellRenderer {
 	    public void setValue(Object value) {
 	        Status status = (Status) value;
 	        if (status == Status.Ready) {

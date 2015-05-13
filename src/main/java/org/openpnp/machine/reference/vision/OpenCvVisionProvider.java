@@ -101,23 +101,24 @@ public class OpenCvVisionProvider implements VisionProvider {
         
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
-        template = OpenCvUtils.convertBufferedImage(template,BufferedImage.TYPE_3BYTE_BGR);   
-        image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_3BYTE_BGR);
+        template = OpenCvUtils.convertBufferedImage(template,BufferedImage.TYPE_BYTE_GRAY);   
+        image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
         
         Mat templateMat = OpenCvUtils.toMat(template);
         Mat imageMat = OpenCvUtils.toMat(image);
         Mat resultMat = new Mat();
         
         Imgproc.matchTemplate(imageMat, templateMat, resultMat, Imgproc.TM_CCOEFF_NORMED);
-        
-        saveDebugImage("template", templateMat);
-        saveDebugImage("camera", imageMat);
-        saveDebugImage("result", resultMat);
+
+        Mat debugMat = null;
+        if (logger.isDebugEnabled()) {
+            debugMat = imageMat.clone();        
+        }
         
         MinMaxLocResult mmr = Core.minMaxLoc(resultMat);
         double maxVal = mmr.maxVal;
         
-        // TODO: Externalize
+        // TODO: Externalize?
         double threshold = 0.7f;
         double corr = 0.85f;
 
@@ -127,8 +128,29 @@ public class OpenCvVisionProvider implements VisionProvider {
         List<TemplateMatch> matches = new ArrayList<TemplateMatch>();
         for (Point point : matMaxima(resultMat, rangeMin, rangeMax)) {
             TemplateMatch match = new TemplateMatch();
-            match.location = camera.getLocation().add(getPixelCenterOffsets(point.x, point.y));
-            match.score = resultMat.get((int) point.y, (int) point.x)[0] / maxVal;
+            int x = point.x;
+            int y = point.y;
+            match.score = resultMat.get(y, x)[0] / maxVal;
+            
+            if (logger.isDebugEnabled()) {
+                Core.rectangle(
+                        debugMat, 
+                        new org.opencv.core.Point(x, y), 
+                        new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()), 
+                        new Scalar(255));
+                Core.putText(
+                        debugMat, 
+                        "" + match.score, 
+                        new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()),
+                        Core.FONT_HERSHEY_PLAIN,
+                        1.0,
+                        new Scalar(255));
+            }
+            
+            Location offsets = getPixelCenterOffsets(
+                    x + (templateMat.cols() / 2), 
+                    y + (templateMat.rows() / 2));
+            match.location = camera.getLocation().subtract(offsets);
             matches.add(match);
         }
         
@@ -139,13 +161,18 @@ public class OpenCvVisionProvider implements VisionProvider {
             }
         });
         
+        saveDebugImage("template", templateMat);
+        saveDebugImage("camera", imageMat);
+        saveDebugImage("result", resultMat);
+        saveDebugImage("debug", debugMat);
+                
         return matches;
     }
     
     /**
      * Given pixel coordinates within the frame of the Camera's image, get
      * the offsets from Camera center to the coordinates in Camera space
-     * and units. The resulting value is effectively a distance the Camera
+     * and units. The resulting value is the distance the Camera
      * can be moved to be centered over the pixel coordinates.
      * @param x
      * @param y

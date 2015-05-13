@@ -110,7 +110,6 @@ public class MainFrame extends JFrame {
 	public static JobPanel jobPanel;
 	public static MachinePanel machinePanel;
 	public static CamerasPanel camerasPanel;
-//	public static BoardsPanel boardsPanel;
 	public static HeadsPanel headsPanel;
 	public static ActuatorsPanel actuatorsPanel;
 	public static CameraPanel cameraPanel;
@@ -170,7 +169,6 @@ public class MainFrame extends JFrame {
 		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration, this);
 		camerasPanel = new CamerasPanel(this, configuration);
-//		boardsPanel = new BoardsPanel(configuration);
 		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
 		actuatorsPanel = new ActuatorsPanel(configuration);
         nozzlesPanel = new NozzlesPanel(this, configuration);
@@ -187,9 +185,13 @@ public class MainFrame extends JFrame {
 
 		mnFile.add(new JMenuItem(jobPanel.newJobAction));
 		mnFile.add(new JMenuItem(jobPanel.openJobAction));
+		
+		mnFile.add(jobPanel.mnOpenRecent);
+		
 		mnFile.addSeparator();
 		mnFile.add(new JMenuItem(jobPanel.saveJobAction));
 		mnFile.add(new JMenuItem(jobPanel.saveJobAsAction));
+		
 		
 		// File -> Import
 		//////////////////////////////////////////////////////////////////////

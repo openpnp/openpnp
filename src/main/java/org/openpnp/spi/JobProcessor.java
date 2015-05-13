@@ -4,7 +4,7 @@ import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.model.Job;
 
-public interface JobProcessor {
+public interface JobProcessor extends WizardConfigurable, PropertySheetHolder {
     public enum JobState {
         Stopped,
         Running,
