@@ -60,9 +60,6 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
      * Once all solutions are identified. Sort each list by weight and take the
      * N lowest weighted solutions that do not conflict with each other.
      *
-     * TODO: This is not currently handling cases where no solution is possible
-     * for a remaining solution. i.e. no feeder, no nozzle tip, etc.
-     * 
      * TODO: Is there a situation where the order in which we take the weighted
      * solutions from their lists would cause successive nozzles to have to
      * use less optimal solutions? I feel like this is a possible issue but
@@ -81,6 +78,13 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 }
             }
         }
+        // If no solutions were found but there are still placements remaining
+        // in the job then we failed to either find a nozzletip or feeder
+        // for a placement. We return the solutions as they are, which includes
+        // nulls for feeder and nozzle.
+        // TODO: It would be better if we filled in what we *could* find
+        // so that the processor will give the user the correct error.
+        // Or we could just throw the error here.
         if (results.size() == 0 && solutions.size() > 0) {
             return solutions;
         }
