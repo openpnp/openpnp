@@ -95,6 +95,9 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         List<WeightedPlacementSolution> weightedSolutions = new ArrayList<WeightedPlacementSolution>();
         for (PlacementSolution solution : solutions) {
             Part part = solution.placement.getPart();
+            if (part == null) {
+                continue;
+            }
             Set<NozzleTip> compatibleNozzleTips = getCompatibleNozzleTips(nozzle, part);
             Set<Feeder> compatibleFeeders = getCompatibleFeeders(machine, nozzle, part);
             for (NozzleTip nozzleTip : compatibleNozzleTips) {
