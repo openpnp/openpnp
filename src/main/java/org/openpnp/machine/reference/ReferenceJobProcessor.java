@@ -217,7 +217,6 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 
         Set<PlacementSolution> solutions;
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
-		    LinkedHashMap<PlacementSolution, Location> placementSolutionLocations = new LinkedHashMap<PlacementSolution, Location>();
 		    for (PlacementSolution solution : solutions) {
                 BoardLocation bl = solution.boardLocation;
                 Part part = solution.placement.getPart();
@@ -290,15 +289,16 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 		fireJobStateChanged();
 	}
 	
-    // TODO: DRY this code out from the run() method. Then break the main
-	// meat from the run() method into a runPnP method and this remains
-	// runDemo method. This opens us up for general setup and then running
-	// pnp jobs, demo jobs, soldering jobs, etc.
+    // TODO: This needs to be it's own class and the job processor needs to
+	// be more abstract. Then we can have job processors that process
+	// job types like demo, pnp, solder, etc.
 	private void runDemo() {
         state = JobState.Running;
         fireJobStateChanged();
         
         Machine machine = Configuration.get().getMachine();
+    
+        preProcessJob(machine);
         
         for (Head head : machine.getHeads()) {
             fireDetailedStatusUpdated(String.format("Move head %s to Safe-Z.", head.getName()));        
@@ -334,16 +334,42 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
         Head head = machine.getHeads().get(0);
         Camera camera = head.getCameras().get(0);
         
-        for (BoardLocation bl : job.getBoardLocations()) {
-            for (Placement placement : bl.getBoard().getPlacements()) {
-                if (placement.getSide() != bl.getSide()) {
-                    continue;
-                }
+        jobPlanner.setJob(job);
                 
-                if (placement.getType() != Type.Place) {
-                    continue;
-                }
+        Set<PlacementSolution> solutions;
+        while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
+            for (PlacementSolution solution : solutions) {
+                Feeder feeder = solution.feeder;
                 
+                firePartProcessingStarted(solution.boardLocation, solution.placement);
+                
+                try {
+                    fireDetailedStatusUpdated(String.format("Move to pick location, safe Z at (%s).", feeder.getPickLocation()));
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
+
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+
+                try {
+                    camera.moveTo(feeder.getPickLocation().derive(null, null, Double.NaN, null), 1.0);
+                    Thread.sleep(750);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                    return;
+                }
+            }
+            
+            // TODO: a lot of the event fires are broken
+            for (PlacementSolution solution : solutions) {
+                BoardLocation bl = solution.boardLocation;
+                Placement placement = solution.placement;
+
                 Location placementLocation = placement.getLocation();
                 placementLocation = 
                         Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);
@@ -355,8 +381,8 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                 }
 
                 try {
-                    camera.moveTo(placementLocation, 1.0);
-                    Thread.sleep(1000);
+                    camera.moveTo(placementLocation.derive(null, null, Double.NaN, null), 1.0);
+                    Thread.sleep(750);
                 }
                 catch (Exception e) {
                     fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -697,16 +723,16 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
                 Nozzle nozzle = solution.nozzle;
                 NozzleTip nozzleTip = solution.nozzleTip;
 	    
-                if (nozzle == null) {
-                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
-                    return;
-                }
-        
                 if (part == null) {
                     fireJobEncounteredError(JobError.PartError, String.format("Part not found for Board %s, Placement %s", bl.getBoard().getName(), placement.getId()));
                     return;
                 }
 
+                if (nozzle == null) {
+                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
+                    return;
+                }
+        
                 if (feeder == null) {
                     fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
                     return;
