@@ -94,6 +94,8 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	@Override
 	public void home(ReferenceHead head) throws Exception {
 		List<String> responses;
+		sendCommand("M999");
+		sendCommand("M83");
 		sendCommand("G28");
 	
 		//For some machines, home is not 0,0,0.  Send an M114 command to get the current position, after homing.
@@ -177,13 +179,15 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
         if (enabled) {
+            sendCommand("M999");
             sendCommand("M17");
-            sendCommand("M420R200E200B200"); //turn on ring light
+            sendCommand("M420R255"); //turn on ring light
+            sendCommand("M421R255"); //turn on ring light
         }
         else{
             sendCommand("M18");
-            sendCommand("M420R0E0B0");//turn off ring light
-            sendCommand("M421R0E0B0");//turn off up-looking camera light
+            sendCommand("M420R0");//turn off ring light
+            sendCommand("M421R0");//turn off up-looking camera light
         }
 	}
 
