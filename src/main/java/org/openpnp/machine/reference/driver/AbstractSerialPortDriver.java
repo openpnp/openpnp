@@ -99,6 +99,23 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
             throw new IOException(e);
         }
     }
+    
+    public String getPortName() {
+        return portName;
+    }
+
+    public void setPortName(String portName) {
+        this.portName = portName;
+    }
+
+    public int getBaud() {
+        return baud;
+    }
+
+    public void setBaud(int baud) {
+        this.baud = baud;
+    }
+    
 
 //    /**
 //     * Send the given String s to the serial port.

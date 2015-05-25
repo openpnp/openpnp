@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -20,10 +19,8 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -51,24 +48,21 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     private boolean disconnectRequested;
     private Object commandLock = new Object();
     private boolean connected;
-    private long connectedBuildNumber;
     private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
     private boolean n1Picked, n2Picked;
-    
-    public OpenBuildsDriver() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect();
-            }
-        });
-    }
-    
     
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         if (enabled) {
+            if (!connected) {
+                try {
+                    connect();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
+                }
+            }
             n1Vacuum(false);
             n1Exhaust(false);
             n2Vacuum(false);
@@ -77,13 +71,15 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
         else {
             // Disable motors
-            sendCommand("M84");
-            n1Vacuum(false);
-            n1Exhaust(false);
-            n2Vacuum(false);
-            n2Exhaust(false);
-            led(false);
-            pump(false);
+            if (connected) {
+                sendCommand("M84");
+                n1Vacuum(false);
+                n1Exhaust(false);
+                n2Vacuum(false);
+                n2Exhaust(false);
+                led(false);
+                pump(false);
+            }
         }
         this.enabled = enabled;
     }
