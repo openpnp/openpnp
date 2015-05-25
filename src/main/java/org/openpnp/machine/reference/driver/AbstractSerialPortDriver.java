@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
+import jssc.SerialPortList;
 import jssc.SerialPortTimeoutException;
 
 import org.openpnp.machine.reference.ReferenceDriver;
@@ -53,6 +54,10 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
             output = null;
             serialPort = null;
         }
+    }
+    
+    public String[] getPortNames() {
+        return SerialPortList.getPortNames();
     }
 
     /**

@@ -1,0 +1,87 @@
+package org.openpnp.machine.reference.driver.wizards;
+
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
+
+import com.jgoodies.forms.factories.FormFactory;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JComboBox;
+
+public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigurationWizard {
+    private final AbstractSerialPortDriver driver;
+    private JComboBox comboBoxPort;
+    private JComboBox comboBoxBaud;
+    
+    public AbstractSerialPortDriverConfigurationWizard(AbstractSerialPortDriver driver) {
+        this.driver = driver;
+        
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        
+        JPanel panel = new JPanel();
+        contentPanel.add(panel);
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblPortName = new JLabel("Port");
+        panel.add(lblPortName, "2, 2, right, default");
+        
+        comboBoxPort = new JComboBox();
+        panel.add(comboBoxPort, "4, 2, fill, default");
+        
+        JLabel lblBaudRate = new JLabel("Baud");
+        panel.add(lblBaudRate, "2, 4, right, default");
+        
+        comboBoxBaud = new JComboBox();
+        panel.add(comboBoxBaud, "4, 4, fill, default");
+        
+        comboBoxBaud.addItem(new Integer(110));
+        comboBoxBaud.addItem(new Integer(300));
+        comboBoxBaud.addItem(new Integer(600));
+        comboBoxBaud.addItem(new Integer(1200));
+        comboBoxBaud.addItem(new Integer(2400));
+        comboBoxBaud.addItem(new Integer(4800));
+        comboBoxBaud.addItem(new Integer(9600));
+        comboBoxBaud.addItem(new Integer(14400));
+        comboBoxBaud.addItem(new Integer(19200));
+        comboBoxBaud.addItem(new Integer(38400));
+        comboBoxBaud.addItem(new Integer(56000));
+        comboBoxBaud.addItem(new Integer(57600));
+        comboBoxBaud.addItem(new Integer(115200));
+        comboBoxBaud.addItem(new Integer(128000));
+        comboBoxBaud.addItem(new Integer(153600));
+        comboBoxBaud.addItem(new Integer(230400));
+        comboBoxBaud.addItem(new Integer(256000));
+        comboBoxBaud.addItem(new Integer(460800));
+        comboBoxBaud.addItem(new Integer(921600));
+        
+        String[] portNames = driver.getPortNames();
+        for (String portName : portNames) {
+            comboBoxPort.addItem(portName);
+        }
+    }
+    
+    @Override
+    public void createBindings() {
+        IntegerConverter integerConverter = new IntegerConverter();
+        
+        addWrappedBinding(driver, "portName", comboBoxPort, "selectedItem");
+        addWrappedBinding(driver, "baud", comboBoxBaud, "selectedItem");
+    }
+}
