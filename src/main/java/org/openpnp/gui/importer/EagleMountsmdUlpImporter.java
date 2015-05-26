@@ -104,8 +104,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
 			// C1 41.91 34.93 180 0.1uF C0805
 			// T10 21.59 14.22  90  SOT23-BEC
 			// printf("%s %5.2f %5.2f %3.0f %s %s\n",
-
-			Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*?)\\s(.*)");
+			Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*)\\s(.*)");
 			Matcher matcher = pattern.matcher(line);
 			matcher.matches();
 			Placement placement = new Placement(matcher.group(1));
@@ -117,9 +116,13 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
 			        Double.parseDouble(matcher.group(4))));
 			Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
+                String value = matcher.group(5);
                 String packageId = matcher.group(6);
 
-                String partId = packageId + "-" + matcher.group(5);
+                String partId = packageId;
+                if (value.trim().length() > 0) {
+                    partId += "-" + value;
+                }
                 Part part = cfg.getPart(partId);
                 if (part == null) {
                     part = new Part(partId);
@@ -290,8 +293,12 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
                 board = new Board();
                 List<Placement> placements = new ArrayList<Placement>();
                 try {
-                    placements.addAll(parseFile(topFile, Side.Top, chckbxCreateMissingParts.isSelected()));
-                    placements.addAll(parseFile(bottomFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
+                    if (topFile.exists()) {
+                        placements.addAll(parseFile(topFile, Side.Top, chckbxCreateMissingParts.isSelected()));
+                    }
+                    if (bottomFile.exists()) {
+                        placements.addAll(parseFile(bottomFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
+                    }
                 }
                 catch (Exception e1) {
                     MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
@@ -303,6 +310,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
                 setVisible(false);
             }
         }
+        
         private class SwingAction_3 extends AbstractAction {
             public SwingAction_3() {
                 putValue(NAME, "Cancel");
