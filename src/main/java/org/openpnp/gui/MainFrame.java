@@ -239,6 +239,8 @@ public class MainFrame extends JFrame {
 			menuItem.setSelected(true);
 		}
 		mnUnits.add(menuItem);
+		
+		mnView.add(machineControlsPanel.showHideJogControlsWindowAction);
 
 		// Job Control
 		//////////////////////////////////////////////////////////////////////

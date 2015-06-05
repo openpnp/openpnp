@@ -514,9 +514,12 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			if (jogControlsWindow.isVisible()) {
+			    // Hide
 				jogControlsWindow.setVisible(false);
+				putValue(AbstractAction.NAME, "Show Jog Controls");
 			}
 			else {
+			    // Show
 				jogControlsWindow.setVisible(true);
 				jogControlsWindow.pack();
 				int x = (int) getLocationOnScreen().getX();
@@ -524,6 +527,7 @@ public class MachineControlsPanel extends JPanel {
 				x += (getSize().getWidth() / 2) - (jogControlsWindow.getSize().getWidth() / 2);
 				y += getSize().getHeight();
 				jogControlsWindow.setLocation(x, y);
+                putValue(AbstractAction.NAME, "Hide Jog Controls");
 			}
 		}
 	};
