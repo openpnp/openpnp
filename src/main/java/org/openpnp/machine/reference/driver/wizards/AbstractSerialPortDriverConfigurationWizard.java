@@ -67,6 +67,7 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
         comboBoxBaud.addItem(new Integer(128000));
         comboBoxBaud.addItem(new Integer(153600));
         comboBoxBaud.addItem(new Integer(230400));
+        comboBoxBaud.addItem(new Integer(250000));
         comboBoxBaud.addItem(new Integer(256000));
         comboBoxBaud.addItem(new Integer(460800));
         comboBoxBaud.addItem(new Integer(921600));
