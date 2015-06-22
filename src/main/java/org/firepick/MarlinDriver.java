@@ -35,9 +35,9 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.openbuilds.OpenBuildsDriverWizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
@@ -70,15 +70,15 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	private double connectedVersion;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
-	public MarlinDriver() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect();
-            }
-        });
-	}
+//	public MarlinDriver() {
+//        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+//            @Override
+//            public void configurationComplete(Configuration configuration)
+//                    throws Exception {
+//                connect();
+//            }
+//        });
+//	}
 	
 	@Override
 	public void actuate(ReferenceActuator actuator, boolean on)
@@ -95,7 +95,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	public void home(ReferenceHead head) throws Exception {
 		List<String> responses;
 		sendCommand("M999");
-		sendCommand("M83");
+		sendCommand("M82"); // Was M83, 6/21/2015, NJ
 		sendCommand("G28");
 	
 		//For some machines, home is not 0,0,0.  Send an M114 command to get the current position, after homing.
@@ -179,15 +179,32 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
         if (enabled) {
-            sendCommand("M999");
-            sendCommand("M17");
-            sendCommand("M420R255"); //turn on ring light
-            sendCommand("M421R255"); //turn on ring light
-        }
+            if (!connected) {
+                try {
+                    connect();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
+                }
+            }
+            sendCommand("M5");       // Turn the vacuum pump OFF
+    		sendCommand("M80");      // Turn power supply ON
+    		Thread.sleep(500,0);     // Delay for a bit, wait for power supply to stabilize.
+            sendCommand("M999");     // Clear errors
+            sendCommand("M17");      // Enable power for all stepper motors
+            sendCommand("M420R255"); // Turn on down-looking LED ring light
+            sendCommand("M421R255"); // Turn on up-looking LED ring light
+        } //if (enabled)
         else{
-            sendCommand("M18");
-            sendCommand("M420R0");//turn off ring light
-            sendCommand("M421R0");//turn off up-looking camera light
+        	if (connected)
+        	{
+                sendCommand("M5");       // Turn the vacuum pump OFF
+                sendCommand("M18");      // Disable all stepper motors.  Same as M84.
+                sendCommand("M420R0");   // Turn off down-looking LED ring light
+                sendCommand("M421R0");   // Turn off up-looking LED ring light
+        		sendCommand("M81");      // Turn power supply OFF
+        	}
         }
 	}
 
@@ -363,8 +380,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
-        return null;
+        return new MarlinDriverWizard(this);
     }
     @Override
     public String getPropertySheetHolderTitle() {
