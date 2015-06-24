@@ -227,7 +227,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
-        children.add(new SimplePropertySheetHolder("Nozzles", getNozzleTips()));
+        children.add(new SimplePropertySheetHolder("Nozzle Tips", getNozzleTips()));
         return children.toArray(new PropertySheetHolder[]{});
     }
 
