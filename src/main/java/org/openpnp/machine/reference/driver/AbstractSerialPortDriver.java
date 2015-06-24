@@ -122,42 +122,6 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     }
     
 
-//    /**
-//     * Send the given String s to the serial port.
-//     * @param s
-//     * @throws Exception
-//     */
-//    protected synchronized void send(String s) throws Exception {
-//        
-//    }
-//    
-//    /**
-//     * Wait for a line from the serial port to match the specified regExp. If
-//     * no match is found within timeout milliseconds the method returns null.
-//     * @param regExp
-//     * @param timeout
-//     * @return A Matcher containing the matched string or null if no match is
-//     * found within the timeout period.
-//     * @throws Exception
-//     */
-//    protected synchronized Matcher expect(String regExp, long timeout) throws Exception {
-//        return null;
-//    }
-//
-//    @Override
-//    public void serialEvent(SerialPortEvent serialPortEvent) {
-//        if (serialPortEvent.isRXCHAR()) {
-//            try {
-//                System.out.print(new String(serialPort.readBytes()));
-//            }
-//            catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-    
-    
-    
     /**
      * SerialInputStream and SerialOutputStream are from the pull request
      * referenced in:
@@ -165,7 +129,6 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
      * 
      * If that pull request is ever merged we can update and remove these.
      */
-    
     
     /**
      * Class that wraps a {@link SerialPort} to provide
