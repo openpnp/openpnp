@@ -94,7 +94,7 @@ public class ReferenceMachine extends AbstractMachine {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return driver.getConfigurationWizard();
+	    return null;
 	}
 	
 	@Override
