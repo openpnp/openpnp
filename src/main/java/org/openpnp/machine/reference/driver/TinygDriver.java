@@ -27,7 +27,6 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -35,7 +34,6 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.wizards.TinygDriverConfigurationWizard;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -76,13 +74,6 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     private JsonParser parser = new JsonParser();
 
     public TinygDriver() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect();
-            }
-        });
     }
 
     @Override
@@ -141,6 +132,9 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
+        if (enabled && !connected) {
+            connect();
+        }
         // sendCommand("$1000=" + (enabled ? "1" : "0"));
     }
 

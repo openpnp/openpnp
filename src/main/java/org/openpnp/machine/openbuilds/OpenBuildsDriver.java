@@ -53,25 +53,18 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        if (enabled) {
-            if (!connected) {
-                try {
-                    connect();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                    throw e;
-                }
-            }
-            n1Vacuum(false);
-            n1Exhaust(false);
-            n2Vacuum(false);
-            n2Exhaust(false);
-            led(true);
+        if (enabled && !connected) {
+            connect();
         }
-        else {
-            // Disable motors
-            if (connected) {
+        if (connected) {
+            if (enabled) {
+                n1Vacuum(false);
+                n1Exhaust(false);
+                n2Vacuum(false);
+                n2Exhaust(false);
+                led(true);
+            }
+            else {
                 sendCommand("M84");
                 n1Vacuum(false);
                 n1Exhaust(false);
@@ -79,6 +72,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 n2Exhaust(false);
                 led(false);
                 pump(false);
+                
             }
         }
         this.enabled = enabled;

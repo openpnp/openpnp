@@ -35,6 +35,7 @@ import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
+import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
@@ -50,8 +51,8 @@ import org.slf4j.LoggerFactory;
 public class ReferenceMachine extends AbstractMachine {
 	private static Logger logger = LoggerFactory.getLogger(ReferenceMachine.class);
 
-	@Element
-	private ReferenceDriver driver;
+	@Element(required=false)
+	private ReferenceDriver driver = new NullDriver();
 	
 	private boolean enabled;
 	

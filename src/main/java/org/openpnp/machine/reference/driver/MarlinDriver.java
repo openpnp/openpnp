@@ -33,14 +33,13 @@ import java.util.regex.Pattern;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.Configuration;
+import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -84,13 +83,6 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
 	public MarlinDriver() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect();
-            }
-        });
 	}
 	
 	@Override
@@ -169,7 +161,12 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
-	    sendCommand(enabled ? enableGcode : disableGcode);
+	    if (enabled && !connected) {
+	        connect();
+	    }
+	    if (connected) {
+	        sendCommand(enabled ? enableGcode : disableGcode);
+	    }
 	}
 
 	@Override
@@ -356,8 +353,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
-        return null;
+        return new AbstractSerialPortDriverConfigurationWizard(this);
     }
 
     @Override

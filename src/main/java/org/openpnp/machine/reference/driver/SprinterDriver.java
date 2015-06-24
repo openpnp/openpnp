@@ -31,14 +31,13 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.Configuration;
+import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -169,13 +168,6 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
 	public SprinterDriver() {
-	    Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect();
-            }
-	    });
 	}
 	
     @Override
@@ -273,9 +265,14 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 
     @Override
 	public void setEnabled(boolean enabled) throws Exception {
-		sendCommand(String.format("M84 %s", enabled ? "T" : ""));
-		place(null);
-		actuate(null, false);
+        if (enabled && !connected) {
+            connect();
+        }
+        if (connected) {
+            sendCommand(String.format("M84 %s", enabled ? "T" : ""));
+            place(null);
+            actuate(null, false);
+        }
 	}
 
 	public synchronized void connect() throws Exception {
@@ -437,7 +434,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 	
     @Override
     public Wizard getConfigurationWizard() {
-        return null;
+        return new AbstractSerialPortDriverConfigurationWizard(this);
     }
 
     @Override

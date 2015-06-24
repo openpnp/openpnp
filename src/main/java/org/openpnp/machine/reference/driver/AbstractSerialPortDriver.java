@@ -22,10 +22,10 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractSerialPortDriver implements ReferenceDriver, Closeable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractSerialPortDriver.class);
     
-    @Attribute
+    @Attribute(required=false)
     protected String portName;
-    @Attribute
-    protected int baud;
+    @Attribute(required=false)
+    protected int baud = 115200;
     
     protected SerialPort serialPort;
     protected SerialInputStream input;

@@ -78,7 +78,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.swing.Action;
 
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -86,7 +85,6 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -126,13 +124,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     private static PrintWriter out;
     
     public LinuxCNC() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                connect(serverIp, port);
-            }
-        });
     }
     
     @Override
@@ -235,8 +226,12 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-
-        sendCommand("set machine " + (enabled ? "on" : "off"));
+        if (enabled && !connected) {
+            connect(serverIp, port);
+        }
+        if (connected) {
+            sendCommand("set machine " + (enabled ? "on" : "off"));
+        }
     }
 
     public synchronized void connect(String serverIp, int port)
