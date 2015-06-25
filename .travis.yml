@@ -9,8 +9,7 @@ env:
 before_install:
 - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
 - sudo dpkg -i install4j_linux_5_1_15.deb
-- sudo dpkg -L install4j
 - /opt/install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
 after_success:
 - mvn package
-- /opt/install4j5/bin/install4jc -r `date +"%Y%m%d%H%M%S"` OpenPnP.install4j
+- /opt/install4j5/bin/install4jc -r `date +"%Y%m%d%H%M%S"` -d installers OpenPnP.install4j
