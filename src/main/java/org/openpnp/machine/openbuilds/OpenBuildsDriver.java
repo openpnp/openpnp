@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
 
-    @Attribute
-    protected double feedRateMmPerMinute;
+    @Attribute(required=false)
+    protected double feedRateMmPerMinute = 5000;
     
     @Attribute(required=false)
     private double zCamRadius = 24;

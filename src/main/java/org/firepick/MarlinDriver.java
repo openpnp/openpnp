@@ -37,13 +37,11 @@ import javax.swing.Action;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.openbuilds.OpenBuildsDriverWizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -58,8 +56,8 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(MarlinDriver.class);
 	private static final double minimumRequiredVersion = 1.0;
 	
-	@Attribute
-	private double feedRateMmPerMinute;
+	@Attribute(required=false)
+	private double feedRateMmPerMinute = 5000;
 	
 	
 	private double x, y, z, c;

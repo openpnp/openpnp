@@ -53,7 +53,7 @@ public class NullDriver implements ReferenceDriver {
             .getLogger(NullDriver.class);
     
     @Attribute(required = false)
-    private double feedRateMmPerMinute;
+    private double feedRateMmPerMinute = 5000;
     
     private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
     

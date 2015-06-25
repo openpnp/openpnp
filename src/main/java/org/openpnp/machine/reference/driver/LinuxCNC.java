@@ -100,11 +100,11 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
             .getLogger(LinuxCNC.class);
     private static final double minimumRequiredVersion = 0.81;
 
-    @Attribute
-    private String serverIp;
-    @Attribute
-    private int port;
-    @Attribute
+    @Attribute(required=false)
+    private String serverIp = "127.0.0.1";
+    @Attribute(required=false)
+    private int port = 502;
+    @Attribute(required=false)
     private double feedRateMmPerMinute;
 
     private double x, y, z, c;

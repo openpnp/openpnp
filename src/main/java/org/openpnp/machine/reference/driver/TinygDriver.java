@@ -58,8 +58,8 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
             .getLogger(TinygDriver.class);
     private static final double minimumRequiredVersion = 0.95;
 
-    @Attribute
-    private double feedRateMmPerMinute;
+    @Attribute(required = false)
+    private double feedRateMmPerMinute = 5000;
     @Element(required = false)
     private Location homeLocation = new Location(LengthUnit.Millimeters);
 

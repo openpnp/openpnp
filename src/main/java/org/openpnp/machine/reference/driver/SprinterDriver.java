@@ -156,8 +156,8 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 	@Attribute(required=false)
 	private boolean homeC;
 	
-	@Attribute
-    private double feedRateMmPerMinute;
+	@Attribute(required=false)
+    private double feedRateMmPerMinute = 5000;
 	
 	private double x, y, z, c;
 	private Thread readerThread;

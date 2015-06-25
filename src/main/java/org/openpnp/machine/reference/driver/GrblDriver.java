@@ -54,8 +54,8 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
 	private static final long minimumRequiredBuildNumber = 20140822;
 	
-	@Attribute
-	private double feedRateMmPerMinute;
+	@Attribute(required=false)
+	private double feedRateMmPerMinute = 5000;
 	
 	
 	private double x, y, z, c;

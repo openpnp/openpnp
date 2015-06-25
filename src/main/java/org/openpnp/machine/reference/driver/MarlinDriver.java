@@ -52,8 +52,8 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(MarlinDriver.class);
 	private static final long minimumRequiredBuildNumber = 20140822;
 	
-	@Attribute
-	protected double feedRateMmPerMinute;
+	@Attribute(required=false)
+	protected double feedRateMmPerMinute = 5000;
 	
     @Element(required=false)
     protected String pickGcode = "M106 S255";

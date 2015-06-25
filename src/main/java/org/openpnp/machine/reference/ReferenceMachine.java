@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.PropertySheetHolder;
@@ -58,6 +59,14 @@ public class ReferenceMachine extends AbstractMachine {
 	
 	public ReferenceDriver getDriver() {
 		return driver;
+	}
+	
+	public void setDriver(ReferenceDriver driver) throws Exception {
+	    if (driver != this.driver) {
+	        setEnabled(false);
+	        close();
+	    }
+	    this.driver = driver;
 	}
 
 	@Override
@@ -94,7 +103,7 @@ public class ReferenceMachine extends AbstractMachine {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-	    return null;
+	    return new ReferenceMachineConfigurationWizard(this);
 	}
 	
 	@Override
