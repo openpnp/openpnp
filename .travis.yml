@@ -5,11 +5,12 @@ jdk:
 - openjdk7
 env:
   global:
-    secure: XqPUkEH6Hoz9kBkxR0wduknBmq23JMxZE6rVdx91F8nKcFYeaGS8s47Ja8GMVVFffSY9voiLrmt7T/6dqO0nO5OQHLFuSMuOnZd6xSPVPKe0J6PL78Qf7fp5JecJOqGsetgLx8vQ46O9NSumQvvaMWeDvb7qG+B0T3hrOPqMZwA=
+    secure: bJVw2AK1useeUy2YF5eyZqak53b1g5hbSa4uUwdP355xIbaJMMk1HCOEr+FMsYBVfYEI8FLnfdIA24bum+9A3xas6RLC/UJUlbkyhNrA2EZDtbS3dHsWxGHaGJ6r0voTsmUIJyCYVCdKQaD9mZ8JDvc5MNUYK0ulbRcnn/0bv+A=
 before_install:
-  - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
-  - sudo dpkg -i install4j_linux_5_1_15.deb
-  - sudo dpkg -L install4j
-  - echo $INSTALL4J_LICENSE_KEY
+- wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
+- sudo dpkg -i install4j_linux_5_1_15.deb
+- sudo dpkg -L install4j
+- /opt/install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
 after_success:
-  - mvn package
+- mvn package
+- /opt/install4j5/bin/install4jc -r `date +"%Y%m%d%H%M%S"` OpenPnP.install4j
