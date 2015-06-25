@@ -9,6 +9,6 @@ env:
 before_install:
   - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
   - sudo dpkg -i install4j_linux_5_1_15.deb
-  - dpkg-query -c install4j_linux_5_1_15.deb
+  - sudo dpkg-query -c install4j
 after_success:
   - mvn package
