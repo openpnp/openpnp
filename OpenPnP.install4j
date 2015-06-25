@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="5.1.8" transformSequenceNumber="4">
+<install4j version="5.1.15" transformSequenceNumber="4">
   <directoryPresets config="/Users/jason/Projects/openpnp/openpnp/lib" />
-  <application name="OpenPnP" distributionSourceDir="" applicationId="9204-4030-0867-1434" mediaDir="/Users/jason/Projects/openpnp/openpnp/installers" mediaFilePattern="${compiler:sys.shortName}_${compiler:sys.platform}_${compiler:sys.version}" compression="6" lzmaCompression="false" pack200Compression="false" excludeSignedFromPacking="true" commonExternalFiles="false" createMd5Sums="true" shrinkRuntime="true" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="0.0.1" allPathsRelative="false" backupOnSave="false" autoSave="false" convertDotsToUnderscores="true" macSignature="????" installerName="" javaMinVersion="1.6" javaMaxVersion="" allowBetaVM="false" jdkMode="runtimeJre" jdkName="">
+  <application name="OpenPnP" distributionSourceDir="" applicationId="9204-4030-0867-1434" mediaDir="/Users/jason/Projects/openpnp/openpnp/installers" mediaFilePattern="${compiler:sys.shortName}_${compiler:sys.platform}_${compiler:sys.version}" compression="6" lzmaCompression="false" pack200Compression="false" excludeSignedFromPacking="true" commonExternalFiles="false" createMd5Sums="true" shrinkRuntime="true" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="0.0.1" allPathsRelative="false" backupOnSave="false" autoSave="false" convertDotsToUnderscores="true" macSignature="????" installerName="" javaMinVersion="1.7" javaMaxVersion="" allowBetaVM="false" jdkMode="runtimeJre" jdkName="">
     <languages skipLanguageSelection="false" languageSelectionInPrincipalLanguage="false">
       <principalLanguage id="en" customLocalizationFile="" />
       <additionalLanguages />
@@ -44,7 +44,7 @@
   </files>
   <launchers>
     <launcher name="OpenPnP" id="23" customizedId="" external="false" excludeFromMenu="false" unixMode="755" menuName="" icnsFile="/Users/jason/Projects/openpnp/openpnp-logo/OpenPnP-logo.icns" customMacBundleIdentifier="false" macBundleIdentifier="" swtApp="false" fileset="" macBundleBinary="JavaApplicationStub" addMacEntitlements="false" macEntitlementsFile="">
-      <executable name="OpenPnP" type="1" iconSet="true" iconFile="" executableDir="" redirectStderr="true" stderrFile="error.log" stderrMode="overwrite" redirectStdout="false" stdoutFile="output.log" stdoutMode="overwrite" failOnStderrOutput="true" executableMode="1" changeWorkingDirectory="true" workingDirectory="." singleInstance="true" serviceStartType="2" serviceDependencies="" serviceDescription="" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false">
+      <executable name="OpenPnP" type="1" iconSet="true" iconFile="" executableDir="" redirectStderr="true" stderrFile="error.log" stderrMode="overwrite" redirectStdout="false" stdoutFile="output.log" stdoutMode="overwrite" failOnStderrOutput="true" executableMode="1" changeWorkingDirectory="true" workingDirectory="." singleInstance="true" serviceStartType="2" serviceDependencies="" serviceDescription="" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false" singleInstanceActivate="true">
         <versionInfo include="false" fileVersion="" fileDescription="" legalCopyright="" internalName="" productName="" />
       </executable>
       <splashScreen show="false" autoOff="true" alwaysOnTop="true" width="0" height="0" bitmapFile="/Users/jason/Projects/openpnp/openpnp/logo/OpenPnP-logo.iconset/icon_128x128.png" java6SplashScreen="false">
@@ -377,13 +377,13 @@
     </applications>
   </installerGui>
   <mediaSets>
-    <windows name="Windows_32" id="24" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="32" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-x86-1.7.0_51" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
+    <windows name="Windows_32" id="24" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="32" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-x86-1.8.0_45" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
       <excludedLaunchers />
       <excludedBeans />
       <overriddenPrincipalLanguage id="en" customLocalizationFile="" />
       <exclude />
       <variables>
-        <variable name="native_path" value="win32" description="" category="" />
+        <variable name="native_path" value="windows/x86" description="" category="" />
       </variables>
       <autoUpdate useMinUpdatableVersion="false" minUpdatableVersion="" useMaxUpdatableVersion="false" maxUpdatableVersion="">
         <commentFiles />
@@ -392,13 +392,13 @@
       <excludedComponents />
       <includedDownloadableComponents />
     </windows>
-    <windows name="Windows_64" id="28" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="64" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-amd64-1.7.0_51" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
+    <windows name="Windows_64" id="28" customizedId="" mediaFileName="" installDir="openpnp" overridePrincipalLanguage="false" jreBitType="64" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="windows-amd64-1.8.0_45" manualJREEntry="false" bundleType="1" jreURL="" jreShared="false" directDownload="false" installOnlyIfNecessary="false" customInstallBaseDir="" contentFilesType="1" downloadURL="" verifyIntegrity="true">
       <excludedLaunchers />
       <excludedBeans />
       <overriddenPrincipalLanguage id="en" customLocalizationFile="" />
       <exclude />
       <variables>
-        <variable name="native_path" value="win64" description="" category="" />
+        <variable name="native_path" value="windows/x64" description="" category="" />
       </variables>
       <autoUpdate useMinUpdatableVersion="false" minUpdatableVersion="" useMaxUpdatableVersion="false" maxUpdatableVersion="">
         <commentFiles />
@@ -407,13 +407,13 @@
       <excludedComponents />
       <includedDownloadableComponents />
     </windows>
-    <macosFolder name="Mac OS X Folder" id="119" customizedId="" mediaFileName="" installDir="OpenPnP" overridePrincipalLanguage="false" jreBitType="all" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="macosx-amd64-1.7.0_51" manualJREEntry="false" bundleType="1" jreURL="http://openpnp.org" jreShared="false" directDownload="false" installOnlyIfNecessary="false" appleJre="false" requiredVmIdPrefix="" customInstallBaseDir="" contentFilesType="1" downloadURL="" signLaunchers="false">
+    <macosFolder name="Mac OS X Folder" id="119" customizedId="" mediaFileName="" installDir="OpenPnP" overridePrincipalLanguage="false" jreBitType="all" runPostProcessor="false" postProcessor="" failOnPostProcessorError="false" useLegacyMediaFileIds="false" legacyMediaFileIds="" includedJRE="macosx-amd64-1.8.0_45" manualJREEntry="false" bundleType="1" jreURL="http://openpnp.org" jreShared="false" directDownload="false" installOnlyIfNecessary="false" appleJre="false" requiredVmIdPrefix="" customInstallBaseDir="" contentFilesType="1" downloadURL="" signLaunchers="false">
       <excludedLaunchers />
       <excludedBeans />
       <overriddenPrincipalLanguage id="en" customLocalizationFile="" />
       <exclude />
       <variables>
-        <variable name="native_path" value="mac-universal" description="" category="" />
+        <variable name="native_path" value="mac/universal" description="" category="" />
       </variables>
       <autoUpdate useMinUpdatableVersion="false" minUpdatableVersion="" useMaxUpdatableVersion="false" maxUpdatableVersion="">
         <commentFiles />

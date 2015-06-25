@@ -1,6 +1,14 @@
 language: java
 jdk:
-  - oraclejdk8
-  - oraclejdk7
-  - openjdk7
-  
+- oraclejdk8
+- oraclejdk7
+- openjdk7
+env:
+  global:
+    secure: XqPUkEH6Hoz9kBkxR0wduknBmq23JMxZE6rVdx91F8nKcFYeaGS8s47Ja8GMVVFffSY9voiLrmt7T/6dqO0nO5OQHLFuSMuOnZd6xSPVPKe0J6PL78Qf7fp5JecJOqGsetgLx8vQ46O9NSumQvvaMWeDvb7qG+B0T3hrOPqMZwA=
+before_install:
+  - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
+  - sudo dpkg -i install4j_linux_5_1_15.deb
+  - dpkg-query -c install4j_linux_5_1_15.deb
+after_success:
+  - mvn package
