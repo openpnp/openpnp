@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="5.1.15" transformSequenceNumber="4">
-  <directoryPresets config="/Users/jason/Projects/openpnp/openpnp/lib" />
-  <application name="OpenPnP" distributionSourceDir="" applicationId="9204-4030-0867-1434" mediaDir="/Users/jason/Projects/openpnp/openpnp/installers" mediaFilePattern="${compiler:sys.shortName}_${compiler:sys.platform}_${compiler:sys.version}" compression="6" lzmaCompression="false" pack200Compression="false" excludeSignedFromPacking="true" commonExternalFiles="false" createMd5Sums="true" shrinkRuntime="true" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="0.0.1" allPathsRelative="false" backupOnSave="false" autoSave="false" convertDotsToUnderscores="true" macSignature="????" installerName="" javaMinVersion="1.7" javaMaxVersion="" allowBetaVM="false" jdkMode="runtimeJre" jdkName="">
+  <directoryPresets config="./src/main/resources/icons" />
+  <application name="OpenPnP" distributionSourceDir="" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.shortName}_${compiler:sys.platform}_${compiler:sys.version}" compression="6" lzmaCompression="false" pack200Compression="false" excludeSignedFromPacking="true" commonExternalFiles="false" createMd5Sums="true" shrinkRuntime="true" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="0.0.1" allPathsRelative="true" backupOnSave="false" autoSave="false" convertDotsToUnderscores="true" macSignature="????" installerName="" javaMinVersion="1.7" javaMaxVersion="" allowBetaVM="false" jdkMode="runtimeJre" jdkName="">
     <languages skipLanguageSelection="false" languageSelectionInPrincipalLanguage="false">
       <principalLanguage id="en" customLocalizationFile="" />
       <additionalLanguages />
@@ -24,10 +24,18 @@
       <mountPoint id="22" root="" location="" mode="755" />
     </mountPoints>
     <entries>
-      <dirEntry mountPoint="22" file="/Users/jason/Projects/openpnp/openpnp/lib/native" overwriteMode="4" shared="false" fileMode="644" uninstallMode="0" overrideFileMode="false" overrideOverwriteMode="false" overrideUninstallMode="false" entryMode="subdir" subDirectory="native" excludeSuffixes=".DS_Store" dirMode="755" overrideDirMode="false">
+      <dirEntry mountPoint="22" file="lib/native" overwriteMode="4" shared="false" fileMode="644" uninstallMode="0" overrideFileMode="false" overrideOverwriteMode="false" overrideUninstallMode="false" entryMode="subdir" subDirectory="native" excludeSuffixes=".DS_Store" dirMode="755" overrideDirMode="false">
         <exclude />
       </dirEntry>
-      <dirEntry mountPoint="22" file="/Users/jason/Projects/openpnp/openpnp/target" overwriteMode="4" shared="false" fileMode="644" uninstallMode="0" overrideFileMode="false" overrideOverwriteMode="false" overrideUninstallMode="false" entryMode="direct" subDirectory="target" excludeSuffixes="" dirMode="755" overrideDirMode="false">
+      <dirEntry mountPoint="22" file="samples" overwriteMode="4" shared="false" fileMode="644" uninstallMode="0" overrideFileMode="false" overrideOverwriteMode="false" overrideUninstallMode="false" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store" dirMode="755" overrideDirMode="false">
+        <exclude>
+          <entry location=".DS_Store" fileType="regular" />
+          <entry location="Demo Board/.DS_Store" fileType="regular" />
+          <entry location="MF2015/.DS_Store" fileType="regular" />
+          <entry location="pnp-test/.DS_Store" fileType="regular" />
+        </exclude>
+      </dirEntry>
+      <dirEntry mountPoint="22" file="target" overwriteMode="4" shared="false" fileMode="644" uninstallMode="0" overrideFileMode="false" overrideOverwriteMode="false" overrideUninstallMode="false" entryMode="direct" subDirectory="target" excludeSuffixes="" dirMode="755" overrideDirMode="false">
         <exclude>
           <entry location="classes" fileType="regular" />
           <entry location="generated-sources" fileType="regular" />
@@ -43,11 +51,11 @@
     <components />
   </files>
   <launchers>
-    <launcher name="OpenPnP" id="23" customizedId="" external="false" excludeFromMenu="false" unixMode="755" menuName="" icnsFile="/Users/jason/Projects/openpnp/openpnp-logo/OpenPnP-logo.icns" customMacBundleIdentifier="false" macBundleIdentifier="" swtApp="false" fileset="" macBundleBinary="JavaApplicationStub" addMacEntitlements="false" macEntitlementsFile="">
+    <launcher name="OpenPnP" id="23" customizedId="" external="false" excludeFromMenu="false" unixMode="755" menuName="" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns" customMacBundleIdentifier="false" macBundleIdentifier="" swtApp="false" fileset="" macBundleBinary="JavaApplicationStub" addMacEntitlements="false" macEntitlementsFile="">
       <executable name="OpenPnP" type="1" iconSet="true" iconFile="" executableDir="" redirectStderr="true" stderrFile="error.log" stderrMode="overwrite" redirectStdout="false" stdoutFile="output.log" stdoutMode="overwrite" failOnStderrOutput="true" executableMode="1" changeWorkingDirectory="true" workingDirectory="." singleInstance="true" serviceStartType="2" serviceDependencies="" serviceDescription="" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false" singleInstanceActivate="true">
         <versionInfo include="false" fileVersion="" fileDescription="" legalCopyright="" internalName="" productName="" />
       </executable>
-      <splashScreen show="false" autoOff="true" alwaysOnTop="true" width="0" height="0" bitmapFile="/Users/jason/Projects/openpnp/openpnp/logo/OpenPnP-logo.iconset/icon_128x128.png" java6SplashScreen="false">
+      <splashScreen show="false" autoOff="true" alwaysOnTop="true" width="0" height="0" bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" java6SplashScreen="false">
         <text>
           <statusLine x="20" y="20" text="" font="Arial" fontSize="8" fontColor="0,0,0" fontWeight="500" />
           <versionLine x="20" y="40" text="version ${compiler:sys.version}" font="Arial" fontSize="8" fontColor="0,0,0" fontWeight="500" />
@@ -74,8 +82,8 @@
         <content />
       </infoPlist>
       <iconImageFiles>
-        <file path="/Users/jason/Projects/openpnp/openpnp-logo/OpenPnP-logo.iconset/icon_32x32.png" />
-        <file path="/Users/jason/Projects/openpnp/openpnp-logo/OpenPnP-logo.iconset/icon_128x128.png" />
+        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
+        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
       </iconImageFiles>
     </launcher>
   </launchers>
