@@ -12,4 +12,7 @@ before_install:
 - /opt/install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
 after_success:
 - mvn package
+- wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
+- wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
+- wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
 - /opt/install4j5/bin/install4jc -r `date +"%Y%m%d%H%M%S"` -d installers OpenPnP.install4j
