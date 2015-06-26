@@ -5,25 +5,23 @@ jdk:
 - oraclejdk7
 - openjdk7
 
-deploy:
-  provider: s3
-  skip_cleanup: true
-  region: us-west-2
-  endpoint: s3-us-west-2.amazonaws.com
-  local_dir: installers
-  on:
-    branch: develop
-    jdk: oraclejdk8
-      
-before_install:
+before_deploy:
 - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
 - sudo dpkg -i install4j_linux_5_1_15.deb
 - /opt/install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
-
-after_success:
 - mvn package
 - wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
-- /opt/install4j5/bin/install4jc -r `git rev-parse --short HEAD` -d installers -D mediaFileVersion=develop OpenPnP.install4j
+- /opt/install4j5/bin/install4jc -r `git rev-parse --short HEAD` -d installers -D mediaFileVersion=`git rev-parse --abbrev-ref HEAD` OpenPnP.install4j
 
+deploy:
+  provider: s3
+  skip_cleanup: true
+  bucket: "openpnp"
+  region: us-west-2
+  endpoint: s3-us-west-2.amazonaws.com
+  local_dir: installers
+  on:
+    jdk: oraclejdk8
+      
