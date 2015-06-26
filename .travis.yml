@@ -8,7 +8,7 @@ jdk:
 addons:
   artifacts: true
     paths:
-      - installers/*
+      - $(ls installers | tr "\n" ":")
     
 before_install:
 - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
