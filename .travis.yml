@@ -22,6 +22,7 @@ deploy:
   region: us-west-2
   endpoint: s3-us-west-2.amazonaws.com
   local_dir: installers
+  all_branches: true
   on:
     jdk: oraclejdk8
       
