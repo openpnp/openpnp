@@ -11,8 +11,8 @@ to build and own a fully functional SMT pick and place machine for under $1000.
 
 ## Project Status
 
-Overall, the project is in a pre-alpha state. This means that it's under heavy development and
-there are currently no end-user usable components. We are working hard towards an initial alpha release.
+Overall, the project is in an alpha state. This means that it’s under heavy development but it is
+usable enough to start working with. See the [Downloads](http://openpnp.org/downloads) page to get started.
 
 If you would like to keep up with our progress you can
 [Watch this project on GitHub](http://github.com/openpnp/openpnp), check out
