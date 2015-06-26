@@ -5,11 +5,16 @@ jdk:
 - oraclejdk7
 - openjdk7
 
-addons:
-  artifacts:
-    paths:
-      - installers/*
-    
+deploy:
+  provider: s3
+  skip_cleanup: true
+  region: us-west-2
+  endpoint: s3-us-west-2.amazonaws.com
+  local_dir: installers
+  on:
+    branch: develop
+    jdk: oraclejdk8
+      
 before_install:
 - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
 - sudo dpkg -i install4j_linux_5_1_15.deb
