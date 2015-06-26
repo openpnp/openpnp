@@ -1,10 +1,11 @@
 language: java
-
 jdk:
 - oraclejdk8
 - oraclejdk7
 - openjdk7
-
+env:
+  global:
+    secure: MK1zNtf1PVXRA5bLEJ6CScDntfhH1R0+06dgzFzdUxWtZIdYxOxuqnJnepfGjBjfyNzQgvQFQQP55UNHVzwjhXX0LUmvIvAPnRLT9RSrOgq952se6nIlz4UGqXDV/JU66ecUi6DVK7C12d5NjWYW8POCUBd+qyz3c6ma7Xh5TH0=
 before_deploy:
 - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
 - sudo dpkg -i install4j_linux_5_1_15.deb
@@ -13,16 +14,19 @@ before_deploy:
 - wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
-- /opt/install4j5/bin/install4jc -r `git rev-parse --short HEAD` -d installers -D mediaFileVersion=`git rev-parse --abbrev-ref HEAD` OpenPnP.install4j
-
+- /opt/install4j5/bin/install4jc -r `git rev-parse --short HEAD` -d installers -D
+  mediaFileVersion=`git rev-parse --abbrev-ref HEAD` OpenPnP.install4j
 deploy:
   provider: s3
+  access_key_id:
+    secure: QzQReumydxD1NJzCrCSE5iLDONzJtAYg4VEK9yV6ySyLd92yNIaU7jBayGjv0936Ufsbq0xG/wpyrPoUhC0IJ9zzNiXJ7biZtFH2T2PlWN2j9MsrZJF7XOyx028IMlUSkTg0VvjewwYDbf35tAUgzwZAC2eWWtkZ44PEaCbRX3A=
+  secret_access_key:
+    secure: C4e7rAxiTBUQhDiZ5zs0FyzTNtRD+f+egrxhB3TBFi8jImEKbQ8hCr84TmSc0rR/ZdPEkjG0Z1gX/x1fKjrBI2tf2D6CyYjCYt9ZaHnMH0AL31yZ5H8FRyxSGM6uFjgHLbNXqaAvg2sNlPVUT4mfEmcJ+mDF1Yp/Jli+532g2Lc=
   skip_cleanup: true
-  bucket: "openpnp"
+  bucket: openpnp
   region: us-west-2
   endpoint: s3-us-west-2.amazonaws.com
   local_dir: installers
   on:
     jdk: oraclejdk8
     all_branches: true
-      
