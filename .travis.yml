@@ -6,9 +6,9 @@ jdk:
 - openjdk7
 
 addons:
-  artifacts: true
+  artifacts:
     paths:
-      - $(ls installers | tr "\n" ":")
+      - installers/*
     
 before_install:
 - wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
