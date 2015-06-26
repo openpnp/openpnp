@@ -18,7 +18,7 @@ before_deploy:
 - wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
-- /opt/install4j5/bin/install4jc -r `git rev-parse --short HEAD` -d installers -D mediaFileVersion=`git rev-parse --abbrev-ref HEAD` OpenPnP.install4j
+- /opt/install4j5/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
 
 deploy:
   provider: s3
