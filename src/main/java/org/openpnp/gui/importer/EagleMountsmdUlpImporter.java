@@ -104,7 +104,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
 			// C1 41.91 34.93 180 0.1uF C0805
 			// T10 21.59 14.22  90  SOT23-BEC
 			// printf("%s %5.2f %5.2f %3.0f %s %s\n",
-			Pattern pattern = Pattern.compile("(\\S+)\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)\\s+(\\d{1,3})\\s(.*)\\s(.*)");
+            Pattern pattern = Pattern.compile("(\\S+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d{1,3})\\s(.*)\\s(.*)");
 			Matcher matcher = pattern.matcher(line);
 			matcher.matches();
 			Placement placement = new Placement(matcher.group(1));
