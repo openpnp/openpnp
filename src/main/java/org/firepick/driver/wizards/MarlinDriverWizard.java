@@ -1,5 +1,6 @@
-package org.firepick;
+package org.firepick.driver.wizards;
 
+import org.firepick.driver.MarlinDriver;
 import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
 
 public class MarlinDriverWizard  extends AbstractSerialPortDriverConfigurationWizard {
