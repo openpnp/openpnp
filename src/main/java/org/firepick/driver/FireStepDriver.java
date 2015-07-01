@@ -1,4 +1,3 @@
-package org.firepick.driver;
 /*
 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
 	
@@ -20,9 +19,13 @@ along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
 	For more information about OpenPnP visit http://openpnp.org
 */
 
-//This file is intended to support the FireStep motion controller, created by Karl Lew (karl@firepick.org).
-//- Neil Jansen (njansen1@gmail.com) 6/22/2014
+// This file is intended to support the FireStep motion controller, created by Karl Lew (karl@firepick.org).
+// More information about the FireStep controller can be found at https://github.com/firepick1/firestep
+// Note that this implementation currently only supports FirePick Delta, which has rotational delta kinematics.
+// It should be trivial to add conditional hooks to enable or disable or switch kinematics for other configurations.
+// - Neil Jansen (njansen1@gmail.com) 7/1/2014
 
+package org.firepick.driver;
 
 import java.io.IOException;
 import java.util.ArrayList;
