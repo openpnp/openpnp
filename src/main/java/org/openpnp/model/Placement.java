@@ -55,6 +55,7 @@ public class Placement extends AbstractModelObject implements Identifiable {
 	@Attribute
 	private String partId;
 	
+	@Deprecated
 	@Attribute(required=false)
 	private Boolean place;
 	
@@ -140,6 +141,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
     
     @Override
 	public String toString() {
-		return String.format("id %s, location %s, side %s, part %s, place %s", id, location, side, part, place);
+		return String.format("id %s, location %s, side %s, part %s, type %s", id, location, side, part, type);
 	}
 }
