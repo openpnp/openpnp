@@ -35,7 +35,6 @@ import javax.swing.Action;
 
 import org.firepick.driver.wizards.FireStepDriverWizard;
 import org.firepick.kinematics.RotatableDeltaKinematicsCalculator;
-import org.firepick.kinematics.RotatableDeltaKinematicsCalculator.RotatableDeltaKinematicsException;
 import org.firepick.model.AngleTriplet;
 import org.firepick.model.RawStepTriplet;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -133,9 +132,11 @@ public class FireStepDriver extends AbstractSerialPortDriver implements Runnable
 		sendJsonCommand(String.format("{'hom':{'x':%d,'y':%d,'z':%d}}", rs.x, rs.y, rs.z), 10000);
 		
 		Location homLoc = deltaCalc.getHomePosCartesian();
+		logger.debug(String.format("Home position: X=%.2f, Y=%.2f, Z=%.2f",homLoc.getX(),homLoc.getY(),homLoc.getZ() ));
 		x = homLoc.getX();
 		y = homLoc.getY();
 		z = homLoc.getZ();
+		//TODO: Fire off head event to get the DRO to update to the new values
 	}
 	
 	@Override
