@@ -104,6 +104,10 @@ public class Location {
 		return (Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2)));
 	}
 	
+	public double getXyzDistanceTo(Location location) {
+		return (Math.sqrt(Math.pow(this.x - location.getX(), 2) + Math.pow(this.y - location.getY(), 2) + Math.pow(this.z - location.getZ(), 2)) );
+	}
+	
 	public Length getLengthX() {
 		return new Length(x, units);
 	}
