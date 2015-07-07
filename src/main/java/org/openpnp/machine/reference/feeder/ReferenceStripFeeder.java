@@ -51,24 +51,43 @@ import org.slf4j.LoggerFactory;
  * the direction of travel.
  * 
  */
+
+/**
+ * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/
+ * holes 1.5mm
+ * hole pitch 4mm
+ * reference hole to part is 2mm
+ * tape width is multiple of 4mm
+ * part pitch is multiple of 4mm except for 0402 and smaller, where it is 2mm 
+ * hole to part is tape width / 2 - 0.5mm 
+ */
 public class ReferenceStripFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
+	
+    @Element(required=false)
+    private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
-	@Element
-	private Length holeDiameter;
+    @Element(required=false)
+    private Location nextHoleLocation = new Location(LengthUnit.Millimeters);
+
+	@Element(required=false)
+	private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 	
-	@Element
-	private Length holePitch;
+	@Element(required=false)
+	private Length holePitch = new Length(4, LengthUnit.Millimeters);
 	
-	@Element
-	private Length partPitch;
-	
-	@Element
-	private Length holeToPartLateral;
-	
-	@Element
-	private Length holeToPartLinear;
-	
+	@Element(required=false)
+    private Length partPitch = new Length(4, LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    private Length tapeWidth = new Length(8, LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    private Length holeToPartLinear = new Length(2, LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    private Length holeToPartLateral = new Length(8 / 2 - 0.5, LengthUnit.Millimeters);
+    
     @Attribute
     private int partCount;
     
@@ -79,9 +98,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
-		boolean result = feedCount < partCount;
-		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getName(), nozzle, result});
-		return result;
+//		boolean result = feedCount < partCount;
+//		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getName(), nozzle, result});
+//		return result;
+	    return true;
 	}
 	
 	@Override
@@ -123,6 +143,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         throw new Exception("Not yet implements");
 	}
     
+    // TODO: temporary testing trash
+    public void doSetup() {
+        System.out.println("you got it boss");
+    }
+    
 	public Length getHoleDiameter() {
         return holeDiameter;
     }
@@ -146,21 +171,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setPartPitch(Length partPitch) {
         this.partPitch = partPitch;
     }
-
-    public Length getHoleToPartLateral() {
-        return holeToPartLateral;
+    
+    public Length getTapeWidth() {
+        return tapeWidth;
     }
 
-    public void setHoleToPartLateral(Length holeToPartLateral) {
-        this.holeToPartLateral = holeToPartLateral;
-    }
-
-    public Length getHoleToPartLinear() {
-        return holeToPartLinear;
-    }
-
-    public void setHoleToPartLinear(Length holeToPartLinear) {
-        this.holeToPartLinear = holeToPartLinear;
+    public void setTapeWidth(Length tapeWidth) {
+        this.tapeWidth = tapeWidth;
     }
 
     public int getPartCount() {

@@ -36,6 +36,7 @@ import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.TableScannerCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
@@ -138,7 +139,8 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
 	public List<Class<? extends Feeder>> getCompatibleFeederClasses() {
 		List<Class<? extends Feeder>> l = new ArrayList<Class<? extends Feeder>>();
-		l.add(ReferenceTrayFeeder.class);
+        l.add(ReferenceStripFeeder.class);
+        l.add(ReferenceTrayFeeder.class);
 		l.add(ReferenceTapeFeeder.class);
 		l.add(ReferenceTubeFeeder.class);
 		return l;
