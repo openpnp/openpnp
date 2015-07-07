@@ -54,7 +54,8 @@ public class ReferenceMachineConfigurationWizard extends
         comboBoxDriver.addItem(SprinterDriver.class.getCanonicalName());
         comboBoxDriver.addItem(TinygDriver.class.getCanonicalName());
         comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(org.firepick.MarlinDriver.class.getCanonicalName());
+        comboBoxDriver.addItem(org.firepick.driver.MarlinDriver.class.getCanonicalName());
+        comboBoxDriver.addItem(org.firepick.driver.FireStepDriver.class.getCanonicalName());
         
         this.driverClassName = machine.getDriver().getClass().getCanonicalName();
     }

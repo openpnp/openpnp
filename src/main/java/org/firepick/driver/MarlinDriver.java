@@ -23,7 +23,7 @@
 // It is a mashup of TinygDriver.java and GrblDriver.java.
 // - Neil Jansen (njansen1@gmail.com) 6/30/2014
 
-package org.firepick;
+package org.firepick.driver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
+import org.firepick.driver.wizards.MarlinDriverWizard;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
