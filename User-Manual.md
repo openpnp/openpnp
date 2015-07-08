@@ -123,8 +123,18 @@ Packages
 Boards
 ------
 
+Boards tell OpenPnP which parts to place and where to place them. Boards are stored in files with the extension `.board.xml`. A Board contains a list of Placements. A Placement tells OpenPnP which part to place at what coordinates and rotation.
+
+Board files are independent from any user or machine. You can share Board files for a given PCB design and use the file to build that particular PCB.
+
+You will typically create a new Board file by importing data from your CAD software such as Eagle or KiCAD. Once you've created a Board file for a design there's no need to change it unless the design changes.
+
 Jobs
 ----
+
+Job files tell OpenPnP where to find one or more Boards on the machine. A Job might consist of a single Board or of many of the same or even different Boards. Each line in a Job tells OpenPnP where to find one particular Board using machine coordinates. When you run the Job OpenPnP will process all of the Placements for each Board in the Job.
+
+Since a Job can contain many of the same Board you can use it to process a full panel of PCBs. Just add the same Board to the Job for as many as the panel contains and set the position of each in the Job.
 
 Your First Job
 --------------
