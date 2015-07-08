@@ -163,6 +163,21 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
             this.y = y;
         }
+        if (!Double.isNaN(c) && c != this.c) {
+            int tool = nozzle == null || nozzle.getName().equals("N1") ? 0 : 1;
+            if (sb.length() == 0) {
+                // If the move won't contain an X or Y component but will
+                // have an E component we need to send the E component as a
+                // solo move because Smoothie won't move only E and Z at
+                // the same time.
+                sendCommand(String.format(Locale.US, "G0 T%d E%2.2f ", tool, c));
+                dwell();
+            }
+            else {
+                sb.append(String.format(Locale.US, "T%d E%2.2f ", tool, c));
+            }
+            this.c = c;
+        }
         if (!Double.isNaN(z) && z != this.z) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
             logger.debug("nozzle {} {} {}", new Object[] { z, zCamRadius, a });
@@ -171,11 +186,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
             sb.append(String.format(Locale.US, "Z%2.2f ", a));
             this.z = a;
-        }
-        if (!Double.isNaN(c) && c != this.c) {
-            int tool = nozzle == null || nozzle.getName().equals("N1") ? 0 : 1;
-            sb.append(String.format(Locale.US, "T%d E%2.2f ", tool, c));
-            this.c = c;
         }
         if (sb.length() > 0) {
             sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));

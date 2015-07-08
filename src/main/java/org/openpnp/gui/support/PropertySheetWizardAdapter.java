@@ -6,9 +6,15 @@ import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 
 public class PropertySheetWizardAdapter implements PropertySheet, WizardContainer {
     private final Wizard wizard;
+    private final String title;
     
     public PropertySheetWizardAdapter(Wizard wizard) {
+        this(wizard, wizard == null ? null : wizard.getWizardName());
+    }
+    
+    public PropertySheetWizardAdapter(Wizard wizard, String title) {
         this.wizard = wizard;
+        this.title = title;
         if (wizard != null) {
             wizard.setWizardContainer(this);
         }
@@ -16,7 +22,7 @@ public class PropertySheetWizardAdapter implements PropertySheet, WizardContaine
 
     @Override
     public String getPropertySheetTitle() {
-        return wizard == null ? null : wizard.getWizardName();
+        return title;
     }
 
     @Override
