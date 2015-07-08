@@ -139,7 +139,7 @@ Since a Job can contain many of the same Board you can use it to process a full 
 Your First Job
 --------------
 
-This section to be expanded in the future, but the general gist of it is:
+This is a brief explanation of how to setup and run your first job. For details on any step you can refer to other parts of this page, but be warned that it hasn't all been documented yet. This is meant to serve as a jumping off point.
 
 1. Define packages used in the PCB in the Packages tab.
 2. Define parts used in the PCB in the Parts tab. Reference the previously created Packages.
