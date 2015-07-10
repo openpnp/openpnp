@@ -72,16 +72,18 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
         comboBoxBaud.addItem(new Integer(460800));
         comboBoxBaud.addItem(new Integer(921600));
         
-        boolean exists = false;
-        String[] portNames = driver.getPortNames();
-        for (String portName : portNames) {
-            comboBoxPort.addItem(portName);
-            if (portName.equals(driver.getPortName())) {
-                exists = true;
+        if (driver != null) {
+            boolean exists = false;
+            String[] portNames = driver.getPortNames();
+            for (String portName : portNames) {
+                comboBoxPort.addItem(portName);
+                if (portName.equals(driver.getPortName())) {
+                    exists = true;
+                }
             }
-        }
-        if (!exists && driver.getPortName() != null) {
-            comboBoxPort.addItem(driver.getPortName());
+            if (!exists && driver.getPortName() != null) {
+                comboBoxPort.addItem(driver.getPortName());
+            }
         }
     }
     
