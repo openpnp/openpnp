@@ -111,6 +111,9 @@ public class Utils2D {
                 null,
                 (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
         
+        // Set the final location's Z to that of the board location.
+        placementLocation = placementLocation.derive(null, null, boardLocation.getZ(), null);
+        
         return placementLocation;
 	    
 	}
