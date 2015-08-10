@@ -87,7 +87,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
             try {
                 JsonObject response = sendCommand("{\"fv\":\"\"}", 500);
                 // {"r":{"fv":0.950,"f":[1,0,10,2853]}}
-                connectedVersion = response.get("fv").getAsDouble();
+                connectedVersion = response.get("r").getAsJsonObject().get("fv").getAsDouble();
                 connected = true;
                 break;
             }
@@ -323,7 +323,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                     processStatusReport(o.get("sr").getAsJsonObject());
                 }
                 else if (o.has("r")) {
-                    lastResponse = o.get("r").getAsJsonObject();
+                    lastResponse = o;
                     synchronized (commandLock) {
                         commandLock.notifyAll();
                     }
