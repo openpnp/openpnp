@@ -35,7 +35,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
 
-import org.firepick.driver.wizards.MarlinDriverWizard;
+import org.firepick.driver.wizards.SmoothieDriverWizard;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -53,8 +53,8 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.  
  */
-public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
-	private static final Logger logger = LoggerFactory.getLogger(MarlinDriver.class);
+public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable {
+	private static final Logger logger = LoggerFactory.getLogger(SmoothieDriver.class);
 	private static final double minimumRequiredVersion = 1.0;
 	
 	@Attribute(required=false)
@@ -66,10 +66,10 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	private boolean disconnectRequested;
 	private Object commandLock = new Object();
 	private boolean connected;
-	private double connectedVersion;
+	//private double connectedVersion;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
-//	public MarlinDriver() {
+//	public SmootiheDriver() {
 //        Configuration.get().addListener(new ConfigurationListener.Adapter() {
 //            @Override
 //            public void configurationComplete(Configuration configuration)
@@ -94,23 +94,20 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	public void home(ReferenceHead head) throws Exception {
 		List<String> responses;
 		sendCommand("M999");
-		sendCommand("M82"); // Was M83, 6/21/2015, NJ
+		sendCommand("M82");
 		sendCommand("G28");
 	
 		//For some machines, home is not 0,0,0.  Send an M114 command to get the current position, after homing.
 		responses = sendCommand("M114");
 	
-	  //We're expecting (Note, this is the modified Marlin M114 response, for FirePick Delta): 
-	  //  M114 X:0.00 Y:0.00 Z:65.39 E:0.00
- 		//  dX:-66.88 dY:-66.88 dZ:-66.88 CalcZ=-247.50
 		for (String response : responses) {
-			if (response.startsWith("M114 ")) {
+			if (response.toUpperCase().startsWith("OK ")) {
 				logger.debug("echo: " + response);
 				String[] coords = response.split(" ");
-				x = Double.parseDouble(coords[1].substring(2));
-				y = Double.parseDouble(coords[2].substring(2));
-				z = Double.parseDouble(coords[3].substring(2));
-				c = Double.parseDouble(coords[4].substring(2));
+				x = Double.parseDouble(coords[2].substring(2));
+				y = Double.parseDouble(coords[3].substring(2));
+				z = Double.parseDouble(coords[4].substring(2));
+				c = Double.parseDouble(coords[9].substring(2));
 			}
 		}
 
@@ -239,16 +236,17 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 			// and notifying before we get a change to wait.
 			readerThread = new Thread(this);
 			readerThread.start();
-			// Wait up to 3 seconds for Marlin to say Hi
+			// Wait up to 3 seconds for Smoothie to say Hi
 			// If we get anything at this point it will have been the settings
 			// dump that is sent after reset.
 			responses = sendCommand(null, 3000);
 		}
 
-		connectedVersion = 1.0;
-		connected = false; //DouglasPearless changed from true to false
-		processConnectionResponses(responses);
+//		connectedVersion = 1.0;
+		connected = false;
+		processConnectionResponses(responses);  //Flush out any start up messages
 
+		//Now try to determine the firmware level
 		for (int i = 0; i < 5 && !connected; i++) {
 			responses = sendCommand("M115", 5000);
 			processConnectionResponses(responses);
@@ -256,13 +254,13 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 		
   if (!connected)  {
 			throw new Error(
-				String.format("Unable to receive connection response from Marlin. Check your port and baud rate, and that you are running at least version %f of Marlin", 
+				String.format("Unable to receive connection response from Smoothie. Check your port and baud rate, and that you are running at least version %f of Marlin", 
 						minimumRequiredVersion));
 		}
 		
 		//TODO: Commenting this out for now. Will implement version checks once we get the prototoype working.
 		//if (connectedVersion < minimumRequiredVersion) {
-		//	throw new Error(String.format("This driver requires Marlin version %.2f or higher. You are running version %.2f", minimumRequiredVersion, connectedVersion));
+		//	throw new Error(String.format("This driver requires Smoothie version %.2f or higher. You are running version %.2f", minimumRequiredVersion, connectedVersion));
 		//}
 		
 		// We are connected to at least the minimum required version now
@@ -278,12 +276,22 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
 	private void processConnectionResponses(List<String> responses) {
 		for (String response : responses) {
-			if (response.startsWith("Marlin")) {
+			if (response.toUpperCase().startsWith("SMOOTHIE")) {
 				logger.debug("echo: " + response);
-				String[] versionComponents = response.split("n");
-				connectedVersion = Double.parseDouble(versionComponents[1]);
-				connected = true;
-				logger.debug(String.format("Connected to Marlin Version: %.2f", connectedVersion));
+//				String[] versionComponents = response.split("n");
+//				connectedVersion = Double.parseDouble(versionComponents[1]);
+//				connected = true;
+//				logger.debug(String.format("Connected to Smoothie Version: %.2f", connectedVersion));
+				logger.debug(String.format("Connected to Smoothie"));
+			} else if (response.toUpperCase().startsWith("PROTOCOL")) {
+				logger.debug("echo: " + response);
+				String[] versionComponents = response.split(" ");
+//				connectedVersion = Double.parseDouble(versionComponents[1]);
+				if (versionComponents[3].toUpperCase().startsWith("DOUGLASPEARLESS")) {
+					connected = true;
+					logger.debug(String.format("Connected to Smoothie with the correct firmware version"));
+				} else
+					logger.debug(String.format("Wrong version of Smoothie, please obtain the latest version from https://github.com/DouglasPearless/Smoothieware"));
 			}
 		}
 	}
@@ -312,7 +320,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 
 
 	private List<String> sendCommand(String command) throws Exception {
-		return sendCommand(command, -1);
+		return sendCommand(command, 500); // changed from -1
 	}
 	
 	private List<String> sendCommand(String command, long timeout) throws Exception {
@@ -379,7 +387,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	
     @Override
     public Wizard getConfigurationWizard() {
-        return new MarlinDriverWizard(this);
+        return new SmoothieDriverWizard(this);
     }
     @Override
     public String getPropertySheetHolderTitle() {
