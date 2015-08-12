@@ -22,7 +22,8 @@
 // This file is intended to support the RepRap Marlin motion controller.
 // It is a mashup of TinygDriver.java and GrblDriver.java.
 // - Neil Jansen (njansen1@gmail.com) 6/30/2014
-
+// - Douglas Pearless (Douglas.Pearless@gmail.com) This is based on Neil's Marlin driver
+//   and is written for my fork of Smoothie, which adds the M115 command and other features required by FPD
 package org.firepick.driver;
 
 import java.io.IOException;
