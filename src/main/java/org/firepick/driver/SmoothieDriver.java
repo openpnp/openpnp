@@ -255,7 +255,7 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
 		
   if (!connected)  {
 			throw new Error(
-				String.format("Unable to receive connection response from Smoothie. Check your port and baud rate, and that you are running at least version of Smoothie from https://github.com/DouglasPearless/Smoothieware", 
+				String.format("Unable to receive connection response from Smoothie. Check your port and baud rate, and that you are running the latest version of Smoothie from https://github.com/DouglasPearless/Smoothieware", 
 						minimumRequiredVersion));
 		}
 		
