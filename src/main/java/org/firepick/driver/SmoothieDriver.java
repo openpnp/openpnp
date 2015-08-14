@@ -253,19 +253,11 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
 			processConnectionResponses(responses);
 		}
 		
-  if (!connected)  {
+  if	(!connected)  {
 			throw new Error(
 				String.format("Unable to receive connection response from Smoothie. Check your port and baud rate, and that you are running the latest version of Smoothie from https://github.com/DouglasPearless/Smoothieware", 
 						minimumRequiredVersion));
 		}
-		
-		//TODO: Commenting this out for now. Will implement version checks once we get the prototoype working.
-		//if (connectedVersion < minimumRequiredVersion) {
-		//	throw new Error(String.format("This driver requires Smoothie version %.2f or higher. You are running version %.2f", minimumRequiredVersion, connectedVersion));
-		//}
-		
-		// We are connected to at least the minimum required version now
-		// So perform some setup
 		
 		// Turn off the stepper drivers
 		setEnabled(false);
@@ -279,15 +271,11 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
 		for (String response : responses) {
 			if (response.toUpperCase().startsWith("SMOOTHIE")) {
 				logger.debug("echo: " + response);
-//				String[] versionComponents = response.split("n");
-//				connectedVersion = Double.parseDouble(versionComponents[1]);
-//				connected = true;
-//				logger.debug(String.format("Connected to Smoothie Version: %.2f", connectedVersion));
 				logger.debug(String.format("Connected to Smoothie"));
 			} else if (response.toUpperCase().startsWith("PROTOCOL")) {
 				logger.debug("echo: " + response);
 				String[] versionComponents = response.split(" ");
-//				connectedVersion = Double.parseDouble(versionComponents[1]);
+
 				if (versionComponents[3].toUpperCase().startsWith("DOUGLASPEARLESS")) {
 					connected = true;
 					logger.debug(String.format("Connected to Smoothie with the correct firmware version"));
@@ -369,7 +357,7 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
 	}
 
 	/**
-	 * Causes Marlin to block until all commands are complete.
+	 * Causes Smoothie to block until all commands are complete.
 	 * @throws Exception
 	 */
 	private void dwell() throws Exception {
