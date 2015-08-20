@@ -83,6 +83,15 @@ public class FiducialLocator {
             throw new Exception("Unable to locate second fiducial.");
         }
         
+        // Calculate the linear distance between the ideal points and the
+        // located points. If they differ by more than a few percent we
+        // probably made a mistake.
+        double fidDistance = Math.abs(a.getLocation().getLinearDistanceTo(b.getLocation()));
+        double visionDistance = Math.abs(aVisionLoc.getLinearDistanceTo(bVisionLoc));
+        if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
+            throw new Exception("Located fiducials are more than 1% away from expected.");
+        }
+
         // Calculate the angle and offset from the results
         Location location = Utils2D.calculateAngleAndOffset(
                 a.getLocation(), 
