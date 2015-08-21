@@ -44,7 +44,7 @@ public class FiducialLocator {
         
     }
     
-    public Location locateBoard(BoardLocation boardLocation) throws Exception {
+    public static Location locateBoard(BoardLocation boardLocation) throws Exception {
         // TODO: finish bottom code
         
         // Find the fids in the board
@@ -108,6 +108,16 @@ public class FiducialLocator {
         return location;
     }
     
+    public static Location getFiducialLocation(Footprint footprint, Camera camera) throws Exception {
+        // Create the template
+        BufferedImage template = createTemplate(camera.getUnitsPerPixel(), footprint);
+        
+        // Wait for camera to settle
+        Thread.sleep(500);
+        // Perform vision operation
+        return getBestTemplateMatch(camera, template);
+    }
+    
     /**
      * Given a placement containing a fiducial, attempt to find the fiducial
      * using the vision system. The function first moves the camera to the
@@ -127,7 +137,7 @@ public class FiducialLocator {
         logger.debug("Locating {}", fid.getId());
         
         // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(), fid);
+        BufferedImage template = createTemplate(camera.getUnitsPerPixel(), fid.getPart().getPackage().getFootprint());
         
         // Move to where we expect to find the fid
         Location location = Utils2D.calculateBoardPlacementLocation(
@@ -190,8 +200,7 @@ public class FiducialLocator {
      * @param fid
      * @return
      */
-    private static BufferedImage createTemplate(Location unitsPerPixel, Placement fid) {
-        Footprint footprint = fid.getPart().getPackage().getFootprint();
+    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint) {
         Shape shape = footprint.getShape();
         
         // Determine the scaling factor to go from Outline units to

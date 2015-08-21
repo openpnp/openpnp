@@ -103,6 +103,11 @@
 		    <artifactId>batik-transcoder</artifactId>
 		    <version>1.7</version>
 		</dependency>
+		<dependency>
+		    <groupId>com.google.zxing</groupId>
+		    <artifactId>javase</artifactId>
+		    <version>2.2</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
