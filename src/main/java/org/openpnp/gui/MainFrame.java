@@ -103,6 +103,7 @@ public class MainFrame extends JFrame {
 
 	// TODO: Really should switch to some kind of DI model, but this will do
 	// for now.
+	public static MainFrame mainFrame;
 	public static MachineControlsPanel machineControlsPanel;
 	public static PartsPanel partsPanel;
 	public static PackagesPanel packagesPanel;
@@ -128,6 +129,7 @@ public class MainFrame extends JFrame {
 	private JMenu mnImport;
 
 	public MainFrame(Configuration configuration) {
+	    mainFrame = this;
 		this.configuration = configuration;
 		LengthCellValue.setConfiguration(configuration);
 		HeadCellValue.setConfiguration(configuration);

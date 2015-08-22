@@ -30,9 +30,7 @@ import org.openpnp.model.Named;
 
 /**
  * Represents a Camera attached to the system and allows a caller to retrieve
- * images from it. A caller can call capture() one time to get the dimensions
- * and details about the returned image. The Camera is expected to return all
- * future images using the same dimensions and type. 
+ * images from it. 
  */
 public interface Camera extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
 	public enum Looking {
@@ -85,4 +83,8 @@ public interface Camera extends Identifiable, Named, HeadMountable, WizardConfig
 	 * @return
 	 */
 	public VisionProvider getVisionProvider();
+	
+	public int getWidth();
+	
+	public int getHeight();
 }
