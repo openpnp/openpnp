@@ -26,6 +26,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
@@ -55,6 +56,10 @@ public class Footprint {
 
     public void setUnits(LengthUnit units) {
         this.units = units;
+    }
+    
+    public List<Pad> getPads() {
+        return pads;
     }
 
     public static class Pad {
