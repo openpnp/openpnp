@@ -117,7 +117,7 @@ public class JobPanel extends JPanel {
 	private static final String UNTITLED_JOB_FILENAME = "Untitled.job.xml";
 	
     private static final String PREF_RECENT_FILES = "JobPanel.recentFiles";
-    private static final int PREF_RECENT_FILES_MAX = 6;
+    private static final int PREF_RECENT_FILES_MAX = 10;
 
     private JobProcessor jobProcessor;
 
@@ -135,6 +135,8 @@ public class JobPanel extends JPanel {
 	private Preferences prefs = Preferences.userNodeForPackage(JobPanel.class);
 	
 	public JMenu mnOpenRecent;
+	
+	private List<File> recentJobs = new ArrayList<>();
 
 	public JobPanel(Configuration configuration, MainFrame frame, MachineControlsPanel machineControlsPanel) {
 		this.configuration = configuration;
@@ -393,9 +395,7 @@ public class JobPanel extends JPanel {
 		add(splitPane);
 		
 		mnOpenRecent = new JMenu("Open Recent Job...");
-		for (File file : loadRecentJobs()) {
-		    mnOpenRecent.add(new OpenRecentJobAction(file));
-		}
+		loadRecentJobs();
 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
@@ -416,38 +416,50 @@ public class JobPanel extends JPanel {
         });
 	}
 	
-	private List<File> loadRecentJobs() {
-	    List<File> files = new ArrayList<File>();
-	    for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
-	        String filename = prefs.get(PREF_RECENT_FILES + "_" + i, null);
-	        if (filename != null) {
-	            File file = new File(filename);
-	            files.add(file);
-	        }
-	    }
-	    return files;
+	private void updateRecentJobsMenu() {
+	    mnOpenRecent.removeAll();
+        for (File file : recentJobs) {
+            mnOpenRecent.add(new OpenRecentJobAction(file));
+        }
 	}
 	
-	private void addRecentJob(File file) {
-        for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
-            String filename = prefs.get(PREF_RECENT_FILES + "_" + i, null);
-            if (filename != null && filename.equals(file.getAbsolutePath())) {
-                return;
-            }
-        }
-	    mnOpenRecent.insert(new OpenRecentJobAction(file), 0);
-	    if (mnOpenRecent.getMenuComponentCount() > PREF_RECENT_FILES_MAX) {
-	        mnOpenRecent.remove(PREF_RECENT_FILES_MAX - 1);
+	private void loadRecentJobs() {
+	    recentJobs.clear();
+	    for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
+	        String path = prefs.get(PREF_RECENT_FILES + "_" + i, null);
+	        if (path != null) {
+	            File file = new File(path);
+	            recentJobs.add(file);
+	        }
 	    }
-        for (int i = PREF_RECENT_FILES_MAX - 2; i >= 0; i--) {
-            String filename = prefs.get(PREF_RECENT_FILES + "_" + i, null);
-            if (filename != null) {
-                prefs.put(PREF_RECENT_FILES + "_" + (i + 1), filename);
-            }
+	    updateRecentJobsMenu();
+	}
+	
+	private void saveRecentJobs() {
+	    // blow away all the existing values
+        for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
+            prefs.remove(PREF_RECENT_FILES + "_" + i);
         }
-        prefs.put(PREF_RECENT_FILES + "_0", file.getAbsolutePath());
+        // update with what we have now
+        for (int i = 0; i < recentJobs.size(); i++) {
+            prefs.put(PREF_RECENT_FILES + "_" + i, recentJobs.get(i).getAbsolutePath());
+        }
+        updateRecentJobsMenu();
 	}
 
+    private void addRecentJob(File file) {
+        while (recentJobs.contains(file)) {
+            recentJobs.remove(file);
+        }
+        // add to top
+        recentJobs.add(0, file);
+        // limit length
+        while (recentJobs.size() > PREF_RECENT_FILES_MAX) {
+            recentJobs.remove(recentJobs.size() - 1);
+        }
+        saveRecentJobs();
+    }
+    
 	public void refreshSelectedBoardRow() {
 		boardLocationsTableModel.fireTableRowsUpdated(
 				boardLocationsTable.getSelectedRow(),
