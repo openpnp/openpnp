@@ -100,6 +100,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.swing.JTabbedPane;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -198,63 +199,6 @@ public class JobPanel extends JPanel {
 
 		JComboBox partsComboBox = new JComboBox(new PartsComboBoxModel());
 		partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
-
-		placementsTable = new AutoSelectTextTable(placementsTableModel);
-		placementsTable.setAutoCreateRowSorter(true);
-		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
-				sidesComboBox));
-		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
-				partsComboBox));
-        placementsTable.setDefaultEditor(Type.class, new DefaultCellEditor(
-                typesComboBox));
-        placementsTable.setDefaultRenderer(Part.class,
-                new IdentifiableTableCellRenderer<Part>());
-        placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
-        placementsTable.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
-		placementsTable.getSelectionModel().addListSelectionListener(
-				new ListSelectionListener() {
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						if (e.getValueIsAdjusting()) {
-							return;
-						}
-						placementSelectionActionGroup
-								.setEnabled(getSelectedPlacement() != null);
-					    placementCaptureAndPositionActionGroup.setEnabled(
-					            getSelectedPlacement() != null 
-					            && getSelectedPlacement().getSide() == getSelectedBoardLocation().getSide());
-						Placement placement = getSelectedPlacement();
-						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-						if (cameraView != null) {
-	                        if (placement != null) {
-                                Reticle reticle = new PackageReticle(placement.getPart().getPackage());
-                                cameraView.setReticle(JobPanel.this.getClass().getName(), reticle);
-	                        }
-	                        else {
-	                            cameraView.removeReticle(JobPanel.this.getClass().getName());
-	                        }
-						}
-					}
-				});
-		placementsTable.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent mouseEvent) {
-                if (mouseEvent.getClickCount() != 2) {
-                    return;
-                }
-                int row = placementsTable.rowAtPoint(new Point(mouseEvent.getX(),
-                        mouseEvent.getY()));
-                int col = placementsTable.columnAtPoint(new Point(mouseEvent.getX(),
-                        mouseEvent.getY()));
-                if (placementsTableModel.getColumnClass(col) == Status.class) {
-                    Status status = (Status) placementsTableModel.getValueAt(row, col);
-                    // TODO: This is some sample code for handling the user
-                    // wishing to do something with the status. Not using it
-                    // right now but leaving it here for the future.
-                    System.out.println(status);
-                }
-            }
-        });
 		
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -345,52 +289,119 @@ public class JobPanel extends JPanel {
 		btnFiducialCheck.setHideActionText(true);
 
 		pnlBoards.add(new JScrollPane(boardLocationsTable));
-		JPanel pnlPlacements = new JPanel();
-		pnlPlacements.setBorder(new TitledBorder(null, "Placements",
-				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		pnlPlacements.setLayout(new BorderLayout(0, 0));
+		JPanel pnlRight = new JPanel();
+		pnlRight.setLayout(new BorderLayout(0, 0));
 
-		JToolBar toolBarPlacements = new JToolBar();
-		toolBarPlacements.setFloatable(false);
-		pnlPlacements.add(toolBarPlacements, BorderLayout.NORTH);
-		JButton btnNewPlacement = new JButton(newPlacementAction);
-		btnNewPlacement.setHideActionText(true);
-		toolBarPlacements.add(btnNewPlacement);
-		JButton btnRemovePlacement = new JButton(removePlacementAction);
-		btnRemovePlacement.setHideActionText(true);
-		toolBarPlacements.add(btnRemovePlacement);
-		toolBarPlacements.addSeparator();
-		JButton btnCaptureCameraPlacementLocation = new JButton(
-				captureCameraPlacementLocation);
-		btnCaptureCameraPlacementLocation.setHideActionText(true);
-		toolBarPlacements.add(btnCaptureCameraPlacementLocation);
-
-		JButton btnCaptureToolPlacementLocation = new JButton(
-				captureToolPlacementLocation);
-		btnCaptureToolPlacementLocation.setHideActionText(true);
-		toolBarPlacements.add(btnCaptureToolPlacementLocation);
+		splitPane.setLeftComponent(pnlBoards);
+		splitPane.setRightComponent(pnlRight);
 		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		pnlRight.add(tabbedPane, BorderLayout.CENTER);
 		
+		JPanel panelPickAndPlace = new JPanel();
+		tabbedPane.addTab("Pick and Place", null, panelPickAndPlace, null);
+				panelPickAndPlace.setLayout(new BorderLayout(0, 0));
+		
+				JToolBar toolBarPlacements = new JToolBar();
+				panelPickAndPlace.add(toolBarPlacements, BorderLayout.NORTH);
+				toolBarPlacements.setFloatable(false);
+				JButton btnNewPlacement = new JButton(newPlacementAction);
+				btnNewPlacement.setHideActionText(true);
+				toolBarPlacements.add(btnNewPlacement);
+				JButton btnRemovePlacement = new JButton(removePlacementAction);
+				btnRemovePlacement.setHideActionText(true);
+				toolBarPlacements.add(btnRemovePlacement);
+				toolBarPlacements.addSeparator();
+				JButton btnCaptureCameraPlacementLocation = new JButton(
+						captureCameraPlacementLocation);
+				btnCaptureCameraPlacementLocation.setHideActionText(true);
+				toolBarPlacements.add(btnCaptureCameraPlacementLocation);
+				
+						JButton btnCaptureToolPlacementLocation = new JButton(
+								captureToolPlacementLocation);
+						btnCaptureToolPlacementLocation.setHideActionText(true);
+						toolBarPlacements.add(btnCaptureToolPlacementLocation);
+						
+						
         JButton btnPositionCameraPositionLocation = new JButton(
                 moveCameraToPlacementLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionCameraPositionLocation);
-
-        JButton btnPositionToolPositionLocation = new JButton(
-                moveToolToPlacementLocation);
-        btnPositionToolPositionLocation.setHideActionText(true);
-        toolBarPlacements.add(btnPositionToolPositionLocation);
         
-        toolBarPlacements.addSeparator();
-        
-        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
-        btnEditFeeder.setHideActionText(true);
-        toolBarPlacements.add(btnEditFeeder);
+                JButton btnPositionToolPositionLocation = new JButton(
+                        moveToolToPlacementLocation);
+                btnPositionToolPositionLocation.setHideActionText(true);
+                toolBarPlacements.add(btnPositionToolPositionLocation);
+                
+                toolBarPlacements.addSeparator();
+                
+                JButton btnEditFeeder = new JButton(editPlacementFeederAction);
+                btnEditFeeder.setHideActionText(true);
+                toolBarPlacements.add(btnEditFeeder);
+                
+                		placementsTable = new AutoSelectTextTable(placementsTableModel);
+                		placementsTable.setAutoCreateRowSorter(true);
+                		placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                		placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
+                				sidesComboBox));
+                		placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
+                				partsComboBox));
+                		placementsTable.setDefaultEditor(Type.class, new DefaultCellEditor(
+                		        typesComboBox));
+                		placementsTable.setDefaultRenderer(Part.class,
+                		        new IdentifiableTableCellRenderer<Part>());
+                		placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
+                		placementsTable.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
+                		placementsTable.getSelectionModel().addListSelectionListener(
+                				new ListSelectionListener() {
+                					@Override
+                					public void valueChanged(ListSelectionEvent e) {
+                						if (e.getValueIsAdjusting()) {
+                							return;
+                						}
+                						placementSelectionActionGroup
+                								.setEnabled(getSelectedPlacement() != null);
+                					    placementCaptureAndPositionActionGroup.setEnabled(
+                					            getSelectedPlacement() != null 
+                					            && getSelectedPlacement().getSide() == getSelectedBoardLocation().getSide());
+                						Placement placement = getSelectedPlacement();
+                						CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+                						if (cameraView != null) {
+	                        if (placement != null) {
+                                Reticle reticle = new PackageReticle(placement.getPart().getPackage());
+                                cameraView.setReticle(JobPanel.this.getClass().getName(), reticle);
+	                        }
+	                        else {
+	                            cameraView.removeReticle(JobPanel.this.getClass().getName());
+	                        }
+                						}
+                					}
+                				});
+                		placementsTable.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() != 2) {
+                    return;
+                }
+                int row = placementsTable.rowAtPoint(new Point(mouseEvent.getX(),
+                        mouseEvent.getY()));
+                int col = placementsTable.columnAtPoint(new Point(mouseEvent.getX(),
+                        mouseEvent.getY()));
+                if (placementsTableModel.getColumnClass(col) == Status.class) {
+                    Status status = (Status) placementsTableModel.getValueAt(row, col);
+                    // TODO: This is some sample code for handling the user
+                    // wishing to do something with the status. Not using it
+                    // right now but leaving it here for the future.
+                    System.out.println(status);
+                }
+            }
+        });
+                		
+                		JScrollPane scrollPane = new JScrollPane(placementsTable);
+                		panelPickAndPlace.add(scrollPane, BorderLayout.CENTER);
 		
-		pnlPlacements.add(new JScrollPane(placementsTable));
-
-		splitPane.setLeftComponent(pnlBoards);
-		splitPane.setRightComponent(pnlPlacements);
+		JPanel panelSolderPaste = new JPanel();
+		tabbedPane.addTab("Solder Paste", null, panelSolderPaste, null);
+		panelSolderPaste.setLayout(new BorderLayout(0, 0));
 
 		add(splitPane);
 		
