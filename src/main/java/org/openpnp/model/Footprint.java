@@ -31,6 +31,10 @@ import java.util.List;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
+/**
+ * A Footprint is a group of SMD pads along with length unit information.
+ * Footprints can be rendered to a Shape for easy display using 2D primitives.
+ */
 public class Footprint {
     @Attribute
     private LengthUnit units = LengthUnit.Millimeters;

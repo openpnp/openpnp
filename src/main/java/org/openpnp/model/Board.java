@@ -57,6 +57,13 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	
 	@ElementList
 	private ArrayList<Placement> placements = new ArrayList<Placement>();
+
+	/**
+	 * A list of Pads, in the form of a Footprint, onto which solder paste
+	 * can be dispensed.
+	 */
+	@Element(required=false)
+    private Footprint solderPasteFootprint;
 	
 	private transient File file;
 	private transient boolean dirty;
@@ -121,6 +128,8 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 			placement.removePropertyChangeListener(this);
 		}
 	}
+	
+	
 	
 	public Outline getOutline() {
 		return outline;

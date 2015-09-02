@@ -41,6 +41,11 @@ public class Placement extends AbstractModelObject implements Identifiable {
         Ignore
     }
     
+    /**
+     * History:
+     * 1.0: Initial revision.
+     * 1.1: Replaced Boolean place with Type type. Deprecated place.
+     */
     @Version(revision=1.1)
     private double version;
     
@@ -61,6 +66,13 @@ public class Placement extends AbstractModelObject implements Identifiable {
 	
 	@Attribute
 	private Type type;
+	
+    /**
+     * A list of Pads, in the form of a Footprint, onto which solder paste
+     * can be dispensed.
+     */
+    @Element(required=false)
+    private Footprint solderPasteFootprint;	
 	
 	@SuppressWarnings("unused")
 	private Placement() {

@@ -51,7 +51,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
     }
 
     @Override
-    public void dispense() throws Exception {
+    public void dispense(Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception {
 		logger.debug("{}.dispense()", getName());
 //		driver.dispense(this);
         machine.fireMachineHeadActivity(head);
