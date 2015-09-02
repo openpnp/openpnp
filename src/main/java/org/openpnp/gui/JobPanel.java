@@ -25,12 +25,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -49,6 +46,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
@@ -56,28 +54,20 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.PackageReticle;
-import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.FiducialCheck;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
-import org.openpnp.gui.tablemodel.PlacementsTableModel;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -86,7 +76,6 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
@@ -97,10 +86,8 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.swing.JTabbedPane;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -136,6 +123,7 @@ public class JobPanel extends JPanel {
     private List<File> recentJobs = new ArrayList<>();
 
     private final JobPlacementsPanel jobPlacementsPanel;
+    private final JobPastePanel jobPastePanel;
 
     public JobPanel(Configuration configuration, MainFrame frame,
             MachineControlsPanel machineControlsPanel) {
@@ -175,6 +163,7 @@ public class JobPanel extends JPanel {
                         boardLocationSelectionActionGroup
                                 .setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
+                        jobPastePanel.setBoardLocation(boardLocation);
                     }
                 });
 
@@ -280,9 +269,8 @@ public class JobPanel extends JPanel {
         jobPlacementsPanel = new JobPlacementsPanel(this);
         tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
 
-        JPanel panelSolderPaste = new JPanel();
-        tabbedPane.addTab("Solder Paste", null, panelSolderPaste, null);
-        panelSolderPaste.setLayout(new BorderLayout(0, 0));
+        jobPastePanel = new JobPastePanel(this);
+        tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
 
         add(splitPane);
 
@@ -307,6 +295,10 @@ public class JobPanel extends JPanel {
                 }
             }
         });
+    }
+    
+    public JobPlacementsPanel getJobPlacementsPanel() {
+        return jobPlacementsPanel;
     }
 
     private void updateRecentJobsMenu() {
