@@ -6,9 +6,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.opencv.core.Point;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Pad;
 import org.slf4j.Logger;
@@ -34,11 +35,17 @@ public class Rs274xParser {
     
     private BufferedReader reader;
     
+    // Context
     private LengthUnit unit;
     private Aperture currentAperture;
     private Point2D.Double currentPoint;
+    private Point2D.Double endPoint;
     private LevelPolarity levelPolarity;
     private InterpolationMode interpolationMode;
+    private boolean multiQuadrantMode;
+    private Map<String, Aperture> apertures = new HashMap<>();
+    private boolean regionMode;
+
     private boolean stopped;
     private int lineNumber;
     
@@ -96,10 +103,123 @@ public class Rs274xParser {
     }
     
     private void readFunctionCodeCommand() throws Exception {
-        String block = readDataBlock();
-        if (block.equals("M02")) {
-            stopped = true;
+        // a command is either a D, G, M or coordinate data
+        // followed by a D.
+        endPoint = new Point2D.Double(currentPoint.getX(), currentPoint.getY());
+        while (!stopped) {
+            int ch = read();
+            switch (ch) {
+                case '*': {
+                    return;
+                }
+                case 'D': {
+                    readDcode();
+                    return;
+                }
+                case 'G': {
+                    readGcode();
+                    return;
+                }
+                case 'M': {
+                    readMcode();
+                    return;
+                }
+                case 'X': 
+                case 'Y':
+                case 'I':
+                case 'J': {
+                    readUntil('*');
+                    return;
+                }
+                default : {
+                    error("Unknown function code " + ((char) ch));
+                }
+            }
         }
+    }
+    
+    private void readGcode() throws Exception {
+        int code = readInteger(false);
+        switch (code) {
+            case 1: {
+                interpolationMode = InterpolationMode.Linear;
+                break;
+            }
+            case 2: {
+                interpolationMode = InterpolationMode.Clockwise;
+                break;
+            }
+            case 3: {
+                interpolationMode = InterpolationMode.CounterClockwise;
+                break;
+            }
+            case 4: {
+                // comment, ignore
+                break;
+            }
+            case 36: {
+                regionMode = true;
+                break;
+            }
+            case 37: {
+                regionMode = false;
+                break;
+            }
+            case 54: {
+                // deprecated, prepare to select aperture
+                break;
+            }
+            case 55: {
+                // deprecated, prepare for flash
+                break;
+            }
+            case 70: {
+                // deprecated, unit inch
+                unit = LengthUnit.Inches;
+                break;
+            }
+            case 71: {
+                // deprecated, unit mm
+                unit = LengthUnit.Millimeters;
+                break;
+            }
+            case 74: {
+                multiQuadrantMode = false;
+                break;
+            }
+            case 75: {
+                multiQuadrantMode = true;
+                break;
+            }
+            default: {
+                logger.warn("Unknown G code " + code);
+            }
+        }
+        readUntil('*');
+    }
+    
+    private void readDcode() throws Exception {
+        int code = readInteger(false);
+        switch (code) {
+            default: {
+                logger.warn("Unknown D code " + code);
+            }
+        }
+        readUntil('*');
+    }
+    
+    private void readMcode() throws Exception {
+        int code = readInteger(false);
+        switch (code) {
+            case 2: {
+                stopped = true;
+                break;
+            }
+            default: {
+                logger.warn("Unknown M code " + code);
+            }
+        }
+        readUntil('*');
     }
     
     private void readExtendedCodeCommand() throws Exception {
@@ -107,7 +227,7 @@ public class Rs274xParser {
             error("Expected start of extended code command");
         }
         while (true) {
-            String block = readDataBlock();
+            readUntil('*');
             if (peek() == '%') {
                 read();
                 break;
@@ -115,14 +235,25 @@ public class Rs274xParser {
         }
     }
     
-    private String readDataBlock() throws Exception {
-        StringBuffer sb = new StringBuffer();
-        int ch;
-        while ((ch = read()) != '*') {
-            sb.append((char) ch);
+    private void readUntil(int ch) throws Exception {
+        while (read() != ch);
+    }
+    
+    private int readInteger(boolean allowNegative) throws Exception {
+        boolean negative = false;
+        if (allowNegative) {
+            if (peek() == '-') {
+                negative = true;
+                read();
+            }
         }
-        String s = sb.toString();
-        return s;
+        StringBuffer sb = new StringBuffer();
+        String allowed = "0123456789";
+        int ch;
+        while (allowed.indexOf(peek()) != -1) {
+            sb.append((char) read());
+        }
+        return negative ? -1 : 1 * Integer.parseInt(sb.toString());
     }
     
     /**
@@ -197,8 +328,9 @@ public class Rs274xParser {
         levelPolarity = LevelPolarity.Dark;
         interpolationMode = null;
         stopped = false;
+        regionMode = false;
+        apertures = new HashMap<>();        
         lineNumber = 1;
-        
         pads = new ArrayList<>();
     }
     
