@@ -1,11 +1,16 @@
 package org.openpnp.gui.importer.rs274x;
 
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.opencv.core.Point;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Pad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,46 +21,210 @@ import org.slf4j.LoggerFactory;
 public class Rs274xParser {
     private final static Logger logger = LoggerFactory.getLogger(Rs274xParser.class);
     
-    private boolean absolute = true;
-    private LengthUnit units = LengthUnit.Inches;
+    enum LevelPolarity {
+        Dark,
+        Clear
+    }
+    
+    enum InterpolationMode {
+        Linear,
+        Clockwise,
+        CounterClockwise
+    }
+    
+    private BufferedReader reader;
+    
+    private LengthUnit unit;
+    private Aperture currentAperture;
+    private Point2D.Double currentPoint;
+    private LevelPolarity levelPolarity;
+    private InterpolationMode interpolationMode;
+    private boolean stopped;
+    private int lineNumber;
+    
+    private List<Pad> pads;
 
     public Rs274xParser() {
-        resetContext();
+        reset();
     }
     
-    public Rs274x parse(File file) throws Exception {
+    /**
+     * Parse the given File for solder paste pads.
+     * @see #parseSolderPastePads(Reader) 
+     * @param file
+     * @return
+     * @throws Exception
+     */
+    public List<Pad> parseSolderPastePads(File file) throws Exception {
         logger.info("parsing " + file);
-        return parse(new FileReader(file));
+        return parseSolderPastePads(new FileReader(file));
     }
     
-    public Rs274x parse(Reader reader) throws Exception {
-        resetContext();
+    /**
+     * Parse the input from the Reader extracting individual pads to be used
+     * for solder paste application. It is expected that the input is is
+     * an RS-274X Gerber solder paste layer.
+     * 
+     * Currently this code only parses out single flashes of rectangular,
+     * circular and oblong apertures. Ideas for future versions include
+     * rendering the entire file and uses blob detection and contour
+     * finding to create polygon pads.
+     * 
+     * @param reader
+     * @return
+     * @throws Exception
+     */
+    public List<Pad> parseSolderPastePads(Reader reader) throws Exception {
+        reset();
         
-        BufferedReader bReader = new BufferedReader(reader);
-        String line = null;
-        while ((line = bReader.readLine()) != null) {
-            parseLine(line);
+        this.reader = new BufferedReader(reader);
+        
+        while (!stopped) {
+            readCommand();
         }
         
-        return new Rs274x();
+        return pads;
     }
     
-    // TODO: Instead of generating a RS274 object, think about only generating Pad
-    // objects somehow.
-    private void parseLine(String line) {
-        
+    private void readCommand() throws Exception {
+        if (peek() == '%') {
+            readExtendedCodeCommand();
+        }
+        else {
+            readFunctionCodeCommand();
+        }
     }
     
+    private void readFunctionCodeCommand() throws Exception {
+        String block = readDataBlock();
+        if (block.equals("M02")) {
+            stopped = true;
+        }
+    }
     
-    private void resetContext() {
+    private void readExtendedCodeCommand() throws Exception {
+        if (read() != '%') {
+            error("Expected start of extended code command");
+        }
+        while (true) {
+            String block = readDataBlock();
+            if (peek() == '%') {
+                read();
+                break;
+            }
+        }
+    }
+    
+    private String readDataBlock() throws Exception {
+        StringBuffer sb = new StringBuffer();
+        int ch;
+        while ((ch = read()) != '*') {
+            sb.append((char) ch);
+        }
+        String s = sb.toString();
+        return s;
+    }
+    
+    /**
+     * Read the next character in the stream, skipping any \r or \n that
+     * precede it.
+     * @return
+     * @throws Exception
+     */
+    private int read() throws Exception {
+        skipCrLf();
+        int ch = reader.read();
+        if (ch == -1) {
+            error("Unexpected end of stream");
+        }
+        return ch;
+    }
+    
+    private void error(String s) throws Exception {
+        throw new Exception(lineNumber + ": " + s);
+    }
+    
+    /**
+     * Peek at the next character in the stream, skipping any \r or \n that
+     * precede it.
+     * @return
+     * @throws Exception
+     */
+    private int peek() throws Exception {
+        skipCrLf();
+        return _peek();
+    }
+    
+    /**
+     * Consume any number of \r or \n, stopping when another character is found. 
+     * @throws Exception
+     */
+    private void skipCrLf() throws Exception {
+        while (true) {
+            int ch = _peek();
+            if (ch == '\n') {
+                lineNumber++;
+                reader.read();
+            }
+            else if (ch == '\r') {
+                reader.read();
+            }
+            else {
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Return the next character in the reader without consuming it.
+     * @return
+     * @throws Exception
+     */
+    private int _peek() throws Exception {
+        reader.mark(1);
+        int ch = reader.read();
+        if (ch == -1) {
+            error("Unexpected end of stream");
+        }
+        reader.reset();
+        return ch;
+    }
+    
+    private void reset() {
+        unit = null;
+        currentAperture = null;
+        currentPoint = new Point2D.Double(0, 0);
+        levelPolarity = LevelPolarity.Dark;
+        interpolationMode = null;
+        stopped = false;
+        lineNumber = 1;
         
+        pads = new ArrayList<>();
     }
     
     public static void main(String[] args) throws Exception {
         File[] files = new File("/Users/jason/Desktop/paste_tests").listFiles();
-        for (File file : files) {            
-            new Rs274xParser().parse(file);
+        for (File file : files) {
+            try {
+                new Rs274xParser().parseSolderPastePads(file);
+            }
+            catch (Exception e) {
+                System.out.println("Error in " + file.getName() + " " + e.getMessage());
+            }
         }
+//        new Rs274xParser().parseSolderPastePads(new File("/Users/jason/Desktop/paste_tests/BTPD-v6.GBC"));
+    }
+    
+    static class Aperture {
+        
+    }
+    
+    static class StandardAperture extends Aperture {
+        
+    }
+    
+    static class MacroAperture extends Aperture {
+        
     }
 }
 
