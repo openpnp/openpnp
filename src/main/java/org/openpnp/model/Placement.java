@@ -21,9 +21,12 @@
 
 package org.openpnp.model;
 
+import java.util.ArrayList;
+
 import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
@@ -67,12 +70,8 @@ public class Placement extends AbstractModelObject implements Identifiable {
 	@Attribute
 	private Type type;
 	
-    /**
-     * A list of Pads, in the form of a Footprint, onto which solder paste
-     * can be dispensed.
-     */
-    @Element(required=false)
-    private Footprint solderPasteFootprint;	
+    @ElementList(required=false)
+    private ArrayList<Pad> solderPastePads = new ArrayList<>();
 	
 	@SuppressWarnings("unused")
 	private Placement() {

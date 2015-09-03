@@ -1,18 +1,13 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -20,140 +15,102 @@ import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.PackageReticle;
-import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PartsComboBoxModel;
-import org.openpnp.gui.tablemodel.PlacementsTableModel;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+import org.openpnp.gui.tablemodel.PadsTableModel;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
-import org.openpnp.model.Placement.Type;
+import org.openpnp.model.Pad;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 
 public class JobPastePanel extends JPanel {
-    private JTable placementsTable;
-    private PlacementsTableModel placementsTableModel;
+    private JTable table;
+    private PadsTableModel tableModel;
     private ActionGroup boardLocationSelectionActionGroup;
-    private ActionGroup placementSelectionActionGroup;
-    private ActionGroup placementCaptureAndPositionActionGroup;
+    private ActionGroup padSelectionActionGroup;
+    private ActionGroup padCaptureAndPositionActionGroup;
     private BoardLocation boardLocation;
 
     public JobPastePanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
         
-        boardLocationSelectionActionGroup = new ActionGroup(newPlacementAction);
+        boardLocationSelectionActionGroup = new ActionGroup(newPadAction);
         boardLocationSelectionActionGroup.setEnabled(false);
 
-        placementSelectionActionGroup = new ActionGroup(removePlacementAction,
-                editPlacementFeederAction);
-        placementSelectionActionGroup.setEnabled(false);
+        padSelectionActionGroup = new ActionGroup(removePadAction);
+        padSelectionActionGroup.setEnabled(false);
 
-        placementCaptureAndPositionActionGroup = new ActionGroup(
-                captureCameraPlacementLocation, captureToolPlacementLocation,
-                moveCameraToPlacementLocation, moveToolToPlacementLocation);
-        placementCaptureAndPositionActionGroup.setEnabled(false);
+        padCaptureAndPositionActionGroup = new ActionGroup(moveCameraToPadLocation, moveToolToPadLocation);
+        padCaptureAndPositionActionGroup.setEnabled(false);
 
-        JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox<>(
-                new PartsComboBoxModel());
-        partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
         JComboBox<Side> sidesComboBox = new JComboBox<>(Side.values());
-        JComboBox<Type> typesComboBox = new JComboBox<>(Type.values());
 
         setLayout(new BorderLayout(0, 0));
-        JToolBar toolBarPlacements = new JToolBar();
-        add(toolBarPlacements, BorderLayout.NORTH);
+        JToolBar toolBar = new JToolBar();
+        add(toolBar, BorderLayout.NORTH);
 
-        toolBarPlacements.setFloatable(false);
-        JButton btnNewPlacement = new JButton(newPlacementAction);
-        btnNewPlacement.setHideActionText(true);
-        toolBarPlacements.add(btnNewPlacement);
-        JButton btnRemovePlacement = new JButton(removePlacementAction);
-        btnRemovePlacement.setHideActionText(true);
-        toolBarPlacements.add(btnRemovePlacement);
-        toolBarPlacements.addSeparator();
-        JButton btnCaptureCameraPlacementLocation = new JButton(
-                captureCameraPlacementLocation);
-        btnCaptureCameraPlacementLocation.setHideActionText(true);
-        toolBarPlacements.add(btnCaptureCameraPlacementLocation);
+        toolBar.setFloatable(false);
+        JButton btnNewPad = new JButton(newPadAction);
+        btnNewPad.setHideActionText(true);
+        toolBar.add(btnNewPad);
+        JButton btnRemovePad = new JButton(removePadAction);
+        btnRemovePad.setHideActionText(true);
+        toolBar.add(btnRemovePad);
+        toolBar.addSeparator();
 
-        JButton btnCaptureToolPlacementLocation = new JButton(
-                captureToolPlacementLocation);
-        btnCaptureToolPlacementLocation.setHideActionText(true);
-        toolBarPlacements.add(btnCaptureToolPlacementLocation);
 
         JButton btnPositionCameraPositionLocation = new JButton(
-                moveCameraToPlacementLocation);
+                moveCameraToPadLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
-        toolBarPlacements.add(btnPositionCameraPositionLocation);
+        toolBar.add(btnPositionCameraPositionLocation);
 
         JButton btnPositionToolPositionLocation = new JButton(
-                moveToolToPlacementLocation);
+                moveToolToPadLocation);
         btnPositionToolPositionLocation.setHideActionText(true);
-        toolBarPlacements.add(btnPositionToolPositionLocation);
+        toolBar.add(btnPositionToolPositionLocation);
 
-        toolBarPlacements.addSeparator();
+        toolBar.addSeparator();
 
-        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
-        btnEditFeeder.setHideActionText(true);
-        toolBarPlacements.add(btnEditFeeder);
+        tableModel = new PadsTableModel(configuration);
 
-        placementsTableModel = new PlacementsTableModel(configuration);
-
-        placementsTable = new AutoSelectTextTable(placementsTableModel);
-        placementsTable.setAutoCreateRowSorter(true);
-        placementsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        placementsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
+        table = new AutoSelectTextTable(tableModel);
+        table.setAutoCreateRowSorter(true);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setDefaultEditor(Side.class, new DefaultCellEditor(
                 sidesComboBox));
-        placementsTable.setDefaultEditor(Part.class, new DefaultCellEditor(
-                partsComboBox));
-        placementsTable.setDefaultEditor(Type.class, new DefaultCellEditor(
-                typesComboBox));
-        placementsTable.setDefaultRenderer(Part.class,
-                new IdentifiableTableCellRenderer<Part>());
-        placementsTable.setDefaultRenderer(PlacementsTableModel.Status.class,
-                new StatusRenderer());
-        placementsTable.setDefaultRenderer(Placement.Type.class,
-                new TypeRenderer());
-        placementsTable.getSelectionModel().addListSelectionListener(
+        table.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
                     @Override
                     public void valueChanged(ListSelectionEvent e) {
                         if (e.getValueIsAdjusting()) {
                             return;
                         }
-                        placementSelectionActionGroup
-                                .setEnabled(getSelectedPlacement() != null);
-                        placementCaptureAndPositionActionGroup
-                                .setEnabled(getSelectedPlacement() != null
-                                        && getSelectedPlacement().getSide() == boardLocation
+                        padSelectionActionGroup
+                                .setEnabled(getSelectedPad() != null);
+                        padCaptureAndPositionActionGroup
+                                .setEnabled(getSelectedPad() != null
+                                        && getSelectedPad().getSide() == boardLocation
                                                 .getSide());
-                        Placement placement = getSelectedPlacement();
+                        Pad pad = getSelectedPad();
                         CameraView cameraView = MainFrame.cameraPanel
                                 .getSelectedCameraView();
                         if (cameraView != null) {
-                            if (placement != null) {
-                                Reticle reticle = new PackageReticle(placement
-                                        .getPart().getPackage());
-                                cameraView.setReticle(JobPastePanel.this
-                                        .getClass().getName(), reticle);
+                            if (pad != null) {
+                                // TODO
+//                                Reticle reticle = new PackageReticle(pad
+//                                        .getPart().getPackage());
+//                                cameraView.setReticle(JobPastePanel.this
+//                                        .getClass().getName(), reticle);
                             }
                             else {
                                 cameraView
@@ -163,124 +120,90 @@ public class JobPastePanel extends JPanel {
                         }
                     }
                 });
-        placementsTable.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent mouseEvent) {
-                if (mouseEvent.getClickCount() != 2) {
-                    return;
-                }
-                int row = placementsTable.rowAtPoint(new Point(mouseEvent
-                        .getX(), mouseEvent.getY()));
-                int col = placementsTable.columnAtPoint(new Point(mouseEvent
-                        .getX(), mouseEvent.getY()));
-                if (placementsTableModel.getColumnClass(col) == Status.class) {
-                    Status status = (Status) placementsTableModel.getValueAt(
-                            row, col);
-                    // TODO: This is some sample code for handling the user
-                    // wishing to do something with the status. Not using it
-                    // right now but leaving it here for the future.
-                    System.out.println(status);
-                }
-            }
-        });
 
-        JScrollPane scrollPane = new JScrollPane(placementsTable);
+        JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
     }
 
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
-            placementsTableModel.setBoard(null);
+            tableModel.setBoard(null);
             boardLocationSelectionActionGroup.setEnabled(false);
         }
         else {
-            placementsTableModel.setBoard(boardLocation.getBoard());
+            tableModel.setBoard(boardLocation.getBoard());
             boardLocationSelectionActionGroup.setEnabled(true);
         }
     }
 
-    public Placement getSelectedPlacement() {
+    public Pad getSelectedPad() {
         if (boardLocation == null) {
             return null;
         }
-        int index = placementsTable.getSelectedRow();
+        int index = table.getSelectedRow();
         if (index == -1) {
             return null;
         }
         else {
-            index = placementsTable.convertRowIndexToModel(index);
-            return boardLocation.getBoard().getPlacements()
-                    .get(index);
+            index = table.convertRowIndexToModel(index);
+            return boardLocation.getBoard().getSolderPastePads().get(index);
         }
     }
 
-    public final Action newPlacementAction = new AbstractAction() {
+    public final Action newPadAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Placement");
+            putValue(NAME, "New Pad");
             putValue(SHORT_DESCRIPTION,
-                    "Create a new placement and add it to the board.");
+                    "Create a new pad and add it to the board.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            if (Configuration.get().getParts().size() == 0) {
-                MessageBoxes
-                        .errorBox(
-                                getTopLevelAncestor(),
-                                "Error",
-                                "There are currently no parts defined in the system. Please create at least one part before creating a placement.");
-                return;
-            }
-
-            String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    "Please enter an ID for the new placement.");
-            if (id == null) {
-                return;
-            }
-            // TODO: Make sure it's unique.
-            Placement placement = new Placement(id);
-
-            placement.setPart(Configuration.get().getParts().get(0));
-            placement.setLocation(new Location(Configuration.get()
+            // TODO: FAKE
+            Pad pad = new Pad.RoundRectangle();
+            
+            pad.setLocation(new Location(Configuration.get()
                     .getSystemUnits()));
 
-            boardLocation.getBoard().addPlacement(placement);
-            placementsTableModel.fireTableDataChanged();
-            Helpers.selectLastTableRow(placementsTable);
+            boardLocation.getBoard().addSolderPastePad(pad);
+            tableModel.fireTableDataChanged();
+            Helpers.selectLastTableRow(table);
         }
     };
 
-    public final Action removePlacementAction = new AbstractAction() {
+    public final Action removePadAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Remove Placement");
+            putValue(NAME, "Remove Pad");
             putValue(SHORT_DESCRIPTION,
-                    "Remove the currently selected placement.");
+                    "Remove the currently selected pad.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Placement placement = getSelectedPlacement();
-            boardLocation.getBoard().removePlacement(placement);
-            placementsTableModel.fireTableDataChanged();
+            Pad pad = getSelectedPad();
+            boardLocation.getBoard().removeSolderPastePad(pad);
+            tableModel.fireTableDataChanged();
         }
     };
 
-    public final Action moveCameraToPlacementLocation = new AbstractAction() {
+    public final Action moveCameraToPadLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCamera);
-            putValue(NAME, "Move Camera To Placement Location");
+            putValue(NAME, "Move Camera To Pad Location");
             putValue(SHORT_DESCRIPTION,
-                    "Position the camera at the placement's location.");
+                    "Position the camera at the pad's location.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Location placementLocation = Utils2D
+            // TODO: Probably wrong
+            Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
-                            .getSide(), getSelectedPlacement().getLocation());
+                            .getSide(), getSelectedPad().getLocation());
 
             final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
             if (camera.getHead() == null) {
@@ -288,7 +211,7 @@ public class JobPastePanel extends JPanel {
                         "Camera is not movable.");
                 return;
             }
-            final Location location = placementLocation;
+            final Location location = padLocation;
             MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
                 public void run() {
                     try {
@@ -304,24 +227,25 @@ public class JobPastePanel extends JPanel {
         }
     };
 
-    public final Action moveToolToPlacementLocation = new AbstractAction() {
+    public final Action moveToolToPadLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerTool);
-            putValue(NAME, "Move Tool To Placement Location");
+            putValue(NAME, "Move Tool To Pad Location");
             putValue(SHORT_DESCRIPTION,
-                    "Position the tool at the placement's location.");
+                    "Position the tool at the pad's location.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Location placementLocation = Utils2D
+            // TODO: Probably wrong
+            Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
-                            .getSide(), getSelectedPlacement().getLocation());
+                            .getSide(), getSelectedPad().getLocation());
 
             final Nozzle nozzle = MainFrame.machineControlsPanel
                     .getSelectedNozzle();
-            final Location location = placementLocation;
+            final Location location = padLocation;
             MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
                 public void run() {
                     try {
@@ -336,111 +260,4 @@ public class JobPastePanel extends JPanel {
             });
         }
     };
-
-    public final Action captureCameraPlacementLocation = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.captureCamera);
-            putValue(NAME, "Capture Camera Placement Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the placement's location to the camera's current position.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            if (camera.getHead() == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "Camera is not movable.");
-                return;
-            }
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), getSelectedPlacement().getSide(),
-                            MainFrame.cameraPanel.getSelectedCameraLocation()
-                                    .invert(true, true, true, true));
-            getSelectedPlacement().setLocation(
-                    placementLocation.invert(true, true, true, true));
-            placementsTable.repaint();
-        }
-    };
-
-    public final Action captureToolPlacementLocation = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.captureTool);
-            putValue(NAME, "Capture Tool Placement Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the placement's location to the tool's current position.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), getSelectedPlacement().getSide(),
-                            nozzle.getLocation().invert(true, true, true, true));
-            getSelectedPlacement().setLocation(
-                    placementLocation.invert(true, true, true, true));
-            placementsTable.repaint();
-        }
-    };
-
-    public final Action editPlacementFeederAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.editFeeder);
-            putValue(NAME, "Edit Placement Feeder");
-            putValue(SHORT_DESCRIPTION,
-                    "Edit the placement's associated feeder definition.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            Placement placement = getSelectedPlacement();
-            Feeder feeder = null;
-            for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                if (f.getPart() == placement.getPart()) {
-                    feeder = f;
-                }
-            }
-            MainFrame.feedersPanel.showFeeder(feeder);
-        }
-    };
-
-    static class TypeRenderer extends DefaultTableCellRenderer {
-        public void setValue(Object value) {
-            Type type = (Type) value;
-            setText(type.name());
-            if (type == Type.Fiducial) {
-                setBackground(Color.cyan);
-            }
-            else if (type == Type.Ignore) {
-                setBackground(Color.yellow);
-            }
-            else if (type == Type.Place) {
-                setBackground(Color.green);
-            }
-        }
-    }
-
-    static class StatusRenderer extends DefaultTableCellRenderer {
-        public void setValue(Object value) {
-            Status status = (Status) value;
-            if (status == Status.Ready) {
-                setBackground(Color.green);
-                setText("Ready");
-            }
-            else if (status == Status.MissingFeeder) {
-                setBackground(Color.yellow);
-                setText("Missing Feeder");
-            }
-            else if (status == Status.MissingPart) {
-                setBackground(Color.red);
-                setText("Missing Part");
-            }
-            else if (status == Status.MissingPart) {
-                setBackground(Color.red);
-                setText(status.toString());
-            }
-        }
-    }
 }
