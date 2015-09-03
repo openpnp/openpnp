@@ -70,9 +70,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
 	@Attribute
 	private Type type;
 	
-    @ElementList(required=false)
-    private ArrayList<Pad> solderPastePads = new ArrayList<>();
-	
 	@SuppressWarnings("unused")
 	private Placement() {
 		this(null);
