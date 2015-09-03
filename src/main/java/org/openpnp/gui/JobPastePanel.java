@@ -2,12 +2,15 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -18,6 +21,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -161,15 +165,35 @@ public class JobPastePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // TODO: FAKE
-            Pad pad = new Pad.RoundRectangle();
-            
-            pad.setLocation(new Location(Configuration.get()
-                    .getSystemUnits()));
+            List<Class<? extends Pad>> padClasses = new ArrayList<>();
+            padClasses.add(Pad.RoundRectangle.class);
+            padClasses.add(Pad.Circle.class);
+            padClasses.add(Pad.Ellipse.class);
+            padClasses.add(Pad.Line.class);
+            ClassSelectionDialog<Pad> dialog = new ClassSelectionDialog<Pad>(
+                    JOptionPane.getFrameForComponent(JobPastePanel.this),
+                    "Select Pad...",
+                    "Please select a pad type from the list below.",
+                    padClasses);
+            dialog.setVisible(true);
+            Class<? extends Pad> padClass = dialog.getSelectedClass();
+            if (padClass == null) {
+                return;
+            }
+            try {
+                Pad pad = padClass.newInstance();
+                pad.setLocation(new Location(Configuration.get()
+                        .getSystemUnits()));
 
-            boardLocation.getBoard().addSolderPastePad(pad);
-            tableModel.fireTableDataChanged();
-            Helpers.selectLastTableRow(table);
+                boardLocation.getBoard().addSolderPastePad(pad);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(
+                        JOptionPane.getFrameForComponent(JobPastePanel.this),
+                        "Pad Error", e);
+            }
         }
     };
 

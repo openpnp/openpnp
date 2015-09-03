@@ -2,6 +2,8 @@ package org.openpnp.model;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.RoundRectangle2D;
 
 import org.openpnp.model.Board.Side;
@@ -37,70 +39,127 @@ public abstract class Pad extends AbstractModelObject {
         firePropertyChange("side", oldValue, side);
     }
     
-//    public static class Line extends Pad {
-//        @Attribute
-//        private double x1;
-//        
-//        @Attribute
-//        private double y1;
-//        
-//        @Attribute
-//        private double x2;
-//        
-//        @Attribute
-//        private double y2;
-//        
-//        public Shape getShape() {
-//            return new Line2D.Double(
-//                    x1,
-//                    -y1,
-//                    x2,
-//                    -y2);
-//        }
-//    }
-//    
-//    public static class Ellipse extends Pad {
-//        // TODO: Probably needs rotation.
-//        
-//        @Attribute
-//        private double x;
-//        
-//        @Attribute
-//        private double y;
-//        
-//        @Attribute
-//        private double width;
-//        
-//        @Attribute
-//        private double height;
-//
-//        public Shape getShape() {
-//            return new Ellipse2D.Double(
-//                    x - (width / 2), 
-//                    y - (height / 2), 
-//                    width, 
-//                    height);
-//        }
-//    }
-//    
-//    public static class Circle extends Pad {
-//        @Attribute
-//        private double x;
-//        
-//        @Attribute
-//        private double y;
-//        
-//        @Attribute
-//        private double radius;
-//        
-//        public Shape getShape() {
-//            return new Ellipse2D.Double(
-//                    x - radius, 
-//                    y - radius, 
-//                    radius * 2, 
-//                    radius * 2);
-//        }
-//    }
+    public static class Line extends Pad {
+        @Attribute
+        private double x1;
+        
+        @Attribute
+        private double y1;
+        
+        @Attribute
+        private double x2;
+        
+        @Attribute
+        private double y2;
+        
+        public double getX1() {
+            return x1;
+        }
+
+        public void setX1(double x1) {
+            double oldValue = this.x1;
+            this.x1 = x1;
+            firePropertyChange("x1", oldValue, x1);
+        }
+        
+        public double getY1() {
+            return y1;
+        }
+
+        public void setY1(double y1) {
+            double oldValue = this.y1;
+            this.y1 = y1;
+            firePropertyChange("y1", oldValue, y1);
+        }
+        
+        public double getX2() {
+            return x2;
+        }
+
+        public void setX2(double x2) {
+            double oldValue = this.x2;
+            this.x2 = x2;
+            firePropertyChange("x2", oldValue, x2);
+        }
+        
+        public double getY2() {
+            return y2;
+        }
+
+        public void setY2(double y2) {
+            double oldValue = this.y2;
+            this.y2 = y2;
+            firePropertyChange("y2", oldValue, y2);
+        }
+        
+        public Shape getShape() {
+            return new Line2D.Double(
+                    location.getX() + x1,
+                    location.getY() - y1,
+                    location.getX() + x2,
+                    location.getY() - y2);
+        }
+    }
+    
+    public static class Ellipse extends Pad {
+        @Attribute
+        private double width;
+        
+        @Attribute
+        private double height;
+
+        public double getWidth() {
+            return width;
+        }
+
+        public void setWidth(double width) {
+            double oldValue = this.width;
+            this.width = width;
+            firePropertyChange("width", oldValue, width);
+        }
+
+        public double getHeight() {
+            return height;
+        }
+
+        public void setHeight(double height) {
+            double oldValue = this.height;
+            this.height = height;
+            firePropertyChange("height", oldValue, height);
+        }
+
+        public Shape getShape() {
+            return new Ellipse2D.Double(
+                    location.getX() - (width / 2), 
+                    location.getY() - (height / 2), 
+                    width, 
+                    height);
+        }
+    }
+
+    
+    public static class Circle extends Pad {
+        @Attribute
+        private double radius;
+        
+        public double getRadius() {
+            return radius;
+        }
+
+        public void setRadius(double radius) {
+            double oldValue = this.radius;
+            this.radius = radius;
+            firePropertyChange("radius", oldValue, radius);
+        }
+
+        public Shape getShape() {
+            return new Ellipse2D.Double(
+                    location.getX() - radius, 
+                    location.getY() - radius, 
+                    radius * 2, 
+                    radius * 2);
+        }
+    }
     
     public static class RoundRectangle extends Pad {
         @Attribute
