@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +40,15 @@ public class Rs274xParser {
     private LengthUnit unit;
     private Aperture currentAperture;
     private Point2D.Double currentPoint;
-    private Point2D.Double endPoint;
     private LevelPolarity levelPolarity;
     private InterpolationMode interpolationMode;
     private boolean multiQuadrantMode;
-    private Map<String, Aperture> apertures = new HashMap<>();
     private boolean regionMode;
+    private int coordinateFormatIntegerLength;
+    private int coordinateFormatDecimalLength;
+    private boolean coordinateFormatTrailingZeroOmission;
+    private boolean coordinateFormatIncremental;
+    private Map<Integer, Aperture> apertures = new HashMap<>();
 
     private boolean stopped;
     private int lineNumber;
@@ -63,7 +67,7 @@ public class Rs274xParser {
      * @throws Exception
      */
     public List<Pad> parseSolderPastePads(File file) throws Exception {
-        logger.info("parsing " + file);
+        logger.info("Parsing " + file);
         return parseSolderPastePads(new FileReader(file));
     }
     
@@ -77,6 +81,9 @@ public class Rs274xParser {
      * rendering the entire file and uses blob detection and contour
      * finding to create polygon pads.
      * 
+     * Another option is to consider each operation it's own element/shape. 
+     * This is how gerbv seems to do it.
+     * 
      * @param reader
      * @return
      * @throws Exception
@@ -86,8 +93,13 @@ public class Rs274xParser {
         
         this.reader = new BufferedReader(reader);
         
-        while (!stopped) {
-            readCommand();
+        try {
+            while (!stopped) {
+                readCommand();
+            }
+        }
+        catch (Exception e) {
+            error("Uncaught error: " + e.getMessage());
         }
         
         return pads;
@@ -105,15 +117,21 @@ public class Rs274xParser {
     private void readFunctionCodeCommand() throws Exception {
         // a command is either a D, G, M or coordinate data
         // followed by a D.
-        endPoint = new Point2D.Double(currentPoint.getX(), currentPoint.getY());
+        // X, Y
+        // TODO: Make sure this becomes the current point.
+        Point2D.Double coordinate = new Point2D.Double(currentPoint.getX(), currentPoint.getY());
+        // I, J
+        Point2D.Double arcCoordinate = new Point2D.Double(0, 0);
         while (!stopped) {
             int ch = read();
             switch (ch) {
                 case '*': {
+                    // Empty block or end of block that was not terminated
+                    // from a previous read.
                     return;
                 }
                 case 'D': {
-                    readDcode();
+                    readDcode(coordinate, arcCoordinate);
                     return;
                 }
                 case 'G': {
@@ -124,12 +142,22 @@ public class Rs274xParser {
                     readMcode();
                     return;
                 }
-                case 'X': 
-                case 'Y':
-                case 'I':
+                // TODO: See 7.2 Coordinate Data without Operation Code
+                case 'X': {
+                    coordinate.x = readCoordinateValue();
+                    break;
+                }
+                case 'Y': {
+                    coordinate.y = readCoordinateValue();
+                    break;
+                }
+                case 'I': {
+                    arcCoordinate.x = readCoordinateValue();
+                    break;
+                }
                 case 'J': {
-                    readUntil('*');
-                    return;
+                    arcCoordinate.y = readCoordinateValue();
+                    break;
                 }
                 default : {
                     error("Unknown function code " + ((char) ch));
@@ -138,8 +166,9 @@ public class Rs274xParser {
         }
     }
     
+    // G54D06
     private void readGcode() throws Exception {
-        int code = readInteger(false);
+        int code = readInteger();
         switch (code) {
             case 1: {
                 interpolationMode = InterpolationMode.Linear;
@@ -155,6 +184,7 @@ public class Rs274xParser {
             }
             case 4: {
                 // comment, ignore
+                readUntil('*');
                 break;
             }
             case 36: {
@@ -191,69 +221,471 @@ public class Rs274xParser {
                 multiQuadrantMode = true;
                 break;
             }
+            case 90: {
+                // deprecated, absolute coordinate mode
+                coordinateFormatIncremental = false;
+                break;
+            }
+            case 91: {
+                // deprecated, incremental coordinate mode
+                coordinateFormatIncremental = true;
+                break;
+            }
             default: {
-                logger.warn("Unknown G code " + code);
+                warn("Unknown G code " + code);
             }
         }
-        readUntil('*');
     }
     
-    private void readDcode() throws Exception {
-        int code = readInteger(false);
+    private void readDcode(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
+        int code = readInteger();
         switch (code) {
+            case 1: {
+                performD01(coordinate, arcCoordinate);
+                break;
+            }
+            case 2: {
+                performD02(coordinate);
+                break;
+            }
+            case 3: {
+                performD03(coordinate);
+                break;
+            }
             default: {
-                logger.warn("Unknown D code " + code);
+                if (code < 10) {
+                    error("Unknown reserved D code " + code);
+                }
+                // anything else is an aperture code, so look up the aperture
+                // and set it as the current
+                currentAperture = apertures.get(code);
+                if (currentAperture == null) {
+                    warn("Unknown aperture " + code);
+                }
             }
         }
-        readUntil('*');
     }
     
     private void readMcode() throws Exception {
-        int code = readInteger(false);
+        int code = readInteger();
         switch (code) {
+            case 0: {
+                // deprecated version of stop command
+                stopped = true;
+                break;
+            }
             case 2: {
                 stopped = true;
                 break;
             }
+            case 1: {
+                // deprecated, does nothing
+                break;
+            }
             default: {
-                logger.warn("Unknown M code " + code);
+                warn("Unknown M code " + code);
             }
         }
-        readUntil('*');
+    }
+    
+    private void performD01(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
+        if (interpolationMode == null) {
+            error("Interpolation mode not yet set");
+        }
+        if (interpolationMode != InterpolationMode.Linear) {
+            warn("Circular interpolation not yet supported");
+        }
+        currentPoint = coordinate;
+    }
+    
+    private void performD02(Point2D.Double coordinate) throws Exception {
+        currentPoint = coordinate;
+    }
+    
+    private void performD03(Point2D.Double coordinate) throws Exception {
+        if (currentAperture == null) {
+            error("Can't flash, no current aperture");
+        }
+        pads.add(currentAperture.createPad(unit, coordinate));
+        currentPoint = coordinate;
     }
     
     private void readExtendedCodeCommand() throws Exception {
         if (read() != '%') {
             error("Expected start of extended code command");
         }
-        while (true) {
-            readUntil('*');
-            if (peek() == '%') {
+        String code = "" + ((char) read()) + ((char) read());
+        switch (code) {
+            case "FS": {
+                // Sets the ‘Coordinate format’ graphics state parameter. See 4.9.
+                // These commands are mandatory and must be used only once, in the header of a file.
+                // Example: FSLAX24Y24
+                readCoordinateFormat();
+                break;
+            }
+            case "MO": {
+                // Sets the ‘Unit’ graphics state parameter. See 4.10.
+                readUnit();
+                break;
+            }
+            case "AD": {
+                // Assigns a D code number to an aperture definition. See 4.11.
+                // These commands can be used multiple times. It is recommended to put them in header of a file.
+                readApertureDefinition();
+                break;
+            }
+            case "AM": {
+                // Defines macro apertures which can be referenced from the AD command. See 4.12.
+                // TODO: We just ignore them for now.
+                while (peek() != '%') {
+                    readUntil('*');
+                    read();
+                }
+                break;
+            }
+            case "SR": {
+                // Sets the ‘Step and Repeat’ graphics state parameter. See 4.13.
+                // These commands can be used multiple times over the whole file.
+                readUntil('*');
                 read();
                 break;
             }
-        }
-    }
-    
-    private void readUntil(int ch) throws Exception {
-        while (read() != ch);
-    }
-    
-    private int readInteger(boolean allowNegative) throws Exception {
-        boolean negative = false;
-        if (allowNegative) {
-            if (peek() == '-') {
-                negative = true;
+            case "LP": {
+                // Starts a new level and sets the ‘Level polarity’ graphics state parameter. See 4.14.
+                readUntil('*');
                 read();
+                break;
+            }
+            case "AS": {
+                // Deprecated axis select, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "IN": {
+                // Deprecated image name, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "IP": {
+                // Deprecated image polarity, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "IR": {
+                // Deprecated image rotation, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "LN": {
+                // Deprecated level name, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "MI": {
+                // Deprecated mirror image, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "OF": {
+                // Deprecated offset, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            case "SF": {
+                // Deprecated scale factor, ignore
+                readUntil('*');
+                read();
+                break;
+            }
+            default: {
+                error("Unknown extended command code " + code);
             }
         }
-        StringBuffer sb = new StringBuffer();
-        String allowed = "0123456789";
+        if (read() != '%') {
+            error("Expected end of extended code command");
+        }
+    }
+    
+    private void readApertureDefinition() throws Exception {
         int ch;
+        if (read() != 'D') {
+            error("Expected aperture D code");
+        }
+        
+        int code = readInteger();
+        int type = read();
+        Aperture aperture = null;
+        switch (type) {
+            case 'R': {
+                aperture = readRectangleApertureDefinition();
+                break;
+            }
+            case 'C': {
+                aperture = readCircleApertureDefinition();
+                break;
+            }
+            case 'O': {
+                aperture = readObroundApertureDefinition();
+                break;
+            }
+            case 'P': {
+                aperture = readPolygonApertureDefinition();
+                break;
+            }
+            default: {
+                error(String.format("Unhandled aperture definition type %c, code %d", ((char) type), code));
+            }
+        }
+        apertures.put(code, aperture);
+    }
+    
+    private Aperture readRectangleApertureDefinition() throws Exception {
+        if (read() != ',') {
+            error("Expected , in rectangle aperture definition");
+        }
+        double width = readDecimal();
+        if (read() != 'X') {
+            error("Expected X in rectangle aperture definition");
+        }
+        double height = readDecimal();
+        Double holeDiameter = null;
+        if (peek() == 'X') {
+            read();
+            holeDiameter = readDecimal();
+        }
+        if (read() != '*') {
+            error("Expected end of data block");
+        }
+        return new RectangleAperture(width, height, holeDiameter);
+    }
+    
+    private Aperture readCircleApertureDefinition() throws Exception {
+        if (read() != ',') {
+            error("Expected , in circle aperture definition");
+        }
+        double diameter = readDecimal();
+        Double holeDiameter = null;
+        if (peek() == 'X') {
+            read();
+            holeDiameter = readDecimal();
+        }
+        if (read() != '*') {
+            error("Expected end of data block");
+        }
+        return new CircleAperture(diameter, holeDiameter);
+    }
+    
+    private Aperture readObroundApertureDefinition() throws Exception {
+        if (read() != ',') {
+            error("Expected , in obround aperture definition");
+        }
+        double width = readDecimal();
+        if (read() != 'X') {
+            error("Expected X in obround aperture definition");
+        }
+        double height = readDecimal();
+        Double holeDiameter = null;
+        if (peek() == 'X') {
+            read();
+            holeDiameter = readDecimal();
+        }
+        if (read() != '*') {
+            error("Expected end of data block");
+        }
+        return new ObroundAperture(width, height, holeDiameter);
+    }
+    
+    private Aperture readPolygonApertureDefinition() throws Exception {
+        if (read() != ',') {
+            error("Expected , in circle aperture definition");
+        }
+
+        double diameter = readDecimal();
+        
+        if (read() != 'X') {
+            error("Expected X in polygon aperture definition");
+        }
+        int numberOfVertices = readInteger();
+        
+        Double rotation = null;
+        if (peek() == 'X') {
+            read();
+            rotation = readDecimal();
+        }
+        
+        Double holeDiameter = null;
+        if (peek() == 'X') {
+            read();
+            holeDiameter = readDecimal();
+        }
+        if (read() != '*') {
+            error("Expected end of data block");
+        }
+        return new PolygonAperture(diameter, numberOfVertices, rotation, holeDiameter);
+    }
+    
+    private void readUnit() throws Exception {
+        String unitCode = readString(2);
+        if (unitCode.equals("MM")) {
+            unit = LengthUnit.Millimeters;
+        }
+        else if (unitCode.equals("IN")) {
+            unit = LengthUnit.Inches;
+        }
+        else {
+            error("Unknown unit code " + unitCode);
+        }
+        
+        if (read() != '*') {
+            error("Expected end of data block");
+        }
+    }
+    
+    private void readCoordinateFormat() throws Exception {
+        int ch;
+        
+        while ("LTAI".indexOf((char) peek()) != -1) {
+            ch = read();
+            switch (ch) {
+                case 'L': {
+                    coordinateFormatTrailingZeroOmission = false;
+                    break;
+                }
+                case 'T': {
+                    coordinateFormatTrailingZeroOmission = true;
+                    break;
+                }
+                case 'A': {
+                    coordinateFormatIncremental = false;
+                    break;
+                }
+                case 'I': {
+                    coordinateFormatIncremental = true;
+                    break;
+                }
+            }
+        }
+        
+        int xI, xD, yI, yD;
+
+        ch = read();
+        if (ch != 'X') {
+            error("Expected X coordinate format");
+        }
+        xI = read() - '0';
+        if (xI < 0 || xI > 6) {
+            warn("Invalid coordinate format, X integer part {}, should be >= 0 && <= 6", xI);
+        }
+        xD = read() - '0';
+        if (xD < 4 || xD > 6) {
+            warn("Invalid coordinate format, X decimal part {}, should be >= 4 && <= 6", xD);
+        }
+        
+        ch = read();
+        if (ch != 'Y') {
+            error("Expected Y coordinate format");
+        }
+        yI = read() - '0';
+        if (yI < 0 || yI > 6) {
+            warn("Invalid coordinate format, Y integer part {}, should be >= 0 && <= 6", yI);
+        }
+        yD = read() - '0';
+        if (yD < 4 || yD > 6) {
+            warn("Invalid coordinate format, Y decimal part {}, should be >= 4 && <= 6", yD);
+        }
+        
+        if (xI != yI || xD != yD) {
+            error(String.format("Coordinate format X does not match Y: %d.%d != %d.%d", xI, xD, yI, yD));
+        }
+        
+        coordinateFormatIntegerLength = xI;
+        coordinateFormatDecimalLength = xD;
+        
+        if (read() != '*') {
+            error("Expected end of data block");
+        }
+    }
+    
+    private String readUntil(int ch) throws Exception {
+        StringBuffer sb = new StringBuffer();
+        while (peek() != ch) {
+            sb.append((char) read());
+        }
+        return sb.toString();
+    }
+    
+    private String readString(int length) throws Exception {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < length; i++) {
+            sb.append((char) read());
+        }
+        return sb.toString();
+    }
+    
+    private double readDecimal() throws Exception {
+        boolean negative = false;
+        int ch = peek();
+        if (ch == '-') {
+            negative = true;
+            read();
+        }
+        else if (ch == '+') {
+            read();
+        }
+        StringBuffer sb = new StringBuffer();
+        String allowed = "0123456789.";
         while (allowed.indexOf(peek()) != -1) {
             sb.append((char) read());
         }
-        return negative ? -1 : 1 * Integer.parseInt(sb.toString());
+        return (negative ? -1 : 1) * Double.parseDouble(sb.toString());
+    }
+    
+    private int readInteger() throws Exception {
+        boolean negative = false;
+        int ch = peek();
+        if (ch == '-') {
+            negative = true;
+            read();
+        }
+        else if (ch == '+') {
+            read();
+        }
+        StringBuffer sb = new StringBuffer();
+        String allowed = "0123456789";
+        while (allowed.indexOf(peek()) != -1) {
+            sb.append((char) read());
+        }
+        return (negative ? -1 : 1) * Integer.parseInt(sb.toString());
+    }
+    
+    private double readCoordinateValue() throws Exception {
+        if (coordinateFormatIncremental) {
+            error("Incremental coordinate format not supported");
+        }
+        if (coordinateFormatTrailingZeroOmission) {
+            error("Trailing zero omission not supported");
+        }
+        if (coordinateFormatIntegerLength == -1 || coordinateFormatDecimalLength == -1) {
+            error("Coordinate format not specified.");
+        }
+        // Read the value as an integer first, since this will read until it hits
+        // something that isn't an integer character, then pad it out and then
+        // break up the components.
+        int value = readInteger();
+        String sValue = Integer.toString(Math.abs(value));
+        while (sValue.length() < coordinateFormatIntegerLength + coordinateFormatDecimalLength) {
+            sValue = "0" + sValue;
+        }
+        String integerPart = sValue.substring(0, coordinateFormatIntegerLength);
+        String decimalPart = sValue.substring(coordinateFormatIntegerLength, coordinateFormatIntegerLength + coordinateFormatDecimalLength - 1);
+        return (value < 0 ? -1 : 1) * Double.parseDouble(integerPart + "." + decimalPart);
     }
     
     /**
@@ -269,10 +701,6 @@ public class Rs274xParser {
             error("Unexpected end of stream");
         }
         return ch;
-    }
-    
-    private void error(String s) throws Exception {
-        throw new Exception(lineNumber + ": " + s);
     }
     
     /**
@@ -326,238 +754,154 @@ public class Rs274xParser {
         currentAperture = null;
         currentPoint = new Point2D.Double(0, 0);
         levelPolarity = LevelPolarity.Dark;
-        interpolationMode = null;
+        /*
+         * This is non-standard, but expected by Eagle, at least. The standard
+         * says that interpolation mode is undefined at the start of the file
+         * but Eagle does not appear to send a G01 at any point before it
+         * starts sending D01s. 
+         */
+        interpolationMode = InterpolationMode.Linear;
         stopped = false;
         regionMode = false;
+        coordinateFormatIntegerLength = -1;
+        coordinateFormatDecimalLength = -1;
+        coordinateFormatTrailingZeroOmission = false;
+        coordinateFormatIncremental = false;
         apertures = new HashMap<>();        
         lineNumber = 1;
         pads = new ArrayList<>();
     }
     
+    private void warn(String s) {
+        logger.warn("WARNING: " + lineNumber + ": " + s);
+    }
+    
+    private void warn(String fmt, Object o1) {
+        logger.warn("WARNING: " + lineNumber + ": " + fmt, o1);
+    }
+    
+    private void warn(String fmt, Object o1, Object o2) {
+        logger.warn("WARNING: " + lineNumber + ": " + fmt, o1, o2);
+    }
+    
+    private void warn(String fmt, Object[] o) {
+        logger.warn("WARNING: " + lineNumber + ": " + fmt, o);
+    }
+    
+    private void error(String s) throws Exception {
+        throw new Exception("ERROR: " + lineNumber + ": " + s);
+    }
+    
     public static void main(String[] args) throws Exception {
         File[] files = new File("/Users/jason/Desktop/paste_tests").listFiles();
         for (File file : files) {
+            if (file.isDirectory()) {
+                continue;
+            }
+            if (file.getName().equals(".DS_Store")) {
+                continue;
+            }
             try {
                 new Rs274xParser().parseSolderPastePads(file);
             }
             catch (Exception e) {
-                System.out.println("Error in " + file.getName() + " " + e.getMessage());
+                System.out.println(file.getName() + " " + e.getMessage());
             }
         }
-//        new Rs274xParser().parseSolderPastePads(new File("/Users/jason/Desktop/paste_tests/BTPD-v6.GBC"));
     }
     
-    static class Aperture {
+    static abstract class Aperture {
+        public abstract Pad createPad(LengthUnit unit, Point2D.Double coordinate);
+    }
+    
+    static abstract class StandardAperture extends Aperture {
         
     }
     
-    static class StandardAperture extends Aperture {
+    static class RectangleAperture extends StandardAperture {
+        public double width;
+        public double height;
+        public Double holeDiameter;
         
+        public RectangleAperture(double width, double height, Double holeDiameter) {
+            this.width = width;
+            this.height = height;
+            this.holeDiameter = holeDiameter;
+        }
+        
+        public Pad createPad(LengthUnit unit, Point2D.Double coordinate) {
+            Pad.RoundRectangle pad = new Pad.RoundRectangle();
+            pad.setWidth(width);
+            pad.setHeight(height);
+            pad.setRoundness(0);
+            pad.setLocation(new Location(unit, coordinate.x, coordinate.y, 0, 0));
+            return pad;
+        }
+
+        @Override
+        public String toString() {
+            return "RectangleAperture [width=" + width + ", height=" + height
+                    + ", holeDiameter=" + holeDiameter + "]";
+        }
+    }
+    
+    static class CircleAperture extends StandardAperture {
+        public double diameter;
+        public Double holeDiameter;
+        
+        public CircleAperture(double diameter, Double holeDiameter) {
+            this.diameter = diameter;
+            this.holeDiameter = holeDiameter;
+        }
+        
+        public Pad createPad(LengthUnit unit, Point2D.Double coordinate) {
+            Pad.Circle pad = new Pad.Circle();
+            pad.setRadius(diameter / 2);
+            pad.setLocation(new Location(unit, coordinate.x, coordinate.y, 0, 0));
+            return pad;
+        }
+
+        @Override
+        public String toString() {
+            return "CircleAperture [diameter=" + diameter + ", holeDiameter="
+                    + holeDiameter + "]";
+        }
+    }
+    
+    static class ObroundAperture extends RectangleAperture {
+        public ObroundAperture(double width, double height, Double holeDiameter) {
+            super(width, height, holeDiameter);
+        }
+
+        @Override
+        public String toString() {
+            return "ObroundAperture [width=" + width + ", height=" + height
+                    + ", holeDiameter=" + holeDiameter + "]";
+        }
+    }
+    
+    static class PolygonAperture extends CircleAperture {
+        public int numberOfVertices;
+        public Double rotation;
+        
+        public PolygonAperture(double diameter, int numberOfVertices, Double rotation, Double holeDiameter) {
+            super(diameter, holeDiameter);
+            this.numberOfVertices = numberOfVertices;
+            this.rotation = rotation;
+        }
+
+        @Override
+        public String toString() {
+            return "PolygonAperture [numberOfVertices=" + numberOfVertices
+                    + ", rotation=" + rotation + ", diameter=" + diameter
+                    + ", holeDiameter=" + holeDiameter + "]";
+        }
     }
     
     static class MacroAperture extends Aperture {
-        
+        @Override
+        public Pad createPad(LengthUnit unit, java.awt.geom.Point2D.Double coordinate) {
+            return null;
+        }
     }
 }
-
-//G75*
-//%MOIN*%
-//%OFA0B0*%
-//%FSLAX25Y25*%
-//%IPPOS*%
-//%LPD*%
-//%AMOC8*
-//5,1,8,0,0,1.08239X$1,22.5*
-//%
-//%ADD10R,0.08000X0.02600*%
-//%ADD11R,0.05118X0.05906*%
-//%ADD12R,0.03000X0.06000*%
-//%ADD13R,0.05000X0.02200*%
-//%ADD14R,0.02200X0.05000*%
-//%ADD15R,0.21260X0.24409*%
-//%ADD16R,0.03937X0.06299*%
-//%ADD17R,0.05512X0.03937*%
-//%ADD18R,0.04331X0.02953*%
-//%ADD19R,0.02953X0.04331*%
-//%ADD20R,0.08661X0.02362*%
-//%ADD21R,0.02600X0.08000*%
-//D10*
-//X0062861Y0143661D03*
-//X0062861Y0148661D03*
-//X0062861Y0153661D03*
-//X0062861Y0158661D03*
-//X0062861Y0163661D03*
-//X0062861Y0168661D03*
-//X0062861Y0173661D03*
-//X0062861Y0178661D03*
-//X0062861Y0183661D03*
-//X0101461Y0183661D03*
-//X0101461Y0178661D03*
-//X0101461Y0173661D03*
-//X0101461Y0168661D03*
-//X0101461Y0163661D03*
-//X0101461Y0158661D03*
-//X0101461Y0153661D03*
-//X0101461Y0148661D03*
-//X0101461Y0143661D03*
-//D11*
-//X0023314Y0059161D03*
-//X0030007Y0059161D03*
-//X0040814Y0059161D03*
-//X0047507Y0059161D03*
-//X0047507Y0069161D03*
-//X0040814Y0069161D03*
-//X0030007Y0069161D03*
-//X0023314Y0069161D03*
-//X0170814Y0146661D03*
-//X0177507Y0146661D03*
-//X0177507Y0182161D03*
-//X0170814Y0182161D03*
-//X0210814Y0184161D03*
-//X0217507Y0184161D03*
-//X0240814Y0094161D03*
-//X0247507Y0094161D03*
-//D12*
-//X0246661Y0075161D03*
-//X0261661Y0075161D03*
-//X0261661Y0055161D03*
-//X0246661Y0055161D03*
-//D13*
-//X0156061Y0153137D03*
-//X0156061Y0156287D03*
-//X0156061Y0159436D03*
-//X0156061Y0162586D03*
-//X0156061Y0165735D03*
-//X0156061Y0168885D03*
-//X0156061Y0172035D03*
-//X0156061Y0175184D03*
-//X0122261Y0175184D03*
-//X0122261Y0172035D03*
-//X0122261Y0168885D03*
-//X0122261Y0165735D03*
-//X0122261Y0162586D03*
-//X0122261Y0159436D03*
-//X0122261Y0156287D03*
-//X0122261Y0153137D03*
-//D14*
-//X0128137Y0147261D03*
-//X0131287Y0147261D03*
-//X0134436Y0147261D03*
-//X0137586Y0147261D03*
-//X0140735Y0147261D03*
-//X0143885Y0147261D03*
-//X0147035Y0147261D03*
-//X0150184Y0147261D03*
-//X0150184Y0181061D03*
-//X0147035Y0181061D03*
-//X0143885Y0181061D03*
-//X0140735Y0181061D03*
-//X0137586Y0181061D03*
-//X0134436Y0181061D03*
-//X0131287Y0181061D03*
-//X0128137Y0181061D03*
-//D15*
-//X0039161Y0114003D03*
-//D16*
-//X0048137Y0085263D03*
-//X0030184Y0085263D03*
-//D17*
-//X0089830Y0088901D03*
-//X0089830Y0081420D03*
-//X0098491Y0085161D03*
-//X0109830Y0088901D03*
-//X0109830Y0081420D03*
-//X0118491Y0085161D03*
-//X0129830Y0088901D03*
-//X0129830Y0081420D03*
-//X0138491Y0085161D03*
-//X0149830Y0088901D03*
-//X0149830Y0081420D03*
-//X0158491Y0085161D03*
-//X0169830Y0088901D03*
-//X0169830Y0081420D03*
-//X0178491Y0085161D03*
-//X0169830Y0068901D03*
-//X0178491Y0065161D03*
-//X0169830Y0061420D03*
-//X0158491Y0065161D03*
-//X0149830Y0068901D03*
-//X0149830Y0061420D03*
-//X0138491Y0065161D03*
-//X0129830Y0068901D03*
-//X0129830Y0061420D03*
-//X0118491Y0065161D03*
-//X0109830Y0068901D03*
-//X0109830Y0061420D03*
-//X0098491Y0065161D03*
-//X0089830Y0068901D03*
-//X0089830Y0061420D03*
-//D18*
-//X0048373Y0148161D03*
-//X0048373Y0153161D03*
-//X0048373Y0158161D03*
-//X0048373Y0163161D03*
-//X0048373Y0169161D03*
-//X0048373Y0174161D03*
-//X0048373Y0179161D03*
-//X0048373Y0184161D03*
-//X0039948Y0184161D03*
-//X0039948Y0179161D03*
-//X0039948Y0174161D03*
-//X0039948Y0169161D03*
-//X0039948Y0163161D03*
-//X0039948Y0158161D03*
-//X0039948Y0153161D03*
-//X0039948Y0148161D03*
-//D19*
-//X0066661Y0103373D03*
-//X0071661Y0103373D03*
-//X0076661Y0103373D03*
-//X0081661Y0103373D03*
-//X0081661Y0094948D03*
-//X0076661Y0094948D03*
-//X0071661Y0094948D03*
-//X0066661Y0094948D03*
-//X0186661Y0094948D03*
-//X0191661Y0094948D03*
-//X0196661Y0094948D03*
-//X0201661Y0094948D03*
-//X0201661Y0103373D03*
-//X0196661Y0103373D03*
-//X0191661Y0103373D03*
-//X0186661Y0103373D03*
-//X0216661Y0103373D03*
-//X0221661Y0103373D03*
-//X0226661Y0103373D03*
-//X0231661Y0103373D03*
-//X0231661Y0094948D03*
-//X0226661Y0094948D03*
-//X0221661Y0094948D03*
-//X0216661Y0094948D03*
-//D20*
-//X0224397Y0156661D03*
-//X0224397Y0161661D03*
-//X0224397Y0166661D03*
-//X0224397Y0171661D03*
-//X0203924Y0171661D03*
-//X0203924Y0166661D03*
-//X0203924Y0161661D03*
-//X0203924Y0156661D03*
-//D21*
-//X0204661Y0076261D03*
-//X0199661Y0076261D03*
-//X0194661Y0076261D03*
-//X0209661Y0076261D03*
-//X0214661Y0076261D03*
-//X0219661Y0076261D03*
-//X0224661Y0076261D03*
-//X0229661Y0076261D03*
-//X0229661Y0052061D03*
-//X0224661Y0052061D03*
-//X0219661Y0052061D03*
-//X0214661Y0052061D03*
-//X0209661Y0052061D03*
-//X0204661Y0052061D03*
-//X0199661Y0052061D03*
-//X0194661Y0052061D03*
-//M02*
