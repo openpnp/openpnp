@@ -74,6 +74,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
+import org.openpnp.model.Pad;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
@@ -569,6 +570,9 @@ public class JobPanel extends JPanel {
             Board existingBoard = getSelectedBoardLocation().getBoard();
             for (Placement placement : importedBoard.getPlacements()) {
                 existingBoard.addPlacement(placement);
+            }
+            for (Pad pad : importedBoard.getSolderPastePads()) {
+                existingBoard.addSolderPastePad(pad);
             }
         }
         catch (Exception e) {

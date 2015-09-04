@@ -405,7 +405,10 @@ public class Rs274xParser {
                 break;
             }
             default: {
-                error("Unknown extended command code " + code);
+                warn("Unknown extended command code " + code);
+                while (peek() != '%') {
+                    read();
+                }
             }
         }
         if (read() != '%') {
