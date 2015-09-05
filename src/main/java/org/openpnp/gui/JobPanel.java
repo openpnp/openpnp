@@ -574,6 +574,8 @@ public class JobPanel extends JPanel {
             for (Pad pad : importedBoard.getSolderPastePads()) {
                 existingBoard.addSolderPastePad(pad);
             }
+            jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
+            jobPastePanel.setBoardLocation(getSelectedBoardLocation());
         }
         catch (Exception e) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);
