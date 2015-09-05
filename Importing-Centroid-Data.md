@@ -2,19 +2,18 @@ See the sections below for information about importing boards from your preferre
 
 EAGLE
 -----
-
 1. In EAGLE, run mountsmd.ulp, which is included in the EAGLE distribution.
 2. In OpenPnP, go to the menu at File -> Import Board -> EAGLE mountsmd.ulp.
 
 KiCAD
 -----
-
 1. In OpenPnP, go to the menu at File -> Import Board -> KiCAD .pos.
 
 Altium
 ------
-
-1. In Altium, export your board using Metric and CSV options.
+1. In Altium, 
+a) Under Outjob configure Pick and Place Setup to use CSV and Text Formats.  Use Metric units.
+b) While Viewing the PCB, use File->Assembly Outputs->Pick and Place Files and set Pick and Place Setup to use CSV and Text Formats.  Use Metric units.
 2. In OpenPnP, use File -> Import Board -> Named CSV.
 
 Others
