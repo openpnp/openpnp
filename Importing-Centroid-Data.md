@@ -11,9 +11,9 @@ KiCAD
 
 Altium
 ------
-1. In Altium, 
-* a) Under Outjob configure Pick and Place Setup to use CSV and Text Formats.  Use Metric units.
-* b) While Viewing the PCB, use File->Assembly Outputs->Pick and Place Files and set Pick and Place Setup to use CSV and Text Formats.  Use Metric units.
+1. Under Outjob configure Pick and Place Setup to use CSV and Text Formats.  Use Metric units.
+1. or While Viewing the PCB, use File->Assembly Outputs->Pick and Place Files and set Pick and Place Setup to use CSV and Text Formats.  Use Metric units.
+
 2. In OpenPnP, use File -> Import Board -> Named CSV.
 
 Others
