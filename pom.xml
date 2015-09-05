@@ -15,8 +15,12 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
 	<dependencies>
+                <dependency>
+                        <groupId>org.ostermiller</groupId>
+                        <artifactId>utils</artifactId>
+                        <version>1.07.00</version>
+                </dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
