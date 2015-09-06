@@ -3,9 +3,6 @@ package org.openpnp.model.eagle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-//import java.util.ArrayList;
-//import java.net.URL;
-//import java.util.HashSet;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -15,7 +12,6 @@ import javax.xml.transform.sax.SAXSource;
 import org.openpnp.model.eagle.xml.Board;
 import org.openpnp.model.eagle.xml.Drawing;
 import org.openpnp.model.eagle.xml.Eagle;
-//import org.openpnp.model.eagle.xml.Libraries;
 import org.openpnp.model.eagle.xml.Library;
 import org.openpnp.model.eagle.xml.Package;
 import org.openpnp.model.eagle.xml.Packages;
@@ -31,22 +27,16 @@ public class EagleLoader {
     private static final String FEATURE_NAMESPACES = "http://xml.org/sax/features/namespaces";
     private static final String FEATURE_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
     
-    //private final URL url;
 
-   // public EagleLoader(URL url) {
-   //     this.url = url;
-   // }
     
     private static File eagleBoard;
     public Board 		board;
     public Library 		library;
     public Schematic 	schematic;
-//    public EagleLoader(File file) {
+
     public EagleLoader(File file) throws Exception{
     	        this.eagleBoard = file;
-//       }
-//    
-//    public static void main(String[] args) throws Exception {
+
         String packageName = "org.openpnp.model.eagle.xml";
 
         JAXBContext ctx = JAXBContext.newInstance(packageName);
@@ -61,7 +51,6 @@ public class EagleLoader {
             }
         });
 
-        //InputSource input = new InputSource(new FileInputStream("/Users/jason/Desktop/adafruit.lbr"));
         InputSource input = new InputSource(new FileInputStream(eagleBoard));
         Source source = new SAXSource(xmlreader, input);
 

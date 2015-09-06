@@ -25,11 +25,8 @@ import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -175,6 +172,8 @@ public class EagleBoardImporter implements BoardImporter {
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
+        private JCheckBox chckbxImportTop;
+        private JCheckBox chckbxImportBottom;
         
         public Dlg(Frame parent) {
             super(parent, DESCRIPTION, true);
@@ -206,7 +205,7 @@ public class EagleBoardImporter implements BoardImporter {
             JButton btnBrowse = new JButton("Browse");
             btnBrowse.setAction(browseBoardFileAction);
             panel.add(btnBrowse, "6, 2");
-            
+                       
             JPanel panel_1 = new JPanel();
             panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
@@ -214,12 +213,24 @@ public class EagleBoardImporter implements BoardImporter {
                     FormFactory.RELATED_GAP_COLSPEC,
                     FormFactory.DEFAULT_COLSPEC,},
                 new RowSpec[] {
+                	FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                	FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
                     FormFactory.RELATED_GAP_ROWSPEC,
                     FormFactory.DEFAULT_ROWSPEC,}));
             
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
+            
+            chckbxImportTop =    new JCheckBox("Import Parts on the Top of the board");
+            chckbxImportTop.setSelected(true);
+            panel_1.add(chckbxImportTop, "2, 4");
+            
+            chckbxImportBottom = new JCheckBox("Import Parts on the Bottom of the board");
+            chckbxImportBottom.setSelected(true);
+            panel_1.add(chckbxImportBottom, "2, 6");
             
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -281,9 +292,12 @@ public class EagleBoardImporter implements BoardImporter {
                 List<Placement> placements = new ArrayList<Placement>();
                 try {
                     if (boardFile.exists()) {
-//                        placements.addAll(parseFile(boardFile, Side.Top, chckbxCreateMissingParts.isSelected())); //Just the top side of the board
-//                        placements.addAll(parseFile(boardFile, Side.Bottom, chckbxCreateMissingParts.isSelected())); //Just the bottom side of the board
-                    	placements.addAll(parseFile(boardFile, null, chckbxCreateMissingParts.isSelected())); //both top and bottom of the board
+                    	if (chckbxImportTop.isSelected() && chckbxImportBottom.isSelected())
+                    		placements.addAll(parseFile(boardFile, null, chckbxCreateMissingParts.isSelected())); //both Top and Bottom of the board
+                    	else if(chckbxImportTop.isSelected())
+                    		placements.addAll(parseFile(boardFile, Side.Top, chckbxCreateMissingParts.isSelected())); //Just the Top side of the board
+                    	else if(chckbxImportBottom.isSelected())
+                    		placements.addAll(parseFile(boardFile, Side.Bottom, chckbxCreateMissingParts.isSelected())); //Just the Bottom side of the board                    	
                     }
                 }
                 catch (Exception e1) {
