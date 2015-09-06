@@ -24,18 +24,14 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 public class EagleLoader {
+	
     private static final String FEATURE_NAMESPACES = "http://xml.org/sax/features/namespaces";
     private static final String FEATURE_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
-    
-
-    
-    private static File eagleBoard;
     public Board 		board;
     public Library 		library;
     public Schematic 	schematic;
 
     public EagleLoader(File file) throws Exception{
-    	        this.eagleBoard = file;
 
         String packageName = "org.openpnp.model.eagle.xml";
 
@@ -51,7 +47,7 @@ public class EagleLoader {
             }
         });
 
-        InputSource input = new InputSource(new FileInputStream(eagleBoard));
+        InputSource input = new InputSource(new FileInputStream(file));
         Source source = new SAXSource(xmlreader, input);
 
         Eagle eagle = (Eagle) unmarshaller.unmarshal(source);
