@@ -110,6 +110,13 @@ public class EagleBoardImporter implements BoardImporter {
 						element_side = Side.Bottom;
 					else
 						element_side = Side.Top;
+					
+					//Now determine if we want to process this part based on which sideof th eboard it is on
+					
+					if (side != null) { //null means process both sides
+						if (side != element_side) continue; //exit this loop and process the next element
+					}
+					
 					String rot_number = rot.replaceAll("[A-Za-z ]", ""); //remove all letters, i.e. R180 becomes 180
 
 					Placement placement = new Placement(element.getName());
@@ -274,9 +281,9 @@ public class EagleBoardImporter implements BoardImporter {
                 List<Placement> placements = new ArrayList<Placement>();
                 try {
                     if (boardFile.exists()) {
-//                        placements.addAll(parseFile(boardFile, Side.Top, chckbxCreateMissingParts.isSelected()));
-//                        placements.addAll(parseFile(boardFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
-                    	placements.addAll(parseFile(boardFile, null, chckbxCreateMissingParts.isSelected()));
+//                        placements.addAll(parseFile(boardFile, Side.Top, chckbxCreateMissingParts.isSelected())); //Just the top side of the board
+//                        placements.addAll(parseFile(boardFile, Side.Bottom, chckbxCreateMissingParts.isSelected())); //Just the bottom side of the board
+                    	placements.addAll(parseFile(boardFile, null, chckbxCreateMissingParts.isSelected())); //both top and bottom of the board
                     }
                 }
                 catch (Exception e1) {
