@@ -274,8 +274,9 @@ public class EagleBoardImporter implements BoardImporter {
                 List<Placement> placements = new ArrayList<Placement>();
                 try {
                     if (boardFile.exists()) {
-                        placements.addAll(parseFile(boardFile, Side.Top, chckbxCreateMissingParts.isSelected()));
-                        placements.addAll(parseFile(boardFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
+//                        placements.addAll(parseFile(boardFile, Side.Top, chckbxCreateMissingParts.isSelected()));
+//                        placements.addAll(parseFile(boardFile, Side.Bottom, chckbxCreateMissingParts.isSelected()));
+                    	placements.addAll(parseFile(boardFile, null, chckbxCreateMissingParts.isSelected()));
                     }
                 }
                 catch (Exception e1) {
