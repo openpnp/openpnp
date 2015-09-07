@@ -58,7 +58,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	@ElementList
 	private ArrayList<Placement> placements = new ArrayList<>();
 
-    @ElementList
+    @ElementList(required=false)
     private ArrayList<Pad> solderPastePads = new ArrayList<>();
     
 	private transient File file;

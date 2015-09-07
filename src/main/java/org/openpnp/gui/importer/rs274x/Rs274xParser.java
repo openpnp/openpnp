@@ -49,9 +49,11 @@ public class Rs274xParser {
     private boolean coordinateFormatTrailingZeroOmission;
     private boolean coordinateFormatIncremental;
     private Map<Integer, Aperture> apertures = new HashMap<>();
-
+    
     private boolean stopped;
     private int lineNumber;
+    private ParseStatistics parseStatistics;
+    private boolean regionStarted;
     
     private List<Pad> pads;
 
@@ -99,6 +101,7 @@ public class Rs274xParser {
             }
         }
         catch (Exception e) {
+            parseStatistics.errored = true;
             error("Uncaught error: " + e.getMessage());
         }
         
@@ -188,11 +191,11 @@ public class Rs274xParser {
                 break;
             }
             case 36: {
-                regionMode = true;
+                enableRegionMode();
                 break;
             }
             case 37: {
-                regionMode = false;
+                disableRegionMode();
                 break;
             }
             case 54: {
@@ -288,26 +291,125 @@ public class Rs274xParser {
         }
     }
     
+    /**
+     * Linear or circular interpolation. If in region mode, add a line or arc
+     * to the current contour. Otherwise draw a line or arc.
+     * @param coordinate
+     * @param arcCoordinate
+     * @throws Exception
+     */
     private void performD01(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
         if (interpolationMode == null) {
-            error("Interpolation mode not yet set");
+            error("Interpolation most must be set before using D02");
         }
-        if (interpolationMode != InterpolationMode.Linear) {
-            warn("Circular interpolation not yet supported");
+        
+        if (regionMode) {
+            if (interpolationMode == InterpolationMode.Linear) {
+                addRegionLine(coordinate);
+            }
+            else {
+                addRegionArc(coordinate, arcCoordinate);
+            }
+        }
+        else {
+            if (interpolationMode == InterpolationMode.Linear) {
+                parseStatistics.lineCount++;
+                warn("Linear interpolation not yet supported");
+            }
+            else {
+                parseStatistics.arcCount++;
+                warn("Circular interpolation not yet supported");
+            }
         }
         currentPoint = coordinate;
     }
     
+    /**
+     * Move / set the current coordinate. Additionally, in region mode end
+     * the current contour.
+     * @param coordinate
+     * @throws Exception
+     */
     private void performD02(Point2D.Double coordinate) throws Exception {
+        if (interpolationMode == null) {
+            error("Interpolation mode must be set before using D02");
+        }
+        
+        if (regionMode) {
+            closeRegion();
+        }
+        
         currentPoint = coordinate;
     }
     
+    /**
+     * Flash the current aperture at the given coordinate.
+     * @param coordinate
+     * @throws Exception
+     */
     private void performD03(Point2D.Double coordinate) throws Exception {
         if (currentAperture == null) {
             error("Can't flash, no current aperture");
         }
+        if (regionMode) {
+            error("Can't flash in region mode");
+        }
+        
+        parseStatistics.flashCount++;
+        
         pads.add(currentAperture.createPad(unit, coordinate));
+        parseStatistics.padCount++;
         currentPoint = coordinate;
+        
+        parseStatistics.flashPerformedCount++;
+    }
+    
+    private void enableRegionMode() throws Exception {
+        if (regionMode) {
+            error("Can't start region mode when already in region mode");
+        }
+        regionMode = true;
+        regionStarted = false;
+    }
+    
+    private void addRegionLine(Point2D.Double coordinate) throws Exception {
+        if (!regionMode) {
+            error("Can't add region line outside of region mode");
+        }
+        if (!regionStarted) {
+            regionStarted = true;
+        }
+        parseStatistics.regionLineCount++;
+        warn("Linear interpolation in region mode not yet supported");
+    }
+    
+    private void addRegionArc(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
+        if (!regionMode) {
+            error("Can't add region arc outside of region mode");
+        }
+        if (!regionStarted) {
+            regionStarted = true;
+        }
+        parseStatistics.regionArcCount++;
+        warn("Circular interpolation in region mode not yet supported");
+    }
+    
+    private void closeRegion() throws Exception {
+        if (!regionMode) {
+            error("Can't end region when not in region mode");
+        }
+        if (regionStarted) {
+            regionStarted = false;
+            parseStatistics.regionCount++;
+        }
+    }
+    
+    private void disableRegionMode() throws Exception {
+        if (!regionMode) {
+            error("Can't exit region mode, not in region mode");
+        }
+        closeRegion();
+        regionMode = false;
     }
     
     private void readExtendedCodeCommand() throws Exception {
@@ -773,6 +875,9 @@ public class Rs274xParser {
         apertures = new HashMap<>();        
         lineNumber = 1;
         pads = new ArrayList<>();
+        regionStarted = false;
+        
+        parseStatistics = new ParseStatistics();
     }
     
     private void warn(String s) {
@@ -796,6 +901,7 @@ public class Rs274xParser {
     }
     
     public static void main(String[] args) throws Exception {
+        HashMap<File, ParseStatistics> results = new HashMap<>();
         File[] files = new File("/Users/jason/Desktop/paste_tests").listFiles();
         for (File file : files) {
             if (file.isDirectory()) {
@@ -804,13 +910,31 @@ public class Rs274xParser {
             if (file.getName().equals(".DS_Store")) {
                 continue;
             }
+            Rs274xParser parser = new Rs274xParser();
             try {
-                new Rs274xParser().parseSolderPastePads(file);
+                parser.parseSolderPastePads(file);
             }
             catch (Exception e) {
                 System.out.println(file.getName() + " " + e.getMessage());
             }
+            results.put(file, parser.parseStatistics);
         }
+        
+        ParseStatistics total = new ParseStatistics();
+        logger.info("");
+        logger.info("");
+        for (File file : results.keySet()) {
+            ParseStatistics stats = results.get(file);
+            total.add(stats);;
+            logger.info(String.format("%-32s: %s", file.getName(), stats.toString()));
+        }
+        String totalLine = String.format("%-32s: %s", "TOTALS", total.toString()); 
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < totalLine.length(); i++) {
+            sb.append("-");
+        }
+        logger.info(sb.toString());
+        logger.info(totalLine);
     }
     
     static abstract class Aperture {
@@ -905,6 +1029,90 @@ public class Rs274xParser {
         @Override
         public Pad createPad(LengthUnit unit, java.awt.geom.Point2D.Double coordinate) {
             return null;
+        }
+    }
+    
+    static class ParseStatistics {
+        public int lineCount;
+        public int linePerformedCount;
+        
+        public int arcCount;
+        public int arcPerformedCount;
+        
+        public int regionLineCount;
+        public int regionLinePerformedCount;
+        
+        public int regionArcCount;
+        public int regionArcPerformedCount;
+        
+        public int regionCount;
+        public int regionPerformedCount;
+        
+        public int flashCount;
+        public int flashPerformedCount;
+        
+        public int padCount;
+        
+        public boolean errored;
+        
+        public double percent(double count, double total) {
+            if (total == 0) {
+                return 100;
+            }
+            return (count / total) * 100;
+        }
+        
+        public void add(ParseStatistics p) {
+            lineCount += p.lineCount;
+            linePerformedCount += p.linePerformedCount;
+            
+            arcCount += p.arcCount;
+            arcPerformedCount += p.arcPerformedCount;
+            
+            regionLineCount += p.regionLineCount;
+            regionLinePerformedCount += p.regionLinePerformedCount;
+            
+            regionArcCount += p.regionArcCount;
+            regionArcPerformedCount += p.regionArcPerformedCount;
+            
+            regionCount += p.regionCount;
+            regionPerformedCount += p.regionPerformedCount;
+            
+            flashCount += p.flashCount;
+            flashPerformedCount += p.flashPerformedCount;
+            
+            padCount += p.padCount;
+        }
+
+        @Override
+        public String toString() {
+            int total = flashCount + regionCount + lineCount + arcCount;
+            int totalPerformed = flashPerformedCount + regionPerformedCount + linePerformedCount + arcPerformedCount;
+            return String.format("%s Total %3.0f%% (%4d/%4d), Flash %3.0f%% (%4d/%4d), Line %3.0f%% (%4d/%4d), Arc %3.0f%% (%4d/%4d), Region %3.0f%% (%4d/%4d), Region line %3.0f%% (%4d/%4d), Region Arc %3.0f%% (%4d/%4d), Pads %4d",
+                    errored ? "FAIL" : "PASS",
+                    percent(totalPerformed, total),
+                    totalPerformed,
+                    total,
+                    percent(flashPerformedCount, flashCount),
+                    flashPerformedCount,
+                    flashCount,
+                    percent(linePerformedCount, lineCount),
+                    linePerformedCount,
+                    lineCount,
+                    percent(arcPerformedCount, arcCount),
+                    arcPerformedCount,
+                    arcCount,
+                    percent(regionPerformedCount, regionCount),
+                    regionPerformedCount,
+                    regionCount,
+                    percent(regionLinePerformedCount, regionLineCount),
+                    regionLinePerformedCount,
+                    regionLineCount,
+                    percent(regionArcPerformedCount, regionArcCount),
+                    regionArcPerformedCount,
+                    regionArcCount,
+                    padCount
+                    );
         }
     }
 }
