@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -923,7 +924,14 @@ public class Rs274xParser {
         ParseStatistics total = new ParseStatistics();
         logger.info("");
         logger.info("");
-        for (File file : results.keySet()) {
+        ArrayList<File> sortedFiles = new ArrayList<>(results.keySet());
+        sortedFiles.sort(new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
+            }
+        });
+        for (File file : sortedFiles) {
             ParseStatistics stats = results.get(file);
             total.add(stats);;
             logger.info(String.format("%-32s: %s", file.getName(), stats.toString()));
