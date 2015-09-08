@@ -572,6 +572,11 @@ public class JobPanel extends JPanel {
                 existingBoard.addPlacement(placement);
             }
             for (Pad pad : importedBoard.getSolderPastePads()) {
+                // TODO: This is a temporary hack until we redesign the importer
+                // interface to be more intuitive. The Gerber importer tends
+                // to return everything in Inches, so this is a method to
+                // try to get it closer to what the user expects to see.
+                pad.setLocation(pad.getLocation().convertToUnits(getSelectedBoardLocation().getLocation().getUnits()));
                 existingBoard.addSolderPastePad(pad);
             }
             jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());

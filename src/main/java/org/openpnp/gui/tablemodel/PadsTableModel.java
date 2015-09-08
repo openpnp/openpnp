@@ -37,19 +37,21 @@ public class PadsTableModel extends AbstractTableModel {
 	final Configuration configuration;
 	
 	private String[] columnNames = new String[] {
-	    "Type",
+	    "Name",
 		"Side", 
         "X", 
         "Y", 
-		"ø"
+		"ø",
+        "Type",
 		};
 	
 	private Class[] columnTypes = new Class[] {
-		String.class,
+        String.class,
 		Side.class,
         LengthCellValue.class,
         LengthCellValue.class,
 		String.class,
+        String.class
 	};
 	
 	private Board board;
@@ -78,7 +80,7 @@ public class PadsTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-	    return columnIndex != 0;
+	    return columnIndex != 5;
 	}
 	
 	@Override
@@ -90,7 +92,10 @@ public class PadsTableModel extends AbstractTableModel {
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
 			Pad pad = board.getSolderPastePads().get(rowIndex);
-            if (columnIndex == 1) {
+            if (columnIndex == 0) {
+                pad.setName((String) aValue);
+            }
+            else if (columnIndex == 1) {
                 pad.setSide((Side) aValue);
             }
 			else if (columnIndex == 2) {
@@ -122,8 +127,8 @@ public class PadsTableModel extends AbstractTableModel {
 		Pad pad = board.getSolderPastePads().get(row);
 		Location loc = pad.getLocation();
 		switch (col) {
-        case 0:
-            return pad.getClass().getSimpleName();
+	    case 0:
+	        return pad.getName();
         case 1:
             return pad.getSide();
 		case 2:
@@ -132,6 +137,8 @@ public class PadsTableModel extends AbstractTableModel {
 			return new LengthCellValue(loc.getLengthY(), true);
 		case 4:
 			return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation());
+        case 5:
+            return pad.getClass().getSimpleName();
 		default:
 			return null;
 		}

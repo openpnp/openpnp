@@ -50,6 +50,10 @@ public class Rs274xParser {
     private boolean coordinateFormatTrailingZeroOmission;
     private boolean coordinateFormatIncremental;
     private Map<Integer, Aperture> apertures = new HashMap<>();
+    /**
+     * Maps Aperture indexes to a count to aid in generation of pad names.
+     */
+    private Map<Integer, Integer> apertureUseCounts = new HashMap<>();
     
     private boolean stopped;
     private int lineNumber;
@@ -358,8 +362,20 @@ public class Rs274xParser {
         
         parseStatistics.flashCount++;
         
-        pads.add(currentAperture.createPad(unit, coordinate));
+        Integer counter = apertureUseCounts.get(currentAperture.getIndex());
+        if (counter == null) {
+            counter = 0;
+        }
+        else {
+            counter++;
+        }
+        apertureUseCounts.put(currentAperture.getIndex(), counter);
+        
+        Pad pad = currentAperture.createPad(unit, coordinate);
+        pad.setName(String.format("D%02d-%03d",  currentAperture.getIndex(), counter++));
+        pads.add(pad);
         parseStatistics.padCount++;
+
         currentPoint = coordinate;
         
         parseStatistics.flashPerformedCount++;
@@ -530,19 +546,19 @@ public class Rs274xParser {
         Aperture aperture = null;
         switch (type) {
             case 'R': {
-                aperture = readRectangleApertureDefinition();
+                aperture = readRectangleApertureDefinition(code);
                 break;
             }
             case 'C': {
-                aperture = readCircleApertureDefinition();
+                aperture = readCircleApertureDefinition(code);
                 break;
             }
             case 'O': {
-                aperture = readObroundApertureDefinition();
+                aperture = readObroundApertureDefinition(code);
                 break;
             }
             case 'P': {
-                aperture = readPolygonApertureDefinition();
+                aperture = readPolygonApertureDefinition(code);
                 break;
             }
             default: {
@@ -552,7 +568,7 @@ public class Rs274xParser {
         apertures.put(code, aperture);
     }
     
-    private Aperture readRectangleApertureDefinition() throws Exception {
+    private Aperture readRectangleApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in rectangle aperture definition");
         }
@@ -569,10 +585,10 @@ public class Rs274xParser {
         if (read() != '*') {
             error("Expected end of data block");
         }
-        return new RectangleAperture(width, height, holeDiameter);
+        return new RectangleAperture(index, width, height, holeDiameter);
     }
     
-    private Aperture readCircleApertureDefinition() throws Exception {
+    private Aperture readCircleApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in circle aperture definition");
         }
@@ -585,10 +601,10 @@ public class Rs274xParser {
         if (read() != '*') {
             error("Expected end of data block");
         }
-        return new CircleAperture(diameter, holeDiameter);
+        return new CircleAperture(index, diameter, holeDiameter);
     }
     
-    private Aperture readObroundApertureDefinition() throws Exception {
+    private Aperture readObroundApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in obround aperture definition");
         }
@@ -605,10 +621,10 @@ public class Rs274xParser {
         if (read() != '*') {
             error("Expected end of data block");
         }
-        return new ObroundAperture(width, height, holeDiameter);
+        return new ObroundAperture(index, width, height, holeDiameter);
     }
     
-    private Aperture readPolygonApertureDefinition() throws Exception {
+    private Aperture readPolygonApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in circle aperture definition");
         }
@@ -634,7 +650,7 @@ public class Rs274xParser {
         if (read() != '*') {
             error("Expected end of data block");
         }
-        return new PolygonAperture(diameter, numberOfVertices, rotation, holeDiameter);
+        return new PolygonAperture(index, diameter, numberOfVertices, rotation, holeDiameter);
     }
     
     private void readUnit() throws Exception {
@@ -877,6 +893,7 @@ public class Rs274xParser {
         lineNumber = 1;
         pads = new ArrayList<>();
         regionStarted = false;
+        apertureUseCounts = new HashMap<>();
         
         parseStatistics = new ParseStatistics();
     }
@@ -946,11 +963,23 @@ public class Rs274xParser {
     }
     
     static abstract class Aperture {
+        final protected int index;
+        
+        public Aperture(int index) {
+            this.index = index;
+        }
+        
+        public int getIndex() {
+            return index;
+        }
+        
         public abstract Pad createPad(LengthUnit unit, Point2D.Double coordinate);
     }
     
     static abstract class StandardAperture extends Aperture {
-        
+        public StandardAperture(int index) {
+            super(index);
+        }
     }
     
     static class RectangleAperture extends StandardAperture {
@@ -958,7 +987,8 @@ public class Rs274xParser {
         public double height;
         public Double holeDiameter;
         
-        public RectangleAperture(double width, double height, Double holeDiameter) {
+        public RectangleAperture(int index, double width, double height, Double holeDiameter) {
+            super(index);
             this.width = width;
             this.height = height;
             this.holeDiameter = holeDiameter;
@@ -984,7 +1014,8 @@ public class Rs274xParser {
         public double diameter;
         public Double holeDiameter;
         
-        public CircleAperture(double diameter, Double holeDiameter) {
+        public CircleAperture(int index, double diameter, Double holeDiameter) {
+            super(index);
             this.diameter = diameter;
             this.holeDiameter = holeDiameter;
         }
@@ -1004,8 +1035,8 @@ public class Rs274xParser {
     }
     
     static class ObroundAperture extends RectangleAperture {
-        public ObroundAperture(double width, double height, Double holeDiameter) {
-            super(width, height, holeDiameter);
+        public ObroundAperture(int index, double width, double height, Double holeDiameter) {
+            super(index, width, height, holeDiameter);
         }
 
         @Override
@@ -1019,8 +1050,8 @@ public class Rs274xParser {
         public int numberOfVertices;
         public Double rotation;
         
-        public PolygonAperture(double diameter, int numberOfVertices, Double rotation, Double holeDiameter) {
-            super(diameter, holeDiameter);
+        public PolygonAperture(int index, double diameter, int numberOfVertices, Double rotation, Double holeDiameter) {
+            super(index, diameter, holeDiameter);
             this.numberOfVertices = numberOfVertices;
             this.rotation = rotation;
         }
@@ -1034,6 +1065,10 @@ public class Rs274xParser {
     }
     
     static class MacroAperture extends Aperture {
+        public MacroAperture(int index) {
+            super(index);
+        }
+        
         @Override
         public Pad createPad(LengthUnit unit, java.awt.geom.Point2D.Double coordinate) {
             return null;

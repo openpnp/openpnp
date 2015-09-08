@@ -17,6 +17,9 @@ public abstract class Pad extends AbstractModelObject {
     @Element
     protected Location location = new Location(LengthUnit.Millimeters);
     
+    @Attribute(required=false)
+    protected String name;
+    
     public abstract Shape getShape();
     
     public Location getLocation() {
@@ -37,6 +40,16 @@ public abstract class Pad extends AbstractModelObject {
         Object oldValue = this.side;
         this.side = side;
         firePropertyChange("side", oldValue, side);
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        Object oldValue = this.name;
+        this.name = name;
+        firePropertyChange("name", oldValue, name);
     }
     
     public static class Line extends Pad {
