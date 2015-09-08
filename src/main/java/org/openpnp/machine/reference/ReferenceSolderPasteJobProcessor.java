@@ -24,10 +24,8 @@ package org.openpnp.machine.reference;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Footprint;
-import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Location;
-import org.openpnp.model.Placement;
+import org.openpnp.model.Pad;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
@@ -74,42 +72,34 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
 		Nozzle nozzle = head.getNozzles().get(0);
 
 		for (BoardLocation boardLocation : job.getBoardLocations()) {
-		    for (Placement placement : boardLocation.getBoard().getPlacements()) {
-		        if (placement.getSide() != boardLocation.getSide()) {
+		    for (Pad pad : boardLocation.getBoard().getSolderPastePads()) {
+		        if (pad.getSide() != boardLocation.getSide()) {
 		            continue;
 		        }
-		        if (placement.getType() != Placement.Type.Place) {
-		            continue;
-		        }
-		        Footprint footprint = placement.getPart().getPackage().getFootprint();
-		        for (Pad pad : footprint.getPads()) {
-		            Location padLocation = new Location(footprint.getUnits(), pad.getX(), pad.getY(), 0, 0);
-		            Location placementLocation = placement.getLocation();
-		            Location location = placementLocation.add(padLocation);
-		            location = Utils2D.calculateBoardPlacementLocation(boardLocation.getLocation(), boardLocation.getSide(), location);
+	            Location location = pad.getLocation();
+	            location = Utils2D.calculateBoardPlacementLocation(boardLocation.getLocation(), boardLocation.getSide(), location);
 
-		            fireDetailedStatusUpdated(String.format("Move to pad location, safe Z at (%s).", location));
-		            if (!shouldJobProcessingContinue()) {
-		                return;
-		            }
-		            try {
-	                    MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
-		            }
-		            catch (Exception e) {
-		                fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-		            }
-		            
-                    fireDetailedStatusUpdated(String.format("Dispense.", location));
-                    if (!shouldJobProcessingContinue()) {
-                        return;
-                    }
-                    try {
-                        Thread.sleep(250);
-                    }
-                    catch (Exception e) {
-                        fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
-                    }
-		        }
+	            fireDetailedStatusUpdated(String.format("Move to pad location, safe Z at (%s).", location));
+	            if (!shouldJobProcessingContinue()) {
+	                return;
+	            }
+	            try {
+                    MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+	            }
+	            catch (Exception e) {
+	                fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+	            }
+	            
+                fireDetailedStatusUpdated(String.format("Dispense.", location));
+                if (!shouldJobProcessingContinue()) {
+                    return;
+                }
+                try {
+                    Thread.sleep(250);
+                }
+                catch (Exception e) {
+                    fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
+                }
 		    }
 		}
 		
