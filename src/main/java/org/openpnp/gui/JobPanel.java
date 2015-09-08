@@ -125,6 +125,8 @@ public class JobPanel extends JPanel {
 
     private final JobPlacementsPanel jobPlacementsPanel;
     private final JobPastePanel jobPastePanel;
+    
+    private JTabbedPane tabbedPane;
 
     public JobPanel(Configuration configuration, MainFrame frame,
             MachineControlsPanel machineControlsPanel) {
@@ -144,7 +146,9 @@ public class JobPanel extends JPanel {
 
         boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 
-        JComboBox<Side> sidesComboBox = new JComboBox<>(Side.values());
+        // Suppress because adding the type specifiers breaks WindowBuilder.
+        @SuppressWarnings("rawtypes")
+        JComboBox sidesComboBox = new JComboBox(Side.values());
 
         boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
         boardLocationsTable.setAutoCreateRowSorter(true);
@@ -264,14 +268,11 @@ public class JobPanel extends JPanel {
         splitPane.setLeftComponent(pnlBoards);
         splitPane.setRightComponent(pnlRight);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         pnlRight.add(tabbedPane, BorderLayout.CENTER);
 
-        jobPlacementsPanel = new JobPlacementsPanel(this);
-        tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
-
         jobPastePanel = new JobPastePanel(this);
-        tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
+        jobPlacementsPanel = new JobPlacementsPanel(this);
 
         add(splitPane);
 
@@ -281,11 +282,22 @@ public class JobPanel extends JPanel {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-                configuration.getMachine().addListener(machineListener);
+                Machine machine = configuration.getMachine();
+                
+                machine.addListener(machineListener);
 
-                jobProcessor = configuration.getMachine().getJobProcessor();
-                jobProcessor.addListener(jobProcessorListener);
-                jobProcessor.setDelegate(jobProcessorDelegate);
+                for (JobProcessor jobProcessor : machine.getJobProcessors().values()) {
+                    jobProcessor.addListener(jobProcessorListener);
+                    jobProcessor.setDelegate(jobProcessorDelegate);
+                }
+                
+                if (machine.getJobProcessors().get(JobProcessor.Type.SolderPaste) != null) {
+                    tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
+                }
+                if (machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace) != null) {
+                    jobProcessor = machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace);
+                    tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
+                }
 
                 updateJobActions();
 

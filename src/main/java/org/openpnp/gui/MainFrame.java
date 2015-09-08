@@ -80,6 +80,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.JobProcessor;
 
 /**
  * The main window of the application.
@@ -473,7 +474,9 @@ public class MainFrame extends JFrame {
 		    @Override
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-		        configuration.getMachine().getJobProcessor().addListener(jobProcessorListener);
+		        for (JobProcessor jobProcessor : configuration.getMachine().getJobProcessors().values()) {
+	                jobProcessor.addListener(jobProcessorListener);
+		        }
             }
 		});
 	}

@@ -1,8 +1,10 @@
 package org.openpnp.spi.base;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.openpnp.spi.Camera;
@@ -10,13 +12,26 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.JobProcessor;
+import org.openpnp.spi.JobProcessor.Type;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractMachine implements Machine {
+    /**
+     * History:
+     * 
+     * Note: Can't actually use the @Version annotation because of a bug
+     * in SimpleXML. See http://sourceforge.net/p/simple/mailman/message/27887562/
+     *  
+     * 1.0: Initial revision.
+     * 1.1: Added jobProcessors Map and deprecated JobProcesor and JobPlanner.
+     */
+
     @ElementList
     protected IdentifiableList<Head> heads = new IdentifiableList<Head>();
     
@@ -26,15 +41,30 @@ public abstract class AbstractMachine implements Machine {
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
     
-    @Element
+    @Deprecated
+    @Element(required=false)
     protected JobPlanner jobPlanner;
     
-    @Element
+    @Deprecated
+    @Element(required=false)
     protected JobProcessor jobProcessor;
+    
+    @ElementMap(entry="jobProcessor", key="type", attribute=true, inline=false, required=false)
+    protected Map<JobProcessor.Type, JobProcessor> jobProcessors = new HashMap<>();
     
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
     
     protected AbstractMachine() {
+    }
+    
+    @SuppressWarnings("unused")
+    @Commit
+    private void commit() {
+        if (jobProcessors.isEmpty()) {
+            jobProcessors.put(JobProcessor.Type.PickAndPlace, jobProcessor);
+            jobProcessor = null;
+            jobPlanner = null;
+        }
     }
     
     @Override
@@ -105,13 +135,8 @@ public abstract class AbstractMachine implements Machine {
     }
     
     @Override
-    public JobPlanner getJobPlanner() {
-        return jobPlanner;
-    }
-    
-    @Override
-    public JobProcessor getJobProcessor() {
-        return jobProcessor;
+    public Map<Type, JobProcessor> getJobProcessors() {
+        return Collections.unmodifiableMap(jobProcessors);
     }
 
     public void fireMachineHeadActivity(Head head) {

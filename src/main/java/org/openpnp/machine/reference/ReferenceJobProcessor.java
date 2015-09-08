@@ -22,7 +22,6 @@
 package org.openpnp.machine.reference;
 
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -38,7 +37,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.Placement.Type;
+import org.openpnp.planner.SimpleJobPlanner;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -53,6 +52,8 @@ import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FiducialLocator;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,22 @@ import org.slf4j.LoggerFactory;
 public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	private static final Logger logger = LoggerFactory.getLogger(ReferenceJobProcessor.class);
 	
+    /**
+     * History:
+     * 
+     * Note: Can't actually use the @Version annotation because of a bug
+     * in SimpleXML. See http://sourceforge.net/p/simple/mailman/message/27887562/
+     *  
+     * 1.0: Initial revision.
+     * 1.1: Added jobPlanner, which is moved here from AbstractMachine.
+     */
+	
+    @Attribute(required=false)
+    private boolean demoMode;
+    
+    @Element(required=false)
+    private JobPlanner jobPlanner;
+    
 	protected Job job;
 	private Set<JobProcessorListener> listeners = new HashSet<JobProcessorListener>();
 	private JobProcessorDelegate delegate = new DefaultJobProcessorDelegate();
@@ -72,11 +89,16 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	
 	private boolean pauseAtNextStep;
 	
-	@Attribute(required=false)
-	private boolean demoMode;
-	
 	public ReferenceJobProcessor() {
 	}
+	
+    @SuppressWarnings("unused")
+    @Commit
+    private void commit() {
+        if (jobPlanner == null) {
+            jobPlanner = new SimpleJobPlanner();
+        }
+    }	
 	
 	@Override
     public void setDelegate(JobProcessorDelegate delegate) {
@@ -210,7 +232,6 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
             return;
         }
 		
-		JobPlanner jobPlanner = machine.getJobPlanner();
 		Head head = machine.getHeads().get(0);
 		
 		jobPlanner.setJob(job);
@@ -330,7 +351,6 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
             return;
         }
         
-        JobPlanner jobPlanner = machine.getJobPlanner();
         Head head = machine.getHeads().get(0);
         Camera camera = head.getCameras().get(0);
         
@@ -708,7 +728,6 @@ public class ReferenceJobProcessor implements Runnable, JobProcessor {
 	 * 		Highest pick location.
 	 */
 	protected void preProcessJob(Machine machine) {
-        JobPlanner jobPlanner = machine.getJobPlanner();
         Head head = machine.getHeads().get(0);
         
         jobPlanner.setJob(job);
