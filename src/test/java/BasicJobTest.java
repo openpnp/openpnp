@@ -67,7 +67,7 @@ public class BasicJobTest {
 
         TestCompleteNotifier notifier = new TestCompleteNotifier();
 
-        JobProcessor jobProcessor = machine.getJobProcessor();
+        JobProcessor jobProcessor = machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace);
         jobProcessor.addListener(new BasicJobTestProcessorListener(notifier));
         jobProcessor.setDelegate(new BasicJobTestJobProcessorDelegate());
 
