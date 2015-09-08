@@ -52,6 +52,8 @@ import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -270,6 +272,19 @@ public class JobPanel extends JPanel {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         pnlRight.add(tabbedPane, BorderLayout.CENTER);
+        
+        tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                Machine machine = Configuration.get().getMachine();
+                String activeTabTitle = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+                if (activeTabTitle.equals("Solder Paste")) {
+                    setJobProcessor(machine.getJobProcessors().get(JobProcessor.Type.SolderPaste));
+                }
+                if (activeTabTitle.equals("Pick and Place")) {
+                    setJobProcessor(machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace));
+                }
+            }
+        });        
 
         jobPastePanel = new JobPastePanel(this);
         jobPlacementsPanel = new JobPlacementsPanel(this);
@@ -278,7 +293,7 @@ public class JobPanel extends JPanel {
 
         mnOpenRecent = new JMenu("Open Recent Job...");
         loadRecentJobs();
-
+        
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration)
                     throws Exception {
@@ -295,19 +310,51 @@ public class JobPanel extends JPanel {
                     tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
                 }
                 if (machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace) != null) {
-                    jobProcessor = machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace);
                     tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
                 }
-
-                updateJobActions();
-
+                
                 // Create an empty Job if one is not loaded
                 if (JobPanel.this.jobProcessor.getJob() == null) {
                     Job job = new Job();
-                    JobPanel.this.jobProcessor.load(job);
+                    jobProcessor.load(job);
                 }
             }
         });
+    }
+    
+    /**
+     * Unregister the listener and delegate for the JobProcessor, set the new
+     * JobProcessor and add the listener and delegate back. If a job was
+     * previously loaded into the JobProcessor, load it into the new one.
+     * 
+     * The sequencing of making this work is a bit complex. When the app is
+     * starting the following happens:
+     * 1. The UI is created and shown. At this time no JobProcessor is set.
+     * 2. The Configuration is loaded and the completion listener is called.
+     * 3. The Configuration listener checks which JobProcessors are registered
+     * and adds tabs for each.
+     * 4. The first tab that is added causes a selection event to happen, which
+     * fires a ChangeEvent on the ChangeListener above.
+     * 5. The ChangeListener checks which tab was selected and calls this
+     * method with the appropriate JobProcessor.
+     * @param jobProcessor
+     */
+    private void setJobProcessor(JobProcessor jobProcessor) {
+        Job job = null;
+        if (this.jobProcessor != null) {
+            job = this.jobProcessor.getJob();
+            if (this.jobProcessor.getState() != JobProcessor.JobState.Stopped) {
+                throw new AssertionError("this.jobProcessor.getState() != JobProcessor.JobState.Stopped");
+            }
+            this.jobProcessor.removeListener(jobProcessorListener);
+            this.jobProcessor.setDelegate(null);
+        }
+        this.jobProcessor = jobProcessor;
+        jobProcessor.addListener(jobProcessorListener);
+        jobProcessor.setDelegate(jobProcessorDelegate);
+        if (job != null) {
+            jobProcessor.load(job);
+        }
     }
     
     public JobPlacementsPanel getJobPlacementsPanel() {
@@ -518,6 +565,7 @@ public class JobPanel extends JPanel {
                     "Start processing the job.");
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(true);
+            tabbedPane.setEnabled(true);
         }
         else if (state == JobState.Running) {
             startPauseResumeJobAction.setEnabled(true);
@@ -529,6 +577,7 @@ public class JobPanel extends JPanel {
                     "Pause processing of the job.");
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(false);
+            tabbedPane.setEnabled(false);
         }
         else if (state == JobState.Paused) {
             startPauseResumeJobAction.setEnabled(true);
@@ -540,6 +589,7 @@ public class JobPanel extends JPanel {
                     "Resume processing of the job.");
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(true);
+            tabbedPane.setEnabled(false);
         }
 
         // We allow the above to run first so that all state is represented

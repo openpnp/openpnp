@@ -31,7 +31,12 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
 
     @Override
     public void setDelegate(JobProcessorDelegate delegate) {
-        this.delegate = delegate;
+        if (delegate == null) {
+            this.delegate = new DefaultJobProcessorDelegate();
+        }
+        else {
+            this.delegate = delegate;
+        }
     }
     
     @Override
