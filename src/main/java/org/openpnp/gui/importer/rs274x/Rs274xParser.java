@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -942,7 +943,7 @@ public class Rs274xParser {
         logger.info("");
         logger.info("");
         ArrayList<File> sortedFiles = new ArrayList<>(results.keySet());
-        sortedFiles.sort(new Comparator<File>() {
+        Collections.sort(sortedFiles, new Comparator<File>() {
             @Override
             public int compare(File o1, File o2) {
                 return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
