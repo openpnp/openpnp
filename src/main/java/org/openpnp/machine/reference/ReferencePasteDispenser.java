@@ -5,6 +5,7 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferencePasteDispenserConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -25,7 +26,6 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
     @Attribute(required = false)
     private double safeZ = 0;
    
-    
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
@@ -53,6 +53,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
     @Override
     public void dispense(Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception {
 		logger.debug("{}.dispense()", getName());
+		Thread.sleep(dispenseTimeMilliseconds);
 //		driver.dispense(this);
         machine.fireMachineHeadActivity(head);
     }
@@ -79,7 +80,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
     
     @Override
     public Wizard getConfigurationWizard() {
-        return null;
+        return new ReferencePasteDispenserConfigurationWizard(this);
     }
     
 	@Override
