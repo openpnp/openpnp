@@ -69,6 +69,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.JobProcessor.JobError;
+import org.openpnp.util.MovableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -355,9 +356,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         nozzle.moveToSafeZ(1.0);
                         feeder.feed(nozzle);
                         Location pickLocation = feeder.getPickLocation();
-                        nozzle.moveToSafeZ(1.0);
-                        nozzle.moveTo(pickLocation.derive(null, null, Double.NaN, null), 1.0);
-                        nozzle.moveTo(pickLocation, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
                         nozzle.pick();
                         nozzle.moveToSafeZ(1.0);
 					}

@@ -205,15 +205,6 @@ public class PackagesPanel extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if (Configuration.get().getPackages().size() == 0) {
-				MessageBoxes
-						.errorBox(
-								getTopLevelAncestor(),
-								"Error",
-								"There are currently no packages defined in the system. Please create at least one package before creating a package.");
-				return;
-			}
-			
 			String id;
 			while ((id = JOptionPane.showInputDialog(frame, "Please enter an ID for the new package.")) != null) {
 				if (configuration.getPackage(id) != null) {

@@ -58,6 +58,8 @@ public class ReferenceMachine extends AbstractMachine {
 	
 	private boolean enabled;
 	
+	private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<Class<? extends Feeder>>();
+	
 	public ReferenceDriver getDriver() {
 		return driver;
 	}
@@ -135,6 +137,10 @@ public class ReferenceMachine extends AbstractMachine {
                 new PropertySheetWizardAdapter(getConfigurationWizard())
         };
     }
+    
+    public void registerFeederClass(Class<? extends Feeder> cls) {
+        registeredFeederClasses.add(cls);
+    }
 
     @Override
 	public List<Class<? extends Feeder>> getCompatibleFeederClasses() {
@@ -143,6 +149,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceTrayFeeder.class);
 		l.add(ReferenceTapeFeeder.class);
 		l.add(ReferenceTubeFeeder.class);
+		l.addAll(registeredFeederClasses);
 		return l;
 	}
 
