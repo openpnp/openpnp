@@ -50,6 +50,11 @@ import org.slf4j.LoggerFactory;
  * 3. Search each of the cardinal directions for the next hole. This gives us
  * the direction of travel.
  * 
+ * 
+ * Another option:
+ * 1. Have the user position the camera over the first part.
+ * 2. We know that a hole is a certain distance from a part so we should be
+ * able to search for the hole.
  */
 
 /**
@@ -68,7 +73,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required=false)
-    private Location nextHoleLocation = new Location(LengthUnit.Millimeters);
+    private Location lastHoleLocation = new Location(LengthUnit.Millimeters);
 
 	@Element(required=false)
 	private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
@@ -143,12 +148,23 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         throw new Exception("Not yet implements");
 	}
     
-    // TODO: temporary testing trash
-    public void doSetup() {
-        System.out.println("you got it boss");
+	public Location getReferenceHoleLocation() {
+        return referenceHoleLocation;
     }
-    
-	public Length getHoleDiameter() {
+
+    public void setReferenceHoleLocation(Location referenceHoleLocation) {
+        this.referenceHoleLocation = referenceHoleLocation;
+    }
+
+    public Location getLastHoleLocation() {
+        return lastHoleLocation;
+    }
+
+    public void setLastHoleLocation(Location lastHoleLocation) {
+        this.lastHoleLocation = lastHoleLocation;
+    }
+
+    public Length getHoleDiameter() {
         return holeDiameter;
     }
 
@@ -171,13 +187,29 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setPartPitch(Length partPitch) {
         this.partPitch = partPitch;
     }
-    
+
     public Length getTapeWidth() {
         return tapeWidth;
     }
 
     public void setTapeWidth(Length tapeWidth) {
         this.tapeWidth = tapeWidth;
+    }
+
+    public Length getHoleToPartLinear() {
+        return holeToPartLinear;
+    }
+
+    public void setHoleToPartLinear(Length holeToPartLinear) {
+        this.holeToPartLinear = holeToPartLinear;
+    }
+
+    public Length getHoleToPartLateral() {
+        return holeToPartLateral;
+    }
+
+    public void setHoleToPartLateral(Length holeToPartLateral) {
+        this.holeToPartLateral = holeToPartLateral;
     }
 
     public int getPartCount() {
@@ -189,14 +221,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public int getFeedCount() {
-		return feedCount;
-	}
+        return feedCount;
+    }
 
-	public void setFeedCount(int feedCount) {
-		this.feedCount = feedCount;
-	}
+    public void setFeedCount(int feedCount) {
+        this.feedCount = feedCount;
+    }
 
-	@Override
+    @Override
 	public String toString() {
 		return getName();
 	}
