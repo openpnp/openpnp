@@ -44,17 +44,6 @@ import org.slf4j.LoggerFactory;
  * Implementation of Feeder that indexes through a strip of cut tape.
  * This is a specialization of the tray feeder that knows specifics
  * about tape so that vision capabilities can be added.
- * 
- * 1. Have the user position the camera over the first tape hole
- * 2. Locate the hole
- * 3. Search each of the cardinal directions for the next hole. This gives us
- * the direction of travel.
- * 
- * 
- * Another option:
- * 1. Have the user position the camera over the first part.
- * 2. We know that a hole is a certain distance from a part so we should be
- * able to search for the hole.
  */
 
 /**
@@ -69,32 +58,32 @@ import org.slf4j.LoggerFactory;
 public class ReferenceStripFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
 	
-    @Element(required=false)
+    // The next four parameters are the critical parameters. The rest should
+	// typically be calculable or are just standard.
+	@Element(required=false)
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required=false)
     private Location lastHoleLocation = new Location(LengthUnit.Millimeters);
 
-	@Element(required=false)
-	private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
-	
-	@Element(required=false)
-	private Length holePitch = new Length(4, LengthUnit.Millimeters);
-	
-	@Element(required=false)
+    @Element(required=false)
     private Length partPitch = new Length(4, LengthUnit.Millimeters);
     
     @Element(required=false)
     private Length tapeWidth = new Length(8, LengthUnit.Millimeters);
     
+    // Standard or calculable parameters.
+    @Element(required=false)
+	private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
+	
+	@Element(required=false)
+	private Length holePitch = new Length(4, LengthUnit.Millimeters);
+	
     @Element(required=false)
     private Length holeToPartLinear = new Length(2, LengthUnit.Millimeters);
     
     @Element(required=false)
     private Length holeToPartLateral = new Length(8 / 2 - 0.5, LengthUnit.Millimeters);
-    
-    @Attribute
-    private int partCount;
     
     @Attribute
 	private int feedCount = 0;
@@ -210,14 +199,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void setHoleToPartLateral(Length holeToPartLateral) {
         this.holeToPartLateral = holeToPartLateral;
-    }
-
-    public int getPartCount() {
-        return partCount;
-    }
-
-    public void setPartCount(int partCount) {
-        this.partCount = partCount;
     }
 
     public int getFeedCount() {

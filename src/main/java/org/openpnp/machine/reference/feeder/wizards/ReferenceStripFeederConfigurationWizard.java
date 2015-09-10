@@ -42,6 +42,8 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.border.EtchedBorder;
+import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends
@@ -54,49 +56,22 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JTextField textFieldFeedEndX;
     private JTextField textFieldFeedEndY;
     private JTextField textFieldFeedEndZ;
-    private JTextField textFieldFeedRate;
-    private JLabel lblActuatorId;
-    private JTextField textFieldActuatorId;
-    private JPanel panelGeneral;
+    private JTextField textFieldTapeWidth;
+    private JLabel lblPartPitch;
+    private JTextField textFieldPartPitch;
+    private JPanel panelTapeSettings;
     private JPanel panelLocations;
     private LocationButtonsPanel locationButtonsPanelFeedStart;
     private LocationButtonsPanel locationButtonsPanelFeedEnd;
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
-        super(feeder);
+        super(feeder, false);
         this.feeder = feeder;
 
         JPanel panelFields = new JPanel();
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
-        panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General Settings",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-        panelFields.add(panelGeneral);
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
-
-        JLabel lblFeedRate = new JLabel("Feed Speed (0 - 1)");
-        panelGeneral.add(lblFeedRate, "2, 2");
-
-        textFieldFeedRate = new JTextField();
-        panelGeneral.add(textFieldFeedRate, "4, 2");
-        textFieldFeedRate.setColumns(5);
-
-        lblActuatorId = new JLabel("Actuator Name");
-        panelGeneral.add(lblActuatorId, "2, 4, right, default");
-
-        textFieldActuatorId = new JTextField();
-        panelGeneral.add(textFieldActuatorId, "4, 4");
-        textFieldActuatorId.setColumns(5);
+        contentPanel.add(panelFields);
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
@@ -171,7 +146,38 @@ public class ReferenceStripFeederConfigurationWizard extends
                 textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ, null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
 
-        contentPanel.add(panelFields);
+        panelTapeSettings = new JPanel();
+        panelTapeSettings.setBorder(new TitledBorder(new EtchedBorder(
+                EtchedBorder.LOWERED, null, null), "Tape Settings",
+                TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
+
+        panelFields.add(panelTapeSettings);
+        panelTapeSettings.setLayout(new FormLayout(
+                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC,
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC,
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC, }));
+
+        JLabel lblTapeWidth = new JLabel("Tape Width");
+        panelTapeSettings.add(lblTapeWidth, "2, 4");
+
+        textFieldTapeWidth = new JTextField();
+        panelTapeSettings.add(textFieldTapeWidth, "4, 4");
+        textFieldTapeWidth.setColumns(5);
+
+        lblPartPitch = new JLabel("Part Pitch");
+        panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
+
+        textFieldPartPitch = new JTextField();
+        panelTapeSettings.add(textFieldPartPitch, "4, 6");
+        textFieldPartPitch.setColumns(5);
     }
 
     @Override
@@ -179,12 +185,14 @@ public class ReferenceStripFeederConfigurationWizard extends
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration
+                .get().getLengthDisplayFormat());
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
 
-//        addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text",
-//                doubleConverter);
-//        addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
+        addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text",
+                lengthConverter);
+        addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text",
+                lengthConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation",
@@ -207,8 +215,9 @@ public class ReferenceStripFeederConfigurationWizard extends
                 "text", lengthConverter);
 
         ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
-        ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
+                .decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
+        ComponentDecorators
+                .decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators

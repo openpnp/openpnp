@@ -52,123 +52,142 @@ import com.jgoodies.forms.layout.RowSpec;
 /**
  * TODO: This should become it's own property sheet which the feeders can include.
  */
-public abstract class AbstractReferenceFeederConfigurationWizard extends AbstractConfigurationWizard {
+public abstract class AbstractReferenceFeederConfigurationWizard extends
+        AbstractConfigurationWizard {
     private final ReferenceFeeder feeder;
+    private final boolean includePickLocation;
 
-	private JPanel panelLocation;
-	private JLabel lblX_1;
-	private JLabel lblY_1;
-	private JLabel lblZ;
-	private JLabel lblRotation;
-	private JTextField textFieldLocationX;
-	private JTextField textFieldLocationY;
-	private JTextField textFieldLocationZ;
-	private JTextField textFieldLocationC;
-	private JPanel panelPart;
+    private JPanel panelLocation;
+    private JLabel lblX_1;
+    private JLabel lblY_1;
+    private JLabel lblZ;
+    private JLabel lblRotation;
+    private JTextField textFieldLocationX;
+    private JTextField textFieldLocationY;
+    private JTextField textFieldLocationZ;
+    private JTextField textFieldLocationC;
+    private JPanel panelPart;
 
-	private JComboBox comboBoxPart;
-	private LocationButtonsPanel locationButtonsPanel;
-	
+    private JComboBox comboBoxPart;
+    private LocationButtonsPanel locationButtonsPanel;
 
-	public AbstractReferenceFeederConfigurationWizard(ReferenceFeeder feeder) {
-		this.feeder = feeder;
+    public AbstractReferenceFeederConfigurationWizard(ReferenceFeeder feeder) {
+        this(feeder, true);
+    }
 
-		panelPart = new JPanel();
-		panelPart.setBorder(new TitledBorder(null, "Part",
-				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		contentPanel.add(panelPart);
-		panelPart
-				.setLayout(new FormLayout(new ColumnSpec[] {
-						FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"),
-						FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"), }, new RowSpec[] {
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC, }));
+    public AbstractReferenceFeederConfigurationWizard(ReferenceFeeder feeder,
+            boolean includePickLocation) {
+        this.feeder = feeder;
+        this.includePickLocation = includePickLocation;
 
-		comboBoxPart = new JComboBox();
-		try {
-		    comboBoxPart.setModel(new PartsComboBoxModel());
-		}
-		catch (Throwable t) {
-		    // Swallow this error. This happens during parsing in
-		    // in WindowBuilder but doesn't happen during normal run.
-		}
-		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-		panelPart.add(comboBoxPart, "2, 2, left, default");
+        panelPart = new JPanel();
+        panelPart.setBorder(new TitledBorder(null, "Part",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelPart);
+        panelPart
+                .setLayout(new FormLayout(new ColumnSpec[] {
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"),
+                        FormFactory.RELATED_GAP_COLSPEC,
+                        ColumnSpec.decode("default:grow"), }, new RowSpec[] {
+                        FormFactory.RELATED_GAP_ROWSPEC,
+                        FormFactory.DEFAULT_ROWSPEC, }));
 
-		panelLocation = new JPanel();
-		panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Pick Location", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPanel.add(panelLocation);
-		panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("left:default:grow"),},
-			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
+        comboBoxPart = new JComboBox();
+        try {
+            comboBoxPart.setModel(new PartsComboBoxModel());
+        }
+        catch (Throwable t) {
+            // Swallow this error. This happens during parsing in
+            // in WindowBuilder but doesn't happen during normal run.
+        }
+        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
+        panelPart.add(comboBoxPart, "2, 2, left, default");
 
-		lblX_1 = new JLabel("X");
-		panelLocation.add(lblX_1, "2, 2");
+        if (includePickLocation) {
+            panelLocation = new JPanel();
+            panelLocation.setBorder(new TitledBorder(new EtchedBorder(
+                    EtchedBorder.LOWERED, null, null), "Pick Location",
+                    TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0,
+                            0, 0)));
+            contentPanel.add(panelLocation);
+            panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    ColumnSpec.decode("default:grow"),
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    ColumnSpec.decode("default:grow"),
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    ColumnSpec.decode("default:grow"),
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    ColumnSpec.decode("default:grow"),
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    ColumnSpec.decode("left:default:grow"), }, new RowSpec[] {
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC, }));
 
-		lblY_1 = new JLabel("Y");
-		panelLocation.add(lblY_1, "4, 2");
+            lblX_1 = new JLabel("X");
+            panelLocation.add(lblX_1, "2, 2");
 
-		lblZ = new JLabel("Z");
-		panelLocation.add(lblZ, "6, 2");
+            lblY_1 = new JLabel("Y");
+            panelLocation.add(lblY_1, "4, 2");
 
-		lblRotation = new JLabel("Rotation");
-		panelLocation.add(lblRotation, "8, 2");
+            lblZ = new JLabel("Z");
+            panelLocation.add(lblZ, "6, 2");
 
-		textFieldLocationX = new JTextField();
-		panelLocation.add(textFieldLocationX, "2, 4");
-		textFieldLocationX.setColumns(8);
+            lblRotation = new JLabel("Rotation");
+            panelLocation.add(lblRotation, "8, 2");
 
-		textFieldLocationY = new JTextField();
-		panelLocation.add(textFieldLocationY, "4, 4");
-		textFieldLocationY.setColumns(8);
+            textFieldLocationX = new JTextField();
+            panelLocation.add(textFieldLocationX, "2, 4");
+            textFieldLocationX.setColumns(8);
 
-		textFieldLocationZ = new JTextField();
-		panelLocation.add(textFieldLocationZ, "6, 4");
-		textFieldLocationZ.setColumns(8);
+            textFieldLocationY = new JTextField();
+            panelLocation.add(textFieldLocationY, "4, 4");
+            textFieldLocationY.setColumns(8);
 
-		textFieldLocationC = new JTextField();
-		panelLocation.add(textFieldLocationC, "8, 4");
-		textFieldLocationC.setColumns(8);
-		
-		locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, textFieldLocationZ, textFieldLocationC);
-		panelLocation.add(locationButtonsPanel, "10, 4");
-	}
+            textFieldLocationZ = new JTextField();
+            panelLocation.add(textFieldLocationZ, "6, 4");
+            textFieldLocationZ.setColumns(8);
 
-	@Override
-	public void createBindings() {
-		LengthConverter lengthConverter = new LengthConverter();
-		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-		
-        MutableLocationProxy location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
-        addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
-        addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-        addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
-        addWrappedBinding(location, "rotation", textFieldLocationC, "text", doubleConverter);
-        
-		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+            textFieldLocationC = new JTextField();
+            panelLocation.add(textFieldLocationC, "8, 4");
+            textFieldLocationC.setColumns(8);
 
-		ComponentDecorators
-				.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
-		ComponentDecorators
-				.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
-		ComponentDecorators
-				.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
-		ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
-	}
+            locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
+                    textFieldLocationY, textFieldLocationZ, textFieldLocationC);
+            panelLocation.add(locationButtonsPanel, "10, 4");
+        }
+    }
+
+    @Override
+    public void createBindings() {
+        LengthConverter lengthConverter = new LengthConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration
+                .get().getLengthDisplayFormat());
+
+        addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+
+        if (includePickLocation) {
+            MutableLocationProxy location = new MutableLocationProxy();
+            bind(UpdateStrategy.READ_WRITE, feeder, "location", location,
+                    "location");
+            addWrappedBinding(location, "lengthX", textFieldLocationX, "text",
+                    lengthConverter);
+            addWrappedBinding(location, "lengthY", textFieldLocationY, "text",
+                    lengthConverter);
+            addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text",
+                    lengthConverter);
+            addWrappedBinding(location, "rotation", textFieldLocationC, "text",
+                    doubleConverter);
+            ComponentDecorators
+                    .decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
+            ComponentDecorators
+                    .decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
+            ComponentDecorators
+                    .decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
+            ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
+        }
+    }
 }
