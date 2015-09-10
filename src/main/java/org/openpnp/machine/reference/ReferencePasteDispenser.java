@@ -54,7 +54,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
     public void dispense(Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception {
 		logger.debug("{}.dispense()", getName());
 		Thread.sleep(dispenseTimeMilliseconds);
-//		driver.dispense(this);
+		driver.dispense(this, startLocation, endLocation, dispenseTimeMilliseconds);
         machine.fireMachineHeadActivity(head);
     }
 
