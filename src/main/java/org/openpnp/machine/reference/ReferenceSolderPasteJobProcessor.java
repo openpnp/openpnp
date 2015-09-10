@@ -96,7 +96,11 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
                     return;
                 }
                 try {
-                    dispenser.dispense(null, null, 100);
+                    // TODO: The startLocation, endLocation and time will
+                    // eventually come from an algorithm that uses the Pad's
+                    // physical properties, but until we have that we just
+                    // send junk data and let the driver interpret it.
+                    dispenser.dispense(null, null, 0);
                 }
                 catch (Exception e) {
                     fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
