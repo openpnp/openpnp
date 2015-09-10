@@ -119,4 +119,6 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      * @throws Exception
      */
     public void setEnabled(boolean enabled) throws Exception;
+    
+    public void dispense(ReferencePasteDispenser dispenser, Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception;
 }
