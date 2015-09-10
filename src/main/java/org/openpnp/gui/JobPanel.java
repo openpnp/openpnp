@@ -81,13 +81,13 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.JobError;
 import org.openpnp.spi.JobProcessor.JobState;
 import org.openpnp.spi.JobProcessor.PickRetryAction;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,13 +276,8 @@ public class JobPanel extends JPanel {
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 Machine machine = Configuration.get().getMachine();
-                String activeTabTitle = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
-                if (activeTabTitle.equals("Solder Paste")) {
-                    setJobProcessor(machine.getJobProcessors().get(JobProcessor.Type.SolderPaste));
-                }
-                if (activeTabTitle.equals("Pick and Place")) {
-                    setJobProcessor(machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace));
-                }
+                JobProcessor.Type type = getSelectedJobProcessorType();
+                setJobProcessor(machine.getJobProcessors().get(type));
             }
         });        
 
@@ -320,6 +315,36 @@ public class JobPanel extends JPanel {
                 }
             }
         });
+    }
+    
+    private JobProcessor.Type getSelectedJobProcessorType() {
+        String activeTabTitle = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+        if (activeTabTitle.equals("Solder Paste")) {
+            return JobProcessor.Type.SolderPaste;
+        }
+        else if (activeTabTitle.equals("Pick and Place")) {
+            return JobProcessor.Type.PickAndPlace;
+        }
+        else {
+            throw new Error("Unknown job tab title: " + activeTabTitle);
+        }
+    }
+    
+    /**
+     * Returns the selected Nozzle or PasteDispenser depending on which type
+     * of Job is selected.
+     * @return
+     */
+    private HeadMountable getSelectedTool() {
+        if (getSelectedJobProcessorType() == JobProcessor.Type.PickAndPlace) {
+            return MainFrame.machineControlsPanel.getSelectedNozzle();
+        }
+        else if (getSelectedJobProcessorType() == JobProcessor.Type.SolderPaste) {
+            return MainFrame.machineControlsPanel.getSelectedPasteDispenser();
+        }
+        else {
+            throw new Error("Unknown tool type: " + getSelectedJobProcessorType());
+        }
     }
     
     /**
@@ -899,8 +924,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            getSelectedBoardLocation().setLocation(
-                    machineControlsPanel.getSelectedNozzle().getLocation());
+            getSelectedBoardLocation().setLocation(getSelectedTool().getLocation());
             boardLocationsTableModel.fireTableRowsUpdated(
                     boardLocationsTable.getSelectedRow(),
                     boardLocationsTable.getSelectedRow());
@@ -950,17 +974,17 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                final Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                final Location location = getSelectedBoardLocation()
-                        .getLocation();
+            final HeadMountable tool = getSelectedTool();
+            final Location location = getSelectedBoardLocation()
+                    .getLocation();
 
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
                 public void run() {
                     try {
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, location,
-                                1.0);
+                        MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
                     }
                     catch (Exception e) {
+                        e.printStackTrace();
                         MessageBoxes.errorBox(getTopLevelAncestor(),
                                 "Move Error", e);
                     }

@@ -34,6 +34,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 
@@ -261,19 +262,17 @@ public class JobPastePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // TODO: Probably wrong
             Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
                             .getSide(), getSelectedPad().getLocation());
 
-            final Nozzle nozzle = MainFrame.machineControlsPanel
-                    .getSelectedNozzle();
+            final PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
             final Location location = padLocation;
             MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
                 public void run() {
                     try {
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, location,
+                        MovableUtils.moveToLocationAtSafeZ(dispenser, location,
                                 1.0);
                     }
                     catch (Exception e) {
