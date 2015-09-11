@@ -63,6 +63,9 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JPanel panelLocations;
     private LocationButtonsPanel locationButtonsPanelFeedStart;
     private LocationButtonsPanel locationButtonsPanelFeedEnd;
+    private JPanel panelGeneralSettings;
+    private JLabel lblFeedCount;
+    private JTextField textFieldFeedCount;
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         super(feeder, false);
@@ -79,72 +82,71 @@ public class ReferenceStripFeederConfigurationWizard extends
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelLocations
                 .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("left:default:grow"), },
-                        new RowSpec[] { FormFactory.RELATED_GAP_ROWSPEC,
-                                FormFactory.DEFAULT_ROWSPEC,
-                                FormFactory.RELATED_GAP_ROWSPEC,
-                                FormFactory.DEFAULT_ROWSPEC,
-                                FormFactory.RELATED_GAP_ROWSPEC,
-                                FormFactory.DEFAULT_ROWSPEC,
-                                FormFactory.RELATED_GAP_ROWSPEC,
-                                FormFactory.DEFAULT_ROWSPEC, }));
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default:grow"),},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
-        panelLocations.add(lblX, "4, 4");
+        panelLocations.add(lblX, "4, 2");
 
         JLabel lblY = new JLabel("Y");
-        panelLocations.add(lblY, "6, 4");
+        panelLocations.add(lblY, "6, 2");
 
         JLabel lblZ = new JLabel("Z");
-        panelLocations.add(lblZ, "8, 4");
+        panelLocations.add(lblZ, "8, 2");
 
         JLabel lblFeedStartLocation = new JLabel("Reference Hole Location");
-        panelLocations.add(lblFeedStartLocation, "2, 6, right, default");
+        panelLocations.add(lblFeedStartLocation, "2, 4, right, default");
 
         textFieldFeedStartX = new JTextField();
-        panelLocations.add(textFieldFeedStartX, "4, 6");
+        panelLocations.add(textFieldFeedStartX, "4, 4");
         textFieldFeedStartX.setColumns(8);
 
         textFieldFeedStartY = new JTextField();
-        panelLocations.add(textFieldFeedStartY, "6, 6");
+        panelLocations.add(textFieldFeedStartY, "6, 4");
         textFieldFeedStartY.setColumns(8);
 
         textFieldFeedStartZ = new JTextField();
-        panelLocations.add(textFieldFeedStartZ, "8, 6");
+        panelLocations.add(textFieldFeedStartZ, "8, 4");
         textFieldFeedStartZ.setColumns(8);
 
         locationButtonsPanelFeedStart = new LocationButtonsPanel(
                 textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ,
                 null);
-        panelLocations.add(locationButtonsPanelFeedStart, "10, 6");
+        panelLocations.add(locationButtonsPanelFeedStart, "10, 4");
 
         JLabel lblFeedEndLocation = new JLabel("Last Hole Location");
-        panelLocations.add(lblFeedEndLocation, "2, 8, right, default");
+        panelLocations.add(lblFeedEndLocation, "2, 6, right, default");
 
         textFieldFeedEndX = new JTextField();
-        panelLocations.add(textFieldFeedEndX, "4, 8");
+        panelLocations.add(textFieldFeedEndX, "4, 6");
         textFieldFeedEndX.setColumns(8);
 
         textFieldFeedEndY = new JTextField();
-        panelLocations.add(textFieldFeedEndY, "6, 8");
+        panelLocations.add(textFieldFeedEndY, "6, 6");
         textFieldFeedEndY.setColumns(8);
 
         textFieldFeedEndZ = new JTextField();
-        panelLocations.add(textFieldFeedEndZ, "8, 8");
+        panelLocations.add(textFieldFeedEndZ, "8, 6");
         textFieldFeedEndZ.setColumns(8);
 
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(
                 textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ, null);
-        panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
+        panelLocations.add(locationButtonsPanelFeedEnd, "10, 6");
 
         panelTapeSettings = new JPanel();
         panelTapeSettings.setBorder(new TitledBorder(new EtchedBorder(
@@ -153,31 +155,49 @@ public class ReferenceStripFeederConfigurationWizard extends
                 new Color(0, 0, 0)));
 
         panelFields.add(panelTapeSettings);
-        panelTapeSettings.setLayout(new FormLayout(
-                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
+        panelTapeSettings.setLayout(new FormLayout(new ColumnSpec[] {
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
 
         JLabel lblTapeWidth = new JLabel("Tape Width");
-        panelTapeSettings.add(lblTapeWidth, "2, 4");
+        panelTapeSettings.add(lblTapeWidth, "2, 2");
 
         textFieldTapeWidth = new JTextField();
-        panelTapeSettings.add(textFieldTapeWidth, "4, 4");
+        panelTapeSettings.add(textFieldTapeWidth, "4, 2");
         textFieldTapeWidth.setColumns(5);
 
         lblPartPitch = new JLabel("Part Pitch");
-        panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
+        panelTapeSettings.add(lblPartPitch, "2, 4, right, default");
 
         textFieldPartPitch = new JTextField();
-        panelTapeSettings.add(textFieldPartPitch, "4, 6");
+        panelTapeSettings.add(textFieldPartPitch, "4, 4");
         textFieldPartPitch.setColumns(5);
+        
+        panelGeneralSettings = new JPanel();
+        panelGeneralSettings.setBorder(new TitledBorder(null, "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelFields.add(panelGeneralSettings);
+        panelGeneralSettings.setLayout(new FormLayout(new ColumnSpec[] {
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
+        
+        lblFeedCount = new JLabel("Feed Count");
+        panelGeneralSettings.add(lblFeedCount, "2, 2, right, default");
+        
+        textFieldFeedCount = new JTextField();
+        panelGeneralSettings.add(textFieldFeedCount, "4, 2, fill, default");
+        textFieldFeedCount.setColumns(10);
     }
 
     @Override
@@ -193,6 +213,8 @@ public class ReferenceStripFeederConfigurationWizard extends
                 lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text",
                 lengthConverter);
+        addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text",
+                intConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation",
@@ -218,6 +240,8 @@ public class ReferenceStripFeederConfigurationWizard extends
                 .decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
+        ComponentDecorators
+                .decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
         ComponentDecorators

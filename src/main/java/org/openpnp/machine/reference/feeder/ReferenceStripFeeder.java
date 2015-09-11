@@ -24,6 +24,7 @@ package org.openpnp.machine.reference.feeder;
 
 
 import javax.swing.Action;
+import javax.vecmath.Vector2d;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -58,8 +59,6 @@ import org.slf4j.LoggerFactory;
 public class ReferenceStripFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
 	
-    // The next four parameters are the critical parameters. The rest should
-	// typically be calculable or are just standard.
 	@Element(required=false)
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
@@ -71,25 +70,21 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     
     @Element(required=false)
     private Length tapeWidth = new Length(8, LengthUnit.Millimeters);
+
+    private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
     
-    // Standard or calculable parameters.
-    @Element(required=false)
-	private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
-	
-	@Element(required=false)
-	private Length holePitch = new Length(4, LengthUnit.Millimeters);
-	
-    @Element(required=false)
-    private Length holeToPartLinear = new Length(2, LengthUnit.Millimeters);
+    private Length holePitch = new Length(4, LengthUnit.Millimeters);
     
-    @Element(required=false)
-    private Length holeToPartLateral = new Length(8 / 2 - 0.5, LengthUnit.Millimeters);
+    private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
     
     @Attribute
 	private int feedCount = 0;
+    
+    private Length getHoleToPartLateral() {
+        Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
+        return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
+    }
 	
-	private Location pickLocation;
-
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
 //		boolean result = feedCount < partCount;
@@ -98,43 +93,33 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    return true;
 	}
 	
+    static public Location linearInterpolation(Location a, Location b, Length distance) {
+//        b = b.convertToUnits(a.getUnits());
+//        distance = distance.convertToUnits(a.getUnits());
+//        Location vAb = b.subtract(a);
+//        double vAbLen = b.getLinearDistanceTo(a);
+//        Location uVab = vAb.derive(vAb.getX() / vAbLen, vAb.getY() / vAbLen, null, null);
+//        Location vT = uVab.multiply(distance.getValue(), distance.getValue(), 1, 1);
+//        return vT;
+        
+          Vector2d vab = new Vector2d(b.getX() - a.getX(), b.getY() - a.getY());
+          double lab = vab.length();
+          Vector2d vu = new Vector2d(vab.x / lab, vab.y / lab);
+          vu.scale(distance.getValue());
+          return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
+    }
+    
 	@Override
     public Location getPickLocation() throws Exception {
-	    if (pickLocation == null) {
-	        pickLocation = location;
-	    }
-		logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-		return pickLocation;
+	    return linearInterpolation(
+	            referenceHoleLocation, 
+	            lastHoleLocation, 
+	            new Length(feedCount * partPitch.getValue(), partPitch.getUnits()));
     }
 
     public void feed(Nozzle nozzle)
 			throws Exception {
-//		logger.debug("{}.feed({})", getName(), nozzle);
-//		int partX, partY;
-//        
-//        if (trayCountX >= trayCountY) {
-//            // X major axis.
-//            partX = feedCount / trayCountY;
-//            partY = feedCount % trayCountY;
-//        }
-//        else {
-//            // Y major axis.
-//            partX = feedCount % trayCountX;
-//            partY = feedCount / trayCountX;
-//        }
-//        
-//        // Multiply the offsets by the X/Y part indexes to get the total offsets
-//        // and then add the pickLocation to offset the final value.
-//        // and then add them to the location to get the final pickLocation.
-//        pickLocation = location.add(
-//                offsets.multiply(partX, partY, 0.0, 0.0));
-//
-//        logger.debug(String.format(
-//                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
-//                partX, partY, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
-//        
-//        feedCount++;
-        throw new Exception("Not yet implements");
+        feedCount++;
 	}
     
 	public Location getReferenceHoleLocation() {
@@ -185,28 +170,20 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         this.tapeWidth = tapeWidth;
     }
 
-    public Length getHoleToPartLinear() {
-        return holeToPartLinear;
-    }
-
-    public void setHoleToPartLinear(Length holeToPartLinear) {
-        this.holeToPartLinear = holeToPartLinear;
-    }
-
-    public Length getHoleToPartLateral() {
-        return holeToPartLateral;
-    }
-
-    public void setHoleToPartLateral(Length holeToPartLateral) {
-        this.holeToPartLateral = holeToPartLateral;
-    }
-
     public int getFeedCount() {
         return feedCount;
     }
 
     public void setFeedCount(int feedCount) {
         this.feedCount = feedCount;
+    }
+    
+    public Length getReferenceHoleToPartLinear() {
+        return referenceHoleToPartLinear;
+    }
+
+    public void setReferenceHoleToPartLinear(Length referenceHoleToPartLinear) {
+        this.referenceHoleToPartLinear = referenceHoleToPartLinear;
     }
 
     @Override
