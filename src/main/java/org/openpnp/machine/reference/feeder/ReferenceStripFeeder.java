@@ -33,8 +33,10 @@ import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigur
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -87,21 +89,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
-//		boolean result = feedCount < partCount;
-//		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getName(), nozzle, result});
-//		return result;
+	    // TODO: feedCount has to be less than |ref,last| / partPitch
 	    return true;
 	}
 	
-    static public Location linearInterpolation(Location a, Location b, Length distance) {
-//        b = b.convertToUnits(a.getUnits());
-//        distance = distance.convertToUnits(a.getUnits());
-//        Location vAb = b.subtract(a);
-//        double vAbLen = b.getLinearDistanceTo(a);
-//        Location uVab = vAb.derive(vAb.getX() / vAbLen, vAb.getY() / vAbLen, null, null);
-//        Location vT = uVab.multiply(distance.getValue(), distance.getValue(), 1, 1);
-//        return vT;
-        
+    static public Location getPointAlongLine(Location a, Location b, Length distance) {
           Vector2d vab = new Vector2d(b.getX() - a.getX(), b.getY() - a.getY());
           double lab = vab.length();
           Vector2d vu = new Vector2d(vab.x / lab, vab.y / lab);
@@ -111,12 +103,37 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     
 	@Override
     public Location getPickLocation() throws Exception {
-	    return linearInterpolation(
-	            referenceHoleLocation, 
-	            lastHoleLocation, 
-	            new Length(feedCount * partPitch.getValue(), partPitch.getUnits()));
+	    Location l = getPointAlongLine(
+                referenceHoleLocation, 
+                lastHoleLocation, 
+                new Length(feedCount * partPitch.getValue(), partPitch.getUnits()));
+	    Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
+	    Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
+        Point p = new Point(x.getValue(), y.getValue());
+        double angle = getAngleFromPoint(lastHoleLocation, referenceHoleLocation);
+        p = Utils2D.rotatePoint(p, angle);
+        l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
+        l = l.derive(null, null, null, angle);
+        return l;
     }
+	
+	public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
 
+	    if((secondPoint.getX() > firstPoint.getX())) {//above 0 to 180 degrees
+
+	        return (Math.atan2((secondPoint.getX() - firstPoint.getX()), (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+
+	    }
+	    else if((secondPoint.getX() < firstPoint.getX())) {//above 180 degrees to 360/0
+
+	        return 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()), (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+
+	    }//End if((secondPoint.x > firstPoint.x) && (secondPoint.y <= firstPoint.y))
+
+	    return Math.atan2(0 ,0);
+
+	}//End public float getAngleFromPoint(Point firstPoint, Point secondPoint)
+	
     public void feed(Nozzle nozzle)
 			throws Exception {
         feedCount++;

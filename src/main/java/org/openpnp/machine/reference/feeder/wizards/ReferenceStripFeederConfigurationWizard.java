@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,8 +43,13 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+
 import javax.swing.border.EtchedBorder;
+
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+
+import javax.swing.JButton;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends
@@ -66,6 +72,7 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JPanel panelGeneralSettings;
     private JLabel lblFeedCount;
     private JTextField textFieldFeedCount;
+    private JButton btnResetFeedCount;
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         super(feeder, false);
@@ -187,6 +194,8 @@ public class ReferenceStripFeederConfigurationWizard extends
                 FormFactory.RELATED_GAP_COLSPEC,
                 FormFactory.DEFAULT_COLSPEC,
                 FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
                 FormFactory.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormFactory.RELATED_GAP_ROWSPEC,
@@ -198,6 +207,15 @@ public class ReferenceStripFeederConfigurationWizard extends
         textFieldFeedCount = new JTextField();
         panelGeneralSettings.add(textFieldFeedCount, "4, 2, fill, default");
         textFieldFeedCount.setColumns(10);
+        
+        btnResetFeedCount = new JButton(new AbstractAction("Reset") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                textFieldFeedCount.setText("0");
+                applyAction.actionPerformed(e);
+            }
+        });
+        panelGeneralSettings.add(btnResetFeedCount, "6, 2");
     }
 
     @Override
