@@ -53,13 +53,29 @@ import org.slf4j.LoggerFactory;
  * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/
  * holes 1.5mm
  * hole pitch 4mm
- * reference hole to part is 2mm
+ * first part center to reference hole linear is 2mm
  * tape width is multiple of 4mm
  * part pitch is multiple of 4mm except for 0402 and smaller, where it is 2mm 
- * hole to part is tape width / 2 - 0.5mm 
+ * hole to part lateral is tape width / 2 - 0.5mm 
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
+	
+	public enum TapeType {
+	    WhitePaper("White Paper"),
+	    BlackPlastic("Black Plastic"),
+	    ClearPlastic("Clear Plastic");
+	    
+	    private String name;
+	    
+	    TapeType(String name) {
+	        this.name = name;
+	    }
+	    
+	    public String toString() {
+	        return name;
+	    }
+	}
 	
 	@Element(required=false)
     private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
@@ -72,6 +88,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     
     @Element(required=false)
     private Length tapeWidth = new Length(8, LengthUnit.Millimeters);
+    
+    @Attribute(required=false)
+    private TapeType tapeType = TapeType.WhitePaper;
 
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
     
@@ -89,57 +108,63 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
-	    // TODO: feedCount has to be less than |ref,last| / partPitch
 	    return true;
 	}
 	
-    static public Location getPointAlongLine(Location a, Location b, Length distance) {
-          Vector2d vab = new Vector2d(b.getX() - a.getX(), b.getY() - a.getY());
-          double lab = vab.length();
-          Vector2d vu = new Vector2d(vab.x / lab, vab.y / lab);
-          vu.scale(distance.getValue());
-          return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
-    }
-    
 	@Override
     public Location getPickLocation() throws Exception {
 	    Location l = getPointAlongLine(
                 referenceHoleLocation, 
                 lastHoleLocation, 
-                new Length(feedCount * partPitch.getValue(), partPitch.getUnits()));
+                new Length((feedCount - 1) * partPitch.getValue(), partPitch.getUnits()));
 	    Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
 	    Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
-        double angle = getAngleFromPoint(lastHoleLocation, referenceHoleLocation);
+        double angle = getAngleFromPoint(referenceHoleLocation, lastHoleLocation);
         p = Utils2D.rotatePoint(p, angle);
         l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
         l = l.derive(null, null, null, angle);
         return l;
     }
 	
-	public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
-
-	    if((secondPoint.getX() > firstPoint.getX())) {//above 0 to 180 degrees
-
-	        return (Math.atan2((secondPoint.getX() - firstPoint.getX()), (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-
-	    }
-	    else if((secondPoint.getX() < firstPoint.getX())) {//above 180 degrees to 360/0
-
-	        return 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()), (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-
-	    }//End if((secondPoint.x > firstPoint.x) && (secondPoint.y <= firstPoint.y))
-
-	    return Math.atan2(0 ,0);
-
-	}//End public float getAngleFromPoint(Point firstPoint, Point secondPoint)
+    static public Location getPointAlongLine(Location a, Location b, Length distance) {
+        Vector2d vab = new Vector2d(b.getX() - a.getX(), b.getY() - a.getY());
+        double lab = vab.length();
+        Vector2d vu = new Vector2d(vab.x / lab, vab.y / lab);
+        vu.scale(distance.getValue());
+        return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
+    }
+  
+    // Stolen from StackOverflow
+    static public double getAngleFromPoint(Location firstPoint,
+            Location secondPoint) {
+        // above 0 to 180 degrees
+        if ((secondPoint.getX() > firstPoint.getX())) {
+            return (Math.atan2((secondPoint.getX() - firstPoint.getX()),
+                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+        }
+        // above 180 degrees to 360/0
+        else if ((secondPoint.getX() < firstPoint.getX())) {
+            return 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
+                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+        }
+        return Math.atan2(0, 0);
+    }
 	
     public void feed(Nozzle nozzle)
 			throws Exception {
         feedCount++;
 	}
     
-	public Location getReferenceHoleLocation() {
+	public TapeType getTapeType() {
+        return tapeType;
+    }
+
+    public void setTapeType(TapeType tapeType) {
+        this.tapeType = tapeType;
+    }
+
+    public Location getReferenceHoleLocation() {
         return referenceHoleLocation;
     }
 
