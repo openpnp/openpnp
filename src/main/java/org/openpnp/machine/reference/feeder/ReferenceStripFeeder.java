@@ -24,7 +24,6 @@ package org.openpnp.machine.reference.feeder;
 
 
 import javax.swing.Action;
-import javax.vecmath.Vector2d;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -128,10 +127,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 	
     static public Location getPointAlongLine(Location a, Location b, Length distance) {
-        Vector2d vab = new Vector2d(b.getX() - a.getX(), b.getY() - a.getY());
-        double lab = vab.length();
-        Vector2d vu = new Vector2d(vab.x / lab, vab.y / lab);
-        vu.scale(distance.getValue());
+        Point vab = b.subtract(a).getXyPoint();
+        double lab = a.getLinearDistanceTo(b);
+        Point vu = new Point(vab.x / lab, vab.y / lab);
+        vu = new Point(vu.x * distance.getValue(), vu.y * distance.getValue());
         return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
     }
   
