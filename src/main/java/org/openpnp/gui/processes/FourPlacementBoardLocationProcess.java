@@ -121,7 +121,7 @@ public class FourPlacementBoardLocationProcess {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
-		placementA = jobPanel.getSelectedPlacement();
+		placementA = jobPanel.getJobPlacementsPanel().getSelection();
 		if (placementA == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please select a placement.");
 			return false;
@@ -137,7 +137,7 @@ public class FourPlacementBoardLocationProcess {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
-		placementB = jobPanel.getSelectedPlacement();
+		placementB = jobPanel.getJobPlacementsPanel().getSelection();
 		if (placementB == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please select a placement.");
 			return false;
@@ -152,7 +152,7 @@ public class FourPlacementBoardLocationProcess {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
-		placementC = jobPanel.getSelectedPlacement();
+		placementC = jobPanel.getJobPlacementsPanel().getSelection();
 		if (placementC == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please select a placement.");
 			return false;
@@ -166,7 +166,7 @@ public class FourPlacementBoardLocationProcess {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
-		placementD = jobPanel.getSelectedPlacement();
+		placementD = jobPanel.getJobPlacementsPanel().getSelection();
 		if (placementD == null || placementD == placementC) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please select a second placement.");
 			return false;

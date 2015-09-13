@@ -47,6 +47,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.PasteDispenser;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left,
@@ -59,7 +60,8 @@ public class JogControlsPanel extends JPanel {
 	private final MachineControlsPanel machineControlsPanel;
 	private final Frame frame;
 	private final Configuration configuration;
-	private JPanel panelActuators;
+    private JPanel panelActuators;
+    private JPanel panelDispensers;
 
 	/**
 	 * Create the panel.
@@ -254,15 +256,20 @@ public class JogControlsPanel extends JPanel {
 		FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
 		fl_panelActuators.setAlignment(FlowLayout.LEFT);
 
-		JButton btnNewButton = new JButton(machineControlsPanel.homeAction);
-		btnNewButton.setFocusable(false);
-		panelSpecial.add(btnNewButton);
+		JButton btnHome = new JButton(machineControlsPanel.homeAction);
+		btnHome.setFocusable(false);
+		panelSpecial.add(btnHome);
 		
 		JButton btnPick = new JButton(pickAction);
 		panelSpecial.add(btnPick);
 		
 		JButton btnPlace = new JButton(placeAction);
 		panelSpecial.add(btnPlace);
+		
+		panelDispensers = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
+		flowLayout.setAlignment(FlowLayout.LEFT);
+		tabbedPane.addTab("Paste Dispensers", null, panelDispensers, null);
 	}
 
 	@SuppressWarnings("serial")
@@ -374,35 +381,59 @@ public class JogControlsPanel extends JPanel {
 
 			Machine machine = Configuration.get().getMachine();
 			
-			for (Head head : machine.getHeads()) {
-			    final Head head_f = head;
-	            for (Actuator actuator : head.getActuators()) {
-	                final Actuator actuator_f = actuator;
-	                final JToggleButton actuatorButton = new JToggleButton(
-	                        head_f.getName() + ":" + actuator_f.getName());
-	                actuatorButton.setFocusable(false);
-	                actuatorButton.addActionListener(new ActionListener() {
-	                    @Override
-	                    public void actionPerformed(ActionEvent e) {
-	                        final boolean state = actuatorButton.isSelected();
-	                        machineControlsPanel.submitMachineTask(
-	                                new Runnable() {
-	                                    @Override
-	                                    public void run() {
-	                                        try {
-	                                            actuator_f.actuate(state);
-	                                        }
-	                                        catch (Exception e) {
-	                                            MessageBoxes.errorBox(frame,
-	                                                    "Actuator Command Failed",
-	                                                    e.getMessage());
-	                                        }
-	                                    }
-	                                });
-	                    }
-	                });
-	                panelActuators.add(actuatorButton);
-	            }
+			for (final Head head : machine.getHeads()) {
+                for (Actuator actuator : head.getActuators()) {
+                    final Actuator actuator_f = actuator;
+                    final JToggleButton actuatorButton = new JToggleButton(
+                            head.getName() + ":" + actuator_f.getName());
+                    actuatorButton.setFocusable(false);
+                    actuatorButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            final boolean state = actuatorButton.isSelected();
+                            machineControlsPanel.submitMachineTask(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                actuator_f.actuate(state);
+                                            }
+                                            catch (Exception e) {
+                                                MessageBoxes.errorBox(frame,
+                                                        "Actuator Command Failed",
+                                                        e.getMessage());
+                                            }
+                                        }
+                                    });
+                        }
+                    });
+                    panelActuators.add(actuatorButton);
+                }
+                for (final PasteDispenser dispenser : head.getPasteDispensers()) {
+                    final JButton dispenserButton = new JButton(
+                            head.getName() + ":" + dispenser.getName());
+                    dispenserButton.setFocusable(false);
+                    dispenserButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            machineControlsPanel.submitMachineTask(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                dispenser.dispense(null, null, 250);
+                                            }
+                                            catch (Exception e) {
+                                                MessageBoxes.errorBox(frame,
+                                                        "Dispenser Command Failed",
+                                                        e.getMessage());
+                                            }
+                                        }
+                                    });
+                        }
+                    });
+                    panelDispensers.add(dispenserButton);
+                }
 			}
 
 			setEnabled(machineControlsPanel.isEnabled());

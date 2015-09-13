@@ -12,6 +12,8 @@ import jssc.SerialPortList;
 import jssc.SerialPortTimeoutException;
 
 import org.openpnp.machine.reference.ReferenceDriver;
+import org.openpnp.machine.reference.ReferencePasteDispenser;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,14 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
         }
     }
     
+    @Override
+    public void dispense(ReferencePasteDispenser dispenser,
+            Location startLocation, Location endLocation,
+            long dispenseTimeMilliseconds) throws Exception {
+        // Do nothing. This is just stubbed in so that it can be released
+        // without breaking every driver in the wild.
+    }
+
     public String[] getPortNames() {
         return SerialPortList.getPortNames();
     }

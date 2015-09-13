@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Action;
 
@@ -42,6 +43,8 @@ import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.JobProcessor;
+import org.openpnp.spi.JobProcessor.Type;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -120,7 +123,7 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
         children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
-        children.add(new SimplePropertySheetHolder("Job Processor", Collections.singletonList(getJobProcessor())));
+        children.add(new SimplePropertySheetHolder("Job Processors", new ArrayList<JobProcessor>(jobProcessors.values())));
         return children.toArray(new PropertySheetHolder[]{});
     }
     

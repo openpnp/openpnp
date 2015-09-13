@@ -28,6 +28,11 @@ public interface JobProcessor extends WizardConfigurable, PropertySheetHolder {
         SkipAndContinue,
     }
     
+    public enum Type {
+        PickAndPlace,
+        SolderPaste
+    }
+    
     public abstract void setDelegate(JobProcessorDelegate delegate);
 
     public abstract void addListener(JobProcessorListener listener);

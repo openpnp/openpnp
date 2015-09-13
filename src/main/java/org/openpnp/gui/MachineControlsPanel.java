@@ -67,6 +67,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -140,10 +141,21 @@ public class MachineControlsPanel extends JPanel {
 	    updateDros();
 	}
 	
-	public Nozzle getSelectedNozzle() {
-	    return selectedNozzle;
-	}
-	
+    public Nozzle getSelectedNozzle() {
+        return selectedNozzle;
+    }
+    
+    public PasteDispenser getSelectedPasteDispenser() {
+        try {
+            // TODO: We don't actually have a way to select a dispenser yet, so
+            // until we do we just return the first one.
+            return Configuration.get().getMachine().getHeads().get(0).getPasteDispensers().get(0);
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+    
 	public JogControlsPanel getJogControlsPanel() {
 		return jogControlsPanel;
 	}
