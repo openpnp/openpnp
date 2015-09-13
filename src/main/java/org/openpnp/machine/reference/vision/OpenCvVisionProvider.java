@@ -290,11 +290,19 @@ public class OpenCvVisionProvider implements VisionProvider {
         nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN), 1.0);
         // Grab an image.
         BufferedImage image = camera.capture();
-        // Return to Safe-Z just to be safe.
-        nozzle.moveToSafeZ(1.0);
         // TODO: Do OpenCV magic
         // Return the offsets. Make sure to convert them to real units instead
         // of pixels. Use camera.getUnitsPerPixel().
+        
+        Thread.sleep(1000);
+
+        // rotate the nozzle to simulate the part being oriented
+        nozzle.moveTo(nozzle.getLocation().derive(null, null, null, 45.0), 1.0);
+        
+        Thread.sleep(1000);
+        
+        // Return to Safe-Z just to be safe.
+        nozzle.moveToSafeZ(1.0);
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     } 
     
