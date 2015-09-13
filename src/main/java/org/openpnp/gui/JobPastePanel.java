@@ -20,7 +20,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -32,8 +31,8 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
@@ -42,33 +41,37 @@ public class JobPastePanel extends JPanel {
     private JTable table;
     private PadsTableModel tableModel;
     private ActionGroup boardLocationSelectionActionGroup;
-    private ActionGroup padSelectionActionGroup;
-    private ActionGroup padCaptureAndPositionActionGroup;
+    private ActionGroup singleSelectionActionGroup;
+    private ActionGroup multiSelectionActionGroup;
+    private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
 
     public JobPastePanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
         
-        boardLocationSelectionActionGroup = new ActionGroup(newPadAction);
+        boardLocationSelectionActionGroup = new ActionGroup(newAction);
         boardLocationSelectionActionGroup.setEnabled(false);
 
-        padSelectionActionGroup = new ActionGroup(removePadAction);
-        padSelectionActionGroup.setEnabled(false);
+        singleSelectionActionGroup = new ActionGroup(removeAction);
+        singleSelectionActionGroup.setEnabled(false);
 
-        padCaptureAndPositionActionGroup = new ActionGroup(moveCameraToPadLocation, moveToolToPadLocation);
-        padCaptureAndPositionActionGroup.setEnabled(false);
+        multiSelectionActionGroup = new ActionGroup(removeAction);
+        multiSelectionActionGroup.setEnabled(false);
 
-        JComboBox<Side> sidesComboBox = new JComboBox<>(Side.values());
+        captureAndPositionActionGroup = new ActionGroup(moveCameraToPadLocation, moveToolToPadLocation);
+        captureAndPositionActionGroup.setEnabled(false);
+
+        JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
 
         setLayout(new BorderLayout(0, 0));
         JToolBar toolBar = new JToolBar();
         add(toolBar, BorderLayout.NORTH);
 
         toolBar.setFloatable(false);
-        JButton btnNewPad = new JButton(newPadAction);
+        JButton btnNewPad = new JButton(newAction);
         btnNewPad.setHideActionText(true);
         toolBar.add(btnNewPad);
-        JButton btnRemovePad = new JButton(removePadAction);
+        JButton btnRemovePad = new JButton(removeAction);
         btnRemovePad.setHideActionText(true);
         toolBar.add(btnRemovePad);
         toolBar.addSeparator();
@@ -90,7 +93,7 @@ public class JobPastePanel extends JPanel {
 
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(
                 sidesComboBox));
         table.getSelectionModel().addListSelectionListener(
@@ -100,28 +103,18 @@ public class JobPastePanel extends JPanel {
                         if (e.getValueIsAdjusting()) {
                             return;
                         }
-                        padSelectionActionGroup
-                                .setEnabled(getSelectedPad() != null);
-                        padCaptureAndPositionActionGroup
-                                .setEnabled(getSelectedPad() != null
-                                        && getSelectedPad().getSide() == boardLocation
-                                                .getSide());
-                        Pad pad = getSelectedPad();
-                        CameraView cameraView = MainFrame.cameraPanel
-                                .getSelectedCameraView();
-                        if (cameraView != null) {
-                            if (pad != null) {
-                                // TODO
-//                                Reticle reticle = new PackageReticle(pad
-//                                        .getPart().getPackage());
-//                                cameraView.setReticle(JobPastePanel.this
-//                                        .getClass().getName(), reticle);
-                            }
-                            else {
-                                cameraView
-                                        .removeReticle(JobPastePanel.this
-                                                .getClass().getName());
-                            }
+                        
+                        if (getSelections().size() > 1) {
+                            // multi select
+                            singleSelectionActionGroup.setEnabled(false);
+                            captureAndPositionActionGroup.setEnabled(false);
+                            multiSelectionActionGroup.setEnabled(true);
+                        }
+                        else {
+                            // single select, or no select
+                            multiSelectionActionGroup.setEnabled(false);
+                            singleSelectionActionGroup.setEnabled(getSelection() != null);
+                            captureAndPositionActionGroup.setEnabled(getSelection() != null && getSelection().getSide() == boardLocation.getSide());
                         }
                     }
                 });
@@ -142,21 +135,28 @@ public class JobPastePanel extends JPanel {
         }
     }
 
-    public Pad getSelectedPad() {
+    public Pad getSelection() {
+        List<Pad> selectedPads = getSelections();
+        if (selectedPads.isEmpty()) {
+            return null;
+        }
+        return selectedPads.get(0);
+    }
+    
+    public List<Pad> getSelections() {
+        ArrayList<Pad> rows = new ArrayList<Pad>();
         if (boardLocation == null) {
-            return null;
+            return rows;
         }
-        int index = table.getSelectedRow();
-        if (index == -1) {
-            return null;
+        int[] selectedRows = table.getSelectedRows();
+        for (int selectedRow : selectedRows) {
+            selectedRow = table.convertRowIndexToModel(selectedRow);
+            rows.add(boardLocation.getBoard().getSolderPastePads().get(selectedRow));
         }
-        else {
-            index = table.convertRowIndexToModel(index);
-            return boardLocation.getBoard().getSolderPastePads().get(index);
-        }
+        return rows;
     }
 
-    public final Action newPadAction = new AbstractAction() {
+    public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Pad");
@@ -198,7 +198,7 @@ public class JobPastePanel extends JPanel {
         }
     };
 
-    public final Action removePadAction = new AbstractAction() {
+    public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Remove Pad");
@@ -208,8 +208,9 @@ public class JobPastePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Pad pad = getSelectedPad();
-            boardLocation.getBoard().removeSolderPastePad(pad);
+            for (Pad pad : getSelections()) {
+                boardLocation.getBoard().removeSolderPastePad(pad);
+            }
             tableModel.fireTableDataChanged();
         }
     };
@@ -228,7 +229,7 @@ public class JobPastePanel extends JPanel {
             Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
-                            .getSide(), getSelectedPad().getLocation());
+                            .getSide(), getSelection().getLocation());
 
             final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
             if (camera.getHead() == null) {
@@ -265,7 +266,7 @@ public class JobPastePanel extends JPanel {
             Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
-                            .getSide(), getSelectedPad().getLocation());
+                            .getSide(), getSelection().getLocation());
 
             final PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
             final Location location = padLocation;
