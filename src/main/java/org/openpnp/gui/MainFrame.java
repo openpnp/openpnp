@@ -71,6 +71,7 @@ import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.NamedCSVImporter;
+import org.openpnp.gui.importer.SolderPasteGerberImporter;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -79,6 +80,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.JobProcessor;
 
 /**
  * The main window of the application.
@@ -472,7 +474,9 @@ public class MainFrame extends JFrame {
 		    @Override
             public void configurationComplete(Configuration configuration)
                     throws Exception {
-		        configuration.getMachine().getJobProcessor().addListener(jobProcessorListener);
+		        for (JobProcessor jobProcessor : configuration.getMachine().getJobProcessors().values()) {
+	                jobProcessor.addListener(jobProcessorListener);
+		        }
             }
 		});
 	}
@@ -482,6 +486,7 @@ public class MainFrame extends JFrame {
         registerBoardImporter(EagleMountsmdUlpImporter.class);
         registerBoardImporter(KicadPosImporter.class);
         registerBoardImporter(NamedCSVImporter.class);
+        registerBoardImporter(SolderPasteGerberImporter.class);
 	}
 	
     /**

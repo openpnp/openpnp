@@ -23,6 +23,7 @@ package org.openpnp.spi;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -112,8 +113,5 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
 	public void removeCamera(Camera camera);
 	
-	public JobPlanner getJobPlanner();
-	
-	public JobProcessor getJobProcessor();
-
+	public Map<JobProcessor.Type, JobProcessor> getJobProcessors();
 }

@@ -107,7 +107,7 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
     private boolean step1() {
-        placementA = jobPanel.getSelectedPlacement();
+        placementA = jobPanel.getJobPlacementsPanel().getSelectedPlacement();
         if (placementA == null) {
             MessageBoxes.errorBox(mainFrame, "Error", "Please select a placement.");
             return false;
@@ -125,7 +125,7 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step3() {
-        placementB = jobPanel.getSelectedPlacement();
+        placementB = jobPanel.getJobPlacementsPanel().getSelectedPlacement();
         if (placementB == null || placementB == placementA) {
             MessageBoxes.errorBox(mainFrame, "Error", "Please select a second placement.");
             return false;

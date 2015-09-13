@@ -88,4 +88,8 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public void removeCamera(Camera camera);
     
     public void moveToSafeZ(double speed) throws Exception;
+    
+    public List<PasteDispenser> getPasteDispensers();
+    
+    public PasteDispenser getPasteDispenser(String id);
 }
