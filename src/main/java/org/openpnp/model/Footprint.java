@@ -26,10 +26,15 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
+/**
+ * A Footprint is a group of SMD pads along with length unit information.
+ * Footprints can be rendered to a Shape for easy display using 2D primitives.
+ */
 public class Footprint {
     @Attribute
     private LengthUnit units = LengthUnit.Millimeters;
@@ -55,6 +60,10 @@ public class Footprint {
 
     public void setUnits(LengthUnit units) {
         this.units = units;
+    }
+    
+    public List<Pad> getPads() {
+        return pads;
     }
 
     public static class Pad {

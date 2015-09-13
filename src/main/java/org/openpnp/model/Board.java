@@ -53,11 +53,14 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	private Outline outline;
 	
 	@ElementList(required=false)
-	private ArrayList<Fiducial> fiducials = new ArrayList<Fiducial>();
+	private ArrayList<Fiducial> fiducials = new ArrayList<>();
 	
 	@ElementList
-	private ArrayList<Placement> placements = new ArrayList<Placement>();
-	
+	private ArrayList<Placement> placements = new ArrayList<>();
+
+    @ElementList(required=false)
+    private ArrayList<Pad> solderPastePads = new ArrayList<>();
+    
 	private transient File file;
 	private transient boolean dirty;
 	
@@ -74,9 +77,12 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	@SuppressWarnings("unused")
 	@Commit
 	private void commit() {
-		for (Placement placement : placements) {
-			placement.addPropertyChangeListener(this);
-		}
+        for (Placement placement : placements) {
+            placement.addPropertyChangeListener(this);
+        }
+        for (Pad pad : solderPastePads) {
+            pad.addPropertyChangeListener(this);
+        }
 	}
 	
 	public List<Fiducial> getFiducials() {
@@ -121,6 +127,31 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 			placement.removePropertyChangeListener(this);
 		}
 	}
+	
+    public List<Pad> getSolderPastePads() {
+        return Collections.unmodifiableList(solderPastePads);
+    }
+    
+    public void addSolderPastePad(Pad pad) {
+        Object oldValue = solderPastePads;
+        solderPastePads = new ArrayList<Pad>(solderPastePads);
+        solderPastePads.add(pad);
+        firePropertyChange("solderPastePads", oldValue, solderPastePads);
+        if (pad != null) {
+            pad.addPropertyChangeListener(this); 
+        }
+    }
+    
+    public void removeSolderPastePad(Pad pad) {
+        Object oldValue = solderPastePads;
+        solderPastePads = new ArrayList<Pad>(solderPastePads);
+        solderPastePads.remove(pad);
+        firePropertyChange("solderPastePads", oldValue, solderPastePads);
+        if (pad != null) {
+            pad.removePropertyChangeListener(this);
+        }
+    }
+    
 	
 	public Outline getOutline() {
 		return outline;

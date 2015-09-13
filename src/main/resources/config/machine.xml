@@ -28,6 +28,11 @@
                   <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
                </camera>
             </cameras>
+            <paste-dispensers>
+               <paste-dispenser class="org.openpnp.machine.reference.ReferencePasteDispenser" id="53050ccf-59a0-4d9f-a8d3-6216f5412e4e" name="D1" safe-z="0.0">
+                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               </paste-dispenser>
+            </paste-dispensers>
          </head>
       </heads>
       <feeders>
@@ -77,8 +82,16 @@
          </feeder>
       </feeders>
       <cameras/>
-      <job-planner class="org.openpnp.planner.SimpleJobPlanner"/>
-      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor"/>
+      <job-processors class="java.util.HashMap">
+         <job-processor type="PickAndPlace">
+            <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" demo-mode="false">
+               <job-planner class="org.openpnp.planner.SimpleJobPlanner"/>
+            </job-processor>
+         </job-processor>
+         <job-processor type="SolderPaste">
+            <job-processor class="org.openpnp.machine.reference.ReferenceSolderPasteJobProcessor"/>
+         </job-processor>
+      </job-processors>
       <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="5000.0"/>
    </machine>
 </openpnp-machine>
