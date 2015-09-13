@@ -14,8 +14,11 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
@@ -66,10 +69,10 @@ public class JobPlacementsPanel extends JPanel {
         boardLocationSelectionActionGroup.setEnabled(false);
 
         singleSelectionActionGroup = new ActionGroup(removeAction,
-                editPlacementFeederAction);
+                editPlacementFeederAction, setTypeAction);
         singleSelectionActionGroup.setEnabled(false);
 
-        multiSelectionActionGroup = new ActionGroup(removeAction);
+        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
         multiSelectionActionGroup.setEnabled(false);
 
         captureAndPositionActionGroup = new ActionGroup(
@@ -180,6 +183,18 @@ public class JobPlacementsPanel extends JPanel {
                 }
             }
         });
+        
+        JPopupMenu popupMenu = new JPopupMenu();
+        
+        popupMenu.add(removeAction);
+        
+        JMenu setTypeMenu = new JMenu(setTypeAction);
+        setTypeMenu.add(new SetTypeAction(Placement.Type.Place));
+        setTypeMenu.add(new SetTypeAction(Placement.Type.Ignore));
+        setTypeMenu.add(new SetTypeAction(Placement.Type.Fiducial));
+        popupMenu.add(setTypeMenu);
+
+        table.setComponentPopupMenu(popupMenu);        
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
@@ -282,9 +297,9 @@ public class JobPlacementsPanel extends JPanel {
     public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Remove Placement");
+            putValue(NAME, "Remove Placement(s)");
             putValue(SHORT_DESCRIPTION,
-                    "Remove the currently selected placement.");
+                    "Remove the currently selected placement(s).");
         }
 
         @Override
@@ -434,7 +449,36 @@ public class JobPlacementsPanel extends JPanel {
             MainFrame.feedersPanel.showFeeder(feeder);
         }
     };
+    
+    public final Action setTypeAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Type");
+            putValue(SHORT_DESCRIPTION,
+                    "Set placement type(s) to...");
+        }
 
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+    
+    class SetTypeAction extends AbstractAction {
+        final Placement.Type type;
+        
+        public SetTypeAction(Placement.Type type) {
+            this.type = type;
+            putValue(NAME, type.toString());
+            putValue(SHORT_DESCRIPTION, "Set placement type(s) to " + type.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Placement placement : getSelections()) {
+                placement.setType(type);
+            }
+        }
+    };
+    
     static class TypeRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             Type type = (Type) value;
