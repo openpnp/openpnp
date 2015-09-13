@@ -3,6 +3,7 @@ package org.openpnp.model.eagle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -30,8 +31,12 @@ public class EagleLoader {
     public Board 		board;
     public Library 		library;
     public Schematic 	schematic;
+    
+    public EagleLoader(File file) throws Exception {
+        this(new FileInputStream(file));
+    }
 
-    public EagleLoader(File file) throws Exception{
+    public EagleLoader(InputStream in) throws Exception {
 
         String packageName = "org.openpnp.model.eagle.xml";
 
@@ -42,12 +47,16 @@ public class EagleLoader {
         xmlreader.setFeature(FEATURE_NAMESPACES, true);
         xmlreader.setFeature(FEATURE_NAMESPACE_PREFIXES, true);
         xmlreader.setEntityResolver(new EntityResolver() {
-            public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
-                return new InputSource(Eagle.class.getResourceAsStream("eagle.dtd"));
+            public InputSource resolveEntity(String publicId, String systemId)
+                    throws SAXException, IOException {
+                InputSource input = new InputSource(ClassLoader.getSystemResourceAsStream("eagle.dtd"));
+                input.setPublicId(publicId);
+                input.setSystemId(systemId);
+                return input;
             }
         });
 
-        InputSource input = new InputSource(new FileInputStream(file));
+        InputSource input = new InputSource(in);
         Source source = new SAXSource(xmlreader, input);
 
         Eagle eagle = (Eagle) unmarshaller.unmarshal(source);
