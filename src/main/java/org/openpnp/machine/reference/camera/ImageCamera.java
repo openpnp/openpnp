@@ -34,7 +34,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
+import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -53,7 +53,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	private int fps = 24;
 	
 	@Element
-	private String sourceUri;
+	private String sourceUri = "classpath://samples/pnp-test/pnp-test.png";
 	
 	@Attribute(required=false)
 	private int width = 640;
@@ -191,7 +191,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 	
 	@Override
 	public Wizard getConfigurationWizard() {
-		return new ReferenceCameraConfigurationWizard(this);
+		return new ImageCameraConfigurationWizard(this);
 	}
 	
     @Override
