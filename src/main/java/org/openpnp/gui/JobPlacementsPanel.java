@@ -186,8 +186,6 @@ public class JobPlacementsPanel extends JPanel {
         
         JPopupMenu popupMenu = new JPopupMenu();
         
-        popupMenu.add(removeAction);
-        
         JMenu setTypeMenu = new JMenu(setTypeAction);
         setTypeMenu.add(new SetTypeAction(Placement.Type.Place));
         setTypeMenu.add(new SetTypeAction(Placement.Type.Ignore));
