@@ -32,6 +32,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
+import org.openpnp.model.Pad.Type;
 
 public class PadsTableModel extends AbstractTableModel {
 	final Configuration configuration;
@@ -42,7 +43,7 @@ public class PadsTableModel extends AbstractTableModel {
         "X", 
         "Y", 
 		"ø",
-        "Type",
+        "Type"
 		};
 	
 	private Class[] columnTypes = new Class[] {
@@ -51,7 +52,7 @@ public class PadsTableModel extends AbstractTableModel {
         LengthCellValue.class,
         LengthCellValue.class,
 		String.class,
-        String.class
+        Type.class
 	};
 	
 	private Board board;
@@ -80,7 +81,7 @@ public class PadsTableModel extends AbstractTableModel {
 	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-	    return columnIndex != 5;
+	    return true;
 	}
 	
 	@Override
@@ -117,6 +118,9 @@ public class PadsTableModel extends AbstractTableModel {
             else if (columnIndex == 4) {
                 pad.setLocation(pad.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
             }
+            else if (columnIndex == 5) {
+                pad.setType((Type) aValue);
+            }
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
@@ -138,7 +142,7 @@ public class PadsTableModel extends AbstractTableModel {
 		case 4:
 			return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation());
         case 5:
-            return pad.getClass().getSimpleName();
+            return pad.getType();
 		default:
 			return null;
 		}

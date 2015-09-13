@@ -1,6 +1,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,14 +11,17 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
@@ -31,7 +35,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
-import org.openpnp.model.Placement;
+import org.openpnp.model.Pad.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
@@ -52,16 +56,17 @@ public class JobPastePanel extends JPanel {
         boardLocationSelectionActionGroup = new ActionGroup(newAction);
         boardLocationSelectionActionGroup.setEnabled(false);
 
-        singleSelectionActionGroup = new ActionGroup(removeAction);
+        singleSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
         singleSelectionActionGroup.setEnabled(false);
 
-        multiSelectionActionGroup = new ActionGroup(removeAction);
+        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
         multiSelectionActionGroup.setEnabled(false);
 
         captureAndPositionActionGroup = new ActionGroup(moveCameraToPadLocation, moveToolToPadLocation);
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
+        JComboBox<Type> typesComboBox = new JComboBox(Type.values());
 
         setLayout(new BorderLayout(0, 0));
         JToolBar toolBar = new JToolBar();
@@ -94,8 +99,15 @@ public class JobPastePanel extends JPanel {
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        
         table.setDefaultEditor(Side.class, new DefaultCellEditor(
                 sidesComboBox));
+
+        table.setDefaultRenderer(Type.class,
+                new TypeRenderer());
+        table.setDefaultEditor(Type.class, new DefaultCellEditor(
+                typesComboBox));
+        
         table.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
                     @Override
@@ -118,6 +130,15 @@ public class JobPastePanel extends JPanel {
                         }
                     }
                 });
+        
+        JPopupMenu popupMenu = new JPopupMenu();
+        
+        JMenu setTypeMenu = new JMenu(setTypeAction);
+        setTypeMenu.add(new SetTypeAction(Pad.Type.Paste));
+        setTypeMenu.add(new SetTypeAction(Pad.Type.Ignore));
+        popupMenu.add(setTypeMenu);
+
+        table.setComponentPopupMenu(popupMenu);                
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
@@ -284,4 +305,46 @@ public class JobPastePanel extends JPanel {
             });
         }
     };
+    
+    public final Action setTypeAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Type");
+            putValue(SHORT_DESCRIPTION,
+                    "Set pad type(s) to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+    
+    class SetTypeAction extends AbstractAction {
+        final Pad.Type type;
+        
+        public SetTypeAction(Pad.Type type) {
+            this.type = type;
+            putValue(NAME, type.toString());
+            putValue(SHORT_DESCRIPTION, "Set pad type(s) to " + type.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Pad pad : getSelections()) {
+                pad.setType(type);
+            }
+        }
+    };
+    
+    static class TypeRenderer extends DefaultTableCellRenderer {
+        public void setValue(Object value) {
+            Type type = (Type) value;
+            setText(type.name());
+            if (type == Type.Paste) {
+                setBackground(Color.cyan);
+            }
+            else if (type == Type.Ignore) {
+                setBackground(Color.yellow);
+            }
+        }
+    }
 }
