@@ -181,7 +181,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                 
                 Location placementLocation = placement.getLocation();
                 if (bottomVisionOffsets != null) {
-                    placementLocation = placementLocation.subtract(bottomVisionOffsets);
+                    placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
                 }
                 placementLocation = 
                         Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);

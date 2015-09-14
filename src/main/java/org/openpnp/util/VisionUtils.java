@@ -1,12 +1,10 @@
 package org.openpnp.util;
 
-import java.awt.image.BufferedImage;
-
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 
 public class VisionUtils {
-    public static Location getPixelCenterOffsets(Camera camera, int x, int y) {
+    public static Location getPixelCenterOffsets(Camera camera, double x, double y) {
         double imageWidth = camera.getWidth();
         double imageHeight = camera.getHeight();
 
