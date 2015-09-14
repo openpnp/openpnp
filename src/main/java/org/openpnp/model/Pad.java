@@ -11,6 +11,14 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 public abstract class Pad extends AbstractModelObject {
+    public enum Type {
+        Paste,
+        Ignore
+    }
+    
+    @Attribute(required=false)
+    private Type type = Type.Paste;
+
     @Attribute
     protected Side side = Side.Top;
     
@@ -40,6 +48,16 @@ public abstract class Pad extends AbstractModelObject {
         Object oldValue = this.side;
         this.side = side;
         firePropertyChange("side", oldValue, side);
+    }
+    
+    public Type getType() {
+        return type;
+    }
+    
+    public void setType(Type type) {
+        Object oldValue = this.type;
+        this.type = type;
+        firePropertyChange("type", oldValue, type);
     }
     
     public String getName() {
