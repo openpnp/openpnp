@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.Icon;
+
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -167,5 +169,11 @@ public abstract class AbstractMachine implements Machine {
         for (MachineListener listener : listeners) {
             listener.machineDisableFailed(this, reason);
         }
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

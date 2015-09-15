@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
@@ -234,6 +235,14 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
         return null;
     }
     
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+
     class DefaultJobProcessorDelegate implements JobProcessorDelegate {
         @Override
         public PickRetryAction partPickFailed(BoardLocation board, Part part,

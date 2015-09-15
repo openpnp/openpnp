@@ -77,6 +77,7 @@ import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -462,6 +463,12 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     
     @Override
     public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
         // TODO Auto-generated method stub
         return null;
     }

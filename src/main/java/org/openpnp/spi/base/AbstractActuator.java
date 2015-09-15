@@ -1,5 +1,7 @@
 package org.openpnp.spi.base;
 
+import javax.swing.Icon;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
@@ -42,5 +44,11 @@ public abstract class AbstractActuator implements Actuator {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

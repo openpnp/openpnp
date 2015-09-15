@@ -5,8 +5,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.Icon;
+
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -147,6 +150,11 @@ public abstract class AbstractCamera implements Camera {
             height = image.getHeight();
         }
         return height;
+    }
+    
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return Icons.captureCamera;
     }
 
     protected class ListenerEntry {
