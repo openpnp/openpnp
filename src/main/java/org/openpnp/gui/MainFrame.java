@@ -461,13 +461,13 @@ public class MainFrame extends JFrame {
 			System.exit(1);
 		}
 
-		for (Camera camera : configuration.getMachine().getCameras()) {
-			cameraPanel.addCamera(camera);
-		}
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Camera camera : head.getCameras()) {
                 cameraPanel.addCamera(camera);
             }
+        }
+        for (Camera camera : configuration.getMachine().getCameras()) {
+            cameraPanel.addCamera(camera);
         }
 
 		configuration.addListener(new ConfigurationListener.Adapter() {
