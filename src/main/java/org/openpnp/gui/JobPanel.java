@@ -1054,8 +1054,13 @@ public class JobPanel extends JPanel {
 
         @Override
         public void jobLoaded(Job job) {
-            jobPlacementsPanel.setBoardLocation(null);
-            boardLocationsTableModel.setJob(jobProcessor.getJob());
+            if (boardLocationsTableModel.getJob() != job) {
+                // If the same job is being loaded there is no reason to reset
+                // the table, so skip it. This allows us to leave the same
+                // row selected in the case of switching job processors and
+                // tabs.
+                boardLocationsTableModel.setJob(job);
+            }
             job.addPropertyChangeListener("dirty", titlePropertyChangeListener);
             job.addPropertyChangeListener("file", titlePropertyChangeListener);
             updateTitle();

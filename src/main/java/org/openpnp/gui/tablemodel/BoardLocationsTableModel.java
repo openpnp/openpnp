@@ -66,6 +66,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 		this.job = job;
 		fireTableDataChanged();
 	}
+	
+	public Job getJob() {
+	    return job;
+	}
 
 	@Override
 	public String getColumnName(int column) {
