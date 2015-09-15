@@ -133,6 +133,16 @@ public class Location {
 	}
 	
 	/**
+	 * Same as {@link Location#subtract(Location)} but also subtracts rotation.
+	 * @param l
+	 * @return
+	 */
+	public Location subtractWithRotation(Location l) {
+        l = l.convertToUnits(getUnits());
+        return new Location(l.getUnits(), x - l.getX(), y - l.getY(), z - l.getZ(), rotation - l.getRotation());
+	}
+	
+	/**
 	 * Returns a new Location with the given Location's X, Y, and Z components
 	 * added to this Location's X, Y, and Z components. Rotation is left
 	 * unchanged.

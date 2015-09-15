@@ -51,6 +51,7 @@ import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.VisionUtils;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     @Attribute(required = false)
     private String dummy;
 
-    private Camera camera;
+    protected Camera camera;
 
     @Override
     public void setCamera(Camera camera) {
@@ -81,7 +82,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         return new OpenCvVisionProviderConfigurationWizard(this);
     }
 
-    private Mat getCameraImage() {
+    protected Mat getCameraImage() {
         BufferedImage image_ = camera.capture();
         Mat image = OpenCvUtils.toMat(image_);
         return image;
@@ -147,7 +148,8 @@ public class OpenCvVisionProvider implements VisionProvider {
                         new Scalar(255));
             }
             
-            Location offsets = getPixelCenterOffsets(
+            Location offsets = VisionUtils.getPixelCenterOffsets(
+                    camera,
                     x + (templateMat.cols() / 2), 
                     y + (templateMat.rows() / 2));
             match.location = camera.getLocation().subtract(offsets);
@@ -167,40 +169,6 @@ public class OpenCvVisionProvider implements VisionProvider {
         saveDebugImage("debug", debugMat);
                 
         return matches;
-    }
-    
-    /**
-     * Given pixel coordinates within the frame of the Camera's image, get
-     * the offsets from Camera center to the coordinates in Camera space
-     * and units. The resulting value is the distance the Camera
-     * can be moved to be centered over the pixel coordinates.
-     * @param x
-     * @param y
-     * @return
-     */
-    private Location getPixelCenterOffsets(int x, int y) {
-        // match now contains the position, in pixels, from the top left corner
-        // of the image to the top left corner of the match. We are interested in
-        // knowing how far from the center of the image the center of the match is.
-        BufferedImage image = camera.capture();
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
-
-        // Calculate the difference between the center of the image to the
-        // center of the match.
-        double offsetX = (imageWidth / 2) - x;
-        double offsetY = (imageHeight / 2) - y;
-
-        // Invert the Y offset because images count top to bottom and the Y
-        // axis of the machine counts bottom to top.
-        offsetY *= -1;
-        
-        // And convert pixels to units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
-        offsetX *= unitsPerPixel.getX();
-        offsetY *= unitsPerPixel.getY();
-
-        return new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
     }
     
     @Override
@@ -240,7 +208,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         return new Point[] { new Point(((int) matchLoc.x) + roiX, ((int) matchLoc.y) + roiY) };
     }
     
-    private void saveDebugImage(String name, Mat mat) {
+    protected void saveDebugImage(String name, Mat mat) {
         if (logger.isDebugEnabled()) {
             try {
                 BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
@@ -290,11 +258,19 @@ public class OpenCvVisionProvider implements VisionProvider {
         nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN), 1.0);
         // Grab an image.
         BufferedImage image = camera.capture();
-        // Return to Safe-Z just to be safe.
-        nozzle.moveToSafeZ(1.0);
         // TODO: Do OpenCV magic
         // Return the offsets. Make sure to convert them to real units instead
         // of pixels. Use camera.getUnitsPerPixel().
+        
+        Thread.sleep(1000);
+
+        // rotate the nozzle to simulate the part being oriented
+        nozzle.moveTo(nozzle.getLocation().derive(null, null, null, 45.0), 1.0);
+        
+        Thread.sleep(1000);
+        
+        // Return to Safe-Z just to be safe.
+        nozzle.moveToSafeZ(1.0);
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     } 
     
