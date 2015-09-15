@@ -112,17 +112,26 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	
 	@Override
     public Location getPickLocation() throws Exception {
+	    // Find the location of the part linearly along the tape
 	    Location l = getPointAlongLine(
                 referenceHoleLocation, 
                 lastHoleLocation, 
                 new Length((feedCount - 1) * partPitch.getValue(), partPitch.getUnits()));
+	    // Create the offsets that are required to go from a reference hole
+	    // to the part in the tape
 	    Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
 	    Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
+        // Determine the angle that the tape is at
         double angle = getAngleFromPoint(referenceHoleLocation, lastHoleLocation);
+        // Rotate the part offsets by the angle to move it into the right
+        // coordinate space
         p = Utils2D.rotatePoint(p, angle);
+        // And add the offset to the location we calculated previously
         l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
-        l = l.derive(null, null, null, angle);
+        // Add in the angle of the tape plus the angle of the part in the tape
+        // so that the part is picked at the right angle
+        l = l.derive(null, null, null, angle + getLocation().getRotation());
         return l;
     }
 	

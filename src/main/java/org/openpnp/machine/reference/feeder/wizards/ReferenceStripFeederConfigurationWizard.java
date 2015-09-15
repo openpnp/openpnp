@@ -37,6 +37,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -44,6 +45,7 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -78,6 +80,8 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JButton btnResetFeedCount;
     private JLabel lblTapeType;
     private JComboBox comboBoxTapeType;
+    private JLabel lblRotationInTape;
+    private JTextField textFieldLocationRotation;
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
@@ -88,12 +92,15 @@ public class ReferenceStripFeederConfigurationWizard extends
         contentPanel.add(panelPart);
         panelPart
                 .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"),
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"), }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
         try {
@@ -104,7 +111,14 @@ public class ReferenceStripFeederConfigurationWizard extends
             // in WindowBuilder but doesn't happen during normal run.
         }
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "2, 2, left, default");
+        panelPart.add(comboBoxPart, "2, 2, 3, 1, left, default");
+        
+        lblRotationInTape = new JLabel("Rotation In Tape");
+        panelPart.add(lblRotationInTape, "2, 4, left, default");
+        
+        textFieldLocationRotation = new JTextField();
+        panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
+        textFieldLocationRotation.setColumns(4);
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -240,6 +254,14 @@ public class ReferenceStripFeederConfigurationWizard extends
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration
+                .get().getLengthDisplayFormat());
+
+        MutableLocationProxy location = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "location", location,
+                "location");
+        addWrappedBinding(location, "rotation", textFieldLocationRotation, "text",
+                doubleConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
@@ -271,6 +293,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ,
                 "text", lengthConverter);
 
+        ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
         ComponentDecorators
