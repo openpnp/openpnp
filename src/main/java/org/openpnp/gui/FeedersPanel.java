@@ -32,7 +32,6 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -66,9 +65,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Outline;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.JobProcessor.JobError;
 import org.openpnp.util.MovableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,7 +119,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		toolBar.add(btnDeleteFeeder);
 
 		toolBar.addSeparator();
-		toolBar.add(feedFeederAction);
+        toolBar.add(feedFeederAction);
+        toolBar.add(moveCameraToPickLocation);
+        toolBar.add(moveToolToPickLocation);
+        toolBar.add(pickFeederAction);
 		toolBar.add(showPartAction);
 
 		JPanel panel_1 = new JPanel();
@@ -172,7 +174,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		feederSelectedActionGroup = new ActionGroup(deleteFeederAction,
-				feedFeederAction, showPartAction);
+				feedFeederAction, showPartAction, pickFeederAction,
+				moveCameraToPickLocation, moveToolToPickLocation);
 
 		table.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -337,37 +340,123 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		}
 	};
 
-	public Action feedFeederAction = new AbstractAction() {
-		{
-			putValue(SMALL_ICON, Icons.feed);
-			putValue(NAME, "Feed");
-			putValue(SHORT_DESCRIPTION,
-					"Command the selected feeder to perform a feed operation.");
-		}
+    public Action feedFeederAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.feed);
+            putValue(NAME, "Feed");
+            putValue(SHORT_DESCRIPTION,
+                    "Command the selected feeder to perform a feed operation.");
+        }
 
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			new Thread() {
-				public void run() {
-					Feeder feeder = getSelectedFeeder();
-					Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-					
-					try {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new Thread() {
+                public void run() {
+                    Feeder feeder = getSelectedFeeder();
+                    Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                    
+                    try {
+                        nozzle.moveToSafeZ(1.0);
+                        feeder.feed(nozzle);
+                        Location pickLocation = feeder.getPickLocation();
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(FeedersPanel.this, "Feed Error",
+                                e);
+                    }
+                }
+            }.start();
+        }
+    };
+
+    public Action pickFeederAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.load);
+            putValue(NAME, "Pick");
+            putValue(SHORT_DESCRIPTION,
+                    "Perform a feed and pick on the selected feeder.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new Thread() {
+                public void run() {
+                    Feeder feeder = getSelectedFeeder();
+                    Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                    
+                    try {
                         nozzle.moveToSafeZ(1.0);
                         feeder.feed(nozzle);
                         Location pickLocation = feeder.getPickLocation();
                         MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
                         nozzle.pick();
                         nozzle.moveToSafeZ(1.0);
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(FeedersPanel.this, "Feed Error",
-								e);
-					}
-				}
-			}.start();
-		}
-	};
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(FeedersPanel.this, "Feed Error",
+                                e);
+                    }
+                }
+            }.start();
+        }
+    };
+
+    public Action moveCameraToPickLocation = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.centerCamera);
+            putValue(NAME, "Move Camera");
+            putValue(SHORT_DESCRIPTION,
+                    "Move the camera to the selected feeder's current pick location.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new Thread() {
+                public void run() {
+                    Feeder feeder = getSelectedFeeder();
+                    Camera camera = MainFrame.cameraPanel.getSelectedCamera();
+                    
+                    try {
+                        Location pickLocation = feeder.getPickLocation();
+                        MovableUtils.moveToLocationAtSafeZ(camera, pickLocation, 1.0);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(FeedersPanel.this, "Movement Error",
+                                e);
+                    }
+                }
+            }.start();
+        }
+    };
+
+    public Action moveToolToPickLocation = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.centerTool);
+            putValue(NAME, "Move Tool");
+            putValue(SHORT_DESCRIPTION,
+                    "Move the tool to the selected feeder's current pick location.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            new Thread() {
+                public void run() {
+                    Feeder feeder = getSelectedFeeder();
+                    Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                    
+                    try {
+                        Location pickLocation = feeder.getPickLocation();
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(FeedersPanel.this, "Movement Error",
+                                e);
+                    }
+                }
+            }.start();
+        }
+    };
 
 	public Action showPartAction = new AbstractAction() {
 		{

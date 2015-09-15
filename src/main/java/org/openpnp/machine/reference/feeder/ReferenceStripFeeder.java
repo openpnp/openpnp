@@ -32,8 +32,10 @@ import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigur
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -44,86 +46,149 @@ import org.slf4j.LoggerFactory;
  * Implementation of Feeder that indexes through a strip of cut tape.
  * This is a specialization of the tray feeder that knows specifics
  * about tape so that vision capabilities can be added.
- * 
- * 1. Have the user position the camera over the first tape hole
- * 2. Locate the hole
- * 3. Search each of the cardinal directions for the next hole. This gives us
- * the direction of travel.
- * 
+ */
+
+/**
+ * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/
+ * holes 1.5mm
+ * hole pitch 4mm
+ * first part center to reference hole linear is 2mm
+ * tape width is multiple of 4mm
+ * part pitch is multiple of 4mm except for 0402 and smaller, where it is 2mm 
+ * hole to part lateral is tape width / 2 - 0.5mm 
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
 	private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
+	
+	public enum TapeType {
+	    WhitePaper("White Paper"),
+	    BlackPlastic("Black Plastic"),
+	    ClearPlastic("Clear Plastic");
+	    
+	    private String name;
+	    
+	    TapeType(String name) {
+	        this.name = name;
+	    }
+	    
+	    public String toString() {
+	        return name;
+	    }
+	}
+	
+	@Element(required=false)
+    private Location referenceHoleLocation = new Location(LengthUnit.Millimeters);
 
-	@Element
-	private Length holeDiameter;
-	
-	@Element
-	private Length holePitch;
-	
-	@Element
-	private Length partPitch;
-	
-	@Element
-	private Length holeToPartLateral;
-	
-	@Element
-	private Length holeToPartLinear;
-	
-    @Attribute
-    private int partCount;
+    @Element(required=false)
+    private Location lastHoleLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required=false)
+    private Length partPitch = new Length(4, LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    private Length tapeWidth = new Length(8, LengthUnit.Millimeters);
+    
+    @Attribute(required=false)
+    private TapeType tapeType = TapeType.WhitePaper;
+
+    private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
+    
+    private Length holePitch = new Length(4, LengthUnit.Millimeters);
+    
+    private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
     
     @Attribute
 	private int feedCount = 0;
+    
+    private Length getHoleToPartLateral() {
+        Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
+        return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
+    }
 	
-	private Location pickLocation;
-
 	@Override
 	public boolean canFeedToNozzle(Nozzle nozzle) {
-		boolean result = feedCount < partCount;
-		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getName(), nozzle, result});
-		return result;
+	    return true;
 	}
 	
 	@Override
     public Location getPickLocation() throws Exception {
-	    if (pickLocation == null) {
-	        pickLocation = location;
-	    }
-		logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-		return pickLocation;
+	    // Find the location of the part linearly along the tape
+	    Location l = getPointAlongLine(
+                referenceHoleLocation, 
+                lastHoleLocation, 
+                new Length((feedCount - 1) * partPitch.getValue(), partPitch.getUnits()));
+	    // Create the offsets that are required to go from a reference hole
+	    // to the part in the tape
+	    Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
+	    Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
+        Point p = new Point(x.getValue(), y.getValue());
+        // Determine the angle that the tape is at
+        double angle = getAngleFromPoint(referenceHoleLocation, lastHoleLocation);
+        // Rotate the part offsets by the angle to move it into the right
+        // coordinate space
+        p = Utils2D.rotatePoint(p, angle);
+        // And add the offset to the location we calculated previously
+        l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
+        // Add in the angle of the tape plus the angle of the part in the tape
+        // so that the part is picked at the right angle
+        l = l.derive(null, null, null, angle + getLocation().getRotation());
+        return l;
     }
-
+	
+    static public Location getPointAlongLine(Location a, Location b, Length distance) {
+        Point vab = b.subtract(a).getXyPoint();
+        double lab = a.getLinearDistanceTo(b);
+        Point vu = new Point(vab.x / lab, vab.y / lab);
+        vu = new Point(vu.x * distance.getValue(), vu.y * distance.getValue());
+        return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
+    }
+  
+    // Stolen from StackOverflow
+    static public double getAngleFromPoint(Location firstPoint,
+            Location secondPoint) {
+        // above 0 to 180 degrees
+        if ((secondPoint.getX() > firstPoint.getX())) {
+            return (Math.atan2((secondPoint.getX() - firstPoint.getX()),
+                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+        }
+        // above 180 degrees to 360/0
+        else if ((secondPoint.getX() < firstPoint.getX())) {
+            return 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
+                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+        }
+        return Math.atan2(0, 0);
+    }
+	
     public void feed(Nozzle nozzle)
 			throws Exception {
-//		logger.debug("{}.feed({})", getName(), nozzle);
-//		int partX, partY;
-//        
-//        if (trayCountX >= trayCountY) {
-//            // X major axis.
-//            partX = feedCount / trayCountY;
-//            partY = feedCount % trayCountY;
-//        }
-//        else {
-//            // Y major axis.
-//            partX = feedCount % trayCountX;
-//            partY = feedCount / trayCountX;
-//        }
-//        
-//        // Multiply the offsets by the X/Y part indexes to get the total offsets
-//        // and then add the pickLocation to offset the final value.
-//        // and then add them to the location to get the final pickLocation.
-//        pickLocation = location.add(
-//                offsets.multiply(partX, partY, 0.0, 0.0));
-//
-//        logger.debug(String.format(
-//                "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
-//                partX, partY, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
-//        
-//        feedCount++;
-        throw new Exception("Not yet implements");
+        feedCount++;
 	}
     
-	public Length getHoleDiameter() {
+	public TapeType getTapeType() {
+        return tapeType;
+    }
+
+    public void setTapeType(TapeType tapeType) {
+        this.tapeType = tapeType;
+    }
+
+    public Location getReferenceHoleLocation() {
+        return referenceHoleLocation;
+    }
+
+    public void setReferenceHoleLocation(Location referenceHoleLocation) {
+        this.referenceHoleLocation = referenceHoleLocation;
+    }
+
+    public Location getLastHoleLocation() {
+        return lastHoleLocation;
+    }
+
+    public void setLastHoleLocation(Location lastHoleLocation) {
+        this.lastHoleLocation = lastHoleLocation;
+    }
+
+    public Length getHoleDiameter() {
         return holeDiameter;
     }
 
@@ -147,39 +212,31 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         this.partPitch = partPitch;
     }
 
-    public Length getHoleToPartLateral() {
-        return holeToPartLateral;
+    public Length getTapeWidth() {
+        return tapeWidth;
     }
 
-    public void setHoleToPartLateral(Length holeToPartLateral) {
-        this.holeToPartLateral = holeToPartLateral;
-    }
-
-    public Length getHoleToPartLinear() {
-        return holeToPartLinear;
-    }
-
-    public void setHoleToPartLinear(Length holeToPartLinear) {
-        this.holeToPartLinear = holeToPartLinear;
-    }
-
-    public int getPartCount() {
-        return partCount;
-    }
-
-    public void setPartCount(int partCount) {
-        this.partCount = partCount;
+    public void setTapeWidth(Length tapeWidth) {
+        this.tapeWidth = tapeWidth;
     }
 
     public int getFeedCount() {
-		return feedCount;
-	}
+        return feedCount;
+    }
 
-	public void setFeedCount(int feedCount) {
-		this.feedCount = feedCount;
-	}
+    public void setFeedCount(int feedCount) {
+        this.feedCount = feedCount;
+    }
+    
+    public Length getReferenceHoleToPartLinear() {
+        return referenceHoleToPartLinear;
+    }
 
-	@Override
+    public void setReferenceHoleToPartLinear(Length referenceHoleToPartLinear) {
+        this.referenceHoleToPartLinear = referenceHoleToPartLinear;
+    }
+
+    @Override
 	public String toString() {
 		return getName();
 	}
