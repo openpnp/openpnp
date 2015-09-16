@@ -65,7 +65,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class EagleBoardImporter implements BoardImporter {
-    private final static String NAME = "EAGLE <flename>.brd";
+    private final static String NAME = "CadSoft EAGLE Board";
     private final static String DESCRIPTION = "Import files directly from EAGLE's <filename>.brd file.";
     
 	private Board board;
