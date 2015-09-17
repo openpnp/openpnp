@@ -154,6 +154,18 @@ public class Location {
 		return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), rotation);
 	}
 
+    /**
+     * Returns a new Location with the given Location's X, Y, and Z components
+     * added to this Location's X, Y, and Z components. Rotation is left
+     * unchanged.
+     * @param l
+     * @return
+     */
+    public Location addWithRotation(Location l) {
+        l = l.convertToUnits(getUnits());
+        return new Location(l.getUnits(), x + l.getX(), y + l.getY(), z + l.getZ(), rotation + l.getRotation());
+    }
+    
 	/**
 	 * Returns a new Location with the given Location's X, Y and Z components
 	 * multiplied by this Location's X, Y and Z components. Rotation is left
