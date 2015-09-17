@@ -78,7 +78,7 @@ public class ReferenceCameraConfigurationWizard extends
         panelGeneral.add(textFieldRotation, "4, 2");
         textFieldRotation.setColumns(10);
         
-        lblFlipX = new JLabel("Flip Verticle");
+        lblFlipX = new JLabel("Flip Vertical");
         panelGeneral.add(lblFlipX, "2, 4, right, default");
         
         chckbxFlipX = new JCheckBox("");
