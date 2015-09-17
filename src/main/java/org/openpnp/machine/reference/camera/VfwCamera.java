@@ -154,7 +154,8 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
 			int[] captureData = captureDevice.captureFrame();
 			BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
 			image.setRGB(0, 0, width, height, captureData, 0, width);
-			broadcastCapture(lastImage = image);
+			lastImage = transformImage(image);
+			broadcastCapture(lastImage);
 			synchronized (captureLock) {
 				captureLock.notify();
 			}

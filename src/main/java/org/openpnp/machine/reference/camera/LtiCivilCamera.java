@@ -129,11 +129,13 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 			Graphics g = grayImage.getGraphics();
 			g.drawImage(bImage, 0, 0, null);  
 			g.dispose();
-			broadcastCapture(lastImage = grayImage);
+			lastImage = grayImage;
 		}
 		else {
-			broadcastCapture(lastImage = bImage);
+		    lastImage = bImage;
 		}
+		lastImage = transformImage(lastImage);
+        broadcastCapture(lastImage);
 		synchronized (captureLock) {
 			captureLock.notify();
 		}

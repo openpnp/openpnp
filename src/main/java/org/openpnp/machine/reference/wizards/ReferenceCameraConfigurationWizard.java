@@ -22,6 +22,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 import org.openpnp.gui.components.LocationButtonsPanel;
+import javax.swing.JCheckBox;
 
 public class ReferenceCameraConfigurationWizard extends
         AbstractConfigurationWizard {
@@ -44,6 +45,10 @@ public class ReferenceCameraConfigurationWizard extends
     private JTextField textFieldLocationZ;
     private JTextField textFieldLocationRotation;
     private LocationButtonsPanel locationButtonsPanel;
+    private JCheckBox chckbxFlipX;
+    private JLabel lblFlipX;
+    private JLabel lblFlipY;
+    private JCheckBox checkBoxFlipY;
     
     
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
@@ -56,8 +61,13 @@ public class ReferenceCameraConfigurationWizard extends
                 FormFactory.RELATED_GAP_COLSPEC,
                 FormFactory.DEFAULT_COLSPEC,
                 FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,},
+                FormFactory.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
                 FormFactory.RELATED_GAP_ROWSPEC,
                 FormFactory.DEFAULT_ROWSPEC,}));
         
@@ -67,6 +77,18 @@ public class ReferenceCameraConfigurationWizard extends
         textFieldRotation = new JTextField();
         panelGeneral.add(textFieldRotation, "4, 2");
         textFieldRotation.setColumns(10);
+        
+        lblFlipX = new JLabel("Flip Verticle");
+        panelGeneral.add(lblFlipX, "2, 4, right, default");
+        
+        chckbxFlipX = new JCheckBox("");
+        panelGeneral.add(chckbxFlipX, "4, 4");
+        
+        lblFlipY = new JLabel("Flip Horizontal");
+        panelGeneral.add(lblFlipY, "2, 6, right, default");
+        
+        checkBoxFlipY = new JCheckBox("");
+        panelGeneral.add(checkBoxFlipY, "4, 6");
 
         panelOffsets = new JPanel();
         contentPanel.add(panelOffsets);
@@ -192,7 +214,9 @@ public class ReferenceCameraConfigurationWizard extends
         }
 
         addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
-
+        addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
+        addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
+        
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
