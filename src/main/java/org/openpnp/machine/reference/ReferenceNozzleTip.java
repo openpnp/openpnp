@@ -145,10 +145,4 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerEndLocation(Location changerEndLocation) {
         this.changerEndLocation = changerEndLocation;
     }
-
-    @Override
-    public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }
