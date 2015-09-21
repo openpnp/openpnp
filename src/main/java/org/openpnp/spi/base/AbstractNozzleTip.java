@@ -2,7 +2,6 @@ package org.openpnp.spi.base;
 
 import javax.swing.Icon;
 
-import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
@@ -36,6 +35,6 @@ public abstract class AbstractNozzleTip implements NozzleTip {
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        return Icons.captureTool;
+        return null;
     }
 }

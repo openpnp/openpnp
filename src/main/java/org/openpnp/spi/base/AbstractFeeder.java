@@ -74,6 +74,6 @@ public abstract class AbstractFeeder implements Feeder {
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        return Icons.feed;
+        return Icons.editFeeder;
     }  
 }
