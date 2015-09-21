@@ -165,7 +165,7 @@ public class FiducialLocator {
             }
             logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
-            MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);        
+            camera.moveTo(location, 1.0);
         }
         
         return location;

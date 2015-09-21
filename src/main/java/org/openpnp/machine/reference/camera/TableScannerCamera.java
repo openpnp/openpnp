@@ -195,7 +195,7 @@ public class TableScannerCamera extends ReferenceCamera implements Runnable {
 
 	@Override
 	public BufferedImage capture() {
-		return renderFrame();
+		return transformImage(renderFrame());
 	}
 	
 	public void run() {

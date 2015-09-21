@@ -22,6 +22,8 @@
 package org.openpnp.gui.support;
 
 import java.awt.Component;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.swing.JOptionPane;
 
@@ -36,11 +38,18 @@ public class MessageBoxes {
 		String message = null;
 		if (cause != null) {
 			message = cause.getMessage();
+			if (message == null || message.trim().isEmpty()) {
+			    StringWriter stringWriter = new StringWriter();
+			    PrintWriter writer = new PrintWriter(stringWriter);
+			    cause.printStackTrace(writer);
+			    writer.close();
+			    message = stringWriter.toString(); 
+			}
 		}
 		if (message == null) {
-			message = "";
+			message = "No message supplied.";
 		}
-		logger.debug(title, cause);
+		logger.debug("{}: {}", title, cause);
 		 message = message.replaceAll("\n", "<br/>");
 		 message = message.replaceAll("\r", "");
          message = "<html><body width=\"400\">" + message + "</body></html>";

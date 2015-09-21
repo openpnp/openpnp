@@ -45,6 +45,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Attribute(required=false)
     protected double rotation = 0;
     
+    @Attribute(required=false)
+    protected boolean flipX = false;
+    
+    @Attribute(required=false)
+    protected boolean flipY = false;
+    
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
@@ -92,23 +98,46 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setRotation(double rotation) {
         this.rotation = rotation;
     }
+    
+    public boolean isFlipX() {
+        return flipX;
+    }
 
-    protected BufferedImage applyRotation(BufferedImage image) {
-        if (rotation == 0) {
+    public void setFlipX(boolean flipX) {
+        this.flipX = flipX;
+    }
+
+    public boolean isFlipY() {
+        return flipY;
+    }
+
+    public void setFlipY(boolean flipY) {
+        this.flipY = flipY;
+    }
+
+    protected BufferedImage transformImage(BufferedImage image) {
+        if (rotation == 0 && !flipX && !flipY) {
             return image;
         }
         
         BufferedImage out = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
         Graphics2D g2d = out.createGraphics();
-        // Create the transform we'll actually use to rotate the image.
         AffineTransform xform = new AffineTransform();
-        // Translate the source to the center of the output.
-        xform.translate(out.getWidth() / 2, out.getHeight() / 2);
-        // Rotate the image.
-        xform.rotate(Math.toRadians(-rotation));
-        // Translate the image to it's center so the rotation happens about
-        // the centerpoint.
-        xform.translate(-image.getWidth() / 2, -image.getHeight() / 2);
+
+        if (flipY) {
+            xform.scale(-1, 1); 
+            xform.translate(-image.getWidth(), 0);
+        }
+        
+        if (flipX) {
+            xform.scale(1, -1); 
+            xform.translate(0, -image.getHeight());
+        }
+        
+        if (rotation != 0) {
+            xform.rotate(Math.toRadians(-rotation), image.getWidth() / 2, image.getHeight() / 2);
+        }
+        
         g2d.drawImage(image, xform, null);
         g2d.dispose();
         return out;

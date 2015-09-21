@@ -72,7 +72,9 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    if (!fg.read(mat)) {
 		        return null;
 		    }
-			return applyRotation(OpenCvUtils.toBufferedImage(mat));
+		    BufferedImage img = OpenCvUtils.toBufferedImage(mat);
+		    mat.release();
+		    return transformImage(img);
 		}
 		catch (Exception e) {
 			return null;

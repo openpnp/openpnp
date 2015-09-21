@@ -148,11 +148,10 @@ public class OpenCvVisionProvider implements VisionProvider {
                         new Scalar(255));
             }
             
-            Location offsets = VisionUtils.getPixelCenterOffsets(
-                    camera,
+            match.location = VisionUtils.getPixelLocation(
+                    camera, 
                     x + (templateMat.cols() / 2), 
                     y + (templateMat.rows() / 2));
-            match.location = camera.getLocation().subtract(offsets);
             matches.add(match);
         }
         

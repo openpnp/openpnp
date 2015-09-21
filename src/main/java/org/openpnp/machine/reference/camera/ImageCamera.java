@@ -157,7 +157,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         
         gFrame.dispose();
         
-	    return frame;
+	    return transformImage(frame);
 	}
 	
     private synchronized void initialize() throws Exception {
