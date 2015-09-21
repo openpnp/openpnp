@@ -124,6 +124,9 @@ public abstract class AbstractHead implements Head {
         for (Actuator actuator : actuators) {
             actuator.moveToSafeZ(speed);
         }
+        for (PasteDispenser dispenser : pasteDispensers) {
+            dispenser.moveToSafeZ(speed);
+        }
     }
     
     @Override
