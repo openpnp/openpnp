@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.Action;
-import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;

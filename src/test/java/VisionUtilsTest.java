@@ -1,6 +1,7 @@
 import java.awt.image.BufferedImage;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -169,6 +170,12 @@ public class VisionUtilsTest {
         @Override
         public int getHeight() {
             return 480;
+        }
+
+        @Override
+        public Icon getPropertySheetHolderIcon() {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
 }
