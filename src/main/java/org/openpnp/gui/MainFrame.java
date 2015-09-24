@@ -114,7 +114,6 @@ public class MainFrame extends JFrame {
 	public static FeedersPanel feedersPanel;
 	public static JobPanel jobPanel;
 	public static CamerasPanel camerasPanel;
-	public static HeadsPanel headsPanel;
 	public static CameraPanel cameraPanel;
     public static NozzleTipsPanel nozzleTipsPanel;
     public static MachineSetupPanel machineSetupPanel;
@@ -171,7 +170,6 @@ public class MainFrame extends JFrame {
 		packagesPanel = new PackagesPanel(configuration, this);
 		feedersPanel = new FeedersPanel(configuration, this);
 		camerasPanel = new CamerasPanel(this, configuration);
-		headsPanel = new HeadsPanel(this, configuration, machineControlsPanel);
         machineSetupPanel = new MachineSetupPanel();
         nozzleTipsPanel = new NozzleTipsPanel();
 
@@ -435,7 +433,6 @@ public class MainFrame extends JFrame {
 		panelBottom.addTab("Packages", null, packagesPanel, null);
 		panelBottom.addTab("Feeders", null, feedersPanel, null);
 		panelBottom.addTab("Cameras", null, camerasPanel, null);
-		panelBottom.addTab("Heads", null, headsPanel, null);
         panelBottom.addTab("Nozzle Tips", null, nozzleTipsPanel, null);
         panelBottom.addTab("Machine Setup", null, machineSetupPanel, null);
 
