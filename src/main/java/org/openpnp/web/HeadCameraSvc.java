@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -47,8 +48,9 @@ public class HeadCameraSvc {
     
     @Getter
     @Setter
+    @ToString
     public static class PointDto {
-        private int x;
-        private int y;
+        private double x;
+        private double y;
     }
 }
