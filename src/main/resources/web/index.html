@@ -1,3 +1,50 @@
-hi hi hi
+<html>
+    <body>
+        <img id="camera" src="">
+    </body>
+</html>
 
-ho ho ho
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script>
+    $(function() {
+        var baseUri = '/api';
+        var cameraUri;
+        
+        getMachine(function(machine) {
+            var head = machine.heads[0];
+            var camera = head.cameras[0];
+            cameraUri = baseUri
+                    + '/machine/heads/' + head.id
+                    + '/cameras/' + camera.id;
+            $('#camera').attr('src', cameraUri + '/stream');
+            $('#camera').click(cameraImageClicked);
+        });
+
+        function cameraImageClicked(e) {
+            var offset = $(this).offset();
+            var x = e.pageX - offset.left;
+            var y = e.pageY - offset.top;
+            $.ajax({
+                type : 'POST',
+                url : cameraUri + '/jog',
+                contentType : 'application/json; charset=utf-8',
+                data : JSON.stringify({
+                    x : x,
+                    y : y
+                }),
+                success : function( data ) {
+                }
+            });
+        }
+        
+        function getMachine(callback) {
+            $.ajax({
+                url : baseUri + '/machine',
+                dataType : 'json',
+                success : function(machine) {
+                    return callback(machine);
+                }
+            });        
+        }
+    });
+</script>

@@ -6,15 +6,9 @@ import java.net.URI;
 import org.apache.commons.io.FileUtils;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Machine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,46 +60,18 @@ public class Main {
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
                 URI.create("http://localhost:8080/api"), 
                 new ResourceConfig().packages("org.openpnp.web"));
+        
         server.getServerConfiguration().addHttpHandler(
                 new CLStaticHttpHandler(
                         ClassLoader.getSystemClassLoader(), 
                         "/web/"),
                 "/");
         
-        Configuration.get().addListener(new ConfigurationListener() {
-            @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
-                // TODO Auto-generated method stub
-                
-            }
-            
-            @Override
-            public void configurationComplete(final Configuration configuration)
-                    throws Exception {
-                new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            Machine machine = configuration.getMachine();
-                            Camera camera = machine.getHeads().get(0).getCameras().get(0);
-                            machine.setEnabled(true);
-                            while (true) {
-                                camera.moveTo(
-                                        new Location(
-                                                LengthUnit.Millimeters,
-                                                Math.random() * 100,
-                                                Math.random() * 100,
-                                                0,
-                                                0), 1.0);
-                                Thread.sleep(1000);
-                            }
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            }
-        });
+        // For development, comment out the CLStaticStaticHttpHandler above use
+        // the below so restart is not required
+        
+//        StaticHttpHandler handler = new StaticHttpHandler("/Users/jason/Projects/openpnp/openpnp/src/main/resources/web");
+//        handler.setFileCacheEnabled(false);
+//        server.getServerConfiguration().addHttpHandler(handler, "/");
     }
 }

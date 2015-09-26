@@ -1,9 +1,8 @@
 package org.openpnp.web;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -14,55 +13,42 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Machine;
+import org.openpnp.util.VisionUtils;
 
 @Path("/machine/heads/{headId}/cameras")
 public class HeadCameraSvc {
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<CameraDto> get(@PathParam("headId") String headId) {
-        List<CameraDto> res = new ArrayList<>();
-        for (Camera camera : Configuration.get().getMachine().getHead(headId).getCameras()) {
-            res.add(new CameraDto(camera));
+    @POST
+    @Path("/{cameraId}/jog")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void jogToPoint(
+            @PathParam("headId") String headId, 
+            @PathParam("cameraId") String cameraId,
+            PointDto point) throws Exception {
+        Machine machine = Configuration.get().getMachine();
+        Camera camera = machine.getHead(headId).getCamera(cameraId);
+        if (!machine.isEnabled()) {
+            machine.setEnabled(true);
         }
-        return res;
+        Location location = VisionUtils.getPixelLocation(camera, point.getX(), point.getY());
+        camera.moveTo(location, 1.0);
     }
     
     @GET
-    @Path("/{cameraId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public CameraDto get(@PathParam("headId") String headId, @PathParam("cameraId") String cameraId) {
-        return new CameraDto(Configuration.get().getMachine().getHead(headId).getCamera(cameraId));
-    }
-    
-    @GET
-    @Path("/{cameraId}/stream.html")
-    @Produces("text/html")
-    public String getStreamHtml(@PathParam("headId") String headId, @PathParam("cameraId") String cameraId) throws Exception {
-        return "<html><body><img src=\"stream.mjpeg\"></body></html>";
-    }
-
-    @GET
-    @Path("/{cameraId}/stream.mjpeg")
+    @Path("/{cameraId}/stream")
     @Produces("text/plain")
     public Response getStreamMjpeg(@PathParam("headId") String headId, @PathParam("cameraId") String cameraId) throws Exception {
         Camera camera = Configuration.get().getMachine().getHead(headId).getCamera(cameraId);
         return new MjpegCameraResponse(camera, 10).getResponse();
     }
     
+    
     @Getter
     @Setter
-    public static class CameraDto {
-        private String id;
-        private String name;
-        
-        public CameraDto() {
-            
-        }
-        
-        public CameraDto(Camera camera) {
-            id = camera.getId();
-            name = camera.getName();
-        }
+    public static class PointDto {
+        private int x;
+        private int y;
     }
 }
