@@ -9,15 +9,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.web.dto.PointDto;
 
 @Path("/machine/heads/{headId}/cameras")
 public class HeadCameraSvc {
@@ -43,14 +40,5 @@ public class HeadCameraSvc {
     public Response getStreamMjpeg(@PathParam("headId") String headId, @PathParam("cameraId") String cameraId) throws Exception {
         Camera camera = Configuration.get().getMachine().getHead(headId).getCamera(cameraId);
         return new MjpegCameraResponse(camera, 10).getResponse();
-    }
-    
-    
-    @Getter
-    @Setter
-    @ToString
-    public static class PointDto {
-        private double x;
-        private double y;
     }
 }
