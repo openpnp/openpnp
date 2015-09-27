@@ -58,7 +58,7 @@ public class Main {
         Configuration.get().load();
         
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
-                URI.create("http://localhost:8080/api"), 
+                URI.create("http://0.0.0.0:8080/api"), 
                 new ResourceConfig().packages("org.openpnp.web"));
         
         server.getServerConfiguration().addHttpHandler(
