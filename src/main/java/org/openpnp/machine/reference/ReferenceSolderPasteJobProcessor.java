@@ -23,12 +23,11 @@ package org.openpnp.machine.reference;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Pad;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.util.MovableUtils;
@@ -73,7 +72,7 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
 		PasteDispenser dispenser = head.getPasteDispensers().get(0);
 
 		for (BoardLocation boardLocation : job.getBoardLocations()) {
-		    for (Pad pad : boardLocation.getBoard().getSolderPastePads()) {
+		    for (BoardPad pad : boardLocation.getBoard().getSolderPastePads()) {
 		        if (pad.getSide() != boardLocation.getSide()) {
 		            continue;
 		        }

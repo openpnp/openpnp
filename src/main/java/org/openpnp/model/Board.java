@@ -59,7 +59,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	private ArrayList<Placement> placements = new ArrayList<>();
 
     @ElementList(required=false)
-    private ArrayList<Pad> solderPastePads = new ArrayList<>();
+    private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
     
 	private transient File file;
 	private transient boolean dirty;
@@ -80,7 +80,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         for (Placement placement : placements) {
             placement.addPropertyChangeListener(this);
         }
-        for (Pad pad : solderPastePads) {
+        for (BoardPad pad : solderPastePads) {
             pad.addPropertyChangeListener(this);
         }
 	}
@@ -128,13 +128,13 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 		}
 	}
 	
-    public List<Pad> getSolderPastePads() {
+    public List<BoardPad> getSolderPastePads() {
         return Collections.unmodifiableList(solderPastePads);
     }
     
-    public void addSolderPastePad(Pad pad) {
+    public void addSolderPastePad(BoardPad pad) {
         Object oldValue = solderPastePads;
-        solderPastePads = new ArrayList<Pad>(solderPastePads);
+        solderPastePads = new ArrayList<BoardPad>(solderPastePads);
         solderPastePads.add(pad);
         firePropertyChange("solderPastePads", oldValue, solderPastePads);
         if (pad != null) {
@@ -142,9 +142,9 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         }
     }
     
-    public void removeSolderPastePad(Pad pad) {
+    public void removeSolderPastePad(BoardPad pad) {
         Object oldValue = solderPastePads;
-        solderPastePads = new ArrayList<Pad>(solderPastePads);
+        solderPastePads = new ArrayList<BoardPad>(solderPastePads);
         solderPastePads.remove(pad);
         firePropertyChange("solderPastePads", oldValue, solderPastePads);
         if (pad != null) {

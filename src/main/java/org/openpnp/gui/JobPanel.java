@@ -73,10 +73,10 @@ import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
-import org.openpnp.model.Pad;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
@@ -658,7 +658,7 @@ public class JobPanel extends JPanel {
             for (Placement placement : importedBoard.getPlacements()) {
                 existingBoard.addPlacement(placement);
             }
-            for (Pad pad : importedBoard.getSolderPastePads()) {
+            for (BoardPad pad : importedBoard.getSolderPastePads()) {
                 // TODO: This is a temporary hack until we redesign the importer
                 // interface to be more intuitive. The Gerber importer tends
                 // to return everything in Inches, so this is a method to

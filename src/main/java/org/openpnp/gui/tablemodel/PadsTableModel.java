@@ -28,11 +28,11 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardPad;
+import org.openpnp.model.BoardPad.Type;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
-import org.openpnp.model.Pad;
-import org.openpnp.model.Pad.Type;
 
 public class PadsTableModel extends AbstractTableModel {
 	final Configuration configuration;
@@ -92,7 +92,7 @@ public class PadsTableModel extends AbstractTableModel {
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		try {
-			Pad pad = board.getSolderPastePads().get(rowIndex);
+			BoardPad pad = board.getSolderPastePads().get(rowIndex);
             if (columnIndex == 0) {
                 pad.setName((String) aValue);
             }
@@ -128,7 +128,7 @@ public class PadsTableModel extends AbstractTableModel {
 	}
 	
 	public Object getValueAt(int row, int col) {
-		Pad pad = board.getSolderPastePads().get(row);
+		BoardPad pad = board.getSolderPastePads().get(row);
 		Location loc = pad.getLocation();
 		switch (col) {
 	    case 0:
