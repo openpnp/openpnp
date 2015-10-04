@@ -19,6 +19,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -51,6 +52,9 @@ public class JobPastePanel extends JPanel {
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
 
+    private static Color typeColorIgnore = new Color(252, 255, 157);
+    private static Color typeColorPaste = new Color(157, 255, 168);
+    
     public JobPastePanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
         
@@ -344,10 +348,14 @@ public class JobPastePanel extends JPanel {
             Type type = (Type) value;
             setText(type.name());
             if (type == Type.Paste) {
-                setBackground(Color.cyan);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorPaste);
             }
             else if (type == Type.Ignore) {
-                setBackground(Color.yellow);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorIgnore);
             }
         }
     }
