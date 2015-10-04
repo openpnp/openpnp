@@ -13,6 +13,7 @@ import javax.ws.rs.core.StreamingOutput;
 import lombok.Getter;
 
 import org.openpnp.spi.Camera;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
 
 // TODO: We really only want to be encoding a given frame once. Instead of
@@ -58,7 +59,7 @@ class MjpegCameraResponse implements StreamingOutput {
         timeStarted = System.currentTimeMillis();
         while (true) {
             BufferedImage image = camera.capture();
-            image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_INT_RGB);
+            image = ImageUtils.convertBufferedImage(image, BufferedImage.TYPE_INT_RGB);
             ByteArrayOutputStream b = new ByteArrayOutputStream();
             ImageIO.write(image, "jpg", b);
             b.flush();
