@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openpnp.model.BoardPad;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
@@ -61,7 +62,7 @@ public class Rs274xParser {
     private ParseStatistics parseStatistics;
     private boolean regionStarted;
     
-    private List<Pad> pads;
+    private List<BoardPad> pads;
 
     public Rs274xParser() {
         reset();
@@ -74,7 +75,7 @@ public class Rs274xParser {
      * @return
      * @throws Exception
      */
-    public List<Pad> parseSolderPastePads(File file) throws Exception {
+    public List<BoardPad> parseSolderPastePads(File file) throws Exception {
         logger.info("Parsing " + file);
         return parseSolderPastePads(new FileReader(file));
     }
@@ -96,7 +97,7 @@ public class Rs274xParser {
      * @return
      * @throws Exception
      */
-    public List<Pad> parseSolderPastePads(Reader reader) throws Exception {
+    public List<BoardPad> parseSolderPastePads(Reader reader) throws Exception {
         reset();
         
         this.reader = new BufferedReader(reader);
@@ -372,7 +373,7 @@ public class Rs274xParser {
         }
         apertureUseCounts.put(currentAperture.getIndex(), counter);
         
-        Pad pad = currentAperture.createPad(unit, coordinate);
+        BoardPad pad = currentAperture.createPad(unit, coordinate);
         pad.setName(String.format("D%02d-%03d",  currentAperture.getIndex(), counter++));
         pads.add(pad);
         parseStatistics.padCount++;
@@ -974,7 +975,7 @@ public class Rs274xParser {
             return index;
         }
         
-        public abstract Pad createPad(LengthUnit unit, Point2D.Double coordinate);
+        public abstract BoardPad createPad(LengthUnit unit, Point2D.Double coordinate);
     }
     
     static abstract class StandardAperture extends Aperture {
@@ -995,13 +996,16 @@ public class Rs274xParser {
             this.holeDiameter = holeDiameter;
         }
         
-        public Pad createPad(LengthUnit unit, Point2D.Double coordinate) {
+        public BoardPad createPad(LengthUnit unit, Point2D.Double coordinate) {
             Pad.RoundRectangle pad = new Pad.RoundRectangle();
+            pad.setUnits(unit);
             pad.setWidth(width);
             pad.setHeight(height);
             pad.setRoundness(0);
-            pad.setLocation(new Location(unit, coordinate.x, coordinate.y, 0, 0));
-            return pad;
+            BoardPad boardPad = new BoardPad(
+                    pad,
+                    new Location(unit, coordinate.x, coordinate.y, 0, 0));
+            return boardPad;
         }
 
         @Override
@@ -1021,11 +1025,14 @@ public class Rs274xParser {
             this.holeDiameter = holeDiameter;
         }
         
-        public Pad createPad(LengthUnit unit, Point2D.Double coordinate) {
+        public BoardPad createPad(LengthUnit unit, Point2D.Double coordinate) {
             Pad.Circle pad = new Pad.Circle();
             pad.setRadius(diameter / 2);
-            pad.setLocation(new Location(unit, coordinate.x, coordinate.y, 0, 0));
-            return pad;
+            pad.setUnits(unit);
+            BoardPad boardPad = new BoardPad(
+                    pad,
+                    new Location(unit, coordinate.x, coordinate.y, 0, 0));
+            return boardPad;
         }
 
         @Override
@@ -1071,7 +1078,7 @@ public class Rs274xParser {
         }
         
         @Override
-        public Pad createPad(LengthUnit unit, java.awt.geom.Point2D.Double coordinate) {
+        public BoardPad createPad(LengthUnit unit, java.awt.geom.Point2D.Double coordinate) {
             return null;
         }
     }
