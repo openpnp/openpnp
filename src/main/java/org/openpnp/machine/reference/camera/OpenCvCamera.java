@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -258,6 +259,23 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         return null;
     }
     
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if (thread != null) {
+            thread.interrupt();
+            try {
+                thread.join();
+            }
+            catch (Exception e) {
+                
+            }
+        }
+        if (fg.isOpened()) {
+            fg.release();
+        }
+    }
+
     public static class Calibration {
         @Attribute(required=false)
         private boolean enabled = false;
