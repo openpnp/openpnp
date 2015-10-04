@@ -109,6 +109,13 @@ public class Length {
 		
 	}
 	
+	public static double convertToUnits(
+	        double value, 
+	        LengthUnit fromUnits, 
+	        LengthUnit toUnits) {
+	    return new Length(value, fromUnits).convertToUnits(toUnits).getValue();
+	}
+	
 	public static Length parse(String s) {
 		return parse(s, false);
 	}

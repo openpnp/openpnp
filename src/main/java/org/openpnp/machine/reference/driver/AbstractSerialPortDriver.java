@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.TimeoutException;
 
+import javax.swing.Icon;
+
 import jssc.SerialPort;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
@@ -130,7 +132,12 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     public void setBaud(int baud) {
         this.baud = baud;
     }
-    
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     /**
      * SerialInputStream and SerialOutputStream are from the pull request

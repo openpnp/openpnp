@@ -1,6 +1,5 @@
 package org.openpnp.util;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
@@ -60,32 +59,11 @@ public class OpenCvUtils {
             type = CvType.CV_8UC3;
         }
         else {
-            img = convertBufferedImage(img, BufferedImage.TYPE_3BYTE_BGR);
+            img = ImageUtils.convertBufferedImage(img, BufferedImage.TYPE_3BYTE_BGR);
             type = CvType.CV_8UC3;
         }
         Mat mat = new Mat(img.getHeight(), img.getWidth(), type);
         mat.put(0, 0, ((DataBufferByte) img.getRaster().getDataBuffer()).getData());
         return mat;
-    }
-
-    /**
-     * Convert a BufferedImage from it's current type to a new, specified type
-     * by creating a new BufferedImage and drawing the source image onto it. If
-     * the image is already of the specified type it is returned unchanged.
-     * 
-     * @param src
-     * @param type
-     * @return
-     */
-    public static BufferedImage convertBufferedImage(BufferedImage src, int type) {
-        if (src.getType() == type) {
-            return src;
-        }
-        BufferedImage img = new BufferedImage(src.getWidth(), src.getHeight(),
-                type);
-        Graphics2D g2d = img.createGraphics();
-        g2d.drawImage(src, 0, 0, null);
-        g2d.dispose();
-        return img;
     }    
 }

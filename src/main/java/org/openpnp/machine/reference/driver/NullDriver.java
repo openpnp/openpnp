@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -304,7 +305,13 @@ public class NullDriver implements ReferenceDriver {
                 new PropertySheetWizardAdapter(getConfigurationWizard())
         };
     }
-    
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     @Override
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub

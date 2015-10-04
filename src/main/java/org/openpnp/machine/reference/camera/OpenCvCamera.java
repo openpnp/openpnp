@@ -22,18 +22,21 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.Action;
 
-import org.opencv.core.Core;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point3;
 import org.opencv.core.Size;
 import org.opencv.highgui.VideoCapture;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.ml.CvNormalBayesClassifier;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -43,6 +46,9 @@ import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWiz
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 /**
  * A Camera implementation based on the OpenCV FrameGrabbers.
@@ -56,8 +62,12 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	@Attribute(name="deviceIndex", required=true)
 	private int deviceIndex = 0;
 	
+	@Element(required=false)
+	private Calibration calibration = new Calibration();
+	
 	private VideoCapture fg = new VideoCapture();
 	private Thread thread;
+	
 	
 	public OpenCvCamera() {
 	}
@@ -72,6 +82,12 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    if (!fg.read(mat)) {
 		        return null;
 		    }
+            if (calibration.isEnabled()) {
+                mat = undistort(mat);
+            }
+//		    if (calibration.isEnabled()) {
+//		        mat = estimatePose(mat);
+//		    }
 		    BufferedImage img = OpenCvUtils.toBufferedImage(mat);
 		    mat.release();
 		    return transformImage(img);
@@ -79,6 +95,78 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		catch (Exception e) {
 			return null;
 		}
+	}
+	
+	private Mat undistort(Mat mat) {
+        Mat dst = new Mat();
+        Imgproc.undistort(
+                mat, 
+                dst, 
+                calibration.getCameraMatrix(), 
+                calibration.getDistortionCoefficients());
+        return dst;
+	}
+
+	/**
+	 * This is just an experiment related to bed leveling. Doesn't belong
+	 * here and will go away eventually.
+	 * @param mat
+	 * @return
+	 */
+	private Mat estimatePose(Mat mat) {
+        Size patternSize = new Size(5, 6);
+        MatOfPoint2f corners = new MatOfPoint2f();
+
+        boolean found = Calib3d.findCirclesGridDefault(
+                mat, 
+                patternSize, 
+                corners,
+                Calib3d.CALIB_CB_SYMMETRIC_GRID);
+	    if (found) {
+	        Calib3d.drawChessboardCorners(
+	                mat, 
+	                patternSize, 
+	                corners, 
+	                found);
+	        Mat rvec = new Mat();
+	        Mat tvec = new Mat();
+	        List<Point3> objectPointsList = new ArrayList<>();
+	        for (int y = 0; y < patternSize.height; y++) {
+	            for (int x = 0; x < patternSize.width; x++) {
+	                objectPointsList.add(new Point3(y, x, 0));
+	            }
+	        }
+	        MatOfPoint3f objectPoints = new MatOfPoint3f();
+	        objectPoints.fromList(objectPointsList);
+            
+	        MatOfDouble distortionCoefficients = new MatOfDouble(calibration.getDistortionCoefficients());
+	        boolean solved = Calib3d.solvePnP(
+	                objectPoints, 
+	                corners, 
+	                calibration.getCameraMatrix(), 
+	                distortionCoefficients, 
+	                rvec, 
+	                tvec);
+	        if (solved) {
+	            Mat rmat = new Mat();
+                Calib3d.Rodrigues(rvec, rmat);
+                double RAD_2_DEG = 180 / Math.PI;
+                double x = tvec.get(0, 0)[0];
+                double y = tvec.get(1, 0)[0];
+                double z = tvec.get(2, 0)[0];
+                double a = rmat.get(0, 0)[0] * RAD_2_DEG;
+                double b = rmat.get(1, 0)[0] * RAD_2_DEG;
+                double c = rmat.get(2, 0)[0] * RAD_2_DEG;
+                System.out.println(String.format("x %2.2f, y %2.2f, z %2.2f, a %2.2f, b %2.2f, c %2.2f", 
+                        x, 
+                        y, 
+                        z, 
+                        a, 
+                        b, 
+                        c));
+	        }
+	    }
+	    return mat;
 	}
 	
 	@Override
@@ -135,12 +223,15 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		thread = new Thread(this);
 		thread.start();
 	}
-
-	@Override
+	
+	public Calibration getCalibration() {
+	    return calibration;
+	}
+	
+    @Override
 	public Wizard getConfigurationWizard() {
 		return new OpenCvCameraConfigurationWizard(this);
 	}
-	
     
     @Override
     public String getPropertySheetHolderTitle() {
@@ -165,5 +256,55 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    public static class Calibration {
+        @Attribute(required=false)
+        private boolean enabled = false;
+        
+        @Element(name="cameraMatrix", required=false)
+        private double[] cameraMatrixArr = new double[9];
+        
+        @Element(name="distortionCoefficients", required=false)
+        private double[] distortionCoefficientsArr = new double[5];
+        
+        private Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        private Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
+        
+        @Commit
+        private void commit() {
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        @Persist
+        private void persist() {
+            cameraMatrix.get(0, 0, cameraMatrixArr);
+            distortionCoefficients.get(0, 0, distortionCoefficientsArr);
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Mat getCameraMatrix() {
+            return cameraMatrix;
+        }
+
+        public void setCameraMatrix(Mat cameraMatrix) {
+            this.cameraMatrix = cameraMatrix;
+        }
+
+        public Mat getDistortionCoefficients() {
+            return distortionCoefficients;
+        }
+
+        public void setDistortionCoefficients(Mat distortionCoefficients) {
+            this.distortionCoefficients = distortionCoefficients;
+        }
     }
 }

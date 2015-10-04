@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +27,7 @@ import org.openpnp.gui.importer.rs274x.Rs274xParser;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardPad;
 import org.openpnp.model.Pad;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -167,18 +167,18 @@ class SolderPasteGerberImporterDlg extends JDialog {
             SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.topFile = new File(textFieldTopFile.getText());
             SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.bottomFile = new File(textFieldBottomFile.getText());
             SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.board = new Board();
-            List<Pad> pads = new ArrayList<>();
+            List<BoardPad> pads = new ArrayList<>();
             try {
                 if (SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.topFile.exists()) {
-                    List<Pad> topPads = new Rs274xParser().parseSolderPastePads(SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.topFile);
-                    for (Pad pad : topPads) {
+                    List<BoardPad> topPads = new Rs274xParser().parseSolderPastePads(SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.topFile);
+                    for (BoardPad pad : topPads) {
                         pad.setSide(Side.Top);
                     }
                     pads.addAll(topPads);
                 }
                 if (SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.bottomFile.exists()) {
-                    List<Pad> bottomPads = new Rs274xParser().parseSolderPastePads(SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.bottomFile);
-                    for (Pad pad : bottomPads) {
+                    List<BoardPad> bottomPads = new Rs274xParser().parseSolderPastePads(SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.bottomFile);
+                    for (BoardPad pad : bottomPads) {
                         pad.setSide(Side.Bottom);
                     }
                     pads.addAll(bottomPads);
@@ -188,7 +188,7 @@ class SolderPasteGerberImporterDlg extends JDialog {
                 MessageBoxes.errorBox(SolderPasteGerberImporterDlg.this, "Import Error", e1);
                 return;
             }
-            for (Pad pad : pads) {
+            for (BoardPad pad : pads) {
                 SolderPasteGerberImporterDlg.this.solderPasteGerberImporter.board.addSolderPastePad(pad);
             }
             setVisible(false);

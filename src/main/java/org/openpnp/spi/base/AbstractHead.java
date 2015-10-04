@@ -3,6 +3,8 @@ package org.openpnp.spi.base;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.Icon;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -124,6 +126,9 @@ public abstract class AbstractHead implements Head {
         for (Actuator actuator : actuators) {
             actuator.moveToSafeZ(speed);
         }
+        for (PasteDispenser dispenser : pasteDispensers) {
+            dispenser.moveToSafeZ(speed);
+        }
     }
     
     @Override
@@ -144,5 +149,11 @@ public abstract class AbstractHead implements Head {
     @Override
     public PasteDispenser getPasteDispenser(String id) {
         return pasteDispensers.get(id);
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

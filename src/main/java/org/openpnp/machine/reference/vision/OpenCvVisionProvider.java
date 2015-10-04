@@ -50,6 +50,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.simpleframework.xml.Attribute;
@@ -102,8 +103,8 @@ public class OpenCvVisionProvider implements VisionProvider {
         
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
-        template = OpenCvUtils.convertBufferedImage(template,BufferedImage.TYPE_BYTE_GRAY);   
-        image = OpenCvUtils.convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
+        template = ImageUtils.convertBufferedImage(template,BufferedImage.TYPE_BYTE_GRAY);   
+        image = ImageUtils.convertBufferedImage(image, BufferedImage.TYPE_BYTE_GRAY);
         
         Mat templateMat = OpenCvUtils.toMat(template);
         Mat imageMat = OpenCvUtils.toMat(image);
@@ -148,11 +149,10 @@ public class OpenCvVisionProvider implements VisionProvider {
                         new Scalar(255));
             }
             
-            Location offsets = VisionUtils.getPixelCenterOffsets(
-                    camera,
+            match.location = VisionUtils.getPixelLocation(
+                    camera, 
                     x + (templateMat.cols() / 2), 
                     y + (templateMat.rows() / 2));
-            match.location = camera.getLocation().subtract(offsets);
             matches.add(match);
         }
         
@@ -179,8 +179,8 @@ public class OpenCvVisionProvider implements VisionProvider {
         
         // Convert the camera image and template image to the same type. This
         // is required by the cvMatchTemplate call.
-        templateImage_ = OpenCvUtils.convertBufferedImage(templateImage_,BufferedImage.TYPE_INT_ARGB);   
-        cameraImage_ = OpenCvUtils.convertBufferedImage(cameraImage_, BufferedImage.TYPE_INT_ARGB);
+        templateImage_ = ImageUtils.convertBufferedImage(templateImage_,BufferedImage.TYPE_INT_ARGB);   
+        cameraImage_ = ImageUtils.convertBufferedImage(cameraImage_, BufferedImage.TYPE_INT_ARGB);
         
         Mat templateImage = OpenCvUtils.toMat(templateImage_);
         Mat cameraImage = OpenCvUtils.toMat(cameraImage_);

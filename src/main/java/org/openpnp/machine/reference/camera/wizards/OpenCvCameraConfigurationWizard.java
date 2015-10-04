@@ -36,6 +36,7 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
@@ -71,13 +72,22 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
 			comboBoxDeviceIndex.addItem(new Integer(i));
 		}
 		panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
+		
+		lblUndistort = new JLabel("Apply Calibration?");
+		panelGeneral.add(lblUndistort, "2, 4");
+		
+		checkBoxUndistort = new JCheckBox("");
+		panelGeneral.add(checkBoxUndistort, "4, 4");
 	}
 
 	@Override
 	public void createBindings() {
 	    super.createBindings();
 		addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
+		addWrappedBinding(camera.getCalibration(), "enabled", checkBoxUndistort, "selected");
 	}
 
 	private JComboBox comboBoxDeviceIndex;
+	private JCheckBox checkBoxUndistort;
+	private JLabel lblUndistort;
 }

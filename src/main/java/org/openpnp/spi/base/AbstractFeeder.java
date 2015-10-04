@@ -1,6 +1,9 @@
 package org.openpnp.spi.base;
 
+import javax.swing.Icon;
+
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -67,5 +70,10 @@ public abstract class AbstractFeeder implements Feeder {
     @Override
     public void setName(String name) {
         this.name = name;
-    }    
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return Icons.editFeeder;
+    }  
 }

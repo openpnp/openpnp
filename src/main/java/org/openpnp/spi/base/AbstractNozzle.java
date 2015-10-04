@@ -3,6 +3,9 @@ package org.openpnp.spi.base;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.Icon;
+
+import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
@@ -56,5 +59,10 @@ public abstract class AbstractNozzle implements Nozzle {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return Icons.captureTool;
     }
 }

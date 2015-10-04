@@ -1,6 +1,7 @@
 package org.openpnp.spi;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 import javax.swing.JPanel;
 
 /**
@@ -19,4 +20,5 @@ public interface PropertySheetHolder {
     PropertySheetHolder[] getChildPropertySheetHolders();
     PropertySheet[] getPropertySheets();
     Action[] getPropertySheetHolderActions();
+    Icon getPropertySheetHolderIcon();
 }

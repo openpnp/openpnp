@@ -22,6 +22,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -42,12 +43,15 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
@@ -128,6 +132,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         
         tree = new JTree();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.setCellRenderer(treeCellRenderer);
         scrollPane.setViewportView(tree);
         
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -220,6 +225,10 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             }
         }
         
+        public PropertySheetHolder getPropertySheetHolder() {
+            return obj;
+        }
+        
         @Override
         public TreeNode getChildAt(int childIndex) {
             return children.get(childIndex);
@@ -259,5 +268,19 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         public String toString() {
             return obj.getPropertySheetHolderTitle();
         }
-    }	
+    }
+    
+    private TreeCellRenderer treeCellRenderer = new DefaultTreeCellRenderer() {
+        // http://stackoverflow.com/questions/20691946/set-icon-to-each-node-in-jtree
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree,
+            Object value, boolean selected, boolean expanded,
+            boolean leaf, int row, boolean hasFocus) {
+                super.getTreeCellRendererComponent(tree, value, selected,expanded, leaf, row, hasFocus);
+                PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) value;
+                PropertySheetHolder psh = node.getPropertySheetHolder();
+                setIcon(psh.getPropertySheetHolderIcon());
+                return this;
+        }    
+    };
 }

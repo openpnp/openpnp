@@ -1,5 +1,7 @@
 package org.openpnp.spi.base;
 
+import javax.swing.Icon;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PasteDispenser;
@@ -42,5 +44,11 @@ public abstract class AbstractPasteDispenser implements PasteDispenser {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -1,11 +1,18 @@
 package org.openpnp.machine.reference;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JComponent;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
@@ -13,6 +20,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.simpleframework.xml.Attribute;
@@ -102,8 +112,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
+        return new Action[] {
+                unloadAction,
+                loadAction
+        };
     }
 
     @Override
@@ -144,4 +156,65 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerEndLocation(Location changerEndLocation) {
         this.changerEndLocation = changerEndLocation;
     }
+    
+    private Nozzle getParentNozzle() {
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (Nozzle nozzle : head.getNozzles()) {
+                for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+                    if (nozzleTip == this) {
+                        return nozzle;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    public Action loadAction = new AbstractAction("Load") {
+        {
+            putValue(SMALL_ICON, Icons.load);
+            putValue(NAME, "Load");
+            putValue(SHORT_DESCRIPTION,
+                    "Load the currently selected nozzle tip.");
+        }
+        
+        @Override
+        public void actionPerformed(final ActionEvent arg0) {
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        getParentNozzle().loadNozzleTip(ReferenceNozzleTip.this);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(((JComponent) arg0.getSource()).getTopLevelAncestor(),
+                                "Movement Error", e);
+                    }
+                }
+            });
+        }
+    };
+    
+    public Action unloadAction = new AbstractAction("Unoad") {
+        {
+            putValue(SMALL_ICON, Icons.unload);
+            putValue(NAME, "Unload");
+            putValue(SHORT_DESCRIPTION,
+                    "Unoad the currently loaded nozzle tip.");
+        }
+        
+        @Override
+        public void actionPerformed(final ActionEvent arg0) {
+            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        getParentNozzle().unloadNozzleTip();
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(((JComponent) arg0.getSource()).getTopLevelAncestor(),
+                                "Movement Error", e);
+                    }
+                }
+            });
+        }
+    };
 }

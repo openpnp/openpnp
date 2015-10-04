@@ -1,5 +1,7 @@
 package org.openpnp.spi.base;
 
+import javax.swing.Icon;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
@@ -29,5 +31,10 @@ public abstract class AbstractNozzleTip implements NozzleTip {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return null;
     }
 }
