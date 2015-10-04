@@ -1,136 +1,91 @@
 package org.openpnp.model;
 
 import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.RoundRectangle2D;
 
-import org.openpnp.model.Board.Side;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 
 public abstract class Pad extends AbstractModelObject {
-    public enum Type {
-        Paste,
-        Ignore
-    }
-    
-    @Attribute(required=false)
-    private Type type = Type.Paste;
-
     @Attribute
-    protected Side side = Side.Top;
-    
-    @Element
-    protected Location location = new Location(LengthUnit.Millimeters);
-    
-    @Attribute(required=false)
-    protected String name;
+    protected LengthUnit units = LengthUnit.Millimeters; 
     
     public abstract Shape getShape();
+    public abstract Pad convertToUnits(LengthUnit units);
     
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        Location oldValue = this.location;
-        this.location = location;
-        firePropertyChange("location", oldValue, location);
-    }
-
-    public Side getSide() {
-        return side;
+    public LengthUnit getUnits() {
+        return units;
     }
     
-    public void setSide(Side side) {
-        Object oldValue = this.side;
-        this.side = side;
-        firePropertyChange("side", oldValue, side);
+    public void setUnits(LengthUnit units) {
+        Object oldValue = units;
+        this.units = units;
+        firePropertyChange("units", oldValue, units);
     }
     
-    public Type getType() {
-        return type;
-    }
-    
-    public void setType(Type type) {
-        Object oldValue = this.type;
-        this.type = type;
-        firePropertyChange("type", oldValue, type);
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        Object oldValue = this.name;
-        this.name = name;
-        firePropertyChange("name", oldValue, name);
-    }
-    
-    public static class Line extends Pad {
-        @Attribute
-        private double x1;
-        
-        @Attribute
-        private double y1;
-        
-        @Attribute
-        private double x2;
-        
-        @Attribute
-        private double y2;
-        
-        public double getX1() {
-            return x1;
-        }
-
-        public void setX1(double x1) {
-            double oldValue = this.x1;
-            this.x1 = x1;
-            firePropertyChange("x1", oldValue, x1);
-        }
-        
-        public double getY1() {
-            return y1;
-        }
-
-        public void setY1(double y1) {
-            double oldValue = this.y1;
-            this.y1 = y1;
-            firePropertyChange("y1", oldValue, y1);
-        }
-        
-        public double getX2() {
-            return x2;
-        }
-
-        public void setX2(double x2) {
-            double oldValue = this.x2;
-            this.x2 = x2;
-            firePropertyChange("x2", oldValue, x2);
-        }
-        
-        public double getY2() {
-            return y2;
-        }
-
-        public void setY2(double y2) {
-            double oldValue = this.y2;
-            this.y2 = y2;
-            firePropertyChange("y2", oldValue, y2);
-        }
-        
-        public Shape getShape() {
-            return new Line2D.Double(
-                    location.getX() + x1,
-                    location.getY() - y1,
-                    location.getX() + x2,
-                    location.getY() - y2);
-        }
-    }
+    // TODO: Line doesn't really work as a shape, so I am removing it
+    // until we really have a need for it at which point it can be revisited.
+//    public static class Line extends Pad {
+//        @Attribute
+//        private double x1;
+//        
+//        @Attribute
+//        private double y1;
+//        
+//        @Attribute
+//        private double x2;
+//        
+//        @Attribute
+//        private double y2;
+//        
+//        public double getX1() {
+//            return x1;
+//        }
+//
+//        public void setX1(double x1) {
+//            double oldValue = this.x1;
+//            this.x1 = x1;
+//            firePropertyChange("x1", oldValue, x1);
+//        }
+//        
+//        public double getY1() {
+//            return y1;
+//        }
+//
+//        public void setY1(double y1) {
+//            double oldValue = this.y1;
+//            this.y1 = y1;
+//            firePropertyChange("y1", oldValue, y1);
+//        }
+//        
+//        public double getX2() {
+//            return x2;
+//        }
+//
+//        public void setX2(double x2) {
+//            double oldValue = this.x2;
+//            this.x2 = x2;
+//            firePropertyChange("x2", oldValue, x2);
+//        }
+//        
+//        public double getY2() {
+//            return y2;
+//        }
+//
+//        public void setY2(double y2) {
+//            double oldValue = this.y2;
+//            this.y2 = y2;
+//            firePropertyChange("y2", oldValue, y2);
+//        }
+//        
+//        public Shape getShape() {
+//            return new Line2D.Double(
+//                    x1,
+//                    y1,
+//                    x2,
+//                    y2);
+//        }
+//    }
     
     public static class Ellipse extends Pad {
         @Attribute
@@ -161,10 +116,19 @@ public abstract class Pad extends AbstractModelObject {
 
         public Shape getShape() {
             return new Ellipse2D.Double(
-                    location.getX() - (width / 2), 
-                    location.getY() - (height / 2), 
+                    -width / 2, 
+                    -height / 2, 
                     width, 
                     height);
+        }
+
+        @Override
+        public Ellipse convertToUnits(LengthUnit units) {
+            Ellipse that = new Ellipse();
+            that.setUnits(units);
+            that.setHeight(Length.convertToUnits(height, this.units, units));
+            that.setWidth(Length.convertToUnits(width, this.units, units));
+            return that;
         }
     }
 
@@ -185,10 +149,18 @@ public abstract class Pad extends AbstractModelObject {
 
         public Shape getShape() {
             return new Ellipse2D.Double(
-                    location.getX() - radius, 
-                    location.getY() - radius, 
+                    -radius, 
+                    -radius, 
                     radius * 2, 
                     radius * 2);
+        }
+
+        @Override
+        public Circle convertToUnits(LengthUnit units) {
+            Circle that = new Circle();
+            that.setUnits(units);
+            that.setRadius(Length.convertToUnits(radius, this.units, units));
+            return that;
         }
     }
     
@@ -233,17 +205,23 @@ public abstract class Pad extends AbstractModelObject {
         }
 
         public Shape getShape() {
-            Shape shape = new RoundRectangle2D.Double(
+            return new RoundRectangle2D.Double(
                     -width / 2,
                     -height / 2,
                     width,
                     height,
                     width / 1.0 * roundness,
                     height / 1.0 * roundness);
-            AffineTransform tx = new AffineTransform();
-            tx.translate(location.getX(), -location.getY());
-            tx.rotate(Math.toRadians(-location.getRotation()));
-            return tx.createTransformedShape(shape);
+        }
+
+        @Override
+        public RoundRectangle convertToUnits(LengthUnit units) {
+            RoundRectangle that = new RoundRectangle();
+            that.setUnits(units);
+            that.setHeight(Length.convertToUnits(height, this.units, units));
+            that.setWidth(Length.convertToUnits(width, this.units, units));
+            // don't convert roundness because it's a percentage
+            return that;
         }
     }    
 }

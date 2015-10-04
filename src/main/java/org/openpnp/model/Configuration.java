@@ -475,6 +475,10 @@ public class Configuration extends AbstractModelObject {
 				boardLocation.setBoardFile(board.getFile().getAbsolutePath());
 			}
 		}
+		// Save any boards in the job
+		for (Board board : boards) {
+		    saveBoard(board);
+		}
 		// Save the job
 		serializer.write(job, new ByteArrayOutputStream());
 		serializer.write(job, file);

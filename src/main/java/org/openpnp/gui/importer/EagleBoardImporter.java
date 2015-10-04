@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -50,13 +51,19 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Package;
+import org.openpnp.model.Pad;
+import org.openpnp.model.Pad.RoundRectangle;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.eagle.*;
+import org.openpnp.model.eagle.EagleLoader;
 import org.openpnp.model.eagle.xml.Element;
+import org.openpnp.model.eagle.xml.Layer;
+import org.openpnp.model.eagle.xml.Library;
+import org.openpnp.model.eagle.xml.Param;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -67,10 +74,11 @@ import com.jgoodies.forms.layout.RowSpec;
 public class EagleBoardImporter implements BoardImporter {
     private final static String NAME = "CadSoft EAGLE Board";
     private final static String DESCRIPTION = "Import files directly from EAGLE's <filename>.brd file.";
-    
+
 	private Board board;
 	private File boardFile;
-	
+	static private Double mil_to_mm = 0.0254;
+
 	@Override
     public String getImporterName() {
 	    return NAME;
@@ -89,12 +97,60 @@ public class EagleBoardImporter implements BoardImporter {
 	}
     
 	private static List<Placement> parseFile(File file, Side side, boolean createMissingParts) throws Exception {
+		
+		String topLayer    = "";
+		String bottomLayer = "";
+		String tCreamLayer = "";
+		String bCreamLayer = "";
+		
+		String mmMinCreamFrame_string;
+		double mmMinCreamFrame_number = 0;
+		String mmMaxCreamFrame_string;
+		double mmMaxCreamFrame_number = 0;
+		
 		ArrayList<Placement> placements = new ArrayList<Placement>();
-		//we don't use the 'side' parameter as we cab read this from the .brd file
+		//we don't use the 'side' parameter as we can read this from the .brd file
 		//in the future we could use the side parameter to restrict this from only parsing one side or the other or both
 		
 		EagleLoader boardToProcess = new EagleLoader(file);
 		if (boardToProcess.board != null ) {
+			
+			//first establish which is the Top, Bottom, tCream and bCream layers
+			for (Layer layer : boardToProcess.layers.getLayer() ) {
+				if (layer.getName().equalsIgnoreCase("Top")) {
+					topLayer = layer.getNumber();
+				} else if (layer.getName().equalsIgnoreCase("Bottom")) {
+					bottomLayer = layer.getNumber();
+				} else if (layer.getName().equalsIgnoreCase("tCream")) {
+					tCreamLayer = layer.getNumber();
+				} else if (layer.getName().equalsIgnoreCase("bCream")) {
+					bCreamLayer = layer.getNumber();
+				}
+			}
+			// figure out the parameters for the pads based on DesignRules
+			for (Param params : boardToProcess.board.getDesignrules().getParam() ) {
+
+				if (params.getName().compareToIgnoreCase("mlMinCreamFrame")==0) { //found exact match when 0 returned
+					mmMinCreamFrame_string = params.getValue().replaceAll("[A-Za-z ]", ""); //remove all letters, i.e. 0mil becomes 0
+					if (params.getValue().toUpperCase().endsWith("MIL")) {
+						mmMinCreamFrame_number = Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
+					} else if (params.getValue().toUpperCase().endsWith("MM")) {
+						mmMinCreamFrame_number = Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
+					} // else throw an exception as can only be mm or mil BUT because we have already initialised these as 0, we don't care
+				}
+				if (params.getName().compareToIgnoreCase("mlMaxCreamFrame")==0) { //found exact match when 0 returned
+					mmMaxCreamFrame_string = params.getValue().replaceAll("[A-Za-z ]", ""); //remove all letters, i.e. "0mil" becomes 0
+					if (params.getValue().toUpperCase().endsWith("MIL")) {
+						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string) * mil_to_mm;
+					} else if (params.getValue().toUpperCase().endsWith("MM")) {
+						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
+					} // else throw an exception as can only be mm or mil BUT because we have already initialised these as 0, we don't care
+				}				
+			}
+			// Now we know the min and max tolerance for the cream (aka solder paste)
+			// which are mmMinCreamFrame_number and mmMaxCreamFrame_number and are in mm (converted from mil as required)
+			
+			//Now we got through each of the parts 
 			if( ! boardToProcess.board.getElements().getElement().isEmpty()){
 				// Process each of the element items
 				for (Element element : boardToProcess.board.getElements().getElement() ) {
@@ -108,7 +164,7 @@ public class EagleBoardImporter implements BoardImporter {
 					else
 						element_side = Side.Top;
 					
-					//Now determine if we want to process this part based on which sideof th eboard it is on
+					//Now determine if we want to process this part based on which side of the board it is on
 					
 					if (side != null) { //null means process both sides
 						if (side != element_side) continue; //exit this loop and process the next element
@@ -126,12 +182,16 @@ public class EagleBoardImporter implements BoardImporter {
 					        y,
 					        0,
 					        rotation));
+					
+					//placement now contains where the package is on the PCB, we need to work out whre the pads
+					//are relative to the 'placement'
 					Configuration cfg = Configuration.get();
 		            if (cfg != null && createMissingParts) {
 		                String value = element.getValue(); // Value
 		                String packageId = element.getPackage(); //Package
-
-		                String partId = packageId;
+		                String libraryId = element.getLibrary(); //Library that contains the package
+		                
+		                String partId = libraryId + "-" + packageId;
 		                if (value.trim().length() > 0) {
 		                    partId += "-" + value;
 		                }
@@ -140,17 +200,95 @@ public class EagleBoardImporter implements BoardImporter {
 		                    part = new Part(partId);
 		                    Package pkg = cfg.getPackage(packageId);
 		                    if (pkg == null) {
-		                        pkg = new Package(packageId);
-		                        cfg.addPackage(pkg);
-		                    }
-		                    part.setPackage(pkg);
+		                        pkg = new Package(libraryId + "-" + packageId);
+		                        //First we need to find the package we want in the libraries in the .brd file
+		                        if ( ! boardToProcess.board.getLibraries().getLibrary().isEmpty()) {
+		                        	for (Library library: boardToProcess.board.getLibraries().getLibrary()) {
+		                        		if (library.getName().equalsIgnoreCase(libraryId)) {
+		                        			//we have found the library, now to scan for the package we want
+		                        			if ( !library.getPackages().getPackage().isEmpty()) {
+		                        				
+		                        				ListIterator<org.openpnp.model.eagle.xml.Package> it = library.getPackages().getPackage().listIterator();
+		                        				
+		                        				while(it.hasNext()) {
 
-		                    cfg.addPart(part);
+		                        					org.openpnp.model.eagle.xml.Package pak = (org.openpnp.model.eagle.xml.Package) it.next();
+				                        			if (pak.getName().equalsIgnoreCase(packageId)) {
+				                		                Footprint fpt = new Footprint();
+				                		                for (Object e: pak.getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHoleOrPadOrSmd()) {
+				                        					if (e instanceof org.openpnp.model.eagle.xml.Smd) {
+				                        						//we have found the correct package in the correct library and we need to see about the pads
+				                        						//now we need to add the pad to the pads in footprint in package
+
+						                		                //Now to iterate through the pads, we need to add pads to the footprint
+						                		                //BUT we also need to take into account the 
+						                		                Pad pad = new Pad.RoundRectangle(); //default to this until we can figure out others
+						                		                        
+						                		                ((RoundRectangle)pad).setRoundness(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRoundness()));
+						                		                        
+						                		                // TODO add support for Polygon and Circle pads
+						                		                pad.setName(((org.openpnp.model.eagle.xml.Smd) e).getName());
+
+						                		                // TODO check that this reduces the pad to the halfway between the minimum & maximum tolerances
+						                		                ((RoundRectangle)pad).setHeight(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDx())-(mmMaxCreamFrame_number-mmMinCreamFrame_number)/2);
+						                		                ((RoundRectangle)pad).setWidth(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDy())-(mmMaxCreamFrame_number-mmMinCreamFrame_number)/2);
+
+//						                		                ((RoundRectangle)pad).setHeight(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDx()));
+//						                		                ((RoundRectangle)pad).setWidth(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDy()));
+						                		                // TODO should really check the layer against the layers to make sure layer 1 is the top layer
+						                		                if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(topLayer) )
+						                		                    pad.setSide(Side.Top);
+						                		                else
+						                		                	pad.setSide(Side.Bottom);
+						                		                        
+						                		                pad.setLocation(new Location(
+						                		    			        LengthUnit.Millimeters,
+						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX()),
+						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY()),
+						                		    			        0,
+						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")))); //remove all letters, i.e. R180 becomes 180        )));
+
+						                		                // TODO figure out if it is possible for an SMD pad to have a drill, it appears not !!
+						                		                pad.setdrillDiameter(0);
+						                		                        
+						                		                fpt.addPad(pad);
+					                		                        	
+				                        					} else if (e instanceof org.openpnp.model.eagle.xml.Pad) {
+				                        							
+				                        					} else if (e instanceof org.openpnp.model.eagle.xml.Polygon) {
+				                        						if (((org.openpnp.model.eagle.xml.Polygon) e).getLayer().equalsIgnoreCase(tCreamLayer) ) {
+				                        							// TODO write the polygon import tCream layer
+				                        							int j = 0;
+				                        						} else if (((org.openpnp.model.eagle.xml.Polygon) e).getLayer().equalsIgnoreCase(bCreamLayer) ) {
+				                        							// TODO write the polygon import bCream layer
+				                        							int j = 0;
+				                        						}
+				                        					}
+		                        						}
+					                		            pkg.setFootprint(fpt); //attach the footprint
+					                		            cfg.addPackage(pkg); //save the package in the configuration file
+					                			        part.setPackage(pkg);
+					                			        part.setLibrary(libraryId);
+
+					                			        cfg.addPart(part);
+		                        					}
+		                        				}
+		                        			}
+		                        		}
+		                        	}
+		                        }
+		                    }
+
 		                }
 		                placement.setPart(part);
 
 		            }
 
+		            //Now we have the part, we now need to add the SolderPastePad to the board
+		            //Note, Eagle has the concept of min and max from the edge of the pad so we need to 
+		            //adjust the pad to be the size as the mid-point between the min and max
+		            //in practive these are usually 0, which means we paste the entire pad
+		            // Board.addSolderPastePad(pad)
 					placement.setSide(element_side);
 					placements.add(placement);
 				}
@@ -306,6 +444,10 @@ public class EagleBoardImporter implements BoardImporter {
                 }
                 for (Placement placement : placements) {
                     board.addPlacement(placement);
+                    //extract all the pads from all the footprints from all the packages from all the parts!
+                    for (Pad pad: placement.getPart().getPackage().getFootprint().getPads()) {
+                    	board.addSolderPastePad(pad);
+                    }
                 }
                 setVisible(false);
             }
