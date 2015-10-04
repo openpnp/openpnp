@@ -53,6 +53,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -584,18 +585,21 @@ public class MainFrame extends JFrame {
 			}
 		}
 		catch (Exception e) {
-			MessageBoxes
-					.errorBox(
-							MainFrame.this,
-							"Configuration Save Error",
-							"There was a problem saving the configuration. The reason was:\n\n"
-									+ e.getMessage()
-									+ "\n\nPlease check your configuration and try again.");
-			return false;
+            String message = "There was a problem saving the configuration. The reason was:\n\n"
+                    + e.getMessage()
+                    + "\n\nDo you want to quit without saving?";
+             message = message.replaceAll("\n", "<br/>");
+             message = message.replaceAll("\r", "");
+             message = "<html><body width=\"400\">" + message + "</body></html>";
+             int result = JOptionPane.showConfirmDialog(
+                     this, 
+                     message, 
+                     "Configuration Save Error", 
+                     JOptionPane.YES_NO_OPTION);
+             if (result != JOptionPane.YES_OPTION) {
+                 return false;
+             }
 		}
-//		if (!boardsPanel.checkForModifications()) {
-//			return false;
-//		}
 		if (!jobPanel.checkForModifications()) {
 			return false;
 		}
