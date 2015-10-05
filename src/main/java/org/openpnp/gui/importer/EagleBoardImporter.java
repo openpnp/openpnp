@@ -224,13 +224,8 @@ public class EagleBoardImporter implements BoardImporter {
 
 				                		                for (Object e: pak.getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHoleOrPadOrSmd()) {
 				                        					if (e instanceof org.openpnp.model.eagle.xml.Smd) {
-				                        						//we have found the correct package in the correct library and we need to see about the pads
-				                        						//now we need to add the pad to the pads in footprint in package
+				                        						//we have found the correct package in the correct library and we need to to add the pad to the boardPads
 
-						                		                //Now to iterate through the pads, we need to add pads to the footprint
-						                		                //BUT we also need to take into account the 
-						                		                
-				                        						//
 				                        			            Pad.RoundRectangle pad = new Pad.RoundRectangle();
 				                        			            pad.setUnits(LengthUnit.Millimeters);
 				                        			            
