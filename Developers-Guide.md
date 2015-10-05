@@ -34,6 +34,10 @@ Please try to adhere to the existing code style as much as possible. Understand 
 
 In the pull request comments, explain what the change does. If it is new functionality, explain why it's useful and how it is to be used. If you are fixing an issue, reference the issue number.
 
+## Testing
+
+OpenPnP contains a JUnit based test suite that must pass before anything new can be merged. You can run it with `mvn test` or from your favorite IDE. You should also try to include new tests for your code if possible.
+
 # The GUI
 
 The GUI is the core user facing component of OpenPnP. OpenPnP is, for all intents and purposes, the GUI. When the term "OpenPnP" is used without referencing the hardware or firmware it should be taken to mean the GUI and the rest of this document will refer to it in that manner.
