@@ -21,6 +21,7 @@
 
 package org.openpnp.gui.importer;
 
+//import java.awt.Component;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -50,13 +51,14 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Pad;
-import org.openpnp.model.Pad.RoundRectangle;
+//import org.openpnp.model.Pad.RoundRectangle;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.eagle.EagleLoader;
@@ -115,7 +117,7 @@ public class EagleBoardImporter implements BoardImporter {
 		EagleLoader boardToProcess = new EagleLoader(file);
 		if (boardToProcess.board != null ) {
 			
-			//first establish which is the Top, Bottom, tCream and bCream layers
+			//first establish which is the Top, Bottom, tCream and bCream layers in case the board has non-standard layer numbering
 			for (Layer layer : boardToProcess.layers.getLayer() ) {
 				if (layer.getName().equalsIgnoreCase("Top")) {
 					topLayer = layer.getNumber();
@@ -127,7 +129,7 @@ public class EagleBoardImporter implements BoardImporter {
 					bCreamLayer = layer.getNumber();
 				}
 			}
-			// figure out the parameters for the pads based on DesignRules
+			// determine the parameters for the pads based on DesignRules
 			for (Param params : boardToProcess.board.getDesignrules().getParam() ) {
 
 				if (params.getName().compareToIgnoreCase("mlMinCreamFrame")==0) { //found exact match when 0 returned
@@ -222,36 +224,44 @@ public class EagleBoardImporter implements BoardImporter {
 
 						                		                //Now to iterate through the pads, we need to add pads to the footprint
 						                		                //BUT we also need to take into account the 
-						                		                Pad pad = new Pad.RoundRectangle(); //default to this until we can figure out others
-						                		                        
-						                		                ((RoundRectangle)pad).setRoundness(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRoundness()));
-						                		                        
+						                		                
+				                        						//
+				                        			            Pad.RoundRectangle pad = new Pad.RoundRectangle();
+				                        			            pad.setUnits(LengthUnit.Millimeters);
+				                        			            pad.setHeight(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDx())-(mmMaxCreamFrame_number-mmMinCreamFrame_number)/2);
+						                		                pad.setWidth(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDy())-(mmMaxCreamFrame_number-mmMinCreamFrame_number)/2);
+				                        			            pad.setRoundness(0);
+				                        			            pad.setRoundness(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRoundness()));
+				                        						
+				                        			            BoardPad boardPad = new BoardPad(
+				                        			                    pad,
+				                        			                    new Location(LengthUnit.Millimeters,
+								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX()),
+								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY()),
+								                		    			        0,
+								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")))
+				                        			                    );
+				                        						//
+						                		                
+						                		                      
 						                		                // TODO add support for Polygon and Circle pads
-						                		                pad.setName(((org.openpnp.model.eagle.xml.Smd) e).getName());
+						                		                //pad.setName(((org.openpnp.model.eagle.xml.Smd) e).getName());
+						                		                
 
 						                		                // TODO check that this reduces the pad to the halfway between the minimum & maximum tolerances
-						                		                ((RoundRectangle)pad).setHeight(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDx())-(mmMaxCreamFrame_number-mmMinCreamFrame_number)/2);
-						                		                ((RoundRectangle)pad).setWidth(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDy())-(mmMaxCreamFrame_number-mmMinCreamFrame_number)/2);
 
 //						                		                ((RoundRectangle)pad).setHeight(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDx()));
 //						                		                ((RoundRectangle)pad).setWidth(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getDy()));
 						                		                // TODO should really check the layer against the layers to make sure layer 1 is the top layer
 						                		                if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(topLayer) )
-						                		                    pad.setSide(Side.Top);
+						                		                    boardPad.setSide(Side.Top);
 						                		                else
-						                		                	pad.setSide(Side.Bottom);
-						                		                        
-						                		                pad.setLocation(new Location(
-						                		    			        LengthUnit.Millimeters,
-						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX()),
-						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY()),
-						                		    			        0,
-						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")))); //remove all letters, i.e. R180 becomes 180        )));
-
+						                		                	boardPad.setSide(Side.Bottom);
+						                		      
 						                		                // TODO figure out if it is possible for an SMD pad to have a drill, it appears not !!
-						                		                pad.setdrillDiameter(0);
+						                		                //pad.setdrillDiameter(0);
 						                		                        
-						                		                fpt.addPad(pad);
+						                		                fpt.addPad(boardPad);
 					                		                        	
 				                        					} else if (e instanceof org.openpnp.model.eagle.xml.Pad) {
 				                        							
@@ -445,7 +455,8 @@ public class EagleBoardImporter implements BoardImporter {
                 for (Placement placement : placements) {
                     board.addPlacement(placement);
                     //extract all the pads from all the footprints from all the packages from all the parts!
-                    for (Pad pad: placement.getPart().getPackage().getFootprint().getPads()) {
+                    // for (Pad pad: placement.getPart().getPackage().getFootprint().getPads()) {
+                    for (BoardPad pad: placement.getPart().getPackage().getFootprint().getPads()) {
                     	board.addSolderPastePad(pad);
                     }
                 }

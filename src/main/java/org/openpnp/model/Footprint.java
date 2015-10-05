@@ -40,15 +40,15 @@ public class Footprint {
     private LengthUnit units = LengthUnit.Millimeters;
     
     @ElementList(inline=true, required=false)
-    private ArrayList<Pad> pads = new ArrayList<Pad>();
+    private ArrayList<BoardPad> pads = new ArrayList<BoardPad>();
     
     public Shape getShape() {
         if (pads.isEmpty()) {
             return null;
         }
         Path2D.Double shape = new Path2D.Double();
-        for (Pad pad : pads) {
-            shape.append(pad.getShape(), false);
+        for (BoardPad pad : pads) {
+            shape.append(pad.getPad().getShape(), false);
         }
         
         return shape;
@@ -62,11 +62,11 @@ public class Footprint {
         this.units = units;
     }
     
-    public List<Pad> getPads() {
+    public List<BoardPad> getPads() {
         return pads;
     }
 
-    public void addPad(Pad pad) {
+    public void addPad(BoardPad pad) {
     	pads.add(pad);
     }
 }
