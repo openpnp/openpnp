@@ -35,7 +35,7 @@ public class Part extends AbstractModelObject implements Identifiable {
 	private String id;
 	@Attribute(required=false)
 	private String name;
-//	@Attribute
+
 	private String libraryId;
 	@Attribute
 	private LengthUnit heightUnits = LengthUnit.Millimeters;

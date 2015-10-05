@@ -22,9 +22,9 @@
 package org.openpnp.model;
 
 import java.awt.Shape;
-//import java.awt.geom.AffineTransform;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
-//import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,15 +40,15 @@ public class Footprint {
     private LengthUnit units = LengthUnit.Millimeters;
     
     @ElementList(inline=true, required=false)
-    private ArrayList<BoardPad> pads = new ArrayList<BoardPad>();
+    private ArrayList<Pad> pads = new ArrayList<Pad>();
     
     public Shape getShape() {
         if (pads.isEmpty()) {
             return null;
         }
         Path2D.Double shape = new Path2D.Double();
-        for (BoardPad pad : pads) {
-            shape.append(pad.getPad().getShape(), false);
+        for (Pad pad : pads) {
+            shape.append(pad.getShape(), false);
         }
         
         return shape;
@@ -62,11 +62,100 @@ public class Footprint {
         this.units = units;
     }
     
-    public List<BoardPad> getPads() {
+    public List<Pad> getPads() {
         return pads;
     }
 
-    public void addPad(BoardPad pad) {
-    	pads.add(pad);
+    public static class Pad {
+        @Attribute
+        private String name;
+        
+        @Attribute
+        private double x;
+        
+        @Attribute
+        private double y;
+        
+        @Attribute
+        private double width;
+        
+        @Attribute
+        private double height;
+        
+        @Attribute(required=false)
+        private double rotation = 0;
+        
+        @Attribute(required=false)
+        private double roundness = 0;
+        
+        public String getName() {
+            return name;
+        }
+        
+        public void setName(String name) {
+            this.name = name;
+        }
+        
+        public double getX() {
+            return x;
+        }
+        
+        public void setX(double x) {
+            this.x = x;
+        }
+        
+        public double getY() {
+            return y;
+        }
+        
+        public void setY(double y) {
+            this.y = y;
+        }
+        
+        public double getWidth() {
+            return width;
+        }
+        
+        public void setWidth(double width) {
+            this.width = width;
+        }
+        
+        public double getHeight() {
+            return height;
+        }
+        
+        public void setHeight(double height) {
+            this.height = height;
+        }
+        
+        public double getRotation() {
+            return rotation;
+        }
+        
+        public void setRotation(double rotation) {
+            this.rotation = rotation;
+        }
+        
+        public double getRoundness() {
+            return roundness;
+        }
+        
+        public void setRoundness(double roundness) {
+            this.roundness = roundness;
+        }
+        
+        public Shape getShape() {
+            Shape shape = new RoundRectangle2D.Double(
+                    -width / 2,
+                    -height / 2,
+                    width,
+                    height,
+                    width / 1.0 * roundness,
+                    height / 1.0 * roundness);
+            AffineTransform tx = new AffineTransform();
+            tx.translate(x, -y);
+            tx.rotate(Math.toRadians(-rotation));
+            return tx.createTransformedShape(shape);
+        }
     }
 }
