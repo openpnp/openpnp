@@ -6,4 +6,5 @@ Summary of guidelines:
 * Describe the change.
 * Follow the coding style.
 * Include tests and documentation.
+* Run and pass the tests.
 * Think of the big picture.
