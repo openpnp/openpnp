@@ -24,6 +24,8 @@ package org.openpnp.machine.reference;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
+import java.io.IOException;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
@@ -153,5 +155,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             return getHeadOffsets();
         }
         return driver.getLocation(this);
+    }
+
+    @Override
+    public void close() throws IOException {
     }
 }

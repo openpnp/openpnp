@@ -15,7 +15,6 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -23,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -61,6 +61,13 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
+    
+    private static Color typeColorIgnore = new Color(252, 255, 157);
+    private static Color typeColorFiducial = new Color(157, 188, 255);
+    private static Color typeColorPlace = new Color(157, 255, 168);
+    private static Color statusColorWarning = new Color(252, 255, 157);
+    private static Color statusColorReady = new Color(157, 255, 168);
+    private static Color statusColorError = new Color(255, 157, 157);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
@@ -482,34 +489,54 @@ public class JobPlacementsPanel extends JPanel {
             Type type = (Type) value;
             setText(type.name());
             if (type == Type.Fiducial) {
-                setBackground(Color.cyan);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorFiducial);
             }
             else if (type == Type.Ignore) {
-                setBackground(Color.yellow);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorIgnore);
             }
             else if (type == Type.Place) {
-                setBackground(Color.green);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorPlace);
             }
         }
     }
-
+    
     static class StatusRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             Status status = (Status) value;
             if (status == Status.Ready) {
-                setBackground(Color.green);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorReady);
                 setText("Ready");
             }
             else if (status == Status.MissingFeeder) {
-                setBackground(Color.yellow);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
                 setText("Missing Feeder");
             }
-            else if (status == Status.MissingPart) {
-                setBackground(Color.red);
-                setText("Missing Part");
+            else if (status == Status.ZeroPartHeight) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorWarning);
+                setText("Part Height");
             }
             else if (status == Status.MissingPart) {
-                setBackground(Color.red);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText("Missing Part");
+            }
+            else {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
                 setText(status.toString());
             }
         }

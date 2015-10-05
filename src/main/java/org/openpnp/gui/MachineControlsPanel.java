@@ -53,6 +53,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraPanel;
@@ -307,6 +308,9 @@ public class MachineControlsPanel extends JPanel {
 		textFieldX.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedX = Double.NaN;
+                }
                 saveXAction.actionPerformed(null);
             }
         });
@@ -331,6 +335,9 @@ public class MachineControlsPanel extends JPanel {
         textFieldY.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedY = Double.NaN;
+                }
                 saveYAction.actionPerformed(null);
             }
         });
@@ -361,6 +368,9 @@ public class MachineControlsPanel extends JPanel {
         textFieldC.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedC = Double.NaN;
+                }
                 saveCAction.actionPerformed(null);
             }
         });
@@ -385,6 +395,9 @@ public class MachineControlsPanel extends JPanel {
         textFieldZ.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedZ = Double.NaN;
+                }
                 saveZAction.actionPerformed(null);
             }
         });

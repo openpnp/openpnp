@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.Action;
 
@@ -44,8 +43,8 @@ import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.JobProcessor;
-import org.openpnp.spi.JobProcessor.Type;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -175,6 +174,29 @@ public class ReferenceMachine extends AbstractMachine {
     
     @Override
     public void close() throws IOException {
-        driver.close();
+        try {
+            driver.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        for (Camera camera : getCameras()) {
+            try {
+                camera.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        for (Head head : getHeads()) {
+            for (Camera camera : head.getCameras()) {
+                try {
+                    camera.close();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

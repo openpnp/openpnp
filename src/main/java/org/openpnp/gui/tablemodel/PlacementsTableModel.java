@@ -64,7 +64,8 @@ public class PlacementsTableModel extends AbstractTableModel {
 	public enum Status {
 	    Ready,
 	    MissingPart,
-	    MissingFeeder
+	    MissingFeeder,
+	    ZeroPartHeight
 	}
 	
 	private Board board;
@@ -155,6 +156,10 @@ public class PlacementsTableModel extends AbstractTableModel {
 	        }
 	        if (!found) {
 	            return Status.MissingFeeder;
+	        }
+	        
+	        if (placement.getPart().getHeight().getValue() == 0) {
+	            return Status.ZeroPartHeight;
 	        }
 	    }
 	    return Status.Ready;
