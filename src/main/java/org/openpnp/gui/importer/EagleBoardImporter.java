@@ -239,8 +239,8 @@ public class EagleBoardImporter implements BoardImporter {
 				                        			            BoardPad boardPad = new BoardPad(
 				                        			                    pad,
 				                        			                    new Location(LengthUnit.Millimeters,
-								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX()),
-								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY()),
+								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX())+x,
+								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY())+y,
 								                		    			        0,
 								                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")))
 				                        			                    );
