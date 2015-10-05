@@ -249,7 +249,6 @@ public class EagleBoardImporter implements BoardImporter {
 				                        			            
 						                		                boardPad.setName(element.getName() + "-" + ((org.openpnp.model.eagle.xml.Smd) e).getName());
 						                		                
-						                		                // TODO should really check the layer against the layers to make sure layer 1 is the top layer
 						                		                if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(topLayer) )
 						                		                    boardPad.setSide(Side.Top);
 						                		                else if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(bottomLayer) )
