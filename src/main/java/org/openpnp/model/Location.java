@@ -97,6 +97,7 @@ public class Location {
 	}
 	
 	public double getLinearDistanceTo(Location location) {
+	    location = location.convertToUnits(getUnits());
 		return getLinearDistanceTo(location.getX(), location.getY());
 	}
 
@@ -105,6 +106,7 @@ public class Location {
 	}
 	
 	public double getXyzDistanceTo(Location location) {
+	    location = location.convertToUnits(getUnits());
 		return (Math.sqrt(Math.pow(this.x - location.getX(), 2) + Math.pow(this.y - location.getY(), 2) + Math.pow(this.z - location.getZ(), 2)) );
 	}
 	
