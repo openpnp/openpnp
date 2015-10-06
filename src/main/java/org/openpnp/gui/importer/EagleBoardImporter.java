@@ -211,7 +211,6 @@ public class EagleBoardImporter implements BoardImporter {
 		                        
             		            cfg.addPackage(pkg); //save the package in the configuration file
             			        part.setPackage(pkg);
-            			        part.setLibrary(libraryId);
 
             			        cfg.addPart(part);
 		                    }
