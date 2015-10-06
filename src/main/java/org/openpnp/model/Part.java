@@ -60,13 +60,12 @@ public class Part extends AbstractModelObject implements Identifiable {
                     throws Exception {
                 if (getPackage() == null) {
                     setPackage(configuration.getPackage(packageId));
-//                    setLibrary(configuration.getLibrary(libraryId));
                 }
             }
 		});
 	}
 	
-//	@SuppressWarnings("unused")
+	@SuppressWarnings("unused")
 	@Persist
 	private void persist() {
 		packageId = (packag == null ? null : packag.getId());
