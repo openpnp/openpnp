@@ -438,6 +438,7 @@ public class EagleBoardImporter implements BoardImporter {
             }
             public void actionPerformed(ActionEvent e) {
                 boardFile = new File(textFieldBoardFile.getText());
+                board = new Board();
                 List<Placement> placements = new ArrayList<Placement>();
                 try {
                     if (boardFile.exists()) {
