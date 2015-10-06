@@ -37,6 +37,8 @@ public interface MachineListener {
 	
 	void machineDisableFailed(Machine machine, String reason);
 	
+	void machineBusy(Machine machine, boolean busy);
+	
 	static public class Adapter implements MachineListener {
 
 		@Override
@@ -57,6 +59,10 @@ public interface MachineListener {
 
 		@Override
 		public void machineDisableFailed(Machine machine, String reason) {
+		}
+		
+		@Override
+		public void machineBusy(Machine machine, boolean busy) {
 		}
 	}
 }

@@ -24,6 +24,11 @@ package org.openpnp.spi;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 
 
@@ -114,4 +119,49 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 	public void removeCamera(Camera camera);
 	
 	public Map<JobProcessor.Type, JobProcessor> getJobProcessors();
+	
+    public Future<Object> submit(Runnable runnable);
+    
+    public <T> Future<T> submit(Callable<T> callable);
+    
+    public <T> Future<T> submit(
+            final Callable<T> callable, 
+            final FutureCallback<T> callback);
+    /**
+     * Submit a task to be run with access to the Machine. This is the primary
+     * entry point into executing any blocking operation on the Machine. If
+     * you are doing anything that results in the Machine doing something
+     * it should happen here.
+     * 
+     * Tasks can be cancelled and interrupted via the returned Future. Tasks
+     * which operate in a loop should check
+     * Thread.currentThread().isInterrupted().
+     * 
+     * When a task begins the MachineListeners are notified with
+     * machineBusy(true). When the task ends, if there are no more tasks
+     * to run then machineBusy(false) is called.
+     * 
+     * TODO: When any task is running the driver for the machine is locked
+     * and any calls to the driver outside of the task will throw an Exception.
+     * 
+     * If any tasks throws an Exception then all queued future tasks are
+     * cancelled.
+     * 
+     * If a task includes a callback the callback is executed before the next
+     * task begins.
+     * 
+     * TODO: By supplying a tag you can guarantee that there is only one
+     * of a certain type of task queued. Attempting to queue another task
+     * with the same tag will return null and the task will not be queued.
+     * 
+     * @param callable
+     * @param callback
+     * @param ignoreEnabled True if the task should execute even if the 
+     * machine is not enabled. This is specifically for enabling the
+     * machine and should not typically be used elsewhere.
+     */
+    public <T> Future<T> submit(
+            final Callable<T> callable, 
+            final FutureCallback<T> callback, 
+            boolean ignoreEnabled);
 }
