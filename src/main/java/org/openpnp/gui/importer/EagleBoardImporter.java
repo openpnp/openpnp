@@ -58,11 +58,14 @@ import org.openpnp.model.Package;
 import org.openpnp.model.Pad;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Point;
 import org.openpnp.model.eagle.EagleLoader;
 import org.openpnp.model.eagle.xml.Element;
 import org.openpnp.model.eagle.xml.Layer;
 import org.openpnp.model.eagle.xml.Library;
 import org.openpnp.model.eagle.xml.Param;
+
+import org.openpnp.util.Utils2D;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -255,11 +258,15 @@ public class EagleBoardImporter implements BoardImporter {
 		                        			            //now rotate the pad by its own rotation relative to its origin and make sure we don't turn through 360 degrees
 		                        			            pad_rotation += Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")) % 360; 
 		                        			            
+		                        			            Point A = new Point(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX())+x,Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY())+y);
+		                        					    Point center = new Point(x,y);
+		                        					    A = Utils2D.rotateTranslateCenterPoint(A, pad_rotation,0,0,center);
+		                        			            
 		                        			            BoardPad boardPad = new BoardPad(
 		                        			                    pad,
 		                        			                    new Location(LengthUnit.Millimeters,
-						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX())+x,
-						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY())+y,
+						                		    			        A.getX(),
+						                		    			        A.getY(),
 						                		    			        0,
 						                		    			        pad_rotation)
 		                        			                    );
@@ -301,7 +308,6 @@ public class EagleBoardImporter implements BoardImporter {
                         		}
                         	}
                         }
-
 		            }
 
 					placement.setSide(element_side);
