@@ -159,10 +159,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // figure out how many parts there should be by taking the delta
         // between the two holes and dividing it by part pitch
         double holeToHoleDistance = lastHoleLocation.getLinearDistanceTo(referenceHoleLocation);
+        // take the ceil of the distance to account for any minor offset from
+        // center of the hole
         holeToHoleDistance = Math.ceil(holeToHoleDistance);
         double partPitch = this.partPitch.convertToUnits(lastHoleLocation.getUnits()).getValue();
+        // And floor the part count because you can't have a partial part.
         double partCount = Math.floor(holeToHoleDistance / partPitch);
-        System.out.println(partCount);
         
         if (feedCount > partCount) {
             throw new Exception(String.format("No more parts available in feeder %s", getName()));
