@@ -99,8 +99,6 @@ public class MachineControlsPanel extends JPanel {
 	private Color droWarningColor = new Color(0xFF5C5C);
 	private Color droSavedColor = new Color(0x90cce0);
 	
-	private ExecutorService machineTaskExecutor = Executors.newSingleThreadExecutor();
-	
 	private JogControlsPanel jogControlsPanel;
 	private JDialog jogControlsWindow;
 	
@@ -135,7 +133,7 @@ public class MachineControlsPanel extends JPanel {
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
 			return;
 		}
-		machineTaskExecutor.submit(runnable);
+		Configuration.get().getMachine().submit(runnable);
 	}
 	
 	public void setSelectedNozzle(Nozzle nozzle) {
