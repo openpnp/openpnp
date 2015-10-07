@@ -106,11 +106,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 	
 	@Override
-	public boolean canFeedToNozzle(Nozzle nozzle) {
-	    return true;
-	}
-	
-	@Override
     public Location getPickLocation() throws Exception {
 	    // Find the location of the part linearly along the tape
 	    Location l = getPointAlongLine(
@@ -161,6 +156,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	
     public void feed(Nozzle nozzle)
 			throws Exception {
+        // figure out how many parts there should be by taking the delta
+        // between the two holes and dividing it by part pitch
+        double holeToHoleDistance = lastHoleLocation.getLinearDistanceTo(referenceHoleLocation);
+        holeToHoleDistance = Math.ceil(holeToHoleDistance);
+        double partPitch = this.partPitch.convertToUnits(lastHoleLocation.getUnits()).getValue();
+        double partCount = Math.floor(holeToHoleDistance / partPitch);
+        System.out.println(partCount);
+        
+        if (feedCount > partCount) {
+            throw new Exception(String.format("No more parts available in feeder %s", getName()));
+        }
+        
         feedCount++;
 	}
     

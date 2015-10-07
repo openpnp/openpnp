@@ -12,6 +12,22 @@ import org.openpnp.model.Placement;
  * are processed and determining which Head/Nozzle/NozzleTip/Feeder combination
  * will be used for each Placement. It is called each time a Head is ready for
  * new work.
+ * 
+ * The current planning system does not do a good job of handling the case where
+ * one feeder may fail to feed so we want to fall back to another one.
+ * 
+ * For instance, say you load 5 strip feeders all with the same part. When the
+ * first one is consumed you want to just fall back to the next and next until
+ * they are all exhausted, and then finally throw an error. Or alternately, tell
+ * the user that no feeders are available and let them reload some.
+ * We can do this to a point with canFeedToNozzle, but it does not allow us to
+ * resume once the user has corrected the problem because a new planning
+ * solution will not be created until the job is restarted.
+ * 
+ * Perhaps the job planner needs to be bi-directional. You ask for a list
+ * of solutions and then tell it which ones you consumed. Until they are
+ * consumed they still available for planning - although that would break with
+ * multiple heads.
  */
 public interface JobPlanner {
     /**
@@ -35,6 +51,15 @@ public interface JobPlanner {
             this.nozzleTip = nozzleTip;
             this.feeder = feeder;
         }
+        
+        @Override
+        public String toString() {
+            return "PlacementSolution [boardLocation=" + boardLocation
+                    + ", placement=" + placement + ", head=" + head
+                    + ", nozzle=" + nozzle + ", nozzleTip=" + nozzleTip
+                    + ", feeder=" + feeder + "]";
+        }
+
     }
     
     public void setJob(Job job);
