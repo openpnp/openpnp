@@ -170,5 +170,15 @@ The [Job Processor](http://openpnp.org/doc/javadoc/org/openpnp/JobProcessor.html
 
 Job Processor is a bit of a black box from a programming point of view. To learn more about how it works it's best to examine the source code.
 
-
 # FAQ
+
+## How can I manage multiple configurations?
+
+By specifying `-DconfigDir` on the command line you can override the default configuration directory for OpenPnP. Example: `-DconfigDir=/Users/jason/.openpnp-openbuilds-machine`.
+
+I manage a number of configurations by creating various Run Configurations in Eclipse. I have one for my primary machine, one for my secondary machine, one for the default directory (no command line parameters) and one that wipes the configuration for the default directory. I use this when I want to reset OpenPnP to it's factory state.
+
+## How can I reset my configuration to the default?
+
+Specify `-DoverrideUserConfig=true` on the command line to overwrite your configuration with the defaults. If paired with `-DconfigDir` you can choose which configuration to overwrite.
+
