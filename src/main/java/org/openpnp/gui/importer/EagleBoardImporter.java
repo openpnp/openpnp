@@ -150,7 +150,7 @@ public class EagleBoardImporter implements BoardImporter {
 						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string) * mil_to_mm;
 					} else if (params.getValue().toUpperCase().endsWith("MM")) {
 						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
-					} // else throw an exception as can only be mm or mil BUT because we have already initialised these as 0, we don't care
+					} // TODO else throw an exception as can only be mm or mil BUT because we have already initialised these as 0, we don't care
 				}				
 			}
 			// Now we know the min and max tolerance for the cream (aka solder paste)
@@ -249,14 +249,19 @@ public class EagleBoardImporter implements BoardImporter {
 		                        			            
 				                		                pad.setRoundness(0);
 		                        			            pad.setRoundness(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRoundness()));
-		                        						
+		                        			            
+		                        			            //first find out how is the package defined
+		                        			            Double pad_rotation = Double.parseDouble(rot_number);
+		                        			            //now rotate the pad by its own rotation relative to its origin and make sure we don't turn through 360 degrees
+		                        			            pad_rotation += Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")) % 360; 
+		                        			            
 		                        			            BoardPad boardPad = new BoardPad(
 		                        			                    pad,
 		                        			                    new Location(LengthUnit.Millimeters,
 						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX())+x,
 						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY())+y,
 						                		    			        0,
-						                		    			        Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")))
+						                		    			        pad_rotation)
 		                        			                    );
 				                		                      
 				                		                // TODO add support for Circle pads
