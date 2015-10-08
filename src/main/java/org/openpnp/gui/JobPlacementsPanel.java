@@ -231,11 +231,11 @@ public class JobPlacementsPanel extends JPanel {
             placement = getSelection();
         }
         if (placement == null || placement.getPart() == null || placement.getPart().getPackage() == null) {
-            cameraView.removeReticle(JobPlacementsPanel.this.getClass().getName());
+            cameraView.removeReticle(JobPanel.class.getName());
         }
         else {
             Reticle reticle = new PackageReticle(placement.getPart().getPackage());
-            cameraView.setReticle(JobPlacementsPanel.this.getClass().getName(), reticle);
+            cameraView.setReticle(JobPanel.class.getName(), reticle);
         }
     }
 

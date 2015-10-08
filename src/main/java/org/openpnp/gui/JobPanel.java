@@ -180,8 +180,7 @@ public class JobPanel extends JPanel {
                 CameraView cameraView = MainFrame.cameraPanel
                         .getSelectedCameraView();
                 if (cameraView != null) {
-                    cameraView
-                            .removeReticle(JobPanel.this.getClass().getName());
+                    cameraView.removeReticle(JobPanel.class.getName());
                 }
             }
         });
