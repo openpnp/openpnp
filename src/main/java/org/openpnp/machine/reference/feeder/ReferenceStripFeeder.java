@@ -170,7 +170,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             throw new Exception(String.format("No more parts available in feeder %s", getName()));
         }
         
-        feedCount++;
+        setFeedCount(getFeedCount() + 1);
 	}
     
 	public TapeType getTapeType() {
@@ -234,7 +234,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void setFeedCount(int feedCount) {
+        int oldValue = this.feedCount;
         this.feedCount = feedCount;
+        firePropertyChange("feedCount", oldValue, feedCount);
     }
     
     public Length getReferenceHoleToPartLinear() {
