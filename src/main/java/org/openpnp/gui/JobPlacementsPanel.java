@@ -221,26 +221,21 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     private void showReticle() {
-        Placement placement;
-        if (getSelections().size() > 1) {
-            placement = null;
+        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        if (cameraView == null) {
+            return;
         }
-        else {
+        
+        Placement placement = null;
+        if (getSelections().size() == 1) {
             placement = getSelection();
         }
-        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        if (cameraView != null) {
-            if (placement != null) {
-                Reticle reticle = new PackageReticle(placement
-                        .getPart().getPackage());
-                cameraView.setReticle(JobPlacementsPanel.this
-                        .getClass().getName(), reticle);
-            }
-            else {
-                cameraView
-                        .removeReticle(JobPlacementsPanel.this
-                                .getClass().getName());
-            }
+        if (placement == null || placement.getPart() == null || placement.getPart().getPackage() == null) {
+            cameraView.removeReticle(JobPlacementsPanel.this.getClass().getName());
+        }
+        else {
+            Reticle reticle = new PackageReticle(placement.getPart().getPackage());
+            cameraView.setReticle(JobPlacementsPanel.this.getClass().getName(), reticle);
         }
     }
 
