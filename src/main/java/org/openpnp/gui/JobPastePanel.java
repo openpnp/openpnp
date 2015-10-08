@@ -3,6 +3,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +40,7 @@ import org.openpnp.model.BoardPad.Type;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
@@ -135,6 +138,19 @@ public class JobPastePanel extends JPanel {
                         }
                     }
                 });
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == ' ') {
+                    BoardPad pad = getSelection();
+                    pad.setType(pad.getType() == Type.Paste ? Type.Ignore : Type.Paste);
+                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                }
+                else {
+                    super.keyTyped(e);
+                }
+            }
+        });
         
         JPopupMenu popupMenu = new JPopupMenu();
         

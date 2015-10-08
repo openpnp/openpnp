@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -187,6 +189,19 @@ public class JobPlacementsPanel extends JPanel {
                     // wishing to do something with the status. Not using it
                     // right now but leaving it here for the future.
                     System.out.println(status);
+                }
+            }
+        });
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == ' ') {
+                    Placement placement = getSelection();
+                    placement.setType(placement.getType() == Type.Place ? Type.Ignore : Type.Place);
+                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                }
+                else {
+                    super.keyTyped(e);
                 }
             }
         });
