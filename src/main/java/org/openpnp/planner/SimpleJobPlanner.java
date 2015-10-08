@@ -70,7 +70,6 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         Set<PlacementSolution> results = new LinkedHashSet<PlacementSolution>();
         Machine machine = Configuration.get().getMachine();
         for (Nozzle nozzle : head.getNozzles()) {
-            System.out.println("Weighted Solutions " + getWeightedSolutions(machine, nozzle));
             for (WeightedPlacementSolution solution : getWeightedSolutions(machine, nozzle)) {
                 if (solutions.contains(solution.originalSolution)) {
                     results.add((PlacementSolution) solution);
@@ -89,8 +88,6 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         if (results.size() == 0 && solutions.size() > 0) {
             return solutions;
         }
-        System.out.println("Results " + results);
-        System.out.println();
         return results.size() > 0 ? results : null;
     }
     
@@ -160,12 +157,6 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 BoardLocation boardLocation, Head head, Nozzle nozzle,
                 NozzleTip nozzleTip, Feeder feeder) {
             super(placement, boardLocation, head, nozzle, nozzleTip, feeder);
-        }
-
-        @Override
-        public String toString() {
-            return "WeightedPlacementSolution [weight=" + weight
-                    + ", originalSolution=" + originalSolution + "]";
         }
     }
 }

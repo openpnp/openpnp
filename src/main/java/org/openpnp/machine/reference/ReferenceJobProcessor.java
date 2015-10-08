@@ -416,20 +416,14 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         }
 
         // Request that the Feeder feeds the part
-        while (shouldJobProcessingContinue()) {
-            try {
-                feeder.feed(nozzle);
-                break;
-            }
-            catch (Exception e) {
-                fireJobEncounteredError(JobError.FeederError, e.getMessage());
-            }
+        try {
+            feeder.feed(nozzle);
         }
-        
-        if (!shouldJobProcessingContinue()) {
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.FeederError, e.getMessage());
             return false;
         }
-
+        
         // Now that the Feeder has done it's feed operation we can get
         // the pick location from it.
         Location pickLocation;
