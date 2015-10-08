@@ -135,7 +135,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     private static Set<Feeder> getCompatibleFeeders(Machine machine, Nozzle nozzle, Part part) {
         Set<Feeder> feeders = new HashSet<Feeder>();
         for (Feeder feeder : machine.getFeeders()) {
-            if (feeder.getPart() == part && feeder.canFeedToNozzle(nozzle) && feeder.isEnabled()) {
+            if (feeder.getPart() == part && feeder.isEnabled()) {
                 feeders.add(feeder);
             }
         }

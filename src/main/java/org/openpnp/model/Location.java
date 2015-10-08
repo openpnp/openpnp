@@ -96,6 +96,12 @@ public class Location {
 		return location;
 	}
 	
+	/**
+	 * Returns the distance between this Location and the specified Location
+	 * in the units of this Location.
+	 * @param location
+	 * @return
+	 */
 	public double getLinearDistanceTo(Location location) {
 	    location = location.convertToUnits(getUnits());
 		return getLinearDistanceTo(location.getX(), location.getY());

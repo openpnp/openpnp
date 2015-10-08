@@ -55,18 +55,6 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
 	public void setPart(Part part);
 	
 	/**
-	 * Returns true if the Feeder is ready and willing to source the Part for
-	 * the given Nozzle. An example of what this check could be used for would
-	 * be to see if the specified Nozzle's Head has an appropriate Actuator
-	 * to drag a tape.
-	 * 
-	 * TODO: This API doesn't make a whole lot of sense and probably needs to
-	 * be removed. We should probably assume that it will work until it doesn't.
-	 * @return
-	 */
-	public boolean canFeedToNozzle(Nozzle nozzle);
-	
-	/**
 	 * Gets the Location from which the currently available Part should be
 	 * picked from. This value may not be valid until after a feed has been
 	 * performed for Feeders who update the pick location.

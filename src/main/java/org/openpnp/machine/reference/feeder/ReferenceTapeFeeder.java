@@ -102,11 +102,6 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 	protected Location visionOffset;
 	
 	@Override
-	public boolean canFeedToNozzle(Nozzle nozzle) {
-	    return nozzle.getHead().getActuatorByName(actuatorName) != null;
-	}
-	
-	@Override
     public Location getPickLocation() throws Exception {
 	    if (pickLocation == null) {
 	        pickLocation = location;
