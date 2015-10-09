@@ -1,4 +1,5 @@
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -177,5 +178,13 @@ public class VisionUtilsTest {
             // TODO Auto-generated method stub
             return null;
         }
+
+        @Override
+        public void close() throws IOException {
+            // TODO Auto-generated method stub
+            
+        }
+        
+        
     }
 }

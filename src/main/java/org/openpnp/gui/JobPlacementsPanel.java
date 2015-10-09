@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -15,7 +17,6 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -23,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -61,6 +63,13 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
+    
+    private static Color typeColorIgnore = new Color(252, 255, 157);
+    private static Color typeColorFiducial = new Color(157, 188, 255);
+    private static Color typeColorPlace = new Color(157, 255, 168);
+    private static Color statusColorWarning = new Color(252, 255, 157);
+    private static Color statusColorReady = new Color(157, 255, 168);
+    private static Color statusColorError = new Color(255, 157, 157);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
@@ -183,6 +192,19 @@ public class JobPlacementsPanel extends JPanel {
                 }
             }
         });
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == ' ') {
+                    Placement placement = getSelection();
+                    placement.setType(placement.getType() == Type.Place ? Type.Ignore : Type.Place);
+                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                }
+                else {
+                    super.keyTyped(e);
+                }
+            }
+        });
         
         JPopupMenu popupMenu = new JPopupMenu();
         
@@ -199,26 +221,21 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     private void showReticle() {
-        Placement placement;
-        if (getSelections().size() > 1) {
-            placement = null;
+        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        if (cameraView == null) {
+            return;
         }
-        else {
+        
+        Placement placement = null;
+        if (getSelections().size() == 1) {
             placement = getSelection();
         }
-        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        if (cameraView != null) {
-            if (placement != null) {
-                Reticle reticle = new PackageReticle(placement
-                        .getPart().getPackage());
-                cameraView.setReticle(JobPlacementsPanel.this
-                        .getClass().getName(), reticle);
-            }
-            else {
-                cameraView
-                        .removeReticle(JobPlacementsPanel.this
-                                .getClass().getName());
-            }
+        if (placement == null || placement.getPart() == null || placement.getPart().getPackage() == null) {
+            cameraView.removeReticle(JobPanel.class.getName());
+        }
+        else {
+            Reticle reticle = new PackageReticle(placement.getPart().getPackage());
+            cameraView.setReticle(JobPanel.class.getName(), reticle);
         }
     }
 
@@ -482,34 +499,54 @@ public class JobPlacementsPanel extends JPanel {
             Type type = (Type) value;
             setText(type.name());
             if (type == Type.Fiducial) {
-                setBackground(Color.cyan);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorFiducial);
             }
             else if (type == Type.Ignore) {
-                setBackground(Color.yellow);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorIgnore);
             }
             else if (type == Type.Place) {
-                setBackground(Color.green);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorPlace);
             }
         }
     }
-
+    
     static class StatusRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             Status status = (Status) value;
             if (status == Status.Ready) {
-                setBackground(Color.green);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorReady);
                 setText("Ready");
             }
             else if (status == Status.MissingFeeder) {
-                setBackground(Color.yellow);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
                 setText("Missing Feeder");
             }
-            else if (status == Status.MissingPart) {
-                setBackground(Color.red);
-                setText("Missing Part");
+            else if (status == Status.ZeroPartHeight) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorWarning);
+                setText("Part Height");
             }
             else if (status == Status.MissingPart) {
-                setBackground(Color.red);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
+                setText("Missing Part");
+            }
+            else {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorError);
                 setText(status.toString());
             }
         }

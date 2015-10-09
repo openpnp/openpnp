@@ -277,9 +277,11 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             Object value, boolean selected, boolean expanded,
             boolean leaf, int row, boolean hasFocus) {
                 super.getTreeCellRendererComponent(tree, value, selected,expanded, leaf, row, hasFocus);
-                PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) value;
-                PropertySheetHolder psh = node.getPropertySheetHolder();
-                setIcon(psh.getPropertySheetHolderIcon());
+                if (value instanceof PropertySheetHolderTreeNode) {
+                    PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) value;
+                    PropertySheetHolder psh = node.getPropertySheetHolder();
+                    setIcon(psh.getPropertySheetHolderIcon());
+                }
                 return this;
         }    
     };

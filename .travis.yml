@@ -1,4 +1,5 @@
 language: java
+sudo: false
 
 jdk:
 - oraclejdk8
@@ -11,14 +12,14 @@ env:
     secure: MK1zNtf1PVXRA5bLEJ6CScDntfhH1R0+06dgzFzdUxWtZIdYxOxuqnJnepfGjBjfyNzQgvQFQQP55UNHVzwjhXX0LUmvIvAPnRLT9RSrOgq952se6nIlz4UGqXDV/JU66ecUi6DVK7C12d5NjWYW8POCUBd+qyz3c6ma7Xh5TH0=
 
 before_deploy:
-- wget http://download-aws.ej-technologies.com/install4j/install4j_linux_5_1_15.deb
-- sudo dpkg -i install4j_linux_5_1_15.deb
-- /opt/install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
+- wget https://s3-us-west-2.amazonaws.com/openpnp/install4j_unix_5_1_15.tar.gz
+- tar -xzf install4j_unix_5_1_15.tar.gz 
+- ./install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
 - mvn package
 - wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
-- /opt/install4j5/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
+- ./install4j5/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
 
 deploy:
   provider: s3
@@ -29,7 +30,6 @@ deploy:
   skip_cleanup: true
   bucket: openpnp
   region: us-west-2
-  endpoint: s3-us-west-2.amazonaws.com
   local_dir: installers
   on:
     jdk: oraclejdk8

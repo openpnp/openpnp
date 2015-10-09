@@ -1,11 +1,18 @@
 package org.openpnp.spi.base;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
@@ -22,6 +29,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 public abstract class AbstractMachine implements Machine {
     /**
@@ -55,6 +64,8 @@ public abstract class AbstractMachine implements Machine {
     protected Map<JobProcessor.Type, JobProcessor> jobProcessors = new HashMap<>();
     
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
+    
+    protected ThreadPoolExecutor executor;
     
     protected AbstractMachine() {
     }
@@ -171,9 +182,98 @@ public abstract class AbstractMachine implements Machine {
         }
     }
 
+    public void fireMachineBusy(boolean busy) {
+        for (MachineListener listener : listeners) {
+            listener.machineBusy(this, busy);
+        }
+    }
+
     @Override
     public Icon getPropertySheetHolderIcon() {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    @Override
+    public Future<Object> submit(Runnable runnable) {
+        return submit(Executors.callable(runnable));
+    }
+    
+    @Override
+    public <T> Future<T> submit(Callable<T> callable) {
+        return submit(callable, null);
+    }
+    
+    @Override
+    public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback) {
+        return submit(callable, callback, false);
+    }
+    
+    @Override
+    public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback, final boolean ignoreEnabled) {
+        synchronized(this) {
+            if (executor == null || executor.isShutdown()) {
+                executor = new ThreadPoolExecutor(
+                        1, 
+                        1, 
+                        1,
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<Runnable>());
+            }
+        }
+        
+        Callable<T> wrapper = new Callable<T>() {
+            public T call() throws Exception {
+                // TODO: lock driver
+                
+                // Notify listeners that the machine is now busy
+                fireMachineBusy(true);
+                
+                // Call the task, storing the result and exception if any
+                T result = null;
+                Exception exception = null;
+                try {
+                    if (!ignoreEnabled && !isEnabled()) {
+                        throw new Exception("Machine is not enabled.");
+                    }
+                    result = callable.call();
+                }
+                catch (Exception e) {
+                    exception = e;
+                }
+                
+                // If a callback was supplied, call it with the results
+                if (callback != null) {
+                    if (exception != null) {
+                        callback.onFailure(exception);
+                    }
+                    else {
+                        callback.onSuccess(result);
+                    }
+                }
+                
+                // If there was an error cancel all pending tasks.
+                if (exception != null) {
+                    executor.shutdownNow();
+                }
+                
+                // TODO: unlock driver
+  
+                // If no more tasks are scheduled notify listeners that
+                // the machine is no longer busy
+                if (executor.getQueue().isEmpty()) {
+                    fireMachineBusy(false);
+                }
+                
+                // Finally, fulfill the Future by either throwing the
+                // exception or returning the result.
+                if (exception != null) {
+                    throw exception;
+                }
+                return result;
+            }
+        };
+        
+        return executor.submit(wrapper); 
     }
 }

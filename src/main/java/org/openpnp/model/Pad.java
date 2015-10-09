@@ -3,7 +3,6 @@ package org.openpnp.model;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
-//import java.awt.geom.Path2D; //Used for Polygons as java.awt.Polygon only supports integer vertex
 
 import org.simpleframework.xml.Attribute;
 

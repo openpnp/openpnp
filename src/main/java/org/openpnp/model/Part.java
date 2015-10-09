@@ -36,7 +36,6 @@ public class Part extends AbstractModelObject implements Identifiable {
 	@Attribute(required=false)
 	private String name;
 
-	private String libraryId;
 	@Attribute
 	private LengthUnit heightUnits = LengthUnit.Millimeters;
 	@Attribute
@@ -65,7 +64,6 @@ public class Part extends AbstractModelObject implements Identifiable {
 		});
 	}
 	
-	@SuppressWarnings("unused")
 	@Persist
 	private void persist() {
 		packageId = (packag == null ? null : packag.getId());
@@ -84,16 +82,6 @@ public class Part extends AbstractModelObject implements Identifiable {
 		Object oldValue = this.name;
 		this.name = name;
 		firePropertyChange("name", oldValue, name);
-	}
-
-	public String getLibrary() {
-		return libraryId;
-	}
-
-	public void setLibrary(String library) {
-		Object oldValue = this.libraryId;
-		this.libraryId = library;
-		firePropertyChange("library", oldValue, library);
 	}
 
 	public Length getHeight() {
@@ -125,6 +113,6 @@ public class Part extends AbstractModelObject implements Identifiable {
 
 	@Override
 	public String toString() {
-		return String.format("id %s, name %s, heightUnits %s, height %f, libraryId $s, packageId (%s)", id, name, heightUnits, height, libraryId, packageId);
+		return String.format("id %s, name %s, heightUnits %s, height %f, packageId (%s)", id, name, heightUnits, height, packageId);
 	}
 }

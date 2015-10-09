@@ -53,6 +53,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraPanel;
@@ -98,8 +99,6 @@ public class MachineControlsPanel extends JPanel {
 	private Color droWarningColor = new Color(0xFF5C5C);
 	private Color droSavedColor = new Color(0x90cce0);
 	
-	private ExecutorService machineTaskExecutor = Executors.newSingleThreadExecutor();
-	
 	private JogControlsPanel jogControlsPanel;
 	private JDialog jogControlsWindow;
 	
@@ -125,14 +124,16 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
-	// TODO: Change this to take an interface that will pass in the Machine,
-	// Configuration, Head, etc. and handle exceptions with the proper dialog.
+    /**
+     * @deprecated See {@link Machine#submit(Runnable)} 
+     * @param runnable
+     */
 	public void submitMachineTask(Runnable runnable) {
 		if (!Configuration.get().getMachine().isEnabled()) {
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
 			return;
 		}
-		machineTaskExecutor.submit(runnable);
+		Configuration.get().getMachine().submit(runnable);
 	}
 	
 	public void setSelectedNozzle(Nozzle nozzle) {
@@ -307,6 +308,9 @@ public class MachineControlsPanel extends JPanel {
 		textFieldX.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedX = Double.NaN;
+                }
                 saveXAction.actionPerformed(null);
             }
         });
@@ -331,6 +335,9 @@ public class MachineControlsPanel extends JPanel {
         textFieldY.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedY = Double.NaN;
+                }
                 saveYAction.actionPerformed(null);
             }
         });
@@ -361,6 +368,9 @@ public class MachineControlsPanel extends JPanel {
         textFieldC.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedC = Double.NaN;
+                }
                 saveCAction.actionPerformed(null);
             }
         });
@@ -385,6 +395,9 @@ public class MachineControlsPanel extends JPanel {
         textFieldZ.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    savedZ = Double.NaN;
+                }
                 saveZAction.actionPerformed(null);
             }
         });

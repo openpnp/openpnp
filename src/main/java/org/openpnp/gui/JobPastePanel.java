@@ -3,6 +3,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -37,6 +40,7 @@ import org.openpnp.model.BoardPad.Type;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
@@ -51,6 +55,9 @@ public class JobPastePanel extends JPanel {
     private ActionGroup captureAndPositionActionGroup;
     private BoardLocation boardLocation;
 
+    private static Color typeColorIgnore = new Color(252, 255, 157);
+    private static Color typeColorPaste = new Color(157, 255, 168);
+    
     public JobPastePanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
         
@@ -131,6 +138,19 @@ public class JobPastePanel extends JPanel {
                         }
                     }
                 });
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == ' ') {
+                    BoardPad pad = getSelection();
+                    pad.setType(pad.getType() == Type.Paste ? Type.Ignore : Type.Paste);
+                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                }
+                else {
+                    super.keyTyped(e);
+                }
+            }
+        });
         
         JPopupMenu popupMenu = new JPopupMenu();
         
@@ -344,10 +364,14 @@ public class JobPastePanel extends JPanel {
             Type type = (Type) value;
             setText(type.name());
             if (type == Type.Paste) {
-                setBackground(Color.cyan);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorPaste);
             }
             else if (type == Type.Ignore) {
-                setBackground(Color.yellow);
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(typeColorIgnore);
             }
         }
     }

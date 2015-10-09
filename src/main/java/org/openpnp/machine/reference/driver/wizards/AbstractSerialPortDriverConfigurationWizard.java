@@ -14,7 +14,10 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+
 import javax.swing.JComboBox;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigurationWizard {
     private final AbstractSerialPortDriver driver;
@@ -72,7 +75,27 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
         comboBoxBaud.addItem(new Integer(460800));
         comboBoxBaud.addItem(new Integer(921600));
         
+        comboBoxPort.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                refreshPortList();
+            }
+            
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+            
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+
+        refreshPortList();
+    }
+    
+    private void refreshPortList() {
         if (driver != null) {
+            comboBoxPort.removeAllItems();
             boolean exists = false;
             String[] portNames = driver.getPortNames();
             for (String portName : portNames) {
