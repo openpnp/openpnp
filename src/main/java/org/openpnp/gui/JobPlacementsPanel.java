@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -190,6 +192,19 @@ public class JobPlacementsPanel extends JPanel {
                 }
             }
         });
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == ' ') {
+                    Placement placement = getSelection();
+                    placement.setType(placement.getType() == Type.Place ? Type.Ignore : Type.Place);
+                    tableModel.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
+                }
+                else {
+                    super.keyTyped(e);
+                }
+            }
+        });
         
         JPopupMenu popupMenu = new JPopupMenu();
         
@@ -206,26 +221,21 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     private void showReticle() {
-        Placement placement;
-        if (getSelections().size() > 1) {
-            placement = null;
+        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        if (cameraView == null) {
+            return;
         }
-        else {
+        
+        Placement placement = null;
+        if (getSelections().size() == 1) {
             placement = getSelection();
         }
-        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        if (cameraView != null) {
-            if (placement != null) {
-                Reticle reticle = new PackageReticle(placement
-                        .getPart().getPackage());
-                cameraView.setReticle(JobPlacementsPanel.this
-                        .getClass().getName(), reticle);
-            }
-            else {
-                cameraView
-                        .removeReticle(JobPlacementsPanel.this
-                                .getClass().getName());
-            }
+        if (placement == null || placement.getPart() == null || placement.getPart().getPackage() == null) {
+            cameraView.removeReticle(JobPanel.class.getName());
+        }
+        else {
+            Reticle reticle = new PackageReticle(placement.getPart().getPackage());
+            cameraView.setReticle(JobPanel.class.getName(), reticle);
         }
     }
 

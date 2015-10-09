@@ -13,6 +13,7 @@ import javax.xml.transform.sax.SAXSource;
 import org.openpnp.model.eagle.xml.Board;
 import org.openpnp.model.eagle.xml.Drawing;
 import org.openpnp.model.eagle.xml.Eagle;
+import org.openpnp.model.eagle.xml.Layers;
 import org.openpnp.model.eagle.xml.Library;
 import org.openpnp.model.eagle.xml.Package;
 import org.openpnp.model.eagle.xml.Packages;
@@ -28,6 +29,8 @@ public class EagleLoader {
 	
     private static final String FEATURE_NAMESPACES = "http://xml.org/sax/features/namespaces";
     private static final String FEATURE_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
+    public Layers		layers;
+    public Eagle		eagle; // TODO remove eagle as this is not strictly required as we peel out the underlying parts, this is the superset
     public Board 		board;
     public Library 		library;
     public Schematic 	schematic;
@@ -59,8 +62,17 @@ public class EagleLoader {
         InputSource input = new InputSource(in);
         Source source = new SAXSource(xmlreader, input);
 
-        Eagle eagle = (Eagle) unmarshaller.unmarshal(source);
+        eagle = (Eagle) unmarshaller.unmarshal(source); // TODO change later to    Eagle eagle = (Eagle) unmarshaller.unmarshal(source);
         Drawing 	drawing 	= (Drawing) 	eagle.getCompatibilityOrDrawing().get(0);
+        
+      //Now see what we have
+        try {
+        	layers 		= (Layers) 		drawing.getLayers();
+        	// Now we need to extract the details
+		}
+		catch (Exception e) {
+			//There were no Layers in the input file
+		}
         
         //Now see what we have
         try {

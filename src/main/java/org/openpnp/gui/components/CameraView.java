@@ -58,6 +58,7 @@ import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
@@ -171,6 +172,8 @@ public class CameraView extends JComponent implements CameraListener {
 			.userNodeForPackage(CameraView.class);
 	
 	private String text;
+	
+	private boolean showImageInfo;
 	
 	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
 
@@ -452,6 +455,10 @@ public class CameraView extends JComponent implements CameraListener {
 			if (text != null) {
 				drawTextOverlay(g2d, 10, 10, text);
 			}
+			
+			if (showImageInfo && image != null) {
+			    drawImageInfo(g2d, 10, 10, image);
+			}
 
 			if (selectionEnabled && selection != null) {
 				paintSelection(g2d);
@@ -684,6 +691,106 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 	}
 
+    private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY, BufferedImage image) {
+        String text = String.format("Resolution: %d x %d\nHistogram:",
+                image.getWidth(), 
+                image.getHeight());
+        Insets insets = new Insets(10, 10, 10, 10);
+        int interLineSpacing = 4;
+        int cornerRadius = 8;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setStroke(new BasicStroke(1.0f));
+        g2d.setFont(g2d.getFont().deriveFont(12.0f));
+        String[] lines = text.split("\n");
+        List<TextLayout> textLayouts = new ArrayList<TextLayout>();
+        int textWidth = 0, textHeight = 0;
+        for (String line : lines) {
+            TextLayout textLayout = new TextLayout(line, g2d.getFont(),
+                    g2d.getFontRenderContext());
+            textWidth = (int) Math.max(textWidth, textLayout.getBounds()
+                    .getWidth());
+            textHeight += (int) textLayout.getBounds().getHeight() + interLineSpacing;
+            textLayouts.add(textLayout);
+        }
+        textHeight -= interLineSpacing;
+        
+        int histogramHeight = 50 + 2;
+        int histogramWidth = 255 + 2;
+        
+        int width = Math.max(textWidth, histogramWidth);
+        int height = textHeight + histogramHeight;
+        
+        g2d.setColor(new Color(0, 0, 0, 0.75f));
+        g2d.fillRoundRect(
+                topLeftX, 
+                topLeftY, 
+                width + insets.left + insets.right, 
+                height + insets.top + insets.bottom,
+                cornerRadius,
+                cornerRadius);
+        g2d.setColor(Color.white);
+        g2d.drawRoundRect(
+                topLeftX, 
+                topLeftY, 
+                width + insets.left + insets.right, 
+                height + insets.top + insets.bottom,
+                cornerRadius,
+                cornerRadius);
+        int yPen = topLeftY + insets.top;
+        for (TextLayout textLayout : textLayouts) {
+            yPen += textLayout.getBounds().getHeight();
+            textLayout.draw(g2d, topLeftX + insets.left, yPen);
+            yPen += interLineSpacing;
+        }
+        
+        g2d.setColor(new Color(1, 1, 1, 0.20f));
+        g2d.fillRect(
+            topLeftX + insets.left,
+            yPen,
+            histogramWidth,
+            histogramHeight);
+        
+        // Calculate the histogram
+        long[][] histogram = new long[3][256];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                histogram[0][r]++;
+                histogram[1][g]++;
+                histogram[2][b]++;
+            }
+        }
+        // find the highest value in the histogram
+        long maxVal = 0;
+        for (int channel = 0; channel < 3; channel++) {
+            for (int bucket = 0; bucket < 256; bucket++) {
+                maxVal = Math.max(maxVal, histogram[channel][bucket]);
+            }
+        }
+        // and scale it to 50 pixels tall
+        double scale = 50.0 / maxVal;
+        Color[] colors = new Color[] {
+                Color.red,
+                Color.green,
+                Color.blue
+        };
+        for (int channel = 0; channel < 3; channel++) {
+            g2d.setColor(colors[channel]);
+            for (int bucket = 0; bucket < 256; bucket++) {
+                int value = (int) (histogram[channel][bucket] * scale);
+                g2d.drawLine(
+                        topLeftX + insets.left + 1 + bucket,
+                        yPen + 1 + 50 - value,
+                        topLeftX + insets.left + 1 + bucket,
+                        yPen + 1 + 50 - value);
+            }
+        }
+    }
+
 	/**
 	 * Changes the HandlePosition to it's inverse if the given rectangle has a
 	 * negative width, height or both.
@@ -813,8 +920,16 @@ public class CameraView extends JComponent implements CameraListener {
 	public void setSelectionEnabled(boolean selectionEnabled) {
 		this.selectionEnabled = selectionEnabled;
 	}
+	
+	public boolean isShowImageInfo() {
+        return showImageInfo;
+    }
 
-	public static Cursor getCursorForHandlePosition(
+    public void setShowImageInfo(boolean showImageInfo) {
+        this.showImageInfo = showImageInfo;
+    }
+
+    public static Cursor getCursorForHandlePosition(
 			HandlePosition handlePosition) {
 		switch (handlePosition) {
 		case NW:

@@ -59,13 +59,6 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	private Location pickLocation;
 
 	@Override
-	public boolean canFeedToNozzle(Nozzle nozzle) {
-		boolean result = (feedCount < (trayCountX * trayCountY));
-		logger.debug("{}.canFeedToNozzle({}) => {}", new Object[]{getName(), nozzle, result});
-		return result;
-	}
-	
-	@Override
     public Location getPickLocation() throws Exception {
 	    if (pickLocation == null) {
 	        pickLocation = location;
@@ -78,6 +71,10 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 			throws Exception {
 		logger.debug("{}.feed({})", getName(), nozzle);
 		int partX, partY;
+		
+		if (feedCount >= (trayCountX * trayCountY)) {
+		    throw new Exception(String.format("Tray empty on feeder %s.", getName()));
+		}
         
         if (trayCountX >= trayCountY) {
             // X major axis.

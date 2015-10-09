@@ -75,6 +75,9 @@ public class PackageReticle implements Reticle {
 		
 
 		Footprint footprint = pkg.getFootprint();
+		if (footprint == null) {
+		    return;
+		}
 		Shape shape = footprint.getShape();
 		if (shape == null) {
 		    return;

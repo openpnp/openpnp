@@ -99,8 +99,6 @@ public class MachineControlsPanel extends JPanel {
 	private Color droWarningColor = new Color(0xFF5C5C);
 	private Color droSavedColor = new Color(0x90cce0);
 	
-	private ExecutorService machineTaskExecutor = Executors.newSingleThreadExecutor();
-	
 	private JogControlsPanel jogControlsPanel;
 	private JDialog jogControlsWindow;
 	
@@ -126,14 +124,16 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
-	// TODO: Change this to take an interface that will pass in the Machine,
-	// Configuration, Head, etc. and handle exceptions with the proper dialog.
+    /**
+     * @deprecated See {@link Machine#submit(Runnable)} 
+     * @param runnable
+     */
 	public void submitMachineTask(Runnable runnable) {
 		if (!Configuration.get().getMachine().isEnabled()) {
 			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
 			return;
 		}
-		machineTaskExecutor.submit(runnable);
+		Configuration.get().getMachine().submit(runnable);
 	}
 	
 	public void setSelectedNozzle(Nozzle nozzle) {

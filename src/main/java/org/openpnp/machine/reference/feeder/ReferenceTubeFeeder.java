@@ -49,11 +49,6 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
     }
 
-    @Override
-	public boolean canFeedToNozzle(Nozzle nozzle) {
-		return true;
-	}
-
 	@Override
 	public Wizard getConfigurationWizard() {
 		return new ReferenceTubeFeederConfigurationWizard(this);

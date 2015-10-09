@@ -1,5 +1,9 @@
 package org.openpnp.util;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 
@@ -52,5 +56,17 @@ public class VisionUtils {
      */
     public static Location getPixelLocation(Camera camera, double x, double y) {
         return camera.getLocation().add(getPixelCenterOffsets(camera, x, y));
+    }
+    
+    public static List<Location> sortLocationsByDistance(final Location origin, List<Location> locations) {
+    	// sort the results by distance from center ascending
+        Collections.sort(locations, new Comparator<Location>() {
+            public int compare(Location o1, Location o2) {
+                Double o1d = origin.getLinearDistanceTo(o1); 
+                Double o2d = origin.getLinearDistanceTo(o2);
+                return o1d.compareTo(o2d);
+            }
+        });
+        return locations;
     }
 }

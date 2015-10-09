@@ -35,6 +35,7 @@ public class Part extends AbstractModelObject implements Identifiable {
 	private String id;
 	@Attribute(required=false)
 	private String name;
+
 	@Attribute
 	private LengthUnit heightUnits = LengthUnit.Millimeters;
 	@Attribute
@@ -63,7 +64,6 @@ public class Part extends AbstractModelObject implements Identifiable {
 		});
 	}
 	
-	@SuppressWarnings("unused")
 	@Persist
 	private void persist() {
 		packageId = (packag == null ? null : packag.getId());
@@ -83,7 +83,7 @@ public class Part extends AbstractModelObject implements Identifiable {
 		this.name = name;
 		firePropertyChange("name", oldValue, name);
 	}
-	
+
 	public Length getHeight() {
 		return new Length(height, heightUnits);
 	}
