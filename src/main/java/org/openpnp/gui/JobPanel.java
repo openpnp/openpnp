@@ -653,20 +653,22 @@ public class JobPanel extends JPanel {
         try {
             Board importedBoard = boardImporter
                     .importBoard((Frame) getTopLevelAncestor());
-            Board existingBoard = getSelectedBoardLocation().getBoard();
-            for (Placement placement : importedBoard.getPlacements()) {
-                existingBoard.addPlacement(placement);
+            if (importedBoard != null) {
+                Board existingBoard = getSelectedBoardLocation().getBoard();
+                for (Placement placement : importedBoard.getPlacements()) {
+                    existingBoard.addPlacement(placement);
+                }
+                for (BoardPad pad : importedBoard.getSolderPastePads()) {
+                    // TODO: This is a temporary hack until we redesign the importer
+                    // interface to be more intuitive. The Gerber importer tends
+                    // to return everything in Inches, so this is a method to
+                    // try to get it closer to what the user expects to see.
+                    pad.setLocation(pad.getLocation().convertToUnits(getSelectedBoardLocation().getLocation().getUnits()));
+                    existingBoard.addSolderPastePad(pad);
+                }
+                jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
+                jobPastePanel.setBoardLocation(getSelectedBoardLocation());
             }
-            for (BoardPad pad : importedBoard.getSolderPastePads()) {
-                // TODO: This is a temporary hack until we redesign the importer
-                // interface to be more intuitive. The Gerber importer tends
-                // to return everything in Inches, so this is a method to
-                // try to get it closer to what the user expects to see.
-                pad.setLocation(pad.getLocation().convertToUnits(getSelectedBoardLocation().getLocation().getUnits()));
-                existingBoard.addSolderPastePad(pad);
-            }
-            jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
-            jobPastePanel.setBoardLocation(getSelectedBoardLocation());
         }
         catch (Exception e) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e);

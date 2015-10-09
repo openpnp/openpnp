@@ -114,6 +114,9 @@ public class EagleBoardImporter implements BoardImporter {
 		double mmMinCreamFrame_number = 0;
 		String mmMaxCreamFrame_string;
 		double mmMaxCreamFrame_number = 0;
+		String libraryId = "";
+		String packageId = "";
+		Part part = null;
 		
 		List<BoardPad> pads = new ArrayList<BoardPad>();
 		
@@ -193,28 +196,41 @@ public class EagleBoardImporter implements BoardImporter {
 					        0,
 					        rotation));
 					
-					//placement now contains where the package is on the PCB, we need to work out whre the pads
+					//placement now contains where the package is on the PCB, we need to work out where the pads
 					//are relative to the 'placement'
 					Configuration cfg = Configuration.get();
 		            if (cfg != null && createMissingParts) {
 		                String value = element.getValue(); // Value
-		                String packageId = element.getPackage(); //Package
-		                String libraryId = element.getLibrary(); //Library that contains the package
+		                packageId = element.getPackage(); //Package
+		                libraryId = element.getLibrary(); //Library that contains the package
+		                
+		                String pkgId  = libraryId + "-" + packageId;
 		                
 		                String partId = libraryId + "-" + packageId;
 		                if (value.trim().length() > 0) {
 		                    partId += "-" + value;
 		                }
-		                Part part = cfg.getPart(partId);
-		                if (part == null) {
-		                    part = new Part(partId);
-		                    Package pkg = cfg.getPackage(packageId);
+		                
+		                part = cfg.getPart(partId);
+		                Package pkg = cfg.getPackage(pkgId);
+		                
+		                if ((part == null) || (pkg == null)) {
+		                    
 		                    if (pkg == null) {
-		                        pkg = new Package(libraryId + "-" + packageId);
-		                        
+		                        pkg = new Package(pkgId);
             		            cfg.addPackage(pkg); //save the package in the configuration file
+            		            if (part != null) {
+            		            	cfg.removePart(part);//we have to remove the part so we can re-add it with the correct package & library
+            		            	part = null;
+            		            }
+            		            
+		                    }
+		                	if (part == null) {
+		                		part = new Part(partId);
             			        part.setPackage(pkg);
-
+// TODO            			        part.setLibrary(libraryId);
+            			        cfg.addPart(part); //save the package in the configuration file
+		                	}
             			        cfg.addPart(part);
 		                    }
 		                }
@@ -305,7 +321,7 @@ public class EagleBoardImporter implements BoardImporter {
                         				}
                         			}
                         		}
-                        	}
+  //                      	}
                         }
 		            }
 
