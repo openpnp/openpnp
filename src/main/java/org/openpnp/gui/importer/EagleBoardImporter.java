@@ -114,6 +114,9 @@ public class EagleBoardImporter implements BoardImporter {
 		double mmMinCreamFrame_number = 0;
 		String mmMaxCreamFrame_string;
 		double mmMaxCreamFrame_number = 0;
+		String libraryId = "";
+		String packageId = "";
+		Part part = null;
 		
 		List<BoardPad> pads = new ArrayList<BoardPad>();
 		
@@ -198,8 +201,8 @@ public class EagleBoardImporter implements BoardImporter {
 					Configuration cfg = Configuration.get();
 		            if (cfg != null && createMissingParts) {
 		                String value = element.getValue(); // Value
-		                String packageId = element.getPackage(); //Package
-		                String libraryId = element.getLibrary(); //Library that contains the package
+		                packageId = element.getPackage(); //Package
+		                libraryId = element.getLibrary(); //Library that contains the package
 		                
 		                String pkgId  = libraryId + "-" + packageId;
 		                
@@ -208,7 +211,7 @@ public class EagleBoardImporter implements BoardImporter {
 		                    partId += "-" + value;
 		                }
 		                
-		                Part part = cfg.getPart(partId);
+		                part = cfg.getPart(partId);
 		                Package pkg = cfg.getPackage(pkgId);
 		                
 		                if ((part == null) || (pkg == null)) {
@@ -225,15 +228,11 @@ public class EagleBoardImporter implements BoardImporter {
 		                	if (part == null) {
 		                		part = new Part(partId);
             			        part.setPackage(pkg);
-<<<<<<< HEAD
-            			        part.setLibrary(libraryId);
+// TODO            			        part.setLibrary(libraryId);
             			        cfg.addPart(part); //save the package in the configuration file
 		                	}
-=======
-
             			        cfg.addPart(part);
 		                    }
->>>>>>> 47b2d6aef2fbbd25662d1372931f0e57845a4ad6
 		                }
 		                placement.setPart(part);
 		                
@@ -322,7 +321,7 @@ public class EagleBoardImporter implements BoardImporter {
                         				}
                         			}
                         		}
-                        	}
+  //                      	}
                         }
 		            }
 
