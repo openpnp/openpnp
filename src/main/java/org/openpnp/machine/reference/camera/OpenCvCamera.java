@@ -36,6 +36,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point3;
 import org.opencv.core.Size;
+import org.opencv.highgui.Highgui;
 import org.opencv.highgui.VideoCapture;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.CameraListener;
@@ -66,9 +67,14 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	@Element(required=false)
 	private Calibration calibration = new Calibration();
 	
+	@Attribute(required=false)
+	private int preferredWidth;
+	@Attribute(required=false)
+	private int preferredHeight;
+	
 	private VideoCapture fg = new VideoCapture();
 	private Thread thread;
-	
+	private boolean dirty = false;
 	
 	public OpenCvCamera() {
 	}
@@ -215,7 +221,16 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 			thread = null;
 		}
 		try {
+		    setDirty(false);
+		    width = null;
+		    height = null;
 		    fg.open(deviceIndex);
+            if (preferredWidth != 0) {
+                fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+            }
+            if (preferredHeight != 0) {
+                fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+            }
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -229,6 +244,32 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	    return calibration;
 	}
 	
+    public int getPreferredWidth() {
+        return preferredWidth;
+    }
+
+    public void setPreferredWidth(int preferredWidth) {
+        this.preferredWidth = preferredWidth;
+        setDirty(true);
+    }
+
+    public int getPreferredHeight() {
+        return preferredHeight;
+    }
+
+    public void setPreferredHeight(int preferredHeight) {
+        this.preferredHeight = preferredHeight;
+        setDirty(true);
+    }
+    
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
     @Override
 	public Wizard getConfigurationWizard() {
 		return new OpenCvCameraConfigurationWizard(this);

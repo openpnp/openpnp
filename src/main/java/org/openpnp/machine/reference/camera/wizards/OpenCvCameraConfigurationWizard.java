@@ -29,6 +29,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
@@ -36,7 +38,9 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+
 import javax.swing.JCheckBox;
+import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
 public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
@@ -54,15 +58,21 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
 		contentPanel.add(panelGeneral);
 		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.RELATED_GAP_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
-			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,
+		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormFactory.DEFAULT_COLSPEC,},
+		    new RowSpec[] {
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,
+		        FormFactory.RELATED_GAP_ROWSPEC,
+		        FormFactory.DEFAULT_ROWSPEC,}));
 		
 		JLabel lblDeviceId = new JLabel("Device Index");
 		panelGeneral.add(lblDeviceId, "2, 2, right, default");
@@ -78,16 +88,57 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
 		
 		checkBoxUndistort = new JCheckBox("");
 		panelGeneral.add(checkBoxUndistort, "4, 4");
+		
+		lblPreferredWidth = new JLabel("Preferred Width");
+		panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
+		
+		textFieldPreferredWidth = new JTextField();
+		panelGeneral.add(textFieldPreferredWidth, "4, 6, fill, default");
+		textFieldPreferredWidth.setColumns(10);
+		
+		lbluseFor = new JLabel("(Use 0 for native resolution)");
+		panelGeneral.add(lbluseFor, "6, 6");
+		
+		lblPreferredHeight = new JLabel("Preferred Height");
+		panelGeneral.add(lblPreferredHeight, "2, 8, right, default");
+		
+		textFieldPreferredHeight = new JTextField();
+		panelGeneral.add(textFieldPreferredHeight, "4, 8, fill, default");
+		textFieldPreferredHeight.setColumns(10);
+		
+		lbluseFor_1 = new JLabel("(Use 0 for native resolution)");
+		panelGeneral.add(lbluseFor_1, "6, 8");
 	}
 
 	@Override
 	public void createBindings() {
+	    IntegerConverter intConverter = new IntegerConverter();
 	    super.createBindings();
-		addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
+        addWrappedBinding(camera, "preferredWidth", textFieldPreferredWidth, "text", intConverter);
+        addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text", intConverter);
 		addWrappedBinding(camera.getCalibration(), "enabled", checkBoxUndistort, "selected");
+		// Should always be last so that it doesn't trigger multiple camera reloads.
+        addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
+		
+        ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);
+        ComponentDecorators.decorateWithAutoSelect(textFieldPreferredHeight);
 	}
+	
+	@Override
+    protected void saveToModel() {
+        super.saveToModel();
+        if (camera.isDirty()) {
+            camera.setDeviceIndex(camera.getDeviceIndex());
+        }
+    }
 
-	private JComboBox comboBoxDeviceIndex;
+    private JComboBox comboBoxDeviceIndex;
 	private JCheckBox checkBoxUndistort;
 	private JLabel lblUndistort;
+	private JLabel lblPreferredWidth;
+	private JLabel lblPreferredHeight;
+	private JTextField textFieldPreferredWidth;
+	private JTextField textFieldPreferredHeight;
+	private JLabel lbluseFor;
+	private JLabel lbluseFor_1;
 }
