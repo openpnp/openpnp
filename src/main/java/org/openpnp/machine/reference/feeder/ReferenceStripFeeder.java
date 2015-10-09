@@ -23,18 +23,23 @@ package org.openpnp.machine.reference.feeder;
 
 
 
+import java.util.List;
+
 import javax.swing.Action;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -166,12 +171,45 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // And floor the part count because you can't have a partial part.
         double partCount = Math.floor(holeToHoleDistance / partPitch);
         
-        if (feedCount > partCount) {
-            throw new Exception(String.format("No more parts available in feeder %s", getName()));
-        }
+//        if (feedCount > partCount) {
+//            throw new Exception(String.format("No more parts available in feeder %s", getName()));
+//        }
         
         setFeedCount(getFeedCount() + 1);
 	}
+    
+    public void autoSetup() throws Exception {
+    	setFeedCount(1);
+        Camera camera = Configuration.get().getMachine().getHeads().get(0).getCameras().get(0);
+        
+        // the camera should be centered within 1 hole pitch of the reference
+        // hole
+        Location location = camera.getLocation();
+        
+        try {
+            // see if we can find the first and second holes
+            List<Location> holeLocations = OpenCvUtils.houghCircles(
+                    camera, 
+                    new Length(1.5 * 0.90, LengthUnit.Millimeters), 
+                    new Length(1.5 * 1.10, LengthUnit.Millimeters), 
+                    new Length(4 * 0.90, LengthUnit.Millimeters));
+
+            System.out.println(holeLocations);
+            
+            if (holeLocations.size() < 2) {
+                throw new Exception("Couldn't find two holes.");
+            }
+            
+            Location hole1Location = holeLocations.get(0);
+            Location hole2Location = holeLocations.get(1);
+            setReferenceHoleLocation(hole1Location);
+            setLastHoleLocation(hole2Location);
+            camera.moveTo(getPickLocation(), 1.0);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
 	public TapeType getTapeType() {
         return tapeType;

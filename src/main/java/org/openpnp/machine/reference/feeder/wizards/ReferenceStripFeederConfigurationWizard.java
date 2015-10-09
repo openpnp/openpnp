@@ -23,8 +23,10 @@ package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -82,6 +84,7 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
+    private JButton btnAutoSetup;
 
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
@@ -126,21 +129,24 @@ public class ReferenceStripFeederConfigurationWizard extends
                 EtchedBorder.LOWERED, null, null), "Tape Settings",
                 TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
-        panelTapeSettings.setLayout(new FormLayout(
-                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
+        panelTapeSettings.setLayout(new FormLayout(new ColumnSpec[] {
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,
+                FormFactory.RELATED_GAP_COLSPEC,
+                FormFactory.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,
+                FormFactory.RELATED_GAP_ROWSPEC,
+                FormFactory.DEFAULT_ROWSPEC,}));
 
         lblTapeType = new JLabel("Tape Type");
         panelTapeSettings.add(lblTapeType, "2, 2, right, default");
@@ -177,6 +183,9 @@ public class ReferenceStripFeederConfigurationWizard extends
             }
         });
         panelTapeSettings.add(btnResetFeedCount, "6, 8");
+        
+        btnAutoSetup = new JButton(autoSetup);
+        panelTapeSettings.add(btnAutoSetup, "4, 10");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -312,4 +321,16 @@ public class ReferenceStripFeederConfigurationWizard extends
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
     }
+    
+    private Action autoSetup = new AbstractAction("Auto Setup") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Configuration.get().getMachine().submit(new Callable<Void>() {
+                public Void call() throws Exception {
+                    feeder.autoSetup();
+                    return null;
+                }
+            });
+        }
+    };
 }
