@@ -50,6 +50,7 @@ public class ReferencePasteDispenserConfigurationWizard extends
     private JTextField locationY;
     private JTextField locationZ;
     private JPanel panelOffsets;
+    private JTextField textFieldSafeZ;
 
     public ReferencePasteDispenserConfigurationWizard(ReferencePasteDispenser dispenser) {
         this.dispenser = dispenser;
@@ -96,6 +97,26 @@ public class ReferencePasteDispenserConfigurationWizard extends
         locationZ.setColumns(5);
 
         contentPanel.add(panelOffsets);
+        
+        JPanel panelSafeZ = new JPanel();
+        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelSafeZ);
+        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,},
+        	new RowSpec[] {
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblSafeZ = new JLabel("Safe Z");
+        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
+        
+        textFieldSafeZ = new JTextField();
+        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
+        textFieldSafeZ.setColumns(10);
+        
     }
 
     @Override
@@ -111,6 +132,7 @@ public class ReferencePasteDispenserConfigurationWizard extends
                 lengthConverter);
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text",
                 lengthConverter);
+        addWrappedBinding(dispenser, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(locationX);
@@ -118,5 +140,6 @@ public class ReferencePasteDispenserConfigurationWizard extends
                 .decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(locationZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

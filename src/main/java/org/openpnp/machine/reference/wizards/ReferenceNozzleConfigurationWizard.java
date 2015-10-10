@@ -54,6 +54,7 @@ public class ReferenceNozzleConfigurationWizard extends
     private JPanel panelChanger;
     private JCheckBox chckbxChangerEnabled;
     private JCheckBox chckbxLimitRotationTo;
+    private JTextField textFieldSafeZ;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -100,6 +101,26 @@ public class ReferenceNozzleConfigurationWizard extends
 
         contentPanel.add(panelOffsets);
         
+        JPanel panelSafeZ = new JPanel();
+        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelSafeZ);
+        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,},
+        	new RowSpec[] {
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblSafeZ = new JLabel("Safe Z");
+        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
+        
+        textFieldSafeZ = new JTextField();
+        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
+        textFieldSafeZ.setColumns(10);
+        
+        
         panelChanger = new JPanel();
         panelChanger.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelChanger);
@@ -125,6 +146,8 @@ public class ReferenceNozzleConfigurationWizard extends
         
         chckbxLimitRotationTo = new JCheckBox("Limit Rotation to 180º");
         panelChanger.add(chckbxLimitRotationTo, "2, 4");
+        
+        
     }
 
     @Override
@@ -145,6 +168,7 @@ public class ReferenceNozzleConfigurationWizard extends
                 "selected");
         addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo,
                 "selected");
+        addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(locationX);
@@ -152,5 +176,6 @@ public class ReferenceNozzleConfigurationWizard extends
                 .decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(locationZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }
