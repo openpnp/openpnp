@@ -64,16 +64,14 @@ import org.openpnp.model.eagle.xml.Element;
 import org.openpnp.model.eagle.xml.Layer;
 import org.openpnp.model.eagle.xml.Library;
 import org.openpnp.model.eagle.xml.Param;
-
 import org.openpnp.util.Utils2D;
-
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.RowSpec;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class EagleBoardImporter implements BoardImporter {
@@ -359,17 +357,17 @@ public class EagleBoardImporter implements BoardImporter {
             panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP, null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(new ColumnSpec[] {
-                    FormFactory.RELATED_GAP_COLSPEC,
-                    FormFactory.DEFAULT_COLSPEC,
-                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
+                    FormSpecs.DEFAULT_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("default:grow"),
-                    FormFactory.RELATED_GAP_COLSPEC,
-                    FormFactory.DEFAULT_COLSPEC,},
+                    FormSpecs.RELATED_GAP_COLSPEC,
+                    FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
-                    FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC,
-                    FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC,}));
+                    FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC,
+                    FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC,}));
             
             JLabel lblBoardFilebrd = new JLabel("Eagle PCB Board File (.brd)");
             panel.add(lblBoardFilebrd, "2, 2, right, default");
@@ -386,15 +384,15 @@ public class EagleBoardImporter implements BoardImporter {
             panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(new ColumnSpec[] {
-                    FormFactory.RELATED_GAP_COLSPEC,
-                    FormFactory.DEFAULT_COLSPEC,},
+                    FormSpecs.RELATED_GAP_COLSPEC,
+                    FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
-                	FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC,
-                	FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC,
-                    FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC,}));
+                	FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC,
+                	FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC,
+                    FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC,}));
             
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);

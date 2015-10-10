@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractCamera;
@@ -53,9 +54,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Attribute(required=false)
     protected boolean flipY = false;
     
+    @Element(required=false)
+    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
-
+    
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -86,9 +90,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("moveToSafeZ({})", new Object[] { speed } );
+        logger.debug("{}.moveToSafeZ({})", new Object[] { getName(), speed } );
+        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN,
-                Double.NaN, 0, Double.NaN);
+                Double.NaN, safeZ.getValue(), Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
@@ -156,6 +161,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
         return driver.getLocation(this);
     }
+
+	public Length getSafeZ() {
+		return safeZ;
+	}
+
+	public void setSafeZ(Length safeZ) {
+		this.safeZ = safeZ;
+	}
 
     @Override
     public void close() throws IOException {

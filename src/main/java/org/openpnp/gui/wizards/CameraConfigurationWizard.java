@@ -47,9 +47,9 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -66,25 +66,25 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		contentPanel.add(panelUpp);
 		panelUpp.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Units Per Pixel", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,},
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,},
 		    new RowSpec[] {
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,}));
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
 		
 		lblWidth = new JLabel("Width");
 		panelUpp.add(lblWidth, "2, 2");
