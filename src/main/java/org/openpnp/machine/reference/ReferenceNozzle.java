@@ -9,8 +9,9 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -39,6 +40,10 @@ public class ReferenceNozzle extends AbstractNozzle implements
     
     @Attribute(required = false)
     private boolean changerEnabled = false;
+    
+    @Element(required=false)
+    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+   
     
     /**
      * If limitRotation is enabled the nozzle will reverse directions when
@@ -143,9 +148,10 @@ public class ReferenceNozzle extends AbstractNozzle implements
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-		logger.debug("{}.moveToSafeZ({})", new Object[]{getName(), speed});
+        logger.debug("{}.moveToSafeZ({})", new Object[] { getName(), speed } );
+        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN,
-                Double.NaN, 0, Double.NaN);
+                Double.NaN, safeZ.getValue(), Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
@@ -247,5 +253,13 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Override
 	public String toString() {
 		return getName();
+	}
+    
+	public Length getSafeZ() {
+		return safeZ;
+	}
+
+	public void setSafeZ(Length safeZ) {
+		this.safeZ = safeZ;
 	}
 }

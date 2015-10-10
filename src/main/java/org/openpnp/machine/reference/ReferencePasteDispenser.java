@@ -7,6 +7,8 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferencePasteDispenserConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractPasteDispenser;
@@ -23,8 +25,8 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
     @Element
     private Location headOffsets;
 
-    @Attribute(required = false)
-    private double safeZ = 0;
+    @Element(required=false)
+    protected Length safeZ = new Length(0, LengthUnit.Millimeters);
    
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
@@ -67,12 +69,14 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-		logger.debug("{}.moveToSafeZ({})", new Object[]{getName(), speed});
+        logger.debug("{}.moveToSafeZ({})", new Object[] { getName(), speed } );
+        Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN,
-                Double.NaN, safeZ, Double.NaN);
+                Double.NaN, safeZ.getValue(), Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
+    
     @Override
     public Location getLocation() {
         return driver.getLocation(this);
@@ -110,13 +114,12 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser implements
 	public String toString() {
 		return getName();
 	}
-    
-    public double getSafeZ() {
-    	return safeZ;
-    }
-    
-    public void setSafeZ(double safeZ) { 
-    	this.safeZ = safeZ; 
-    }
 
+	public Length getSafeZ() {
+		return safeZ;
+	}
+
+	public void setSafeZ(Length safeZ) {
+		this.safeZ = safeZ;
+	}
 }

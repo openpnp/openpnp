@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -37,11 +36,12 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceActuator;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class ReferenceActuatorConfigurationWizard extends
         AbstractConfigurationWizard {
     private final ReferenceActuator actuator;
@@ -50,32 +50,32 @@ public class ReferenceActuatorConfigurationWizard extends
     private JTextField locationY;
     private JTextField locationZ;
     private JPanel panelOffsets;
+    private JPanel panelSafeZ;
+    private JLabel lblSafeZ;
+    private JTextField textFieldSafeZ;
 
     public ReferenceActuatorConfigurationWizard(ReferenceActuator actuator) {
         this.actuator = actuator;
 
-        JPanel panelFields = new JPanel();
-        panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
         panelOffsets = new JPanel();
-        panelFields.add(panelOffsets);
+        contentPanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(new EtchedBorder(
                 EtchedBorder.LOWERED, null, null), "Offsets",
                 TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         panelOffsets.setLayout(new FormLayout(
-                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
+                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC, }, new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblX = new JLabel("X");
         panelOffsets.add(lblX, "2, 2");
@@ -99,6 +99,25 @@ public class ReferenceActuatorConfigurationWizard extends
         locationZ.setColumns(5);
 
         contentPanel.add(panelOffsets);
+        
+        panelSafeZ = new JPanel();
+        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelSafeZ);
+        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,},
+        	new RowSpec[] {
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblSafeZ = new JLabel("Safe Z");
+        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
+        
+        textFieldSafeZ = new JTextField();
+        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
+        textFieldSafeZ.setColumns(10);
     }
 
     @Override
@@ -114,6 +133,7 @@ public class ReferenceActuatorConfigurationWizard extends
                 lengthConverter);
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text",
                 lengthConverter);
+        addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(locationX);
@@ -121,5 +141,6 @@ public class ReferenceActuatorConfigurationWizard extends
                 .decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators
                 .decorateWithAutoSelectAndLengthConversion(locationZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

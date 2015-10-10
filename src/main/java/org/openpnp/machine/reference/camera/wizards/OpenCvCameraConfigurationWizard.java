@@ -23,9 +23,11 @@ package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.Color;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -34,13 +36,10 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import javax.swing.JCheckBox;
-import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
 public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
@@ -58,21 +57,21 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
 		contentPanel.add(panelGeneral);
 		panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,},
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,},
 		    new RowSpec[] {
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,}));
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
 		
 		JLabel lblDeviceId = new JLabel("Device Index");
 		panelGeneral.add(lblDeviceId, "2, 2, right, default");

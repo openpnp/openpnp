@@ -3,7 +3,6 @@ package org.openpnp.machine.reference.wizards;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
-import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.openbuilds.OpenBuildsDriver;
@@ -17,9 +16,9 @@ import org.openpnp.machine.reference.driver.SimulatorDriver;
 import org.openpnp.machine.reference.driver.SprinterDriver;
 import org.openpnp.machine.reference.driver.TinygDriver;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceMachineConfigurationWizard extends
@@ -32,13 +31,13 @@ public class ReferenceMachineConfigurationWizard extends
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,}));
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblDriver = new JLabel("Driver");
         contentPanel.add(lblDriver, "2, 2, right, default");
