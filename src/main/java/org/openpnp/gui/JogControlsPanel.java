@@ -266,6 +266,9 @@ public class JogControlsPanel extends JPanel {
 		JButton btnPlace = new JButton(placeAction);
 		panelSpecial.add(btnPlace);
 		
+		JButton btnSafeZ = new JButton(safezAction);
+		panelSpecial.add(btnSafeZ);
+		
 		panelDispensers = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
 		flowLayout.setAlignment(FlowLayout.LEFT);
@@ -368,6 +371,25 @@ public class JogControlsPanel extends JPanel {
                         e.printStackTrace();
                         MessageBoxes.errorBox(frame,
                                 "Place Operation Failed", e.getMessage());
+                    }
+                }
+            });
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action safezAction = new AbstractAction("Head Safe Z") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        Configuration.get().getMachine().getHeads().get(0).moveToSafeZ(1.0);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        MessageBoxes.errorBox(frame,
+                                "Movement Operation Failed", e.getMessage());
                     }
                 }
             });
