@@ -36,9 +36,9 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceActuator;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
@@ -61,18 +61,18 @@ public class ReferenceActuatorConfigurationWizard extends
                 TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         panelOffsets.setLayout(new FormLayout(
-                new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC,
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC,
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
+                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC, }, new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblX = new JLabel("X");
         panelOffsets.add(lblX, "2, 2");

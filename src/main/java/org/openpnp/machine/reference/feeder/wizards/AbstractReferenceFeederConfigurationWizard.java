@@ -43,9 +43,9 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
@@ -86,12 +86,12 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends
         contentPanel.add(panelPart);
         panelPart
                 .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
                         ColumnSpec.decode("default:grow"),
-                        FormFactory.RELATED_GAP_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
                         ColumnSpec.decode("default:grow"), }, new RowSpec[] {
-                        FormFactory.RELATED_GAP_ROWSPEC,
-                        FormFactory.DEFAULT_ROWSPEC, }));
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, }));
 
         comboBoxPart = new JComboBox();
         try {
@@ -112,20 +112,20 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends
                             0, 0)));
             contentPanel.add(panelLocation);
             panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
-                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("default:grow"),
-                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("default:grow"),
-                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("default:grow"),
-                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("default:grow"),
-                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormSpecs.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("left:default:grow"), }, new RowSpec[] {
-                    FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC,
-                    FormFactory.RELATED_GAP_ROWSPEC,
-                    FormFactory.DEFAULT_ROWSPEC, }));
+                    FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC,
+                    FormSpecs.RELATED_GAP_ROWSPEC,
+                    FormSpecs.DEFAULT_ROWSPEC, }));
 
             lblX_1 = new JLabel("X");
             panelLocation.add(lblX_1, "2, 2");

@@ -38,11 +38,6 @@
 			<version>1.2.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.jgoodies</groupId>
-			<artifactId>forms</artifactId>
-			<version>1.3.0</version>
-		</dependency>
-		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
@@ -111,6 +106,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>14.0.1</version>
+        </dependency>
+        <dependency>
+        	<groupId>com.jgoodies</groupId>
+        	<artifactId>jgoodies-forms</artifactId>
+        	<version>1.8.0</version>
         </dependency>
 	</dependencies>
 	<build>

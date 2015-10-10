@@ -37,8 +37,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -71,9 +69,9 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 public class MachineControlsPanel extends JPanel {
@@ -266,11 +264,11 @@ public class MachineControlsPanel extends JPanel {
 		JPanel panel = new JPanel();
 		add(panel);
 		panel.setLayout(new FormLayout(new ColumnSpec[] {
-		        FormFactory.RELATED_GAP_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
 		        ColumnSpec.decode("default:grow"),},
 		    new RowSpec[] {
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,}));
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
 		
 		comboBoxNozzles = new JComboBox();
 		comboBoxNozzles.addActionListener(new ActionListener() {
