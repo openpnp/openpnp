@@ -42,6 +42,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class ReferenceNozzleConfigurationWizard extends
         AbstractConfigurationWizard {
     private final ReferenceNozzle nozzle;

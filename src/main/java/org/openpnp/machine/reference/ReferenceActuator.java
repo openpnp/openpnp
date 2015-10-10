@@ -46,6 +46,9 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 	@Attribute
 	private int index;
 	
+    @Attribute(required = false)
+    private double safeZ = 0;
+
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
@@ -104,7 +107,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public void moveToSafeZ(double speed) throws Exception {
         logger.debug("{}.moveToSafeZ({})", new Object[] { getName(), speed } );
         Location l = new Location(getLocation().getUnits(), Double.NaN,
-                Double.NaN, 0, Double.NaN);
+                Double.NaN, safeZ, Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
@@ -142,4 +145,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 	public String toString() {
 		return getName();
 	}
+    
+    public double getSafeZ() {
+    	return safeZ;
+    }
+    
+    public void setSafeZ(double safeZ) { 
+    	this.safeZ = safeZ; 
+    }
+
 }

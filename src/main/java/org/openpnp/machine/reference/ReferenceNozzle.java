@@ -40,6 +40,10 @@ public class ReferenceNozzle extends AbstractNozzle implements
     @Attribute(required = false)
     private boolean changerEnabled = false;
     
+    @Attribute(required = false)
+    private double safeZ = 0;
+   
+    
     /**
      * If limitRotation is enabled the nozzle will reverse directions when
      * commanded to rotate past 180 degrees. So, 190 degrees becomes -170
@@ -145,7 +149,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
     public void moveToSafeZ(double speed) throws Exception {
 		logger.debug("{}.moveToSafeZ({})", new Object[]{getName(), speed});
         Location l = new Location(getLocation().getUnits(), Double.NaN,
-                Double.NaN, 0, Double.NaN);
+                Double.NaN, safeZ, Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
@@ -248,4 +252,13 @@ public class ReferenceNozzle extends AbstractNozzle implements
 	public String toString() {
 		return getName();
 	}
+    
+    public double getSafeZ() {
+    	return safeZ;
+    }
+    
+    public void setSafeZ(double safeZ) { 
+    	this.safeZ = safeZ; 
+    }
+
 }

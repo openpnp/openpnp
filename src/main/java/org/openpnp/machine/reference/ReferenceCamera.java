@@ -53,9 +53,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Attribute(required=false)
     protected boolean flipY = false;
     
+    @Attribute(required = false)
+    private double safeZ = 0;
+
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
-
+    
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -88,7 +91,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void moveToSafeZ(double speed) throws Exception {
         logger.debug("moveToSafeZ({})", new Object[] { speed } );
         Location l = new Location(getLocation().getUnits(), Double.NaN,
-                Double.NaN, 0, Double.NaN);
+                Double.NaN, safeZ, Double.NaN);
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
@@ -155,6 +158,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             return getHeadOffsets();
         }
         return driver.getLocation(this);
+    }
+
+    public double getSafeZ() {
+    	return safeZ;
+    }
+    
+    public void setSafeZ(double safeZ) { 
+    	this.safeZ = safeZ;
     }
 
     @Override

@@ -144,8 +144,7 @@ public class BasicJobTest {
         }
     }
 
-    public static class BasicJobTestProcessorListener implements
-            JobProcessorListener {
+    public static class BasicJobTestProcessorListener extends JobProcessorListener.Adapter {
         final private TestCompleteNotifier notifier;
 
         public BasicJobTestProcessorListener(TestCompleteNotifier notifier) {

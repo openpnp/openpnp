@@ -264,7 +264,7 @@ public class Location {
 	
 	@Override
 	public String toString() {
-		return String.format(Locale.US,"units %s, x %f, y %f, z %f, rotation %f", units.getShortName(), x, y, z, rotation);
+		return String.format(Locale.US,"(%f, %f, %f, %f %s)", x, y, z, rotation, units.getShortName());
 	}
 	
 	public Point getXyPoint() {

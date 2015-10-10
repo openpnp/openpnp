@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -35,7 +34,6 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -43,6 +41,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class ReferencePasteDispenserConfigurationWizard extends
         AbstractConfigurationWizard {
     private final ReferencePasteDispenser dispenser;
@@ -55,11 +54,8 @@ public class ReferencePasteDispenserConfigurationWizard extends
     public ReferencePasteDispenserConfigurationWizard(ReferencePasteDispenser dispenser) {
         this.dispenser = dispenser;
 
-        JPanel panelFields = new JPanel();
-        panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
         panelOffsets = new JPanel();
-        panelFields.add(panelOffsets);
+        contentPanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(new EtchedBorder(
                 EtchedBorder.LOWERED, null, null), "Offsets",
                 TitledBorder.LEADING, TitledBorder.TOP, null,
