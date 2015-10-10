@@ -23,6 +23,9 @@ package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
@@ -32,14 +35,20 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.CameraViewActionEvent;
+import org.openpnp.gui.components.CameraViewActionListener;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -48,8 +57,15 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.VisionUtils;
 
+import com.google.common.collect.Lists;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -325,12 +341,129 @@ public class ReferenceStripFeederConfigurationWizard extends
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Configuration.get().getMachine().submit(new Callable<Void>() {
-                public Void call() throws Exception {
-                    feeder.autoSetup();
-                    return null;
-                }
-            });
+        	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        	cameraView.addActionListener(autoSetupPart1Clicked);
+        	cameraView.setText("Click on the center of the first part in the tape.");
+        }
+    };
+    
+    private List<Location> part1HoleLocations;
+    private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
+		@Override
+		public void actionPerformed(final CameraViewActionEvent action) {
+        	final CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        	final Camera camera = cameraView.getCamera();
+        	cameraView.removeActionListener(this);
+			Configuration.get().getMachine().submit(new Callable<Void>() {
+				public Void call() throws Exception {
+					cameraView.setText("Checking first part...");
+		        	camera.moveTo(action.getLocation(), 1.0);
+		        	Thread.sleep(750);
+		            part1HoleLocations = OpenCvUtils.houghCircles(
+		                    camera, 
+		                    feeder.getHoleDiameter().multiply(0.9), 
+		                    feeder.getHoleDiameter().multiply(1.1), 
+		                    feeder.getHolePitch().multiply(0.9));
+		            // TODO: Need to handle special case when there is only one closest
+		            // hole to the clicked location, like if it's the start of the tape.
+		            
+		            for (Location location : part1HoleLocations) {
+		            	System.out.println(action.getLocation() + " " + location + " " + location.getLinearLengthTo(action.getLocation()));
+		            }
+		            
+		            cameraView.setText("Now click on the center of the second part in the tape.");
+		            
+		            cameraView.addActionListener(autoSetupPart2Clicked);
+		        	return null;
+				}
+			});
+		}
+	};
+    
+    private CameraViewActionListener autoSetupPart2Clicked = new CameraViewActionListener() {
+		@Override
+		public void actionPerformed(final CameraViewActionEvent action) {
+        	final CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        	final Camera camera = cameraView.getCamera();
+        	cameraView.removeActionListener(this);
+			Configuration.get().getMachine().submit(new Callable<Void>() {
+				public Void call() throws Exception {
+					cameraView.setText("Checking second part...");
+		        	camera.moveTo(action.getLocation(), 1.0);
+		        	Thread.sleep(750);
+		            List<Location> part2HoleLocations = OpenCvUtils.houghCircles(
+		                    camera, 
+		                    feeder.getHoleDiameter().multiply(0.9), 
+		                    feeder.getHoleDiameter().multiply(1.1), 
+		                    feeder.getHolePitch().multiply(0.9));
+		            
+		        	List<Location> referenceHoles = deriveReferenceHoles(
+		        			part1HoleLocations, 
+		        			part2HoleLocations);
+		        	final Location referenceHole1 = referenceHoles.get(0);
+		        	final Location referenceHole2 = referenceHoles.get(1);
+		        	Length partPitch = referenceHole1.getLinearLengthTo(referenceHole2);
+		        	partPitch.setValue(Math.round(partPitch.getValue()));
+		        	feeder.setReferenceHoleLocation(referenceHole1);
+		        	feeder.setLastHoleLocation(referenceHole2);
+		        	
+		        	final Length partPitch_ = partPitch;
+		        	SwingUtilities.invokeLater(new Runnable() {
+		        		public void run() {
+				        	Helpers.copyLocationIntoTextFields(
+				        			referenceHole1, 
+				        			textFieldFeedStartX, 
+				        			textFieldFeedStartY, 
+				        			textFieldFeedStartZ);
+				        	Helpers.copyLocationIntoTextFields(
+				        			referenceHole2, 
+				        			textFieldFeedEndX, 
+				        			textFieldFeedEndY, 
+				        			textFieldFeedEndZ);
+				        	textFieldPartPitch.setText(partPitch_.getValue() + "");
+		        		}
+		        	});
+		        	
+		        	feeder.setFeedCount(1);
+		        	camera.moveTo(feeder.getPickLocation(), 1.0);
+		        	feeder.setFeedCount(0);
+		        	cameraView.setText("Setup complete!");
+		        	Thread.sleep(1500);
+		        	cameraView.setText(null);
+
+		        	return null;
+				}
+			});
+		}
+	};
+	
+	private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations, List<Location> part2HoleLocations) {
+		// We are only interested in the pair of holes closest to each part
+		part1HoleLocations = part1HoleLocations.subList(0, Math.min(2,  part1HoleLocations.size()));
+		part2HoleLocations = part2HoleLocations.subList(0, Math.min(2,  part2HoleLocations.size()));
+		
+		// Part 1's reference hole is the one closest to either of part 2's holes.
+		Location part1ReferenceHole = VisionUtils.sortLocationsByDistance(
+				part2HoleLocations.get(0),
+				part1HoleLocations).get(0);
+		// Part 2's reference hole is the one farthest from part 1's reference hole.
+		Location part2ReferenceHole = Lists.reverse(VisionUtils.sortLocationsByDistance(
+				part1ReferenceHole,
+				part2HoleLocations)).get(0);
+		
+		List<Location> referenceHoles = new ArrayList<>();
+		referenceHoles.add(part1ReferenceHole);
+		referenceHoles.add(part2ReferenceHole);
+		return referenceHoles;
+	}
+	
+    private Action autoSetupCancel = new AbstractAction("Auto Setup") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	MainFrame.mainFrame.hideInstructions();
+        	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        	cameraView.removeActionListener(autoSetupPart1Clicked);
+        	cameraView.removeActionListener(autoSetupPart2Clicked);
         }
     };
 }

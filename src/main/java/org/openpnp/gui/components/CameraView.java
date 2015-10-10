@@ -60,6 +60,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -456,7 +457,7 @@ public class CameraView extends JComponent implements CameraListener {
 				drawTextOverlay(g2d, 10, 10, text);
 			}
 			
-			if (showImageInfo && image != null) {
+			if (showImageInfo && text == null) {
 			    drawImageInfo(g2d, 10, 10, image);
 			}
 
@@ -692,7 +693,10 @@ public class CameraView extends JComponent implements CameraListener {
 	}
 
     private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY, BufferedImage image) {
-        String text = String.format("Resolution: %d x %d\nHistogram:",
+        if (image == null) {
+        	return;
+        }
+    	String text = String.format("Resolution: %d x %d\nHistogram:",
                 image.getWidth(), 
                 image.getHeight());
         Insets insets = new Insets(10, 10, 10, 10);
@@ -992,13 +996,39 @@ public class CameraView extends JComponent implements CameraListener {
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
+            int x = e.getX();
+            int y = e.getY();
+
+            // Find the difference in X and Y from the center of the image
+            // to the mouse click.
+            double offsetX = (scaledWidth / 2) - (x - imageX);
+            double offsetY = (scaledHeight / 2) - (y - imageY);
+
+            // Invert the X so that the offsets represent a bottom left to
+            // top right coordinate system.
+            offsetX = -offsetX;
+
+            // Scale the offsets by the units per pixel for the camera.
+            offsetX *= scaledUnitsPerPixelX;
+            offsetY *= scaledUnitsPerPixelY;
+
+            // The offsets now represent the distance to move the camera
+            // in the Camera's units per pixel's units.
+
+            // Create a location in the Camera's units per pixel's units
+            // and with the values of the offsets.
+            Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                    offsetY, 0.0, 0.0);
+            // Add the offsets to the Camera's position.
+            Location location = camera.getLocation().add(offsets);
 			CameraViewActionEvent action = new CameraViewActionEvent(
 					CameraView.this, 
 					e.getX(), 
 					e.getY(), 
 					e.getX() * scaledUnitsPerPixelX, 
-					e.getY() * scaledUnitsPerPixelY);
-			for (CameraViewActionListener listener : actionListeners) {
+					e.getY() * scaledUnitsPerPixelY,
+					location);
+			for (CameraViewActionListener listener : new ArrayList<>(actionListeners)) {
 				listener.actionPerformed(action);
 			}
 		}

@@ -135,6 +135,9 @@ public class OpenCvUtils {
         
     	saveDebugImage("houghCircles_in", mat);
     	
+    	// save a copy of the image for debugging
+    	Mat debug = mat.clone();
+    	
     	// hough requires grayscale images
     	mat = toGray(mat);
     	
@@ -154,7 +157,10 @@ public class OpenCvUtils {
     			(int) (minDiameter / 2), 
     			(int) (maxDiameter / 2));
     	
-    	drawCircles(mat, circles);
+    	if (logger.isDebugEnabled()) {
+    		drawCircles(debug, circles);
+    		saveDebugImage("houghCircles_debug", debug);
+    	}
     	
     	saveDebugImage("houghCircles_out", mat);
 

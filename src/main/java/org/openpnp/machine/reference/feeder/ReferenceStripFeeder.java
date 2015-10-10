@@ -178,39 +178,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount() + 1);
 	}
     
-    public void autoSetup() throws Exception {
-    	setFeedCount(1);
-        Camera camera = Configuration.get().getMachine().getHeads().get(0).getCameras().get(0);
-        
-        // the camera should be centered within 1 hole pitch of the reference
-        // hole
-        Location location = camera.getLocation();
-        
-        try {
-            // see if we can find the first and second holes
-            List<Location> holeLocations = OpenCvUtils.houghCircles(
-                    camera, 
-                    new Length(1.5 * 0.90, LengthUnit.Millimeters), 
-                    new Length(1.5 * 1.10, LengthUnit.Millimeters), 
-                    new Length(4 * 0.90, LengthUnit.Millimeters));
-
-            System.out.println(holeLocations);
-            
-            if (holeLocations.size() < 2) {
-                throw new Exception("Couldn't find two holes.");
-            }
-            
-            Location hole1Location = holeLocations.get(0);
-            Location hole2Location = holeLocations.get(1);
-            setReferenceHoleLocation(hole1Location);
-            setLastHoleLocation(hole2Location);
-            camera.moveTo(getPickLocation(), 1.0);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    
 	public TapeType getTapeType() {
         return tapeType;
     }

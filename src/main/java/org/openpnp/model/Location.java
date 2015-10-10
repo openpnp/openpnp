@@ -96,6 +96,11 @@ public class Location {
 		return location;
 	}
 	
+	public Length getLinearLengthTo(Location location) {
+		double distance = getLinearDistanceTo(location);
+		return new Length(distance, getUnits());
+	}
+	
 	/**
 	 * Returns the distance between this Location and the specified Location
 	 * in the units of this Location.
