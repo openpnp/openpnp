@@ -24,7 +24,6 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -58,7 +57,6 @@ import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -236,6 +234,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         panelLocations.add(lblZ_1, "8, 2");
 
         JLabel lblFeedStartLocation = new JLabel("Reference Hole Location");
+        lblFeedStartLocation.setToolTipText("The location of a tape hole 2mm from the first part in the direction of the second part.");
         panelLocations.add(lblFeedStartLocation, "2, 4, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -255,7 +254,8 @@ public class ReferenceStripFeederConfigurationWizard extends
                 null);
         panelLocations.add(locationButtonsPanelFeedStart, "10, 4");
 
-        JLabel lblFeedEndLocation = new JLabel("Last Hole Location");
+        JLabel lblFeedEndLocation = new JLabel("Next Hole Location");
+        lblFeedEndLocation.setToolTipText("The location of another hole after the reference hole. This can be any hole along the tape as long as it's past the reference hole.");
         panelLocations.add(lblFeedEndLocation, "2, 6, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -364,12 +364,14 @@ public class ReferenceStripFeederConfigurationWizard extends
 		                    feeder.getHoleDiameter().multiply(0.9), 
 		                    feeder.getHoleDiameter().multiply(1.1), 
 		                    feeder.getHolePitch().multiply(0.9));
-		            // TODO: Need to handle special case when there is only one closest
-		            // hole to the clicked location, like if it's the start of the tape.
-		            
-		            for (Location location : part1HoleLocations) {
-		            	System.out.println(action.getLocation() + " " + location + " " + location.getLinearLengthTo(action.getLocation()));
-		            }
+		            // Need to handle the special case where the first two holes we find are not the
+		            // reference hole and next hole. This can happen if another tape is close by and
+		            // one of it's holes is detected as either of the holes.
+		            // If we only read one hole that's okay. It just becomes the reference hole.
+		            // If we read multiple holes I think we need to check that they are in a line,
+		            // but which line?
+		            // I think this is where RANSAC comes in. We need to find the best fit line of all the holes
+		            // we find.
 		            
 		            cameraView.setText("Now click on the center of the second part in the tape.");
 		            
