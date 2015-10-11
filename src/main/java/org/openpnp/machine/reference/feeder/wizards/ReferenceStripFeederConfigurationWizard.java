@@ -71,6 +71,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends
@@ -147,62 +148,72 @@ public class ReferenceStripFeederConfigurationWizard extends
                 TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         panelTapeSettings.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-            		FormSpecs.RELATED_GAP_ROWSPEC,
-            		FormSpecs.DEFAULT_ROWSPEC,
-            		FormSpecs.RELATED_GAP_ROWSPEC,
-            		FormSpecs.DEFAULT_ROWSPEC,
-            		FormSpecs.RELATED_GAP_ROWSPEC,
-            		FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblTapeType = new JLabel("Tape Type");
-        panelTapeSettings.add(lblTapeType, "2, 2, right, default");
-
-        comboBoxTapeType = new JComboBox(TapeType.values());
-        panelTapeSettings.add(comboBoxTapeType, "4, 2, fill, default");
-
-        JLabel lblTapeWidth = new JLabel("Tape Width");
-        panelTapeSettings.add(lblTapeWidth, "2, 4");
-
-        textFieldTapeWidth = new JTextField();
-        panelTapeSettings.add(textFieldTapeWidth, "4, 4");
-        textFieldTapeWidth.setColumns(5);
-
-        lblPartPitch = new JLabel("Part Pitch");
-        panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
-
-        textFieldPartPitch = new JTextField();
-        panelTapeSettings.add(textFieldPartPitch, "4, 6");
-        textFieldPartPitch.setColumns(5);
-
-        lblFeedCount = new JLabel("Feed Count");
-        panelTapeSettings.add(lblFeedCount, "2, 8");
-
-        textFieldFeedCount = new JTextField();
-        panelTapeSettings.add(textFieldFeedCount, "4, 8");
-        textFieldFeedCount.setColumns(10);
-
-        btnResetFeedCount = new JButton(new AbstractAction("Reset") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                textFieldFeedCount.setText("0");
-                applyAction.actionPerformed(e);
-            }
-        });
-        panelTapeSettings.add(btnResetFeedCount, "6, 8");
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,},
+        	new RowSpec[] {
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,}));
         
         btnAutoSetup = new JButton(autoSetup);
-        panelTapeSettings.add(btnAutoSetup, "4, 10");
+        panelTapeSettings.add(btnAutoSetup, "2, 2, 11, 1");
+
+        lblTapeType = new JLabel("Tape Type");
+        panelTapeSettings.add(lblTapeType, "2, 4, right, default");
+
+        comboBoxTapeType = new JComboBox(TapeType.values());
+        panelTapeSettings.add(comboBoxTapeType, "4, 4, fill, default");
+        
+                JLabel lblTapeWidth = new JLabel("Tape Width");
+                panelTapeSettings.add(lblTapeWidth, "8, 4, right, default");
+        
+                textFieldTapeWidth = new JTextField();
+                panelTapeSettings.add(textFieldTapeWidth, "10, 4");
+                textFieldTapeWidth.setColumns(5);
+        
+                lblPartPitch = new JLabel("Part Pitch");
+                panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
+        
+                textFieldPartPitch = new JTextField();
+                panelTapeSettings.add(textFieldPartPitch, "4, 6");
+                textFieldPartPitch.setColumns(5);
+        
+                lblFeedCount = new JLabel("Feed Count");
+                panelTapeSettings.add(lblFeedCount, "8, 6, right, default");
+        
+                textFieldFeedCount = new JTextField();
+                panelTapeSettings.add(textFieldFeedCount, "10, 6");
+                textFieldFeedCount.setColumns(10);
+        
+                btnResetFeedCount = new JButton(new AbstractAction("Reset") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        textFieldFeedCount.setText("0");
+                        applyAction.actionPerformed(e);
+                    }
+                });
+                panelTapeSettings.add(btnResetFeedCount, "12, 6");
+        
+        lblUseVision = new JLabel("Use Vision?");
+        panelTapeSettings.add(lblUseVision, "2, 8");
+        
+        chckbxUseVision = new JCheckBox("");
+        panelTapeSettings.add(chckbxUseVision, "4, 8");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -320,6 +331,8 @@ public class ReferenceStripFeederConfigurationWizard extends
                 "text", lengthConverter);
         addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ,
                 "text", lengthConverter);
+        
+        addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators
@@ -498,4 +511,6 @@ public class ReferenceStripFeederConfigurationWizard extends
         	cameraView.removeActionListener(autoSetupPart2Clicked);
         }
     };
+    private JCheckBox chckbxUseVision;
+    private JLabel lblUseVision;
 }

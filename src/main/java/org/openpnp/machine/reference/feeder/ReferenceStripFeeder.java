@@ -292,8 +292,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setReferenceHoleToPartLinear(Length referenceHoleToPartLinear) {
         this.referenceHoleToPartLinear = referenceHoleToPartLinear;
     }
+    
+    public boolean isVisionEnabled() {
+		return visionEnabled;
+	}
 
-    @Override
+	public void setVisionEnabled(boolean visionEnabled) {
+		this.visionEnabled = visionEnabled;
+	}
+
+	@Override
 	public String toString() {
 		return getName();
 	}
