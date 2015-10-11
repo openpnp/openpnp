@@ -58,17 +58,12 @@ import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.VisionUtils;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-// TODO: Handle camera rotation.
-// TODO: Probably need to give some serious thought to rounding and
-// truncation in the selection stuff. Probably doing a lot of off by one.
 public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
@@ -119,6 +114,8 @@ public class CameraView extends JComponent implements CameraListener {
 	 * recalculate all the scaling data.
 	 */
 	private double lastSourceWidth, lastSourceHeight;
+	
+	private Location lastUnitsPerPixel;
 
 	/**
 	 * The width and height of the image after it has been scaled to fit the
@@ -361,8 +358,9 @@ public class CameraView extends JComponent implements CameraListener {
 		BufferedImage oldFrame = lastFrame;
 		lastFrame = img;
 		if (oldFrame == null
-				|| (oldFrame.getWidth() != img.getWidth() || oldFrame
-						.getHeight() != img.getHeight())) {
+				|| (oldFrame.getWidth() != img.getWidth() 
+				|| oldFrame.getHeight() != img.getHeight()
+				|| camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
 			calculateScalingData();
 		}
 		repaint();
@@ -414,8 +412,9 @@ public class CameraView extends JComponent implements CameraListener {
 		scaleRatioX = lastSourceWidth / (double) scaledWidth;
 		scaleRatioY = lastSourceHeight / (double) scaledHeight;
 
-		scaledUnitsPerPixelX = camera.getUnitsPerPixel().getX() * scaleRatioX;
-		scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY() * scaleRatioY;
+		lastUnitsPerPixel = camera.getUnitsPerPixel();
+		scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
+		scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
 		if (selectionEnabled && selection != null) {
 			// setSelection() handles updating the scaled rectangle
@@ -996,6 +995,14 @@ public class CameraView extends JComponent implements CameraListener {
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				return;
+			}
+			
+			if (e.isShiftDown()) {
+				return;
+			}
+			
             int x = e.getX();
             int y = e.getY();
 
