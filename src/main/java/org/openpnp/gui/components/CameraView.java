@@ -177,6 +177,9 @@ public class CameraView extends JComponent implements CameraListener {
 	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
 	
 	private CameraViewFilter cameraViewFilter;
+	
+	private long flashStartTimeMs;
+	private long flashLengthMs = 250;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -311,6 +314,23 @@ public class CameraView extends JComponent implements CameraListener {
 
 	public void setText(String text) {
 		this.text = text;
+		flash();
+	}
+	
+	private void flash() {
+		flashStartTimeMs = System.currentTimeMillis();
+		scheduledExecutor.scheduleAtFixedRate(
+			new Runnable() {
+				public void run() {
+					if (System.currentTimeMillis() - flashStartTimeMs < flashLengthMs) {
+						repaint();
+					}
+					else {
+						flashStartTimeMs = 0;
+						throw new RuntimeException();
+					}
+				}
+			}, 0, 30, TimeUnit.MILLISECONDS);
 	}
 	
 	public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
@@ -478,6 +498,15 @@ public class CameraView extends JComponent implements CameraListener {
 			g.setColor(Color.red);
 			g.drawLine(ins.left, ins.top, ins.right, ins.bottom);
 			g.drawLine(ins.right, ins.top, ins.left, ins.bottom);
+		}
+		
+		if (flashStartTimeMs > 0) {
+			long timeLeft = flashLengthMs - (System.currentTimeMillis() - flashStartTimeMs);
+			float alpha = (1f / flashLengthMs) * timeLeft;
+			alpha = Math.min(alpha, 1);
+			alpha = Math.max(alpha, 0);
+			g2d.setColor(new Color(1f, 1f, 1f, alpha));
+			g2d.fillRect(0, 0, getWidth(), getHeight());
 		}
 	}
 
