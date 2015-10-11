@@ -22,7 +22,6 @@ import org.openpnp.spi.Camera;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO: It would be cool if all these utility functions were chainable.
 public class OpenCvUtils {
     private final static Logger logger = LoggerFactory.getLogger(OpenCvUtils.class);
 
