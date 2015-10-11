@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -43,6 +44,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewActionEvent;
 import org.openpnp.gui.components.CameraViewActionListener;
+import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -62,6 +64,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.FluentCv;
 
 import com.google.common.collect.Lists;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -344,10 +347,27 @@ public class ReferenceStripFeederConfigurationWizard extends
         	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
         	cameraView.addActionListener(autoSetupPart1Clicked);
         	cameraView.setText("Click on the center of the first part in the tape.");
+        	
+        	cameraView.setCameraViewFilter(new CameraViewFilter() {
+				@Override
+				public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
+					return new FluentCv()
+						.toMat(image, "original")
+						.toGray()
+						.thresholdOtsu(false)
+						.gaussianBlur(9)
+						.houghCircles(camera, 
+			                    feeder.getHoleDiameter().multiply(0.9), 
+			                    feeder.getHoleDiameter().multiply(1.1), 
+			                    feeder.getHolePitch().multiply(0.9))
+						.drawCircles("original")
+						.toBufferedImage();
+				}
+			});
         }
     };
     
-    private List<Location> part1HoleLocations;
+    private List<Location> part1HoleLocations = new ArrayList<>();
     private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
@@ -359,11 +379,17 @@ public class ReferenceStripFeederConfigurationWizard extends
 					cameraView.setText("Checking first part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
 		        	Thread.sleep(750);
-		            part1HoleLocations = OpenCvUtils.houghCircles(
-		                    camera, 
-		                    feeder.getHoleDiameter().multiply(0.9), 
-		                    feeder.getHoleDiameter().multiply(1.1), 
-		                    feeder.getHolePitch().multiply(0.9));
+		        	part1HoleLocations.clear();
+					new FluentCv()
+						.toMat(camera.capture())
+						.toGray()
+						.thresholdOtsu(false)
+						.gaussianBlur(9)
+						.houghCircles(camera, 
+			                    feeder.getHoleDiameter().multiply(0.9), 
+			                    feeder.getHoleDiameter().multiply(1.1), 
+			                    feeder.getHolePitch().multiply(0.9))
+						.circlesToLocations(camera, part1HoleLocations);
 		            // Need to handle the special case where the first two holes we find are not the
 		            // reference hole and next hole. This can happen if another tape is close by and
 		            // one of it's holes is detected as either of the holes.
@@ -393,11 +419,17 @@ public class ReferenceStripFeederConfigurationWizard extends
 					cameraView.setText("Checking second part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
 		        	Thread.sleep(750);
-		            List<Location> part2HoleLocations = OpenCvUtils.houghCircles(
-		                    camera, 
-		                    feeder.getHoleDiameter().multiply(0.9), 
-		                    feeder.getHoleDiameter().multiply(1.1), 
-		                    feeder.getHolePitch().multiply(0.9));
+		        	List<Location> part2HoleLocations = new ArrayList<>();
+					new FluentCv()
+						.toMat(camera.capture())
+						.toGray()
+						.thresholdOtsu(false)
+						.gaussianBlur(9)
+						.houghCircles(camera, 
+			                    feeder.getHoleDiameter().multiply(0.9), 
+			                    feeder.getHoleDiameter().multiply(1.1), 
+			                    feeder.getHolePitch().multiply(0.9))
+						.circlesToLocations(camera, part2HoleLocations);
 		            
 		        	List<Location> referenceHoles = deriveReferenceHoles(
 		        			part1HoleLocations, 
@@ -429,9 +461,11 @@ public class ReferenceStripFeederConfigurationWizard extends
 		        	feeder.setFeedCount(1);
 		        	camera.moveTo(feeder.getPickLocation(), 1.0);
 		        	feeder.setFeedCount(0);
+		        	
 		        	cameraView.setText("Setup complete!");
 		        	Thread.sleep(1500);
 		        	cameraView.setText(null);
+		        	cameraView.setCameraViewFilter(null);
 
 		        	return null;
 				}

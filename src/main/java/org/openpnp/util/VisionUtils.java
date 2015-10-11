@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 
@@ -68,5 +69,17 @@ public class VisionUtils {
             }
         });
         return locations;
+    }
+    
+    public static double toPixels(Length length, Camera camera) {
+    	// convert inputs to the same units
+    	Location unitsPerPixel = camera.getUnitsPerPixel();
+    	length = length.convertToUnits(unitsPerPixel.getUnits());
+
+    	// we average the units per pixel because circles can't be ovals
+    	double avgUnitsPerPixel = (unitsPerPixel.getX() + unitsPerPixel.getY()) / 2;
+    	
+    	// convert it all to pixels
+    	return length.getValue() / avgUnitsPerPixel;
     }
 }

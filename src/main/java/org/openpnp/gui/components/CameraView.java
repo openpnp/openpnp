@@ -39,6 +39,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -174,6 +175,8 @@ public class CameraView extends JComponent implements CameraListener {
 	private boolean showImageInfo;
 	
 	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
+	
+	private CameraViewFilter cameraViewFilter;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -309,6 +312,10 @@ public class CameraView extends JComponent implements CameraListener {
 	public void setText(String text) {
 		this.text = text;
 	}
+	
+	public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
+		this.cameraViewFilter = cameraViewFilter;
+	}
 
 	public BufferedImage captureSelectionImage() {
 		if (selection == null || lastFrame == null) {
@@ -355,6 +362,9 @@ public class CameraView extends JComponent implements CameraListener {
 
 	@Override
 	public void frameReceived(BufferedImage img) {
+		if (cameraViewFilter != null) {
+			img = cameraViewFilter.filterCameraImage(camera, img);
+		}
 		BufferedImage oldFrame = lastFrame;
 		lastFrame = img;
 		if (oldFrame == null
