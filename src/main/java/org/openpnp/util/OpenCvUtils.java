@@ -4,19 +4,19 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.slf4j.Logger;
@@ -92,6 +92,8 @@ public class OpenCvUtils {
     		Length minDiameter, 
     		Length maxDiameter, 
     		Length minDistance) throws Exception {
+    	logger.debug("houghCircles({}, {}, {}, {})", new Object[] { camera.getName(), minDiameter, maxDiameter, minDistance });
+    	
     	// convert inputs to the same units
     	Location unitsPerPixel = camera.getUnitsPerPixel();
     	minDiameter = minDiameter.convertToUnits(unitsPerPixel.getUnits());
@@ -102,33 +104,14 @@ public class OpenCvUtils {
     	double avgUnitsPerPixel = (unitsPerPixel.getX() + unitsPerPixel.getY()) / 2;
         
     	// convert it all to pixels
-    	double minRadius = minDiameter.getValue() / 2 / avgUnitsPerPixel;
-        double maxRadius = maxDiameter.getValue() / 2 / avgUnitsPerPixel;
-        double minDistance2 = minDistance.getValue() / avgUnitsPerPixel;
+    	double minDiameterPixels = minDiameter.getValue() / avgUnitsPerPixel;
+        double maxDiameterPixels = maxDiameter.getValue() / avgUnitsPerPixel;
+        double minDistancePixels = minDistance.getValue() / avgUnitsPerPixel;
+
+        BufferedImage image = camera.capture(); 
+        Mat mat = toMat(image);
+        Mat circles = houghCircles(mat, minDiameterPixels, maxDiameterPixels, minDistancePixels);
         
-    	// grab an image
-        BufferedImage image = camera.capture();
-    	Mat mat = toMat(image);
-
-    	// hough requires grayscale images
-    	mat = toGray(mat);
-    	
-    	// add a blur because hough likes it that way
-    	mat = gaussianBlur(mat, 9);
-    	
-    	// run the houghcircles algorithm
-    	Mat circles = new Mat();
-    	Imgproc.HoughCircles(
-    			mat, 
-    			circles, 
-    			Imgproc.CV_HOUGH_GRADIENT, 
-    			1, 
-    			minDistance2,
-    			80, 
-    			10, 
-    			(int) minRadius, 
-    			(int) maxRadius);
-
     	// convert the results into Locations
     	List<Location> locations = new ArrayList<>();
     	for (int i = 0; i < circles.cols(); i++) {
@@ -144,6 +127,43 @@ public class OpenCvUtils {
     	// sort by distance from center
     	locations = VisionUtils.sortLocationsByDistance(camera.getLocation(), locations);
         return locations;
+    }
+    
+    public static Mat houghCircles(Mat mat, double minDiameter, double maxDiameter, double minDistance) {
+        logger.debug("houghCircles(Mat, {}, {}, {})", new Object[] { minDiameter, maxDiameter, minDistance });
+        
+    	saveDebugImage("houghCircles_in", mat);
+    	
+    	// save a copy of the image for debugging
+    	Mat debug = mat.clone();
+    	
+    	// hough requires grayscale images
+    	mat = toGray(mat);
+    	
+    	// and prefers a blurred image
+    	mat = gaussianBlur(mat, 9);
+    	
+    	// run the houghcircles algorithm
+    	Mat circles = new Mat();
+    	Imgproc.HoughCircles(
+    			mat, 
+    			circles, 
+    			Imgproc.CV_HOUGH_GRADIENT, 
+    			1, 
+    			minDistance,
+    			80, 
+    			10, 
+    			(int) (minDiameter / 2), 
+    			(int) (maxDiameter / 2));
+    	
+    	if (logger.isDebugEnabled()) {
+    		drawCircles(debug, circles);
+    		saveDebugImage("houghCircles_debug", debug);
+    	}
+    	
+    	saveDebugImage("houghCircles_out", mat);
+
+    	return circles;
     }
     
     /**
@@ -170,5 +190,53 @@ public class OpenCvUtils {
     public static Mat gaussianBlur(Mat mat, int kernel) {
     	Imgproc.GaussianBlur(mat, mat, new Size(kernel, kernel), 0);
     	return mat;
+    }
+    
+    public static Mat drawCircles(Mat mat, Mat circles) {
+    	for (int i = 0; i < circles.cols(); i++) {
+    		double[] circle = circles.get(0, i);
+    		double x = circle[0];
+    		double y = circle[1];
+    		double radius = circle[2];
+        	Core.circle(mat, new Point(x, y), (int) radius, new Scalar(0, 0, 255, 255), 2);
+        	Core.circle(mat, new Point(x, y), 1, new Scalar(0, 255, 0, 255), 2);
+    	}
+    	return mat;
+    }
+    
+    public static Mat thresholdAdaptive(Mat mat, boolean invert) {
+    	Imgproc.adaptiveThreshold(
+    			mat, 
+    			mat, 
+    			255, 
+    			Imgproc.ADAPTIVE_THRESH_MEAN_C, 
+    			invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY, 
+    			3,
+    			5);
+    	return mat;
+    }
+    
+    public static Mat thresholdOtsu(Mat mat, boolean invert) {
+    	Imgproc.threshold(
+    			mat, 
+    			mat,
+    			0,
+    			255, 
+    			(invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY) | Imgproc.THRESH_OTSU);
+    	return mat;
+    }
+    
+    public static void saveDebugImage(String name, Mat mat) {
+        if (logger.isDebugEnabled()) {
+            try {
+                BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
+                File file = Configuration.get().createResourceFile(
+                        OpenCvUtils.class, name + "_", ".png");
+                ImageIO.write(debugImage, "PNG", file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

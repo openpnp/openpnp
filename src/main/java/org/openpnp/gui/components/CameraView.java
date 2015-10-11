@@ -39,6 +39,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,16 +59,12 @@ import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-// TODO: Handle camera rotation.
-// TODO: Probably need to give some serious thought to rounding and
-// truncation in the selection stuff. Probably doing a lot of off by one.
 public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
@@ -118,6 +115,8 @@ public class CameraView extends JComponent implements CameraListener {
 	 * recalculate all the scaling data.
 	 */
 	private double lastSourceWidth, lastSourceHeight;
+	
+	private Location lastUnitsPerPixel;
 
 	/**
 	 * The width and height of the image after it has been scaled to fit the
@@ -176,6 +175,8 @@ public class CameraView extends JComponent implements CameraListener {
 	private boolean showImageInfo;
 	
 	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
+	
+	private CameraViewFilter cameraViewFilter;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -311,6 +312,10 @@ public class CameraView extends JComponent implements CameraListener {
 	public void setText(String text) {
 		this.text = text;
 	}
+	
+	public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
+		this.cameraViewFilter = cameraViewFilter;
+	}
 
 	public BufferedImage captureSelectionImage() {
 		if (selection == null || lastFrame == null) {
@@ -357,11 +362,15 @@ public class CameraView extends JComponent implements CameraListener {
 
 	@Override
 	public void frameReceived(BufferedImage img) {
+		if (cameraViewFilter != null) {
+			img = cameraViewFilter.filterCameraImage(camera, img);
+		}
 		BufferedImage oldFrame = lastFrame;
 		lastFrame = img;
 		if (oldFrame == null
-				|| (oldFrame.getWidth() != img.getWidth() || oldFrame
-						.getHeight() != img.getHeight())) {
+				|| (oldFrame.getWidth() != img.getWidth() 
+				|| oldFrame.getHeight() != img.getHeight()
+				|| camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
 			calculateScalingData();
 		}
 		repaint();
@@ -413,8 +422,9 @@ public class CameraView extends JComponent implements CameraListener {
 		scaleRatioX = lastSourceWidth / (double) scaledWidth;
 		scaleRatioY = lastSourceHeight / (double) scaledHeight;
 
-		scaledUnitsPerPixelX = camera.getUnitsPerPixel().getX() * scaleRatioX;
-		scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY() * scaleRatioY;
+		lastUnitsPerPixel = camera.getUnitsPerPixel();
+		scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
+		scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
 		if (selectionEnabled && selection != null) {
 			// setSelection() handles updating the scaled rectangle
@@ -456,7 +466,7 @@ public class CameraView extends JComponent implements CameraListener {
 				drawTextOverlay(g2d, 10, 10, text);
 			}
 			
-			if (showImageInfo && image != null) {
+			if (showImageInfo && text == null) {
 			    drawImageInfo(g2d, 10, 10, image);
 			}
 
@@ -692,7 +702,10 @@ public class CameraView extends JComponent implements CameraListener {
 	}
 
     private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY, BufferedImage image) {
-        String text = String.format("Resolution: %d x %d\nHistogram:",
+        if (image == null) {
+        	return;
+        }
+    	String text = String.format("Resolution: %d x %d\nHistogram:",
                 image.getWidth(), 
                 image.getHeight());
         Insets insets = new Insets(10, 10, 10, 10);
@@ -992,13 +1005,47 @@ public class CameraView extends JComponent implements CameraListener {
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				return;
+			}
+			
+			if (e.isShiftDown()) {
+				return;
+			}
+			
+            int x = e.getX();
+            int y = e.getY();
+
+            // Find the difference in X and Y from the center of the image
+            // to the mouse click.
+            double offsetX = (scaledWidth / 2) - (x - imageX);
+            double offsetY = (scaledHeight / 2) - (y - imageY);
+
+            // Invert the X so that the offsets represent a bottom left to
+            // top right coordinate system.
+            offsetX = -offsetX;
+
+            // Scale the offsets by the units per pixel for the camera.
+            offsetX *= scaledUnitsPerPixelX;
+            offsetY *= scaledUnitsPerPixelY;
+
+            // The offsets now represent the distance to move the camera
+            // in the Camera's units per pixel's units.
+
+            // Create a location in the Camera's units per pixel's units
+            // and with the values of the offsets.
+            Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                    offsetY, 0.0, 0.0);
+            // Add the offsets to the Camera's position.
+            Location location = camera.getLocation().add(offsets);
 			CameraViewActionEvent action = new CameraViewActionEvent(
 					CameraView.this, 
 					e.getX(), 
 					e.getY(), 
 					e.getX() * scaledUnitsPerPixelX, 
-					e.getY() * scaledUnitsPerPixelY);
-			for (CameraViewActionListener listener : actionListeners) {
+					e.getY() * scaledUnitsPerPixelY,
+					location);
+			for (CameraViewActionListener listener : new ArrayList<>(actionListeners)) {
 				listener.actionPerformed(action);
 			}
 		}

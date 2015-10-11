@@ -21,15 +21,25 @@
 
 package org.openpnp.gui.components;
 
+import org.openpnp.model.Location;
+
 public class CameraViewActionEvent {
 	public int componentX, componentY;
 	public double physicalX, physicalY;
+	public Location location;
 	
-	public CameraViewActionEvent(CameraView source, int componentX, int componentY, double physicalX, double physicalY) {
+	public CameraViewActionEvent(
+			CameraView source, 
+			int componentX, 
+			int componentY, 
+			double physicalX, 
+			double physicalY,
+			Location location) {
 		this.componentX = componentX;
 		this.componentY = componentY;
 		this.physicalX = physicalX;
 		this.physicalY = physicalY;
+		this.location = location;
 	}
 
 	public int getComponentX() {
@@ -62,5 +72,13 @@ public class CameraViewActionEvent {
 
 	public void setPhysicalY(double physicalY) {
 		this.physicalY = physicalY;
+	}
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 }
