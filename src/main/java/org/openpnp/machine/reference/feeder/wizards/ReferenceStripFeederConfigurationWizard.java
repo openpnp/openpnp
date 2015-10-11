@@ -237,7 +237,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         panelLocations.add(lblZ_1, "8, 2");
 
         JLabel lblFeedStartLocation = new JLabel("Reference Hole Location");
-        lblFeedStartLocation.setToolTipText("The location of a tape hole 2mm from the first part in the direction of the second part.");
+        lblFeedStartLocation.setToolTipText("The location of the first tape hole past the first part in the direction of more parts.");
         panelLocations.add(lblFeedStartLocation, "2, 4, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -367,7 +367,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         }
     };
     
-    private List<Location> part1HoleLocations = new ArrayList<>();
+    private List<Location> part1HoleLocations;
     private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
@@ -378,18 +378,8 @@ public class ReferenceStripFeederConfigurationWizard extends
 				public Void call() throws Exception {
 					cameraView.setText("Checking first part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
-		        	Thread.sleep(750);
-		        	part1HoleLocations.clear();
-					new FluentCv()
-						.toMat(camera.capture())
-						.toGray()
-						.thresholdOtsu(false)
-						.gaussianBlur(9)
-						.houghCircles(camera, 
-			                    feeder.getHoleDiameter().multiply(0.9), 
-			                    feeder.getHoleDiameter().multiply(1.1), 
-			                    feeder.getHolePitch().multiply(0.9))
-						.circlesToLocations(camera, part1HoleLocations);
+		        	Thread.sleep(100);
+		        	part1HoleLocations = findHoles(camera);
 		            // Need to handle the special case where the first two holes we find are not the
 		            // reference hole and next hole. This can happen if another tape is close by and
 		            // one of it's holes is detected as either of the holes.
@@ -418,18 +408,8 @@ public class ReferenceStripFeederConfigurationWizard extends
 				public Void call() throws Exception {
 					cameraView.setText("Checking second part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
-		        	Thread.sleep(750);
-		        	List<Location> part2HoleLocations = new ArrayList<>();
-					new FluentCv()
-						.toMat(camera.capture())
-						.toGray()
-						.thresholdOtsu(false)
-						.gaussianBlur(9)
-						.houghCircles(camera, 
-			                    feeder.getHoleDiameter().multiply(0.9), 
-			                    feeder.getHoleDiameter().multiply(1.1), 
-			                    feeder.getHolePitch().multiply(0.9))
-						.circlesToLocations(camera, part2HoleLocations);
+		        	Thread.sleep(100);
+		        	List<Location> part2HoleLocations = findHoles(camera);
 		            
 		        	List<Location> referenceHoles = deriveReferenceHoles(
 		        			part1HoleLocations, 
@@ -437,6 +417,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 		        	final Location referenceHole1 = referenceHoles.get(0);
 		        	final Location referenceHole2 = referenceHoles.get(1);
 		        	Length partPitch = referenceHole1.getLinearLengthTo(referenceHole2);
+		        	
 		        	partPitch.setValue(Math.round(partPitch.getValue()));
 		        	feeder.setReferenceHoleLocation(referenceHole1);
 		        	feeder.setLastHoleLocation(referenceHole2);
@@ -472,6 +453,21 @@ public class ReferenceStripFeederConfigurationWizard extends
 			});
 		}
 	};
+	
+	private List<Location> findHoles(Camera camera) {
+	    List<Location> holeLocations = new ArrayList<>();
+		new FluentCv()
+			.toMat(camera.capture())
+			.toGray()
+			.thresholdOtsu(false)
+			.gaussianBlur(9)
+			.houghCircles(camera, 
+                feeder.getHoleDiameter().multiply(0.9), 
+                feeder.getHoleDiameter().multiply(1.1), 
+                feeder.getHolePitch().multiply(0.9))
+			.circlesToLocations(camera, holeLocations);
+	    return holeLocations;
+	}
 	
 	private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations, List<Location> part2HoleLocations) {
 		// We are only interested in the pair of holes closest to each part
