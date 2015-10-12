@@ -37,6 +37,22 @@ Running OpenPnP
 
 Inside the folder you unzipped OpenPnP to there is an `openpnp.sh` and `openpnp.bat` script. These should work for Windows, Mac and Linux. For Mac and Linux, run `openpnp.sh` and for Windows run `openpnp.bat`. After a short wait you should see the OpenPnP Main Window. If something goes wrong, visit the Troubleshooting section of this document for help.
 
+Coordinate System
+=================
+
+OpenPnP uses the right handed coordinate system which is also used in physics, math, 3D graphics and many CAD packages.
+
+In this coordinate system we are standing above the machine, looking down at it.
+
+The X axis moves right and left. Right is positive.
+The Y axis moves forward and back. Forward is positive.
+The Z axis moves up and down. Up is positive.
+The C, or rotation, axis rotates clockwise and counter-clockwise. Counter-clockwise is positive.
+
+More information can be found at:
+http://www.evl.uic.edu/ralph/508S98/coordinates.html
+http://en.wikipedia.org/wiki/Right-hand_rule
+
 The User Interface
 ==================
 
@@ -62,7 +78,7 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 * Ctrl+Tab: Open the jog controls window which gives you visible buttons for most of the other shortcuts.
 * Ctrl+Arrow Key: Jog the currently selected Nozzle in X and Y. Up and Down arrows jog in Y and Left and Right arrows jog in X.
 * Ctrl+/, Ctrl+': Jog the currently selected Nozzle down and up in Z.
-* Ctrl+>, Ctrl+<: Rotate the currently selected Nozzle clockwise and counterclockwise.
+* Ctrl+<, Ctrl+>: Rotate the currently selected Nozzle counter-clockwise and clockwise.
 * Ctrl+Plus, Ctrl+Minus: Change the jog increment slider. This changes how far each jog key will move the Nozzle.
 * Shift+Left Mouse Click: Hold Shift and left click the mouse anywhere in the camera view to move the camera to that position.
 
