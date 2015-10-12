@@ -555,7 +555,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 	 * @return
 	 */
 	private BufferedImage showHoles(Camera camera, BufferedImage image) {
-		boolean debug = true;
+		boolean debug = false;
 		if (debug) {
 			return new FluentCv()
 				.setCamera(camera)
