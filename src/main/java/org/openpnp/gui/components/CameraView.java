@@ -315,12 +315,12 @@ public class CameraView extends JComponent implements CameraListener {
 
 	public void setText(String text) {
 		this.text = text;
-		if (text != null) {
-			flash();
-		}
 	}
 	
-	private void flash() {
+	/**
+	 * Causes a short flash in the CameraView to get the user's attention.
+	 */
+	public void flash() {
 		flashStartTimeMs = System.currentTimeMillis();
 		scheduledExecutor.scheduleAtFixedRate(
 			new Runnable() {

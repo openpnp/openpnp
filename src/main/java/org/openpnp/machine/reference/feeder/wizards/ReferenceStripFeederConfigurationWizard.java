@@ -362,6 +362,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
         	cameraView.addActionListener(autoSetupPart1Clicked);
         	cameraView.setText("Click on the center of the first part in the tape.");
+        	cameraView.flash();
         	
         	cameraView.setCameraViewFilter(new CameraViewFilter() {
 				@Override
@@ -394,6 +395,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 		            // we find.
 		            
 		            cameraView.setText("Now click on the center of the second part in the tape.");
+		            cameraView.flash();
 		            
 		            cameraView.addActionListener(autoSetupPart2Clicked);
 		        	return null;
@@ -485,26 +487,46 @@ public class ReferenceStripFeederConfigurationWizard extends
 	 * @return
 	 */
 	private BufferedImage showHoles(Camera camera, BufferedImage image) {
-		return new FluentCv()
-			.setCamera(camera)
-			.toMat(image, "original")
-			.toGray()
-			.gaussianBlur(9)
-			.houghCircles( 
-                    feeder.getHoleDiameter().multiply(0.9), 
-                    feeder.getHoleDiameter().multiply(1.1), 
-                    feeder.getHolePitch().multiply(0.9),
-                    "houghUnfiltered")
-			.drawCircles("original", Color.red, "unfiltered")
-			.recall("houghUnfiltered")
-			.filterCirclesByDistance(
-					feeder.getTapeWidth().multiply(0.25), 
-					feeder.getTapeWidth(), "houghDistanceFiltered")
-			.drawCircles("unfiltered", Color.blue, "distanceFiltered")
-			.recall("houghDistanceFiltered")
-			.filterCirclesToLine(new Length(0.5, LengthUnit.Millimeters))
-			.drawCircles("distanceFiltered", Color.green)
-			.toBufferedImage();
+		boolean verbose = false;
+		if (verbose) {
+			return new FluentCv()
+				.setCamera(camera)
+				.toMat(image, "original")
+				.toGray()
+				.gaussianBlur(9)
+				.houghCircles( 
+	                    feeder.getHoleDiameter().multiply(0.9), 
+	                    feeder.getHoleDiameter().multiply(1.1), 
+	                    feeder.getHolePitch().multiply(0.9),
+	                    "houghUnfiltered")
+				.drawCircles("original", Color.red, "unfiltered")
+				.recall("houghUnfiltered")
+				.filterCirclesByDistance(
+						feeder.getTapeWidth().multiply(0.25), 
+						feeder.getTapeWidth(), "houghDistanceFiltered")
+				.drawCircles("unfiltered", Color.blue, "distanceFiltered")
+				.recall("houghDistanceFiltered")
+				.filterCirclesToLine(new Length(0.5, LengthUnit.Millimeters))
+				.drawCircles("distanceFiltered", Color.green)
+				.toBufferedImage();
+		}
+		else {
+			return new FluentCv()
+				.setCamera(camera)
+				.toMat(image, "original")
+				.toGray()
+				.gaussianBlur(9)
+				.houghCircles( 
+	                    feeder.getHoleDiameter().multiply(0.9), 
+	                    feeder.getHoleDiameter().multiply(1.1), 
+	                    feeder.getHolePitch().multiply(0.9))
+				.filterCirclesByDistance(
+						feeder.getTapeWidth().multiply(0.25), 
+						feeder.getTapeWidth())
+				.filterCirclesToLine(new Length(0.5, LengthUnit.Millimeters))
+				.drawCircles("original")
+				.toBufferedImage();
+		}
 	}
 	
 	private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations, List<Location> part2HoleLocations) {
