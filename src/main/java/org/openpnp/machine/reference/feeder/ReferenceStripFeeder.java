@@ -152,7 +152,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
                     partPitch.multiply(feedCount - 1));
     	    camera.moveTo(expectedLocation, 1.0);
     	    // and look for the hole
-    	    Thread.sleep(100);
     	    Location actualLocation = findClosestHole(camera);
     	    if (actualLocation == null) {
     	    	throw new Exception("Unable to locate reference hole. End of strip?");
@@ -173,7 +172,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Location findClosestHole(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
 	    new FluentCv()
-	    	.toMat(camera.capture())
+	    	.toMat(camera.settleAndCapture())
 	    	.toGray()
 	    	.thresholdOtsu(false)
 	    	.gaussianBlur(9)

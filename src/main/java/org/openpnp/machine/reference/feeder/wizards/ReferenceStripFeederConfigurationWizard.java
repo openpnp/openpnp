@@ -391,7 +391,6 @@ public class ReferenceStripFeederConfigurationWizard extends
 				public Void call() throws Exception {
 					cameraView.setText("Checking first part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
-		        	Thread.sleep(100);
 		        	part1HoleLocations = findHoles(camera);
 		            // Need to handle the special case where the first two holes we find are not the
 		            // reference hole and next hole. This can happen if another tape is close by and
@@ -421,7 +420,6 @@ public class ReferenceStripFeederConfigurationWizard extends
 				public Void call() throws Exception {
 					cameraView.setText("Checking second part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
-		        	Thread.sleep(100);
 		        	List<Location> part2HoleLocations = findHoles(camera);
 		            
 		        	List<Location> referenceHoles = deriveReferenceHoles(
@@ -470,7 +468,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 	private List<Location> findHoles(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
 		new FluentCv()
-			.toMat(camera.capture())
+			.toMat(camera.settleAndCapture())
 			.toGray()
 			.thresholdOtsu(false)
 			.gaussianBlur(9)

@@ -35,6 +35,9 @@ public abstract class AbstractCamera implements Camera {
     @Element(required=false)
     protected VisionProvider visionProvider;
     
+    @Attribute(required=false)
+    protected long settleTimeMs = 250;
+    
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
     
     protected Head head;
@@ -123,6 +126,16 @@ public abstract class AbstractCamera implements Camera {
         return visionProvider;
     }
     
+    public BufferedImage settleAndCapture() {
+    	try {
+    		Thread.sleep(getSettleTimeMs());
+    	}
+    	catch (Exception e) {
+    		
+    	}
+    	return capture();
+    }
+    
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : listeners) {
             if (listener.lastFrameSent < (System.currentTimeMillis() - (1000 / listener.maximumFps))) {
@@ -152,7 +165,15 @@ public abstract class AbstractCamera implements Camera {
         return height;
     }
     
-    @Override
+    public long getSettleTimeMs() {
+		return settleTimeMs;
+	}
+    
+    public void setSettleTimeMs(long settleTimeMs) {
+    	this.settleTimeMs = settleTimeMs;
+    }
+
+	@Override
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureCamera;
     }
