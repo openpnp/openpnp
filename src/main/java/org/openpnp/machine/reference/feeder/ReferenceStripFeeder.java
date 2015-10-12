@@ -110,6 +110,34 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     
     private Location visionOffsets;
     
+	public Length getHoleDiameterMin() {
+	    return getHoleDiameter().multiply(0.9);
+	}
+
+	public Length getHoleDiameterMax() {
+	    return getHoleDiameter().multiply(1.1);
+	}
+
+	public Length getHolePitchMin() {
+		return getHolePitch().multiply(0.9);
+	}
+
+	public Length getHoleDistanceMin() {
+		return getTapeWidth().multiply(0.25);
+	}
+
+	public Length getHoleDistanceMax() {
+	    return getTapeWidth().multiply(0.75);
+	}
+
+	public Length getHoleLineDistanceMax() {
+	    return new Length(0.5, LengthUnit.Millimeters);
+	}
+
+    public int getHoleBlurKernelSize() {
+		return 9;
+	}
+
 	@Override
     public Location getPickLocation() throws Exception {
 	    // Find the location of the part linearly along the tape
@@ -175,11 +203,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    	.setCamera(camera)
 	    	.settleAndCapture()
 	    	.toGray()
-	    	.gaussianBlur(9)
+	    	.gaussianBlur(getHoleBlurKernelSize())
 	    	.houghCircles(
-	    			holeDiameter.multiply(0.90),
-	    			holeDiameter.multiply(1.1), 
-	    			holePitch.multiply(0.9))
+	    			getHoleDiameterMin(),
+	    			getHoleDiameterMax(), 
+	    			getHolePitchMin())
 	    	.circlesToLocations(holeLocations);
 	    if (holeLocations.isEmpty()) {
 	    	return null;

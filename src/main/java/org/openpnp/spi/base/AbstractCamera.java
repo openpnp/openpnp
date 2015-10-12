@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -137,7 +138,7 @@ public abstract class AbstractCamera implements Camera {
     }
     
     protected void broadcastCapture(BufferedImage img) {
-        for (ListenerEntry listener : listeners) {
+        for (ListenerEntry listener : new ArrayList<ListenerEntry>(listeners)) {
             if (listener.lastFrameSent < (System.currentTimeMillis() - (1000 / listener.maximumFps))) {
                 listener.listener.frameReceived(img);
                 listener.lastFrameSent = System.currentTimeMillis();

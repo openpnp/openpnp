@@ -23,6 +23,7 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.HslColor;
 import org.openpnp.util.VisionUtils;
 
 /**
@@ -155,7 +156,7 @@ public class FluentCv {
 			String baseTag, 
 			Color color, 
 			String... tag) {
-		Color centerColor = Color.green;
+		Color centerColor = new HslColor(color).getComplementary();
 		Mat mat = get(baseTag);
 		if (mat == null) {
 			mat = new Mat();

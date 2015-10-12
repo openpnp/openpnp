@@ -54,6 +54,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
@@ -69,6 +70,7 @@ import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FutureCallback;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -105,10 +107,10 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
-
+    
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
-
+        
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(null, "Part",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -359,6 +361,7 @@ public class ReferenceStripFeederConfigurationWizard extends
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {
+        	btnAutoSetup.setAction(autoSetupCancel);
         	Camera camera = Configuration
         			.get()
         			.getMachine()
@@ -375,6 +378,23 @@ public class ReferenceStripFeederConfigurationWizard extends
 					return showHoles(camera, image);
 				}
 			});
+        }
+    };
+    
+    private Action autoSetupCancel = new AbstractAction("Cancel Auto Setup") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	btnAutoSetup.setAction(autoSetup);
+        	Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+        	cameraView.setText(null);
+        	cameraView.setCameraViewFilter(null);
+        	cameraView.removeActionListener(autoSetupPart1Clicked);
+        	cameraView.removeActionListener(autoSetupPart2Clicked);
         }
     };
     
@@ -408,6 +428,23 @@ public class ReferenceStripFeederConfigurationWizard extends
 		            
 		            cameraView.addActionListener(autoSetupPart2Clicked);
 		        	return null;
+				}
+			}, new FutureCallback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+				}
+
+				@Override
+				public void onFailure(final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							autoSetupCancel.actionPerformed(null);
+							MessageBoxes.errorBox(
+									getTopLevelAncestor(), 
+									"Auto Setup Failure",
+									t);
+						}
+					});
 				}
 			});
 		}
@@ -465,8 +502,26 @@ public class ReferenceStripFeederConfigurationWizard extends
 		        	Thread.sleep(1500);
 		        	cameraView.setText(null);
 		        	cameraView.setCameraViewFilter(null);
+		        	btnAutoSetup.setAction(autoSetup);
 
 		        	return null;
+				}
+			}, new FutureCallback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+				}
+
+				@Override
+				public void onFailure(final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							autoSetupCancel.actionPerformed(null);
+							MessageBoxes.errorBox(
+									getTopLevelAncestor(), 
+									"Auto Setup Failure",
+									t);
+						}
+					});
 				}
 			});
 		}
@@ -478,15 +533,15 @@ public class ReferenceStripFeederConfigurationWizard extends
 			.setCamera(camera)
 			.settleAndCapture()
 			.toGray()
-			.gaussianBlur(9)
+			.gaussianBlur(feeder.getHoleBlurKernelSize())
 			.houghCircles( 
-                feeder.getHoleDiameter().multiply(0.9), 
-                feeder.getHoleDiameter().multiply(1.1), 
-                feeder.getHolePitch().multiply(0.9))
+                feeder.getHoleDiameterMin(), 
+                feeder.getHoleDiameterMax(), 
+                feeder.getHolePitchMin())
 			.filterCirclesByDistance(
-					feeder.getTapeWidth().multiply(0.25), 
-					feeder.getTapeWidth())
-			.filterCirclesToLine(new Length(0.25, LengthUnit.Millimeters))
+					feeder.getHoleDistanceMin(), 
+					feeder.getHoleDistanceMax())
+			.filterCirclesToLine(feeder.getHoleLineDistanceMax())
 			.circlesToLocations(holeLocations);
 	    return holeLocations;
 	}
@@ -500,26 +555,27 @@ public class ReferenceStripFeederConfigurationWizard extends
 	 * @return
 	 */
 	private BufferedImage showHoles(Camera camera, BufferedImage image) {
-		boolean verbose = false;
-		if (verbose) {
+		boolean debug = true;
+		if (debug) {
 			return new FluentCv()
 				.setCamera(camera)
 				.toMat(image, "original")
 				.toGray()
-				.gaussianBlur(9)
+				.gaussianBlur(feeder.getHoleBlurKernelSize())
 				.houghCircles( 
-	                    feeder.getHoleDiameter().multiply(0.9), 
-	                    feeder.getHoleDiameter().multiply(1.1), 
-	                    feeder.getHolePitch().multiply(0.9),
+	                    feeder.getHoleDiameterMin(), 
+	                    feeder.getHoleDiameterMax(), 
+	                    feeder.getHolePitchMin(),
 	                    "houghUnfiltered")
 				.drawCircles("original", Color.red, "unfiltered")
 				.recall("houghUnfiltered")
 				.filterCirclesByDistance(
-						feeder.getTapeWidth().multiply(0.25), 
-						feeder.getTapeWidth(), "houghDistanceFiltered")
+						feeder.getHoleDistanceMin(), 
+						feeder.getHoleDistanceMax(), 
+						"houghDistanceFiltered")
 				.drawCircles("unfiltered", Color.blue, "distanceFiltered")
 				.recall("houghDistanceFiltered")
-				.filterCirclesToLine(new Length(0.5, LengthUnit.Millimeters))
+				.filterCirclesToLine(feeder.getHoleLineDistanceMax())
 				.drawCircles("distanceFiltered", Color.green)
 				.toBufferedImage();
 		}
@@ -528,16 +584,16 @@ public class ReferenceStripFeederConfigurationWizard extends
 				.setCamera(camera)
 				.toMat(image, "original")
 				.toGray()
-				.gaussianBlur(9)
+				.gaussianBlur(feeder.getHoleBlurKernelSize())
 				.houghCircles( 
-	                    feeder.getHoleDiameter().multiply(0.9), 
-	                    feeder.getHoleDiameter().multiply(1.1), 
-	                    feeder.getHolePitch().multiply(0.9))
+	                    feeder.getHoleDiameterMin(), 
+	                    feeder.getHoleDiameterMax(), 
+	                    feeder.getHolePitchMin())
 				.filterCirclesByDistance(
-						feeder.getTapeWidth().multiply(0.25), 
-						feeder.getTapeWidth())
-				.filterCirclesToLine(new Length(0.5, LengthUnit.Millimeters))
-				.drawCircles("original")
+						feeder.getHoleDistanceMin(), 
+						feeder.getHoleDistanceMax())
+				.filterCirclesToLine(feeder.getHoleLineDistanceMax())
+				.drawCircles("original", Color.green)
 				.toBufferedImage();
 		}
 	}
