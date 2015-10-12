@@ -52,6 +52,7 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
@@ -1041,6 +1042,10 @@ public class CameraView extends JComponent implements CameraListener {
 			}
 			
 			if (e.isShiftDown()) {
+				return;
+			}
+			
+			if (SwingUtilities.isRightMouseButton(e)) {
 				return;
 			}
 			

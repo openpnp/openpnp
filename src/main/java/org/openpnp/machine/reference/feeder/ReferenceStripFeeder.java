@@ -172,16 +172,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Location findClosestHole(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
 	    new FluentCv()
-	    	.toMat(camera.settleAndCapture())
+	    	.setCamera(camera)
+	    	.settleAndCapture()
 	    	.toGray()
 	    	.thresholdOtsu(false)
 	    	.gaussianBlur(9)
 	    	.houghCircles(
-	    			camera, 
 	    			holeDiameter.multiply(0.90),
 	    			holeDiameter.multiply(1.1), 
 	    			holePitch.multiply(0.9))
-	    	.circlesToLocations(camera, holeLocations);
+	    	.circlesToLocations(holeLocations);
 	    if (holeLocations.isEmpty()) {
 	    	return null;
 	    }

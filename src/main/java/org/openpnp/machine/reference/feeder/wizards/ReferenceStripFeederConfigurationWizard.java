@@ -24,6 +24,7 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -59,6 +60,7 @@ import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -364,17 +366,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         	cameraView.setCameraViewFilter(new CameraViewFilter() {
 				@Override
 				public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-					return new FluentCv()
-						.toMat(image, "original")
-						.toGray()
-						.thresholdOtsu(false)
-						.gaussianBlur(9)
-						.houghCircles(camera, 
-			                    feeder.getHoleDiameter().multiply(0.9), 
-			                    feeder.getHoleDiameter().multiply(1.1), 
-			                    feeder.getHolePitch().multiply(0.9))
-						.drawCircles("original")
-						.toBufferedImage();
+					return showHoles(camera, image);
 				}
 			});
         }
@@ -468,16 +460,53 @@ public class ReferenceStripFeederConfigurationWizard extends
 	private List<Location> findHoles(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
 		new FluentCv()
-			.toMat(camera.settleAndCapture())
+			.setCamera(camera)
+			.settleAndCapture()
 			.toGray()
 			.thresholdOtsu(false)
 			.gaussianBlur(9)
-			.houghCircles(camera, 
+			.houghCircles( 
                 feeder.getHoleDiameter().multiply(0.9), 
                 feeder.getHoleDiameter().multiply(1.1), 
                 feeder.getHolePitch().multiply(0.9))
-			.circlesToLocations(camera, holeLocations);
+			.filterCirclesByDistance(
+					feeder.getTapeWidth().multiply(0.25), 
+					feeder.getTapeWidth())
+			.filterCirclesToLine(new Length(0.25, LengthUnit.Millimeters))
+			.circlesToLocations(holeLocations);
 	    return holeLocations;
+	}
+	
+	/**
+	 * Show candidate holes in the image. Red are any holes that are found. Blue
+	 * is holes that passed the distance check but failed the line check. Green
+	 * passed all checks and are good.
+	 * @param camera
+	 * @param image
+	 * @return
+	 */
+	private BufferedImage showHoles(Camera camera, BufferedImage image) {
+		return new FluentCv()
+			.setCamera(camera)
+			.toMat(image, "original")
+			.toGray()
+			.thresholdOtsu(false)
+			.gaussianBlur(9)
+			.houghCircles( 
+                    feeder.getHoleDiameter().multiply(0.9), 
+                    feeder.getHoleDiameter().multiply(1.1), 
+                    feeder.getHolePitch().multiply(0.9),
+                    "houghUnfiltered")
+			.drawCircles("original", Color.red, "unfiltered")
+			.recall("houghUnfiltered")
+			.filterCirclesByDistance(
+					feeder.getTapeWidth().multiply(0.25), 
+					feeder.getTapeWidth(), "houghDistanceFiltered")
+			.drawCircles("unfiltered", Color.blue, "distanceFiltered")
+			.recall("houghDistanceFiltered")
+			.filterCirclesToLine(new Length(0.25, LengthUnit.Millimeters))
+			.drawCircles("distanceFiltered", Color.green)
+			.toBufferedImage();
 	}
 	
 	private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations, List<Location> part2HoleLocations) {
