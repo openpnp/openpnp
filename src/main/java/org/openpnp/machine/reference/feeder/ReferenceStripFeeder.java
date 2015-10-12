@@ -175,7 +175,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    	.setCamera(camera)
 	    	.settleAndCapture()
 	    	.toGray()
-	    	.thresholdOtsu(false)
 	    	.gaussianBlur(9)
 	    	.houghCircles(
 	    			holeDiameter.multiply(0.90),

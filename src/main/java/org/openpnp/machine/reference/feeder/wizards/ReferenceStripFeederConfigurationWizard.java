@@ -463,7 +463,6 @@ public class ReferenceStripFeederConfigurationWizard extends
 			.setCamera(camera)
 			.settleAndCapture()
 			.toGray()
-			.thresholdOtsu(false)
 			.gaussianBlur(9)
 			.houghCircles( 
                 feeder.getHoleDiameter().multiply(0.9), 
@@ -490,7 +489,6 @@ public class ReferenceStripFeederConfigurationWizard extends
 			.setCamera(camera)
 			.toMat(image, "original")
 			.toGray()
-			.thresholdOtsu(false)
 			.gaussianBlur(9)
 			.houghCircles( 
                     feeder.getHoleDiameter().multiply(0.9), 
@@ -504,7 +502,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 					feeder.getTapeWidth(), "houghDistanceFiltered")
 			.drawCircles("unfiltered", Color.blue, "distanceFiltered")
 			.recall("houghDistanceFiltered")
-			.filterCirclesToLine(new Length(0.25, LengthUnit.Millimeters))
+			.filterCirclesToLine(new Length(0.5, LengthUnit.Millimeters))
 			.drawCircles("distanceFiltered", Color.green)
 			.toBufferedImage();
 	}
