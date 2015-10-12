@@ -145,7 +145,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         
         if (visionEnabled) {
             // go to where we expect to find the next reference hole
-            Camera camera = nozzle.getHead().getCameras().get(0);
+            Camera camera = nozzle.getHead().getDefaultCamera();
     	    Location expectedLocation = getPointAlongLine(
                     referenceHoleLocation, 
                     lastHoleLocation, 
