@@ -39,9 +39,6 @@ import org.openpnp.spi.Camera;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
- * 
- * @author jason TODO add a way to identify a particular camera in grid view;
- *         maybe tooltip
  */
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
@@ -122,6 +119,18 @@ public class CameraPanel extends JPanel {
 	        return null;
 	    }
 	    return camera.getLocation();
+	}
+	
+	public CameraView getCameraView(Camera camera) {
+		for (Component component : camerasPanel.getComponents()) {
+			if (component instanceof CameraView) {
+				CameraView cameraView = (CameraView) component;
+				if (cameraView.getCamera() == camera) {
+					return cameraView;
+				}
+			}
+		}
+		return null;
 	}
 	
 	private AbstractAction cameraSelectedAction = new AbstractAction("") {

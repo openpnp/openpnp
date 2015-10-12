@@ -359,7 +359,12 @@ public class ReferenceStripFeederConfigurationWizard extends
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {
-        	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        	Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
         	cameraView.addActionListener(autoSetupPart1Clicked);
         	cameraView.setText("Click on the center of the first part in the tape.");
         	cameraView.flash();
@@ -377,8 +382,12 @@ public class ReferenceStripFeederConfigurationWizard extends
     private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
-        	final CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        	final Camera camera = cameraView.getCamera();
+        	final Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
         	cameraView.removeActionListener(this);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				public Void call() throws Exception {
@@ -407,8 +416,12 @@ public class ReferenceStripFeederConfigurationWizard extends
     private CameraViewActionListener autoSetupPart2Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
-        	final CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        	final Camera camera = cameraView.getCamera();
+        	final Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
         	cameraView.removeActionListener(this);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				public Void call() throws Exception {
@@ -549,15 +562,6 @@ public class ReferenceStripFeederConfigurationWizard extends
 		return referenceHoles;
 	}
 	
-    private Action autoSetupCancel = new AbstractAction("Auto Setup") {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-        	MainFrame.mainFrame.hideInstructions();
-        	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        	cameraView.removeActionListener(autoSetupPart1Clicked);
-        	cameraView.removeActionListener(autoSetupPart2Clicked);
-        }
-    };
     private JCheckBox chckbxUseVision;
     private JLabel lblUseVision;
 }

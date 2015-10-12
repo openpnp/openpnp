@@ -156,4 +156,31 @@ public abstract class AbstractHead implements Head {
         // TODO Auto-generated method stub
         return null;
     }
+
+	@Override
+	public Camera getDefaultCamera() {
+		List<Camera> cameras = getCameras();
+		if (cameras == null || cameras.isEmpty()) {
+			return null;
+		}
+		return cameras.get(0);
+	}
+
+	@Override
+	public Nozzle getDefaultNozzle() {
+		List<Nozzle> nozzles = getNozzles();
+		if (nozzles == null || nozzles.isEmpty()) {
+			return null;
+		}
+		return nozzles.get(0);
+	}
+
+	@Override
+	public PasteDispenser getDefaultPasteDispenser() {
+		List<PasteDispenser> dispensers = getPasteDispensers();
+		if (dispensers == null || dispensers.isEmpty()) {
+			return null;
+		}
+		return dispensers.get(0);
+	}
 }
