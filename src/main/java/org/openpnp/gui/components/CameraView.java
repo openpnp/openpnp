@@ -314,7 +314,9 @@ public class CameraView extends JComponent implements CameraListener {
 
 	public void setText(String text) {
 		this.text = text;
-		flash();
+		if (text != null) {
+			flash();
+		}
 	}
 	
 	private void flash() {
