@@ -127,7 +127,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	}
 
 	public Length getHoleDistanceMax() {
-	    return getTapeWidth().multiply(0.75);
+	    return getTapeWidth().multiply(1.5);
 	}
 
 	public Length getHoleLineDistanceMax() {

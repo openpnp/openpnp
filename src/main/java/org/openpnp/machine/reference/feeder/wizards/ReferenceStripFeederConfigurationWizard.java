@@ -24,7 +24,6 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -32,6 +31,7 @@ import java.util.concurrent.Callable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -61,11 +61,9 @@ import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 
@@ -75,7 +73,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends
@@ -372,10 +369,12 @@ public class ReferenceStripFeederConfigurationWizard extends
         	cameraView.setText("Click on the center of the first part in the tape.");
         	cameraView.flash();
         	
+        	final boolean showDetails = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
+        	
         	cameraView.setCameraViewFilter(new CameraViewFilter() {
 				@Override
 				public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-					return showHoles(camera, image);
+					return showHoles(camera, image, showDetails);
 				}
 			});
         }
@@ -554,9 +553,8 @@ public class ReferenceStripFeederConfigurationWizard extends
 	 * @param image
 	 * @return
 	 */
-	private BufferedImage showHoles(Camera camera, BufferedImage image) {
-		boolean debug = false;
-		if (debug) {
+	private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) {
+		if (showDetails) {
 			return new FluentCv()
 				.setCamera(camera)
 				.toMat(image, "original")

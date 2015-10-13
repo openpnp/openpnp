@@ -334,32 +334,9 @@ public class FluentCv {
     		points.add(new Point(x, y));
     	}
     	
-    	long t = System.currentTimeMillis();
-		// match the points to a line
-    	MatOfPoint pointsMat = new MatOfPoint();
-		pointsMat.fromList(points);
-		Mat line = new Mat();
-		Imgproc.fitLine(
-				pointsMat, 
-				line, 
-				Imgproc.CV_DIST_HUBER, 
-				0, 
-				0.01, 
-				0.01);
-		float vx = (float) line.get(0, 0)[0]; 
-		float vy = (float) line.get(1, 0)[0]; 
-		float x = (float) line.get(2, 0)[0]; 
-		float y = (float) line.get(3, 0)[0];
-		Point a = new Point(x, y);
-		Point b = new Point(x + vx, y + vy);
-		System.out.println(System.currentTimeMillis() - t);
-		
-    	t = System.currentTimeMillis();
-		Point[] lineRansac = ransac(points, 100, maxDistance);
-    	a = lineRansac[0];
-    	b = lineRansac[1];
-		System.out.println(System.currentTimeMillis() - t);
-		System.out.println();
+		Point[] line = ransac(points, 100, maxDistance);
+    	Point a = line[0];
+    	Point b = line[1];
 		
     	// filter the points by distance from the resulting line
 		List<float[]> results = new ArrayList<float[]>();
