@@ -7,13 +7,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -21,9 +16,12 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -37,12 +35,12 @@ import org.openpnp.util.VisionUtils;
  * an operation the result of the operation will be stored and can be
  * recalled back into the current Mat.
  * 
- *  Heavily influenced by FireSight by Karl Lew
- *  https://github.com/firepick1/FireSight
+ * Heavily influenced by FireSight by Karl Lew
+ * https://github.com/firepick1/FireSight
  *  
- *  TODO: Rethink operations that return or process data points versus
- *  images. Perhaps these should require a tag to work with and
- *  leave the image unchanged.
+ * TODO: Rethink operations that return or process data points versus
+ * images. Perhaps these should require a tag to work with and
+ * leave the image unchanged.
  */
 public class FluentCv {
     static {
@@ -81,6 +79,16 @@ public class FluentCv {
 	
 	public FluentCv cvtColor(int code, String... tag) {
 		Imgproc.cvtColor(mat, mat, code);
+		return store(mat, tag);
+	}
+	
+	public FluentCv threshold(double threshold, boolean invert, String... tag) {
+    	Imgproc.threshold(
+    			mat, 
+    			mat,
+    			threshold,
+    			255, 
+    			invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY);
 		return store(mat, tag);
 	}
 	
@@ -334,7 +342,7 @@ public class FluentCv {
     		points.add(new Point(x, y));
     	}
     	
-		Point[] line = ransac(points, 100, maxDistance);
+		Point[] line = Ransac.ransac(points, 100, maxDistance);
     	Point a = line[0];
     	Point b = line[1];
 		
@@ -361,6 +369,69 @@ public class FluentCv {
 	
 	public Mat mat() {
 		return mat;
+	}
+	
+	/**
+	 * Calculate the absolute difference between the previously
+	 * stored Mat called source1 and the current Mat.
+	 * @param source1
+	 * @param tag
+	 */
+	public FluentCv absDiff(String source1, String... tag) {
+		Core.absdiff(get(source1), mat, mat);
+		return store(mat, tag);
+	}
+	
+	public FluentCv canny(double threshold1, double threshold2, String... tag) {
+		Imgproc.Canny(mat, mat, threshold1, threshold2);
+		return store(mat, tag);
+	}
+	
+	public FluentCv findContours(List<MatOfPoint> contours, String... tag) {
+		Mat hierarchy = new Mat();
+		Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
+		return store(mat, tag);
+	}
+	
+	public FluentCv drawContours(List<MatOfPoint> contours, Color color, int thickness, String... tag) {
+		if (color == null) {
+			for (int i = 0; i < contours.size(); i++) {
+				Imgproc.drawContours(mat, contours, i, indexedColor(i), thickness);
+			}
+		}
+		else {
+			Imgproc.drawContours(mat, contours, -1, colorToScalar(color), thickness);
+		}
+		return store(mat, tag);
+	}
+
+	/**
+	 * Draw the minAreaRect of each contour. 
+	 * @param contours
+	 * @param color If null, use a new color for each rect.
+	 * @param tag
+	 * @return
+	 */
+	public FluentCv drawContourRects(List<MatOfPoint> contours, Color color, int thickness, String... tag) {
+		Scalar color_ = null;
+		if (color != null) {
+			color_ = colorToScalar(color);
+		}
+		for (int i = 0; i < contours.size(); i++) {
+			MatOfPoint2f contour_ = new MatOfPoint2f();
+		    contours.get(i).convertTo(contour_, CvType.CV_32FC2);
+			RotatedRect rect = Imgproc.minAreaRect(contour_);
+			// From: http://stackoverflow.com/questions/23327502/opencv-how-to-draw-minarearect-in-java
+			Point points[] = new Point[4];
+		    rect.points(points);
+		    if (color == null) {
+		    	color_ = indexedColor(i);
+		    }
+		    for(int j = 0; j < 4; ++j) {
+		        Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
+		    }		
+		}
+		return store(mat, tag);
 	}
 	
 	private void checkCamera() {
@@ -395,6 +466,21 @@ public class FluentCv {
 				color.getGreen(), 
 				color.getRed(), 
 				255);
+	}
+	
+	/**
+	 * Return a Scalar representing a color from an imaginary list of colors starting at index 0
+	 * and extending on to Integer.MAX_VALUE. Can be used to pick a different color for each object
+	 * in a list. Colors are not guaranteed to be unique successive colors will be significantly different.
+	 * @param i
+	 * @return
+	 */
+	private static Scalar indexedColor(int i) {
+		float h = (i * i) % 360;
+		float s = Math.max((i * i) % 100, 50);
+		float l = Math.max((i * i) % 100, 50);
+		Color color = new HslColor(h, s, l).getRGB();
+		return colorToScalar(color);
 	}
 	
     private static BufferedImage convertBufferedImage(BufferedImage src, int type) {
@@ -445,130 +531,19 @@ public class FluentCv {
 		Core.line(img, p, q, colorToScalar(color));
 	}
 
-	/*
-	 * http://users.utcluj.ro/~igiosan/Resources/PRS/L1/lab_01e.pdf
-	 * http://cs.gmu.edu/~kosecka/cs682/lect-fitting.pdf
-	 * http://introcs.cs.princeton.edu/java/36inheritance/LeastSquares.java.html
-	 */
-	public static Point[] ransac(List<Point> points, int maxIterations, double threshold) {
-		Point bestA = null, bestB = null;
-		int bestInliers = 0;
-		for (int i = 0; i < maxIterations; i++) {
-			// take a random sample of two points
-			Collections.shuffle(points);
-			Point a = points.get(0);
-			Point b = points.get(1);
-			// find the inliers
-			int inliers = 0;
-			for (Point p : points) {
-				double distance = pointToLineDistance(a, b, p);
-				if (distance <= threshold) {
-					inliers++;
-				}
-			}
-			if (inliers > bestInliers) {
-				bestA = a;
-				bestB = b;
-				bestInliers = inliers;
-			}
-		}
-		return new Point[] { bestA, bestB };
-	}
-	
-	// TODO: This currently seems to give much worse results than ransac. Figure out why.
-	public static List<RansacLine> multiRansac(List<Point> points, int maxIterations, double threshold) {
-		Random random = new Random();
-		Set<RansacLine> lines = new HashSet<>();
-		for (int i = 0; i < maxIterations; i++) {
-			// take a random sample of two points
-			Point a = points.get(random.nextInt(points.size()));
-			Point b = points.get(random.nextInt(points.size()));
-			RansacLine line = new RansacLine(a, b, 0);
-			// if we have already processed this pair, skip it
-			if (lines.contains(line)) {
-				continue;
-			}
-			// add the result
-			lines.add(line);
-			// find the inliers
-			for (Point p : points) {
-				double distance = pointToLineDistance(a, b, p);
-				if (distance <= threshold) {
-					line.inliers++;
-				}
-			}
-		}
-		List<RansacLine> results = new ArrayList<>(lines);
-		Collections.sort(results, new Comparator<RansacLine>() {
-			@Override
-			public int compare(RansacLine o1, RansacLine o2) {
-				return o2.inliers - o1.inliers;
-			}
-		});
-		return results;
-	}
-	
-	public static class RansacLine {
-		public Point a;
-		public Point b;
-		public transient int inliers;
-		
-		public RansacLine(Point a, Point b, int inliers) {
-			this.a = a;
-			this.b = b;
-			this.inliers = inliers;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((a == null) ? 0 : a.hashCode());
-			result = prime * result + ((b == null) ? 0 : b.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			RansacLine other = (RansacLine) obj;
-			if (a == null) {
-				if (other.a != null)
-					return false;
-			} else if (!a.equals(other.a))
-				return false;
-			if (b == null) {
-				if (other.b != null)
-					return false;
-			} else if (!b.equals(other.b))
-				return false;
-			return true;
-		}
-
-		@Override
-		public String toString() {
-			return "RansacLine [a=" + a + ", b=" + b + ", inliers=" + inliers + "]";
-		}
-	}
-	
     public static void main(String[] args) throws Exception {
     	List<Point> points = new ArrayList<>();
+    	List<MatOfPoint> contours = new ArrayList<>();
 		FluentCv cv = new FluentCv()
-			.read(new File("/Users/jason/Desktop/test.png"), "original")
+			.read(new File("/Users/jason/Desktop/up.png"), "original")
 			.toGray()
-			.gaussianBlur(9)
-			.houghCircles(28, 32, 10, "hough")
-			.drawCircles("original", Color.red, "unfiltered")
-			.recall("hough")
-			.filterCirclesToLine(10)
-			.circlesToPoints(points)
-			.drawCircles("unfiltered", Color.green)
-			.write(new File("/Users/jason/Desktop/test_out.png"));
+			.threshold(60, false)
+			.gaussianBlur(3)
+			.canny(100, 200)
+			.findContours(contours)
+			.recall("original")
+			.drawContours(contours, null, 1)
+			.drawContourRects(contours, null, 2)
+			.write(new File("/Users/jason/Desktop/up_out.png"));
     }
-    
 }
