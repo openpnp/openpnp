@@ -60,6 +60,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -92,10 +93,24 @@ import org.openpnp.util.VisionUtils;
  * 
  * In the spirit of FireSight, this code is licensed differently from the
  * rest of OpenPnP. Please see the license header above.
+ * 
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+ * This API is still under heavy development and is likely to change
+ * significantly in the near future.  
  *  
  * TODO: Rethink operations that return or process data points versus
  * images. Perhaps these should require a tag to work with and
  * leave the image unchanged.
+ * 
+ * There is a bit of a divergence right now between how things like
+ * contours and rotated rects are handled versus circles. Circles
+ * already have a Mat representation that we can kind of coerce along
+ * the pipeline where contours do not (List<MatOfPoint>). We need to
+ * pick one of the methods and stick with it, doing translation where
+ * needed.
+ * 
+ * Keeping things in Mat does give the benefit of not moving too much
+ * memory between OpenCv and Java. 
  */
 public class FluentCv {
     static {
@@ -208,7 +223,6 @@ public class FluentCv {
     		double[] circle = mat.get(0, i);
     		double x = circle[0];
     		double y = circle[1];
-    		double radius = circle[2];
     		points.add(new Point(x, y));
     	}
     	return this;
@@ -381,8 +395,6 @@ public class FluentCv {
 	 * @return
 	 */
 	public FluentCv filterCirclesToLine(double maxDistance, String... tag) {
-		// fitLine doesn't like when you give it a zero length array, so just
-		// bail if there are not enough points to make a line.
 		if (this.mat.cols() < 2) {
 			return store(this.mat, tag);
 		}
@@ -451,7 +463,7 @@ public class FluentCv {
 	public FluentCv drawContours(List<MatOfPoint> contours, Color color, int thickness, String... tag) {
 		if (color == null) {
 			for (int i = 0; i < contours.size(); i++) {
-				Imgproc.drawContours(mat, contours, i, indexedColor(i), thickness);
+				Imgproc.drawContours(mat, contours, i, colorToScalar(indexedColor(i)), thickness);
 			}
 		}
 		else {
@@ -459,34 +471,39 @@ public class FluentCv {
 		}
 		return store(mat, tag);
 	}
-
-	/**
-	 * Draw the minAreaRect of each contour. 
-	 * @param contours
-	 * @param color If null, use a new color for each rect.
-	 * @param tag
-	 * @return
-	 */
-	public FluentCv drawContourRects(List<MatOfPoint> contours, Color color, int thickness, String... tag) {
-		Scalar color_ = null;
-		if (color != null) {
-			color_ = colorToScalar(color);
+	
+	public FluentCv drawRects(List<RotatedRect> rects, Color color, int thickness, String... tag) {
+		for (int i = 0; i < rects.size(); i++) {
+			RotatedRect rect = rects.get(i);
+			if (color == null) {
+				drawRotatedRect(mat, rect, indexedColor(i), thickness);
+			}
+			else {
+				drawRotatedRect(mat, rect, color, thickness);
+			}
 		}
+		return store(mat, tag);
+	}
+	
+	public FluentCv getContourRects(List<MatOfPoint> contours, List<RotatedRect> rects) {
 		for (int i = 0; i < contours.size(); i++) {
 			MatOfPoint2f contour_ = new MatOfPoint2f();
 		    contours.get(i).convertTo(contour_, CvType.CV_32FC2);
 			RotatedRect rect = Imgproc.minAreaRect(contour_);
-			// From: http://stackoverflow.com/questions/23327502/opencv-how-to-draw-minarearect-in-java
-			Point points[] = new Point[4];
-		    rect.points(points);
-		    if (color == null) {
-		    	color_ = indexedColor(i);
-		    }
-		    for(int j = 0; j < 4; ++j) {
-		        Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
-		    }		
+			rects.add(rect);
 		}
-		return store(mat, tag);
+		return this;
+	}
+	
+	public FluentCv filterRectsByArea(List<RotatedRect> rects, double areaMin, double areaMax) {
+		for (Iterator<RotatedRect> i = rects.iterator(); i.hasNext(); ) {
+			RotatedRect rect = i.next();
+			double area = rect.size.width * rect.size.height;
+			if (area < areaMin || area > areaMax) {
+				i.remove();
+			}
+		}
+		return this;
 	}
 	
 	private void checkCamera() {
@@ -524,18 +541,19 @@ public class FluentCv {
 	}
 	
 	/**
-	 * Return a Scalar representing a color from an imaginary list of colors starting at index 0
-	 * and extending on to Integer.MAX_VALUE. Can be used to pick a different color for each object
-	 * in a list. Colors are not guaranteed to be unique successive colors will be significantly different.
+	 * Return a Color from an imaginary list of colors starting at index 0
+	 * and extending on to Integer.MAX_VALUE. Can be used to pick a different
+	 * color for each object in a list. Colors are not guaranteed to be unique
+	 * but successive colors will be significantly different from each other.
 	 * @param i
 	 * @return
 	 */
-	private static Scalar indexedColor(int i) {
-		float h = (i * i) % 360;
-		float s = Math.max((i * i) % 100, 50);
+	private static Color indexedColor(int i) {
+		float h = (i * 59) % 360;
+		float s = Math.max((i * i) % 100, 80);
 		float l = Math.max((i * i) % 100, 50);
 		Color color = new HslColor(h, s, l).getRGB();
-		return colorToScalar(color);
+		return color;
 	}
 	
     private static BufferedImage convertBufferedImage(BufferedImage src, int type) {
@@ -585,10 +603,20 @@ public class FluentCv {
 		}
 		Core.line(img, p, q, colorToScalar(color));
 	}
+	
+	private static void drawRotatedRect(Mat mat, RotatedRect rect, Color color, int thickness) {
+		// From: http://stackoverflow.com/questions/23327502/opencv-how-to-draw-minarearect-in-java
+		Point points[] = new Point[4];
+	    rect.points(points);
+	    Scalar color_ = colorToScalar(color);
+	    for(int j = 0; j < 4; ++j) {
+	        Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
+	    }		
+	}
 
     public static void main(String[] args) throws Exception {
-    	List<Point> points = new ArrayList<>();
     	List<MatOfPoint> contours = new ArrayList<>();
+    	List<RotatedRect> rects = new ArrayList<>();
 		FluentCv cv = new FluentCv()
 			.read(new File("/Users/jason/Desktop/up.png"), "original")
 			.toGray()
@@ -597,8 +625,11 @@ public class FluentCv {
 			.canny(100, 200)
 			.findContours(contours)
 			.recall("original")
+			.getContourRects(contours, rects)
 			.drawContours(contours, null, 1)
-			.drawContourRects(contours, null, 2)
+			.filterRectsByArea(rects, 112000, Double.MAX_VALUE)
+			.drawRects(rects, null, 2)
 			.write(new File("/Users/jason/Desktop/up_out.png"));
+		System.out.println(rects);
     }
 }
