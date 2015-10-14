@@ -1,3 +1,56 @@
+/*
+ 	Copyright (C) 2015 Jason von Nieda <jason@vonnieda.org>
+ 	
+ 	This file is part of OpenPnP.
+ 	
+ 	You may use this file under either the GPLv3 License or the MIT
+ 	License at your preference. Functions in OpenPnP that this
+ 	file rely on are also available under these terms. See the two
+ 	licenses below.
+ 	
+	GPLv3 License Terms
+	-------------------
+	
+	OpenPnP is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    OpenPnP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
+ 	
+ 	For more information about OpenPnP visit http://openpnp.org
+ 	
+ 	
+ 	MIT License Terms
+ 	-----------------
+ 	
+ 	The MIT License (MIT)
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+	
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+	
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
+*/
+
 package org.openpnp.vision;
 
 
@@ -21,7 +74,6 @@ import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -37,6 +89,9 @@ import org.openpnp.util.VisionUtils;
  * 
  * Heavily influenced by FireSight by Karl Lew
  * https://github.com/firepick1/FireSight
+ * 
+ * In the spirit of FireSight, this code is licensed differently from the
+ * rest of OpenPnP. Please see the license header above.
  *  
  * TODO: Rethink operations that return or process data points versus
  * images. Perhaps these should require a tag to work with and
