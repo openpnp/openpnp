@@ -117,6 +117,23 @@ public class FluentCv {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
+    
+    public enum ColorCode {
+    	Bgr2Gray(Imgproc.COLOR_BGR2GRAY),
+    	Rgb2Gray(Imgproc.COLOR_RGB2GRAY),
+    	Gray2Bgr(Imgproc.COLOR_GRAY2BGR),
+    	Gray2Rgb(Imgproc.COLOR_GRAY2RGB);
+    	
+    	private int code;
+    	
+    	ColorCode(int code) {
+    		this.code = code;
+    	}
+    	
+    	public int getCode() {
+    		return code;
+    	}
+    }
 
     private LinkedHashMap<String, Mat> stored = new LinkedHashMap<>();
 	private Mat mat = new Mat();
@@ -147,9 +164,13 @@ public class FluentCv {
 		return store(mat, tag);
 	}
 	
-	public FluentCv cvtColor(int code, String... tag) {
-		Imgproc.cvtColor(mat, mat, code);
+	public FluentCv cvtColor(ColorCode code, String... tag) {
+		Imgproc.cvtColor(mat, mat, code.getCode());
 		return store(mat, tag);
+	}
+	
+	public FluentCv threshold(double threshold, String... tag) {
+		return threshold(threshold, false, tag);
 	}
 	
 	public FluentCv threshold(double threshold, boolean invert, String... tag) {
@@ -161,6 +182,10 @@ public class FluentCv {
     			invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY);
 		return store(mat, tag);
 	}
+
+	public FluentCv thresholdOtsu(String... tag) {
+		return thresholdOtsu(false, tag);
+	}
 	
 	public FluentCv thresholdOtsu(boolean invert, String... tag) {
     	Imgproc.threshold(
@@ -171,6 +196,10 @@ public class FluentCv {
     			(invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY) | Imgproc.THRESH_OTSU);
 		return store(mat, tag);
 	}
+	
+	public FluentCv thresholdAdaptive(String...tag) {
+		return thresholdAdaptive(false, tag);
+	}	
 	
 	public FluentCv thresholdAdaptive(boolean invert, String...tag) {
     	Imgproc.adaptiveThreshold(
@@ -287,6 +316,10 @@ public class FluentCv {
 	public FluentCv recall(String tag) {
 		mat = get(tag);
 		return this;
+	}
+	
+	public FluentCv store(String tag) {
+		return store(mat, tag);
 	}
 	
 	public FluentCv write(File file) throws Exception {
@@ -438,6 +471,10 @@ public class FluentCv {
 		return mat;
 	}
 	
+	public FluentCv mat(Mat mat, String... tag) {
+		return store(mat, tag);
+	}
+	
 	/**
 	 * Calculate the absolute difference between the previously
 	 * stored Mat called source1 and the current Mat.
@@ -470,6 +507,17 @@ public class FluentCv {
 			Imgproc.drawContours(mat, contours, -1, colorToScalar(color), thickness);
 		}
 		return store(mat, tag);
+	}
+	
+	public FluentCv filterContoursByArea(List<MatOfPoint> contours, double areaMin, double areaMax) {
+		for (Iterator<MatOfPoint> i = contours.iterator(); i.hasNext(); ) {
+			MatOfPoint contour = i.next();
+			double area = Imgproc.contourArea(contour);
+			if (area < areaMin || area > areaMax) {
+				i.remove();
+			}
+		}
+		return this;
 	}
 	
 	public FluentCv drawRects(List<RotatedRect> rects, Color color, int thickness, String... tag) {
@@ -613,23 +661,4 @@ public class FluentCv {
 	        Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
 	    }		
 	}
-
-    public static void main(String[] args) throws Exception {
-    	List<MatOfPoint> contours = new ArrayList<>();
-    	List<RotatedRect> rects = new ArrayList<>();
-		FluentCv cv = new FluentCv()
-			.read(new File("/Users/jason/Desktop/up.png"), "original")
-			.toGray()
-			.threshold(60, false)
-			.gaussianBlur(3)
-			.canny(100, 200)
-			.findContours(contours)
-			.recall("original")
-			.getContourRects(contours, rects)
-			.drawContours(contours, null, 1)
-			.filterRectsByArea(rects, 112000, Double.MAX_VALUE)
-			.drawRects(rects, null, 2)
-			.write(new File("/Users/jason/Desktop/up_out.png"));
-		System.out.println(rects);
-    }
 }
