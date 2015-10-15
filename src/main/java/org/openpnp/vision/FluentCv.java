@@ -169,34 +169,33 @@ public class FluentCv {
 		return store(mat, tag);
 	}
 	
+	/**
+	 * Apply a threshold to the Mat. If the threshold value is 0 then the Otsu
+	 * flag will be added and the threshold value ignored. Otsu performs
+	 * automatic determination of the threshold value by sampling the
+	 * image.
+	 * @param threshold
+	 * @param tag
+	 * @return
+	 */
 	public FluentCv threshold(double threshold, String... tag) {
 		return threshold(threshold, false, tag);
 	}
 	
 	public FluentCv threshold(double threshold, boolean invert, String... tag) {
+		int type = invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY;
+		if (threshold == 0) {
+			type |= Imgproc.THRESH_OTSU;
+		}
     	Imgproc.threshold(
     			mat, 
     			mat,
     			threshold,
     			255, 
-    			invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY);
+    			type);
 		return store(mat, tag);
 	}
 
-	public FluentCv thresholdOtsu(String... tag) {
-		return thresholdOtsu(false, tag);
-	}
-	
-	public FluentCv thresholdOtsu(boolean invert, String... tag) {
-    	Imgproc.threshold(
-    			mat, 
-    			mat,
-    			0,
-    			255, 
-    			(invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY) | Imgproc.THRESH_OTSU);
-		return store(mat, tag);
-	}
-	
 	public FluentCv thresholdAdaptive(String...tag) {
 		return thresholdAdaptive(false, tag);
 	}	
