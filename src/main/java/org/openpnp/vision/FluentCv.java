@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -157,14 +158,14 @@ public class FluentCv {
 	}
 	
 	public FluentCv toGray(String...tag) {
-    	if (mat.channels() == 1) {
-    		return this;
-    	}
-		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-		return store(mat, tag);
+		return convertColor(ColorCode.Bgr2Gray, tag);
 	}
 	
-	public FluentCv cvtColor(ColorCode code, String... tag) {
+	public FluentCv toColor(String... tag) {
+		return convertColor(ColorCode.Gray2Bgr, tag);
+	}
+	
+	public FluentCv convertColor(ColorCode code, String... tag) {
 		Imgproc.cvtColor(mat, mat, code.getCode());
 		return store(mat, tag);
 	}
@@ -212,25 +213,30 @@ public class FluentCv {
 		return store(mat, tag);
 	}
 	
-	public FluentCv gaussianBlur(int kernelSize, String... tag) {
+	public FluentCv blurGaussian(int kernelSize, String... tag) {
     	Imgproc.GaussianBlur(mat, mat, new Size(kernelSize, kernelSize), 0);
 		return store(mat, tag);
 	}
 	
-	public FluentCv houghCircles( 
+	public FluentCv blurMedian(int kernelSize, String... tag) {
+    	Imgproc.medianBlur(mat, mat, kernelSize);
+		return store(mat, tag);
+	}
+	
+	public FluentCv findCirclesHough( 
     		Length minDiameter, 
     		Length maxDiameter, 
     		Length minDistance,
     		String... tag) {
 		checkCamera();
-        return houghCircles(
+        return findCirclesHough(
         		(int) VisionUtils.toPixels(minDiameter, camera), 
         		(int) VisionUtils.toPixels(maxDiameter, camera), 
         		(int) VisionUtils.toPixels(minDistance, camera),
         		tag);
 	}
 	
-	public FluentCv houghCircles(int minDiameter, int maxDiameter, int minDistance, String... tag) {
+	public FluentCv findCirclesHough(int minDiameter, int maxDiameter, int minDistance, String... tag) {
     	Mat circles = new Mat();
     	Imgproc.HoughCircles(
     			mat, 
@@ -246,7 +252,7 @@ public class FluentCv {
 		return this;
 	}
 	
-	public FluentCv circlesToPoints(List<Point> points) {
+	public FluentCv convertCirclesToPoints(List<Point> points) {
     	for (int i = 0; i < mat.cols(); i++) {
     		double[] circle = mat.get(0, i);
     		double x = circle[0];
@@ -256,7 +262,7 @@ public class FluentCv {
     	return this;
 	}
 	
-	public FluentCv circlesToLocations(List<Location> locations) {
+	public FluentCv convertCirclesToLocations(List<Location> locations) {
 		checkCamera();
     	Location unitsPerPixel = camera
     			.getUnitsPerPixel()
@@ -319,6 +325,10 @@ public class FluentCv {
 	
 	public FluentCv store(String tag) {
 		return store(mat, tag);
+	}
+	
+	public List<String> getStoredTags() {
+		return new ArrayList<String>(stored.keySet());
 	}
 	
 	public FluentCv write(File file) throws Exception {
@@ -467,7 +477,7 @@ public class FluentCv {
 	}
 	
 	public Mat mat() {
-		return mat;
+		return mat.clone();
 	}
 	
 	public FluentCv mat(Mat mat, String... tag) {
@@ -485,9 +495,57 @@ public class FluentCv {
 		return store(mat, tag);
 	}
 	
-	public FluentCv canny(double threshold1, double threshold2, String... tag) {
+	public FluentCv findEdgesCanny(double threshold1, double threshold2, String... tag) {
 		Imgproc.Canny(mat, mat, threshold1, threshold2);
 		return store(mat, tag);
+	}
+	
+	public FluentCv findEdgesRobertsCross(String... tag) {
+		// Java interpretation of
+		// https://www.scss.tcd.ie/publications/book-supplements/A-Practical-Introduction-to-Computer-Vision-with-OpenCV/Code/Edges.cpp
+		// Note: Java API does not have abs. This appears to be doing the
+		// same thing effectively, but I am not sure it's 100% the same
+		// as Cri's version.
+		Mat kernel = Mat.eye(new Size(2, 2), CvType.CV_32FC1);
+		kernel.put(0, 0, 
+				0, 1, 
+				-1, 0);
+		Mat roberts1 = new Mat();
+		Imgproc.filter2D(mat, roberts1, CvType.CV_32FC1, kernel);
+		Core.convertScaleAbs(roberts1, roberts1);
+		
+		kernel.put(0, 0, 
+				1, 0,
+				0, -1);
+		Mat roberts2 = new Mat();
+		Imgproc.filter2D(mat, roberts2, CvType.CV_32FC1, kernel);
+		Core.convertScaleAbs(roberts2, roberts2);
+		
+		Mat roberts = new Mat();
+		Core.add(roberts1, roberts2, roberts);
+		
+		return store(roberts, tag);
+		
+//		// Java interpretation of Cri S's C version.
+//		// This is very slow, my fault, not his. Probably due to all the
+//		// array accesses.
+//		int ptr1[] = { 0, 0, 0, 0 };
+//		int indexx[] = { 0, 1, 1, 0 };
+//		int indexy[] = { 0, 0, 1, 1 };
+//		for (int y = 0; y < mat.rows() - 1; y++) {
+//			for (int x = 0; x < mat.cols() - 1; x++) {
+//				int temp = 0, temp1 = 0;
+//				for (int i = 0; i < 4; i++) {
+//					ptr1[i] = (int) mat.get(y + indexy[i], x + indexx[i])[0]; //  // ptr1[i] = *(ptr + (y + indexy[i]) * gray->widthStep + x + indexx[i]);
+//				}
+//				temp = Math.abs(ptr1[0] - ptr1[2]);
+//				temp1 = Math.abs(ptr1[1] - ptr1[3]);
+//				temp = (temp > temp1 ? temp : temp1);
+//				temp = (int) Math.sqrt((float) (temp * temp) + (float) (temp1 * temp1));
+//				mat.put(y, x, temp); // *(ptr + y * gray->widthStep + x) = temp;
+//			}
+//		}
+//		return store(mat, tag);
 	}
 	
 	public FluentCv findContours(List<MatOfPoint> contours, String... tag) {
@@ -536,6 +594,9 @@ public class FluentCv {
 		for (int i = 0; i < contours.size(); i++) {
 			MatOfPoint2f contour_ = new MatOfPoint2f();
 		    contours.get(i).convertTo(contour_, CvType.CV_32FC2);
+			if (contour_.empty()) {
+				continue;
+			}
 			RotatedRect rect = Imgproc.minAreaRect(contour_);
 			rects.add(rect);
 		}
@@ -569,6 +630,12 @@ public class FluentCv {
 		return this;
 	}
 	
+	public FluentCv floodFill(Point seedPoint, Color color, String... tag) {
+		Mat mask = new Mat();
+		Imgproc.floodFill(mat, mask, seedPoint, colorToScalar(color));
+		return store(mat, tag);
+	}
+	
 	private Mat get(String tag) {
 		Mat mat = stored.get(tag);
 		if (mat == null) {
@@ -579,7 +646,7 @@ public class FluentCv {
 		return mat.clone();
 	}
 	
-	private static Scalar colorToScalar(Color color) {
+	public static Scalar colorToScalar(Color color) {
 		return new Scalar(
 				color.getBlue(), 
 				color.getGreen(), 
@@ -595,7 +662,7 @@ public class FluentCv {
 	 * @param i
 	 * @return
 	 */
-	private static Color indexedColor(int i) {
+	public static Color indexedColor(int i) {
 		float h = (i * 59) % 360;
 		float s = Math.max((i * i) % 100, 80);
 		float l = Math.max((i * i) % 100, 50);
@@ -603,7 +670,7 @@ public class FluentCv {
 		return color;
 	}
 	
-    private static BufferedImage convertBufferedImage(BufferedImage src, int type) {
+    public static BufferedImage convertBufferedImage(BufferedImage src, int type) {
         if (src.getType() == type) {
             return src;
         }
@@ -630,7 +697,7 @@ public class FluentCv {
 	 * @param p2
 	 * @param color
 	 */
-	private static void infiniteLine(Mat img, Point p1, Point p2, Color color) {
+	public static void infiniteLine(Mat img, Point p1, Point p2, Color color) {
 		Point p = new Point(), q = new Point();
 		// Check if the line is a vertical line because vertical lines don't
 		// have slope
@@ -651,7 +718,7 @@ public class FluentCv {
 		Core.line(img, p, q, colorToScalar(color));
 	}
 	
-	private static void drawRotatedRect(Mat mat, RotatedRect rect, Color color, int thickness) {
+	public static void drawRotatedRect(Mat mat, RotatedRect rect, Color color, int thickness) {
 		// From: http://stackoverflow.com/questions/23327502/opencv-how-to-draw-minarearect-in-java
 		Point points[] = new Point[4];
 	    rect.points(points);
@@ -659,5 +726,25 @@ public class FluentCv {
 	    for(int j = 0; j < 4; ++j) {
 	        Core.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
 	    }		
+	}
+	
+	// From: http://docs.opencv.org/doc/tutorials/highgui/video-input-psnr-ssim/video-input-psnr-ssim.html#image-similarity-psnr-and-ssim
+	public static double calculatePsnr(Mat I1, Mat I2) {
+		Mat s1 = new Mat();
+		Core.absdiff(I1, I2, s1); // |I1 - I2|
+		s1.convertTo(s1, CvType.CV_32F); // cannot make a square on 8 bits
+		s1 = s1.mul(s1); // |I1 - I2|^2
+
+		Scalar s = Core.sumElems(s1); // sum elements per channel
+
+		double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
+
+		if (sse <= 1e-10) // for small values return zero
+			return 0;
+		else {
+			double mse = sse / (double) (I1.channels() * I1.total());
+			double psnr = 10.0 * Math.log10((255 * 255) / mse);
+			return psnr;
+		}
 	}
 }

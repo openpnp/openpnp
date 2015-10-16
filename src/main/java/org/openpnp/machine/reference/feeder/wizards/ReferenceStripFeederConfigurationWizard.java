@@ -532,8 +532,8 @@ public class ReferenceStripFeederConfigurationWizard extends
 			.setCamera(camera)
 			.settleAndCapture()
 			.toGray()
-			.gaussianBlur(feeder.getHoleBlurKernelSize())
-			.houghCircles( 
+			.blurGaussian(feeder.getHoleBlurKernelSize())
+			.findCirclesHough( 
                 feeder.getHoleDiameterMin(), 
                 feeder.getHoleDiameterMax(), 
                 feeder.getHolePitchMin())
@@ -541,7 +541,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 					feeder.getHoleDistanceMin(), 
 					feeder.getHoleDistanceMax())
 			.filterCirclesToLine(feeder.getHoleLineDistanceMax())
-			.circlesToLocations(holeLocations);
+			.convertCirclesToLocations(holeLocations);
 	    return holeLocations;
 	}
 	
@@ -559,8 +559,8 @@ public class ReferenceStripFeederConfigurationWizard extends
 				.setCamera(camera)
 				.toMat(image, "original")
 				.toGray()
-				.gaussianBlur(feeder.getHoleBlurKernelSize())
-				.houghCircles( 
+				.blurGaussian(feeder.getHoleBlurKernelSize())
+				.findCirclesHough( 
 	                    feeder.getHoleDiameterMin(), 
 	                    feeder.getHoleDiameterMax(), 
 	                    feeder.getHolePitchMin(),
@@ -582,8 +582,8 @@ public class ReferenceStripFeederConfigurationWizard extends
 				.setCamera(camera)
 				.toMat(image, "original")
 				.toGray()
-				.gaussianBlur(feeder.getHoleBlurKernelSize())
-				.houghCircles( 
+				.blurGaussian(feeder.getHoleBlurKernelSize())
+				.findCirclesHough( 
 	                    feeder.getHoleDiameterMin(), 
 	                    feeder.getHoleDiameterMax(), 
 	                    feeder.getHolePitchMin())

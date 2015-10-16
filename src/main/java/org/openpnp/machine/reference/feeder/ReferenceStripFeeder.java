@@ -203,12 +203,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    	.setCamera(camera)
 	    	.settleAndCapture()
 	    	.toGray()
-	    	.gaussianBlur(getHoleBlurKernelSize())
-	    	.houghCircles(
+	    	.blurGaussian(getHoleBlurKernelSize())
+	    	.findCirclesHough(
 	    			getHoleDiameterMin(),
 	    			getHoleDiameterMax(), 
 	    			getHolePitchMin())
-	    	.circlesToLocations(holeLocations);
+	    	.convertCirclesToLocations(holeLocations);
 	    if (holeLocations.isEmpty()) {
 	    	return null;
 	    }
