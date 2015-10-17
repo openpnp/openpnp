@@ -148,7 +148,7 @@ public class EagleBoardImporter implements BoardImporter {
 						mmMinCreamFrame_number = Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
 					} else if (params.getValue().toUpperCase().endsWith("MM")) {
 						mmMinCreamFrame_number = Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
-					} // else throw an exception as can only be mm or mil BUT because we have already initialised these as 0, we don't care
+					} else throw new Exception("mlMinCream must either bin inmil or mm"); // Force the importer to abort, something is very wrong
 				}
 				if (params.getName().compareToIgnoreCase("mlMaxCreamFrame")==0) { //found exact match when 0 returned
 					mmMaxCreamFrame_string = params.getValue().replaceAll("[A-Za-z ]", ""); //remove all letters, i.e. "0mil" becomes 0
@@ -156,7 +156,7 @@ public class EagleBoardImporter implements BoardImporter {
 						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string) * mil_to_mm;
 					} else if (params.getValue().toUpperCase().endsWith("MM")) {
 						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
-					} // TODO else throw an exception as can only be mm or mil BUT because we have already initialised these as 0, we don't care
+					} else throw new Exception("mlMaxCream must either bin inmil or mm"); // Force the importer to abort, something is very wrong
 				}				
 			}
 			// Now we know the min and max tolerance for the cream (aka solder paste)
@@ -274,9 +274,38 @@ public class EagleBoardImporter implements BoardImporter {
 		                        			            pad_rotation += Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")) % 360; 
 		                        			            
 		                        			            Point A = new Point(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX())+x,Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY())+y);
-		                        					    Point center = new Point(x,y);
-		                        					    A = Utils2D.rotateTranslateCenterPoint(A, pad_rotation,0,0,center);
+		                        					    //Point center = new Point(x,y); //this is the center of the board itself
+		                        			            Point center = new Point(14.6,0); // TODO remove debug force for EAT001
+		                        					    //A = Utils2D.rotateTranslateCenterPoint(A, pad_rotation,0,0,center);
+		                        			            Point part_center = new Point(x,y);
 		                        			            
+		                        			            if (element_side == Side.Top) {
+		                        			            	if (rotation >= 180)
+		                        			            	  A = Utils2D.rotateTranslateCenterPoint(A, rotation,0,0,part_center); //rotate the part-pin
+		                        			            	else
+		                        			            	  A = Utils2D.rotateTranslateCenterPoint(A, -rotation,0,0,part_center); //rotate the part-pin
+		                        			            } else if (element_side == Side.Bottom) {
+		                        			            	A = Utils2D.rotateTranslateCenterPoint(A, -rotation,0,0,part_center); //rotate the part-pin
+
+		                        			            
+		                        			            //Mirror along the Y axis of the board
+		                        					    if (A.getX() < center.getX()) {
+		                        					    	Double offset = center.getX()-A.getX();
+		                        					    	A.setX(center.getX()+offset); //mirror left to right across the centre of the board
+		                        					    } else {
+		                        					    	Double offset = A.getX() - center.getX();
+		                        					    	A.setX(center.getX()-offset);
+		                        					    }
+		                        			            //Mirror along the X axis of the part's center line
+		                        					    if (A.getY() < y) {
+		                        					    	Double offset = y-A.getY();
+		                        					    	A.setY(y+offset); //mirror top to bottom across the centre of the part
+		                        					    } else {
+		                        					    	Double offset = A.getY()-y;
+		                        					    	A.setY(y-offset); //mirror bottom to top across the centre of the part
+		                        					    }
+		                        					    
+		                        			            }
 		                        			            BoardPad boardPad = new BoardPad(
 		                        			                    pad,
 		                        			                    new Location(LengthUnit.Millimeters,
@@ -290,10 +319,18 @@ public class EagleBoardImporter implements BoardImporter {
 		                        			            
 				                		                boardPad.setName(element.getName() + "-" + ((org.openpnp.model.eagle.xml.Smd) e).getName());
 				                		                
-				                		                if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(topLayer) )
-				                		                    boardPad.setSide(Side.Top);
-				                		                else if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(bottomLayer) )
-				                		                	boardPad.setSide(Side.Bottom);
+				                		                if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(topLayer) ) { //is the pad on top
+				                		                	if (element_side == Side.Top) 		// part is on the top
+				                		                		boardPad.setSide(Side.Top);		//pad is on the top
+				                		                	else
+				                		                		boardPad.setSide(Side.Bottom);	//part is on top, but pat is on the bottom
+				                		                }
+				                		                else if ( ((org.openpnp.model.eagle.xml.Smd) e).getLayer().equalsIgnoreCase(bottomLayer) ){ //is the pad on the bottom
+				                		                	if (element_side == Side.Top)		//part is top
+				                		                		boardPad.setSide(Side.Bottom);	//pad stays on the bottom
+				                		                	else
+				                		                		boardPad.setSide(Side.Top);		//pad moves to the top
+				                		                }
 				                		                else
 				                		                	logger.info("Warning: " + file + "contains a SMD pad that is not on a topLayer or bottomLayer");
 				                		      
