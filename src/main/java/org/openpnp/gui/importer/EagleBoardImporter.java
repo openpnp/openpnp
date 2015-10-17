@@ -105,6 +105,7 @@ public class EagleBoardImporter implements BoardImporter {
     
 	private static List<Placement> parseFile(File file, Side side, boolean createMissingParts) throws Exception {
 		
+		String dimensionLayer = "";
 		String topLayer    = "";
 		String bottomLayer = "";
 		String tCreamLayer = "";
@@ -127,9 +128,11 @@ public class EagleBoardImporter implements BoardImporter {
 		EagleLoader boardToProcess = new EagleLoader(file);
 		if (boardToProcess.board != null ) {
 			
-			//first establish which is the Top, Bottom, tCream and bCream layers in case the board has non-standard layer numbering
+			//first establish which is the Dimension, Top, Bottom, tCream and bCream layers in case the board has non-standard layer numbering
 			for (Layer layer : boardToProcess.layers.getLayer() ) {
-				if (layer.getName().equalsIgnoreCase("Top")) {
+				if (layer.getName().equalsIgnoreCase("Dimension")) {
+					dimensionLayer = layer.getNumber();
+				} else if (layer.getName().equalsIgnoreCase("Top")) {
 					topLayer = layer.getNumber();
 				} else if (layer.getName().equalsIgnoreCase("Bottom")) {
 					bottomLayer = layer.getNumber();
@@ -139,6 +142,19 @@ public class EagleBoardImporter implements BoardImporter {
 					bCreamLayer = layer.getNumber();
 				}
 			}
+			
+			//Now we want to establish the width of the board which we need to record
+			Double x_boundary = 0.0;
+			for (Object e:  boardToProcess.board.getPlain().getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole()) {
+				if (e instanceof org.openpnp.model.eagle.xml.Wire) {
+					if (((org.openpnp.model.eagle.xml.Wire) e).getLayer().equalsIgnoreCase(dimensionLayer)) {
+						x_boundary = Math.max( x_boundary,  Double.parseDouble(((org.openpnp.model.eagle.xml.Wire) e).getX1() ));
+						x_boundary = Math.max( x_boundary,  Double.parseDouble(((org.openpnp.model.eagle.xml.Wire) e).getX2() ));
+					}
+				}
+			}
+			Point center = new Point(x_boundary,0); //note that we set x = maximum x point on the Y=0;
+			
 			// determine the parameters for the pads based on DesignRules
 			for (Param params : boardToProcess.board.getDesignrules().getParam() ) {
 
@@ -274,38 +290,44 @@ public class EagleBoardImporter implements BoardImporter {
 		                        			            pad_rotation += Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getRot().replaceAll("[A-Za-z ]", "")) % 360; 
 		                        			            
 		                        			            Point A = new Point(Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getX())+x,Double.parseDouble(((org.openpnp.model.eagle.xml.Smd) e).getY())+y);
-		                        					    //Point center = new Point(x,y); //this is the center of the board itself
-		                        			            Point center = new Point(14.6,0); // TODO remove debug force for EAT001
-		                        					    //A = Utils2D.rotateTranslateCenterPoint(A, pad_rotation,0,0,center);
+		                        			            
 		                        			            Point part_center = new Point(x,y);
 		                        			            
 		                        			            if (element_side == Side.Top) {
-		                        			            	if (rotation >= 180)
+		                        			            	if (rotation > 180)
 		                        			            	  A = Utils2D.rotateTranslateCenterPoint(A, rotation,0,0,part_center); //rotate the part-pin
 		                        			            	else
 		                        			            	  A = Utils2D.rotateTranslateCenterPoint(A, -rotation,0,0,part_center); //rotate the part-pin
 		                        			            } else if (element_side == Side.Bottom) {
-		                        			            	A = Utils2D.rotateTranslateCenterPoint(A, -rotation,0,0,part_center); //rotate the part-pin
+		                        			            	if (rotation > 180)
+		                        			            		A = Utils2D.rotateTranslateCenterPoint(A, rotation,0,0,part_center); //rotate the part-pin
+		                        			            	else
+		                        			            		A = Utils2D.rotateTranslateCenterPoint(A, -(180-rotation),0,0,part_center); //rotate the part-pin
 
-		                        			            
-		                        			            //Mirror along the Y axis of the board
-		                        					    if (A.getX() < center.getX()) {
-		                        					    	Double offset = center.getX()-A.getX();
-		                        					    	A.setX(center.getX()+offset); //mirror left to right across the centre of the board
-		                        					    } else {
-		                        					    	Double offset = A.getX() - center.getX();
-		                        					    	A.setX(center.getX()-offset);
-		                        					    }
-		                        			            //Mirror along the X axis of the part's center line
-		                        					    if (A.getY() < y) {
-		                        					    	Double offset = y-A.getY();
-		                        					    	A.setY(y+offset); //mirror top to bottom across the centre of the part
-		                        					    } else {
-		                        					    	Double offset = A.getY()-y;
-		                        					    	A.setY(y-offset); //mirror bottom to top across the centre of the part
-		                        					    }
+		                        			            	//Mirror along the Y axis of the board
+		                        			            	if (A.getX() < center.getX()) {
+		                        					    		Double offset = center.getX()-A.getX();
+		                        					    		A.setX(center.getX()+offset); //mirror left to right across the centre of the board
+		                        					    	} else {
+		                        					    		Double offset = A.getX() - center.getX();
+		                        					    		A.setX(center.getX()-offset);
+		                        					    	}
+		                        			            	//Mirror along the X axis of the part's center line
+		                        					    	if (A.getY() < y) {
+		                        					    		Double offset = y-A.getY();
+		                        					    		A.setY(y+offset); //mirror top to bottom across the centre of the part
+		                        					    	} else {
+		                        					    		Double offset = A.getY()-y;
+		                        					    		A.setY(y-offset); //mirror bottom to top across the centre of the part
+		                        					    	}
 		                        					    
 		                        			            }
+		                        			            
+		                        			            // TODO Need to writ the logic for pad rotation
+		                        					    //A = Utils2D.rotateTranslateCenterPoint(A, pad_rotation,0,0,center);
+		                        			            //
+		                        			            
+		                        			            
 		                        			            BoardPad boardPad = new BoardPad(
 		                        			                    pad,
 		                        			                    new Location(LengthUnit.Millimeters,
