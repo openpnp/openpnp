@@ -164,7 +164,7 @@ public class EagleBoardImporter implements BoardImporter {
 						mmMinCreamFrame_number = Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
 					} else if (params.getValue().toUpperCase().endsWith("MM")) {
 						mmMinCreamFrame_number = Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
-					} else throw new Exception("mlMinCream must either bin inmil or mm"); // Force the importer to abort, something is very wrong
+					} else throw new Exception("mlMinCream must either be in mil or mm"); // Force the importer to abort, something is very wrong
 				}
 				if (params.getName().compareToIgnoreCase("mlMaxCreamFrame")==0) { //found exact match when 0 returned
 					mmMaxCreamFrame_string = params.getValue().replaceAll("[A-Za-z ]", ""); //remove all letters, i.e. "0mil" becomes 0
@@ -172,7 +172,7 @@ public class EagleBoardImporter implements BoardImporter {
 						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string) * mil_to_mm;
 					} else if (params.getValue().toUpperCase().endsWith("MM")) {
 						mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
-					} else throw new Exception("mlMaxCream must either bin inmil or mm"); // Force the importer to abort, something is very wrong
+					} else throw new Exception("mlMaxCream must either be in mil or mm"); // Force the importer to abort, something is very wrong
 				}				
 			}
 			// Now we know the min and max tolerance for the cream (aka solder paste)
