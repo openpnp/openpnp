@@ -404,7 +404,7 @@ public class EagleBoardImporter implements BoardImporter {
 							                		    			        0)
 			                        			                    );
 			                        			            logger.info("Pad generated width is " + pad.getWidth() + " height " + pad.getHeight() + " centered at x = " + boardPad.getLocation().getX() + " y = " + boardPad.getLocation().getY());
-			                        			            boardPad.setName("Polygon "); //Polygons are not named so just name it as "Polygon"
+			                        			            boardPad.setName(element.getName() + "-" +"Polygon "); //Polygons are not named so just name it as "Polygon"
 			                        			            
 		                        							if (((org.openpnp.model.eagle.xml.Polygon) e).getLayer().equalsIgnoreCase(tCreamLayer))
 		                        								boardPad.setSide(Side.Top);
