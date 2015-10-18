@@ -153,7 +153,7 @@ public class EagleBoardImporter implements BoardImporter {
 					}
 				}
 			}
-			Point center = new Point(x_boundary,0); //note that we set x = maximum x point on the Y=0;
+			Point center = new Point(x_boundary/2,0); //note that we set x = maximum x point on the Y=0;
 			
 			// determine the parameters for the pads based on DesignRules
 			for (Param params : boardToProcess.board.getDesignrules().getParam() ) {
