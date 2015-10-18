@@ -131,10 +131,10 @@ public class JogControlsPanel extends JPanel {
 					}
 
 					if (c > 0) {
-						cPos -= jogIncrement;
+						cPos += jogIncrement;
 					}
 					else if (c < 0) {
-						cPos += jogIncrement;
+						cPos -= jogIncrement;
 					}
 					
 					machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
@@ -199,17 +199,6 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnXPlus.gridy = 2;
 		panelControls.add(btnXPlus, gbc_btnXPlus);
 
-		JButton btnCMinus = new JButton(cMinusAction);
-		btnCMinus.setFocusable(false);
-		btnCMinus.setPreferredSize(new Dimension(50, 29));
-		GridBagConstraints gbc_btnCMinus = new GridBagConstraints();
-		gbc_btnCMinus.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCMinus.gridheight = 4;
-		gbc_btnCMinus.fill = GridBagConstraints.BOTH;
-		gbc_btnCMinus.gridx = 0;
-		gbc_btnCMinus.gridy = 1;
-		panelControls.add(btnCMinus, gbc_btnCMinus);
-
 		JButton btnCPlus = new JButton(cPlusAction);
 		btnCPlus.setFocusable(false);
 		btnCPlus.setPreferredSize(new Dimension(50, 29));
@@ -217,9 +206,20 @@ public class JogControlsPanel extends JPanel {
 		gbc_btnCPlus.insets = new Insets(0, 0, 0, 5);
 		gbc_btnCPlus.gridheight = 4;
 		gbc_btnCPlus.fill = GridBagConstraints.BOTH;
-		gbc_btnCPlus.gridx = 1;
+		gbc_btnCPlus.gridx = 0;
 		gbc_btnCPlus.gridy = 1;
 		panelControls.add(btnCPlus, gbc_btnCPlus);
+
+		JButton btnCMinus = new JButton(cMinusAction);
+		btnCMinus.setFocusable(false);
+		btnCMinus.setPreferredSize(new Dimension(50, 29));
+		GridBagConstraints gbc_btnCMinus = new GridBagConstraints();
+		gbc_btnCMinus.insets = new Insets(0, 0, 0, 5);
+		gbc_btnCMinus.gridheight = 4;
+		gbc_btnCMinus.fill = GridBagConstraints.BOTH;
+		gbc_btnCMinus.gridx = 1;
+		gbc_btnCMinus.gridy = 1;
+		panelControls.add(btnCMinus, gbc_btnCMinus);
 
 		JButton btnZMinus = new JButton(zMinusAction);
 		btnZMinus.setFocusable(false);
@@ -265,6 +265,9 @@ public class JogControlsPanel extends JPanel {
 		
 		JButton btnPlace = new JButton(placeAction);
 		panelSpecial.add(btnPlace);
+		
+		JButton btnSafeZ = new JButton(safezAction);
+		panelSpecial.add(btnSafeZ);
 		
 		panelDispensers = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
@@ -368,6 +371,25 @@ public class JogControlsPanel extends JPanel {
                         e.printStackTrace();
                         MessageBoxes.errorBox(frame,
                                 "Place Operation Failed", e.getMessage());
+                    }
+                }
+            });
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action safezAction = new AbstractAction("Head Safe Z") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            machineControlsPanel.submitMachineTask(new Runnable() {
+                public void run() {
+                    try {
+                        Configuration.get().getMachine().getHeads().get(0).moveToSafeZ(1.0);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        MessageBoxes.errorBox(frame,
+                                "Movement Operation Failed", e.getMessage());
                     }
                 }
             });

@@ -23,6 +23,9 @@ package org.openpnp.machine.reference.feeder;
 
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.Action;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -33,9 +36,11 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.Utils2D;
+import org.openpnp.vision.FluentCv;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -90,21 +95,49 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     
     @Attribute(required=false)
     private TapeType tapeType = TapeType.WhitePaper;
+    
+    @Attribute(required=false)
+    private boolean visionEnabled = true;
 
+    @Attribute
+	private int feedCount = 0;
+    
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
     
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
     
     private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
     
-    @Attribute
-	private int feedCount = 0;
+    private Location visionOffsets;
     
-    private Length getHoleToPartLateral() {
-        Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
-        return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
-    }
-	
+	public Length getHoleDiameterMin() {
+	    return getHoleDiameter().multiply(0.9);
+	}
+
+	public Length getHoleDiameterMax() {
+	    return getHoleDiameter().multiply(1.1);
+	}
+
+	public Length getHolePitchMin() {
+		return getHolePitch().multiply(0.9);
+	}
+
+	public Length getHoleDistanceMin() {
+		return getTapeWidth().multiply(0.25);
+	}
+
+	public Length getHoleDistanceMax() {
+	    return getTapeWidth().multiply(1.5);
+	}
+
+	public Length getHoleLineDistanceMax() {
+	    return new Length(0.5, LengthUnit.Millimeters);
+	}
+
+    public int getHoleBlurKernelSize() {
+		return 9;
+	}
+
 	@Override
     public Location getPickLocation() throws Exception {
 	    // Find the location of the part linearly along the tape
@@ -127,7 +160,64 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // Add in the angle of the tape plus the angle of the part in the tape
         // so that the part is picked at the right angle
         l = l.derive(null, null, null, angle + getLocation().getRotation());
+        // and if vision was performed, add the offsets
+        if (visionEnabled && visionOffsets != null) {
+        	l = l.add(visionOffsets);
+        }
         return l;
+    }
+	
+    public void feed(Nozzle nozzle)
+			throws Exception {
+        setFeedCount(getFeedCount() + 1);
+        
+        if (visionEnabled) {
+            // go to where we expect to find the next reference hole
+            Camera camera = nozzle.getHead().getDefaultCamera();
+    	    Location expectedLocation = getPointAlongLine(
+                    referenceHoleLocation, 
+                    lastHoleLocation, 
+                    partPitch.multiply(feedCount - 1));
+    	    camera.moveTo(expectedLocation, 1.0);
+    	    // and look for the hole
+    	    Location actualLocation = findClosestHole(camera);
+    	    if (actualLocation == null) {
+    	    	throw new Exception("Unable to locate reference hole. End of strip?");
+    	    }
+    	    // make sure it's not too far away
+    	    Length distance = actualLocation
+    	    		.getLinearLengthTo(expectedLocation)
+    	    		.convertToUnits(LengthUnit.Millimeters);
+    	    if (distance.getValue() > 2) {
+    	    	throw new Exception("Unable to locate reference hole. End of strip?");
+    	    }
+    	    visionOffsets = actualLocation
+    	    		.subtract(expectedLocation)
+    	    		.derive(null, null, 0d, 0d);
+        }
+	}
+    
+    private Location findClosestHole(Camera camera) {
+	    List<Location> holeLocations = new ArrayList<>();
+	    new FluentCv()
+	    	.setCamera(camera)
+	    	.settleAndCapture()
+	    	.toGray()
+	    	.blurGaussian(getHoleBlurKernelSize())
+	    	.findCirclesHough(
+	    			getHoleDiameterMin(),
+	    			getHoleDiameterMax(), 
+	    			getHolePitchMin())
+	    	.convertCirclesToLocations(holeLocations);
+	    if (holeLocations.isEmpty()) {
+	    	return null;
+	    }
+	    return holeLocations.get(0);
+    }
+    
+    private Length getHoleToPartLateral() {
+        Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
+        return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
     }
 	
     static public Location getPointAlongLine(Location a, Location b, Length distance) {
@@ -154,25 +244,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return Math.atan2(0, 0);
     }
 	
-    public void feed(Nozzle nozzle)
-			throws Exception {
-        // figure out how many parts there should be by taking the delta
-        // between the two holes and dividing it by part pitch
-        double holeToHoleDistance = lastHoleLocation.getLinearDistanceTo(referenceHoleLocation);
-        // take the ceil of the distance to account for any minor offset from
-        // center of the hole
-        holeToHoleDistance = Math.ceil(holeToHoleDistance);
-        double partPitch = this.partPitch.convertToUnits(lastHoleLocation.getUnits()).getValue();
-        // And floor the part count because you can't have a partial part.
-        double partCount = Math.floor(holeToHoleDistance / partPitch);
-        
-        if (feedCount > partCount) {
-            throw new Exception(String.format("No more parts available in feeder %s", getName()));
-        }
-        
-        setFeedCount(getFeedCount() + 1);
-	}
-    
 	public TapeType getTapeType() {
         return tapeType;
     }
@@ -236,6 +307,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setFeedCount(int feedCount) {
         int oldValue = this.feedCount;
         this.feedCount = feedCount;
+        this.visionOffsets = null;
         firePropertyChange("feedCount", oldValue, feedCount);
     }
     
@@ -246,8 +318,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void setReferenceHoleToPartLinear(Length referenceHoleToPartLinear) {
         this.referenceHoleToPartLinear = referenceHoleToPartLinear;
     }
+    
+    public boolean isVisionEnabled() {
+		return visionEnabled;
+	}
 
-    @Override
+	public void setVisionEnabled(boolean visionEnabled) {
+		this.visionEnabled = visionEnabled;
+	}
+
+	@Override
 	public String toString() {
 		return getName();
 	}
@@ -281,3 +361,20 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return null;
     }  
 }
+
+// this code left here in case we want to use it in the future. it is for 
+// calculating how many parts there are based on the first and last reference hole.
+//// figure out how many parts there should be by taking the delta
+//// between the two holes and dividing it by part pitch
+//double holeToHoleDistance = lastHoleLocation.getLinearDistanceTo(referenceHoleLocation);
+//// take the ceil of the distance to account for any minor offset from
+//// center of the hole
+//holeToHoleDistance = Math.ceil(holeToHoleDistance);
+//double partPitch = this.partPitch.convertToUnits(lastHoleLocation.getUnits()).getValue();
+//// And floor the part count because you can't have a partial part.
+//double partCount = Math.floor(holeToHoleDistance / partPitch);
+//
+////if (feedCount > partCount) {
+////    throw new Exception(String.format("No more parts available in feeder %s", getName()));
+////}
+//

@@ -39,7 +39,11 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -49,13 +53,16 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
@@ -64,9 +71,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-// TODO: Handle camera rotation.
-// TODO: Probably need to give some serious thought to rounding and
-// truncation in the selection stuff. Probably doing a lot of off by one.
 public class CameraView extends JComponent implements CameraListener {
 	private final static Logger logger = LoggerFactory
 			.getLogger(CameraView.class);
@@ -117,6 +121,8 @@ public class CameraView extends JComponent implements CameraListener {
 	 * recalculate all the scaling data.
 	 */
 	private double lastSourceWidth, lastSourceHeight;
+	
+	private Location lastUnitsPerPixel;
 
 	/**
 	 * The width and height of the image after it has been scaled to fit the
@@ -172,7 +178,14 @@ public class CameraView extends JComponent implements CameraListener {
 	
 	private String text;
 	
+	private boolean showImageInfo;
+	
 	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
+	
+	private CameraViewFilter cameraViewFilter;
+	
+	private long flashStartTimeMs;
+	private long flashLengthMs = 250;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -308,6 +321,29 @@ public class CameraView extends JComponent implements CameraListener {
 	public void setText(String text) {
 		this.text = text;
 	}
+	
+	/**
+	 * Causes a short flash in the CameraView to get the user's attention.
+	 */
+	public void flash() {
+		flashStartTimeMs = System.currentTimeMillis();
+		scheduledExecutor.scheduleAtFixedRate(
+			new Runnable() {
+				public void run() {
+					if (System.currentTimeMillis() - flashStartTimeMs < flashLengthMs) {
+						repaint();
+					}
+					else {
+						flashStartTimeMs = 0;
+						throw new RuntimeException();
+					}
+				}
+			}, 0, 30, TimeUnit.MILLISECONDS);
+	}
+	
+	public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
+		this.cameraViewFilter = cameraViewFilter;
+	}
 
 	public BufferedImage captureSelectionImage() {
 		if (selection == null || lastFrame == null) {
@@ -354,11 +390,15 @@ public class CameraView extends JComponent implements CameraListener {
 
 	@Override
 	public void frameReceived(BufferedImage img) {
+		if (cameraViewFilter != null) {
+			img = cameraViewFilter.filterCameraImage(camera, img);
+		}
 		BufferedImage oldFrame = lastFrame;
 		lastFrame = img;
 		if (oldFrame == null
-				|| (oldFrame.getWidth() != img.getWidth() || oldFrame
-						.getHeight() != img.getHeight())) {
+				|| (oldFrame.getWidth() != img.getWidth() 
+				|| oldFrame.getHeight() != img.getHeight()
+				|| camera.getUnitsPerPixel() != lastUnitsPerPixel)) {
 			calculateScalingData();
 		}
 		repaint();
@@ -410,8 +450,9 @@ public class CameraView extends JComponent implements CameraListener {
 		scaleRatioX = lastSourceWidth / (double) scaledWidth;
 		scaleRatioY = lastSourceHeight / (double) scaledHeight;
 
-		scaledUnitsPerPixelX = camera.getUnitsPerPixel().getX() * scaleRatioX;
-		scaledUnitsPerPixelY = camera.getUnitsPerPixel().getY() * scaleRatioY;
+		lastUnitsPerPixel = camera.getUnitsPerPixel();
+		scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
+		scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
 		if (selectionEnabled && selection != null) {
 			// setSelection() handles updating the scaled rectangle
@@ -452,6 +493,10 @@ public class CameraView extends JComponent implements CameraListener {
 			if (text != null) {
 				drawTextOverlay(g2d, 10, 10, text);
 			}
+			
+			if (showImageInfo && text == null) {
+			    drawImageInfo(g2d, 10, 10, image);
+			}
 
 			if (selectionEnabled && selection != null) {
 				paintSelection(g2d);
@@ -461,6 +506,15 @@ public class CameraView extends JComponent implements CameraListener {
 			g.setColor(Color.red);
 			g.drawLine(ins.left, ins.top, ins.right, ins.bottom);
 			g.drawLine(ins.right, ins.top, ins.left, ins.bottom);
+		}
+		
+		if (flashStartTimeMs > 0) {
+			long timeLeft = flashLengthMs - (System.currentTimeMillis() - flashStartTimeMs);
+			float alpha = (1f / flashLengthMs) * timeLeft;
+			alpha = Math.min(alpha, 1);
+			alpha = Math.max(alpha, 0);
+			g2d.setColor(new Color(1f, 1f, 1f, alpha));
+			g2d.fillRect(0, 0, getWidth(), getHeight());
 		}
 	}
 
@@ -684,6 +738,109 @@ public class CameraView extends JComponent implements CameraListener {
 		}
 	}
 
+    private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY, BufferedImage image) {
+        if (image == null) {
+        	return;
+        }
+    	String text = String.format("Resolution: %d x %d\nHistogram:",
+                image.getWidth(), 
+                image.getHeight());
+        Insets insets = new Insets(10, 10, 10, 10);
+        int interLineSpacing = 4;
+        int cornerRadius = 8;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setStroke(new BasicStroke(1.0f));
+        g2d.setFont(g2d.getFont().deriveFont(12.0f));
+        String[] lines = text.split("\n");
+        List<TextLayout> textLayouts = new ArrayList<TextLayout>();
+        int textWidth = 0, textHeight = 0;
+        for (String line : lines) {
+            TextLayout textLayout = new TextLayout(line, g2d.getFont(),
+                    g2d.getFontRenderContext());
+            textWidth = (int) Math.max(textWidth, textLayout.getBounds()
+                    .getWidth());
+            textHeight += (int) textLayout.getBounds().getHeight() + interLineSpacing;
+            textLayouts.add(textLayout);
+        }
+        textHeight -= interLineSpacing;
+        
+        int histogramHeight = 50 + 2;
+        int histogramWidth = 255 + 2;
+        
+        int width = Math.max(textWidth, histogramWidth);
+        int height = textHeight + histogramHeight;
+        
+        g2d.setColor(new Color(0, 0, 0, 0.75f));
+        g2d.fillRoundRect(
+                topLeftX, 
+                topLeftY, 
+                width + insets.left + insets.right, 
+                height + insets.top + insets.bottom,
+                cornerRadius,
+                cornerRadius);
+        g2d.setColor(Color.white);
+        g2d.drawRoundRect(
+                topLeftX, 
+                topLeftY, 
+                width + insets.left + insets.right, 
+                height + insets.top + insets.bottom,
+                cornerRadius,
+                cornerRadius);
+        int yPen = topLeftY + insets.top;
+        for (TextLayout textLayout : textLayouts) {
+            yPen += textLayout.getBounds().getHeight();
+            textLayout.draw(g2d, topLeftX + insets.left, yPen);
+            yPen += interLineSpacing;
+        }
+        
+        g2d.setColor(new Color(1, 1, 1, 0.20f));
+        g2d.fillRect(
+            topLeftX + insets.left,
+            yPen,
+            histogramWidth,
+            histogramHeight);
+        
+        // Calculate the histogram
+        long[][] histogram = new long[3][256];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                histogram[0][r]++;
+                histogram[1][g]++;
+                histogram[2][b]++;
+            }
+        }
+        // find the highest value in the histogram
+        long maxVal = 0;
+        for (int channel = 0; channel < 3; channel++) {
+            for (int bucket = 0; bucket < 256; bucket++) {
+                maxVal = Math.max(maxVal, histogram[channel][bucket]);
+            }
+        }
+        // and scale it to 50 pixels tall
+        double scale = 50.0 / maxVal;
+        Color[] colors = new Color[] {
+                Color.red,
+                Color.green,
+                Color.blue
+        };
+        for (int channel = 0; channel < 3; channel++) {
+            g2d.setColor(colors[channel]);
+            for (int bucket = 0; bucket < 256; bucket++) {
+                int value = (int) (histogram[channel][bucket] * scale);
+                g2d.drawLine(
+                        topLeftX + insets.left + 1 + bucket,
+                        yPen + 1 + 50 - value,
+                        topLeftX + insets.left + 1 + bucket,
+                        yPen + 1 + 50 - value);
+            }
+        }
+    }
+
 	/**
 	 * Changes the HandlePosition to it's inverse if the given rectangle has a
 	 * negative width, height or both.
@@ -813,8 +970,16 @@ public class CameraView extends JComponent implements CameraListener {
 	public void setSelectionEnabled(boolean selectionEnabled) {
 		this.selectionEnabled = selectionEnabled;
 	}
+	
+	public boolean isShowImageInfo() {
+        return showImageInfo;
+    }
 
-	public static Cursor getCursorForHandlePosition(
+    public void setShowImageInfo(boolean showImageInfo) {
+        this.showImageInfo = showImageInfo;
+    }
+
+    public static Cursor getCursorForHandlePosition(
 			HandlePosition handlePosition) {
 		switch (handlePosition) {
 		case NW:
@@ -873,18 +1038,213 @@ public class CameraView extends JComponent implements CameraListener {
 			setCursor(Cursor.getDefaultCursor());
 		}
 	}
+	
+	/**
+	 * Capture the current image (unscaled, unmodified) and write it to disk.
+	 */
+	private void captureSnapshot() {
+		try {
+			flash();
+			File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
+			dir.mkdirs();
+			DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
+			File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
+			ImageIO.write(lastFrame, "png", file);
+		}
+		catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	private void fireActionEvent(MouseEvent e) {
+		if (actionListeners.isEmpty()) {
+			return;
+		}
+		
+        int x = e.getX();
+        int y = e.getY();
+
+        // Find the difference in X and Y from the center of the image
+        // to the mouse click.
+        double offsetX = (scaledWidth / 2) - (x - imageX);
+        double offsetY = (scaledHeight / 2) - (y - imageY);
+
+        // Invert the X so that the offsets represent a bottom left to
+        // top right coordinate system.
+        offsetX = -offsetX;
+
+        // Scale the offsets by the units per pixel for the camera.
+        offsetX *= scaledUnitsPerPixelX;
+        offsetY *= scaledUnitsPerPixelY;
+
+        // The offsets now represent the distance to move the camera
+        // in the Camera's units per pixel's units.
+
+        // Create a location in the Camera's units per pixel's units
+        // and with the values of the offsets.
+        Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                offsetY, 0.0, 0.0);
+        // Add the offsets to the Camera's position.
+        Location location = camera.getLocation().add(offsets);
+		CameraViewActionEvent action = new CameraViewActionEvent(
+				CameraView.this, 
+				e.getX(), 
+				e.getY(), 
+				e.getX() * scaledUnitsPerPixelX, 
+				e.getY() * scaledUnitsPerPixelY,
+				location);
+		for (CameraViewActionListener listener : new ArrayList<>(actionListeners)) {
+			listener.actionPerformed(action);
+		}
+	}
+	
+	private void moveToClick(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+
+        // Find the difference in X and Y from the center of the image
+        // to the mouse click.
+        double offsetX = (scaledWidth / 2) - (x - imageX);
+        double offsetY = (scaledHeight / 2) - (y - imageY);
+
+        // Invert the X so that the offsets represent a bottom left to
+        // top right coordinate system.
+        offsetX = -offsetX;
+
+        // Scale the offsets by the units per pixel for the camera.
+        offsetX *= scaledUnitsPerPixelX;
+        offsetY *= scaledUnitsPerPixelY;
+
+        // The offsets now represent the distance to move the camera
+        // in the Camera's units per pixel's units.
+
+        // Create a location in the Camera's units per pixel's units
+        // and with the values of the offsets.
+        Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                offsetY, 0.0, 0.0);
+        // Add the offsets to the Camera's position.
+        final Location location = camera.getLocation().add(offsets);
+        // And move there.
+        MainFrame.machineControlsPanel
+                .submitMachineTask(new Runnable() {
+                    public void run() {
+                        try {
+                            MovableUtils.moveToLocationAtSafeZ(camera,
+                                    location, 1.0);
+                        }
+                        catch (Exception e) {
+                            MessageBoxes.errorBox(
+                                    getTopLevelAncestor(),
+                                    "Movement Error", e);
+                        }
+                    }
+                });
+	}
+	
+	private void beginSelection(MouseEvent e) {
+        // If we're not doing anything currently, we can start
+        // a new operation.
+        if (selectionMode == null) {
+            int x = e.getX();
+            int y = e.getY();
+            
+            // See if there is a handle under the cursor.
+            HandlePosition handlePosition = getSelectionHandleAtPosition(
+                    x, y);
+            if (handlePosition != null) {
+                selectionMode = SelectionMode.Resizing;
+                selectionActiveHandle = handlePosition;
+            }
+            // If not, perhaps they want to move the rectangle
+            else if (selection != null
+                    && selectionScaled.contains(x, y)) {
+
+                selectionMode = SelectionMode.Moving;
+                // Store the distance between the rectangle's origin and
+                // where they started moving it from.
+                selectionStartX = x - selectionScaled.x;
+                selectionStartY = y - selectionScaled.y;
+            }
+            // If not those, it's time to create a rectangle
+            else {
+                selectionMode = SelectionMode.Creating;
+                selectionStartX = x;
+                selectionStartY = y;
+            }
+        }
+	}
+	
+	private void continueSelection(MouseEvent e) {
+		int x = e.getX();
+		int y = e.getY();
+
+		if (selectionMode == SelectionMode.Resizing) {
+			int rx = selectionScaled.x;
+			int ry = selectionScaled.y;
+			int rw = selectionScaled.width;
+			int rh = selectionScaled.height;
+
+			if (selectionActiveHandle == HandlePosition.NW) {
+				setScaledSelection(x, y, (rw - (x - rx)),
+						(rh - (y - ry)));
+			}
+			else if (selectionActiveHandle == HandlePosition.NE) {
+				setScaledSelection(rx, y, x - rx, (rh - (y - ry)));
+			}
+			else if (selectionActiveHandle == HandlePosition.N) {
+				setScaledSelection(rx, y, rw, (rh - (y - ry)));
+			}
+			else if (selectionActiveHandle == HandlePosition.E) {
+				setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh);
+			}
+			else if (selectionActiveHandle == HandlePosition.SE) {
+				setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh
+						+ (y - (ry + rh)));
+			}
+			else if (selectionActiveHandle == HandlePosition.S) {
+				setScaledSelection(rx, ry, rw, rh + (y - (ry + rh)));
+			}
+			else if (selectionActiveHandle == HandlePosition.SW) {
+				setScaledSelection(x, ry, (rw - (x - rx)), rh
+						+ (y - (ry + rh)));
+			}
+			else if (selectionActiveHandle == HandlePosition.W) {
+				setScaledSelection(x, ry, (rw - (x - rx)), rh);
+			}
+		}
+		else if (selectionMode == SelectionMode.Moving) {
+			setScaledSelection(x - selectionStartX,
+					y - selectionStartY, selectionScaled.width,
+					selectionScaled.height);
+		}
+		else if (selectionMode == SelectionMode.Creating) {
+			int sx = selectionStartX;
+			int sy = selectionStartY;
+			int w = x - sx;
+			int h = y - sy;
+			setScaledSelection(sx, sy, w, h);
+		}
+		updateCursor();
+		repaint();
+	}
+	
+	private void endSelection() {
+		selectionMode = null;
+		selectionActiveHandle = null;
+	}
 
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			CameraViewActionEvent action = new CameraViewActionEvent(
-					CameraView.this, 
-					e.getX(), 
-					e.getY(), 
-					e.getX() * scaledUnitsPerPixelX, 
-					e.getY() * scaledUnitsPerPixelY);
-			for (CameraViewActionListener listener : actionListeners) {
-				listener.actionPerformed(action);
+			if (e.isPopupTrigger() || e.isShiftDown() || SwingUtilities.isRightMouseButton(e)) {
+				return;
+			}
+			// double click captures an image from the camera and writes it to disk. 
+			if (e.getClickCount() == 2) {
+				captureSnapshot();
+			}
+			else {
+				fireActionEvent(e);
 			}
 		}
 		
@@ -894,77 +1254,11 @@ public class CameraView extends JComponent implements CameraListener {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
-
-            int x = e.getX();
-            int y = e.getY();
-
-            if (e.isShiftDown()) {
-                // Find the difference in X and Y from the center of the image
-                // to the mouse click.
-                double offsetX = (scaledWidth / 2) - (x - imageX);
-                double offsetY = (scaledHeight / 2) - (y - imageY);
-
-                // Invert the X so that the offsets represent a bottom left to
-                // top right coordinate system.
-                offsetX = -offsetX;
-
-                // Scale the offsets by the units per pixel for the camera.
-                offsetX *= scaledUnitsPerPixelX;
-                offsetY *= scaledUnitsPerPixelY;
-
-                // The offsets now represent the distance to move the camera
-                // in the Camera's units per pixel's units.
-
-                // Create a location in the Camera's units per pixel's units
-                // and with the values of the offsets.
-                Location offsets = camera.getUnitsPerPixel().derive(offsetX,
-                        offsetY, 0.0, 0.0);
-                // Add the offsets to the Camera's position.
-                final Location location = camera.getLocation().add(offsets);
-                // And move there.
-                MainFrame.machineControlsPanel
-                        .submitMachineTask(new Runnable() {
-                            public void run() {
-                                try {
-                                    MovableUtils.moveToLocationAtSafeZ(camera,
-                                            location, 1.0);
-                                }
-                                catch (Exception e) {
-                                    MessageBoxes.errorBox(
-                                            getTopLevelAncestor(),
-                                            "Movement Error", e);
-                                }
-                            }
-                        });
+            else if (e.isShiftDown()) {
+            	moveToClick(e);
             }
             else if (selectionEnabled) {
-                // If we're not doing anything currently, we can start
-                // a new operation.
-                if (selectionMode == null) {
-                    // See if there is a handle under the cursor.
-                    HandlePosition handlePosition = getSelectionHandleAtPosition(
-                            x, y);
-                    if (handlePosition != null) {
-                        selectionMode = SelectionMode.Resizing;
-                        selectionActiveHandle = handlePosition;
-                    }
-                    // If not, perhaps they want to move the rectangle
-                    else if (selection != null
-                            && selectionScaled.contains(x, y)) {
-
-                        selectionMode = SelectionMode.Moving;
-                        // Store the distance between the rectangle's origin and
-                        // where they started moving it from.
-                        selectionStartX = x - selectionScaled.x;
-                        selectionStartY = y - selectionScaled.y;
-                    }
-                    // If not those, it's time to create a rectangle
-                    else {
-                        selectionMode = SelectionMode.Creating;
-                        selectionStartX = x;
-                        selectionStartY = y;
-                    }
-                }
+            	beginSelection(e);
             }
         }
 
@@ -974,9 +1268,9 @@ public class CameraView extends JComponent implements CameraListener {
 				popupMenu.show(e.getComponent(), e.getX(), e.getY());
 				return;
 			}
-			
-			selectionMode = null;
-			selectionActiveHandle = null;
+			else {
+				endSelection();
+			}
 		}
 	};
 
@@ -989,57 +1283,7 @@ public class CameraView extends JComponent implements CameraListener {
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (selectionEnabled) {
-				int x = e.getX();
-				int y = e.getY();
-
-				if (selectionMode == SelectionMode.Resizing) {
-					int rx = selectionScaled.x;
-					int ry = selectionScaled.y;
-					int rw = selectionScaled.width;
-					int rh = selectionScaled.height;
-
-					if (selectionActiveHandle == HandlePosition.NW) {
-						setScaledSelection(x, y, (rw - (x - rx)),
-								(rh - (y - ry)));
-					}
-					else if (selectionActiveHandle == HandlePosition.NE) {
-						setScaledSelection(rx, y, x - rx, (rh - (y - ry)));
-					}
-					else if (selectionActiveHandle == HandlePosition.N) {
-						setScaledSelection(rx, y, rw, (rh - (y - ry)));
-					}
-					else if (selectionActiveHandle == HandlePosition.E) {
-						setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh);
-					}
-					else if (selectionActiveHandle == HandlePosition.SE) {
-						setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh
-								+ (y - (ry + rh)));
-					}
-					else if (selectionActiveHandle == HandlePosition.S) {
-						setScaledSelection(rx, ry, rw, rh + (y - (ry + rh)));
-					}
-					else if (selectionActiveHandle == HandlePosition.SW) {
-						setScaledSelection(x, ry, (rw - (x - rx)), rh
-								+ (y - (ry + rh)));
-					}
-					else if (selectionActiveHandle == HandlePosition.W) {
-						setScaledSelection(x, ry, (rw - (x - rx)), rh);
-					}
-				}
-				else if (selectionMode == SelectionMode.Moving) {
-					setScaledSelection(x - selectionStartX,
-							y - selectionStartY, selectionScaled.width,
-							selectionScaled.height);
-				}
-				else if (selectionMode == SelectionMode.Creating) {
-					int sx = selectionStartX;
-					int sy = selectionStartY;
-					int w = x - sx;
-					int h = y - sy;
-					setScaledSelection(sx, sy, w, h);
-				}
-				updateCursor();
-				repaint();
+				continueSelection(e);
 			}
 		}
 	};

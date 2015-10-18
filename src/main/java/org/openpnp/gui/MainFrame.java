@@ -322,10 +322,10 @@ public class MainFrame extends JFrame {
 				.getJogControlsPanel().zMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA,
 				mask), machineControlsPanel
-				.getJogControlsPanel().cMinusAction);
+				.getJogControlsPanel().cPlusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD,
 				mask), machineControlsPanel
-				.getJogControlsPanel().cPlusAction);
+				.getJogControlsPanel().cMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS,
 				mask),
 				machineControlsPanel.lowerIncrementAction);

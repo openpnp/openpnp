@@ -42,14 +42,15 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -66,25 +67,25 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		contentPanel.add(panelUpp);
 		panelUpp.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Units Per Pixel", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,
-		        FormFactory.RELATED_GAP_COLSPEC,
-		        FormFactory.DEFAULT_COLSPEC,},
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,},
 		    new RowSpec[] {
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,
-		        FormFactory.RELATED_GAP_ROWSPEC,
-		        FormFactory.DEFAULT_ROWSPEC,}));
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
 		
 		lblWidth = new JLabel("Width");
 		panelUpp.add(lblWidth, "2, 2");
@@ -126,23 +127,45 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		
 		lblUppInstructions = new JLabel("<html>\n<ol>\n<li>Place an object with a known width and height on the table. Graphing paper is a good, easy choice for this.\n<li>Enter the width and height of the object into the Width and Height fields.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Press Measure and use the camera selection rectangle to measure the object. Press Confirm when finished.\n<li>The calculated units per pixel values will be inserted into the X and Y fields.\n</ol>\n</html>");
 		panelUpp.add(lblUppInstructions, "2, 6, 10, 1, default, fill");
+		
+		panelVision = new JPanel();
+		panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		contentPanel.add(panelVision);
+		panelVision.setLayout(new FormLayout(new ColumnSpec[] {
+				FormSpecs.RELATED_GAP_COLSPEC,
+				FormSpecs.DEFAULT_COLSPEC,
+				FormSpecs.RELATED_GAP_COLSPEC,
+				FormSpecs.DEFAULT_COLSPEC,},
+			new RowSpec[] {
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,}));
+		
+		lblSettleTimems = new JLabel("Settle Time (ms)");
+		panelVision.add(lblSettleTimems, "2, 2, right, default");
+		
+		textFieldSettleTime = new JTextField();
+		panelVision.add(textFieldSettleTime, "4, 2, fill, default");
+		textFieldSettleTime.setColumns(10);
 	}
 
 	@Override
 	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        LongConverter longConverter = new LongConverter();
         
 		MutableLocationProxy unitsPerPixel = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
         addWrappedBinding(unitsPerPixel, "lengthY", textFieldUppY, "text", lengthConverter);
+        
+        addWrappedBinding(camera, "settleTimeMs", textFieldSettleTime, "text", longConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
         
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldHeight);
+        ComponentDecorators.decorateWithAutoSelect(textFieldSettleTime);
 	}
 	
 	private Action measureAction = new AbstractAction("Measure") {
@@ -197,4 +220,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	private JLabel lblHeight;
 	private JLabel lblX;
 	private JLabel lblY;
+	private JPanel panelVision;
+	private JLabel lblSettleTimems;
+	private JTextField textFieldSettleTime;
 }

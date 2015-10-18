@@ -48,6 +48,33 @@ public class Length {
 		this.units = units;
 	}
 	
+	public Length add(Length length) {
+		length = length.convertToUnits(units);
+		return new Length(value + length.getValue(), units);
+	}
+	
+	public Length subtract(Length length) {
+		length = length.convertToUnits(units);
+		return new Length(value - length.getValue(), units);
+	}
+	
+	public Length multiply(Length length) {
+		length = length.convertToUnits(units);
+		return new Length(value * length.getValue(), units);
+	}
+	
+	public Length add(double d) {
+		return new Length(value + d, units);
+	}
+	
+	public Length subtract(double d) {
+		return new Length(value - d, units);
+	}
+	
+	public Length multiply(double d) {
+		return new Length(value * d, units);
+	}
+	
 	public double getValue() {
 		return value;
 	}

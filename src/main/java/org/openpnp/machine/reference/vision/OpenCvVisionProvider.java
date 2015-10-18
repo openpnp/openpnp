@@ -257,7 +257,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         // part's rotation at 0.
         nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN), 1.0);
         // Grab an image.
-        BufferedImage image = camera.capture();
+        BufferedImage image = camera.settleAndCapture();
         // TODO: Do OpenCV magic
         // Return the offsets. Make sure to convert them to real units instead
         // of pixels. Use camera.getUnitsPerPixel().

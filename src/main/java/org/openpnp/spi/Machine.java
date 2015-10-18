@@ -164,4 +164,6 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
             final Callable<T> callable, 
             final FutureCallback<T> callback, 
             boolean ignoreEnabled);
+    
+    public Head getDefaultHead();
 }

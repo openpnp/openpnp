@@ -92,4 +92,10 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public List<PasteDispenser> getPasteDispensers();
     
     public PasteDispenser getPasteDispenser(String id);
+    
+    public Camera getDefaultCamera();
+    
+    public Nozzle getDefaultNozzle();
+    
+    public PasteDispenser getDefaultPasteDispenser(); 
 }

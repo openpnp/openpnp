@@ -25,10 +25,14 @@ import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -55,18 +59,14 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.RowSpec;
-
-import java.io.*;
-
-import com.Ostermiller.util.CSVParser;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.Ostermiller.util.CSVParser;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 
 @SuppressWarnings("serial")
@@ -324,17 +324,17 @@ for ( String as[]; (as = csvParser.getLine()) != null; )
 	        panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 	        getContentPane().add(panel);
 	        panel.setLayout(new FormLayout(new ColumnSpec[] {
-	                FormFactory.RELATED_GAP_COLSPEC,
-	                FormFactory.DEFAULT_COLSPEC,
-	                FormFactory.RELATED_GAP_COLSPEC,
+	                FormSpecs.RELATED_GAP_COLSPEC,
+	                FormSpecs.DEFAULT_COLSPEC,
+	                FormSpecs.RELATED_GAP_COLSPEC,
 	                ColumnSpec.decode("default:grow"),
-	                FormFactory.RELATED_GAP_COLSPEC,
-	                FormFactory.DEFAULT_COLSPEC,},
+	                FormSpecs.RELATED_GAP_COLSPEC,
+	                FormSpecs.DEFAULT_COLSPEC,},
 	            new RowSpec[] {
-	                FormFactory.RELATED_GAP_ROWSPEC,
-	                FormFactory.DEFAULT_ROWSPEC,
-	                FormFactory.RELATED_GAP_ROWSPEC,
-	                FormFactory.DEFAULT_ROWSPEC,}));
+	                FormSpecs.RELATED_GAP_ROWSPEC,
+	                FormSpecs.DEFAULT_ROWSPEC,
+	                FormSpecs.RELATED_GAP_ROWSPEC,
+	                FormSpecs.DEFAULT_ROWSPEC,}));
 	        
 	        JLabel lblTopFilemnt = new JLabel("Centeroid File (.csv)");
 	        panel.add(lblTopFilemnt, "2, 2, right, default");
@@ -351,11 +351,11 @@ for ( String as[]; (as = csvParser.getLine()) != null; )
 	        panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 	        getContentPane().add(panel_1);
 	        panel_1.setLayout(new FormLayout(new ColumnSpec[] {
-	                FormFactory.RELATED_GAP_COLSPEC,
-	                FormFactory.DEFAULT_COLSPEC,},
+	                FormSpecs.RELATED_GAP_COLSPEC,
+	                FormSpecs.DEFAULT_COLSPEC,},
 	            new RowSpec[] {
-	                FormFactory.RELATED_GAP_ROWSPEC,
-	                FormFactory.DEFAULT_ROWSPEC,}));
+	                FormSpecs.RELATED_GAP_ROWSPEC,
+	                FormSpecs.DEFAULT_ROWSPEC,}));
 	        
 	        chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
 	        chckbxCreateMissingParts.setSelected(true);

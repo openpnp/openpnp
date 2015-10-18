@@ -276,4 +276,13 @@ public abstract class AbstractMachine implements Machine {
         
         return executor.submit(wrapper); 
     }
+
+	@Override
+	public Head getDefaultHead() {
+		List<Head> heads = getHeads();
+		if (heads == null || heads.isEmpty()) {
+			return null;
+		}
+		return heads.get(0);
+	}
 }

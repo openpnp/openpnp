@@ -58,6 +58,11 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		add(reticleMenu);
 		add(maxFpsMenu);
 		
+	    JCheckBoxMenuItem chkShowImageInfo = new JCheckBoxMenuItem(showImageInfoAction);
+	    chkShowImageInfo.setSelected(cameraView.isShowImageInfo());
+	    add(chkShowImageInfo);
+
+		
 		if (cameraView.getDefaultReticle() != null) {
 			if (cameraView.getDefaultReticle() instanceof RulerReticle) {
 				setReticleOptionsMenu(createRulerReticleOptionsMenu((RulerReticle) cameraView.getDefaultReticle()));
@@ -608,6 +613,13 @@ public class CameraViewPopupMenu extends JPopupMenu {
 		}
 		reticleOptionsMenu = menu;
 	}
+	
+	private Action showImageInfoAction = new AbstractAction("Show Image Info?") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            cameraView.setShowImageInfo(((JCheckBoxMenuItem) e.getSource()).isSelected());
+        }
+	};
 	
 	private Action noReticleAction = new AbstractAction("None") {
 		@Override

@@ -2,6 +2,7 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
 
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -10,6 +11,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -17,13 +19,12 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 
-import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.openpnp.gui.components.LocationButtonsPanel;
-import javax.swing.JCheckBox;
 
+@SuppressWarnings("serial")
 public class ReferenceCameraConfigurationWizard extends
         AbstractConfigurationWizard {
     private final ReferenceCamera referenceCamera;
@@ -49,27 +50,90 @@ public class ReferenceCameraConfigurationWizard extends
     private JLabel lblFlipX;
     private JLabel lblFlipY;
     private JCheckBox checkBoxFlipY;
+    private JTextField textFieldSafeZ;
     
     
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
         
+                panelOffsets = new JPanel();
+                contentPanel.add(panelOffsets);
+                panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,},
+                    new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+                
+                        JLabel olblX = new JLabel("X");
+                        panelOffsets.add(olblX, "2, 2");
+                        
+                                JLabel olblY = new JLabel("Y");
+                                panelOffsets.add(olblY, "4, 2");
+                                
+                                        JLabel olblZ = new JLabel("Z");
+                                        panelOffsets.add(olblZ, "6, 2");
+                                        
+                                        
+                                        textFieldOffX = new JTextField();
+                                        panelOffsets.add(textFieldOffX, "2, 4");
+                                        textFieldOffX.setColumns(8);
+                                        
+                                                textFieldOffY = new JTextField();
+                                                panelOffsets.add(textFieldOffY, "4, 4");
+                                                textFieldOffY.setColumns(8);
+                                                
+                                                        textFieldOffZ = new JTextField();
+                                                        panelOffsets.add(textFieldOffZ, "6, 4");
+                                                        textFieldOffZ.setColumns(8);
+                                                        
+                                                        JPanel panelSafeZ = new JPanel();
+                                                        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                                                        contentPanel.add(panelSafeZ);
+                                                        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
+                                                        		FormSpecs.RELATED_GAP_COLSPEC,
+                                                        		FormSpecs.DEFAULT_COLSPEC,
+                                                        		FormSpecs.RELATED_GAP_COLSPEC,
+                                                        		FormSpecs.DEFAULT_COLSPEC,},
+                                                        	new RowSpec[] {
+                                                        		FormSpecs.RELATED_GAP_ROWSPEC,
+                                                        		FormSpecs.DEFAULT_ROWSPEC,}));
+                                                        
+                                                        JLabel lblSafeZ = new JLabel("Safe Z");
+                                                        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
+                                                        
+                                                        textFieldSafeZ = new JTextField();
+                                                        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
+                                                        textFieldSafeZ.setColumns(10);
+                                                        
+        
         panelGeneral = new JPanel();
         panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,}));
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblRotation = new JLabel("Rotation");
         panelGeneral.add(lblRotation, "2, 2, right, default");
@@ -89,67 +153,25 @@ public class ReferenceCameraConfigurationWizard extends
         
         checkBoxFlipY = new JCheckBox("");
         panelGeneral.add(checkBoxFlipY, "4, 6");
-
-        panelOffsets = new JPanel();
-        contentPanel.add(panelOffsets);
-        panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,}));
-
-        JLabel olblX = new JLabel("X");
-        panelOffsets.add(olblX, "2, 2");
-
-        JLabel olblY = new JLabel("Y");
-        panelOffsets.add(olblY, "4, 2");
-
-        JLabel olblZ = new JLabel("Z");
-        panelOffsets.add(olblZ, "6, 2");
-        
-        
-        textFieldOffX = new JTextField();
-        panelOffsets.add(textFieldOffX, "2, 4");
-        textFieldOffX.setColumns(8);
-
-        textFieldOffY = new JTextField();
-        panelOffsets.add(textFieldOffY, "4, 4");
-        textFieldOffY.setColumns(8);
-
-        textFieldOffZ = new JTextField();
-        panelOffsets.add(textFieldOffZ, "6, 4");
-        textFieldOffZ.setColumns(8);
         
         panelLocation = new JPanel();
         panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLocation);
         panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
-                FormFactory.DEFAULT_COLSPEC,
-                FormFactory.RELATED_GAP_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
-                FormFactory.RELATED_GAP_ROWSPEC,
-                FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
         
         lblX = new JLabel("X");
@@ -222,6 +244,8 @@ public class ReferenceCameraConfigurationWizard extends
         addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
+        addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
+
         
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         
@@ -233,5 +257,6 @@ public class ReferenceCameraConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }
