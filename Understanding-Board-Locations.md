@@ -8,7 +8,7 @@ If you place a part at the same position but on the bottom of the board, the coo
 
 Consider this simple board:
 
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/board.png)
+![](Understanding-Board-Locations/board.png)
 
 It has two resistors: R1 and R2. R1 is at 5,5 and R2 is at 15,15.
 
