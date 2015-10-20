@@ -87,7 +87,6 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 			if (columnIndex == 1) {
 				this_package.setDescription((String) aValue);
 			}
-			configuration.setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input

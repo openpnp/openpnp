@@ -31,6 +31,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
@@ -70,7 +73,6 @@ public class Configuration extends AbstractModelObject {
 	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
 	private Machine machine;
 	private LinkedHashMap<File, Board> boards = new LinkedHashMap<File, Board>();
-	private boolean dirty;
 	private boolean loaded;
 	private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<ConfigurationListener>());
 	private File configurationDirectory;
@@ -179,14 +181,6 @@ public class Configuration extends AbstractModelObject {
 		return file;
 	}
 	
-	public boolean isDirty() {
-		return dirty;
-	}
-
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
-	}
-
 	public void addListener(ConfigurationListener listener) {
 		listeners.add(listener);
 		if (loaded) {
@@ -205,7 +199,7 @@ public class Configuration extends AbstractModelObject {
 		listeners.remove(listener);
 	}
 	
-	public void load() throws Exception {
+	public synchronized void load() throws Exception {
 		boolean forceSave = false;
 		boolean overrideUserConfig = Boolean.getBoolean("overrideUserConfig");
 		
@@ -282,7 +276,7 @@ public class Configuration extends AbstractModelObject {
         }
 	}
 	
-	public void save() throws Exception {
+	public synchronized void save() throws Exception {
 		try {
 			saveMachine(new File(configurationDirectory, "machine.xml"));
 		}
@@ -301,7 +295,6 @@ public class Configuration extends AbstractModelObject {
 		catch (Exception e) {
 			throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
 		}
-		dirty = false;
 	}
 	
 	public Package getPackage(String id) {
@@ -320,13 +313,11 @@ public class Configuration extends AbstractModelObject {
 	        throw new Error("Package with null Id cannot be added to Configuration.");
 	    }
 		packages.put(pkg.getId().toUpperCase(), pkg);
-		dirty = true;
 		firePropertyChange("packages", null, packages);
 	}
 	
     public void removePackage(Package pkg) {
         packages.remove(pkg.getId());
-        dirty = true;
         firePropertyChange("packages", null, packages);
     }
     
@@ -346,13 +337,11 @@ public class Configuration extends AbstractModelObject {
             throw new Error("Part with null Id cannot be added to Configuration.");
 	    }
 		parts.put(part.getId().toUpperCase(), part);
-		dirty = true;
 		firePropertyChange("parts", null, parts);
 	}
 	
 	public void removePart(Part part) {
 	    parts.remove(part.getId());
-	    dirty = true;
 	    firePropertyChange("parts", null, parts);
 	}
 	

@@ -107,7 +107,6 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 			else if (columnIndex == 3) {
 				part.setPackage((Package) aValue);
 			}
-			Configuration.get().setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input

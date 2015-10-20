@@ -202,7 +202,6 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
 	@Override
 	public void wizardCompleted(Wizard wizard) {
-		Configuration.get().setDirty(true);
 	}
 
 	@Override

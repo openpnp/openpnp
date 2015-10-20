@@ -265,7 +265,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 
 	@Override
 	public void wizardCompleted(Wizard wizard) {
-		configuration.setDirty(true);
 	}
 
 	@Override
@@ -311,7 +310,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 				MainFrame.cameraPanel.addCamera(camera);
 				tableModel.refresh();
 				Helpers.selectLastTableRow(table);
-				configuration.setDirty(true);
 			}
 			catch (Exception e) {
 				MessageBoxes.errorBox(
@@ -345,7 +343,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
                     configuration.getMachine().removeCamera(camera);
                 }
                 tableModel.refresh();
-                configuration.setDirty(true);
                 MessageBoxes.errorBox(
                         getTopLevelAncestor(), 
                         "Restart Required", 

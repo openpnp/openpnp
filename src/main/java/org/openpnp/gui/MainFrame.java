@@ -578,11 +578,9 @@ public class MainFrame extends JFrame {
 
 		}
 
-		// Save the configuration if it's dirty
+		// Save the configuration
 		try {
-			if (configuration.isDirty()) {
-				configuration.save();
-			}
+			configuration.save();
 		}
 		catch (Exception e) {
             String message = "There was a problem saving the configuration. The reason was:\n\n"

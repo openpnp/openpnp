@@ -114,7 +114,6 @@ public class CamerasTableModel extends AbstractTableModel {
 			    }
 			    camera.setHead(value.getHead());
 			}
-			configuration.setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
