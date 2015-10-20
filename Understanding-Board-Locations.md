@@ -12,16 +12,16 @@ Consider this simple board:
 
 It has two resistors: R1 and R2. R1 is at 5,5 and R2 is at 15,15.
 
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/R1.png)
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/R2.png)
+![](Understanding-Board-Locations/R1.png)
+![](Understanding-Board-Locations/R2.png)
 
 When we look at the top of the board we see R1, but not R2, because R2 is on the bottom.
 
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/Top.png)
+![](Understanding-Board-Locations/Top.png)
 
 And when we look at the bottom we see R2, but not R1. But now, since we have turned the board over, the origin is in the bottom right instead of the bottom left.
 
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/Bottom.png)
+![](Understanding-Board-Locations/Bottom.png)
 
 It appears that R2 has moved 15 units left, but really all we've done is turned the board over, changing the origin.
 
@@ -31,13 +31,13 @@ OpenPnP handles this the exact same way. When OpenPnP needs to move to a placeme
 
 Now consider this board on the bed of your pick and place machine. First you set it up to place the top:
 
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/Top_Bed.png)
+![](Understanding-Board-Locations/Top_Bed.png)
 
 The red crosshair represents where you tell OpenPnP the board origin is. This is the board location.
 
 When you are ready to place the bottom you flip the board over:
 
-![](https://dl.dropboxusercontent.com/u/19742583/wiki/Bottom_Bed.png)
+![](Understanding-Board-Locations/Bottom_Bed.png)
 
 And since the board origin has moved, you tell OpenPnP where to find it.
 
