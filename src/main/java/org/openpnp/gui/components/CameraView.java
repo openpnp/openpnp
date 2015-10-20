@@ -345,6 +345,34 @@ public class CameraView extends JComponent implements CameraListener {
 		this.cameraViewFilter = cameraViewFilter;
 	}
 
+	/**
+	 * Show image instead of the camera image for milliseconds. After
+	 * milliseconds elapses the view goes back to showing the camera image.
+	 * The image should be the same width and height as the camera image
+	 * otherwise the behavior is undefined. This function is intended to
+	 * be used to briefly show the result of image processing. This is
+	 * a shortcut to setCameraViewFilter(CameraViewFilter) which simply
+	 * removes itself after the specified time.
+	 * @param image
+	 * @param millseconds
+	 */
+	public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
+		setCameraViewFilter(new CameraViewFilter() {
+        	long t = System.currentTimeMillis();
+        	
+			@Override
+			public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
+				if ((System.currentTimeMillis() - t) < milliseconds) {
+					return filteredImage;
+				}
+				else {
+					setCameraViewFilter(null);
+					return image;
+				}
+			}
+		});	
+	}
+
 	public BufferedImage captureSelectionImage() {
 		if (selection == null || lastFrame == null) {
 			return null;

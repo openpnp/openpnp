@@ -60,6 +60,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,6 +78,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.utils.Converters;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -601,6 +603,22 @@ public class FluentCv {
 			rects.add(rect);
 		}
 		return this;
+	}
+	
+	public FluentCv getContourMaxRects(List<MatOfPoint> contours, List<RotatedRect> rect) {
+		List<Point> contoursCombined = new ArrayList<>();
+		for (MatOfPoint mp : contours) {
+			List<Point> points = new ArrayList<Point>();
+			Converters.Mat_to_vector_Point(mp, points);
+			for (Point point : points) {
+				contoursCombined.add(point);
+			}
+		}
+		contours.clear();
+		MatOfPoint points = new MatOfPoint();
+		points.fromList(contoursCombined);
+		
+		return getContourRects(Collections.singletonList(points), rect);
 	}
 	
 	public FluentCv filterRectsByArea(List<RotatedRect> rects, double areaMin, double areaMax) {
