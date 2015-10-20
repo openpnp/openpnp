@@ -7,11 +7,6 @@ OpenPnP is made up of three components. The hardware, the firmware and the softw
 
 The purpose of this manual is to help you get the software up and running, and to teach you how to configure and operate it.
 
-Pre-Release Software Warning
-============================
-
-OpenPnP is currently considered Alpha level software. This means that it is still under heavy development, may have major bugs and may be entirely unreliable. If you are still interested in continuing...
-
 Installation
 ============
 
