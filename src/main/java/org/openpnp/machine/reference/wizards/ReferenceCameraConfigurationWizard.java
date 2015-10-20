@@ -14,6 +14,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -51,6 +52,10 @@ public class ReferenceCameraConfigurationWizard extends
     private JLabel lblFlipY;
     private JCheckBox checkBoxFlipY;
     private JTextField textFieldSafeZ;
+    private JLabel lblOffsetX;
+    private JLabel lblOffsetY;
+    private JTextField textFieldOffsetX;
+    private JTextField textFieldOffsetY;
     
     
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
@@ -122,18 +127,22 @@ public class ReferenceCameraConfigurationWizard extends
         panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		FormSpecs.RELATED_GAP_COLSPEC,
+        		FormSpecs.DEFAULT_COLSPEC,
+        		ColumnSpec.decode("default:grow"),},
+        	new RowSpec[] {
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,
+        		FormSpecs.RELATED_GAP_ROWSPEC,
+        		FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblRotation = new JLabel("Rotation");
         panelGeneral.add(lblRotation, "2, 2, right, default");
@@ -142,17 +151,31 @@ public class ReferenceCameraConfigurationWizard extends
         panelGeneral.add(textFieldRotation, "4, 2");
         textFieldRotation.setColumns(10);
         
+        lblOffsetX = new JLabel("Offset X");
+        panelGeneral.add(lblOffsetX, "2, 4, right, default");
+        
+        textFieldOffsetX = new JTextField();
+        panelGeneral.add(textFieldOffsetX, "4, 4");
+        textFieldOffsetX.setColumns(10);
+        
+        lblOffsetY = new JLabel("Offset Y");
+        panelGeneral.add(lblOffsetY, "2, 6, right, default");
+        
+        textFieldOffsetY = new JTextField();
+        panelGeneral.add(textFieldOffsetY, "4, 6");
+        textFieldOffsetY.setColumns(10);
+        
         lblFlipX = new JLabel("Flip Vertical");
-        panelGeneral.add(lblFlipX, "2, 4, right, default");
+        panelGeneral.add(lblFlipX, "2, 8, right, default");
         
         chckbxFlipX = new JCheckBox("");
-        panelGeneral.add(chckbxFlipX, "4, 4");
+        panelGeneral.add(chckbxFlipX, "4, 8");
         
         lblFlipY = new JLabel("Flip Horizontal");
-        panelGeneral.add(lblFlipY, "2, 6, right, default");
+        panelGeneral.add(lblFlipY, "2, 10, right, default");
         
         checkBoxFlipY = new JCheckBox("");
-        panelGeneral.add(checkBoxFlipY, "4, 6");
+        panelGeneral.add(checkBoxFlipY, "4, 10");
         
         panelLocation = new JPanel();
         panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -220,6 +243,7 @@ public class ReferenceCameraConfigurationWizard extends
     
     @Override
     public void createBindings() {
+    	IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();
 
@@ -242,12 +266,16 @@ public class ReferenceCameraConfigurationWizard extends
         }
 
         addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
+        addWrappedBinding(referenceCamera, "offsetX", textFieldOffsetX, "text", intConverter);
+        addWrappedBinding(referenceCamera, "offsetY", textFieldOffsetY, "text", intConverter);
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
         addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
         
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
+        ComponentDecorators.decorateWithAutoSelect(textFieldOffsetX);
+        ComponentDecorators.decorateWithAutoSelect(textFieldOffsetY);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffY);
