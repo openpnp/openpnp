@@ -125,7 +125,10 @@ public class FluentCv {
     	Bgr2Gray(Imgproc.COLOR_BGR2GRAY),
     	Rgb2Gray(Imgproc.COLOR_RGB2GRAY),
     	Gray2Bgr(Imgproc.COLOR_GRAY2BGR),
-    	Gray2Rgb(Imgproc.COLOR_GRAY2RGB);
+    	Gray2Rgb(Imgproc.COLOR_GRAY2RGB),
+    	Bgr2Hls(Imgproc.COLOR_BGR2HLS),
+    	Hls2Bgr(Imgproc.COLOR_HLS2BGR),
+    	;
     	
     	private int code;
     	
@@ -168,7 +171,11 @@ public class FluentCv {
 	}
 	
 	public FluentCv convertColor(ColorCode code, String... tag) {
-		Imgproc.cvtColor(mat, mat, code.getCode());
+		return convertColor(code.getCode(), tag);
+	}
+	
+	public FluentCv convertColor(int code, String... tag) {
+		Imgproc.cvtColor(mat, mat, code);
 		return store(mat, tag);
 	}
 	
