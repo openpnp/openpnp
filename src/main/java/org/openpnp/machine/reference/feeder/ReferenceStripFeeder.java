@@ -110,6 +110,34 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     
     private Location visionOffsets;
     
+	public Length getHoleDiameterMin() {
+	    return getHoleDiameter().multiply(0.9);
+	}
+
+	public Length getHoleDiameterMax() {
+	    return getHoleDiameter().multiply(1.1);
+	}
+
+	public Length getHolePitchMin() {
+		return getHolePitch().multiply(0.9);
+	}
+
+	public Length getHoleDistanceMin() {
+		return getTapeWidth().multiply(0.25);
+	}
+
+	public Length getHoleDistanceMax() {
+	    return getTapeWidth().multiply(1.5);
+	}
+
+	public Length getHoleLineDistanceMax() {
+	    return new Length(0.5, LengthUnit.Millimeters);
+	}
+
+    public int getHoleBlurKernelSize() {
+		return 9;
+	}
+
 	@Override
     public Location getPickLocation() throws Exception {
 	    // Find the location of the part linearly along the tape
@@ -145,14 +173,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         
         if (visionEnabled) {
             // go to where we expect to find the next reference hole
-            Camera camera = nozzle.getHead().getCameras().get(0);
+            Camera camera = nozzle.getHead().getDefaultCamera();
     	    Location expectedLocation = getPointAlongLine(
                     referenceHoleLocation, 
                     lastHoleLocation, 
                     partPitch.multiply(feedCount - 1));
     	    camera.moveTo(expectedLocation, 1.0);
     	    // and look for the hole
-    	    Thread.sleep(100);
     	    Location actualLocation = findClosestHole(camera);
     	    if (actualLocation == null) {
     	    	throw new Exception("Unable to locate reference hole. End of strip?");
@@ -173,16 +200,15 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Location findClosestHole(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
 	    new FluentCv()
-	    	.toMat(camera.capture())
+	    	.setCamera(camera)
+	    	.settleAndCapture()
 	    	.toGray()
-	    	.thresholdOtsu(false)
-	    	.gaussianBlur(9)
-	    	.houghCircles(
-	    			camera, 
-	    			holeDiameter.multiply(0.90),
-	    			holeDiameter.multiply(1.1), 
-	    			holePitch.multiply(0.9))
-	    	.circlesToLocations(camera, holeLocations);
+	    	.blurGaussian(getHoleBlurKernelSize())
+	    	.findCirclesHough(
+	    			getHoleDiameterMin(),
+	    			getHoleDiameterMax(), 
+	    			getHolePitchMin())
+	    	.convertCirclesToLocations(holeLocations);
 	    if (holeLocations.isEmpty()) {
 	    	return null;
 	    }

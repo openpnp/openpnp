@@ -184,7 +184,23 @@ public class VisionUtilsTest {
             // TODO Auto-generated method stub
             
         }
-        
-        
+
+		@Override
+		public BufferedImage settleAndCapture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public long getSettleTimeMs() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public void setSettleTimeMs(long settleTimeMs) {
+			// TODO Auto-generated method stub
+			
+		}
     }
 }

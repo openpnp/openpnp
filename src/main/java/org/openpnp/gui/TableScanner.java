@@ -257,12 +257,7 @@ public class TableScanner extends JDialog implements Runnable {
 			            null,
 			            null);
 			    camera.moveTo(location, 1.0);
-				// Give the head and camera 500ms to settle
-				Thread.sleep(500);
-				// We capture two images to make sure that the one we save is
-				// not coming from a previous frame.
-				image = camera.capture();
-				image = camera.capture();
+				image = camera.settleAndCapture();
 				File outputFile = new File(outputDirectory,
 						String.format(Locale.US, "%2.3f,%2.3f.png", location.getX(), location.getY()));
 				ImageIO.write(image, "png",outputFile);

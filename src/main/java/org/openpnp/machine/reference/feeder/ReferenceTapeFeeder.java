@@ -218,9 +218,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 //		head.moveTo(head.getX(), head.getY(), z, head.getC());
 		
 		// Settle the camera
-		// TODO: This should be configurable, or maybe just built into
-		// the VisionProvider
-		Thread.sleep(200);
+		Thread.sleep(camera.getSettleTimeMs());
 		
 		VisionProvider visionProvider = camera.getVisionProvider();
 		

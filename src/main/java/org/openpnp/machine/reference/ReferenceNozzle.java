@@ -179,7 +179,6 @@ public class ReferenceNozzle extends AbstractNozzle implements
         logger.debug("{}.loadNozzleTip({}): Finished", new Object[]{getName(), nozzleTip.getName()});
         this.nozzleTip = nozzleTip;
         currentNozzleTipId = nozzleTip.getId();
-        Configuration.get().setDirty(true);
     }
 
     @Override
@@ -204,7 +203,6 @@ public class ReferenceNozzle extends AbstractNozzle implements
         logger.debug("{}.unloadNozzleTip(): Finished", new Object[]{getName()});
         nozzleTip = null;
         currentNozzleTipId = null;
-        Configuration.get().setDirty(true);
     }
 
     @Override

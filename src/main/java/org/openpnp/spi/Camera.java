@@ -63,6 +63,12 @@ public interface Camera extends Identifiable, Named, HeadMountable, WizardConfig
 	public BufferedImage capture();
 	
 	/**
+	 * Same as capture(), but waits the settle time before capturing.
+	 * @return
+	 */
+	public BufferedImage settleAndCapture();
+	
+	/**
 	 * Registers a listener to receive continuous images from the camera at a rate less than
 	 * or equal to maximumFps images per second.
 	 * @param listener
@@ -85,7 +91,23 @@ public interface Camera extends Identifiable, Named, HeadMountable, WizardConfig
 	 */
 	public VisionProvider getVisionProvider();
 	
+	/**
+	 * Get the width of images in pixels that will be returned from this Camera.
+	 * @return
+	 */
 	public int getWidth();
 	
+	/**
+	 * Get the height of images in pixels that will be returned from this Camera.
+	 * @return
+	 */
 	public int getHeight();
+	
+	/**
+	 * Get the time in milliseconds that the Camera should be allowed to settle before
+	 * images are captured for vision operations.
+	 * @return
+	 */
+	public long getSettleTimeMs();
+	public void setSettleTimeMs(long settleTimeMs);
 }

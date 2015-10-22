@@ -263,7 +263,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 	@Override
 	public void wizardCompleted(Wizard wizard) {
-		configuration.setDirty(true);
 		// Repaint the table so that any changed fields get updated.
 		table.repaint();
 	}
@@ -308,7 +307,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				configuration.getMachine().addFeeder(feeder);
 				tableModel.refresh();
 				Helpers.selectLastTableRow(table);
-				configuration.setDirty(true);
 			}
 			catch (Exception e) {
 				MessageBoxes.errorBox(
@@ -335,7 +333,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             if (ret == JOptionPane.YES_OPTION) {
                 configuration.getMachine().removeFeeder(getSelectedFeeder());
                 tableModel.refresh();
-                configuration.setDirty(true);
             }
 		}
 	};

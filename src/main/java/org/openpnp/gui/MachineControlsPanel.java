@@ -37,6 +37,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -69,6 +70,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
 
+import com.google.common.util.concurrent.FutureCallback;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -471,13 +473,22 @@ public class MachineControlsPanel extends JPanel {
 	private Action stopMachineAction = new AbstractAction("STOP") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			try {
-				Configuration.get().getMachine().setEnabled(false);
-				MachineControlsPanel.this.setEnabled(false);
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", e.getMessage());
-			}
+			Configuration.get().getMachine().submit(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					Configuration.get().getMachine().setEnabled(false);
+					return null;
+				}
+			}, new FutureCallback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+				}
+
+				@Override
+				public void onFailure(Throwable t) {
+					MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", t.getMessage());
+				}
+			}, true);
 		}
 	};
 	
@@ -485,13 +496,22 @@ public class MachineControlsPanel extends JPanel {
 	private Action startMachineAction = new AbstractAction("START") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			try {
-				Configuration.get().getMachine().setEnabled(true);
-				MachineControlsPanel.this.setEnabled(true);
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", e.getMessage());
-			}
+			Configuration.get().getMachine().submit(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					Configuration.get().getMachine().setEnabled(true);
+					return null;
+				}
+			}, new FutureCallback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+				}
+
+				@Override
+				public void onFailure(Throwable t) {
+					MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", t.getMessage());
+				}
+			}, true);
 		}
 	};
 	
@@ -706,6 +726,7 @@ public class MachineControlsPanel extends JPanel {
 		public void machineEnabled(Machine machine) {
 			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
 			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+			setEnabled(true);
 		}
 
 		@Override
@@ -718,6 +739,7 @@ public class MachineControlsPanel extends JPanel {
 		public void machineDisabled(Machine machine, String reason) {
 			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
 			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+			setEnabled(false);
 		}
 
 		@Override

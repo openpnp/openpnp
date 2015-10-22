@@ -83,9 +83,9 @@
 			<version>1.6.4</version>
 		</dependency>
         <dependency>
-            <groupId>nu.pattern</groupId>
+            <groupId>org.openpnp</groupId>
             <artifactId>opencv</artifactId>
-            <version>2.4.9-7</version>
+            <version>2.4.11-1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

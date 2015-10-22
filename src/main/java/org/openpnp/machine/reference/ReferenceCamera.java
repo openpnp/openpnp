@@ -56,6 +56,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     @Element(required=false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+    
+    @Attribute(required=false)
+    protected int offsetX = 0;
+    
+    @Attribute(required=false)
+    protected int offsetY = 0;
 
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
@@ -121,9 +127,25 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setFlipY(boolean flipY) {
         this.flipY = flipY;
     }
+    
+    public int getOffsetX() {
+		return offsetX;
+	}
 
-    protected BufferedImage transformImage(BufferedImage image) {
-        if (rotation == 0 && !flipX && !flipY) {
+	public void setOffsetX(int offsetX) {
+		this.offsetX = offsetX;
+	}
+
+	public int getOffsetY() {
+		return offsetY;
+	}
+
+	public void setOffsetY(int offsetY) {
+		this.offsetY = offsetY;
+	}
+
+	protected BufferedImage transformImage(BufferedImage image) {
+        if (rotation == 0 && !flipX && !flipY && offsetX == 0 && offsetY == 0) {
             return image;
         }
         
@@ -131,6 +153,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         Graphics2D g2d = out.createGraphics();
         AffineTransform xform = new AffineTransform();
 
+        xform.translate(offsetX, offsetY);
+        
         if (flipY) {
             xform.scale(-1, 1); 
             xform.translate(-image.getWidth(), 0);

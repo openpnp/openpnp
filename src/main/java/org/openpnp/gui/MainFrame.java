@@ -322,10 +322,10 @@ public class MainFrame extends JFrame {
 				.getJogControlsPanel().zMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA,
 				mask), machineControlsPanel
-				.getJogControlsPanel().cMinusAction);
+				.getJogControlsPanel().cPlusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD,
 				mask), machineControlsPanel
-				.getJogControlsPanel().cPlusAction);
+				.getJogControlsPanel().cMinusAction);
 		hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS,
 				mask),
 				machineControlsPanel.lowerIncrementAction);
@@ -578,11 +578,9 @@ public class MainFrame extends JFrame {
 
 		}
 
-		// Save the configuration if it's dirty
+		// Save the configuration
 		try {
-			if (configuration.isDirty()) {
-				configuration.save();
-			}
+			configuration.save();
 		}
 		catch (Exception e) {
             String message = "There was a problem saving the configuration. The reason was:\n\n"

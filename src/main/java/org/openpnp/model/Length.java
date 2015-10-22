@@ -221,14 +221,30 @@ public class Length {
 	}
 	
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((units == null) ? 0 : units.hashCode());
+		long temp;
+		temp = Double.doubleToLongBits(value);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Length) {
-			Length o = (Length) obj;
-			return o.value == value && o.units == units;
-		}
-		else {
+		if (this == obj)
+			return true;
+		if (obj == null)
 			return false;
-		}
+		if (getClass() != obj.getClass())
+			return false;
+		Length other = (Length) obj;
+		if (units != other.units)
+			return false;
+		if (Double.doubleToLongBits(value) != Double.doubleToLongBits(other.value))
+			return false;
+		return true;
 	}
 	
 	public static Location setLocationField(Configuration configuration, Location location, Length length, Field field, boolean defaultToOldUnits) {

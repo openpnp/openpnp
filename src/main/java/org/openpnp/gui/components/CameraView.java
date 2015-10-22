@@ -39,8 +39,11 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
-import java.lang.ref.WeakReference;
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -50,13 +53,16 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
@@ -177,6 +183,9 @@ public class CameraView extends JComponent implements CameraListener {
 	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
 	
 	private CameraViewFilter cameraViewFilter;
+	
+	private long flashStartTimeMs;
+	private long flashLengthMs = 250;
 
 	public CameraView() {
 		setBackground(Color.black);
@@ -313,8 +322,55 @@ public class CameraView extends JComponent implements CameraListener {
 		this.text = text;
 	}
 	
+	/**
+	 * Causes a short flash in the CameraView to get the user's attention.
+	 */
+	public void flash() {
+		flashStartTimeMs = System.currentTimeMillis();
+		scheduledExecutor.scheduleAtFixedRate(
+			new Runnable() {
+				public void run() {
+					if (System.currentTimeMillis() - flashStartTimeMs < flashLengthMs) {
+						repaint();
+					}
+					else {
+						flashStartTimeMs = 0;
+						throw new RuntimeException();
+					}
+				}
+			}, 0, 30, TimeUnit.MILLISECONDS);
+	}
+	
 	public void setCameraViewFilter(CameraViewFilter cameraViewFilter) {
 		this.cameraViewFilter = cameraViewFilter;
+	}
+
+	/**
+	 * Show image instead of the camera image for milliseconds. After
+	 * milliseconds elapses the view goes back to showing the camera image.
+	 * The image should be the same width and height as the camera image
+	 * otherwise the behavior is undefined. This function is intended to
+	 * be used to briefly show the result of image processing. This is
+	 * a shortcut to setCameraViewFilter(CameraViewFilter) which simply
+	 * removes itself after the specified time.
+	 * @param image
+	 * @param millseconds
+	 */
+	public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
+		setCameraViewFilter(new CameraViewFilter() {
+        	long t = System.currentTimeMillis();
+        	
+			@Override
+			public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
+				if ((System.currentTimeMillis() - t) < milliseconds) {
+					return filteredImage;
+				}
+				else {
+					setCameraViewFilter(null);
+					return image;
+				}
+			}
+		});	
 	}
 
 	public BufferedImage captureSelectionImage() {
@@ -478,6 +534,15 @@ public class CameraView extends JComponent implements CameraListener {
 			g.setColor(Color.red);
 			g.drawLine(ins.left, ins.top, ins.right, ins.bottom);
 			g.drawLine(ins.right, ins.top, ins.left, ins.bottom);
+		}
+		
+		if (flashStartTimeMs > 0) {
+			long timeLeft = flashLengthMs - (System.currentTimeMillis() - flashStartTimeMs);
+			float alpha = (1f / flashLengthMs) * timeLeft;
+			alpha = Math.min(alpha, 1);
+			alpha = Math.max(alpha, 0);
+			g2d.setColor(new Color(1f, 1f, 1f, alpha));
+			g2d.fillRect(0, 0, getWidth(), getHeight());
 		}
 	}
 
@@ -1001,52 +1066,213 @@ public class CameraView extends JComponent implements CameraListener {
 			setCursor(Cursor.getDefaultCursor());
 		}
 	}
+	
+	/**
+	 * Capture the current image (unscaled, unmodified) and write it to disk.
+	 */
+	private void captureSnapshot() {
+		try {
+			flash();
+			File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
+			dir.mkdirs();
+			DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
+			File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
+			ImageIO.write(lastFrame, "png", file);
+		}
+		catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	private void fireActionEvent(MouseEvent e) {
+		if (actionListeners.isEmpty()) {
+			return;
+		}
+		
+        int x = e.getX();
+        int y = e.getY();
+
+        // Find the difference in X and Y from the center of the image
+        // to the mouse click.
+        double offsetX = (scaledWidth / 2) - (x - imageX);
+        double offsetY = (scaledHeight / 2) - (y - imageY);
+
+        // Invert the X so that the offsets represent a bottom left to
+        // top right coordinate system.
+        offsetX = -offsetX;
+
+        // Scale the offsets by the units per pixel for the camera.
+        offsetX *= scaledUnitsPerPixelX;
+        offsetY *= scaledUnitsPerPixelY;
+
+        // The offsets now represent the distance to move the camera
+        // in the Camera's units per pixel's units.
+
+        // Create a location in the Camera's units per pixel's units
+        // and with the values of the offsets.
+        Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                offsetY, 0.0, 0.0);
+        // Add the offsets to the Camera's position.
+        Location location = camera.getLocation().add(offsets);
+		CameraViewActionEvent action = new CameraViewActionEvent(
+				CameraView.this, 
+				e.getX(), 
+				e.getY(), 
+				e.getX() * scaledUnitsPerPixelX, 
+				e.getY() * scaledUnitsPerPixelY,
+				location);
+		for (CameraViewActionListener listener : new ArrayList<>(actionListeners)) {
+			listener.actionPerformed(action);
+		}
+	}
+	
+	private void moveToClick(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+
+        // Find the difference in X and Y from the center of the image
+        // to the mouse click.
+        double offsetX = (scaledWidth / 2) - (x - imageX);
+        double offsetY = (scaledHeight / 2) - (y - imageY);
+
+        // Invert the X so that the offsets represent a bottom left to
+        // top right coordinate system.
+        offsetX = -offsetX;
+
+        // Scale the offsets by the units per pixel for the camera.
+        offsetX *= scaledUnitsPerPixelX;
+        offsetY *= scaledUnitsPerPixelY;
+
+        // The offsets now represent the distance to move the camera
+        // in the Camera's units per pixel's units.
+
+        // Create a location in the Camera's units per pixel's units
+        // and with the values of the offsets.
+        Location offsets = camera.getUnitsPerPixel().derive(offsetX,
+                offsetY, 0.0, 0.0);
+        // Add the offsets to the Camera's position.
+        final Location location = camera.getLocation().add(offsets);
+        // And move there.
+        MainFrame.machineControlsPanel
+                .submitMachineTask(new Runnable() {
+                    public void run() {
+                        try {
+                            MovableUtils.moveToLocationAtSafeZ(camera,
+                                    location, 1.0);
+                        }
+                        catch (Exception e) {
+                            MessageBoxes.errorBox(
+                                    getTopLevelAncestor(),
+                                    "Movement Error", e);
+                        }
+                    }
+                });
+	}
+	
+	private void beginSelection(MouseEvent e) {
+        // If we're not doing anything currently, we can start
+        // a new operation.
+        if (selectionMode == null) {
+            int x = e.getX();
+            int y = e.getY();
+            
+            // See if there is a handle under the cursor.
+            HandlePosition handlePosition = getSelectionHandleAtPosition(
+                    x, y);
+            if (handlePosition != null) {
+                selectionMode = SelectionMode.Resizing;
+                selectionActiveHandle = handlePosition;
+            }
+            // If not, perhaps they want to move the rectangle
+            else if (selection != null
+                    && selectionScaled.contains(x, y)) {
+
+                selectionMode = SelectionMode.Moving;
+                // Store the distance between the rectangle's origin and
+                // where they started moving it from.
+                selectionStartX = x - selectionScaled.x;
+                selectionStartY = y - selectionScaled.y;
+            }
+            // If not those, it's time to create a rectangle
+            else {
+                selectionMode = SelectionMode.Creating;
+                selectionStartX = x;
+                selectionStartY = y;
+            }
+        }
+	}
+	
+	private void continueSelection(MouseEvent e) {
+		int x = e.getX();
+		int y = e.getY();
+
+		if (selectionMode == SelectionMode.Resizing) {
+			int rx = selectionScaled.x;
+			int ry = selectionScaled.y;
+			int rw = selectionScaled.width;
+			int rh = selectionScaled.height;
+
+			if (selectionActiveHandle == HandlePosition.NW) {
+				setScaledSelection(x, y, (rw - (x - rx)),
+						(rh - (y - ry)));
+			}
+			else if (selectionActiveHandle == HandlePosition.NE) {
+				setScaledSelection(rx, y, x - rx, (rh - (y - ry)));
+			}
+			else if (selectionActiveHandle == HandlePosition.N) {
+				setScaledSelection(rx, y, rw, (rh - (y - ry)));
+			}
+			else if (selectionActiveHandle == HandlePosition.E) {
+				setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh);
+			}
+			else if (selectionActiveHandle == HandlePosition.SE) {
+				setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh
+						+ (y - (ry + rh)));
+			}
+			else if (selectionActiveHandle == HandlePosition.S) {
+				setScaledSelection(rx, ry, rw, rh + (y - (ry + rh)));
+			}
+			else if (selectionActiveHandle == HandlePosition.SW) {
+				setScaledSelection(x, ry, (rw - (x - rx)), rh
+						+ (y - (ry + rh)));
+			}
+			else if (selectionActiveHandle == HandlePosition.W) {
+				setScaledSelection(x, ry, (rw - (x - rx)), rh);
+			}
+		}
+		else if (selectionMode == SelectionMode.Moving) {
+			setScaledSelection(x - selectionStartX,
+					y - selectionStartY, selectionScaled.width,
+					selectionScaled.height);
+		}
+		else if (selectionMode == SelectionMode.Creating) {
+			int sx = selectionStartX;
+			int sy = selectionStartY;
+			int w = x - sx;
+			int h = y - sy;
+			setScaledSelection(sx, sy, w, h);
+		}
+		updateCursor();
+		repaint();
+	}
+	
+	private void endSelection() {
+		selectionMode = null;
+		selectionActiveHandle = null;
+	}
 
 	private MouseListener mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			if (e.isPopupTrigger()) {
+			if (e.isPopupTrigger() || e.isShiftDown() || SwingUtilities.isRightMouseButton(e)) {
 				return;
 			}
-			
-			if (e.isShiftDown()) {
-				return;
+			// double click captures an image from the camera and writes it to disk. 
+			if (e.getClickCount() == 2) {
+				captureSnapshot();
 			}
-			
-            int x = e.getX();
-            int y = e.getY();
-
-            // Find the difference in X and Y from the center of the image
-            // to the mouse click.
-            double offsetX = (scaledWidth / 2) - (x - imageX);
-            double offsetY = (scaledHeight / 2) - (y - imageY);
-
-            // Invert the X so that the offsets represent a bottom left to
-            // top right coordinate system.
-            offsetX = -offsetX;
-
-            // Scale the offsets by the units per pixel for the camera.
-            offsetX *= scaledUnitsPerPixelX;
-            offsetY *= scaledUnitsPerPixelY;
-
-            // The offsets now represent the distance to move the camera
-            // in the Camera's units per pixel's units.
-
-            // Create a location in the Camera's units per pixel's units
-            // and with the values of the offsets.
-            Location offsets = camera.getUnitsPerPixel().derive(offsetX,
-                    offsetY, 0.0, 0.0);
-            // Add the offsets to the Camera's position.
-            Location location = camera.getLocation().add(offsets);
-			CameraViewActionEvent action = new CameraViewActionEvent(
-					CameraView.this, 
-					e.getX(), 
-					e.getY(), 
-					e.getX() * scaledUnitsPerPixelX, 
-					e.getY() * scaledUnitsPerPixelY,
-					location);
-			for (CameraViewActionListener listener : new ArrayList<>(actionListeners)) {
-				listener.actionPerformed(action);
+			else {
+				fireActionEvent(e);
 			}
 		}
 		
@@ -1056,77 +1282,11 @@ public class CameraView extends JComponent implements CameraListener {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
-
-            int x = e.getX();
-            int y = e.getY();
-
-            if (e.isShiftDown()) {
-                // Find the difference in X and Y from the center of the image
-                // to the mouse click.
-                double offsetX = (scaledWidth / 2) - (x - imageX);
-                double offsetY = (scaledHeight / 2) - (y - imageY);
-
-                // Invert the X so that the offsets represent a bottom left to
-                // top right coordinate system.
-                offsetX = -offsetX;
-
-                // Scale the offsets by the units per pixel for the camera.
-                offsetX *= scaledUnitsPerPixelX;
-                offsetY *= scaledUnitsPerPixelY;
-
-                // The offsets now represent the distance to move the camera
-                // in the Camera's units per pixel's units.
-
-                // Create a location in the Camera's units per pixel's units
-                // and with the values of the offsets.
-                Location offsets = camera.getUnitsPerPixel().derive(offsetX,
-                        offsetY, 0.0, 0.0);
-                // Add the offsets to the Camera's position.
-                final Location location = camera.getLocation().add(offsets);
-                // And move there.
-                MainFrame.machineControlsPanel
-                        .submitMachineTask(new Runnable() {
-                            public void run() {
-                                try {
-                                    MovableUtils.moveToLocationAtSafeZ(camera,
-                                            location, 1.0);
-                                }
-                                catch (Exception e) {
-                                    MessageBoxes.errorBox(
-                                            getTopLevelAncestor(),
-                                            "Movement Error", e);
-                                }
-                            }
-                        });
+            else if (e.isShiftDown()) {
+            	moveToClick(e);
             }
             else if (selectionEnabled) {
-                // If we're not doing anything currently, we can start
-                // a new operation.
-                if (selectionMode == null) {
-                    // See if there is a handle under the cursor.
-                    HandlePosition handlePosition = getSelectionHandleAtPosition(
-                            x, y);
-                    if (handlePosition != null) {
-                        selectionMode = SelectionMode.Resizing;
-                        selectionActiveHandle = handlePosition;
-                    }
-                    // If not, perhaps they want to move the rectangle
-                    else if (selection != null
-                            && selectionScaled.contains(x, y)) {
-
-                        selectionMode = SelectionMode.Moving;
-                        // Store the distance between the rectangle's origin and
-                        // where they started moving it from.
-                        selectionStartX = x - selectionScaled.x;
-                        selectionStartY = y - selectionScaled.y;
-                    }
-                    // If not those, it's time to create a rectangle
-                    else {
-                        selectionMode = SelectionMode.Creating;
-                        selectionStartX = x;
-                        selectionStartY = y;
-                    }
-                }
+            	beginSelection(e);
             }
         }
 
@@ -1136,9 +1296,9 @@ public class CameraView extends JComponent implements CameraListener {
 				popupMenu.show(e.getComponent(), e.getX(), e.getY());
 				return;
 			}
-			
-			selectionMode = null;
-			selectionActiveHandle = null;
+			else {
+				endSelection();
+			}
 		}
 	};
 
@@ -1151,57 +1311,7 @@ public class CameraView extends JComponent implements CameraListener {
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (selectionEnabled) {
-				int x = e.getX();
-				int y = e.getY();
-
-				if (selectionMode == SelectionMode.Resizing) {
-					int rx = selectionScaled.x;
-					int ry = selectionScaled.y;
-					int rw = selectionScaled.width;
-					int rh = selectionScaled.height;
-
-					if (selectionActiveHandle == HandlePosition.NW) {
-						setScaledSelection(x, y, (rw - (x - rx)),
-								(rh - (y - ry)));
-					}
-					else if (selectionActiveHandle == HandlePosition.NE) {
-						setScaledSelection(rx, y, x - rx, (rh - (y - ry)));
-					}
-					else if (selectionActiveHandle == HandlePosition.N) {
-						setScaledSelection(rx, y, rw, (rh - (y - ry)));
-					}
-					else if (selectionActiveHandle == HandlePosition.E) {
-						setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh);
-					}
-					else if (selectionActiveHandle == HandlePosition.SE) {
-						setScaledSelection(rx, ry, rw + (x - (rx + rw)), rh
-								+ (y - (ry + rh)));
-					}
-					else if (selectionActiveHandle == HandlePosition.S) {
-						setScaledSelection(rx, ry, rw, rh + (y - (ry + rh)));
-					}
-					else if (selectionActiveHandle == HandlePosition.SW) {
-						setScaledSelection(x, ry, (rw - (x - rx)), rh
-								+ (y - (ry + rh)));
-					}
-					else if (selectionActiveHandle == HandlePosition.W) {
-						setScaledSelection(x, ry, (rw - (x - rx)), rh);
-					}
-				}
-				else if (selectionMode == SelectionMode.Moving) {
-					setScaledSelection(x - selectionStartX,
-							y - selectionStartY, selectionScaled.width,
-							selectionScaled.height);
-				}
-				else if (selectionMode == SelectionMode.Creating) {
-					int sx = selectionStartX;
-					int sy = selectionStartY;
-					int w = x - sx;
-					int h = y - sy;
-					setScaledSelection(sx, sy, w, h);
-				}
-				updateCursor();
-				repaint();
+				continueSelection(e);
 			}
 		}
 	};

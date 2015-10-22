@@ -113,7 +113,7 @@ public class FiducialLocator {
         BufferedImage template = createTemplate(camera.getUnitsPerPixel(), footprint);
         
         // Wait for camera to settle
-        Thread.sleep(500);
+        Thread.sleep(camera.getSettleTimeMs());
         // Perform vision operation
         return getBestTemplateMatch(camera, template);
     }
@@ -156,7 +156,7 @@ public class FiducialLocator {
         
         for (int i = 0; i < 3; i++) {
             // Wait for camera to settle
-            Thread.sleep(500);
+            Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
             location = getBestTemplateMatch(camera, template);
             if (location == null) {

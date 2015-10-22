@@ -83,7 +83,6 @@ public class FeedersTableModel extends AbstractTableModel {
 			else if (columnIndex == 3) {
 				feeder.setEnabled((Boolean) aValue);
 			}
-			configuration.setDirty(true);
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input

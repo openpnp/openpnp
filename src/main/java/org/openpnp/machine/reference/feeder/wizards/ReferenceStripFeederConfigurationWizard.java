@@ -31,6 +31,7 @@ import java.util.concurrent.Callable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,6 +54,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
@@ -62,16 +64,15 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FutureCallback;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends
@@ -103,10 +104,10 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
-
+    
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
-
+        
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(null, "Part",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -357,26 +358,42 @@ public class ReferenceStripFeederConfigurationWizard extends
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {
-        	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
+        	btnAutoSetup.setAction(autoSetupCancel);
+        	Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
         	cameraView.addActionListener(autoSetupPart1Clicked);
         	cameraView.setText("Click on the center of the first part in the tape.");
+        	cameraView.flash();
+        	
+        	final boolean showDetails = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
         	
         	cameraView.setCameraViewFilter(new CameraViewFilter() {
 				@Override
 				public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-					return new FluentCv()
-						.toMat(image, "original")
-						.toGray()
-						.thresholdOtsu(false)
-						.gaussianBlur(9)
-						.houghCircles(camera, 
-			                    feeder.getHoleDiameter().multiply(0.9), 
-			                    feeder.getHoleDiameter().multiply(1.1), 
-			                    feeder.getHolePitch().multiply(0.9))
-						.drawCircles("original")
-						.toBufferedImage();
+					return showHoles(camera, image, showDetails);
 				}
 			});
+        }
+    };
+    
+    private Action autoSetupCancel = new AbstractAction("Cancel Auto Setup") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	btnAutoSetup.setAction(autoSetup);
+        	Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+        	cameraView.setText(null);
+        	cameraView.setCameraViewFilter(null);
+        	cameraView.removeActionListener(autoSetupPart1Clicked);
+        	cameraView.removeActionListener(autoSetupPart2Clicked);
         }
     };
     
@@ -384,14 +401,17 @@ public class ReferenceStripFeederConfigurationWizard extends
     private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
-        	final CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        	final Camera camera = cameraView.getCamera();
+        	final Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
         	cameraView.removeActionListener(this);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				public Void call() throws Exception {
 					cameraView.setText("Checking first part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
-		        	Thread.sleep(100);
 		        	part1HoleLocations = findHoles(camera);
 		            // Need to handle the special case where the first two holes we find are not the
 		            // reference hole and next hole. This can happen if another tape is close by and
@@ -403,9 +423,27 @@ public class ReferenceStripFeederConfigurationWizard extends
 		            // we find.
 		            
 		            cameraView.setText("Now click on the center of the second part in the tape.");
+		            cameraView.flash();
 		            
 		            cameraView.addActionListener(autoSetupPart2Clicked);
 		        	return null;
+				}
+			}, new FutureCallback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+				}
+
+				@Override
+				public void onFailure(final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							autoSetupCancel.actionPerformed(null);
+							MessageBoxes.errorBox(
+									getTopLevelAncestor(), 
+									"Auto Setup Failure",
+									t);
+						}
+					});
 				}
 			});
 		}
@@ -414,14 +452,17 @@ public class ReferenceStripFeederConfigurationWizard extends
     private CameraViewActionListener autoSetupPart2Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
-        	final CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        	final Camera camera = cameraView.getCamera();
+        	final Camera camera = Configuration
+        			.get()
+        			.getMachine()
+        			.getDefaultHead()
+        			.getDefaultCamera();
+        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
         	cameraView.removeActionListener(this);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				public Void call() throws Exception {
 					cameraView.setText("Checking second part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
-		        	Thread.sleep(100);
 		        	List<Location> part2HoleLocations = findHoles(camera);
 		            
 		        	List<Location> referenceHoles = deriveReferenceHoles(
@@ -460,8 +501,26 @@ public class ReferenceStripFeederConfigurationWizard extends
 		        	Thread.sleep(1500);
 		        	cameraView.setText(null);
 		        	cameraView.setCameraViewFilter(null);
+		        	btnAutoSetup.setAction(autoSetup);
 
 		        	return null;
+				}
+			}, new FutureCallback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+				}
+
+				@Override
+				public void onFailure(final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							autoSetupCancel.actionPerformed(null);
+							MessageBoxes.errorBox(
+									getTopLevelAncestor(), 
+									"Auto Setup Failure",
+									t);
+						}
+					});
 				}
 			});
 		}
@@ -470,16 +529,71 @@ public class ReferenceStripFeederConfigurationWizard extends
 	private List<Location> findHoles(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
 		new FluentCv()
-			.toMat(camera.capture())
+			.setCamera(camera)
+			.settleAndCapture()
 			.toGray()
-			.thresholdOtsu(false)
-			.gaussianBlur(9)
-			.houghCircles(camera, 
-                feeder.getHoleDiameter().multiply(0.9), 
-                feeder.getHoleDiameter().multiply(1.1), 
-                feeder.getHolePitch().multiply(0.9))
-			.circlesToLocations(camera, holeLocations);
+			.blurGaussian(feeder.getHoleBlurKernelSize())
+			.findCirclesHough( 
+                feeder.getHoleDiameterMin(), 
+                feeder.getHoleDiameterMax(), 
+                feeder.getHolePitchMin())
+			.filterCirclesByDistance(
+					feeder.getHoleDistanceMin(), 
+					feeder.getHoleDistanceMax())
+			.filterCirclesToLine(feeder.getHoleLineDistanceMax())
+			.convertCirclesToLocations(holeLocations);
 	    return holeLocations;
+	}
+	
+	/**
+	 * Show candidate holes in the image. Red are any holes that are found. Blue
+	 * is holes that passed the distance check but failed the line check. Green
+	 * passed all checks and are good.
+	 * @param camera
+	 * @param image
+	 * @return
+	 */
+	private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) {
+		if (showDetails) {
+			return new FluentCv()
+				.setCamera(camera)
+				.toMat(image, "original")
+				.toGray()
+				.blurGaussian(feeder.getHoleBlurKernelSize())
+				.findCirclesHough( 
+	                    feeder.getHoleDiameterMin(), 
+	                    feeder.getHoleDiameterMax(), 
+	                    feeder.getHolePitchMin(),
+	                    "houghUnfiltered")
+				.drawCircles("original", Color.red, "unfiltered")
+				.recall("houghUnfiltered")
+				.filterCirclesByDistance(
+						feeder.getHoleDistanceMin(), 
+						feeder.getHoleDistanceMax(), 
+						"houghDistanceFiltered")
+				.drawCircles("unfiltered", Color.blue, "distanceFiltered")
+				.recall("houghDistanceFiltered")
+				.filterCirclesToLine(feeder.getHoleLineDistanceMax())
+				.drawCircles("distanceFiltered", Color.green)
+				.toBufferedImage();
+		}
+		else {
+			return new FluentCv()
+				.setCamera(camera)
+				.toMat(image, "original")
+				.toGray()
+				.blurGaussian(feeder.getHoleBlurKernelSize())
+				.findCirclesHough( 
+	                    feeder.getHoleDiameterMin(), 
+	                    feeder.getHoleDiameterMax(), 
+	                    feeder.getHolePitchMin())
+				.filterCirclesByDistance(
+						feeder.getHoleDistanceMin(), 
+						feeder.getHoleDistanceMax())
+				.filterCirclesToLine(feeder.getHoleLineDistanceMax())
+				.drawCircles("original", Color.green)
+				.toBufferedImage();
+		}
 	}
 	
 	private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations, List<Location> part2HoleLocations) {
@@ -502,15 +616,6 @@ public class ReferenceStripFeederConfigurationWizard extends
 		return referenceHoles;
 	}
 	
-    private Action autoSetupCancel = new AbstractAction("Auto Setup") {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-        	MainFrame.mainFrame.hideInstructions();
-        	CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        	cameraView.removeActionListener(autoSetupPart1Clicked);
-        	cameraView.removeActionListener(autoSetupPart2Clicked);
-        }
-    };
     private JCheckBox chckbxUseVision;
     private JLabel lblUseVision;
 }
