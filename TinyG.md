@@ -1,4 +1,6 @@
-OpenPnP installs with default motor control set for demo mode. To use TinyG as your motion controller, the machine.xml file will need to be edited. The machine.xml needs to be created if it does not exist, launch OpenPnP and then exit, If OpenPnP cannot find the machine.xml file, it will create the file with defaults. The following line should replace the motor control demo line in the machine.xml file:
+OpenPnP installs with default motor control set for demo mode. To use TinyG as your motion controller, follow the instructions at https://github.com/openpnp/openpnp/wiki/User-Manual#the-driver and set your driver to `org.openpnp.machine.reference.driver.TinygDriver`.
+
+If you'd prefer to set the driver manually the machine.xml file will need to be edited. The machine.xml needs to be created if it does not exist, launch OpenPnP and then exit, If OpenPnP cannot find the machine.xml file, it will create the file with defaults. The following line should replace the motor control demo line in the machine.xml file:
 
 `<driver class="org.openpnp.machine.reference.driver.TinygDriver" port-name="COM10" baud="115200" feed-rate-mm-per-minute="5000.0">`
 
