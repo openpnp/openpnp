@@ -83,6 +83,17 @@ Setup
 The Driver
 ----------
 
+In OpenPnP, the Driver is the part of the software that interfaces between OpenPnP and a particular type of machine. Typically this is just a small piece of code that translates OpenPnP commands into commands for a particular motion controller such as Smoothie, TinyG, Marlin, etc.
+
+Before you can move your machine you have to select and set up your Driver. To do that:
+
+1. Go to the Machine Setup tab and select the root node of the tree. On most setups it's called "ReferenceMachine". A setup panel will appear on the right.
+2. In the setup panel, select the driver that most closely matches you motion controller or machine. Click apply.
+3. OpenPnP will prompt you to restart the program, so do that.
+4. After restarting OpenPnP go back to the Machine Setup tab and find the Driver you selected in the tree. It should be near the bottom, under the Driver branch. Select it and a setup panel will appear.
+5. At this point you can configure the driver with parameters that are specific to your machine. For instance, most drivers that talk to the machine over the serial port will have a combo box to select the port and baud rate. Hit Apply once you've configured your settings.
+6. Click the big START button to start the machine and try it out!
+
 Heads
 -----
 
