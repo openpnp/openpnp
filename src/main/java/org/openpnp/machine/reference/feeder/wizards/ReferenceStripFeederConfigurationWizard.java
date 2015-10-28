@@ -413,15 +413,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 					cameraView.setText("Checking first part...");
 		        	camera.moveTo(action.getLocation(), 1.0);
 		        	part1HoleLocations = findHoles(camera);
-		            // Need to handle the special case where the first two holes we find are not the
-		            // reference hole and next hole. This can happen if another tape is close by and
-		            // one of it's holes is detected as either of the holes.
-		            // If we only read one hole that's okay. It just becomes the reference hole.
-		            // If we read multiple holes I think we need to check that they are in a line,
-		            // but which line?
-		            // I think this is where RANSAC comes in. We need to find the best fit line of all the holes
-		            // we find.
-		            
+		        	
 		            cameraView.setText("Now click on the center of the second part in the tape.");
 		            cameraView.flash();
 		            
@@ -599,6 +591,22 @@ public class ReferenceStripFeederConfigurationWizard extends
 	private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations, List<Location> part2HoleLocations) {
 		// We are only interested in the pair of holes closest to each part
 		part1HoleLocations = part1HoleLocations.subList(0, Math.min(2,  part1HoleLocations.size()));
+		// If part1's second closest hole is more than half a hole pitch from the
+		// closest hole then it's junk, so we drop it. This helps us filter out
+		// situations where instead of capturing the reference hole and the
+		// preceding hole we actually capture the reference hole and the next
+		// hole. This happens when there is no preceding hole visible like if
+		// the tape is cut right at the first part.
+		if (part1HoleLocations.size() > 1) {
+			Location p1h1 = part1HoleLocations.get(0);
+			Location p1h2 = part1HoleLocations.get(1);
+			Length distance = p1h1.getLinearLengthTo(p1h2);
+			Length halfPitch = feeder.getHolePitch().multiply(0.5);
+			distance = distance.convertToUnits(halfPitch.getUnits());
+			if (distance.getValue() > halfPitch.getValue()) {
+				part1HoleLocations.remove(1);
+			}
+		}
 		part2HoleLocations = part2HoleLocations.subList(0, Math.min(2,  part2HoleLocations.size()));
 		
 		// Part 1's reference hole is the one closest to either of part 2's holes.
