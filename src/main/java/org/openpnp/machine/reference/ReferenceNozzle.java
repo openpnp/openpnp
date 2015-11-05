@@ -51,7 +51,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
      * and -190 becomes 170.
      */
     @Attribute(required = false)
-    private boolean limitRotation = false;
+    private boolean limitRotation = true;
     
     protected NozzleTip nozzleTip;
 
