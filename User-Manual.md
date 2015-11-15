@@ -144,6 +144,19 @@ Actuators
 
 Cameras
 -------
+* Add a camera on the "Cameras" tab of "The Tabs" by pressing the green "+" icon.  
+* Select a camera driver from the provided list, try the "OpenCVCamera" and press the "Accept" button. The newly added camera will show up in the camera list.
+* Double click on the name of the new camera to rename it.  
+* Click on the "Camera Specific" tab (while your newly created camera is still selected in the camera list).
+* In the "General" section you can pick the "Device Index".  Each camera connected to your computer will have a unique device index starting at index 0. 
+* Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
+
+### Camera Types
+* LtiCivilCamera
+* VfwCamera
+* TableScannerCamera
+* OpenCVCamera
+* ImageCamera
 
 Feeders
 -------
