@@ -75,6 +75,7 @@ Shortcuts
 There are a few important keyboard shortcuts that are critical to know to use OpenPnP. All of the shortcuts use Ctrl + another key. They are:
 
 * Ctrl+Tab: Open the jog controls window which gives you visible buttons for most of the other shortcuts.
+
 ![Jog Controls](https://globedrop.com/wiki/_media/openpnp:jogcontrols.png)
 * Ctrl+Arrow Key: Jog the currently selected Nozzle in X and Y. Up and Down arrows jog in Y and Left and Right arrows jog in X.
 * Ctrl+/, Ctrl+': Jog the currently selected Nozzle down and up in Z.
