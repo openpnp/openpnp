@@ -20,17 +20,14 @@ OpenPnP is designed to run on Mac, Windows and Linux. Other platforms may be sup
 Download
 --------
 
-Visit http://openpnp.org to find out how to download the latest snapshot or release of OpenPnP.
+Visit http://openpnp.org/downloads to find out how to download the latest snapshot or release of OpenPnP.
 
-Install
--------
-
-Unzip the software into a directory of your choosing. Typically this would be the same place you keep your other applications.
-
-Running OpenPnP
+Install and Run
 ---------------
 
-Inside the folder you unzipped OpenPnP to there is an `openpnp.sh` and `openpnp.bat` script. These should work for Windows, Mac and Linux. For Mac and Linux, run `openpnp.sh` and for Windows run `openpnp.bat`. After a short wait you should see the OpenPnP Main Window. If something goes wrong, visit the Troubleshooting section of this document for help.
+If you are using one of the binary installers from the website, just run the installer and follow the instructions. After installation you can run OpenPnP from your operating system's applications list, i.e. Start Menu, Applications folder, etc.
+
+If you are using an archive version of OpenPnP, unzip the software into a directory of your choosing. Typically this would be the same place you keep your other applications. Inside the folder you unzipped OpenPnP to there is an `openpnp.sh` and `openpnp.bat` script. These should work for Windows, Mac and Linux. For Mac and Linux, run `openpnp.sh` and for Windows run `openpnp.bat`. After a short wait you should see the OpenPnP Main Window. If something goes wrong, visit the Troubleshooting section of this document for help.
 
 Coordinate System
 =================
