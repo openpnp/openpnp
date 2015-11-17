@@ -66,7 +66,7 @@ OpenCV is now included with OpenPnP, so an additional installation is not requir
 
 ### Maven
 
-OpenPnP uses Maven for dependencies and building. You can get it at http://maven.apache.org/download.cgi#Installation. Once installed, make sure
+OpenPnP uses Maven for dependencies and building. You can get it at http://maven.apache.org/download.cgi#. See http://maven.apache.org/install.html for additional information on installing it. Once installed, make sure
 you can run `mvn --version` from your command line with no errors.
 
 ## Compiling
