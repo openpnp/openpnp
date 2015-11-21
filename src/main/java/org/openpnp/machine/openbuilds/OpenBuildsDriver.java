@@ -260,27 +260,39 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
          * the controller and we'll start getting some data. On others, it may
          * already be running and we will get nothing on connect.
          */
-        
+
+        connected = false;
         List<String> responses;
-        synchronized (commandLock) {
-            // Start the reader thread with the commandLock held. This will
-            // keep the thread from quickly parsing any responses messages
-            // and notifying before we get a chance to wait.
-            readerThread = new Thread(this);
-            readerThread.start();
-            // Wait up to 3 seconds for firmware to say Hi
-            // If we get anything at this point it will have been the settings
-            // dump that is sent after reset.
-            responses = sendCommand(null, 3000);
-        }
-
-        processConnectionResponses(responses);
-
-        for (int i = 0; i < 5 && !connected; i++) {
-            responses = sendCommand("M104", 5000);
-            processConnectionResponses(responses);
-        }
+        readerThread = new Thread(this);
+        readerThread.start();
+            
+        do {
+            // Consume any buffered incoming data, including startup messages
+            responses = sendCommand(null, 200);
+        } while (!responses.isEmpty());
+            
         
+    	// Send a request to force Smoothie to respond and clear any buffers.
+        // On my machine, at least, this causes Smoothie to re-send it's
+        // startup message and I can't figure out why, but this works
+        // around it.
+    	responses = sendCommand("M114", 5000);
+    	// Continue to read responses until we get the one that is the
+    	// result of the M114 command. When we see that we're connected.
+    	long t = System.currentTimeMillis();
+    	while (System.currentTimeMillis() - t < 5000) {
+            for (String response : responses) {
+            	if (response.contains("X:")) {
+            		connected = true;
+            		break;
+            	}
+            }
+            if (connected) {
+            	break;
+            }
+            responses = sendCommand(null, 200);
+    	}
+
         if (!connected)  {
             throw new Error(
                 String.format("Unable to receive connection response. Check your port and baud rate"));
@@ -340,16 +352,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] { x, y, z, c, c2 });
     }
     
-    private void processConnectionResponses(List<String> responses) {
-        for (String response : responses) {
-            Matcher matcher = Pattern.compile(".*Smoothie.*").matcher(response);
-            if (matcher.matches()) {
-                connected = true;
-                logger.debug(String.format("Connected"));
-            }
-        }
-    }
-
     public synchronized void disconnect() {
         disconnectRequested = true;
         connected = false;
