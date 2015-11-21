@@ -733,6 +733,11 @@ public class MachineControlsPanel extends JPanel {
 			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
 			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 			setEnabled(true);
+			EventQueue.invokeLater(new Runnable() {
+				public void run() {
+					updateDros();
+				}
+			});
 		}
 
 		@Override
