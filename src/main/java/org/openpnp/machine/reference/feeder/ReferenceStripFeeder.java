@@ -174,10 +174,26 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (visionEnabled) {
             // go to where we expect to find the next reference hole
             Camera camera = nozzle.getHead().getDefaultCamera();
-    	    Location expectedLocation = getPointAlongLine(
-                    referenceHoleLocation, 
-                    lastHoleLocation, 
-                    partPitch.multiply(feedCount - 1));
+    	    Location expectedLocation = null;
+    	    if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() < 4) {
+    	    	// For tapes with a part pitch < 4 we need to check each hole
+    	    	// twice since there are two parts per reference hole.
+    	    	// Note the use of holePitch here and partPitch in the
+    	    	// alternate case below.
+    	    	expectedLocation = getPointAlongLine(
+                        referenceHoleLocation, 
+                        lastHoleLocation, 
+                        holePitch.multiply((feedCount - 1) / 2));
+    	    }
+    	    else {
+    	    	// For tapes with a part pitch >= 4 there is always a reference
+    	    	// hole 2mm from a part so we just multiply by the part pitch
+    	    	// skipping over holes that are not reference holes.
+    	    	expectedLocation = getPointAlongLine(
+                        referenceHoleLocation, 
+                        lastHoleLocation, 
+                        partPitch.multiply(feedCount - 1));
+    	    }
     	    camera.moveTo(expectedLocation, 1.0);
     	    // and look for the hole
     	    Location actualLocation = findClosestHole(camera);
