@@ -416,12 +416,17 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         }
 
         // Request that the Feeder feeds the part
-        try {
-            feeder.feed(nozzle);
-        }
-        catch (Exception e) {
-            fireJobEncounteredError(JobError.FeederError, e.getMessage());
-            return false;
+        while (true) {
+        	if (!shouldJobProcessingContinue()) {
+        		return false;
+        	}
+            try {
+                feeder.feed(nozzle);
+                break;
+            }
+            catch (Exception e) {
+                fireJobEncounteredError(JobError.FeederError, e.getMessage());
+            }
         }
         
         // Now that the Feeder has done it's feed operation we can get
