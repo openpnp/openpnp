@@ -109,6 +109,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
     
     private Location visionOffsets;
+    private Location visionLocation;
     
 	public Length getHoleDiameterMin() {
 	    return getHoleDiameter().multiply(0.9);
@@ -141,9 +142,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	@Override
     public Location getPickLocation() throws Exception {
 	    // Find the location of the part linearly along the tape
+		Location[] lineLocations = getIdealLineLocations();
 	    Location l = getPointAlongLine(
-                referenceHoleLocation, 
-                lastHoleLocation, 
+	    		lineLocations[0], 
+	    		lineLocations[1], 
                 new Length((feedCount - 1) * partPitch.getValue(), partPitch.getUnits()));
 	    // Create the offsets that are required to go from a reference hole
 	    // to the part in the tape
@@ -151,7 +153,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
         // Determine the angle that the tape is at
-        double angle = getAngleFromPoint(referenceHoleLocation, lastHoleLocation);
+        double angle = getAngleFromPoint(lineLocations[0], lineLocations[1]);
         // Rotate the part offsets by the angle to move it into the right
         // coordinate space
         p = Utils2D.rotatePoint(p, angle);
@@ -167,51 +169,73 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return l;
     }
 	
+	public Location[] getIdealLineLocations() {
+		if (visionLocation == null) {
+			return new Location[] { referenceHoleLocation, lastHoleLocation };
+		}
+		double d1 = referenceHoleLocation.getLinearLengthTo(lastHoleLocation).convertToUnits(LengthUnit.Millimeters).getValue();
+		double d2 = referenceHoleLocation.getLinearLengthTo(visionLocation).convertToUnits(LengthUnit.Millimeters).getValue();
+		if (d2 > d1) {
+			return new Location[] { referenceHoleLocation, visionLocation };
+		}
+		else {
+			return new Location[] { referenceHoleLocation, lastHoleLocation };
+		}
+	}
+	
     public void feed(Nozzle nozzle)
 			throws Exception {
         setFeedCount(getFeedCount() + 1);
         
-        if (visionEnabled) {
-            // go to where we expect to find the next reference hole
-            Camera camera = nozzle.getHead().getDefaultCamera();
-    	    Location expectedLocation = null;
-    	    if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() < 4) {
-    	    	// For tapes with a part pitch < 4 we need to check each hole
-    	    	// twice since there are two parts per reference hole.
-    	    	// Note the use of holePitch here and partPitch in the
-    	    	// alternate case below.
-    	    	expectedLocation = getPointAlongLine(
-                        referenceHoleLocation, 
-                        lastHoleLocation, 
-                        holePitch.multiply((feedCount - 1) / 2));
-    	    }
-    	    else {
-    	    	// For tapes with a part pitch >= 4 there is always a reference
-    	    	// hole 2mm from a part so we just multiply by the part pitch
-    	    	// skipping over holes that are not reference holes.
-    	    	expectedLocation = getPointAlongLine(
-                        referenceHoleLocation, 
-                        lastHoleLocation, 
-                        partPitch.multiply(feedCount - 1));
-    	    }
-    	    camera.moveTo(expectedLocation, 1.0);
-    	    // and look for the hole
-    	    Location actualLocation = findClosestHole(camera);
-    	    if (actualLocation == null) {
-    	    	throw new Exception("Unable to locate reference hole. End of strip?");
-    	    }
-    	    // make sure it's not too far away
-    	    Length distance = actualLocation
-    	    		.getLinearLengthTo(expectedLocation)
-    	    		.convertToUnits(LengthUnit.Millimeters);
-    	    if (distance.getValue() > 2) {
-    	    	throw new Exception("Unable to locate reference hole. End of strip?");
-    	    }
-    	    visionOffsets = actualLocation
-    	    		.subtract(expectedLocation)
-    	    		.derive(null, null, 0d, 0d);
-        }
+        updateVisionOffsets(nozzle);
 	}
+    
+    private void updateVisionOffsets(Nozzle nozzle) throws Exception {
+    	if (!visionEnabled) {
+    		return;
+    	}
+        // go to where we expect to find the next reference hole
+        Camera camera = nozzle.getHead().getDefaultCamera();
+	    Location expectedLocation = null;
+	    Location[] lineLocations = getIdealLineLocations();
+	    
+	    if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() < 4) {
+	    	// For tapes with a part pitch < 4 we need to check each hole
+	    	// twice since there are two parts per reference hole.
+	    	// Note the use of holePitch here and partPitch in the
+	    	// alternate case below.
+	    	expectedLocation = getPointAlongLine(
+                    lineLocations[0], 
+                    lineLocations[1], 
+                    holePitch.multiply((feedCount - 1) / 2));
+	    }
+	    else {
+	    	// For tapes with a part pitch >= 4 there is always a reference
+	    	// hole 2mm from a part so we just multiply by the part pitch
+	    	// skipping over holes that are not reference holes.
+	    	expectedLocation = getPointAlongLine(
+	    			lineLocations[0], 
+	    			lineLocations[1], 
+                    partPitch.multiply(feedCount - 1));
+	    }
+	    camera.moveTo(expectedLocation, 1.0);
+	    // and look for the hole
+	    Location actualLocation = findClosestHole(camera);
+	    if (actualLocation == null) {
+	    	throw new Exception("Unable to locate reference hole. End of strip?");
+	    }
+	    // make sure it's not too far away
+	    Length distance = actualLocation
+	    		.getLinearLengthTo(expectedLocation)
+	    		.convertToUnits(LengthUnit.Millimeters);
+	    if (distance.getValue() > 2) {
+	    	throw new Exception("Unable to locate reference hole. End of strip?");
+	    }
+	    visionOffsets = actualLocation
+	    		.subtract(expectedLocation)
+	    		.derive(null, null, 0d, 0d);
+	    visionLocation = actualLocation;
+    }
     
     private Location findClosestHole(Camera camera) {
 	    List<Location> holeLocations = new ArrayList<>();
@@ -274,6 +298,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void setReferenceHoleLocation(Location referenceHoleLocation) {
         this.referenceHoleLocation = referenceHoleLocation;
+        visionLocation = null;
     }
 
     public Location getLastHoleLocation() {
@@ -282,6 +307,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void setLastHoleLocation(Location lastHoleLocation) {
         this.lastHoleLocation = lastHoleLocation;
+        visionLocation = null;
     }
 
     public Length getHoleDiameter() {

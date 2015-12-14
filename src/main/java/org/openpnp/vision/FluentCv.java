@@ -292,6 +292,16 @@ public class FluentCv {
 		return this;
 	}
 	
+	/**
+	 * Draw circles from the current Mat contained onto the Mat specified
+	 * in baseTag using the specified color, optionally storing the results in
+	 * tag. The current Mat is replaced with the Mat from baseTag with the
+	 * circles drawn on top of it.
+	 * @param baseTag
+	 * @param color
+	 * @param tag
+	 * @return
+	 */
 	public FluentCv drawCircles(
 			String baseTag, 
 			Color color, 
@@ -320,9 +330,17 @@ public class FluentCv {
         			2);
     	}
 		return store(mat, tag);
-		
 	}
 	
+	/**
+	 * Draw circles from the current Mat contained onto the Mat specified
+	 * in baseTag using the color red, optionally storing the results in
+	 * tag. The current Mat is replaced with the Mat from baseTag with the
+	 * circles drawn on top of it.
+	 * @param baseTag
+	 * @param tag
+	 * @return
+	 */
 	public FluentCv drawCircles(String baseTag, String... tag) {
 		return drawCircles(baseTag, Color.red, tag);
 	}
