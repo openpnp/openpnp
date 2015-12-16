@@ -271,17 +271,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     // Stolen from StackOverflow
     static public double getAngleFromPoint(Location firstPoint,
             Location secondPoint) {
+    	double angle = 0.0;
         // above 0 to 180 degrees
         if ((secondPoint.getX() > firstPoint.getX())) {
-            return (Math.atan2((secondPoint.getX() - firstPoint.getX()),
+            angle = (Math.atan2((secondPoint.getX() - firstPoint.getX()),
                     (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
         // above 180 degrees to 360/0
-        else if ((secondPoint.getX() < firstPoint.getX())) {
-            return 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
+        else if ((secondPoint.getX() <= firstPoint.getX())) {
+            angle = 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
                     (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
-        return Math.atan2(0, 0);
+        return angle;
     }
 	
 	public TapeType getTapeType() {
