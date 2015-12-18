@@ -1,8 +1,8 @@
-# Video
+## Video
 
 [![screen shot 2015-12-17 at 7 38 36 pm](https://cloud.githubusercontent.com/assets/1182323/11888726/cd026382-a4f5-11e5-9b3b-6f9729ebeb0a.png)](https://www.youtube.com/watch?v=Ml03yALid10)
 
-# Step by Step
+## Step by Step
 
 1. Go to http://www.eclipse.org/downloads/ and download "Eclipse IDE for Java Developers" for your platform. When the download completes, unzip or install Eclipse and start it up.
 2. Eclipse will ask you where to store it's workspace. The default is fine. You can click "Use this as the default and do not ask again." if you don't want to be bothered every time you start Eclipse.
