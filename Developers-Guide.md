@@ -50,9 +50,9 @@ Everything below assumes you are working in the `gui/` subdirectory of the repos
 
 ## Prerequisites
 
-### JDK or JRE 7+
+### JDK or JRE 8+
 
-OpenPnP is written in Java and requires Java 7 or higher to run. If you want
+OpenPnP is written in Java and requires Java 8 or higher to run. If you want
 to do development on OpenPnP or recompile it, you should install the JDK. 
 If you just want to run it you can install the smaller JRE.
 
@@ -68,6 +68,8 @@ OpenCV is now included with OpenPnP, so an additional installation is not requir
 
 OpenPnP uses Maven for dependencies and building. You can get it at http://maven.apache.org/download.cgi#. See http://maven.apache.org/install.html for additional information on installing it. Once installed, make sure
 you can run `mvn --version` from your command line with no errors.
+
+If you are using an IDE with Maven included you don't need to install the command line version. 
 
 ## Compiling
 
@@ -185,4 +187,3 @@ I manage a number of configurations by creating various Run Configurations in Ec
 ## How can I reset my configuration to the default?
 
 Specify `-DoverrideUserConfig=true` on the command line to overwrite your configuration with the defaults. If paired with `-DconfigDir` you can choose which configuration to overwrite.
-
