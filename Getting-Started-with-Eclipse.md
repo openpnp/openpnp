@@ -1,6 +1,6 @@
 ## Video
 
-[![screen shot 2015-12-17 at 7 38 36 pm](https://cloud.githubusercontent.com/assets/1182323/11888726/cd026382-a4f5-11e5-9b3b-6f9729ebeb0a.png)](https://www.youtube.com/watch?v=Ml03yALid10)
+[![screen shot 2015-12-17 at 7 42 49 pm](https://cloud.githubusercontent.com/assets/1182323/11888779/72454a3a-a4f6-11e5-9907-725518ad7c02.png)](https://www.youtube.com/watch?v=Ml03yALid10)
 
 ## Step by Step
 
