@@ -83,6 +83,8 @@ run the command `mvn package`. Once this is complete you can use the `openpnp.sh
 
 You can import the `openpnp` folder into Eclipse as a Maven project. For detailed instructions on getting started with Eclipse, see [[Getting-Started-with-Eclipse]]
 
+To learn how to build a new OpenPnP package with Eclipse see: https://www.youtube.com/watch?v=53H_vwrZz6o
+
 ### IntelliJ IDEA v12+
 
 Simply import the `openpnp` folder as Maven project.
