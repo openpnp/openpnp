@@ -89,7 +89,7 @@ For additional help with Eclipse see:
 
 ### IntelliJ IDEA v12+
 
-Simply import the `openpnp` folder as Maven project.
+Simply import the `openpnp` folder as a Maven project.
  
 
 # System Architecture
