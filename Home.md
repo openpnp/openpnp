@@ -1,3 +1,8 @@
-Welcome to the OpenPnP Wiki!
+## New User Resources
+* [User Manual](https://github.com/openpnp/openpnp/wiki/User-Manual)
+* [Video Tutorials](https://github.com/openpnp/openpnp/wiki/Video-Tutorials)
+* [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ)
 
-If you are just getting started please take a look at the [User Manual](https://github.com/openpnp/openpnp/wiki/User-Manual), the [Developers Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide) and especially the [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ)!
+## Development Resources
+* [Developers Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide)
+* [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ)
