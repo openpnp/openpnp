@@ -473,6 +473,7 @@ public class MachineControlsPanel extends JPanel {
 	private Action stopMachineAction = new AbstractAction("STOP") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			setEnabled(false);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -482,11 +483,13 @@ public class MachineControlsPanel extends JPanel {
 			}, new FutureCallback<Void>() {
 				@Override
 				public void onSuccess(Void result) {
+					setEnabled(true);
 				}
 
 				@Override
 				public void onFailure(Throwable t) {
 					MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", t.getMessage());
+					setEnabled(true);
 				}
 			}, true);
 		}
@@ -496,6 +499,7 @@ public class MachineControlsPanel extends JPanel {
 	private Action startMachineAction = new AbstractAction("START") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			setEnabled(false);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -505,11 +509,13 @@ public class MachineControlsPanel extends JPanel {
 			}, new FutureCallback<Void>() {
 				@Override
 				public void onSuccess(Void result) {
+					setEnabled(true);
 				}
 
 				@Override
 				public void onFailure(Throwable t) {
 					MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", t.getMessage());
+					setEnabled(true);
 				}
 			}, true);
 		}
@@ -727,6 +733,11 @@ public class MachineControlsPanel extends JPanel {
 			btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
 			btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
 			setEnabled(true);
+			EventQueue.invokeLater(new Runnable() {
+				public void run() {
+					updateDros();
+				}
+			});
 		}
 
 		@Override

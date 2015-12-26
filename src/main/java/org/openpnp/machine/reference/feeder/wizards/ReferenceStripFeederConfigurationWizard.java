@@ -105,6 +105,9 @@ public class ReferenceStripFeederConfigurationWizard extends
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
     
+    private Location firstPartLocation;
+    private Location secondPartLocation;
+    
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
         
@@ -401,6 +404,7 @@ public class ReferenceStripFeederConfigurationWizard extends
     private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
+			firstPartLocation = action.getLocation();
         	final Camera camera = Configuration
         			.get()
         			.getMachine()
@@ -452,6 +456,7 @@ public class ReferenceStripFeederConfigurationWizard extends
     private CameraViewActionListener autoSetupPart2Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
+			secondPartLocation = action.getLocation();
         	final Camera camera = Configuration
         			.get()
         			.getMachine()
@@ -470,11 +475,12 @@ public class ReferenceStripFeederConfigurationWizard extends
 		        			part2HoleLocations);
 		        	final Location referenceHole1 = referenceHoles.get(0);
 		        	final Location referenceHole2 = referenceHoles.get(1);
-		        	Length partPitch = referenceHole1.getLinearLengthTo(referenceHole2);
 		        	
-		        	partPitch.setValue(Math.round(partPitch.getValue()));
 		        	feeder.setReferenceHoleLocation(referenceHole1);
 		        	feeder.setLastHoleLocation(referenceHole2);
+		        	
+		        	Length partPitch = firstPartLocation.getLinearLengthTo(secondPartLocation);
+		        	partPitch.setValue(2*(Math.round(partPitch.getValue()/2)));
 		        	
 		        	final Length partPitch_ = partPitch;
 		        	SwingUtilities.invokeLater(new Runnable() {

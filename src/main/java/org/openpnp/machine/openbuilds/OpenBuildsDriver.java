@@ -43,7 +43,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     
     private boolean enabled;
     
-    protected double x, y, z, c;
+    protected double x, y, z, c, c2;
     private Thread readerThread;
     private boolean disconnectRequested;
     private Object commandLock = new Object();
@@ -91,6 +91,11 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         sendCommand("G0 Z0");
         // Home X and Y
         sendCommand("G28 X0 Y0");
+        // Zero out the two "extruders"
+        sendCommand("T1");
+        sendCommand("G92 E0");
+        sendCommand("T0");
+        sendCommand("G92 E0");
         // Update position
         getCurrentPosition();
     }
@@ -116,12 +121,14 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
         if (hm instanceof ReferenceNozzle) {
+        	ReferenceNozzle nozzle = (ReferenceNozzle) hm;
             double z = Math.sin(Math.toRadians(this.z)) * zCamRadius;
             if (((ReferenceNozzle) hm).getName().equals("N2")) {
                 z = -z;
             }
             z += zCamWheelRadius + zGap;                
-            return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm
+            int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
+            return new Location(LengthUnit.Millimeters, x, y, z, tool == 0 ? c : c2).add(hm
                     .getHeadOffsets());
         }
         else {
@@ -163,20 +170,28 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
             this.y = y;
         }
-        if (!Double.isNaN(c) && c != this.c) {
-            int tool = nozzle == null || nozzle.getName().equals("N1") ? 0 : 1;
+        int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
+        if (!Double.isNaN(c) && c != (tool == 0 ? this.c : this.c2)) {
+        	// If there is an E move we need to set the tool before
+        	// performing any commands otherwise we may move the wrong tool.
+        	sendCommand(String.format(Locale.US, "T%d", tool));
             if (sb.length() == 0) {
                 // If the move won't contain an X or Y component but will
                 // have an E component we need to send the E component as a
                 // solo move because Smoothie won't move only E and Z at
                 // the same time.
-                sendCommand(String.format(Locale.US, "G0 T%d E%2.2f ", tool, c));
+                sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute));
                 dwell();
             }
             else {
-                sb.append(String.format(Locale.US, "T%d E%2.2f ", tool, c));
+                sb.append(String.format(Locale.US, "E%2.2f ", c));
             }
-            this.c = c;
+            if (tool == 0) {
+            	this.c = c;
+            }
+            else {
+            	this.c2 = c;
+            }
         }
         if (!Double.isNaN(z) && z != this.z) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
@@ -245,27 +260,39 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
          * the controller and we'll start getting some data. On others, it may
          * already be running and we will get nothing on connect.
          */
-        
+
+        connected = false;
         List<String> responses;
-        synchronized (commandLock) {
-            // Start the reader thread with the commandLock held. This will
-            // keep the thread from quickly parsing any responses messages
-            // and notifying before we get a chance to wait.
-            readerThread = new Thread(this);
-            readerThread.start();
-            // Wait up to 3 seconds for firmware to say Hi
-            // If we get anything at this point it will have been the settings
-            // dump that is sent after reset.
-            responses = sendCommand(null, 3000);
-        }
-
-        processConnectionResponses(responses);
-
-        for (int i = 0; i < 5 && !connected; i++) {
-            responses = sendCommand("M104", 5000);
-            processConnectionResponses(responses);
-        }
+        readerThread = new Thread(this);
+        readerThread.start();
+            
+        do {
+            // Consume any buffered incoming data, including startup messages
+            responses = sendCommand(null, 200);
+        } while (!responses.isEmpty());
+            
         
+    	// Send a request to force Smoothie to respond and clear any buffers.
+        // On my machine, at least, this causes Smoothie to re-send it's
+        // startup message and I can't figure out why, but this works
+        // around it.
+    	responses = sendCommand("M114", 5000);
+    	// Continue to read responses until we get the one that is the
+    	// result of the M114 command. When we see that we're connected.
+    	long t = System.currentTimeMillis();
+    	while (System.currentTimeMillis() - t < 5000) {
+            for (String response : responses) {
+            	if (response.contains("X:")) {
+            		connected = true;
+            		break;
+            	}
+            }
+            if (connected) {
+            	break;
+            }
+            responses = sendCommand(null, 200);
+    	}
+
         if (!connected)  {
             throw new Error(
                 String.format("Unable to receive connection response. Check your port and baud rate"));
@@ -287,7 +314,9 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     }
     
     protected void getCurrentPosition() throws Exception {
-        List<String> responses = sendCommand("M114");
+        List<String> responses;
+    	sendCommand("T0");
+        responses = sendCommand("M114");
         for (String response : responses) {
             if (response.contains("X:")) {
                 String[] comps = response.split(" ");
@@ -301,22 +330,28 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                     else if (comp.startsWith("Z:")) {
                         z = Double.parseDouble(comp.split(":")[1]);
                     }
+                    else if (comp.startsWith("E:")) {
+                        c = Double.parseDouble(comp.split(":")[1]);
+                    }
                 }
             }
         }
-        logger.debug("Current Position is {}, {}, {}, {}", new Object[] { x, y, z, c });
-    }
-    
-    private void processConnectionResponses(List<String> responses) {
+    	sendCommand("T1");
+        responses = sendCommand("M114");
         for (String response : responses) {
-            Matcher matcher = Pattern.compile(".*Smoothie.*").matcher(response);
-            if (matcher.matches()) {
-                connected = true;
-                logger.debug(String.format("Connected"));
+            if (response.contains("X:")) {
+                String[] comps = response.split(" ");
+                for (String comp : comps) {
+                    if (comp.startsWith("E:")) {
+                        c2 = Double.parseDouble(comp.split(":")[1]);
+                    }
+                }
             }
         }
+        sendCommand("T0");
+        logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] { x, y, z, c, c2 });
     }
-
+    
     public synchronized void disconnect() {
         disconnectRequested = true;
         connected = false;
