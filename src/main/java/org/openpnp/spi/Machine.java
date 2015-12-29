@@ -165,5 +165,5 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
             final FutureCallback<T> callback, 
             boolean ignoreEnabled);
     
-    public Head getDefaultHead();
+    public Head getDefaultHead() throws Exception;
 }

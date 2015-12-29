@@ -20,6 +20,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
@@ -132,9 +133,35 @@ public class FiducialLocator {
      * @throws Exception
      */
     private static Location getFiducialLocation(BoardLocation boardLocation, Placement fid) throws Exception {
-        Camera camera = Configuration.get().getMachine().getHeads().get(0).getCameras().get(0);
+        Camera camera = Configuration
+            .get()
+            .getMachine()
+            .getDefaultHead()
+            .getDefaultCamera();
         
         logger.debug("Locating {}", fid.getId());
+        
+        Part part = fid.getPart();
+        if (part == null) {
+        	throw new Exception(String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
+        }
+        
+        org.openpnp.model.Package pkg = part.getPackage();
+        if (pkg == null) {
+        	throw new Exception(String.format("Part %s does not have a valid package assigned.", 
+        			part.getId()));
+        }
+        
+        Footprint footprint = pkg.getFootprint(); 
+        if (footprint == null) {
+        	throw new Exception(String.format("Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials", 
+        			pkg.getId()));
+        }
+        
+        if (footprint.getShape() == null) {
+        	throw new Exception(String.format("Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
+        			pkg.getId()));
+        }
         
         // Create the template
         BufferedImage template = createTemplate(camera.getUnitsPerPixel(), fid.getPart().getPackage().getFootprint());
@@ -145,14 +172,6 @@ public class FiducialLocator {
                 fid.getLocation());
         MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 
-        
-        // these modifications make the template match more accurate but have only
-        // been tested slightly
-//      Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-//      Imgproc.GaussianBlur(mat, mat, new Size(3, 3), 0);
-//        Imgproc.threshold(mat, mat, 100, 255, Imgproc.THRESH_BINARY);
-        
-        
         
         for (int i = 0; i < 3; i++) {
             // Wait for camera to settle
@@ -200,8 +219,12 @@ public class FiducialLocator {
      * @param fid
      * @return
      */
-    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint) {
+    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint) throws Exception {
         Shape shape = footprint.getShape();
+        
+        if (shape == null) {
+        	throw new Exception("Invalid footprint found, unable to create template for fiducial match.");
+        }
         
         // Determine the scaling factor to go from Outline units to
         // Camera units.
