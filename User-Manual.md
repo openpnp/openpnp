@@ -193,7 +193,9 @@ This is a brief explanation of how to setup and run your first job. For details 
 2. Define parts used in the PCB in the Parts tab. Reference the previously created Packages.
 3. Setup feeders in the Feeders tab for each unique Part being used in the job.
 4. Create a new board by pressing ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-new.svg) in the Job tab and add Placements to it for each Placement in the PCB.
-5. Set the position of the board in the Job tab. You can use capture camera ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg) to align it to the corner, use fiducial locate ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-fiducial-locate.svg) to find it automatically or use the two placement manual process ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-two-placement-locate.svg). 
+5. Set the position of the board in the Job tab. You can use capture camera ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg) to align it to the corner, use fiducial locate ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-fiducial-locate.svg) to find it automatically or use the two placement manual process ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-two-placement-locate.svg).
+
+    For additional information on using fiducials, see [[Fiducials]].
 6. You'll need to set the Z position of the board, too. Touch the nozzle tip to the board and use capture nozzle ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg) to set it.
 7. Run the job by clicking Start ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/control-start.svg).
 
