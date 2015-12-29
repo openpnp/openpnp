@@ -1,0 +1,1 @@
+This page is a placeholder for documentation about the fiducial system in OpenPnP.
