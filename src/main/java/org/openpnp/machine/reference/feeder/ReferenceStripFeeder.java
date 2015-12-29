@@ -39,6 +39,7 @@ import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
 import org.simpleframework.xml.Attribute;
@@ -218,7 +219,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    			lineLocations[1], 
                     partPitch.multiply(feedCount - 1));
 	    }
-	    camera.moveTo(expectedLocation, 1.0);
+	    MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation, 1.0);
 	    // and look for the hole
 	    Location actualLocation = findClosestHole(camera);
 	    if (actualLocation == null) {
