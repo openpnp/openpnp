@@ -63,7 +63,6 @@ import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.processes.FiducialCheck;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -89,6 +88,8 @@ import org.openpnp.spi.JobProcessor.PickRetryAction;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
+import org.openpnp.vision.FiducialLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -943,25 +944,12 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            if (camera.getHead() == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error",
-                        "Camera is not movable.");
-                return;
-            }
-            final Location location = getSelectedBoardLocation().getLocation();
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+            	Camera camera = getSelectedTool().getHead().getDefaultCamera();
+            	MainFrame.cameraPanel.ensureCameraVisible(camera);
+                Location location = getSelectedBoardLocation().getLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+        	});
         }
     };
 
@@ -975,22 +963,11 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            final HeadMountable tool = getSelectedTool();
-            final Location location = getSelectedBoardLocation()
-                    .getLocation();
-
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = getSelectedTool();
+                Location location = getSelectedBoardLocation().getLocation();
+                MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
+        	});
         }
     };
 
@@ -1018,7 +995,14 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new FiducialCheck(frame, JobPanel.this);
+        	UiUtils.submitUiMachineTask(() -> {
+                Location location = FiducialLocator.locateBoard(getSelectedBoardLocation());
+                getSelectedBoardLocation().setLocation(location);
+                refreshSelectedBoardRow();
+                Camera camera = getSelectedTool().getHead().getDefaultCamera();
+                MainFrame.cameraPanel.ensureCameraVisible(camera);
+                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+        	});
         }
     };
 
