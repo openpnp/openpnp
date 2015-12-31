@@ -114,6 +114,9 @@ public class CameraPanel extends JPanel {
 	 * 5. When showing an overlay reticle, show it on the camera view that makes
 	 * the most sense using the rules above, not just the selected one. Also
 	 * remove it from same. 
+	 * 
+	 * NOTICE: After finishing, go back and make sure that all getDefaultCamera() are
+	 * using the new rules as some were converted before these rules were set.
 	 * @return
 	 */
 	// TODO: Remove
@@ -157,15 +160,6 @@ public class CameraPanel extends JPanel {
 			return selectedCameraView.getCamera();
 		}
 		return null;
-	}
-	
-	// TODO: Remove
-	public Location getSelectedCameraLocation() {
-	    Camera camera = getSelectedCamera();
-	    if (camera == null) {
-	        return null;
-	    }
-	    return camera.getLocation();
 	}
 	
 	public CameraView getCameraView(Camera camera) {

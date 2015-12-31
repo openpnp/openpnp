@@ -58,6 +58,7 @@ public class FourPlacementBoardLocationProcess {
 	
 	private final MainFrame mainFrame;
 	private final JobPanel jobPanel;
+	private final Camera camera;
 	
 	private int step = -1;
 	private String[] instructions = new String[] {
@@ -71,9 +72,14 @@ public class FourPlacementBoardLocationProcess {
 	private Placement placementA, placementB, placementC, placementD;
 	private Location placementLocationA, placementLocationB, placementLocationC, placementLocationD;
 	
-	public FourPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) {
+	public FourPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) throws Exception {
 		this.mainFrame = mainFrame;
 		this.jobPanel = jobPanel;
+		this.camera = MainFrame
+				.machineControlsPanel
+				.getSelectedTool()
+				.getHead()
+				.getDefaultCamera();
 		advance();
 	}
 	
@@ -116,7 +122,7 @@ public class FourPlacementBoardLocationProcess {
 	}
 	
 	private boolean step1() {
-		placementLocationA = MainFrame.cameraPanel.getSelectedCameraLocation();
+		placementLocationA = camera.getLocation();
 		if (placementLocationA == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
@@ -132,7 +138,7 @@ public class FourPlacementBoardLocationProcess {
 	
 	
 	private boolean step2() {
-		placementLocationB = MainFrame.cameraPanel.getSelectedCameraLocation();
+		placementLocationB = camera.getLocation();
 		if (placementLocationB == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
@@ -147,7 +153,7 @@ public class FourPlacementBoardLocationProcess {
 
 
 	private boolean step3() {
-		placementLocationC = MainFrame.cameraPanel.getSelectedCameraLocation();
+		placementLocationC = camera.getLocation();
 		if (placementLocationC == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
@@ -161,7 +167,7 @@ public class FourPlacementBoardLocationProcess {
 	}
 	
 	private boolean step4() {
-		placementLocationD = MainFrame.cameraPanel.getSelectedCameraLocation();
+		placementLocationD = camera.getLocation();
 		if (placementLocationD == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;

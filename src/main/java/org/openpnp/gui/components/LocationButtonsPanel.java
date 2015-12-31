@@ -42,6 +42,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 /**
  * A JPanel of 4 small buttons that assist in setting locations. The buttons
@@ -130,9 +131,16 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			Location l = MainFrame.cameraPanel.getSelectedCameraLocation();
-			Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY,
-					textFieldZ, textFieldC);
+			UiUtils.messageBoxOnException(() -> {
+				Camera camera = MainFrame
+						.machineControlsPanel
+						.getSelectedTool()
+						.getHead()
+						.getDefaultCamera();
+				Location l = camera.getLocation();
+				Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY,
+						textFieldZ, textFieldC);
+			});
 		}
 	};
 

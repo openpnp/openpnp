@@ -34,6 +34,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import org.slf4j.LoggerFactory;
  * Guides the user through the two point board location operation using
  * step by step instructions.
  * 
- * TODO: Select the right camera on startup and then disable the CameraPanel while active.
  * TODO: Disable the BoardLocation table while active.
  */
 public class TwoPlacementBoardLocationProcess {
@@ -50,6 +50,7 @@ public class TwoPlacementBoardLocationProcess {
 	
 	private final MainFrame mainFrame;
 	private final JobPanel jobPanel;
+	private final Camera camera;
 	
 	private int step = -1;
 	private String[] instructions = new String[] {
@@ -63,9 +64,14 @@ public class TwoPlacementBoardLocationProcess {
 	private Placement placementA, placementB;
 	private Location visionA, visionB;
 	
-	public TwoPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) {
+	public TwoPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) throws Exception {
 		this.mainFrame = mainFrame;
 		this.jobPanel = jobPanel;
+		this.camera = MainFrame
+				.machineControlsPanel
+				.getSelectedTool()
+				.getHead()
+				.getDefaultCamera();
 		advance();
 	}
 	
@@ -116,7 +122,7 @@ public class TwoPlacementBoardLocationProcess {
     }
     
 	private boolean step2() {
-		visionA = MainFrame.cameraPanel.getSelectedCameraLocation();
+		visionA = camera.getLocation();
 		if (visionA == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
@@ -139,7 +145,7 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step4() {
-        visionB = MainFrame.cameraPanel.getSelectedCameraLocation();
+        visionB = camera.getLocation();
         if (visionB == null) {
             MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
             return false;
@@ -171,21 +177,11 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step5() {
-		MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-			public void run() {
-				Head head = Configuration.get().getMachine().getHeads().get(0);
-				try {
-					Camera camera = MainFrame.cameraPanel
-							.getSelectedCamera();
-					Location location = jobPanel.getSelectedBoardLocation()
-							.getLocation();
-					MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-				}
-				catch (Exception e) {
-					MessageBoxes.errorBox(mainFrame,
-							"Move Error", e);
-				}
-			}
+		UiUtils.submitUiMachineTask(() -> {
+			Location location = jobPanel
+					.getSelectedBoardLocation()
+					.getLocation();
+			MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 		});
 		
 		return true;

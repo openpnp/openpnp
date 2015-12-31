@@ -51,8 +51,10 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 
 public class JobPlacementsPanel extends JPanel {
@@ -406,20 +408,17 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            if (camera.getHead() == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "Camera is not movable.");
-                return;
-            }
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), getSelection().getSide(),
-                            MainFrame.cameraPanel.getSelectedCameraLocation()
-                                    .invert(true, true, true, true));
-            getSelection().setLocation(
-                    placementLocation.invert(true, true, true, true));
-            table.repaint();
+        	UiUtils.messageBoxOnException(() -> {
+            	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+            	Camera camera = tool.getHead().getDefaultCamera();
+                Location placementLocation = Utils2D.calculateBoardPlacementLocation(
+                		boardLocation.getLocation(), 
+                		getSelection().getSide(),
+                        camera.getLocation().invert(true, true, true, true));
+                getSelection().setLocation(
+                        placementLocation.invert(true, true, true, true));
+                table.repaint();
+        	});
         }
     };
 

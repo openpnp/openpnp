@@ -892,11 +892,15 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            getSelectedBoardLocation().setLocation(
-                    MainFrame.cameraPanel.getSelectedCameraLocation());
-            boardLocationsTableModel.fireTableRowsUpdated(
-                    boardLocationsTable.getSelectedRow(),
-                    boardLocationsTable.getSelectedRow());
+        	UiUtils.messageBoxOnException(() -> {
+            	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+            	Camera camera = tool.getHead().getDefaultCamera();
+                getSelectedBoardLocation().setLocation(
+                        camera.getLocation());
+                boardLocationsTableModel.fireTableRowsUpdated(
+                        boardLocationsTable.getSelectedRow(),
+                        boardLocationsTable.getSelectedRow());
+        	});
         }
     };
 
@@ -967,7 +971,9 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
+        	UiUtils.messageBoxOnException(() -> {
+                new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
+        	});
         }
     };
 
