@@ -85,6 +85,7 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.JobError;
 import org.openpnp.spi.JobProcessor.JobState;
 import org.openpnp.spi.JobProcessor.PickRetryAction;
+import org.openpnp.spi.Locatable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
@@ -317,7 +318,7 @@ public class JobPanel extends JPanel {
         });
     }
     
-    private JobProcessor.Type getSelectedJobProcessorType() {
+    public JobProcessor.Type getSelectedJobProcessorType() {
         String activeTabTitle = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
         if (activeTabTitle.equals("Solder Paste")) {
             return JobProcessor.Type.SolderPaste;
@@ -327,23 +328,6 @@ public class JobPanel extends JPanel {
         }
         else {
             throw new Error("Unknown job tab title: " + activeTabTitle);
-        }
-    }
-    
-    /**
-     * Returns the selected Nozzle or PasteDispenser depending on which type
-     * of Job is selected.
-     * @return
-     */
-    private HeadMountable getSelectedTool() {
-        if (getSelectedJobProcessorType() == JobProcessor.Type.PickAndPlace) {
-            return MainFrame.machineControlsPanel.getSelectedNozzle();
-        }
-        else if (getSelectedJobProcessorType() == JobProcessor.Type.SolderPaste) {
-            return MainFrame.machineControlsPanel.getSelectedPasteDispenser();
-        }
-        else {
-            throw new Error("Unknown tool type: " + getSelectedJobProcessorType());
         }
     }
     
@@ -926,7 +910,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            getSelectedBoardLocation().setLocation(getSelectedTool().getLocation());
+        	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+            getSelectedBoardLocation().setLocation(tool.getLocation());
             boardLocationsTableModel.fireTableRowsUpdated(
                     boardLocationsTable.getSelectedRow(),
                     boardLocationsTable.getSelectedRow());
@@ -945,7 +930,8 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
         	UiUtils.submitUiMachineTask(() -> {
-            	Camera camera = getSelectedTool().getHead().getDefaultCamera();
+        		HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+            	Camera camera = tool.getHead().getDefaultCamera();
             	MainFrame.cameraPanel.ensureCameraVisible(camera);
                 Location location = getSelectedBoardLocation().getLocation();
                 MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
@@ -964,7 +950,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
         	UiUtils.submitUiMachineTask(() -> {
-                HeadMountable tool = getSelectedTool();
+                HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
                 Location location = getSelectedBoardLocation().getLocation();
                 MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
         	});
@@ -999,7 +985,8 @@ public class JobPanel extends JPanel {
                 Location location = FiducialLocator.locateBoard(getSelectedBoardLocation());
                 getSelectedBoardLocation().setLocation(location);
                 refreshSelectedBoardRow();
-                Camera camera = getSelectedTool().getHead().getDefaultCamera();
+                HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                Camera camera = tool.getHead().getDefaultCamera();
                 MainFrame.cameraPanel.ensureCameraVisible(camera);
                 MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
         	});

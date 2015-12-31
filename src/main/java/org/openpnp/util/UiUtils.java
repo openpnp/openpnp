@@ -89,5 +89,20 @@ public class UiUtils {
 				}
 			}
     	});
-    }	
+    }
+	
+	/**
+	 * Functional wrapper for actions that may throw an Exception. Presents
+	 * an error box to the user with the Exception contents if one is thrown.
+	 * Basically saves like 5 lines of boilerplate in actions.
+	 * @param thrunnable
+	 */
+	public static void messageBoxOnException(Thrunnable thrunnable) {
+		try {
+			thrunnable.thrun();
+		}
+		catch (Exception e) {
+			MessageBoxes.errorBox(MainFrame.mainFrame, "Error", e);
+		}
+	}
 }

@@ -64,11 +64,14 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -150,10 +153,32 @@ public class MachineControlsPanel extends JPanel {
         try {
             // TODO: We don't actually have a way to select a dispenser yet, so
             // until we do we just return the first one.
-            return Configuration.get().getMachine().getHeads().get(0).getPasteDispensers().get(0);
+            return Configuration
+            		.get()
+            		.getMachine()
+            		.getDefaultHead()
+            		.getDefaultPasteDispenser();
         }
         catch (Exception e) {
             return null;
+        }
+    }
+    
+    /**
+     * Returns the selected Nozzle or PasteDispenser depending on which type
+     * of Job is selected.
+     * @return
+     */
+    public HeadMountable getSelectedTool() {
+    	JobProcessor.Type jobProcessorType = MainFrame.jobPanel.getSelectedJobProcessorType(); 
+        if (jobProcessorType == JobProcessor.Type.PickAndPlace) {
+            return getSelectedNozzle();
+        }
+        else if (jobProcessorType == JobProcessor.Type.SolderPaste) {
+            return getSelectedPasteDispenser();
+        }
+        else {
+            throw new Error("Unknown tool type: " + jobProcessorType);
         }
     }
     
