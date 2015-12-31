@@ -33,7 +33,6 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
-import org.openpnp.machine.reference.camera.TableScannerCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
@@ -160,7 +159,6 @@ public class ReferenceMachine extends AbstractMachine {
 		List<Class<? extends Camera>> l = new ArrayList<Class<? extends Camera>>();
 		l.add(LtiCivilCamera.class);
 		l.add(VfwCamera.class);
-		l.add(TableScannerCamera.class);
         l.add(OpenCvCamera.class);
         l.add(ImageCamera.class);
 		return l;

@@ -42,6 +42,7 @@ import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -466,23 +467,12 @@ public class FourPlacementBoardLocationProcess {
 	}
 	
 	private boolean step5() {
-		MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-			public void run() {
-				Head head = Configuration.get().getMachine().getHeads().get(0);
-				try {
-					Camera camera = MainFrame.cameraPanel
-							.getSelectedCamera();
-					Location location = jobPanel.getSelectedBoardLocation()
-							.getLocation();
-					MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-				}
-				catch (Exception e) {
-					MessageBoxes.errorBox(mainFrame,
-							"Move Error", e);
-				}
-			}
+		UiUtils.submitUiMachineTask(() -> {
+			Location location = jobPanel
+					.getSelectedBoardLocation()
+					.getLocation();
+			MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 		});
-		
 		return true;
 	}
 	

@@ -154,14 +154,6 @@ public class CameraPanel extends JPanel {
 		return null;
 	}
 	
-	// TODO: Remove
-	public Camera getSelectedCamera() {
-		if (selectedCameraView != null) {
-			return selectedCameraView.getCamera();
-		}
-		return null;
-	}
-	
 	public CameraView getCameraView(Camera camera) {
 		return cameraViews.get(camera);
 	}

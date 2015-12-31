@@ -40,6 +40,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -198,18 +199,14 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            final Location location = getParsedLocation();
-			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-					    MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(getTopLevelAncestor(),
-								"Movement Error", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				Camera camera = MainFrame
+						.machineControlsPanel
+						.getSelectedTool()
+						.getHead()
+						.getDefaultCamera();
+	            Location location = getParsedLocation();
+			    MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 			});
 		}
 	};
@@ -223,18 +220,12 @@ public class LocationButtonsPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-            final Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-            final Location location = getParsedLocation();
-			MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-					    MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(getTopLevelAncestor(),
-								"Movement Error", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				HeadMountable tool = MainFrame
+						.machineControlsPanel
+						.getSelectedTool();
+	            Location location = getParsedLocation();
+			    MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
 			});
 		}
 	};

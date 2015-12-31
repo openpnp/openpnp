@@ -338,30 +338,19 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+        	UiUtils.submitUiMachineTask(() -> {
+                Location location = Utils2D.calculateBoardPlacementLocation(
+                		boardLocation.getLocation(), 
+                		boardLocation.getSide(), 
+                		getSelection().getLocation());
 
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            if (camera.getHead() == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error",
-                        "Camera is not movable.");
-                return;
-            }
-            final Location location = placementLocation;
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
-            });
+                Camera camera = MainFrame
+                		.machineControlsPanel
+                		.getSelectedTool()
+                		.getHead()
+                		.getDefaultCamera();
+                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+        	});
         }
     };
 

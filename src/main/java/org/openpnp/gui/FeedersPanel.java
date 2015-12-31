@@ -69,6 +69,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -409,21 +410,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    Feeder feeder = getSelectedFeeder();
-                    Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-                    
-                    try {
-                        Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(camera, pickLocation, 1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(FeedersPanel.this, "Movement Error",
-                                e);
-                    }
-                }
-            }.start();
+        	UiUtils.submitUiMachineTask(() -> {
+                Feeder feeder = getSelectedFeeder();
+                Camera camera = MainFrame
+                		.machineControlsPanel
+                		.getSelectedTool()
+                		.getHead()
+                		.getDefaultCamera();
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation, 1.0);
+        	});
         }
     };
 

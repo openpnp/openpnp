@@ -44,6 +44,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 
 public class JobPastePanel extends JPanel {
@@ -270,31 +271,19 @@ public class JobPastePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // TODO: Probably wrong
-            Location padLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+        	UiUtils.submitUiMachineTask(() -> {
+                Location location = Utils2D.calculateBoardPlacementLocation(
+                		boardLocation.getLocation(), 
+                		boardLocation.getSide(), 
+                		getSelection().getLocation());
 
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            if (camera.getHead() == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error",
-                        "Camera is not movable.");
-                return;
-            }
-            final Location location = padLocation;
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
-            });
+                Camera camera = MainFrame
+                		.machineControlsPanel
+                		.getSelectedTool()
+                		.getHead()
+                		.getDefaultCamera();
+                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+        	});
         }
     };
 
