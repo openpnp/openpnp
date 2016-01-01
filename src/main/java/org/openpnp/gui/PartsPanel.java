@@ -139,31 +139,9 @@ public class PartsPanel extends JPanel {
 				Part part = getSelectedPart();
 				
 				deletePartAction.setEnabled(part != null);
-				
-		        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-		        if (cameraView != null) {
-	                if (part != null) {
-	                    Reticle reticle = new OutlineReticle(part.getPackage().getOutline());
-	                    MainFrame.cameraPanel.getSelectedCameraView().setReticle(PartsPanel.this.getClass().getName(), reticle);
-	                }
-	                else {
-	                    MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PartsPanel.this.getClass().getName());
-	                }                                       
-		        }
 			}
 		});
 		
-		
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-                if (cameraView != null) {
-                    cameraView.removeReticle(PartsPanel.this.getClass().getName());
-                }
-            }
-        });        
-        
 		deletePartAction.setEnabled(false);
 		
 		JButton btnNewPart = toolBar.add(newPartAction);

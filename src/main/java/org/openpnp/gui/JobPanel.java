@@ -176,17 +176,6 @@ public class JobPanel extends JPanel {
                     }
                 });
 
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                CameraView cameraView = MainFrame.cameraPanel
-                        .getSelectedCameraView();
-                if (cameraView != null) {
-                    cameraView.removeReticle(JobPanel.class.getName());
-                }
-            }
-        });
-
         setLayout(new BorderLayout(0, 0));
 
         splitPane = new JSplitPane();

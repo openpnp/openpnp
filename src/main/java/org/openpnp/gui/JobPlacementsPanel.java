@@ -172,7 +172,6 @@ public class JobPlacementsPanel extends JPanel {
                             singleSelectionActionGroup.setEnabled(getSelection() != null);
                             captureAndPositionActionGroup.setEnabled(getSelection() != null && getSelection().getSide() == boardLocation.getSide());
                         }
-                        showReticle();
                     }
                 });
         table.addMouseListener(new MouseAdapter() {
@@ -222,25 +221,6 @@ public class JobPlacementsPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
     
-    private void showReticle() {
-        CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-        if (cameraView == null) {
-            return;
-        }
-        
-        Placement placement = null;
-        if (getSelections().size() == 1) {
-            placement = getSelection();
-        }
-        if (placement == null || placement.getPart() == null || placement.getPart().getPackage() == null) {
-            cameraView.removeReticle(JobPanel.class.getName());
-        }
-        else {
-            Reticle reticle = new PackageReticle(placement.getPart().getPackage());
-            cameraView.setReticle(JobPanel.class.getName(), reticle);
-        }
-    }
-
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {

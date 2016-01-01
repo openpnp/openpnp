@@ -141,31 +141,10 @@ public class PackagesPanel extends JPanel {
 				Package this_package = getSelectedPackage();
 				
 				deletePackageAction.setEnabled(this_package != null);
-				
-                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-                if (cameraView != null) {
-                    if (this_package != null) {
-                        Reticle reticle = new PackageReticle(this_package);
-                        cameraView.setReticle(PackagesPanel.this.getClass().getName(), reticle);
-                    }
-                    else {
-                        MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PackagesPanel.this.getClass().getName());
-                    }                                       
-                }
 			}
 		});
 
 
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-                if (cameraView != null) {
-                    cameraView.removeReticle(PackagesPanel.this.getClass().getName());
-                }
-            }
-        });        
-		
 		deletePackageAction.setEnabled(false);
 		
 		JButton btnNewPackage = toolBar.add(newPackageAction);

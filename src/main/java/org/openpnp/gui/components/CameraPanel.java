@@ -119,11 +119,6 @@ public class CameraPanel extends JPanel {
 	 * using the new rules as some were converted before these rules were set.
 	 * @return
 	 */
-	// TODO: Remove
-	public CameraView getSelectedCameraView() {
-		return selectedCameraView;
-	}
-	
 	/**
 	 * Make sure the given Camera is visible in the UI. If All Cameras is
 	 * selected we do nothing, otherwise we select the specified Camera.
