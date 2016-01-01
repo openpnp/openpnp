@@ -1,3 +1,10 @@
+## Driver Source
+
+The current source for the TinygDriver can be found at https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/machine/reference/driver/TinygDriver.java.
+It's worth taking a look through the source code when doing an integration with TinyG. The source is not complex and it is the best reference for how things work.
+
+## Usage Notes
+
 OpenPnP installs with default motor control set for demo mode. To use TinyG as your motion controller, follow the instructions at https://github.com/openpnp/openpnp/wiki/User-Manual#the-driver and set your driver to `org.openpnp.machine.reference.driver.TinygDriver`.
 
 If you'd prefer to set the driver manually the machine.xml file will need to be edited. The machine.xml needs to be created if it does not exist, launch OpenPnP and then exit, If OpenPnP cannot find the machine.xml file, it will create the file with defaults. The following line should replace the motor control demo line in the machine.xml file:
@@ -12,5 +19,15 @@ TinyG has built in test routines, sending "$test=3" will move the X and Y steppe
 
 The TinyG controller should be configured for use with OpenPnP now. Close any software that has been used to test the TinyG so that the comm port will be released. Launch OpenPnP, open the Jog controls, using the X or Y axis buttons the stepper motors should operate for a short time for each jog command issued.
 
+## Gcode Mapping
 
+The following Gcodes are currently sent by the driver:
 
+Function      | Gcode
+------------- | -------------
+Home          | G92 X Y Z A
+Move          | G1 X Y Z A F
+Pick          | M4
+Place         | M5
+Actuator On   | M8
+Actuator Off  | M9
