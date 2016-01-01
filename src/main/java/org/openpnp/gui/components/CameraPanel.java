@@ -33,7 +33,6 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import org.openpnp.gui.support.CameraItem;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 
 /**
@@ -86,39 +85,6 @@ public class CameraPanel extends JPanel {
 		add(camerasPanel);
 	}
 	
-	/**
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * STOPSHIP
-	 * Rules for this refactor:
-	 * 1. If a specific Nozzle is involved, use nozzle.getHead().getDefaultCamera().
-	 * 2. If it's a user initiated action use getSelectedNozzle().getHead().getDefaultCamera()
-	 * 3. If it's a job action we should be using the same as #1.
-	 * 4. When we need the user to interact with the camera view we should make
-	 * sure to select the right one for them before starting the action using
-	 * the rules above.
-	 * 5. When showing an overlay reticle, show it on the camera view that makes
-	 * the most sense using the rules above, not just the selected one. Also
-	 * remove it from same. 
-	 * 
-	 * NOTICE: After finishing, go back and make sure that all getDefaultCamera() are
-	 * using the new rules as some were converted before these rules were set.
-	 * @return
-	 */
 	/**
 	 * Make sure the given Camera is visible in the UI. If All Cameras is
 	 * selected we do nothing, otherwise we select the specified Camera.

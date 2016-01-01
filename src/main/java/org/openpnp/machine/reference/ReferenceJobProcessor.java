@@ -246,8 +246,17 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
             return;
         }
         
-        Head head = machine.getHeads().get(0);
-        Camera camera = head.getCameras().get(0);
+        Head head;
+        Camera camera;
+        
+        try {
+            head = machine.getDefaultHead();
+            camera = head.getDefaultCamera();
+        }
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.HeadError, e.getMessage());
+            return;
+        }
         
         jobPlanner.setJob(job);
                 
