@@ -200,13 +200,13 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 		}
 		
 		if (!connected)  {
-			throw new Error(
+			throw new Exception(
 				String.format("Unable to receive connection response from Grbl. Check your port and baud rate, and that you are running at least build %d of Grbl", 
 						minimumRequiredBuildNumber));
 		}
 		
 		if (connectedBuildNumber < minimumRequiredBuildNumber) {
-			throw new Error(String.format("This driver requires Grbl build %d or higher. You are running build %d", minimumRequiredBuildNumber, connectedBuildNumber));
+			throw new Exception(String.format("This driver requires Grbl build %d or higher. You are running build %d", minimumRequiredBuildNumber, connectedBuildNumber));
 		}
 		
 		// We are connected to at least the minimum required version now

@@ -41,8 +41,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     @Attribute(required=false)
     private double zGap = 2;
     
-    private boolean enabled;
-    
     protected double x, y, z, c, c2;
     private Thread readerThread;
     private boolean disconnectRequested;
@@ -75,7 +73,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 
             }
         }
-        this.enabled = enabled;
     }
     
     @Override
@@ -294,7 +291,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     	}
 
         if (!connected)  {
-            throw new Error(
+            throw new Exception(
                 String.format("Unable to receive connection response. Check your port and baud rate"));
         }
         

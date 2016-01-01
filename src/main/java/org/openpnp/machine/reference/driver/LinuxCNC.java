@@ -270,19 +270,19 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         processConnectionResponses(responses);
 
         if (!connected) {
-            throw new Error(
+            throw new Exception(
                     "Unable to receive connection response from LinuxCNC ver 1.1. Check your server ip and port in machine.xml");
         }
 
         if (!connected) {
-            throw new Error(
+            throw new Exception(
                     String.format(
                             "Unable to receive connection response from LinuxCNC. Check your server ip and port in machine.xml and that you are running at least version %f of LinuxCNCrsh",
                             minimumRequiredVersion));
         }
 
         if (connectedVersion < minimumRequiredVersion) {
-            throw new Error(
+            throw new Exception(
                     String.format(
                             "This driver requires LinuxCNCrsh version %.2f or higher. You are running version %.2f",
                             minimumRequiredVersion, connectedVersion));
