@@ -60,6 +60,8 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -418,21 +420,29 @@ public class ReferenceTapeFeederConfigurationWizard extends
     private Action selectTemplateImageAction = new AbstractAction("Select") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            CameraView cameraView = MainFrame.cameraPanel
-                    .getSelectedCameraView();
-            cameraView.setSelectionEnabled(true);
-            // org.openpnp.model.Rectangle r =
-            // feeder.getVision().getTemplateImageCoordinates();
-            org.openpnp.model.Rectangle r = null;
-            if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
-                cameraView.setSelection(0, 0, 100, 100);
-            }
-            else {
-                // cameraView.setSelection(r.getLeft(), r.getTop(),
-                // r.getWidth(), r.getHeight());
-            }
-            btnChangeTemplateImage.setAction(confirmSelectTemplateImageAction);
-            cancelSelectTemplateImageAction.setEnabled(true);
+        	UiUtils.messageBoxOnException(() -> {
+            	Camera camera = MainFrame
+            			.machineControlsPanel
+            			.getSelectedTool()
+            			.getHead()
+            			.getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel
+                        .setSelectedCamera(camera);
+                
+                cameraView.setSelectionEnabled(true);
+                // org.openpnp.model.Rectangle r =
+                // feeder.getVision().getTemplateImageCoordinates();
+                org.openpnp.model.Rectangle r = null;
+                if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+                    cameraView.setSelection(0, 0, 100, 100);
+                }
+                else {
+                    // cameraView.setSelection(r.getLeft(), r.getTop(),
+                    // r.getWidth(), r.getHeight());
+                }
+                btnChangeTemplateImage.setAction(confirmSelectTemplateImageAction);
+                cancelSelectTemplateImageAction.setEnabled(true);
+        	});
         }
     };
 
@@ -441,26 +451,30 @@ public class ReferenceTapeFeederConfigurationWizard extends
             "Confirm") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    CameraView cameraView = MainFrame.cameraPanel
-                            .getSelectedCameraView();
-                    BufferedImage image = cameraView.captureSelectionImage();
-                    if (image == null) {
-                        MessageBoxes
-                                .errorBox(
-                                        ReferenceTapeFeederConfigurationWizard.this,
-                                        "No Image Selected",
-                                        "Please select an area of the camera image using the mouse.");
-                    }
-                    else {
-                        labelTemplateImage.setIcon(new ImageIcon(image));
-                    }
-                    cameraView.setSelectionEnabled(false);
-                    btnChangeTemplateImage.setAction(selectTemplateImageAction);
-                    cancelSelectTemplateImageAction.setEnabled(false);
+        	UiUtils.messageBoxOnException(() -> {
+            	Camera camera = MainFrame
+            			.machineControlsPanel
+            			.getSelectedTool()
+            			.getHead()
+            			.getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel
+                        .setSelectedCamera(camera);
+                
+                BufferedImage image = cameraView.captureSelectionImage();
+                if (image == null) {
+                    MessageBoxes
+                            .errorBox(
+                                    ReferenceTapeFeederConfigurationWizard.this,
+                                    "No Image Selected",
+                                    "Please select an area of the camera image using the mouse.");
                 }
-            }.start();
+                else {
+                    labelTemplateImage.setIcon(new ImageIcon(image));
+                }
+                cameraView.setSelectionEnabled(false);
+                btnChangeTemplateImage.setAction(selectTemplateImageAction);
+                cancelSelectTemplateImageAction.setEnabled(false);
+        	});
         }
     };
 
@@ -469,15 +483,19 @@ public class ReferenceTapeFeederConfigurationWizard extends
             "Cancel") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            btnChangeTemplateImage.setAction(selectTemplateImageAction);
-            cancelSelectTemplateImageAction.setEnabled(false);
-            CameraView cameraView = MainFrame.cameraPanel
-                    .getSelectedCameraView();
-            if (cameraView == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "Unable to locate Camera.");
-            }
-            cameraView.setSelectionEnabled(false);
+        	UiUtils.messageBoxOnException(() -> {
+            	Camera camera = MainFrame
+            			.machineControlsPanel
+            			.getSelectedTool()
+            			.getHead()
+            			.getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel
+                        .setSelectedCamera(camera);
+                
+                btnChangeTemplateImage.setAction(selectTemplateImageAction);
+                cancelSelectTemplateImageAction.setEnabled(false);
+                cameraView.setSelectionEnabled(false);
+        	});
         }
     };
 
@@ -485,21 +503,29 @@ public class ReferenceTapeFeederConfigurationWizard extends
     private Action selectAoiAction = new AbstractAction("Select") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            btnChangeAoi.setAction(confirmSelectAoiAction);
-            cancelSelectAoiAction.setEnabled(true);
+        	UiUtils.messageBoxOnException(() -> {
+            	Camera camera = MainFrame
+            			.machineControlsPanel
+            			.getSelectedTool()
+            			.getHead()
+            			.getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel
+                        .setSelectedCamera(camera);
+                
+                btnChangeAoi.setAction(confirmSelectAoiAction);
+                cancelSelectAoiAction.setEnabled(true);
 
-            CameraView cameraView = MainFrame.cameraPanel
-                    .getSelectedCameraView();
-            cameraView.setSelectionEnabled(true);
-            org.openpnp.model.Rectangle r = feeder.getVision()
-                    .getAreaOfInterest();
-            if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
-                cameraView.setSelection(0, 0, 100, 100);
-            }
-            else {
-                cameraView.setSelection(r.getX(), r.getY(), r.getWidth(),
-                        r.getHeight());
-            }
+                cameraView.setSelectionEnabled(true);
+                org.openpnp.model.Rectangle r = feeder.getVision()
+                        .getAreaOfInterest();
+                if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
+                    cameraView.setSelection(0, 0, 100, 100);
+                }
+                else {
+                    cameraView.setSelection(r.getX(), r.getY(), r.getWidth(),
+                            r.getHeight());
+                }
+        	});
         }
     };
 
@@ -507,27 +533,31 @@ public class ReferenceTapeFeederConfigurationWizard extends
     private Action confirmSelectAoiAction = new AbstractAction("Confirm") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    btnChangeAoi.setAction(selectAoiAction);
-                    cancelSelectAoiAction.setEnabled(false);
+        	UiUtils.messageBoxOnException(() -> {
+            	Camera camera = MainFrame
+            			.machineControlsPanel
+            			.getSelectedTool()
+            			.getHead()
+            			.getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel
+                        .setSelectedCamera(camera);
+                
+                btnChangeAoi.setAction(selectAoiAction);
+                cancelSelectAoiAction.setEnabled(false);
 
-                    CameraView cameraView = MainFrame.cameraPanel
-                            .getSelectedCameraView();
-                    cameraView.setSelectionEnabled(false);
-                    final Rectangle rect = cameraView.getSelection();
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            textFieldAoiX.setText(Integer.toString(rect.x));
-                            textFieldAoiY.setText(Integer.toString(rect.y));
-                            textFieldAoiWidth.setText(Integer
-                                    .toString(rect.width));
-                            textFieldAoiHeight.setText(Integer
-                                    .toString(rect.height));
-                        }
-                    });
-                }
-            }.start();
+                cameraView.setSelectionEnabled(false);
+                final Rectangle rect = cameraView.getSelection();
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        textFieldAoiX.setText(Integer.toString(rect.x));
+                        textFieldAoiY.setText(Integer.toString(rect.y));
+                        textFieldAoiWidth.setText(Integer
+                                .toString(rect.width));
+                        textFieldAoiHeight.setText(Integer
+                                .toString(rect.height));
+                    }
+                });
+        	});
         }
     };
 
@@ -535,15 +565,21 @@ public class ReferenceTapeFeederConfigurationWizard extends
     private Action cancelSelectAoiAction = new AbstractAction("Cancel") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            btnChangeAoi.setAction(selectAoiAction);
-            cancelSelectAoiAction.setEnabled(false);
-            CameraView cameraView = MainFrame.cameraPanel
-                    .getSelectedCameraView();
-            if (cameraView == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "Unable to locate Camera.");
-            }
-            cameraView.setSelectionEnabled(false);
+        	UiUtils.messageBoxOnException(() -> {
+            	Camera camera = MainFrame
+            			.machineControlsPanel
+            			.getSelectedTool()
+            			.getHead()
+            			.getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel
+                        .setSelectedCamera(camera);
+                
+                btnChangeAoi.setAction(selectAoiAction);
+                cancelSelectAoiAction.setEnabled(false);
+                btnChangeAoi.setAction(selectAoiAction);
+                cancelSelectAoiAction.setEnabled(false);
+                cameraView.setSelectionEnabled(false);
+        	});
         }
     };
 }
