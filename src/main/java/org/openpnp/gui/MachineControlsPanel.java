@@ -229,6 +229,8 @@ public class MachineControlsPanel extends JPanel {
 		homeAction.setEnabled(enabled);
 		goToZeroAction.setEnabled(enabled);
 		jogControlsPanel.setEnabled(enabled);
+		targetCameraAction.setEnabled(enabled);
+		targetToolAction.setEnabled(enabled);
 	}
 	
 	public Location getCurrentLocation() {
@@ -367,6 +369,10 @@ public class MachineControlsPanel extends JPanel {
 		panelDrosFirstLine.add(textFieldY);
 		textFieldY.setColumns(6);
 		
+		JButton btnTargetTool = new JButton(targetToolAction);
+		panelDrosFirstLine.add(btnTargetTool);
+		btnTargetTool.setToolTipText("Position the tool at the camera's current location.");
+		
 		JPanel panelDrosSecondLine = new JPanel();
 		panelDros.add(panelDrosSecondLine);
 		panelDrosSecondLine.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
@@ -421,6 +427,10 @@ public class MachineControlsPanel extends JPanel {
             }
         });
 		panelDrosSecondLine.add(textFieldZ);
+		
+		JButton btnTargetCamera = new JButton(targetCameraAction);
+		panelDrosSecondLine.add(btnTargetCamera);
+		btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
 		
 		JPanel panelIncrements = new JPanel();
 		add(panelIncrements);
@@ -612,6 +622,30 @@ public class MachineControlsPanel extends JPanel {
 		}
 	};
 	
+	@SuppressWarnings("serial")
+	public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			UiUtils.submitUiMachineTask(() -> {
+				HeadMountable tool = getSelectedTool();
+				Camera camera = tool.getHead().getDefaultCamera();
+				MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(), 1.0);
+			});
+		}
+	};
+	
+    @SuppressWarnings("serial")
+    public Action targetCameraAction = new AbstractAction(null, Icons.centerCamera) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+			UiUtils.submitUiMachineTask(() -> {
+				HeadMountable tool = getSelectedTool();
+				Camera camera = tool.getHead().getDefaultCamera();
+				MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation(), 1.0);
+			});
+        }
+    };
+    
     @SuppressWarnings("serial")
     public Action saveXAction = new AbstractAction(null) {
         @Override
