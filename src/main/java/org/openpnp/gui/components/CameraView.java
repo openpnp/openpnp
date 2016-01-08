@@ -1063,7 +1063,7 @@ public class CameraView extends JComponent implements CameraListener {
 			}
 		}
 		else {
-			setCursor(Cursor.getDefaultCursor());
+			setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 		}
 	}
 	
