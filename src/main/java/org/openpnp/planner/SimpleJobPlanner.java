@@ -37,6 +37,10 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         super.setJob(job);
         solutions.clear();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
+        	if (!boardLocation.isEnabled()) {
+        		continue;
+        	}
+        	
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (placement.getType() != Type.Place) {
                     continue;

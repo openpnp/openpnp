@@ -72,6 +72,9 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
 		PasteDispenser dispenser = head.getPasteDispensers().get(0);
 
 		for (BoardLocation boardLocation : job.getBoardLocations()) {
+			if (!boardLocation.isEnabled()) {
+				continue;
+			}
 		    for (BoardPad pad : boardLocation.getBoard().getSolderPastePads()) {
 		        if (pad.getSide() != boardLocation.getSide()) {
 		            continue;

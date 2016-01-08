@@ -43,6 +43,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			"Y", 
 			"Z", 
 			"ø",
+			"Enabled?",
 			"Check Fids?"
 	};
 	
@@ -53,6 +54,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			LengthCellValue.class,
 			LengthCellValue.class,
 			String.class,
+			Boolean.class,
 			Boolean.class
 	};
 	
@@ -133,6 +135,9 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
             }
             else if (columnIndex == 6) {
+                boardLocation.setEnabled((Boolean) aValue);
+            }
+            else if (columnIndex == 7) {
                 boardLocation.setCheckFiducials((Boolean) aValue);
             }
 		}
@@ -158,6 +163,8 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         case 5:
             return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation(), "");
         case 6:
+            return boardLocation.isEnabled();
+        case 7:
             return boardLocation.isCheckFiducials();
 		default:
 			return null;
