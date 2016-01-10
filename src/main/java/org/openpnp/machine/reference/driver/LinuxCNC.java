@@ -260,13 +260,21 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         }
         connected = true;
 
-        responses = sendCommand("hello EMC x 1");
-        // responses.addAll(sendCommand("set echo off"));
+        responses = sendCommand("hello EMC x 1.1");
         responses.addAll(sendCommand("set enable EMCTOO"));
 
         responses.addAll(sendCommand("set estop off"));
         responses.addAll(sendCommand("set mode mdi"));
-
+        
+        // set_wait done -- will respond after the commanded move is completed
+        // The default behavior is to respond when received which causes 
+        // OpenPnP to spit out gcode full-bore.
+        responses.addAll(sendCommand("set set_wait done"));
+        responses.addAll(sendCommand("set echo off"));
+        // verbose on -- all commands will be replied with ACK or NAK
+        // This will be used later to determine the return status.
+        responses.addAll(sendCommand("set verbose on"));
+        
         processConnectionResponses(responses);
 
         if (!connected) {
