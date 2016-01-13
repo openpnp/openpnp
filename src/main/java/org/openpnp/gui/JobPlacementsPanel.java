@@ -349,20 +349,11 @@ public class JobPlacementsPanel extends JPanel {
                             .getLocation(), boardLocation
                             .getSide(), getSelection().getLocation());
 
-            final Nozzle nozzle = MainFrame.machineControlsPanel
+            Nozzle nozzle = MainFrame.machineControlsPanel
                     .getSelectedNozzle();
-            final Location location = placementLocation;
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation,
+                        1.0);
             });
         }
     };

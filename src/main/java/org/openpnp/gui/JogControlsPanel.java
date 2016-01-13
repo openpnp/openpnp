@@ -48,6 +48,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PasteDispenser;
+import org.openpnp.util.UiUtils;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left,
@@ -96,53 +97,46 @@ public class JogControlsPanel extends JPanel {
 	}
 
 	private void jog(final int x, final int y, final int z, final int c) {
-		machineControlsPanel.submitMachineTask(new Runnable() {
-			public void run() {
-				try {
-				    Location l = machineControlsPanel.getSelectedNozzle().getLocation().convertToUnits(Configuration.get().getSystemUnits());
-					double xPos = l.getX();
-					double yPos = l.getY();
-					double zPos = l.getZ();
-					double cPos = l.getRotation();
+		UiUtils.submitUiMachineTask(() -> {
+		    Location l = machineControlsPanel.getSelectedNozzle().getLocation().convertToUnits(Configuration.get().getSystemUnits());
+			double xPos = l.getX();
+			double yPos = l.getY();
+			double zPos = l.getZ();
+			double cPos = l.getRotation();
 
-					double jogIncrement = new Length(machineControlsPanel
-							.getJogIncrement(), configuration.getSystemUnits())
-							.getValue();
+			double jogIncrement = new Length(machineControlsPanel
+					.getJogIncrement(), configuration.getSystemUnits())
+					.getValue();
 
-					if (x > 0) {
-						xPos += jogIncrement;
-					}
-					else if (x < 0) {
-						xPos -= jogIncrement;
-					}
-
-					if (y > 0) {
-						yPos += jogIncrement;
-					}
-					else if (y < 0) {
-						yPos -= jogIncrement;
-					}
-
-					if (z > 0) {
-						zPos += jogIncrement;
-					}
-					else if (z < 0) {
-						zPos -= jogIncrement;
-					}
-
-					if (c > 0) {
-						cPos += jogIncrement;
-					}
-					else if (c < 0) {
-						cPos -= jogIncrement;
-					}
-					
-					machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
-				}
-				catch (Exception e) {
-					MessageBoxes.errorBox(frame, "Jog Failed", e.getMessage());
-				}
+			if (x > 0) {
+				xPos += jogIncrement;
 			}
+			else if (x < 0) {
+				xPos -= jogIncrement;
+			}
+
+			if (y > 0) {
+				yPos += jogIncrement;
+			}
+			else if (y < 0) {
+				yPos -= jogIncrement;
+			}
+
+			if (z > 0) {
+				zPos += jogIncrement;
+			}
+			else if (z < 0) {
+				zPos -= jogIncrement;
+			}
+
+			if (c > 0) {
+				cPos += jogIncrement;
+			}
+			else if (c < 0) {
+				cPos -= jogIncrement;
+			}
+			
+			machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
 		});
 	}
 
@@ -343,18 +337,9 @@ public class JogControlsPanel extends JPanel {
     public Action pickAction = new AbstractAction("Pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        machineControlsPanel.getSelectedNozzle().pick();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        MessageBoxes.errorBox(frame,
-                                "Pick Operation Failed", e.getMessage());
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+                machineControlsPanel.getSelectedNozzle().pick();
+        	});
         }
     };
 
@@ -362,18 +347,9 @@ public class JogControlsPanel extends JPanel {
     public Action placeAction = new AbstractAction("Place") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        machineControlsPanel.getSelectedNozzle().place();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        MessageBoxes.errorBox(frame,
-                                "Place Operation Failed", e.getMessage());
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+                machineControlsPanel.getSelectedNozzle().place();
+        	});
         }
     };
     
@@ -381,18 +357,9 @@ public class JogControlsPanel extends JPanel {
     public Action safezAction = new AbstractAction("Head Safe Z") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        Configuration.get().getMachine().getHeads().get(0).moveToSafeZ(1.0);
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        MessageBoxes.errorBox(frame,
-                                "Movement Operation Failed", e.getMessage());
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+                Configuration.get().getMachine().getDefaultHead().moveToSafeZ(1.0);
+        	});
         }
     };
 
@@ -413,20 +380,9 @@ public class JogControlsPanel extends JPanel {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             final boolean state = actuatorButton.isSelected();
-                            machineControlsPanel.submitMachineTask(
-                                    new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try {
-                                                actuator_f.actuate(state);
-                                            }
-                                            catch (Exception e) {
-                                                MessageBoxes.errorBox(frame,
-                                                        "Actuator Command Failed",
-                                                        e.getMessage());
-                                            }
-                                        }
-                                    });
+                        	UiUtils.submitUiMachineTask(() -> {
+                                actuator_f.actuate(state);
+                        	});
                         }
                     });
                     panelActuators.add(actuatorButton);
@@ -438,20 +394,9 @@ public class JogControlsPanel extends JPanel {
                     dispenserButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            machineControlsPanel.submitMachineTask(
-                                    new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try {
-                                                dispenser.dispense(null, null, 250);
-                                            }
-                                            catch (Exception e) {
-                                                MessageBoxes.errorBox(frame,
-                                                        "Dispenser Command Failed",
-                                                        e.getMessage());
-                                            }
-                                        }
-                                    });
+                        	UiUtils.submitUiMachineTask(() -> {
+                                dispenser.dispense(null, null, 250);
+                        	});
                         }
                     });
                     panelDispensers.add(dispenserButton);

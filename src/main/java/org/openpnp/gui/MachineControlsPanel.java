@@ -127,18 +127,6 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
-    /**
-     * @deprecated See {@link Machine#submit(Runnable)} 
-     * @param runnable
-     */
-	public void submitMachineTask(Runnable runnable) {
-		if (!Configuration.get().getMachine().isEnabled()) {
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine has not been started.");
-			return;
-		}
-		Configuration.get().getMachine().submit(runnable);
-	}
-	
 	public void setSelectedNozzle(Nozzle nozzle) {
 	    selectedNozzle = nozzle;
 	    comboBoxNozzles.setSelectedItem(selectedNozzle);
@@ -550,18 +538,10 @@ public class MachineControlsPanel extends JPanel {
 	public Action goToZeroAction = new AbstractAction("Go To Zero") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						selectedNozzle.moveToSafeZ(1.0);
-						// Move to 0, 0, 0, 0.
-						selectedNozzle.moveTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), 1.0);
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-						MessageBoxes.errorBox(frame, "Go To Zero Failed", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				selectedNozzle.moveToSafeZ(1.0);
+				// Move to 0, 0, 0, 0.
+				selectedNozzle.moveTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), 1.0);
 			});
 		}
 	};
@@ -570,16 +550,8 @@ public class MachineControlsPanel extends JPanel {
 	public Action homeAction = new AbstractAction("Home") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						selectedNozzle.getHead().home();
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-						MessageBoxes.errorBox(frame, "Homing Failed", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				selectedNozzle.getHead().home();
 			});
 		}
 	};

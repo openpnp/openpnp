@@ -302,19 +302,10 @@ public class JobPastePanel extends JPanel {
                             .getLocation(), boardLocation
                             .getSide(), getSelection().getLocation());
 
-            final PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
-            final Location location = padLocation;
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(dispenser, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
+            PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.moveToLocationAtSafeZ(dispenser, padLocation,
+                        1.0);
             });
         }
     };

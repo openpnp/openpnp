@@ -25,6 +25,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
+import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -180,17 +181,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         @Override
         public void actionPerformed(final ActionEvent arg0) {
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        getParentNozzle().loadNozzleTip(ReferenceNozzleTip.this);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(((JComponent) arg0.getSource()).getTopLevelAncestor(),
-                                "Movement Error", e);
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+                getParentNozzle().loadNozzleTip(ReferenceNozzleTip.this);
+        	});
         }
     };
     
@@ -204,17 +197,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         
         @Override
         public void actionPerformed(final ActionEvent arg0) {
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        getParentNozzle().unloadNozzleTip();
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(((JComponent) arg0.getSource()).getTopLevelAncestor(),
-                                "Movement Error", e);
-                    }
-                }
-            });
+        	UiUtils.submitUiMachineTask(() -> {
+                getParentNozzle().unloadNozzleTip();
+        	});
         }
     };
 }
