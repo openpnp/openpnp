@@ -234,7 +234,7 @@ public abstract class AbstractMachine implements Machine {
                 Exception exception = null;
                 try {
                     if (!ignoreEnabled && !isEnabled()) {
-                        throw new Exception("Machine is not enabled.");
+                        throw new Exception("Machine has not been started.");
                     }
                     result = callable.call();
                 }

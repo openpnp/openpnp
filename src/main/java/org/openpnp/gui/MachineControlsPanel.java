@@ -133,7 +133,7 @@ public class MachineControlsPanel extends JPanel {
      */
 	public void submitMachineTask(Runnable runnable) {
 		if (!Configuration.get().getMachine().isEnabled()) {
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
+			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine has not been started.");
 			return;
 		}
 		Configuration.get().getMachine().submit(runnable);

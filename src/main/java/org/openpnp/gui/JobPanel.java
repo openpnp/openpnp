@@ -291,11 +291,11 @@ public class JobPanel extends JPanel {
                     jobProcessor.setDelegate(jobProcessorDelegate);
                 }
                 
-                if (machine.getJobProcessors().get(JobProcessor.Type.SolderPaste) != null) {
-                    tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
-                }
                 if (machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace) != null) {
                     tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
+                }
+                if (machine.getJobProcessors().get(JobProcessor.Type.SolderPaste) != null) {
+                    tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
                 }
                 
                 // Create an empty Job if one is not loaded
