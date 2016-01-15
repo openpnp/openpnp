@@ -169,6 +169,11 @@ public class VisionUtilsTest {
         }
 
         @Override
+        public void dwell(long ms) throws Exception {
+		Thread.sleep(ms);
+        }
+
+        @Override
         public int getHeight() {
             return 480;
         }
