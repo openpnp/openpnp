@@ -113,9 +113,8 @@ public class Location {
 	}
 
 	public double getLinearDistanceTo(double x, double y) {
-		return (Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - x, 2 )));
+		return (Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2)));
 	}
-	
 	
 	public double getXyzDistanceTo(Location location) {
 	    location = location.convertToUnits(getUnits());
@@ -134,9 +133,6 @@ public class Location {
 		return new Length(z, units);
 	}
 	
-	public Location get() {
-        	return new Location(units, x , y ,z ,rotation ).convertToUnits(LengthUnit.Millimeters);
-	}
 	/**
 	 * Returns a new Location with the given Location's X, Y, and Z components
 	 * subtracted from this Location's X, Y, and Z components. Rotation is left
@@ -252,8 +248,6 @@ public class Location {
                 rotation == null ? this.rotation : rotation
 	            );
 	}
-
-	
 	
 	/**
 	 * Returns a new Location with this Location's X and Y rotated by angle.
