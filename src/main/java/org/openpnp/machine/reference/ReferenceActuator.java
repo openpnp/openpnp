@@ -99,6 +99,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
+    public void dwell(long ms) throws Exception {
+		driver.dwell(ms/1000.);
+    }
+
+    @Override
     public void moveTo(Location location, double speed) throws Exception {
 		logger.debug("{}.moveTo({}, {})", new Object[] { getName(), location, speed } );
 		driver.moveTo(this, location, speed);

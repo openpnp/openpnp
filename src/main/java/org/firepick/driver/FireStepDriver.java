@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeoutException;
+import java.util.List;
 
 import javax.swing.Action;
 
@@ -81,6 +82,7 @@ public class FireStepDriver extends AbstractSerialPortDriver implements Runnable
 	private String connectedVersion;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
 	
+	private boolean enabled;
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
 	    if (enabled) {
@@ -119,6 +121,7 @@ public class FireStepDriver extends AbstractSerialPortDriver implements Runnable
 	    		}
 	    	}
 	    }
+		this.enabled=enabled;
 	}
 	
 	@Override
@@ -475,15 +478,48 @@ public class FireStepDriver extends AbstractSerialPortDriver implements Runnable
 		}
 	}
 	
-	private List<String> drainResponseQueue() {
-		List<String> responses = new ArrayList<String>();
-		String response;
-		while ((response = responseQueue.poll()) != null) {
-			responses.add(response);
-		}
-		return responses;
-	}
+                List<String> responses = new ArrayList<String>();
+
+        @Override
+        public List<String> Msg() { return responses; }
+
+        private List<String> drainResponseQueue() {
+                responses.clear();
+                String response;
+                while ((response = responseQueue.poll()) != null) {
+                        responses.add(response);
+                }
+                return responses;
+        }
+
+
 	
+        @Override
+        public void dwell(double seconds) throws Exception {
+		seconds*=1000;
+		Thread.sleep((long)seconds);
+        }
+
+        @Override
+        public void dwell() throws Exception {
+						
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                if(connected&&enabled) {
+                        sendCommand(command, timeout);
+                        return true;
+                }
+                        return false;
+        }
+
+
 	@Override
 	public Wizard getConfigurationWizard() {
 		//return null;

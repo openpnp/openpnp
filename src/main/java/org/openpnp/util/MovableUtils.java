@@ -20,4 +20,18 @@ public class MovableUtils {
         hm.moveTo(location.derive(null, null, Double.NaN, null), speed);
         hm.moveTo(location, speed);
     }
+
+    public static void move(HeadMountable hm, Location location, double speed) throws Exception {
+	// TODO make optimisation 
+	// TODO make check for movement
+        hm.moveToSafeZ(speed);
+        hm.moveTo(location.derive(null, null, Double.NaN, null), speed);
+        hm.moveTo(location, speed);
+    }
+
+	public static void dwell(long milliseconds) throws Exception {
+		Thread.sleep(milliseconds);
+	}
 }
+
+

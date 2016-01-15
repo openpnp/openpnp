@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference;
 
 import java.io.Closeable;
+import java.util.List;
 
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -94,6 +95,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      */
     public void place(ReferenceNozzle nozzle) throws Exception;
 
+
     /**
      * Actuates a machine defined object with a boolean state.
      * 
@@ -112,6 +114,7 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      */
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
 
+    
     /**
      * Attempts to enable the Driver, turning on all outputs.
      * 
@@ -121,4 +124,27 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void setEnabled(boolean enabled) throws Exception;
     
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation, Location endLocation, long dispenseTimeMilliseconds) throws Exception;
+
+    /**
+     * waits until motion is finished
+     * 
+     * @throws Exception
+     */
+	public  void dwell()  throws Exception;
+    
+    /**
+     * waits Seconds and returns after
+     * 
+     * @throws Exception
+     */
+	public  void dwell(double Seconds)  throws Exception;
+
+    /**
+     *  Gcode interface
+     * 
+     * @throws Exception
+     */
+	public  boolean GCode(String command) throws Exception ;
+	public  boolean GCode(String command, long timeout) throws Exception;
+	public  List<String> Msg(); 
 }

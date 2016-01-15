@@ -110,6 +110,12 @@ public class ReferenceNozzle extends AbstractNozzle implements
     }
 
     @Override
+    public void dwell(long time) throws Exception {
+        	driver.dwell(pickDwellMilliseconds/1000.);
+
+    }
+
+    @Override
     public void pick() throws Exception {
 		logger.debug("{}.pick()", getName());
 		if (nozzleTip == null) {
@@ -117,7 +123,7 @@ public class ReferenceNozzle extends AbstractNozzle implements
 		}
 		driver.pick(this);
         machine.fireMachineHeadActivity(head);
-        Thread.sleep(pickDwellMilliseconds);
+        	dwell(pickDwellMilliseconds);
     }
 
     @Override
@@ -128,13 +134,13 @@ public class ReferenceNozzle extends AbstractNozzle implements
         }
 		driver.place(this);
         machine.fireMachineHeadActivity(head);
-        Thread.sleep(placeDwellMilliseconds);
+        	driver.dwell(placeDwellMilliseconds/1000.);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         logger.debug("{}.moveTo({}, {})", new Object[] { getName(), location, speed } );
-        if (limitRotation && !Double.isNaN(location.getRotation()) && Math.abs(location.getRotation()) > 180) {
+        while (limitRotation && !Double.isNaN(location.getRotation()) && Math.abs(location.getRotation()) > 180) {
             if (location.getRotation() < 0) {
                 location = location.derive(null, null, null, location.getRotation() + 360);
             }

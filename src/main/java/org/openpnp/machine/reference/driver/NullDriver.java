@@ -27,6 +27,9 @@ import java.util.HashMap;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -281,6 +284,34 @@ public class NullDriver implements ReferenceDriver {
         logger.debug("setEnabled({})", enabled);
         this.enabled = enabled;
     }
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+		seconds*=1000;
+		Thread.sleep((long)seconds);
+        }
+
+        @Override
+        public void dwell() throws Exception {
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  true;
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                        return true;
+        }
+
+
+        @Override
+        public List<String> Msg() { return new ArrayList<String>(); }
+
+
+
+
 
     @Override
     public Wizard getConfigurationWizard() {

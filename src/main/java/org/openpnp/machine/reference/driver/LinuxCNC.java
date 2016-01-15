@@ -226,6 +226,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         
     }
 
+	private boolean enabled;
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         if (enabled && !connected) {
@@ -234,6 +235,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         if (connected) {
             sendCommand("set machine " + (enabled ? "on" : "off"));
         }
+	this.enabled=enabled;
     }
 
     public synchronized void connect(String serverIp, int port)
@@ -376,18 +378,48 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
      * 
      * @throws Exception
      */
-    private void dwell() throws Exception {
-        sendCommand("set mdi G4 P0");
-    }
 
-    private List<String> drainResponseQueue() {
-        List<String> responses = new ArrayList<String>();
-        String response;
-        while ((response = responseQueue.poll()) != null) {
-            responses.add(response);
+        @Override
+        public void dwell(double seconds) throws Exception {
+                seconds*=1;
+                GCode("set mdi G4 P"+seconds);
         }
-        return responses;
-    }
+
+        @Override
+        public void dwell() throws Exception {
+        	GCode("set mdi G4 P0");
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+		command = "set mdi " + command;
+                if(connected&&enabled) {
+                        sendCommand(command, timeout);
+                        return true;
+                }
+                        return false;
+        }
+
+                List<String> responses = new ArrayList<String>();
+
+        @Override
+        public List<String> Msg() { return responses; }
+
+        private List<String> drainResponseQueue() {
+                responses.clear();
+                String response;
+                while ((response = responseQueue.poll()) != null) {
+                        responses.add(response);
+                }
+                return responses;
+        }
+
+
 
     private String readLine() {
         StringBuffer line = new StringBuffer();

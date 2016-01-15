@@ -173,6 +173,7 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
         dwell();
 	}
 	
+	private boolean enabled;
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
         if (enabled) {
@@ -203,6 +204,7 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
         		sendCommand("M81");      // Turn power supply OFF
         	}
         }
+	 this.enabled=enabled;
 	}
 
 	@Override
@@ -360,20 +362,49 @@ public class SmoothieDriver extends AbstractSerialPortDriver implements Runnable
 	 * Causes Smoothie to block until all commands are complete.
 	 * @throws Exception
 	 */
-	private void dwell() throws Exception {
-		sendCommand("M400");
-		//sendCommand("G4 P0");
-	}
 
-	private List<String> drainResponseQueue() {
-		List<String> responses = new ArrayList<String>();
-		String response;
-		while ((response = responseQueue.poll()) != null) {
-			responses.add(response);
-		}
-		return responses;
-	}
-	
+	@Override
+        public void dwell(double seconds) throws Exception {
+                seconds*=1;
+                GCode("G4 S"+seconds);
+		dwell();
+        }
+
+        @Override
+        public void dwell() throws Exception {
+		GCode("M400");
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                if(connected&&enabled) {
+                        sendCommand(command, timeout);
+                        return true;
+                }
+                        return false;
+        }
+
+
+                List<String> responses = new ArrayList<String>();
+
+        @Override
+        public List<String> Msg() { return responses; }
+
+        private List<String> drainResponseQueue() {
+                responses.clear();
+                String response;
+                while ((response = responseQueue.poll()) != null) {
+                        responses.add(response);
+                }
+                return responses;
+        }
+
+
     @Override
     public Wizard getConfigurationWizard() {
         return new SmoothieDriverWizard(this);

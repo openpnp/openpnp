@@ -65,6 +65,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	private boolean connected;
 	private long connectedBuildNumber;
 	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
+	private boolean enabled;
 	
 	public GrblDriver() {
 	}
@@ -153,6 +154,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	            sendCommand("$X");
 	        }
 	    }
+		this.enabled=enabled;
 	}
 
 	@Override
@@ -309,19 +311,46 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	 * Causes Grbl to block until all commands are complete.
 	 * @throws Exception
 	 */
-	private void dwell() throws Exception {
-		sendCommand("G4 P0");
-	}
+		List<String> responses = new ArrayList<String>();
+
+        @Override
+        public List<String> Msg() { return responses; }
 
 	private List<String> drainResponseQueue() {
-		List<String> responses = new ArrayList<String>();
+		responses.clear();	
 		String response;
 		while ((response = responseQueue.poll()) != null) {
 			responses.add(response);
 		}
 		return responses;
 	}
-	
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+                seconds*=1;
+                GCode("G4 P"+seconds);
+        }
+
+        @Override
+        public void dwell() throws Exception {
+                GCode("G4 P0");
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                if(connected&&enabled) {
+                        sendCommand(command, timeout);
+                        return true;
+                }
+                        return false;
+        }
+
+
     @Override
     public Wizard getConfigurationWizard() {
         return new AbstractSerialPortDriverConfigurationWizard(this);
