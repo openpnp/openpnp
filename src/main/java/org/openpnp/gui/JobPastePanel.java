@@ -33,6 +33,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PadsTableModel;
+import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
@@ -40,7 +41,6 @@ import org.openpnp.model.BoardPad.Type;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
-import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
@@ -156,9 +156,16 @@ public class JobPastePanel extends JPanel {
         JPopupMenu popupMenu = new JPopupMenu();
         
         JMenu setTypeMenu = new JMenu(setTypeAction);
-        setTypeMenu.add(new SetTypeAction(BoardPad.Type.Paste));
-        setTypeMenu.add(new SetTypeAction(BoardPad.Type.Ignore));
+        for (BoardPad.Type type : BoardPad.Type.values()) {
+            setTypeMenu.add(new SetTypeAction(type));
+        }
         popupMenu.add(setTypeMenu);
+
+        JMenu setSideMenu = new JMenu(setSideAction);
+        for (Board.Side side : Board.Side.values()) {
+        	setSideMenu.add(new SetSideAction(side));
+        }
+        popupMenu.add(setSideMenu);
 
         table.setComponentPopupMenu(popupMenu);                
 
@@ -335,6 +342,35 @@ public class JobPastePanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (BoardPad pad : getSelections()) {
                 pad.setType(type);
+            }
+        }
+    };
+    
+    public final Action setSideAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Side");
+            putValue(SHORT_DESCRIPTION,
+                    "Set pad side(s) to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+    
+    class SetSideAction extends AbstractAction {
+        final Board.Side side;
+        
+        public SetSideAction(Board.Side side) {
+            this.side = side;
+            putValue(NAME, side.toString());
+            putValue(SHORT_DESCRIPTION, "Set pad side(s) to " + side.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (BoardPad pad : getSelections()) {
+                pad.setSide(side);
             }
         }
     };

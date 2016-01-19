@@ -30,9 +30,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.PackageReticle;
-import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -42,6 +39,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -210,10 +208,16 @@ public class JobPlacementsPanel extends JPanel {
         JPopupMenu popupMenu = new JPopupMenu();
         
         JMenu setTypeMenu = new JMenu(setTypeAction);
-        setTypeMenu.add(new SetTypeAction(Placement.Type.Place));
-        setTypeMenu.add(new SetTypeAction(Placement.Type.Ignore));
-        setTypeMenu.add(new SetTypeAction(Placement.Type.Fiducial));
+        for (Placement.Type type : Placement.Type.values()) {
+            setTypeMenu.add(new SetTypeAction(type));
+        }
         popupMenu.add(setTypeMenu);
+
+        JMenu setSideMenu = new JMenu(setSideAction);
+        for (Board.Side side : Board.Side.values()) {
+        	setSideMenu.add(new SetSideAction(side));
+        }
+        popupMenu.add(setSideMenu);
 
         table.setComponentPopupMenu(popupMenu);        
 
@@ -449,6 +453,35 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setType(type);
+            }
+        }
+    };
+    
+    public final Action setSideAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Side");
+            putValue(SHORT_DESCRIPTION,
+                    "Set placement side(s) to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+    
+    class SetSideAction extends AbstractAction {
+        final Board.Side side;
+        
+        public SetSideAction(Board.Side side) {
+            this.side = side;
+            putValue(NAME, side.toString());
+            putValue(SHORT_DESCRIPTION, "Set placement side(s) to " + side.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Placement placement : getSelections()) {
+                placement.setSide(side);
             }
         }
     };
