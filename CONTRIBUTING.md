@@ -1,5 +1,12 @@
-# Code Contributions and Pull Requests
+# Issues, Bug Reports, and Feature Requests
+* When creating a new Issue, first search to see if it has already been filed.
+* Bug reports must include the following or will be deleted:
+    * Steps to reproduce.
+    * Expected result.
+    * Actual result.
+    * Notes, log files, screen captures, videos, etc. to show the problem.
 
+# Code Contributions and Pull Requests
 Before starting work on a pull request, please read: https://github.com/openpnp/openpnp/wiki/Developers-Guide#contributing
 
 Summary of guidelines:
@@ -12,11 +19,3 @@ Summary of guidelines:
 * Think of how this affects other users.
 
 
-# Issues, Bug Reports, and Feature Requests
-
-* When creating a new Issue, first search to see if it has already been filed.
-* Bug reports must include the following or will be deleted:
-    * Steps to reproduce.
-    * Expected result.
-    * Actual result.
-    * Notes, log files, screen captures, videos, etc. to show the problem.
