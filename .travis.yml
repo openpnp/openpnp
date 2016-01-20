@@ -31,4 +31,6 @@ deploy:
   local_dir: installers
   on:
     jdk: oraclejdk8
-    branch: (master|develop)
+    branch:
+    	- develop
+    	- master
