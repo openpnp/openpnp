@@ -3,23 +3,21 @@ sudo: false
 
 jdk:
 - oraclejdk8
-- oraclejdk7
-- openjdk7
 
 env:
   global:
     # INSTALL4J_LICENSE_KEY
-    secure: MK1zNtf1PVXRA5bLEJ6CScDntfhH1R0+06dgzFzdUxWtZIdYxOxuqnJnepfGjBjfyNzQgvQFQQP55UNHVzwjhXX0LUmvIvAPnRLT9RSrOgq952se6nIlz4UGqXDV/JU66ecUi6DVK7C12d5NjWYW8POCUBd+qyz3c6ma7Xh5TH0=
+    secure: Y5WwLvftJ/7KdL/MYBPuPHwzgrKbAn8QNBXCAKiZUvw80sHtrrjrCgD68UVfikl/m1v/EBnBOkMg8b38ZCPo0YON4E2jIRjOl58GH0NQ5fS58Cp6LPNMmjlSJTEtEpJak7P7ADxwWFXm4AVKeYS04mF2TbwasVs4nMYddCv8QYY=
 
 before_deploy:
-- wget https://s3-us-west-2.amazonaws.com/openpnp/install4j_unix_5_1_15.tar.gz
-- tar -xzf install4j_unix_5_1_15.tar.gz 
-- ./install4j5/bin/install4jc -L $INSTALL4J_LICENSE_KEY
+- wget https://s3-us-west-2.amazonaws.com/openpnp/install4j_unix_6_0_4.tar.gz
+- tar -xzf install4j_unix_6_0_4.tar.gz
+- ./install4j6/bin/install4jc -L $INSTALL4J_LICENSE_KEY
 - mvn package
 - wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
-- ./install4j5/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
+- ./install4j6/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
 
 deploy:
   provider: s3
@@ -33,4 +31,6 @@ deploy:
   local_dir: installers
   on:
     jdk: oraclejdk8
-    all_branches: true
+    branch:
+      - develop
+      - master
