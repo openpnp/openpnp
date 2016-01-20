@@ -32,5 +32,5 @@ deploy:
   on:
     jdk: oraclejdk8
     branch:
-	- develop
-	- master
+      - develop
+      - master
