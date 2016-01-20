@@ -110,4 +110,5 @@ public interface Camera extends Identifiable, Named, HeadMountable, WizardConfig
 	 */
 	public long getSettleTimeMs();
 	public void setSettleTimeMs(long settleTimeMs);
+
 }

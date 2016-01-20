@@ -129,7 +129,7 @@ public abstract class AbstractCamera implements Camera {
     
     public BufferedImage settleAndCapture() {
     	try {
-    		Thread.sleep(getSettleTimeMs());
+    		dwell(getSettleTimeMs());
     	}
     	catch (Exception e) {
     		

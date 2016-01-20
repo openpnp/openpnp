@@ -1,6 +1,9 @@
 doc
 bin
 target
+code
+old
+dead
 
 installers
 .settings
@@ -8,4 +11,5 @@ installers
 .idea
 *.iml
 .classpath
+err
 src/main/resources/icons/src/Soft_Scraps_by_deleket

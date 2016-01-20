@@ -87,6 +87,10 @@ public class Part extends AbstractModelObject implements Identifiable {
 	public Length getHeight() {
 		return new Length(height, heightUnits);
 	}
+
+	public Length getRadius() {
+		return new Length(5,heightUnits);
+	}
 	
 	public void setHeight(Length height) {
 		Object oldValue = getHeight();

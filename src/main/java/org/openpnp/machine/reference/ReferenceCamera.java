@@ -76,6 +76,11 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             }
         });
     }
+
+    @Override
+    public void dwell(long time) throws Exception {
+	driver.dwell(time/1000.); 
+    }
     
     @Override
     public Location getHeadOffsets() {

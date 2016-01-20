@@ -159,6 +159,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
         }
 	}
 	
+	private boolean enabled;
 	@Override
 	public void setEnabled(boolean enabled) throws Exception {
 	    if (enabled && !connected) {
@@ -167,6 +168,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	    if (connected) {
 	        sendCommand(enabled ? enableGcode : disableGcode);
 	    }
+		this.enabled=enabled;
 	}
 
 	@Override
@@ -338,18 +340,46 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 	 * Causes Grbl to block until all commands are complete.
 	 * @throws Exception
 	 */
-	protected void dwell() throws Exception {
-		sendCommand("G4 P0");
+	@Override
+	public void dwell() throws Exception {
+		GCode("G4 P0");
 	}
 
-	private List<String> drainResponseQueue() {
-		List<String> responses = new ArrayList<String>();
-		String response;
-		while ((response = responseQueue.poll()) != null) {
-			responses.add(response);
-		}
-		return responses;
+	@Override
+	public void dwell(double seconds) throws Exception {
+		seconds*=1;
+		GCode("G4 P"+seconds);
 	}
+
+	@Override
+    public boolean GCode(String command) throws Exception {
+                return	GCode(command, -1);
+        }
+
+	@Override
+        public boolean GCode(String command, long timeout) throws Exception {
+		if(connected&&enabled) {
+                	sendCommand(command, timeout);
+			return true;
+		}
+			return false;
+        }
+
+                List<String> responses = new ArrayList<String>();
+
+        @Override
+        public List<String> Msg() { return responses; }
+
+        private List<String> drainResponseQueue() {
+                responses.clear();
+                String response;
+                while ((response = responseQueue.poll()) != null) {
+                        responses.add(response);
+                }
+                return responses;
+        }
+
+
 	
     @Override
     public Wizard getConfigurationWizard() {

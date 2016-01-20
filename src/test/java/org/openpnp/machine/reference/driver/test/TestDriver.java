@@ -1,6 +1,8 @@
 package org.openpnp.machine.reference.driver.test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -117,6 +119,40 @@ public class TestDriver implements ReferenceDriver {
         logger.debug("setEnabled({})", enabled);
         delegate.setEnabled(enabled);
     }
+
+
+        @Override
+        public List<String> Msg() { 
+        	logger.debug("Msg()");
+        return	delegate.Msg();
+	}
+
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+        	logger.debug("dwell({})", seconds);
+        	delegate.dwell(seconds);
+        }
+
+        @Override
+        public void dwell() throws Exception {
+        	logger.debug("dwell()" );
+        	delegate.dwell();
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+        	logger.debug("GCode({})", command);
+        return	delegate.GCode(command);
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+        	logger.debug("GCode(},{})", command,timeout);
+        return	delegate.GCode(command,timeout);
+            // TODO Auto-generated method stub
+        }
     
     public static class TestDriverDelegate implements ReferenceDriver {
 
@@ -220,7 +256,32 @@ public class TestDriver implements ReferenceDriver {
             // TODO Auto-generated method stub
             
         }
-    }
+
+        @Override
+        public List<String> Msg() { return new ArrayList<String>(); }
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public void dwell() throws Exception {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+            // TODO Auto-generated method stub
+		return true;
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+            // TODO Auto-generated method stub
+		return true;
+        }
+}
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -257,4 +318,5 @@ public class TestDriver implements ReferenceDriver {
         // TODO Auto-generated method stub
         
     }
+
 }

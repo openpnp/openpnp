@@ -22,6 +22,8 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
@@ -130,11 +132,13 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         sendCommand(String.format(Locale.US, "G92 X0 Y0 Z0 A0"));
     }
 
+	private boolean enabled;
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         if (enabled && !connected) {
             connect();
         }
+	this.enabled=enabled;
         // sendCommand("$1000=" + (enabled ? "1" : "0"));
     }
 
@@ -159,6 +163,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location,
             double speed) throws Exception {
+	if(hm!=null)
         location = location.subtract(hm.getHeadOffsets());
 
         location = location.convertToUnits(LengthUnit.Millimeters);
@@ -427,6 +432,42 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         // 80-99 | Expansion | Expansion ranges
         // 100-119 | Expansion |
     }
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+                seconds*=1;
+                GCode("G4 P"+seconds);
+		dwell();
+        }
+
+        @Override
+        public void dwell() throws Exception {
+		moveTo(null,new Location(LengthUnit.Millimeters, x, y, z, c),1.0);
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                if(connected&&enabled) {
+                        sendCommand(command, timeout);
+                        return true;
+                }
+                        return false;
+        }
+
+
+	// TODO dummy function
+        @Override
+        public List<String> Msg() { return new ArrayList<String>(); }
+
+
+
+
+
 
     @Override
     public Wizard getConfigurationWizard() {

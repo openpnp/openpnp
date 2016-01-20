@@ -27,6 +27,8 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -249,6 +251,35 @@ public class SimulatorDriver implements ReferenceDriver {
             e.printStackTrace();
         }
     }
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+		seconds*=1000;
+		Thread.sleep((long)seconds);
+        }
+
+        @Override
+        public void dwell() throws Exception {
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                        return true;
+        }
+
+
+        @Override
+        public List<String> Msg() { return new ArrayList<String>(); }
+
+
+
+
+
     
     @Override
     public Wizard getConfigurationWizard() {

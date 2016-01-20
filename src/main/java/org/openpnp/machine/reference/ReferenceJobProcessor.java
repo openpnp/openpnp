@@ -281,7 +281,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
                 try {
                     camera.moveTo(feeder.getPickLocation().derive(null, null, Double.NaN, null), 1.0);
-                    Thread.sleep(750);
+                    camera.dwell(750);
                 }
                 catch (Exception e) {
                     fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -306,7 +306,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
                 try {
                     camera.moveTo(placementLocation.derive(null, null, Double.NaN, null), 1.0);
-                    Thread.sleep(750);
+                    camera.dwell(750);
                 }
                 catch (Exception e) {
                     fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());

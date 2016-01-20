@@ -21,6 +21,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
     private boolean n1Picked, n2Picked;
     
+	private boolean enabled;
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         if (enabled && !connected) {
@@ -73,6 +75,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 
             }
         }
+		this.enabled=enabled;
     }
     
     @Override
@@ -231,7 +234,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
             n1Vacuum(false);
             n1Exhaust(true);
-            Thread.sleep(500);
+            dwell(0.5);
             n1Exhaust(false);
         }
         else {
@@ -241,7 +244,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
             n2Vacuum(false);
             n2Exhaust(true);
-            Thread.sleep(500);
+            dwell(0.5);
             n2Exhaust(false);
         }
     }
@@ -423,19 +426,55 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
      * Block until all movement is complete.
      * @throws Exception
      */
-    protected void dwell() throws Exception {
-        sendCommand("M400");
-    }
 
-    private List<String> drainResponseQueue() {
-        List<String> responses = new ArrayList<String>();
-        String response;
-        while ((response = responseQueue.poll()) != null) {
-            responses.add(response);
+/*
+        @Override
+        public void dwell(long ms) throws Exception {
+		dwell(ms/1000.);
         }
-        return responses;
-    }
-    
+*/
+
+        @Override
+        public void dwell(double seconds) throws Exception {
+                sendCommand("G4 P"+seconds);
+		dwell();
+        }
+
+        @Override
+        public void dwell() throws Exception {
+        	GCode("M400");
+        }
+
+        @Override
+        public boolean GCode(String command) throws Exception {
+                return  GCode(command, -1);
+        }
+
+        @Override
+        public boolean GCode(String command, long timeout) throws Exception {
+                if(connected&&enabled) {
+                        sendCommand(command, timeout);
+                        return true;
+                }
+                        return false;
+        }
+
+
+                List<String> responses = new ArrayList<String>();
+
+        @Override
+        public List<String> Msg() { return responses; }
+
+        private List<String> drainResponseQueue() {
+                responses.clear();
+                String response;
+                while ((response = responseQueue.poll()) != null) {
+                        responses.add(response);
+                }
+                return responses;
+        }
+
+
     @Override
     public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName();
