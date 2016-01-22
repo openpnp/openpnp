@@ -29,9 +29,12 @@ import javax.swing.JTextField;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
+import org.openpnp.model.Length;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -166,4 +169,15 @@ public class ReferenceTrayFeederConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountY);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
     }
+
+	@Override
+	protected void saveToModel() {
+		super.saveToModel();
+		if (feeder.getOffsets().getX() == 0 && feeder.getTrayCountX() > 1) {
+			MessageBoxes.errorBox(this, "Error", "X offset must be greater than 0 if X tray count is greater than 1 or feed failure will occur.");
+		}
+		if (feeder.getOffsets().getY() == 0 && feeder.getTrayCountY() > 1) {
+			MessageBoxes.errorBox(this, "Error", "Y offset must be greater than 0 if Y tray count is greater than 1 or feed failure will occur.");
+		}
+	}
 }
