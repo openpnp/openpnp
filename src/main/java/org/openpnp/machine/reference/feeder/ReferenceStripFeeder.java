@@ -223,14 +223,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    // and look for the hole
 	    Location actualLocation = findClosestHole(camera);
 	    if (actualLocation == null) {
-	    	throw new Exception("Unable to locate reference hole. End of strip?");
+	    	throw new Exception("Feeder " + getName() + ": Unable to locate reference hole. End of strip?");
 	    }
 	    // make sure it's not too far away
 	    Length distance = actualLocation
 	    		.getLinearLengthTo(expectedLocation)
 	    		.convertToUnits(LengthUnit.Millimeters);
 	    if (distance.getValue() > 2) {
-	    	throw new Exception("Unable to locate reference hole. End of strip?");
+	    	throw new Exception("Feeder " + getName() + ": Unable to locate reference hole. End of strip?");
 	    }
 	    visionOffsets = actualLocation
 	    		.subtract(expectedLocation)

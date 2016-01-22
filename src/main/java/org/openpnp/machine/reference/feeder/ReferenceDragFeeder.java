@@ -35,7 +35,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceTapeFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -74,8 +74,8 @@ import org.slf4j.LoggerFactory;
  * then used in the next feed operation to be sure to hit the tape at the
  * right position.
  */
-public class ReferenceTapeFeeder extends ReferenceFeeder {
-	private final static Logger logger = LoggerFactory.getLogger(ReferenceTapeFeeder.class);
+public class ReferenceDragFeeder extends ReferenceFeeder {
+	private final static Logger logger = LoggerFactory.getLogger(ReferenceDragFeeder.class);
 	
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -349,7 +349,7 @@ public class ReferenceTapeFeeder extends ReferenceFeeder {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceTapeFeederConfigurationWizard(this);
+        return new ReferenceDragFeederConfigurationWizard(this);
     }
     
     @Override
