@@ -58,6 +58,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	
 	private Location pickLocation;
 
+
 	@Override
     public Location getPickLocation() throws Exception {
 	    if (pickLocation == null) {
@@ -71,27 +72,32 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 			throws Exception {
 		logger.debug("{}.feed({})", getName(), nozzle);
 		int partX, partY;
+		double JavaBugWorkaroundX,JavaBugWorkaroundY,JavaBugWorkaroundC;
 		
 		if (feedCount >= (trayCountX * trayCountY)) {
 		    throw new Exception(String.format("Tray empty on feeder %s.", getName()));
 		}
         
+	JavaBugWorkaroundC=feedCount; JavaBugWorkaroundY=trayCountY; JavaBugWorkaroundX=trayCountX;
         if (trayCountX >= trayCountY) {
             // X major axis.
-            partX = feedCount / trayCountY;
-            partY = feedCount % trayCountY;
+            JavaBugWorkaroundX = JavaBugWorkaroundC / JavaBugWorkaroundY;
+            JavaBugWorkaroundY = JavaBugWorkaroundC % JavaBugWorkaroundY;
         }
         else {
             // Y major axis.
-            partX = feedCount % trayCountX;
-            partY = feedCount / trayCountX;
+            JavaBugWorkaroundY = JavaBugWorkaroundC / JavaBugWorkaroundX;
+            JavaBugWorkaroundX = JavaBugWorkaroundC % JavaBugWorkaroundX;
         }
+	partX=(int)JavaBugWorkaroundX;
+	partY=(int)JavaBugWorkaroundY;
         
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
+        
         pickLocation = location.add(
-                offsets.multiply(partX, partY, 0.0, 0.0));
+                offsets.multiply(partX, partY, 1.0, 1.0));
 
         logger.debug(String.format(
                 "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
