@@ -36,7 +36,7 @@
          </head>
       </heads>
       <feeders>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="923eedf1-6a1a-4bbc-b603-421066262adc" name="R0805" enabled="false" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="923eedf1-6a1a-4bbc-b603-421066262adc" name="R0805" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <reference-hole-location units="Millimeters" x="89.759" y="38.006" z="0.0" rotation="0.0"/>
             <last-hole-location units="Millimeters" x="89.828" y="34.052" z="0.0" rotation="0.0"/>
