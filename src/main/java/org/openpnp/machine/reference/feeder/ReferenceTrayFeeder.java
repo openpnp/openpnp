@@ -58,10 +58,11 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	
 	private Location pickLocation;
 
+
 	@Override
     public Location getPickLocation() throws Exception {
 	    if (pickLocation == null) {
-	        pickLocation = location.derive(null,null,null,null);
+	        pickLocation = location;
 	    }
 		logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
 		return pickLocation;
@@ -71,25 +72,30 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 			throws Exception {
 		logger.debug("{}.feed({})", getName(), nozzle);
 		int partX, partY;
+		double X,Y,C;
 		
 		if (feedCount >= (trayCountX * trayCountY)) {
 		    throw new Exception(String.format("Tray empty on feeder %s.", getName()));
 		}
         
+	C=feedCount; Y=trayCountY; X=trayCountX;
         if (trayCountX >= trayCountY) {
             // X major axis.
-            partX = feedCount / trayCountX;
-            partY = feedCount % trayCountY;
+            X = C / Y;
+            Y = C % Y;
         }
         else {
             // Y major axis.
-            partX = feedCount % trayCountX;
-            partY = feedCount / trayCountY;
+            Y = C / X;
+            X = C % X;
         }
+	partX=(int)X;
+	partY=(int)Y;
         
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
+        
         pickLocation = location.add(
                 offsets.multiply(partX, partY, 1.0, 1.0));
 
