@@ -71,7 +71,6 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle)
 			throws Exception {
 		logger.debug("{}.feed({})", getName(), nozzle);
-		int partX, partY;
 		double X,Y,C;
 		
 		if (feedCount >= (trayCountX * trayCountY)) {
@@ -79,7 +78,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 		}
         
 	C=feedCount; Y=trayCountY; X=trayCountX;
-        if (trayCountX >= trayCountY) {
+        if (X >= Y) {
             // X major axis.
             X = C / Y;
             Y = C % Y;
@@ -89,19 +88,17 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
             Y = C / X;
             X = C % X;
         }
-	partX=(int)X;
-	partY=(int)Y;
-        
+
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
         
         pickLocation = location.add(
-                offsets.multiply(partX, partY, 1.0, 1.0));
+                offsets.multiply(X, Y, 1.0, 1.0));
 
         logger.debug(String.format(
                 "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
-                partX, partY, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
+                (int)X, (int)Y, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
         
         feedCount++;
 	}
