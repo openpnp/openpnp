@@ -58,6 +58,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	
 	private Location pickLocation;
 
+
 	@Override
     public Location getPickLocation() throws Exception {
 	    if (pickLocation == null) {
@@ -70,32 +71,34 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle)
 			throws Exception {
 		logger.debug("{}.feed({})", getName(), nozzle);
-		int partX, partY;
+		double X,Y,C;
 		
 		if (feedCount >= (trayCountX * trayCountY)) {
 		    throw new Exception(String.format("Tray empty on feeder %s.", getName()));
 		}
         
-        if (trayCountX >= trayCountY) {
+	C=feedCount; Y=trayCountY; X=trayCountX;
+        if (X >= Y) {
             // X major axis.
-            partX = feedCount / trayCountY;
-            partY = feedCount % trayCountY;
+            X = C / Y;
+            Y = C % Y;
         }
         else {
             // Y major axis.
-            partX = feedCount % trayCountX;
-            partY = feedCount / trayCountX;
+            Y = C / X;
+            X = C % X;
         }
-        
+
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
+        
         pickLocation = location.add(
-                offsets.multiply(partX, partY, 0.0, 0.0));
+                offsets.multiply(X, Y, 1.0, 1.0));
 
         logger.debug(String.format(
                 "Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount,
-                partX, partY, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
+                (int)X, (int)Y, pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
         
         feedCount++;
 	}
