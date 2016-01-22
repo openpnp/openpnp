@@ -58,7 +58,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.machine.reference.feeder.ReferenceTapeFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
@@ -69,9 +69,9 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ReferenceTapeFeederConfigurationWizard extends
+public class ReferenceDragFeederConfigurationWizard extends
         AbstractReferenceFeederConfigurationWizard {
-    private final ReferenceTapeFeeder feeder;
+    private final ReferenceDragFeeder feeder;
 
     private JTextField textFieldFeedStartX;
     private JTextField textFieldFeedStartY;
@@ -108,7 +108,7 @@ public class ReferenceTapeFeederConfigurationWizard extends
     private JPanel panel;
     private JButton btnCancelChangeTemplateImage;
 
-    public ReferenceTapeFeederConfigurationWizard(ReferenceTapeFeeder feeder) {
+    public ReferenceDragFeederConfigurationWizard(ReferenceDragFeeder feeder) {
         super(feeder);
         this.feeder = feeder;
 
@@ -464,7 +464,7 @@ public class ReferenceTapeFeederConfigurationWizard extends
                 if (image == null) {
                     MessageBoxes
                             .errorBox(
-                                    ReferenceTapeFeederConfigurationWizard.this,
+                                    ReferenceDragFeederConfigurationWizard.this,
                                     "No Image Selected",
                                     "Please select an area of the camera image using the mouse.");
                 }
