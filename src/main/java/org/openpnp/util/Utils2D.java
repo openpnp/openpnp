@@ -77,15 +77,16 @@ public class Utils2D {
 		return new Point(point.getX() * scaleX, point.getY() * scaleY);
 	}
 	
-	public static Location calculateBoardPlacementLocation(Location boardLocation, Side boardSide, Location placementLocation) {
+
+	public static Location calculateBoardPlacementLocation(Location boardLocation, double bottom, Location placementLocation) {
         // We will work in the units of the placementLocation, so convert
         // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
         
         // If we are placing the bottom of the board we need to invert
         // the placement location.
-        if (boardSide == Side.Bottom) {
-            placementLocation = placementLocation.invert(true, false, false, false);
+        if (bottom != 0.0) {
+            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),bottom,0.0,0.0,0.0));
         }
 
         // Create the point that represents the final placement location
@@ -94,25 +95,7 @@ public class Utils2D {
 
         // Rotate and translate the point into the same coordinate space
         // as the board
-        p = Utils2D.rotateTranslateScalePoint(p, boardLocation
-                .getRotation(), boardLocation.getX(), boardLocation
-                .getY(), 1.0, 1.0);
-
-        // Update the placementLocation with the transformed point
-        placementLocation = placementLocation.derive(p.getX(), p.getY(), null, null);
-
-        // Update the placementLocation with the board's rotation and
-        // the placement's rotation
-        // This sets the rotation of the part itself when it will be
-        // placed
-        placementLocation = placementLocation.derive(
-                null, 
-                null, 
-                null,
-                (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
-        
-        // Set the final location's Z to that of the board location.
-        placementLocation = placementLocation.derive(null, null, boardLocation.getZ(), null);
+        placementLocation = placementLocation.subtract(boardLocation).rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
         
         return placementLocation;
 	    

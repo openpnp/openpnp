@@ -281,7 +281,7 @@ public class JobPastePanel extends JPanel {
         	UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(
                 		boardLocation.getLocation(), 
-                		boardLocation.getSide(), 
+                		boardLocation.getSideWidth(), 
                 		getSelection().getLocation());
 
                 Camera camera = MainFrame
@@ -307,7 +307,7 @@ public class JobPastePanel extends JPanel {
             Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+                            .getSideWidth(), getSelection().getLocation());
 
             PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
             UiUtils.submitUiMachineTask(() -> {

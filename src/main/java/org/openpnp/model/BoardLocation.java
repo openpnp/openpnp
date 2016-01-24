@@ -22,6 +22,8 @@
 package org.openpnp.model;
 
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -29,6 +31,8 @@ import org.simpleframework.xml.core.Commit;
 public class BoardLocation extends AbstractModelObject {
 	@Element
 	private Location location;
+	@Element(required=false) // for compatility
+	private Location dimension=new Location(LengthUnit.Millimeters);
 	@Attribute
 	private Side side = Side.Top;
 	private Board board;
@@ -68,8 +72,24 @@ public class BoardLocation extends AbstractModelObject {
 		firePropertyChange("location", oldValue, location);
 	}
 
+	public Location getDimension() {
+		return dimension;
+	}
+
+	public void setDimension(Location location) {
+		Location oldValue = this.dimension;
+		this.dimension = location;
+		firePropertyChange("dimension", oldValue, location);
+	}
+
 	public Side getSide() {
 		return side;
+	}
+
+	public double getSideWidth() {
+		if(side==Side.Bottom)
+		return dimension.getX();
+		return 0.0;
 	}
 
 	public void setSide(Side side) {

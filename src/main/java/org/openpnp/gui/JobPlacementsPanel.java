@@ -325,7 +325,7 @@ public class JobPlacementsPanel extends JPanel {
         	UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(
                 		boardLocation.getLocation(), 
-                		boardLocation.getSide(), 
+                		boardLocation.getSideWidth(), 
                 		getSelection().getLocation());
 
                 Camera camera = MainFrame
@@ -351,7 +351,7 @@ public class JobPlacementsPanel extends JPanel {
             Location placementLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
                             .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+                            .getSideWidth(), getSelection().getLocation());
 
             Nozzle nozzle = MainFrame.machineControlsPanel
                     .getSelectedNozzle();
@@ -377,7 +377,7 @@ public class JobPlacementsPanel extends JPanel {
             	Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocation(
                 		boardLocation.getLocation(), 
-                		getSelection().getSide(),
+                		boardLocation.getSideWidth(),
                         camera.getLocation().invert(true, true, true, true));
                 getSelection().setLocation(
                         placementLocation.invert(true, true, true, true));
@@ -399,7 +399,7 @@ public class JobPlacementsPanel extends JPanel {
             Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
             Location placementLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), getSelection().getSide(),
+                            .getLocation(), boardLocation.getSideWidth(),
                             nozzle.getLocation().invert(true, true, true, true));
             getSelection().setLocation(
                     placementLocation.invert(true, true, true, true));
