@@ -91,7 +91,7 @@ public class Utils2D {
 
         // Rotate and translate the point into the same coordinate space
         // as the board
-        placementLocation = placementLocation.subtract(boardLocation).rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
+        placementLocation = placementLocation.subtract(boardLocation.derive(null,null,0.0,0.0)).rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
         
         return placementLocation;
 	    
