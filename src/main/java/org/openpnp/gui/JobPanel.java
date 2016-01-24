@@ -885,7 +885,7 @@ public class JobPanel extends JPanel {
             	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
             	Camera camera = tool.getHead().getDefaultCamera();
                 double z=getSelectedBoardLocation().getLocation().getZ();
-                getSelectedBoardLocation().setLocation(camera.getLocation().divert(0.0,0.0,z,0.0));
+                getSelectedBoardLocation().setLocation(camera.getLocation().derive(null,null,z,null));
                 boardLocationsTableModel.fireTableRowsUpdated(
                         boardLocationsTable.getSelectedRow(),
                         boardLocationsTable.getSelectedRow());
@@ -905,7 +905,7 @@ public class JobPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
         	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
                 double z=getSelectedBoardLocation().getLocation().getZ();
-                getSelectedBoardLocation().setLocation(tool.getLocation().divert(0.0,0.0,z,0.0));
+                getSelectedBoardLocation().setLocation(tool.getLocation().derive(null,null,z,null));
             boardLocationsTableModel.fireTableRowsUpdated(
                     boardLocationsTable.getSelectedRow(),
                     boardLocationsTable.getSelectedRow());
