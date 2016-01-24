@@ -89,14 +89,21 @@ public class Utils2D {
             placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),bottom,0.0,0.0,0.0));
         }
 
-        // Create the point that represents the final placement location
-        Point p = new Point(placementLocation.getX(),
-                placementLocation.getY());
-
         // Rotate and translate the point into the same coordinate space
         // as the board
         placementLocation = placementLocation.subtract(boardLocation).rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
         
+        return placementLocation;
+	    
+	}
+
+
+	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, double bottom, Location placementLocation) {
+	// inverse steps of calculateBoardPlacementLocation
+        boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
+        placementLocation = placementLocation.subtractWithRotation(boardLocation).rotateXy(-boardLocation.getRotation()).add(boardLocation);
+        if (bottom != 0.0) 
+            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),bottom,0.0,0.0,0.0));
         return placementLocation;
 	    
 	}
