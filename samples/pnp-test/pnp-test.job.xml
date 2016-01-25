@@ -1,7 +1,16 @@
 <openpnp-job>
    <board-locations>
-      <board-location side="Top" board-file="pnp-test.board.xml">
-         <location units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
+      <board-location side="Top" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="1.6963817439713709" y="1.1284594011538516" z="0.0" rotation="-0.07165303584843132"/>
+      </board-location>
+      <board-location side="Top" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="30.00419850725092" y="31.385809140618836" z="0.0" rotation="74.65654549732643"/>
+      </board-location>
+      <board-location side="Bottom" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="77.4830607253765" y="1.1428854331970335" z="0.0" rotation="0.08416252382379524"/>
+      </board-location>
+      <board-location side="Bottom" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="75.97501163496284" y="68.38094997456919" z="0.0" rotation="72.20000000000005"/>
       </board-location>
    </board-locations>
 </openpnp-job>
