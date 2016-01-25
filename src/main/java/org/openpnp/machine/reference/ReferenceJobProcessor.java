@@ -184,7 +184,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                     placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
                 }
                 placementLocation = 
-                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSideWidth(), placementLocation);
+                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), bl.getSideWidth(), placementLocation);
 
                 // Update the placementLocation with the proper Z value. This is
                 // the distance to the top of the board plus the height of 
@@ -296,7 +296,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
                 Location placementLocation = placement.getLocation();
                 placementLocation = 
-                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSideWidth(), placementLocation);
+                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), bl.getSideWidth(), placementLocation);
                 
                 fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (%s).", placementLocation));
 

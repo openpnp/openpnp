@@ -78,32 +78,32 @@ public class Utils2D {
 	}
 	
 
-	public static Location calculateBoardPlacementLocation(Location boardLocation, double bottom, Location placementLocation) {
+	public static Location calculateBoardPlacementLocation(Location boardLocation, Side side, double offset, Location placementLocation) {
         // We will work in the units of the placementLocation, so convert
         // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
         
         // If we are placing the bottom of the board we need to invert
         // the placement location.
-        if (bottom != 0.0) {
-            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),bottom,0.0,0.0,0.0));
+        if (side == Side.Bottom) {
+            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
         }
 
         // Rotate and translate the point into the same coordinate space
         // as the board
-        placementLocation = placementLocation.subtract(boardLocation.derive(null,null,0.0,0.0)).rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
-        
+        placementLocation = placementLocation.subtract(boardLocation).rotateXy(boardLocation.getRotation()).add(boardLocation).addWithRotation(boardLocation);
         return placementLocation;
 	    
 	}
 
 
-	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, double bottom, Location placementLocation) {
+	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side, double offset, Location placementLocation) {
 	// inverse steps of calculateBoardPlacementLocation
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-        placementLocation = placementLocation.subtractWithRotation(boardLocation).rotateXy(-boardLocation.getRotation()).add(boardLocation);
-        if (bottom != 0.0) 
-            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),bottom,0.0,0.0,0.0));
+        placementLocation = placementLocation.subtractWithRotation(boardLocation).subtract(boardLocation).rotateXy(-boardLocation.getRotation()).add(boardLocation);
+        if (side==Side.Bottom)  {
+            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
+	}
         return placementLocation;
 	    
 	}

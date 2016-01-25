@@ -87,9 +87,7 @@ public class BoardLocation extends AbstractModelObject {
 	}
 
 	public double getSideWidth() {
-		if(side==Side.Bottom)
 		return dimension.getX();
-		return 0.0;
 	}
 
 	public void setSide(Side side) {

@@ -281,6 +281,7 @@ public class JobPastePanel extends JPanel {
         	UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(
                 		boardLocation.getLocation(), 
+                		boardLocation.getSide(), 
                 		boardLocation.getSideWidth(), 
                 		getSelection().getLocation());
 
@@ -306,7 +307,7 @@ public class JobPastePanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Location padLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation
+                            .getLocation(), boardLocation.getSide(), boardLocation
                             .getSideWidth(), getSelection().getLocation());
 
             PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
