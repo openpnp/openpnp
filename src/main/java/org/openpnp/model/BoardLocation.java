@@ -31,8 +31,6 @@ import org.simpleframework.xml.core.Commit;
 public class BoardLocation extends AbstractModelObject {
 	@Element
 	private Location location;
-	@Element(required=false) // for compatility
-	private Location dimension=new Location(LengthUnit.Millimeters);
 	@Attribute
 	private Side side = Side.Top;
 	private Board board;
@@ -73,13 +71,11 @@ public class BoardLocation extends AbstractModelObject {
 	}
 
 	public Location getDimension() {
-		return dimension;
+		return board.getDimension();
 	}
 
 	public void setDimension(Location location) {
-		Location oldValue = this.dimension;
-		this.dimension = location;
-		firePropertyChange("dimension", oldValue, location);
+		board.setDimension(location);
 	}
 
 	public Side getSide() {
@@ -87,7 +83,7 @@ public class BoardLocation extends AbstractModelObject {
 	}
 
 	public double getSideWidth() {
-		return dimension.getX();
+		return board.getDimension().getX();
 	}
 
 	public void setSide(Side side) {
