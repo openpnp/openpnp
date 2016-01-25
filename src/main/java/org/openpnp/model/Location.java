@@ -256,9 +256,9 @@ public class Location {
 	 * @return
 	 */
 	public Location rotateXy(double angle) {
-	    if(angle==0.0) return this;
-	    while(angle<180.) angle+=360;
-	    while(angle>180.) angle-=360;
+	    if(angle==0.0) { return this; } 
+	    while(angle<180.) { angle+=360; } 
+	    while(angle>180.) { angle-=360; } 
 	    angle = Math.toRadians(angle);
         
 	    return new Location(

@@ -136,8 +136,8 @@ public class Utils2D {
         Location idealARotated = idealA.rotateXy(angle);
         
         Location offset = actualA.subtract(idealARotated);
-	while(angle<-180.) angle+=360;
-	while(angle> 180.) angle-=360;
+	while(angle<-180.) { angle+=360; }
+	while(angle> 180.) { angle-=360; }
         
         return new Location(idealA.getUnits(), offset.getX(), offset.getY(), 0, angle);
     }
