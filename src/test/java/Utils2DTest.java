@@ -10,16 +10,15 @@ public class Utils2DTest {
         // Create two placements to test with.
         Location idealA = new Location(LengthUnit.Millimeters, 5, 35, 0, 0);
         Location idealB = new Location(LengthUnit.Millimeters, 55, 5, 0, 0);
+        Location board  = new Location(LengthUnit.Millimeters, 5, 4, 0, 10);
         
         // Rotate and translate the placements to simulate a board that has
         // been placed on the table
-        double angle = 10;
         Location offset = new Location(idealA.getUnits(), 10, 10, 0, 0);
-        
-        Location actualA = idealA.rotateXy(angle);
-        actualA = actualA.add(offset);
-        Location actualB = idealB.rotateXy(angle);
-        actualB = actualB.add(offset);
+	
+       	// rotate 
+        Location actualA = Utils2D.calculateBoardPlacementLocation(board, Side.Top, 100., idealA);
+        Location actualB = Utils2D.calculateBoardPlacementLocation(board, Side.Top, 100., idealB);
         
         System.out.println("idealA " + idealA);
         System.out.println("idealB " + idealB);
@@ -29,10 +28,22 @@ public class Utils2DTest {
         Location results = Utils2D.calculateAngleAndOffset(idealA, idealB, actualA, actualB);
         
         System.out.println("results " + results);
-        
-        within("angle", results.getRotation(), angle, 0.001);
-        within("x", results.getX(), offset.getX(), 0.01);
-        within("y", results.getY(), offset.getY(), 0.01);
+	check(results,5.77, 3.19, 0., 10);
+
+        board  = new Location(LengthUnit.Millimeters, 5, 4, 0, 92);
+        actualA = Utils2D.calculateBoardPlacementLocation(board, Side.Top, 100., idealA);
+        actualB = Utils2D.calculateBoardPlacementLocation(board, Side.Top, 100., idealB);
+        results = Utils2D.calculateAngleAndOffset(idealA, idealB, actualA, actualB);
+        System.out.println("results " + results);
+	check(results,14.17, 3.14, 0., 92.);
+        board  = new Location(LengthUnit.Millimeters, 5, 4, 0, -92);
+        actualA = Utils2D.calculateBoardPlacementLocation(board, Side.Top, 100., idealA);
+        actualB = Utils2D.calculateBoardPlacementLocation(board, Side.Top, 100., idealB);
+        results = Utils2D.calculateAngleAndOffset(idealA, idealB, actualA, actualB);
+        System.out.println("results " + results);
+	check(results,6.17, 13.14, 0., -92.);
+
+
     }
   
     private static void check(Location loc,Location tst) throws Exception {
