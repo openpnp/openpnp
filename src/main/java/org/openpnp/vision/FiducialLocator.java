@@ -46,9 +46,7 @@ public class FiducialLocator {
     }
     
     public static Location locateBoard(BoardLocation boardLocation) throws Exception {
-    	if (boardLocation.getSide() == Side.Bottom) {
-    		throw new Exception("Bottom fiducial check is not yet supported. See https://github.com/openpnp/openpnp/issues/191");
-    	}
+        // TODO: finish bottom code
         
         // Find the fids in the board
         IdentifiableList<Placement> fiducials = getFiducials(boardLocation);
