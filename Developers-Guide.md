@@ -45,7 +45,11 @@ In the pull request comments, explain what the change does. If it is new functio
 
 ## Testing
 
+### Automated Testing (Required)
+
 OpenPnP contains a JUnit based test suite that must pass before anything new can be merged. You can run it with `mvn test` or from your favorite IDE. You should also try to include new tests for your code if possible.
+
+### Manual Testing (Strongly Recommended)
 
 In addition to the automated tests, it's a good idea to run a manual test using OpenPnP's base configuration. To do this:
 
