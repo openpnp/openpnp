@@ -30,6 +30,15 @@ Your commits should be generally useful, not specifically useful to just your ma
 
 Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it.
 
+OpenPnP closely follows the [Google Java Style](https://google.github.io/styleguide/javaguide.html). While there may be existing code in OpenPnP that does not follow the style exactly, any new code must follow the style.
+
+Two things in particular are extremely important:
+
+1. [Naming of variables and classes](https://google.github.io/styleguide/javaguide.html#s5-naming).
+2. [Always include optional braces](https://google.github.io/styleguide/javaguide.html#s4.1.1-braces-always-used).
+
+Code that does not follow these two guidelines (at least) will not be accepted.
+
 ## Describe Your Work
 
 In the pull request comments, explain what the change does. If it is new functionality, explain why it's useful and how it is to be used. If you are fixing an issue, reference the issue number.
@@ -37,6 +46,13 @@ In the pull request comments, explain what the change does. If it is new functio
 ## Testing
 
 OpenPnP contains a JUnit based test suite that must pass before anything new can be merged. You can run it with `mvn test` or from your favorite IDE. You should also try to include new tests for your code if possible.
+
+In addition to the automated tests, it's a good idea to run a manual test using OpenPnP's base configuration. To do this:
+
+1. Delete your [configuration directory](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) or start OpenPnP with `-DoverrideUserConfig=true` on the command line. This will reset your configuration to the same configuration that OpenPnP ships with.
+2. Start OpenPnP and load the pnp-test.job.xml from the samples directory.
+3. Run the job. You should see the camera image move and the machine should simulate picking and placing the entire job.
+4. Verify that the job runs and completes without errors. Watch the camera view and see if anything strange is happening.
 
 # The GUI
 
