@@ -326,6 +326,7 @@ public class JobPlacementsPanel extends JPanel {
                 Location location = Utils2D.calculateBoardPlacementLocation(
                 		boardLocation.getLocation(), 
                 		boardLocation.getSide(), 
+                		boardLocation.getSideWidth(), 
                 		getSelection().getLocation());
 
                 Camera camera = MainFrame
@@ -350,8 +351,8 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Location placementLocation = Utils2D
                     .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+                            .getLocation(), boardLocation.getSide(), boardLocation
+                            .getSideWidth(), getSelection().getLocation());
 
             Nozzle nozzle = MainFrame.machineControlsPanel
                     .getSelectedNozzle();
@@ -375,12 +376,12 @@ public class JobPlacementsPanel extends JPanel {
         	UiUtils.messageBoxOnException(() -> {
             	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
             	Camera camera = tool.getHead().getDefaultCamera();
-                Location placementLocation = Utils2D.calculateBoardPlacementLocation(
+                Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
                 		boardLocation.getLocation(), 
-                		getSelection().getSide(),
-                        camera.getLocation().invert(true, true, true, true));
-                getSelection().setLocation(
-                        placementLocation.invert(true, true, true, true));
+                		boardLocation.getSide(),
+                		boardLocation.getSideWidth(),
+                        camera.getLocation());
+                getSelection().setLocation(placementLocation);
                 table.repaint();
         	});
         }
@@ -398,11 +399,12 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
             Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), getSelection().getSide(),
-                            nozzle.getLocation().invert(true, true, true, true));
-            getSelection().setLocation(
-                    placementLocation.invert(true, true, true, true));
+                    .calculateBoardPlacementLocationInverse(boardLocation
+                            .getLocation(), 
+			boardLocation.getSide(),
+			boardLocation.getSideWidth(),
+                            nozzle.getLocation());
+                getSelection().setLocation(placementLocation);
             table.repaint();
         }
     };

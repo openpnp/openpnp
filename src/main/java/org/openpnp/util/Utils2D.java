@@ -77,43 +77,33 @@ public class Utils2D {
 		return new Point(point.getX() * scaleX, point.getY() * scaleY);
 	}
 	
-	public static Location calculateBoardPlacementLocation(Location boardLocation, Side boardSide, Location placementLocation) {
+
+	public static Location calculateBoardPlacementLocation(Location boardLocation, Side side, double offset, Location placementLocation) {
         // We will work in the units of the placementLocation, so convert
         // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
         
         // If we are placing the bottom of the board we need to invert
         // the placement location.
-        if (boardSide == Side.Bottom) {
-            placementLocation = placementLocation.invert(true, false, false, false);
+        if (side == Side.Bottom) {
+            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
         }
-
-        // Create the point that represents the final placement location
-        Point p = new Point(placementLocation.getX(),
-                placementLocation.getY());
 
         // Rotate and translate the point into the same coordinate space
         // as the board
-        p = Utils2D.rotateTranslateScalePoint(p, boardLocation
-                .getRotation(), boardLocation.getX(), boardLocation
-                .getY(), 1.0, 1.0);
+        placementLocation = placementLocation.subtract(boardLocation).rotateXy(boardLocation.getRotation()).add(boardLocation).addWithRotation(boardLocation);
+        return placementLocation;
+	    
+	}
 
-        // Update the placementLocation with the transformed point
-        placementLocation = placementLocation.derive(p.getX(), p.getY(), null, null);
 
-        // Update the placementLocation with the board's rotation and
-        // the placement's rotation
-        // This sets the rotation of the part itself when it will be
-        // placed
-        placementLocation = placementLocation.derive(
-                null, 
-                null, 
-                null,
-                (placementLocation.getRotation() + boardLocation.getRotation()) % 360.0);
-        
-        // Set the final location's Z to that of the board location.
-        placementLocation = placementLocation.derive(null, null, boardLocation.getZ(), null);
-        
+	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side, double offset, Location placementLocation) {
+	// inverse steps of calculateBoardPlacementLocation
+        boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
+        placementLocation = placementLocation.subtractWithRotation(boardLocation).subtract(boardLocation).rotateXy(-boardLocation.getRotation()).add(boardLocation);
+        if (side==Side.Bottom)  {
+            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
+	}
         return placementLocation;
 	    
 	}
@@ -146,6 +136,8 @@ public class Utils2D {
         Location idealARotated = idealA.rotateXy(angle);
         
         Location offset = actualA.subtract(idealARotated);
+	while(angle<-180.) { angle+=360; }
+	while(angle> 180.) { angle-=360; }
         
         return new Location(idealA.getUnits(), offset.getX(), offset.getY(), 0, angle);
     }

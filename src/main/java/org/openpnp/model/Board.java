@@ -51,6 +51,11 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	
 	@Element(required=false)
 	private Outline outline;
+
+	@Element(required=false)
+        private Location dimension=new Location(LengthUnit.Millimeters);
+
+	@Element(required=false) // for compatility
 	
 	@ElementList(required=false)
 	private ArrayList<Fiducial> fiducials = new ArrayList<>();
@@ -88,6 +93,18 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	public List<Fiducial> getFiducials() {
 		return Collections.unmodifiableList(fiducials);
 	}
+
+        public Location getDimension() {
+                return dimension;
+        }
+
+        public void setDimension(Location location) {
+                Location oldValue = this.dimension;
+                this.dimension = location;
+                firePropertyChange("dimension", oldValue, location);
+        }
+
+
 	
 	
 	public void addFiducial(Fiducial fiducial) {
