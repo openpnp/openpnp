@@ -8,28 +8,28 @@
       <placement version="1.1" id="R8" side="Top" part-id="R0201-1K" type="Place">
          <location units="Millimeters" x="6.0" y="22.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R7" side="Top" part-id="R0201-1K" type="Place">
+      <placement version="1.1" id="R7" side="Top" part-id="R0201-1K" type="Ignore">
          <location units="Millimeters" x="12.0" y="22.0" z="0.0" rotation="315.0"/>
       </placement>
-      <placement version="1.1" id="R9" side="Top" part-id="R0201-1K" type="Place">
+      <placement version="1.1" id="R9" side="Top" part-id="R0201-1K" type="Ignore">
          <location units="Millimeters" x="6.0" y="17.0" z="0.0" rotation="270.0"/>
       </placement>
       <placement version="1.1" id="R6" side="Top" part-id="R0402-1K" type="Place">
          <location units="Millimeters" x="25.0" y="22.0" z="0.0" rotation="45.0"/>
       </placement>
-      <placement version="1.1" id="R5" side="Top" part-id="R0402-1K" type="Place">
+      <placement version="1.1" id="R5" side="Top" part-id="R0402-1K" type="Ignore">
          <location units="Millimeters" x="31.0" y="22.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R4" side="Top" part-id="R0402-1K" type="Place">
+      <placement version="1.1" id="R4" side="Top" part-id="R0402-1K" type="Ignore">
          <location units="Millimeters" x="31.0" y="17.0" z="0.0" rotation="90.0"/>
       </placement>
       <placement version="1.1" id="R10" side="Top" part-id="R0603-1K" type="Place">
          <location units="Millimeters" x="6.0" y="11.0" z="0.0" rotation="270.0"/>
       </placement>
-      <placement version="1.1" id="R12" side="Top" part-id="R0603-1K" type="Place">
+      <placement version="1.1" id="R12" side="Top" part-id="R0603-1K" type="Ignore">
          <location units="Millimeters" x="12.0" y="6.0" z="0.0" rotation="315.0"/>
       </placement>
-      <placement version="1.1" id="R11" side="Top" part-id="R0603-1K" type="Place">
+      <placement version="1.1" id="R11" side="Top" part-id="R0603-1K" type="Ignore">
          <location units="Millimeters" x="6.0" y="6.0" z="0.0" rotation="0.0"/>
       </placement>
       <placement version="1.1" id="FID1" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
@@ -41,10 +41,10 @@
       <placement version="1.1" id="FID3" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
          <location units="Millimeters" x="34.5" y="2.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R2" side="Top" part-id="R0805-1K" type="Place">
+      <placement version="1.1" id="R2" side="Top" part-id="R0805-1K" type="Ignore">
          <location units="Millimeters" x="31.0" y="11.0" z="0.0" rotation="90.0"/>
       </placement>
-      <placement version="1.1" id="R3" side="Top" part-id="R0805-1K" type="Place">
+      <placement version="1.1" id="R3" side="Top" part-id="R0805-1K" type="Ignore">
          <location units="Millimeters" x="25.0" y="6.0" z="0.0" rotation="45.0"/>
       </placement>
       <placement version="1.1" id="R13" side="Bottom" part-id="R0805-1K" type="Place">
@@ -53,28 +53,28 @@
       <placement version="1.1" id="R14" side="Bottom" part-id="R0201-1K" type="Place">
          <location units="Millimeters" x="31.0" y="22.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R15" side="Bottom" part-id="R0201-1K" type="Place">
+      <placement version="1.1" id="R15" side="Bottom" part-id="R0201-1K" type="Ignore">
          <location units="Millimeters" x="25.0" y="22.0" z="0.0" rotation="315.0"/>
       </placement>
-      <placement version="1.1" id="R16" side="Bottom" part-id="R0201-1K" type="Place">
+      <placement version="1.1" id="R16" side="Bottom" part-id="R0201-1K" type="Ignore">
          <location units="Millimeters" x="31.0" y="17.0" z="0.0" rotation="270.0"/>
       </placement>
-      <placement version="1.1" id="R17" side="Bottom" part-id="R0402-1K" type="Place">
+      <placement version="1.1" id="R17" side="Bottom" part-id="R0402-1K" type="Ignore">
          <location units="Millimeters" x="12.0" y="22.0" z="0.0" rotation="45.0"/>
       </placement>
       <placement version="1.1" id="R18" side="Bottom" part-id="R0402-1K" type="Place">
          <location units="Millimeters" x="6.0" y="22.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R19" side="Bottom" part-id="R0402-1K" type="Place">
+      <placement version="1.1" id="R19" side="Bottom" part-id="R0402-1K" type="Ignore">
          <location units="Millimeters" x="6.0" y="17.0" z="0.0" rotation="90.0"/>
       </placement>
       <placement version="1.1" id="R20" side="Bottom" part-id="R0603-1K" type="Place">
          <location units="Millimeters" x="31.0" y="11.0" z="0.0" rotation="270.0"/>
       </placement>
-      <placement version="1.1" id="R21" side="Bottom" part-id="R0603-1K" type="Place">
+      <placement version="1.1" id="R21" side="Bottom" part-id="R0603-1K" type="Ignore">
          <location units="Millimeters" x="25.0" y="6.0" z="0.0" rotation="315.0"/>
       </placement>
-      <placement version="1.1" id="R22" side="Bottom" part-id="R0603-1K" type="Place">
+      <placement version="1.1" id="R22" side="Bottom" part-id="R0603-1K" type="Ignore">
          <location units="Millimeters" x="31.0" y="6.0" z="0.0" rotation="0.0"/>
       </placement>
       <placement version="1.1" id="FID4" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
@@ -86,10 +86,10 @@
       <placement version="1.1" id="FID6" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
          <location units="Millimeters" x="2.0" y="2.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R23" side="Bottom" part-id="R0805-1K" type="Place">
+      <placement version="1.1" id="R23" side="Bottom" part-id="R0805-1K" type="Ignore">
          <location units="Millimeters" x="6.0" y="11.0" z="0.0" rotation="90.0"/>
       </placement>
-      <placement version="1.1" id="R24" side="Bottom" part-id="R0805-1K" type="Place">
+      <placement version="1.1" id="R24" side="Bottom" part-id="R0805-1K" type="Ignore">
          <location units="Millimeters" x="12.0" y="6.0" z="0.0" rotation="45.0"/>
       </placement>
    </placements>

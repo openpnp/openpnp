@@ -2,6 +2,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
@@ -55,6 +56,18 @@ public class BasicJobTest {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
+        
+        // Copy the required configuration files over to the new configuration
+        // directory.
+        FileUtils.copyURLToFile(
+        		ClassLoader.getSystemResource("config/BasicJobTest/machine.xml"),
+        		new File(workingDirectory, "machine.xml"));
+        FileUtils.copyURLToFile(
+        		ClassLoader.getSystemResource("config/BasicJobTest/packages.xml"),
+        		new File(workingDirectory, "packages.xml"));
+        FileUtils.copyURLToFile(
+        		ClassLoader.getSystemResource("config/BasicJobTest/parts.xml"),
+        		new File(workingDirectory, "parts.xml"));
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
