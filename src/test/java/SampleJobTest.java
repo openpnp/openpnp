@@ -55,10 +55,10 @@ public class SampleJobTest {
         driver.setFeedRateMmPerMinute(15000);
         
         Camera camera =  machine.getDefaultHead().getDefaultCamera();
-        File videoFile = new File("target");
-        videoFile = new File(videoFile, "SampleJobTest.mp4");
-        MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
-        camera.startContinuousCapture(encoder, 25);
+//        File videoFile = new File("target");
+//        videoFile = new File(videoFile, "SampleJobTest.mp4");
+//        MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
+//        camera.startContinuousCapture(encoder, 25);
         
         TestCompleteNotifier notifier = new TestCompleteNotifier();
 
@@ -77,8 +77,8 @@ public class SampleJobTest {
             jobProcessor.start();
             notifier.wait();
         }
-        camera.stopContinuousCapture(encoder);
-        encoder.finish();
+//        camera.stopContinuousCapture(encoder);
+//        encoder.finish();
         if (notifier.failed) {
             throw notifier.exception;
         }
