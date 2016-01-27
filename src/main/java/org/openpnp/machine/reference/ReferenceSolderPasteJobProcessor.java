@@ -81,10 +81,7 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
 		        }
 	            Location location = pad.getLocation();
 	            location = Utils2D.calculateBoardPlacementLocation(
-	            		boardLocation.getLocation(), 
-	            		boardLocation.getSide(), 
-	            		boardLocation.getBoard().getDimensions().getX(), 
-	            		location);
+	            		boardLocation, location);
 
 	            fireDetailedStatusUpdated(String.format("Move to pad location, safe Z at (%s).", location));
 	            if (!shouldJobProcessingContinue()) {

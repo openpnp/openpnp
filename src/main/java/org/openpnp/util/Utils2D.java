@@ -25,6 +25,7 @@
 package org.openpnp.util;
 
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 
@@ -77,7 +78,14 @@ public class Utils2D {
 		return new Point(point.getX() * scaleX, point.getY() * scaleY);
 	}
 	
-
+	public static Location calculateBoardPlacementLocation(BoardLocation bl, Location placementLocation) {
+		return calculateBoardPlacementLocation(
+				bl.getLocation(),
+				bl.getSide(),
+				bl.getBoard().getDimensions().getX(),
+				placementLocation);
+	}
+	
 	public static Location calculateBoardPlacementLocation(Location boardLocation, Side side, double offset, Location placementLocation) {
         // We will work in the units of the placementLocation, so convert
         // anything that isn't in those units to it.
@@ -94,10 +102,17 @@ public class Utils2D {
         // as the board
         placementLocation = placementLocation.rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
         return placementLocation;
-	    
 	}
 
 
+	public static Location calculateBoardPlacementLocationInverse(BoardLocation boardLocation, Location placementLocation) {
+		return calculateBoardPlacementLocationInverse(
+				boardLocation.getLocation(), 
+				boardLocation.getSide(),
+				boardLocation.getBoard().getDimensions().getX(),
+				placementLocation); 
+	}
+	
 	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side, double offset, Location placementLocation) {
 		// inverse steps of calculateBoardPlacementLocation
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
@@ -107,7 +122,6 @@ public class Utils2D {
             		.add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
         }
         return placementLocation;
-	    
 	}
 	
    /**
