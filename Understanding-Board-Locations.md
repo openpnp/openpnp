@@ -1,8 +1,8 @@
 # Deprecation Warning
 
-Please note that due to a recent change, this document, while still accurate, does not describe the best method of setting board locations. It is now possible, by setting the width of the board to use the same board location for both top and bottom.
+Please note that due to a recent change this document is outdated. The method described here still works, but there is now a better way to set board locations. You can now use the same board location for both the top and bottom of the board, as long as you also specify the width of the board.
 
-# Original Information
+# Outdated Method
 
 In OpenPnP all placements are made relative to the origin of the board, which is the X, Y coordinate of 0,0. We call this the Board Location.
 
