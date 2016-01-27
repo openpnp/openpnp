@@ -113,16 +113,16 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 			else if (columnIndex == 1) {
 				LengthCellValue value = (LengthCellValue) aValue;
 				Length length = value.getLength();
-				Location location = boardLocation.getDimension();
+				Location location = boardLocation.getBoard().getDimensions();
 				location = Length.setLocationField(configuration, location, length, Length.Field.X);
-				boardLocation.setDimension(location);
+				boardLocation.getBoard().setDimensions(location);
 			}
 			else if (columnIndex == 2) {
 				LengthCellValue value = (LengthCellValue) aValue;
 				Length length = value.getLength();
-				Location location = boardLocation.getDimension();
+				Location location = boardLocation.getBoard().getDimensions();
 				location = Length.setLocationField(configuration, location, length, Length.Field.Y);
-				boardLocation.setDimension(location);
+				boardLocation.getBoard().setDimensions(location);
 			}
 			else if (columnIndex == 3) {
 				boardLocation.setSide((Side) aValue);
@@ -167,7 +167,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
 		BoardLocation boardLocation = job.getBoardLocations().get(row);
 		Location loc = boardLocation.getLocation();
-		Location dim = boardLocation.getDimension();
+		Location dim = boardLocation.getBoard().getDimensions();
 		switch (col) {
 		case 0:
 			return boardLocation.getBoard().getName();

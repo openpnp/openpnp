@@ -168,7 +168,9 @@ public class FiducialLocator {
         
         // Move to where we expect to find the fid
         Location location = Utils2D.calculateBoardPlacementLocation(
-                boardLocation.getLocation(), boardLocation.getSide(), boardLocation.getSideWidth(),
+                boardLocation.getLocation(), 
+                boardLocation.getSide(), 
+                boardLocation.getBoard().getDimensions().getX(),
                 fid.getLocation());
         MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 

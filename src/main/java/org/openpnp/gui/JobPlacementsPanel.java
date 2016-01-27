@@ -326,7 +326,7 @@ public class JobPlacementsPanel extends JPanel {
                 Location location = Utils2D.calculateBoardPlacementLocation(
                 		boardLocation.getLocation(), 
                 		boardLocation.getSide(), 
-                		boardLocation.getSideWidth(), 
+                		boardLocation.getBoard().getDimensions().getX(), 
                 		getSelection().getLocation());
 
                 Camera camera = MainFrame
@@ -350,9 +350,11 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation.getSide(), boardLocation
-                            .getSideWidth(), getSelection().getLocation());
+                    .calculateBoardPlacementLocation(
+                    		boardLocation.getLocation(), 
+                    		boardLocation.getSide(), 
+                    		boardLocation.getBoard().getDimensions().getX(), 
+                    		getSelection().getLocation());
 
             Nozzle nozzle = MainFrame.machineControlsPanel
                     .getSelectedNozzle();
@@ -379,7 +381,7 @@ public class JobPlacementsPanel extends JPanel {
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
                 		boardLocation.getLocation(), 
                 		boardLocation.getSide(),
-                		boardLocation.getSideWidth(),
+                		boardLocation.getBoard().getDimensions().getX(),
                         camera.getLocation());
                 getSelection().setLocation(placementLocation);
                 table.repaint();
@@ -399,10 +401,10 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
             Location placementLocation = Utils2D
-                    .calculateBoardPlacementLocationInverse(boardLocation
-                            .getLocation(), 
-			boardLocation.getSide(),
-			boardLocation.getSideWidth(),
+                    .calculateBoardPlacementLocationInverse(
+                    		boardLocation.getLocation(), 
+                    		boardLocation.getSide(),
+                    		boardLocation.getBoard().getDimensions().getX(),
                             nozzle.getLocation());
                 getSelection().setLocation(placementLocation);
             table.repaint();

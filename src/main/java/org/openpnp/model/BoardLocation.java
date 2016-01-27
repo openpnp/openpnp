@@ -70,20 +70,8 @@ public class BoardLocation extends AbstractModelObject {
 		firePropertyChange("location", oldValue, location);
 	}
 
-	public Location getDimension() {
-		return board.getDimension();
-	}
-
-	public void setDimension(Location location) {
-		board.setDimension(location);
-	}
-
 	public Side getSide() {
 		return side;
-	}
-
-	public double getSideWidth() {
-		return board.getDimension().getX();
 	}
 
 	public void setSide(Side side) {

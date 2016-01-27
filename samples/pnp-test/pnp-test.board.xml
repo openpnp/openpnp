@@ -1,6 +1,6 @@
 <openpnp-board name="pnp-test.board.xml">
    <outline units="Millimeters"/>
-   <dimension units="Millimeters" x="37.0" y="0.0" z="0.0" rotation="0.0"/>
+   <dimensions units="Millimeters" x="37.0" y="0.0" z="0.0" rotation="0.0"/>
    <fiducials/>
    <placements>
       <placement version="1.1" id="R1" side="Top" part-id="R0805-1K" type="Place">

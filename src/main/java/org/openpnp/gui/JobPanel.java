@@ -884,8 +884,8 @@ public class JobPanel extends JPanel {
         	UiUtils.messageBoxOnException(() -> {
             	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
             	Camera camera = tool.getHead().getDefaultCamera();
-                double z=getSelectedBoardLocation().getLocation().getZ();
-                getSelectedBoardLocation().setLocation(camera.getLocation().derive(null,null,z,null));
+                double z = getSelectedBoardLocation().getLocation().getZ();
+                getSelectedBoardLocation().setLocation(camera.getLocation().derive(null, null, z, null));
                 boardLocationsTableModel.fireTableRowsUpdated(
                         boardLocationsTable.getSelectedRow(),
                         boardLocationsTable.getSelectedRow());
@@ -904,8 +904,8 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
         	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
-                double z=getSelectedBoardLocation().getLocation().getZ();
-                getSelectedBoardLocation().setLocation(tool.getLocation().derive(null,null,z,null));
+                double z = getSelectedBoardLocation().getLocation().getZ();
+                getSelectedBoardLocation().setLocation(tool.getLocation().derive(null, null, z, null));
             boardLocationsTableModel.fireTableRowsUpdated(
                     boardLocationsTable.getSelectedRow(),
                     boardLocationsTable.getSelectedRow());

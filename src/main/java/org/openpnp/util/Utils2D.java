@@ -86,7 +86,8 @@ public class Utils2D {
         // If we are placing the bottom of the board we need to invert
         // the placement location.
         if (side == Side.Bottom) {
-            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
+            placementLocation = placementLocation.invert(true, false, false, false)
+            		.add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
         }
 
         // Rotate and translate the point into the same coordinate space
@@ -98,12 +99,13 @@ public class Utils2D {
 
 
 	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side, double offset, Location placementLocation) {
-	// inverse steps of calculateBoardPlacementLocation
+		// inverse steps of calculateBoardPlacementLocation
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
         placementLocation = placementLocation.subtractWithRotation(boardLocation).rotateXy(-boardLocation.getRotation());
         if (side==Side.Bottom)  {
-            placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
-	}
+            placementLocation = placementLocation.invert(true, false, false, false)
+            		.add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
+        }
         return placementLocation;
 	    
 	}
