@@ -91,7 +91,7 @@ public class Utils2D {
 
         // Rotate and translate the point into the same coordinate space
         // as the board
-        placementLocation = placementLocation.subtract(boardLocation).rotateXy(boardLocation.getRotation()).add(boardLocation).addWithRotation(boardLocation);
+        placementLocation = placementLocation.rotateXy(boardLocation.getRotation()).addWithRotation(boardLocation);
         return placementLocation;
 	    
 	}
@@ -100,7 +100,7 @@ public class Utils2D {
 	public static Location calculateBoardPlacementLocationInverse(Location boardLocation, Side side, double offset, Location placementLocation) {
 	// inverse steps of calculateBoardPlacementLocation
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
-        placementLocation = placementLocation.subtractWithRotation(boardLocation).subtract(boardLocation).rotateXy(-boardLocation.getRotation()).add(boardLocation);
+        placementLocation = placementLocation.subtractWithRotation(boardLocation).rotateXy(-boardLocation.getRotation());
         if (side==Side.Bottom)  {
             placementLocation = placementLocation.invert(true, false, false, false).add(new Location(placementLocation.getUnits(),offset,0.0,0.0,0.0));
 	}
