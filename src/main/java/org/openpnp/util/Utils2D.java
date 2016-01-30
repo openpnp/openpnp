@@ -24,9 +24,12 @@
 
 package org.openpnp.util;
 
+import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 
 
@@ -125,15 +128,14 @@ public class Utils2D {
 	}
 	
    /**
-     * Given two "ideal" unrotated and unoffset Locations and two matching
-     * "actual" Locations that have been offset and rotated, calculate the
-     * angle of rotation and offset between them.
+     * Given two "ideal" Locations and two matching "actual" Locations that
+     * calculate the difference in rotation and offset between them.
      * 
-     * Angle is the difference between the angles between the two ideal
-     * Locations and the two actual Locations.
+     * Angle is the difference in angle between the line through the two
+     * ideal Locations and the line through the two actual locations.
      * 
-     * Offset is the difference between one of the ideal Locations having been
-     * rotated by Angle and the matching actual Location. 
+     * Offset is the difference in position of the first ideal and first
+     * actual Location. 
      * 
      * @param idealA
      * @param idealB
@@ -145,15 +147,13 @@ public class Utils2D {
         idealB = idealB.convertToUnits(idealA.getUnits());
         actualA = actualA.convertToUnits(idealA.getUnits());
         actualB = actualB.convertToUnits(idealA.getUnits());
-
-        double angle = Math.toDegrees(Math.atan2(actualA.getY() - actualB.getY(), actualA.getX() - actualB.getX())
-                - Math.atan2(idealA.getY() - idealB.getY(), idealA.getX() - idealB.getX()));
         
-        Location idealARotated = idealA.rotateXy(angle);
+        double idealAngle = Math.toDegrees(Math.atan2(idealB.getY() - idealA.getY(), idealB.getX() - idealA.getX())); 
+        double actualAngle = Math.toDegrees(Math.atan2(actualB.getY() - actualA.getY(), actualB.getX() - actualA.getX()));
         
-        Location offset = actualA.subtract(idealARotated);
-	while(angle<-180.) { angle+=360; }
-	while(angle> 180.) { angle-=360; }
+        double angle = actualAngle - idealAngle;
+        
+        Location offset = actualA.subtract(idealA);
         
         return new Location(idealA.getUnits(), offset.getX(), offset.getY(), 0, angle);
     }
