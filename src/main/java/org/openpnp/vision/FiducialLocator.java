@@ -57,39 +57,38 @@ public class FiducialLocator {
         // Find the two that are most distant from each other
         List<Placement> mostDistant = getMostDistantPlacements(fiducials);
         
-        Placement a = mostDistant.get(0);
-        Placement b = mostDistant.get(1);
+        Placement placementA = mostDistant.get(0);
+        Placement placementB = mostDistant.get(1);
 
-        logger.debug("Chose {} and {}", a.getId(), b.getId());
+        logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
         
         // Run the fiducial check on each and get their actual locations
-        Location aActualLoc = getFiducialLocation(boardLocation, a);
-        if (aActualLoc == null) {
+        Location actualLocationA = getFiducialLocation(boardLocation, placementA);
+        if (actualLocationA == null) {
             throw new Exception("Unable to locate first fiducial.");
         }
-        Location bActualLoc = getFiducialLocation(boardLocation, b);
-        if (bActualLoc == null) {
+        Location actualLocationB = getFiducialLocation(boardLocation, placementB);
+        if (actualLocationB == null) {
             throw new Exception("Unable to locate second fiducial.");
         }
         
         // Calculate the linear distance between the ideal points and the
         // located points. If they differ by more than a few percent we
         // probably made a mistake.
-        double fidDistance = Math.abs(a.getLocation().getLinearDistanceTo(b.getLocation()));
-        double visionDistance = Math.abs(aActualLoc.getLinearDistanceTo(bActualLoc));
+        double fidDistance = Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
+        double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
         if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }
-        
                 
         // Calculate the angle and offset from the results
-        Location aIdealLoc = Utils2D.calculateBoardPlacementLocation(boardLocation, a.getLocation());
-        Location bIdealLoc = Utils2D.calculateBoardPlacementLocation(boardLocation, b.getLocation());
+        Location idealLocationA = Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
+        Location idealLocationB = Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
         Location location = Utils2D.calculateAngleAndOffset(
-                aIdealLoc, 
-                bIdealLoc, 
-                aActualLoc,
-                bActualLoc);
+                idealLocationA, 
+                idealLocationB, 
+                actualLocationA,
+                actualLocationB);
         
         location = boardLocation.getLocation().addWithRotation(location);
         location = location.derive(
