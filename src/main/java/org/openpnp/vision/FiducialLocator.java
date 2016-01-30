@@ -84,7 +84,7 @@ public class FiducialLocator {
         // Calculate the angle and offset from the results
         Location idealLocationA = Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
         Location idealLocationB = Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
-        Location location = Utils2D.calculateAngleAndOffset(
+        Location location = Utils2D.calculateAngleAndOffset2(
                 idealLocationA, 
                 idealLocationB, 
                 actualLocationA,
