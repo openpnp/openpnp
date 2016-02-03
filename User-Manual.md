@@ -7,6 +7,11 @@ OpenPnP is made up of three components. The hardware, the firmware and the softw
 
 The purpose of this manual is to help you get the software up and running, and to teach you how to configure and operate it.
 
+Quick Start
+===========
+
+If you are brand new to OpenPnP have a look at the [[Quick Start]] guide to quickly get up and running and comfortable with the software. Once you are done there it will guide you back here to get into the details.
+
 Installation
 ============
 
