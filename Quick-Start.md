@@ -42,7 +42,7 @@ Now that you've seen the user interface a bit, it's time to try running a pick a
 6. If you haven't already, press the big green START button to start the machine.
 6. Press the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/control-start.svg) button to start the job and the camera will start moving.
 
-OpenPnP will now simulate a full pick and place job. It will use computer vision to align the boards using fiducials, find parts in virtual feeders and place the parts on virtual boards. You can follow along by watching the camera view.
+OpenPnP will now simulate a full pick and place job. It will use computer vision to align the boards using fiducials, find parts in virtual feeders, and then place the parts on virtual boards. You can follow along by watching the camera view.
 
 When the job is complete, congratulations! You've run a job in OpenPnP! The next step is to dive into the [[User Manual]] and start learning how to hook OpenPnP up to a real machine.
 
