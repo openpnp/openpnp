@@ -21,7 +21,7 @@ If you are using an archive version of OpenPnP, unzip the software into a direct
 A Quick Tour
 ============
 
-OpenPnP comes set up so that you can use it right away to see how it works. You don't even a need a machine connected.
+OpenPnP is set up out of the box so that you can use it right away; you don't even a need to connect a machine!
 
 When you start OpenPnP for the first time you will see a simulated pick and place table in the camera view. Try following along with the items below to get a feel for how OpenPnP works:
 
