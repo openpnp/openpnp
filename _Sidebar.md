@@ -1,7 +1,8 @@
 OpenPnP
 -------
 
-* [User's Manual](https://github.com/openpnp/openpnp/wiki/User-Manual)
+* [[Quick Start]]
+* [[User Manual]]
     * [Setup](https://github.com/openpnp/openpnp/wiki/User-Manual#setup)
     * [Feeders](https://github.com/openpnp/openpnp/wiki/User-Manual#feeders)
     * [Cameras](https://github.com/openpnp/openpnp/wiki/User-Manual#cameras)
