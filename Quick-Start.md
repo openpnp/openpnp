@@ -46,3 +46,13 @@ OpenPnP will now simulate a full pick and place job. It will use computer vision
 
 When the job is complete, congratulations! You've run a job in OpenPnP! The next step is to dive into the [[User Manual]] and start learning how to hook OpenPnP up to a real machine.
 
+What's Next
+===========
+
+Next you should start reading the [[User Manual]] to get a better feel for the more advanced features of OpenPnP, and to learn how start integrating the software with your machine.
+
+If you don't have a machine yet, visit http://openpnp.org/hardware/ to see some options for building or buying a machine.
+
+If you want to dive into the code, have a look at the [[Developers Guide]] to start hacking.
+
+For help or just conversation, join [the discussion group](http://groups.google.com/group/openpnp), or come chat with us on Freenode IRC at [#openpnp](http://webchat.freenode.net/?channels=openpnp). If you don’t have an IRC client, you can use [this web based one](http://webchat.freenode.net/?channels=openpnp).
