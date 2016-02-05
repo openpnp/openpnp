@@ -65,6 +65,14 @@ public class Footprint {
     public List<Pad> getPads() {
         return pads;
     }
+    
+    public void removePad(Pad pad) {
+        pads.remove(pad);
+    }
+    
+    public void addPad(Pad pad) {
+        pads.add(pad);
+    }
 
     public static class Pad {
         @Attribute

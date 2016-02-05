@@ -24,20 +24,20 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.DefaultCellEditor;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -50,15 +50,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.PackageReticle;
-import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
@@ -69,7 +63,10 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class PackagesPanel extends JPanel {
 	private final static Logger logger = LoggerFactory.getLogger(PackagesPanel.class);
-	
+
+	private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+
 	final private Configuration configuration;
 	final private Frame frame;
 	
@@ -77,6 +74,8 @@ public class PackagesPanel extends JPanel {
 	private TableRowSorter<PackagesTableModel> packagesTableSorter;
 	private JTextField searchTextField;
 	private JTable packagesTable;
+
+	private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
 
 	public PackagesPanel(Configuration configuration, Frame frame) {
 		this.configuration = configuration;
@@ -86,16 +85,16 @@ public class PackagesPanel extends JPanel {
 		packagesTableModel = new PackagesTableModel(configuration);
 		packagesTableSorter = new TableRowSorter<PackagesTableModel>(packagesTableModel);
 
-		JPanel panel_5 = new JPanel();
-		add(panel_5, BorderLayout.NORTH);
-		panel_5.setLayout(new BorderLayout(0, 0));
+		JPanel toolbarAndSearch = new JPanel();
+		add(toolbarAndSearch, BorderLayout.NORTH);
+		toolbarAndSearch.setLayout(new BorderLayout(0, 0));
 
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
-		panel_5.add(toolBar);
+		toolbarAndSearch.add(toolBar);
 
 		JPanel panel_1 = new JPanel();
-		panel_5.add(panel_1, BorderLayout.EAST);
+		toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
 		JLabel lblSearch = new JLabel("Search");
 		panel_1.add(lblSearch);
@@ -119,32 +118,59 @@ public class PackagesPanel extends JPanel {
         });
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
+		    
+		JSplitPane splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+//        splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
+//                PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation",
+                new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        prefs.putInt(PREF_DIVIDER_POSITION,
+                                splitPane.getDividerLocation());
+                    }
+                });
+        add(splitPane, BorderLayout.CENTER);
+        
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+//        JPanel settingsPanel = new JPanel();
+//        tabbedPane.add("Settings", settingsPanel);
+        JPanel footprintPanel = new JPanel();
+        footprintPanel.setLayout(new BorderLayout());
+        tabbedPane.add("Footprint", footprintPanel);
+        
 		
-		JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
-		packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
-
 		packagesTable = new AutoSelectTextTable(packagesTableModel);
 		packagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		packagesTable.setDefaultEditor(org.openpnp.model.Package.class, new DefaultCellEditor(packagesCombo));
-		packagesTable.setDefaultRenderer(org.openpnp.model.Package.class, new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
-		
-		add(new JScrollPane(packagesTable), BorderLayout.CENTER);
-
-		packagesTable.setRowSorter(packagesTableSorter);
 		
 		packagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				Package this_package = getSelectedPackage();
-				
-				deletePackageAction.setEnabled(this_package != null);
-			}
-		});
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+                
+                Package pkg = getSelectedPackage();
+                
+                deletePackageAction.setEnabled(pkg != null);
+                
+                footprintPanel.removeAll();
+                
+                if (pkg != null) {
+                    footprintPanel.add(new FootprintPanel(pkg.getFootprint()), BorderLayout.CENTER);
+                }
+                
+                revalidate();
+                repaint();
+            }
+        });
+        
+		packagesTable.setRowSorter(packagesTableSorter);
 
-
+        splitPane.setLeftComponent(new JScrollPane(packagesTable));
+        splitPane.setRightComponent(tabbedPane);
+        
 		deletePackageAction.setEnabled(false);
 		
 		JButton btnNewPackage = toolBar.add(newPackageAction);
