@@ -42,6 +42,12 @@ public class Footprint {
     @ElementList(inline=true, required=false)
     private ArrayList<Pad> pads = new ArrayList<Pad>();
     
+    @Attribute(required=false)
+    private double bodyWidth;
+    
+    @Attribute(required=false)
+    private double bodyHeight;
+    
     public Shape getShape() {
         if (pads.isEmpty()) {
             return null;
@@ -50,6 +56,11 @@ public class Footprint {
         for (Pad pad : pads) {
             shape.append(pad.getShape(), false);
         }
+        
+        Pad body = new Pad();
+        body.setWidth(bodyWidth);
+        body.setHeight(bodyHeight);
+        shape.append(body.getShape(), false);
         
         return shape;
     }
@@ -73,6 +84,24 @@ public class Footprint {
     public void addPad(Pad pad) {
         pads.add(pad);
     }
+    
+    public double getBodyWidth() {
+        return bodyWidth;
+    }
+
+    public void setBodyWidth(double bodyWidth) {
+        this.bodyWidth = bodyWidth;
+    }
+
+    public double getBodyHeight() {
+        return bodyHeight;
+    }
+
+    public void setBodyHeight(double bodyHeight) {
+        this.bodyHeight = bodyHeight;
+    }
+
+
 
     public static class Pad {
         @Attribute
@@ -93,6 +122,10 @@ public class Footprint {
         @Attribute(required=false)
         private double rotation = 0;
         
+        /**
+         * Roundness as a percentage of the width and height. 0 is square,
+         * 100 is round.
+         */
         @Attribute(required=false)
         private double roundness = 0;
         
@@ -158,8 +191,8 @@ public class Footprint {
                     -height / 2,
                     width,
                     height,
-                    width / 1.0 * roundness,
-                    height / 1.0 * roundness);
+                    width / 100.0 * roundness,
+                    height / 100.0 * roundness);
             AffineTransform tx = new AffineTransform();
             tx.translate(x, -y);
             tx.rotate(Math.toRadians(-rotation));

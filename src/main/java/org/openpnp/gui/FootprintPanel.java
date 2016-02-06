@@ -23,6 +23,8 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -37,11 +39,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.reticle.FootprintReticle;
+import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.tablemodel.FootprintTableModel;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
+import org.openpnp.spi.Camera;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,8 +98,26 @@ public class FootprintPanel extends JPanel {
 		
 		JButton btnNew = toolBar.add(newAction);
 		JButton btnDelete = toolBar.add(deleteAction);
+		
+        showReticle();
 	}
 	
+    private void showReticle() {
+        try {
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+            if (cameraView == null) {     
+                return;       
+            }     
+            cameraView.removeReticle(FootprintPanel.class.getName());       
+            Reticle reticle = new FootprintReticle(footprint);
+            cameraView.setReticle(FootprintPanel.class.getName(), reticle);             
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }     
+    
 	private Pad getSelectedPad() {
 		int index = table.getSelectedRow();
 		if (index == -1) {

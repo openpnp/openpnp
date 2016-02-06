@@ -24,6 +24,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
@@ -50,6 +52,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -57,6 +60,7 @@ import org.openpnp.gui.tablemodel.PackagesTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,6 +181,23 @@ public class PackagesPanel extends JPanel {
 		btnNewPackage.setToolTipText("");
 		JButton btnDeletePackage = toolBar.add(deletePackageAction);
 		btnDeletePackage.setToolTipText("");
+		
+        addComponentListener(new ComponentAdapter() {
+            @Override     
+            public void componentHidden(ComponentEvent e) {
+                try {
+                    Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+                    CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+                    if (cameraView == null) {
+                        return;
+                    }
+                    cameraView.removeReticle(FootprintPanel.class.getName());       
+                }
+                catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            }     
+        });
 	}
 	
 	private Package getSelectedPackage() {

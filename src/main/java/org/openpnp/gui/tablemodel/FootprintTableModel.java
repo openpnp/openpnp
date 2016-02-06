@@ -135,7 +135,10 @@ public class FootprintTableModel extends AbstractTableModel {
                 pad.setRotation(Double.parseDouble(aValue.toString()));
             }
             else if (columnIndex == 6) {
-                pad.setRoundness(Double.parseDouble(aValue.toString()) / 100.0);
+                double val = Double.parseDouble(aValue.toString());
+                val = Math.max(val, 0);
+                val = Math.min(val, 100);
+                pad.setRoundness(val);
             }
 		}
 		catch (Exception e) {
@@ -159,7 +162,7 @@ public class FootprintTableModel extends AbstractTableModel {
         case 5:
             return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(), pad.getRotation());
         case 6:
-            return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(), pad.getRoundness() * 100.0);
+            return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(), pad.getRoundness());
 		default:
 			return null;
 		}
