@@ -49,9 +49,6 @@ public class Footprint {
     private double bodyHeight;
     
     public Shape getShape() {
-        if (pads.isEmpty()) {
-            return null;
-        }
         Path2D.Double shape = new Path2D.Double();
         for (Pad pad : pads) {
             shape.append(pad.getShape(), false);
