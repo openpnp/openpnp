@@ -14,3 +14,4 @@ When adding a package here, please use the following format:
 </package>
 ```
 
+To use one of these packages in your system just copy the definition to your clipboard and hit the "Paste" button in the Packages panel.
