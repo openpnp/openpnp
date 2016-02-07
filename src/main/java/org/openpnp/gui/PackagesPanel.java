@@ -23,21 +23,28 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.DefaultCellEditor;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -51,25 +58,26 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.PackageReticle;
-import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
+import org.simpleframework.xml.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class PackagesPanel extends JPanel {
 	private final static Logger logger = LoggerFactory.getLogger(PackagesPanel.class);
-	
+
+	private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
+	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+
 	final private Configuration configuration;
 	final private Frame frame;
 	
@@ -77,6 +85,9 @@ public class PackagesPanel extends JPanel {
 	private TableRowSorter<PackagesTableModel> packagesTableSorter;
 	private JTextField searchTextField;
 	private JTable packagesTable;
+	private ActionGroup packageSelectedActionGroup;
+
+	private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
 
 	public PackagesPanel(Configuration configuration, Frame frame) {
 		this.configuration = configuration;
@@ -86,16 +97,16 @@ public class PackagesPanel extends JPanel {
 		packagesTableModel = new PackagesTableModel(configuration);
 		packagesTableSorter = new TableRowSorter<PackagesTableModel>(packagesTableModel);
 
-		JPanel panel_5 = new JPanel();
-		add(panel_5, BorderLayout.NORTH);
-		panel_5.setLayout(new BorderLayout(0, 0));
+		JPanel toolbarAndSearch = new JPanel();
+		add(toolbarAndSearch, BorderLayout.NORTH);
+		toolbarAndSearch.setLayout(new BorderLayout(0, 0));
 
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
-		panel_5.add(toolBar);
+		toolbarAndSearch.add(toolBar);
 
 		JPanel panel_1 = new JPanel();
-		panel_5.add(panel_1, BorderLayout.EAST);
+		toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
 		JLabel lblSearch = new JLabel("Search");
 		panel_1.add(lblSearch);
@@ -119,59 +130,84 @@ public class PackagesPanel extends JPanel {
         });
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
+		    
+		JSplitPane splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+//        splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
+//                PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation",
+                new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        prefs.putInt(PREF_DIVIDER_POSITION,
+                                splitPane.getDividerLocation());
+                    }
+                });
+        add(splitPane, BorderLayout.CENTER);
+        
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+//        JPanel settingsPanel = new JPanel();
+//        tabbedPane.add("Settings", settingsPanel);
+        JPanel footprintPanel = new JPanel();
+        footprintPanel.setLayout(new BorderLayout());
+        tabbedPane.add("Footprint", footprintPanel);
+        
 		
-		JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
-		packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
-
 		packagesTable = new AutoSelectTextTable(packagesTableModel);
 		packagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		packagesTable.setDefaultEditor(org.openpnp.model.Package.class, new DefaultCellEditor(packagesCombo));
-		packagesTable.setDefaultRenderer(org.openpnp.model.Package.class, new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
-		
-		add(new JScrollPane(packagesTable), BorderLayout.CENTER);
-
-		packagesTable.setRowSorter(packagesTableSorter);
 		
 		packagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting()) {
-					return;
-				}
-				Package this_package = getSelectedPackage();
-				
-				deletePackageAction.setEnabled(this_package != null);
-				
-                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-                if (cameraView != null) {
-                    if (this_package != null) {
-                        Reticle reticle = new PackageReticle(this_package);
-                        cameraView.setReticle(PackagesPanel.this.getClass().getName(), reticle);
-                    }
-                    else {
-                        MainFrame.cameraPanel.getSelectedCameraView().removeReticle(PackagesPanel.this.getClass().getName());
-                    }                                       
-                }
-			}
-		});
-
-
-        addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentHidden(ComponentEvent e) {
-                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-                if (cameraView != null) {
-                    cameraView.removeReticle(PackagesPanel.this.getClass().getName());
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
                 }
+                
+                Package pkg = getSelectedPackage();
+                
+                packageSelectedActionGroup.setEnabled(pkg != null);
+                
+                footprintPanel.removeAll();
+                
+                if (pkg != null) {
+                    footprintPanel.add(new FootprintPanel(pkg.getFootprint()), BorderLayout.CENTER);
+                }
+                
+                revalidate();
+                repaint();
             }
-        });        
+        });
+        
+		packagesTable.setRowSorter(packagesTableSorter);
+
+        splitPane.setLeftComponent(new JScrollPane(packagesTable));
+        splitPane.setRightComponent(tabbedPane);
+        
+        packageSelectedActionGroup = new ActionGroup(deletePackageAction, copyPackageToClipboardAction);
+        packageSelectedActionGroup.setEnabled(false);
 		
-		deletePackageAction.setEnabled(false);
+		toolBar.add(newPackageAction);
+		toolBar.add(deletePackageAction);
+		toolBar.addSeparator();
+        toolBar.add(copyPackageToClipboardAction);
+        toolBar.add(pastePackageToClipboardAction);
 		
-		JButton btnNewPackage = toolBar.add(newPackageAction);
-		btnNewPackage.setToolTipText("");
-		JButton btnDeletePackage = toolBar.add(deletePackageAction);
-		btnDeletePackage.setToolTipText("");
+        addComponentListener(new ComponentAdapter() {
+            @Override     
+            public void componentHidden(ComponentEvent e) {
+                try {
+                    Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+                    CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+                    if (cameraView == null) {
+                        return;
+                    }
+                    cameraView.removeReticle(FootprintPanel.class.getName());       
+                }
+                catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            }     
+        });
 	}
 	
 	private Package getSelectedPackage() {
@@ -221,14 +257,14 @@ public class PackagesPanel extends JPanel {
 		}
 	};
 	
-	public final Action deletePackageAction = new AbstractAction() {
-		{
-			putValue(SMALL_ICON, Icons.delete);
-			putValue(NAME, "Delete Package");
-			putValue(SHORT_DESCRIPTION, "Delete the currently selected package.");
-		}
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
+    public final Action deletePackageAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Package");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected package.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
             // Check to make sure there are no parts using this package.
             for (Part part : Configuration.get().getParts()) {
                 if (part.getPackage() == getSelectedPackage()) {
@@ -244,6 +280,63 @@ public class PackagesPanel extends JPanel {
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().removePackage(getSelectedPackage());
             }
-		}
-	};
+        }
+    };
+
+    // TODO: add to enable group
+    public final Action copyPackageToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            putValue(NAME, "Copy Package to Clipboard");
+            putValue(SHORT_DESCRIPTION, "Copy the currently selected package to the clipboard in text format.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Package pkg = getSelectedPackage();
+            if (pkg == null) {
+                return;
+            }
+            try {
+                Serializer s = Configuration.get().createSerializer();
+                StringWriter w = new StringWriter();
+                s.write(pkg, w);
+                StringSelection stringSelection = new StringSelection(w.toString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+            }
+        }
+    };
+    
+    public final Action pastePackageToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            putValue(NAME, "Create Package from Clipboard");
+            putValue(SHORT_DESCRIPTION, "Create a new package from a definition on the clipboard.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Serializer ser = Configuration.get().createSerializer();
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                StringReader r = new StringReader(s);
+                Package pkg = ser.read(Package.class, s);
+                for (int i = 0; ; i++) {
+                    if (Configuration.get().getPackage(pkg.getId() + "-" + i) == null) {
+                        pkg.setId(pkg.getId() + "-" + i);
+                        Configuration.get().addPackage(pkg);
+                        break;
+                    }
+                }
+                packagesTableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(packagesTable);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+            }
+        }
+    };
 }

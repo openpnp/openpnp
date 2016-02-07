@@ -64,11 +64,14 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -124,18 +127,6 @@ public class MachineControlsPanel extends JPanel {
 		jogControlsWindow.getContentPane().add(jogControlsPanel);
 	}
 	
-    /**
-     * @deprecated See {@link Machine#submit(Runnable)} 
-     * @param runnable
-     */
-	public void submitMachineTask(Runnable runnable) {
-		if (!Configuration.get().getMachine().isEnabled()) {
-			MessageBoxes.errorBox(getTopLevelAncestor(), "Machine Error", "Machine is not started.");
-			return;
-		}
-		Configuration.get().getMachine().submit(runnable);
-	}
-	
 	public void setSelectedNozzle(Nozzle nozzle) {
 	    selectedNozzle = nozzle;
 	    comboBoxNozzles.setSelectedItem(selectedNozzle);
@@ -150,10 +141,32 @@ public class MachineControlsPanel extends JPanel {
         try {
             // TODO: We don't actually have a way to select a dispenser yet, so
             // until we do we just return the first one.
-            return Configuration.get().getMachine().getHeads().get(0).getPasteDispensers().get(0);
+            return Configuration
+            		.get()
+            		.getMachine()
+            		.getDefaultHead()
+            		.getDefaultPasteDispenser();
         }
         catch (Exception e) {
             return null;
+        }
+    }
+    
+    /**
+     * Returns the selected Nozzle or PasteDispenser depending on which type
+     * of Job is selected.
+     * @return
+     */
+    public HeadMountable getSelectedTool() {
+    	JobProcessor.Type jobProcessorType = MainFrame.jobPanel.getSelectedJobProcessorType(); 
+        if (jobProcessorType == JobProcessor.Type.PickAndPlace) {
+            return getSelectedNozzle();
+        }
+        else if (jobProcessorType == JobProcessor.Type.SolderPaste) {
+            return getSelectedPasteDispenser();
+        }
+        else {
+            throw new Error("Unknown tool type: " + jobProcessorType);
         }
     }
     
@@ -525,18 +538,10 @@ public class MachineControlsPanel extends JPanel {
 	public Action goToZeroAction = new AbstractAction("Go To Zero") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						selectedNozzle.moveToSafeZ(1.0);
-						// Move to 0, 0, 0, 0.
-						selectedNozzle.moveTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), 1.0);
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-						MessageBoxes.errorBox(frame, "Go To Zero Failed", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				selectedNozzle.moveToSafeZ(1.0);
+				// Move to 0, 0, 0, 0.
+				selectedNozzle.moveTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), 1.0);
 			});
 		}
 	};
@@ -545,16 +550,8 @@ public class MachineControlsPanel extends JPanel {
 	public Action homeAction = new AbstractAction("Home") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-						selectedNozzle.getHead().home();
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-						MessageBoxes.errorBox(frame, "Homing Failed", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				selectedNozzle.getHead().home();
 			});
 		}
 	};
@@ -601,17 +598,10 @@ public class MachineControlsPanel extends JPanel {
 	public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			final Location location = cameraPanel.getSelectedCameraLocation();
-			final Nozzle nozzle = getSelectedNozzle();
-			submitMachineTask(new Runnable() {
-				public void run() {
-					try {
-					    MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
-					}
-					catch (Exception e) {
-						MessageBoxes.errorBox(frame, "Move Failed", e);
-					}
-				}
+			UiUtils.submitUiMachineTask(() -> {
+				HeadMountable tool = getSelectedTool();
+				Camera camera = tool.getHead().getDefaultCamera();
+				MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(), 1.0);
 			});
 		}
 	};
@@ -620,21 +610,11 @@ public class MachineControlsPanel extends JPanel {
     public Action targetCameraAction = new AbstractAction(null, Icons.centerCamera) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            final Camera camera = cameraPanel.getSelectedCamera();
-            if (camera == null) {
-                return;
-            }
-            final Location location = getSelectedNozzle().getLocation();
-            submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(frame, "Move Failed", e);
-                    }
-                }
-            });
+			UiUtils.submitUiMachineTask(() -> {
+				HeadMountable tool = getSelectedTool();
+				Camera camera = tool.getHead().getDefaultCamera();
+				MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation(), 1.0);
+			});
         }
     };
     

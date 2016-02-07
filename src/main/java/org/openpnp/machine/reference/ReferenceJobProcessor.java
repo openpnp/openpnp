@@ -184,7 +184,8 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                     placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
                 }
                 placementLocation = 
-                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);
+                        Utils2D.calculateBoardPlacementLocation(
+                        		bl, placementLocation);
 
                 // Update the placementLocation with the proper Z value. This is
                 // the distance to the top of the board plus the height of 
@@ -246,8 +247,17 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
             return;
         }
         
-        Head head = machine.getHeads().get(0);
-        Camera camera = head.getCameras().get(0);
+        Head head;
+        Camera camera;
+        
+        try {
+            head = machine.getDefaultHead();
+            camera = head.getDefaultCamera();
+        }
+        catch (Exception e) {
+            fireJobEncounteredError(JobError.HeadError, e.getMessage());
+            return;
+        }
         
         jobPlanner.setJob(job);
                 
@@ -287,7 +297,8 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
                 Location placementLocation = placement.getLocation();
                 placementLocation = 
-                        Utils2D.calculateBoardPlacementLocation(bl.getLocation(), bl.getSide(), placementLocation);
+                        Utils2D.calculateBoardPlacementLocation(
+                        		bl, placementLocation);
                 
                 fireDetailedStatusUpdated(String.format("Move to placement location, safe Z at (%s).", placementLocation));
 
@@ -296,7 +307,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                 }
 
                 try {
-                    camera.moveTo(placementLocation.derive(null, null, Double.NaN, null), 1.0);
+                    camera.moveTo(placementLocation.derive(null, null, Double.NaN, null), placement.getPart().getSpeed());
                     Thread.sleep(750);
                 }
                 catch (Exception e) {
@@ -317,6 +328,9 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
     protected void checkFiducials() throws Exception {
         FiducialLocator locator = new FiducialLocator();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (!boardLocation.isEnabled()) {
+                continue;
+            }
             if (!boardLocation.isCheckFiducials()) {
                 continue;
             }
@@ -512,7 +526,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         }
 
         try {
-            nozzle.moveToSafeZ(1.0);
+            nozzle.moveToSafeZ(placement.getPart().getSpeed());
         }
         catch (Exception e) {
             fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -531,7 +545,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
         // Move the nozzle to the placement Location at safe Z
         try {
-            nozzle.moveTo(placementLocation.derive(null, null, Double.NaN, null), 1.0);
+            nozzle.moveTo(placementLocation.derive(null, null, Double.NaN, null), placement.getPart().getSpeed());
         }
         catch (Exception e) {
             fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -546,7 +560,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
         // Lower the nozzle.
         try {
-            nozzle.moveTo(placementLocation, 1.0);
+            nozzle.moveTo(placementLocation, placement.getPart().getSpeed());
         }
         catch (Exception e) {
             fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());

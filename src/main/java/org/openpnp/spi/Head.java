@@ -93,9 +93,9 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     
     public PasteDispenser getPasteDispenser(String id);
     
-    public Camera getDefaultCamera();
+    public Camera getDefaultCamera() throws Exception;
     
-    public Nozzle getDefaultNozzle();
+    public Nozzle getDefaultNozzle() throws Exception;
     
-    public PasteDispenser getDefaultPasteDispenser(); 
+    public PasteDispenser getDefaultPasteDispenser() throws Exception; 
 }

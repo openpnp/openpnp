@@ -66,6 +66,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1063,7 +1064,7 @@ public class CameraView extends JComponent implements CameraListener {
 			}
 		}
 		else {
-			setCursor(Cursor.getDefaultCursor());
+			setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 		}
 	}
 	
@@ -1133,7 +1134,7 @@ public class CameraView extends JComponent implements CameraListener {
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
         double offsetX = (scaledWidth / 2) - (x - imageX);
-        double offsetY = (scaledHeight / 2) - (y - imageY);
+        double offsetY = (scaledHeight / 2) - (y - imageY) + 1;
 
         // Invert the X so that the offsets represent a bottom left to
         // top right coordinate system.
@@ -1151,22 +1152,11 @@ public class CameraView extends JComponent implements CameraListener {
         Location offsets = camera.getUnitsPerPixel().derive(offsetX,
                 offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
-        final Location location = camera.getLocation().add(offsets);
+        Location location = camera.getLocation().add(offsets);
         // And move there.
-        MainFrame.machineControlsPanel
-                .submitMachineTask(new Runnable() {
-                    public void run() {
-                        try {
-                            MovableUtils.moveToLocationAtSafeZ(camera,
-                                    location, 1.0);
-                        }
-                        catch (Exception e) {
-                            MessageBoxes.errorBox(
-                                    getTopLevelAncestor(),
-                                    "Movement Error", e);
-                        }
-                    }
-                });
+        UiUtils.submitUiMachineTask(() -> {
+            MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+        });
 	}
 	
 	private void beginSelection(MouseEvent e) {

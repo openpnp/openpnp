@@ -72,12 +72,16 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
 		PasteDispenser dispenser = head.getPasteDispensers().get(0);
 
 		for (BoardLocation boardLocation : job.getBoardLocations()) {
+			if (!boardLocation.isEnabled()) {
+				continue;
+			}
 		    for (BoardPad pad : boardLocation.getBoard().getSolderPastePads()) {
 		        if (pad.getSide() != boardLocation.getSide()) {
 		            continue;
 		        }
 	            Location location = pad.getLocation();
-	            location = Utils2D.calculateBoardPlacementLocation(boardLocation.getLocation(), boardLocation.getSide(), location);
+	            location = Utils2D.calculateBoardPlacementLocation(
+	            		boardLocation, location);
 
 	            fireDetailedStatusUpdated(String.format("Move to pad location, safe Z at (%s).", location));
 	            if (!shouldJobProcessingContinue()) {

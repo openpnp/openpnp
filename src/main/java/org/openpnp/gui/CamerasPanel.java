@@ -67,7 +67,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
 import org.slf4j.Logger;
@@ -352,14 +351,6 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 	};
 	
 	
-	private Action tableScannerAction = new AbstractAction("Table Scanner") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			TableScanner tableScanner = new TableScanner(frame, configuration);
-			tableScanner.pack();
-			tableScanner.setVisible(true);
-		}
-	};
 	private JPanel generalConfigPanel;
     private JPanel cameraSpecificConfigPanel;
     private JPanel visionProviderConfigPanel;

@@ -33,7 +33,6 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import org.openpnp.gui.support.CameraItem;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 
 /**
@@ -85,13 +84,20 @@ public class CameraPanel extends JPanel {
 		add(camerasCombo, BorderLayout.NORTH);
 		add(camerasPanel);
 	}
-
-	// TODO: Remove
-	public CameraView getSelectedCameraView() {
-		return selectedCameraView;
+	
+	/**
+	 * Make sure the given Camera is visible in the UI. If All Cameras is
+	 * selected we do nothing, otherwise we select the specified Camera.
+	 * @param camera
+	 * @return
+	 */
+	public void ensureCameraVisible(Camera camera) {
+		if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM)) {
+			return;
+		}
+		setSelectedCamera(camera);
 	}
 	
-	// TODO: Remove
 	public CameraView setSelectedCamera(Camera camera) {
 		if (selectedCameraView != null && selectedCameraView.getCamera() == camera) {
 			return selectedCameraView;
@@ -107,23 +113,6 @@ public class CameraPanel extends JPanel {
 			}
 		}
 		return null;
-	}
-	
-	// TODO: Remove
-	public Camera getSelectedCamera() {
-		if (selectedCameraView != null) {
-			return selectedCameraView.getCamera();
-		}
-		return null;
-	}
-	
-	// TODO: Remove
-	public Location getSelectedCameraLocation() {
-	    Camera camera = getSelectedCamera();
-	    if (camera == null) {
-	        return null;
-	    }
-	    return camera.getLocation();
 	}
 	
 	public CameraView getCameraView(Camera camera) {

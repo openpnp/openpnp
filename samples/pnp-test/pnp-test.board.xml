@@ -1,210 +1,291 @@
-<openpnp-board name="Pick and Place Test.board.xml">
+<openpnp-board name="pnp-test.board.xml">
    <outline units="Millimeters"/>
+   <dimensions units="Millimeters" x="37.0" y="0.0" z="0.0" rotation="0.0"/>
    <fiducials/>
    <placements>
-      <placement version="1.1" id="FID1" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
-         <location units="Millimeters" x="2.5" y="2.5" z="0.0" rotation="0.0"/>
-      </placement>
-      <placement version="1.1" id="FID2" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
-         <location units="Millimeters" x="73.5" y="2.5" z="0.0" rotation="0.0"/>
-      </placement>
-      <placement version="1.1" id="FID3" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
-         <location units="Millimeters" x="73.5" y="73.5" z="0.0" rotation="0.0"/>
-      </placement>
-      <placement version="1.1" id="FID4" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
-         <location units="Millimeters" x="2.5" y="73.5" z="0.0" rotation="0.0"/>
-      </placement>
       <placement version="1.1" id="R1" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="38.0" y="38.0" z="0.0" rotation="0.0"/>
+         <location units="Millimeters" x="31.0" y="6.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R2" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="62.0" y="38.0" z="0.0" rotation="0.0"/>
+      <placement version="1.1" id="R8" side="Top" part-id="R0201-1K" type="Place">
+         <location units="Millimeters" x="6.0" y="22.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R3" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="61.18" y="44.21" z="0.0" rotation="15.0"/>
+      <placement version="1.1" id="R7" side="Top" part-id="R0201-1K" type="Ignore">
+         <location units="Millimeters" x="12.0" y="22.0" z="0.0" rotation="315.0"/>
       </placement>
-      <placement version="1.1" id="R4" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="58.78" y="50.0" z="0.0" rotation="30.0"/>
+      <placement version="1.1" id="R9" side="Top" part-id="R0201-1K" type="Ignore">
+         <location units="Millimeters" x="6.0" y="17.0" z="0.0" rotation="270.0"/>
       </placement>
-      <placement version="1.1" id="R5" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="54.97" y="54.97" z="0.0" rotation="45.0"/>
+      <placement version="1.1" id="R6" side="Top" part-id="R0402-1K" type="Place">
+         <location units="Millimeters" x="25.0" y="22.0" z="0.0" rotation="45.0"/>
       </placement>
-      <placement version="1.1" id="R6" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="50.0" y="58.78" z="0.0" rotation="60.0"/>
+      <placement version="1.1" id="R5" side="Top" part-id="R0402-1K" type="Ignore">
+         <location units="Millimeters" x="31.0" y="22.0" z="0.0" rotation="0.0"/>
       </placement>
-      <placement version="1.1" id="R7" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="44.21" y="61.18" z="0.0" rotation="75.0"/>
+      <placement version="1.1" id="R4" side="Top" part-id="R0402-1K" type="Ignore">
+         <location units="Millimeters" x="31.0" y="17.0" z="0.0" rotation="90.0"/>
       </placement>
-      <placement version="1.1" id="R8" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="38.0" y="62.0" z="0.0" rotation="90.0"/>
+      <placement version="1.1" id="R10" side="Top" part-id="R0603-1K" type="Place">
+         <location units="Millimeters" x="6.0" y="11.0" z="0.0" rotation="270.0"/>
       </placement>
-      <placement version="1.1" id="R9" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="31.79" y="61.18" z="0.0" rotation="105.0"/>
-      </placement>
-      <placement version="1.1" id="R10" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="26.0" y="58.78" z="0.0" rotation="120.0"/>
-      </placement>
-      <placement version="1.1" id="R11" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="21.03" y="54.97" z="0.0" rotation="135.0"/>
-      </placement>
-      <placement version="1.1" id="R12" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="17.22" y="50.0" z="0.0" rotation="150.0"/>
-      </placement>
-      <placement version="1.1" id="R13" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="14.82" y="44.21" z="0.0" rotation="165.0"/>
-      </placement>
-      <placement version="1.1" id="R14" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="14.0" y="38.0" z="0.0" rotation="180.0"/>
-      </placement>
-      <placement version="1.1" id="R15" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="14.82" y="31.79" z="0.0" rotation="195.0"/>
-      </placement>
-      <placement version="1.1" id="R16" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="17.22" y="26.0" z="0.0" rotation="210.0"/>
-      </placement>
-      <placement version="1.1" id="R17" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="21.03" y="21.03" z="0.0" rotation="225.0"/>
-      </placement>
-      <placement version="1.1" id="R18" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="26.0" y="17.22" z="0.0" rotation="240.0"/>
-      </placement>
-      <placement version="1.1" id="R19" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="31.79" y="14.82" z="0.0" rotation="255.0"/>
-      </placement>
-      <placement version="1.1" id="R20" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="38.0" y="14.0" z="0.0" rotation="270.0"/>
-      </placement>
-      <placement version="1.1" id="R21" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="44.21" y="14.82" z="0.0" rotation="285.0"/>
-      </placement>
-      <placement version="1.1" id="R22" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="50.0" y="17.22" z="0.0" rotation="300.0"/>
-      </placement>
-      <placement version="1.1" id="R23" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="54.97" y="21.03" z="0.0" rotation="315.0"/>
-      </placement>
-      <placement version="1.1" id="R24" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="58.78" y="26.0" z="0.0" rotation="330.0"/>
-      </placement>
-      <placement version="1.1" id="R25" side="Top" part-id="R0805-1K" type="Place">
-         <location units="Millimeters" x="61.18" y="31.79" z="0.0" rotation="345.0"/>
-      </placement>
-      <placement version="1.1" id="R36" side="Top" part-id="R0201-1K" type="Place">
-         <location units="Millimeters" x="6.0" y="70.0" z="0.0" rotation="0.0"/>
-      </placement>
-      <placement version="1.1" id="R37" side="Top" part-id="R0201-1K" type="Place">
-         <location units="Millimeters" x="12.0" y="70.0" z="0.0" rotation="315.0"/>
-      </placement>
-      <placement version="1.1" id="R38" side="Top" part-id="R0201-1K" type="Place">
-         <location units="Millimeters" x="6.0" y="64.0" z="0.0" rotation="270.0"/>
-      </placement>
-      <placement version="1.1" id="R39" side="Top" part-id="R0402-1K" type="Place">
-         <location units="Millimeters" x="64.0" y="70.0" z="0.0" rotation="45.0"/>
-      </placement>
-      <placement version="1.1" id="R40" side="Top" part-id="R0402-1K" type="Place">
-         <location units="Millimeters" x="70.0" y="70.0" z="0.0" rotation="0.0"/>
-      </placement>
-      <placement version="1.1" id="R41" side="Top" part-id="R0402-1K" type="Place">
-         <location units="Millimeters" x="70.0" y="64.0" z="0.0" rotation="90.0"/>
-      </placement>
-      <placement version="1.1" id="R42" side="Top" part-id="R0603-1K" type="Place">
-         <location units="Millimeters" x="6.0" y="12.0" z="0.0" rotation="270.0"/>
-      </placement>
-      <placement version="1.1" id="R43" side="Top" part-id="R0603-1K" type="Place">
+      <placement version="1.1" id="R12" side="Top" part-id="R0603-1K" type="Ignore">
          <location units="Millimeters" x="12.0" y="6.0" z="0.0" rotation="315.0"/>
       </placement>
-      <placement version="1.1" id="R44" side="Top" part-id="R0603-1K" type="Place">
+      <placement version="1.1" id="R11" side="Top" part-id="R0603-1K" type="Ignore">
          <location units="Millimeters" x="6.0" y="6.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID1" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="2.0" y="2.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID2" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="34.5" y="26.5" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID3" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="34.5" y="2.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R2" side="Top" part-id="R0805-1K" type="Ignore">
+         <location units="Millimeters" x="31.0" y="11.0" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="R3" side="Top" part-id="R0805-1K" type="Ignore">
+         <location units="Millimeters" x="25.0" y="6.0" z="0.0" rotation="45.0"/>
+      </placement>
+      <placement version="1.1" id="R13" side="Bottom" part-id="R0805-1K" type="Place">
+         <location units="Millimeters" x="6.0" y="6.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R14" side="Bottom" part-id="R0201-1K" type="Place">
+         <location units="Millimeters" x="31.0" y="22.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R15" side="Bottom" part-id="R0201-1K" type="Ignore">
+         <location units="Millimeters" x="25.0" y="22.0" z="0.0" rotation="315.0"/>
+      </placement>
+      <placement version="1.1" id="R16" side="Bottom" part-id="R0201-1K" type="Ignore">
+         <location units="Millimeters" x="31.0" y="17.0" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement version="1.1" id="R17" side="Bottom" part-id="R0402-1K" type="Ignore">
+         <location units="Millimeters" x="12.0" y="22.0" z="0.0" rotation="45.0"/>
+      </placement>
+      <placement version="1.1" id="R18" side="Bottom" part-id="R0402-1K" type="Place">
+         <location units="Millimeters" x="6.0" y="22.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R19" side="Bottom" part-id="R0402-1K" type="Ignore">
+         <location units="Millimeters" x="6.0" y="17.0" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="R20" side="Bottom" part-id="R0603-1K" type="Place">
+         <location units="Millimeters" x="31.0" y="11.0" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement version="1.1" id="R21" side="Bottom" part-id="R0603-1K" type="Ignore">
+         <location units="Millimeters" x="25.0" y="6.0" z="0.0" rotation="315.0"/>
+      </placement>
+      <placement version="1.1" id="R22" side="Bottom" part-id="R0603-1K" type="Ignore">
+         <location units="Millimeters" x="31.0" y="6.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID4" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="34.5" y="2.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID5" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="2.5" y="26.5" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID6" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="2.0" y="2.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R23" side="Bottom" part-id="R0805-1K" type="Ignore">
+         <location units="Millimeters" x="6.0" y="11.0" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="R24" side="Bottom" part-id="R0805-1K" type="Ignore">
+         <location units="Millimeters" x="12.0" y="6.0" z="0.0" rotation="45.0"/>
       </placement>
    </placements>
    <solder-paste-pads>
-      <board-pad type="Paste" side="Top" name="D10-000">
-         <location units="Millimeters" x="14.9479" y="37.9984" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05118" height="0.05906" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R1-1">
+         <location units="Millimeters" x="30.05" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D10-001">
-         <location units="Millimeters" x="13.04798" y="37.9984" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05118" height="0.05906" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R1-2">
+         <location units="Millimeters" x="31.95" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D10-002">
-         <location units="Millimeters" x="61.0489" y="37.9984" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05118" height="0.05906" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R8-1">
+         <location units="Millimeters" x="5.745" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D10-003">
-         <location units="Millimeters" x="62.94882" y="37.9984" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05118" height="0.05906" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R8-2">
+         <location units="Millimeters" x="6.255" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D10-004">
-         <location units="Millimeters" x="37.04843999999999" y="37.9984" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05118" height="0.05906" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R7-1">
+         <location units="Millimeters" x="11.81968777079743" y="22.18031222920257" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D10-005">
-         <location units="Millimeters" x="38.94836" y="37.9984" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05118" height="0.05906" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R7-2">
+         <location units="Millimeters" x="12.18031222920257" y="21.81968777079743" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D11-000">
-         <location units="Millimeters" x="37.9984" y="61.0489" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05906" height="0.05118" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R9-1">
+         <location units="Millimeters" x="6.0" y="17.255" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D11-001">
-         <location units="Millimeters" x="37.9984" y="62.94882" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05906" height="0.05118" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R9-2">
+         <location units="Millimeters" x="6.0" y="16.745" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D11-002">
-         <location units="Millimeters" x="37.9984" y="14.9479" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05906" height="0.05118" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R6-1">
+         <location units="Millimeters" x="24.540380592228747" y="22.459619407771253" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D11-003">
-         <location units="Millimeters" x="37.9984" y="13.04798" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.05906" height="0.05118" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R6-2">
+         <location units="Millimeters" x="25.459619407771253" y="21.540380592228747" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D12-000">
-         <location units="Millimeters" x="6.25348" y="69.99986" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.01102" height="0.01693" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R5-1">
+         <location units="Millimeters" x="30.35" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D12-001">
-         <location units="Millimeters" x="5.74294" y="69.99986" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.01102" height="0.01693" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R5-2">
+         <location units="Millimeters" x="31.65" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D13-000">
-         <location units="Millimeters" x="5.999479999999999" y="64.25438" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.01693" height="0.01102" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R4-1">
+         <location units="Millimeters" x="31.0" y="17.65" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D13-001">
-         <location units="Millimeters" x="5.999479999999999" y="63.74383999999999" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.01693" height="0.01102" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R4-2">
+         <location units="Millimeters" x="31.0" y="16.35" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D14-000">
-         <location units="Millimeters" x="69.34962" y="69.99986" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.02756" height="0.03543" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R10-1">
+         <location units="Millimeters" x="6.0" y="11.85" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D14-001">
-         <location units="Millimeters" x="70.6501" y="69.99986" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.02756" height="0.03543" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R10-2">
+         <location units="Millimeters" x="6.0" y="10.15" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D15-000">
-         <location units="Millimeters" x="69.99986" y="64.64808" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.03543" height="0.02756" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R12-1">
+         <location units="Millimeters" x="11.398959235991436" y="6.601040764008565" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D15-001">
-         <location units="Millimeters" x="69.99986" y="63.3476" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.03543" height="0.02756" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R12-2">
+         <location units="Millimeters" x="12.601040764008564" y="5.398959235991435" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D16-000">
-         <location units="Millimeters" x="5.999479999999999" y="12.84986" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.04331" height="0.03937" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R11-1">
+         <location units="Millimeters" x="5.15" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D16-001">
-         <location units="Millimeters" x="5.999479999999999" y="11.14806" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.04331" height="0.03937" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R11-2">
+         <location units="Millimeters" x="6.85" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D17-000">
-         <location units="Millimeters" x="5.14858" y="5.999479999999999" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.03937" height="0.04331" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R2-1">
+         <location units="Millimeters" x="31.0" y="11.95" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
       </board-pad>
-      <board-pad type="Paste" side="Top" name="D17-001">
-         <location units="Millimeters" x="6.84784" y="5.999479999999999" z="0.0" rotation="0.0"/>
-         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Inches" width="0.03937" height="0.04331" roundness="0.0"/>
+      <board-pad type="Paste" side="Top" name="R2-2">
+         <location units="Millimeters" x="31.0" y="10.05" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Top" name="R3-1">
+         <location units="Millimeters" x="24.32824855787278" y="6.67175144212722" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Top" name="R3-2">
+         <location units="Millimeters" x="25.67175144212722" y="5.32824855787278" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R13-1">
+         <location units="Millimeters" x="30.05" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R13-2">
+         <location units="Millimeters" x="31.95" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R14-1">
+         <location units="Millimeters" x="5.745000000000001" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R14-2">
+         <location units="Millimeters" x="6.254999999999999" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R15-1">
+         <location units="Millimeters" x="12.18031222920257" y="21.81968777079743" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R15-2">
+         <location units="Millimeters" x="11.81968777079743" y="22.18031222920257" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R16-1">
+         <location units="Millimeters" x="6.0" y="16.745" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R16-2">
+         <location units="Millimeters" x="6.0" y="17.255" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.43" height="0.28" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R17-1">
+         <location units="Millimeters" x="24.540380592228743" y="21.540380592228743" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R17-2">
+         <location units="Millimeters" x="25.459619407771257" y="22.459619407771257" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R18-1">
+         <location units="Millimeters" x="30.35" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R18-2">
+         <location units="Millimeters" x="31.65" y="22.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R19-1">
+         <location units="Millimeters" x="31.0" y="16.35" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R19-2">
+         <location units="Millimeters" x="31.0" y="17.65" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="0.9" height="0.7" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R20-1">
+         <location units="Millimeters" x="6.0" y="10.149999999999999" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R20-2">
+         <location units="Millimeters" x="6.0" y="11.850000000000001" z="0.0" rotation="270.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R21-1">
+         <location units="Millimeters" x="12.601040764008566" y="5.398959235991433" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R21-2">
+         <location units="Millimeters" x="11.398959235991434" y="6.601040764008567" z="0.0" rotation="315.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R22-1">
+         <location units="Millimeters" x="5.149999999999999" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R22-2">
+         <location units="Millimeters" x="6.850000000000001" y="6.0" z="0.0" rotation="0.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.1" height="1.0" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R23-1">
+         <location units="Millimeters" x="31.0" y="10.05" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R23-2">
+         <location units="Millimeters" x="31.0" y="11.95" z="0.0" rotation="90.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R24-1">
+         <location units="Millimeters" x="24.328248557872783" y="5.32824855787278" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
+      </board-pad>
+      <board-pad type="Paste" side="Bottom" name="R24-2">
+         <location units="Millimeters" x="25.671751442127217" y="6.67175144212722" z="0.0" rotation="45.0"/>
+         <pad class="org.openpnp.model.Pad$RoundRectangle" units="Millimeters" width="1.5" height="1.3" roundness="0.0"/>
       </board-pad>
    </solder-paste-pads>
 </openpnp-board>

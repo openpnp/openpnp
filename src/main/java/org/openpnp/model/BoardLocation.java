@@ -22,6 +22,8 @@
 package org.openpnp.model;
 
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -38,6 +40,9 @@ public class BoardLocation extends AbstractModelObject {
 	
 	@Attribute(required=false)
 	private boolean checkFiducials;
+	
+	@Attribute(required=false)
+	private boolean enabled = true;
 	
 	BoardLocation() {
 		setLocation(new Location(LengthUnit.Millimeters));
@@ -102,8 +107,18 @@ public class BoardLocation extends AbstractModelObject {
         this.checkFiducials = checkFiducials;
         firePropertyChange("checkFiducials", oldValue, checkFiducials);
     }
+    
+    public boolean isEnabled() {
+		return enabled;
+	}
 
-    @Override
+	public void setEnabled(boolean enabled) {
+        boolean oldValue = this.enabled;
+        this.enabled = enabled;
+        firePropertyChange("enabled", oldValue, enabled);
+	}
+
+	@Override
 	public String toString() {
 		return String.format("board (%s), location (%s), side (%s)", boardFile, location, side);
 	}

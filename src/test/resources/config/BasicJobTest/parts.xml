@@ -1,0 +1,24 @@
+<openpnp-parts>
+   <part id="C-0805-100NF" name="" height-units="Inches" height="0.0325" package-id="0805">
+   </part>
+   <part id="C-0805-1UF" name="" height-units="Inches" height="0.0325" package-id="0805">
+   </part>
+   <part id="C-0805-10UF" name="" height-units="Inches" height="0.0325" package-id="0805">
+   </part>
+   <part id="R-0805-1K" name="" height-units="Inches" height="0.0325" package-id="0805">
+   </part>
+   <part id="R-0805-10K" name="" height-units="Inches" height="0.0325" package-id="0805">
+   </part>
+   <part id="R-0805-47" name="" height-units="Inches" height="0.0325" package-id="0805">
+   </part>
+   <part id="MMBT3906-7-F" name="" height-units="Inches" height="0.0325" package-id="SOT-23-3">
+   </part>
+   <part id="PTS525SM10SMTR LFS" name="" height-units="Inches" height="0.0325" package-id="TO-252-3">
+   </part>
+   <part id="ATMEGA168A-AU" name="" height-units="Inches" height="0.0325" package-id="JEDEC-MS-026-ABA">
+   </part>
+   <part id="ULN2803ADWR" name="" height-units="Inches" height="0.0325" package-id="EIA3528">
+   </part>
+   <part id="MC78M05CDTRKG" name="" height-units="Inches" height="0.0325" package-id="EIA3528">
+   </part>
+</openpnp-parts>

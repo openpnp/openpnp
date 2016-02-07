@@ -260,29 +260,37 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
         }
         connected = true;
 
-        responses = sendCommand("hello EMC x 1");
-        // responses.addAll(sendCommand("set echo off"));
+        responses = sendCommand("hello EMC x 1.1");
         responses.addAll(sendCommand("set enable EMCTOO"));
 
         responses.addAll(sendCommand("set estop off"));
         responses.addAll(sendCommand("set mode mdi"));
-
+        
+        // set_wait done -- will respond after the commanded move is completed
+        // The default behavior is to respond when received which causes 
+        // OpenPnP to spit out gcode full-bore.
+        responses.addAll(sendCommand("set set_wait done"));
+        responses.addAll(sendCommand("set echo off"));
+        // verbose on -- all commands will be replied with ACK or NAK
+        // This will be used later to determine the return status.
+        responses.addAll(sendCommand("set verbose on"));
+        
         processConnectionResponses(responses);
 
         if (!connected) {
-            throw new Error(
+            throw new Exception(
                     "Unable to receive connection response from LinuxCNC ver 1.1. Check your server ip and port in machine.xml");
         }
 
         if (!connected) {
-            throw new Error(
+            throw new Exception(
                     String.format(
                             "Unable to receive connection response from LinuxCNC. Check your server ip and port in machine.xml and that you are running at least version %f of LinuxCNCrsh",
                             minimumRequiredVersion));
         }
 
         if (connectedVersion < minimumRequiredVersion) {
-            throw new Error(
+            throw new Exception(
                     String.format(
                             "This driver requires LinuxCNCrsh version %.2f or higher. You are running version %.2f",
                             minimumRequiredVersion, connectedVersion));

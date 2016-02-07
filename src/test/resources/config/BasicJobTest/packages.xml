@@ -1,0 +1,30 @@
+<openpnp-packages>
+   <package id="SW-TACT-5.25MM">
+   </package>
+   <package id="JEDEC-MS-013-AB" description="18 SOIC 0.300in / 7.5mm Wide">
+   </package>
+   <package id="0805" description="0805">
+     <footprint units="Millimeters">
+         <pad name="1" x="-0.95" y="0.0" width="1.3" height="1.5" rotation="90.0" roundness="0.0"/>
+         <pad name="2" x="0.95" y="0.0" width="1.3" height="1.5" rotation="90.0" roundness="0.0"/>
+     </footprint>
+   </package>
+   <package id="TO-252-3" description="TO-252-3, DPak (2 Leads + Tab), SC-63">
+   </package>
+   <package id="SOT-23-3" description="SOT-23-3">
+   </package>
+   <package id="JEDEC-MS-026-ABA" description="32-TQFP 7mm x 7mm">
+   </package>
+   <package id="0603" description="0603">
+   </package>
+   <package id="0603-4" description="0603-4">
+   </package>
+   <package id="1206" description="1206">
+   </package>
+   <package id="2012" description="2012">
+   </package>
+   <package id="EIA3528" description="EIA3528">
+   </package>
+   <package id="EIA3216" description="EIA3216">
+   </package>
+</openpnp-packages>

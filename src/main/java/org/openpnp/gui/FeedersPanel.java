@@ -69,6 +69,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +124,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         toolBar.add(moveCameraToPickLocation);
         toolBar.add(moveToolToPickLocation);
         toolBar.add(pickFeederAction);
-		toolBar.add(showPartAction);
 
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1, BorderLayout.EAST);
@@ -174,7 +174,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		feederSelectedActionGroup = new ActionGroup(deleteFeederAction,
-				feedFeederAction, showPartAction, pickFeederAction,
+				feedFeederAction, pickFeederAction,
 				moveCameraToPickLocation, moveToolToPickLocation);
 
 		table.getSelectionModel().addListSelectionListener(
@@ -203,17 +203,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 					}
 				});
 		
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-                if (cameraView != null) {
-                    cameraView.removeReticle(FeedersPanel.this.getClass().getName());
-                }
-            }
-        });
-		
-
 		feederSelectedActionGroup.setEnabled(false);
 		
         splitPane.setLeftComponent(new JScrollPane(table));
@@ -409,21 +398,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    Feeder feeder = getSelectedFeeder();
-                    Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-                    
-                    try {
-                        Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(camera, pickLocation, 1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(FeedersPanel.this, "Movement Error",
-                                e);
-                    }
-                }
-            }.start();
+        	UiUtils.submitUiMachineTask(() -> {
+                Feeder feeder = getSelectedFeeder();
+                Camera camera = MainFrame
+                		.machineControlsPanel
+                		.getSelectedTool()
+                		.getHead()
+                		.getDefaultCamera();
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation, 1.0);
+        	});
         }
     };
 
@@ -454,38 +438,4 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }.start();
         }
     };
-
-	public Action showPartAction = new AbstractAction() {
-		{
-			putValue(SMALL_ICON, Icons.showPart);
-			putValue(NAME, "Show Part");
-			putValue(SHORT_DESCRIPTION,
-					"Show an outline of the part for the selected feeder in the camera view.");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			Feeder feeder = getSelectedFeeder();
-			if (feeder != null) {
-				Part part = feeder.getPart();
-				if (part != null) {
-					org.openpnp.model.Package pkg = part.getPackage();
-					if (pkg != null) {
-						Outline outline = pkg.getOutline();
-						CameraView cameraView = MainFrame.cameraPanel
-								.getSelectedCameraView();
-						if (cameraView != null) {
-	                        if (cameraView.getReticle(FeedersPanel.this.getClass().getName()) != null) {
-	                            cameraView.removeReticle(FeedersPanel.this.getClass().getName());
-	                        }
-	                        else {
-	                            cameraView.setReticle(FeedersPanel.this.getClass().getName(), new OutlineReticle(
-	                                    outline));
-	                        }
-						}
-					}
-				}
-			}
-		}
-	};
 }

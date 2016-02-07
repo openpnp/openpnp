@@ -107,6 +107,9 @@ public class ReferenceStripFeederConfigurationWizard extends
     
     private Location firstPartLocation;
     private Location secondPartLocation;
+    private List<Location> part1HoleLocations;
+    private Camera autoSetupCamera;
+
     
     public ReferenceStripFeederConfigurationWizard(ReferenceStripFeeder feeder) {
         this.feeder = feeder;
@@ -361,13 +364,24 @@ public class ReferenceStripFeederConfigurationWizard extends
     private Action autoSetup = new AbstractAction("Auto Setup") {
         @Override
         public void actionPerformed(ActionEvent e) {
+        	try {
+        		autoSetupCamera = Configuration
+            			.get()
+            			.getMachine()
+            			.getDefaultHead()
+            			.getDefaultCamera(); 
+        	}
+        	catch (Exception ex) {
+				MessageBoxes.errorBox(
+						getTopLevelAncestor(), 
+						"Auto Setup Failure",
+						ex);
+				return;
+        	}
+        	
         	btnAutoSetup.setAction(autoSetupCancel);
-        	Camera camera = Configuration
-        			.get()
-        			.getMachine()
-        			.getDefaultHead()
-        			.getDefaultCamera();
-        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+        	
+        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
         	cameraView.addActionListener(autoSetupPart1Clicked);
         	cameraView.setText("Click on the center of the first part in the tape.");
         	cameraView.flash();
@@ -387,12 +401,7 @@ public class ReferenceStripFeederConfigurationWizard extends
         @Override
         public void actionPerformed(ActionEvent e) {
         	btnAutoSetup.setAction(autoSetup);
-        	Camera camera = Configuration
-        			.get()
-        			.getMachine()
-        			.getDefaultHead()
-        			.getDefaultCamera();
-        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+        	CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
         	cameraView.setText(null);
         	cameraView.setCameraViewFilter(null);
         	cameraView.removeActionListener(autoSetupPart1Clicked);
@@ -400,31 +409,17 @@ public class ReferenceStripFeederConfigurationWizard extends
         }
     };
     
-    private List<Location> part1HoleLocations;
     private CameraViewActionListener autoSetupPart1Clicked = new CameraViewActionListener() {
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
 			firstPartLocation = action.getLocation();
-        	final Camera camera = Configuration
-        			.get()
-        			.getMachine()
-        			.getDefaultHead()
-        			.getDefaultCamera();
-        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
         	cameraView.removeActionListener(this);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				public Void call() throws Exception {
 					cameraView.setText("Checking first part...");
-		        	camera.moveTo(action.getLocation(), 1.0);
-		        	part1HoleLocations = findHoles(camera);
-		            // Need to handle the special case where the first two holes we find are not the
-		            // reference hole and next hole. This can happen if another tape is close by and
-		            // one of it's holes is detected as either of the holes.
-		            // If we only read one hole that's okay. It just becomes the reference hole.
-		            // If we read multiple holes I think we need to check that they are in a line,
-		            // but which line?
-		            // I think this is where RANSAC comes in. We need to find the best fit line of all the holes
-		            // we find.
+					autoSetupCamera.moveTo(action.getLocation(), 1.0);
+		        	part1HoleLocations = findHoles(autoSetupCamera);
 		            
 		            cameraView.setText("Now click on the center of the second part in the tape.");
 		            cameraView.flash();
@@ -457,18 +452,13 @@ public class ReferenceStripFeederConfigurationWizard extends
 		@Override
 		public void actionPerformed(final CameraViewActionEvent action) {
 			secondPartLocation = action.getLocation();
-        	final Camera camera = Configuration
-        			.get()
-        			.getMachine()
-        			.getDefaultHead()
-        			.getDefaultCamera();
-        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+        	final CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
         	cameraView.removeActionListener(this);
 			Configuration.get().getMachine().submit(new Callable<Void>() {
 				public Void call() throws Exception {
 					cameraView.setText("Checking second part...");
-		        	camera.moveTo(action.getLocation(), 1.0);
-		        	List<Location> part2HoleLocations = findHoles(camera);
+					autoSetupCamera.moveTo(action.getLocation(), 1.0);
+		        	List<Location> part2HoleLocations = findHoles(autoSetupCamera);
 		            
 		        	List<Location> referenceHoles = deriveReferenceHoles(
 		        			part1HoleLocations, 
@@ -500,7 +490,7 @@ public class ReferenceStripFeederConfigurationWizard extends
 		        	});
 		        	
 		        	feeder.setFeedCount(1);
-		        	camera.moveTo(feeder.getPickLocation(), 1.0);
+		        	autoSetupCamera.moveTo(feeder.getPickLocation(), 1.0);
 		        	feeder.setFeedCount(0);
 		        	
 		        	cameraView.setText("Setup complete!");

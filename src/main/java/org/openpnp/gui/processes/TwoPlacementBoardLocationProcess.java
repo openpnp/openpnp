@@ -28,12 +28,12 @@ import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.Configuration;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
  * Guides the user through the two point board location operation using
  * step by step instructions.
  * 
- * TODO: Select the right camera on startup and then disable the CameraPanel while active.
  * TODO: Disable the BoardLocation table while active.
  */
 public class TwoPlacementBoardLocationProcess {
@@ -50,6 +49,7 @@ public class TwoPlacementBoardLocationProcess {
 	
 	private final MainFrame mainFrame;
 	private final JobPanel jobPanel;
+	private final Camera camera;
 	
 	private int step = -1;
 	private String[] instructions = new String[] {
@@ -61,11 +61,16 @@ public class TwoPlacementBoardLocationProcess {
 	};
 	
 	private Placement placementA, placementB;
-	private Location visionA, visionB;
+	private Location actualLocationA, actualLocationB;
 	
-	public TwoPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) {
+	public TwoPlacementBoardLocationProcess(MainFrame mainFrame, JobPanel jobPanel) throws Exception {
 		this.mainFrame = mainFrame;
 		this.jobPanel = jobPanel;
+		this.camera = MainFrame
+				.machineControlsPanel
+				.getSelectedTool()
+				.getHead()
+				.getDefaultCamera();
 		advance();
 	}
 	
@@ -116,8 +121,8 @@ public class TwoPlacementBoardLocationProcess {
     }
     
 	private boolean step2() {
-		visionA = MainFrame.cameraPanel.getSelectedCameraLocation();
-		if (visionA == null) {
+		actualLocationA = camera.getLocation();
+		if (actualLocationA == null) {
 			MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
 			return false;
 		}
@@ -139,53 +144,41 @@ public class TwoPlacementBoardLocationProcess {
 	}
 	
 	private boolean step4() {
-        visionB = MainFrame.cameraPanel.getSelectedCameraLocation();
-        if (visionB == null) {
+        actualLocationB = camera.getLocation();
+        if (actualLocationB == null) {
             MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
             return false;
         }
-		
-        // If the placements are on the Bottom of the board we need to invert X
-		Location placementALocation = placementA.getLocation();
-		Location placementBLocation = placementB.getLocation();
-        if (placementA.getSide() == Side.Bottom) {
-            placementALocation = placementALocation.invert(true, false, false, false);
-            placementBLocation = placementBLocation.invert(true, false, false, false);
-        }
-		
-		Location boardLocation = Utils2D.calculateAngleAndOffset(
-		        placementALocation, 
-		        placementBLocation, 
-		        visionA,
-		        visionB);
         
-		Location oldBoardLocation = jobPanel.getSelectedBoardLocation().getLocation();
-		oldBoardLocation = oldBoardLocation.convertToUnits(boardLocation.getUnits());
-		
-		boardLocation = boardLocation.derive(null, null, oldBoardLocation.getZ(), null);
-
-		jobPanel.getSelectedBoardLocation().setLocation(boardLocation);
+        // Calculate the angle and offset from the results
+        BoardLocation boardLocation = jobPanel.getSelectedBoardLocation();
+        Location idealLocationA = Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
+        Location idealLocationB = Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
+        Location location = Utils2D.calculateAngleAndOffset2(
+                idealLocationA, 
+                idealLocationB, 
+                actualLocationA,
+                actualLocationB);
+        
+        location = boardLocation.getLocation().addWithRotation(location);
+        location = location.derive(
+                null, 
+                null, 
+                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), 
+                null);
+        
+		jobPanel.getSelectedBoardLocation().setLocation(location);
 		jobPanel.refreshSelectedBoardRow();
 		
 		return true;
 	}
 	
 	private boolean step5() {
-		MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-			public void run() {
-				Head head = Configuration.get().getMachine().getHeads().get(0);
-				try {
-					Camera camera = MainFrame.cameraPanel
-							.getSelectedCamera();
-					Location location = jobPanel.getSelectedBoardLocation()
-							.getLocation();
-					MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-				}
-				catch (Exception e) {
-					MessageBoxes.errorBox(mainFrame,
-							"Move Error", e);
-				}
-			}
+		UiUtils.submitUiMachineTask(() -> {
+			Location location = jobPanel
+					.getSelectedBoardLocation()
+					.getLocation();
+			MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 		});
 		
 		return true;

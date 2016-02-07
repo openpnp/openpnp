@@ -14,12 +14,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements an algorithm for finding a set of fiducials on a board and
  * returning the correct orientation for the board. 
- * TODO: This needs to be integrated into the VisionProvider somehow.
  */
 public class FiducialLocator {
     private static final Logger logger = LoggerFactory
@@ -45,8 +44,6 @@ public class FiducialLocator {
     }
     
     public static Location locateBoard(BoardLocation boardLocation) throws Exception {
-        // TODO: finish bottom code
-        
         // Find the fids in the board
         IdentifiableList<Placement> fiducials = getFiducials(boardLocation);
         
@@ -60,45 +57,40 @@ public class FiducialLocator {
         // Find the two that are most distant from each other
         List<Placement> mostDistant = getMostDistantPlacements(fiducials);
         
-        Placement a = mostDistant.get(0);
-        Placement b = mostDistant.get(1);
+        Placement placementA = mostDistant.get(0);
+        Placement placementB = mostDistant.get(1);
 
-        logger.debug("Chose {} and {}", a.getId(), b.getId());
+        logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
         
-        Location aLoc = a.getLocation();
-        Location bLoc = b.getLocation();
-                
-        if (boardLocation.getSide() == Side.Bottom) {
-            aLoc = aLoc.invert(true, false, false, false);
-            bLoc = bLoc.invert(true, false, false, false);
-        }
-
         // Run the fiducial check on each and get their actual locations
-        Location aVisionLoc = getFiducialLocation(boardLocation, a);
-        if (aVisionLoc == null) {
+        Location actualLocationA = getFiducialLocation(boardLocation, placementA);
+        if (actualLocationA == null) {
             throw new Exception("Unable to locate first fiducial.");
         }
-        Location bVisionLoc = getFiducialLocation(boardLocation, b);
-        if (bVisionLoc == null) {
+        Location actualLocationB = getFiducialLocation(boardLocation, placementB);
+        if (actualLocationB == null) {
             throw new Exception("Unable to locate second fiducial.");
         }
         
         // Calculate the linear distance between the ideal points and the
         // located points. If they differ by more than a few percent we
         // probably made a mistake.
-        double fidDistance = Math.abs(a.getLocation().getLinearDistanceTo(b.getLocation()));
-        double visionDistance = Math.abs(aVisionLoc.getLinearDistanceTo(bVisionLoc));
+        double fidDistance = Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
+        double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
         if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }
-
+                
         // Calculate the angle and offset from the results
-        Location location = Utils2D.calculateAngleAndOffset(
-                a.getLocation(), 
-                b.getLocation(), 
-                aVisionLoc,
-                bVisionLoc);
+        Location idealLocationA = Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
+        Location idealLocationB = Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
+        Location location = Utils2D.calculateAngleAndOffset2(
+                idealLocationA, 
+                idealLocationB, 
+                actualLocationA,
+                actualLocationB);
         
+        location = boardLocation.getLocation().addWithRotation(location);
         location = location.derive(
                 null, 
                 null, 
@@ -132,27 +124,45 @@ public class FiducialLocator {
      * @throws Exception
      */
     private static Location getFiducialLocation(BoardLocation boardLocation, Placement fid) throws Exception {
-        Camera camera = Configuration.get().getMachine().getHeads().get(0).getCameras().get(0);
+        Camera camera = Configuration
+            .get()
+            .getMachine()
+            .getDefaultHead()
+            .getDefaultCamera();
         
         logger.debug("Locating {}", fid.getId());
+        
+        Part part = fid.getPart();
+        if (part == null) {
+        	throw new Exception(String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
+        }
+        
+        org.openpnp.model.Package pkg = part.getPackage();
+        if (pkg == null) {
+        	throw new Exception(String.format("Part %s does not have a valid package assigned.", 
+        			part.getId()));
+        }
+        
+        Footprint footprint = pkg.getFootprint(); 
+        if (footprint == null) {
+        	throw new Exception(String.format("Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials", 
+        			pkg.getId()));
+        }
+        
+        if (footprint.getShape() == null) {
+        	throw new Exception(String.format("Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
+        			pkg.getId()));
+        }
         
         // Create the template
         BufferedImage template = createTemplate(camera.getUnitsPerPixel(), fid.getPart().getPackage().getFootprint());
         
         // Move to where we expect to find the fid
         Location location = Utils2D.calculateBoardPlacementLocation(
-                boardLocation.getLocation(), boardLocation.getSide(),
-                fid.getLocation());
+        		boardLocation, fid.getLocation());
+        logger.debug("Looking for {} at {}", fid.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
 
-        
-        // these modifications make the template match more accurate but have only
-        // been tested slightly
-//      Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-//      Imgproc.GaussianBlur(mat, mat, new Size(3, 3), 0);
-//        Imgproc.threshold(mat, mat, 100, 255, Imgproc.THRESH_BINARY);
-        
-        
         
         for (int i = 0; i < 3; i++) {
             // Wait for camera to settle
@@ -200,8 +210,12 @@ public class FiducialLocator {
      * @param fid
      * @return
      */
-    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint) {
+    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint) throws Exception {
         Shape shape = footprint.getShape();
+        
+        if (shape == null) {
+        	throw new Exception("Invalid footprint found, unable to create template for fiducial match.");
+        }
         
         // Determine the scaling factor to go from Outline units to
         // Camera units.

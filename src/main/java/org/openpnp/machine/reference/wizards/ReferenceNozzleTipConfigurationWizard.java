@@ -37,6 +37,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -101,7 +102,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
         scrollPane = new JScrollPane();
         panelPackageCompat.add(scrollPane, "2, 4, fill, default");
         
-        table = new JTable(tableModel = new PackagesTableModel());
+        table = new AutoSelectTextTable(tableModel = new PackagesTableModel());
         scrollPane.setViewportView(table);
         
         panelChanger = new JPanel();

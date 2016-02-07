@@ -7,8 +7,6 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.Action;
 
@@ -41,7 +39,8 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     @Attribute(required=false)
     private double zGap = 2;
     
-    private boolean enabled;
+    @Attribute(required=false)
+    private boolean homeZ = false;
     
     protected double x, y, z, c, c2;
     private Thread readerThread;
@@ -75,7 +74,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 
             }
         }
-        this.enabled = enabled;
     }
     
     @Override
@@ -85,10 +83,12 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         // so the firmware's position is correct. We just need to move to zero
         // and update the position.
         
-        // Home Z
-        sendCommand("G28 Z0");
-        // Move Z to 0
-        sendCommand("G0 Z0");
+        if (homeZ) {
+            // Home Z
+            sendCommand("G28 Z0");
+            // Move Z to 0
+            sendCommand("G0 Z0");
+        }
         // Home X and Y
         sendCommand("G28 X0 Y0");
         // Zero out the two "extruders"
@@ -294,7 +294,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     	}
 
         if (!connected)  {
-            throw new Error(
+            throw new Exception(
                 String.format("Unable to receive connection response. Check your port and baud rate"));
         }
         

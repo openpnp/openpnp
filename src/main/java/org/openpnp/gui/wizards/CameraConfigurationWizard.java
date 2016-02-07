@@ -40,7 +40,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MessageBoxes;
@@ -53,6 +52,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 	private final Camera camera;
 	private JPanel panelUpp;
@@ -174,9 +174,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 			btnMeasure.setAction(confirmMeasureAction);
 			cancelMeasureAction.setEnabled(true);
 			CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
-			if (cameraView == null) {
-				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
-			}
 			cameraView.setSelectionEnabled(true);
 			cameraView.setSelection(0, 0, 100, 100);
 		}
@@ -187,10 +184,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		public void actionPerformed(ActionEvent arg0) {
 			btnMeasure.setAction(measureAction);
 			cancelMeasureAction.setEnabled(false);
-			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-			if (cameraView == null) {
-				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
-			}
+			CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
 			cameraView.setSelectionEnabled(false);
 			Rectangle selection = cameraView.getSelection();
             double width = Double.parseDouble(textFieldWidth.getText());
@@ -205,10 +199,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 		public void actionPerformed(ActionEvent arg0) {
 			btnMeasure.setAction(measureAction);
 			cancelMeasureAction.setEnabled(false);
-			CameraView cameraView = MainFrame.cameraPanel.getSelectedCameraView();
-			if (cameraView == null) {
-				MessageBoxes.errorBox(CameraConfigurationWizard.this, "Error", "Unable to locate Camera.");
-			}
+			CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
 			cameraView.setSelectionEnabled(false);
 		}
 	};

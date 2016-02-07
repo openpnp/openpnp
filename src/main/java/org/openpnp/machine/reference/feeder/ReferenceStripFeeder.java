@@ -39,6 +39,7 @@ import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
 import org.simpleframework.xml.Attribute;
@@ -218,18 +219,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	    			lineLocations[1], 
                     partPitch.multiply(feedCount - 1));
 	    }
-	    camera.moveTo(expectedLocation, 1.0);
+	    MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation, 1.0);
 	    // and look for the hole
 	    Location actualLocation = findClosestHole(camera);
 	    if (actualLocation == null) {
-	    	throw new Exception("Unable to locate reference hole. End of strip?");
+	    	throw new Exception("Feeder " + getName() + ": Unable to locate reference hole. End of strip?");
 	    }
 	    // make sure it's not too far away
 	    Length distance = actualLocation
 	    		.getLinearLengthTo(expectedLocation)
 	    		.convertToUnits(LengthUnit.Millimeters);
 	    if (distance.getValue() > 2) {
-	    	throw new Exception("Unable to locate reference hole. End of strip?");
+	    	throw new Exception("Feeder " + getName() + ": Unable to locate reference hole. End of strip?");
 	    }
 	    visionOffsets = actualLocation
 	    		.subtract(expectedLocation)
@@ -271,17 +272,18 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     // Stolen from StackOverflow
     static public double getAngleFromPoint(Location firstPoint,
             Location secondPoint) {
+    	double angle = 0.0;
         // above 0 to 180 degrees
         if ((secondPoint.getX() > firstPoint.getX())) {
-            return (Math.atan2((secondPoint.getX() - firstPoint.getX()),
+            angle = (Math.atan2((secondPoint.getX() - firstPoint.getX()),
                     (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
         // above 180 degrees to 360/0
-        else if ((secondPoint.getX() < firstPoint.getX())) {
-            return 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
+        else if ((secondPoint.getX() <= firstPoint.getX())) {
+            angle = 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
                     (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
-        return Math.atan2(0, 0);
+        return angle;
     }
 	
 	public TapeType getTapeType() {

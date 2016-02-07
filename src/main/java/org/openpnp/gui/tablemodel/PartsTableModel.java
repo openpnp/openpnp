@@ -25,6 +25,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -40,13 +41,15 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 		"Id", 
 		"Description",
 		"Height", 
-		"Package" 
+		"Package",
+		"Speed (0 - 1)"
 	};
 	private Class[] columnTypes = new Class[] {
 		String.class,
 		String.class,
 		LengthCellValue.class,
 		Package.class,
+		String.class
 	};
 	private List<Part> parts;
 
@@ -107,6 +110,12 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 			else if (columnIndex == 3) {
 				part.setPackage((Package) aValue);
 			}
+			else if (columnIndex == 4) {
+			    double val = Double.parseDouble(aValue.toString());
+			    val = Math.max(0, val);
+			    val = Math.min(1, val);
+			    part.setSpeed(val);
+			}
 		}
 		catch (Exception e) {
 			// TODO: dialog, bad input
@@ -124,6 +133,8 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 			return new LengthCellValue(part.getHeight(), true);
 		case 3:
 			 return part.getPackage();
+		case 4:
+            return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(), part.getSpeed());
 		default:
 			return null;
 		}

@@ -307,7 +307,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 		}
 		
 		if (!connected)  {
-			throw new Error(
+			throw new Exception(
 //				String.format("Unable to receive connection response from Sprinter. Check your port and baud rate, and that you are running at least version %f of Sprinter", 
 //						minimumRequiredVersion));
 				String.format("Unable to receive connection response from Sprinter. Check your port and baud rate, and that you are running the latest version of Sprinter."));

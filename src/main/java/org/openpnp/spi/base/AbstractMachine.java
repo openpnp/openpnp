@@ -234,7 +234,7 @@ public abstract class AbstractMachine implements Machine {
                 Exception exception = null;
                 try {
                     if (!ignoreEnabled && !isEnabled()) {
-                        throw new Exception("Machine is not enabled.");
+                        throw new Exception("Machine has not been started.");
                     }
                     result = callable.call();
                 }
@@ -278,10 +278,10 @@ public abstract class AbstractMachine implements Machine {
     }
 
 	@Override
-	public Head getDefaultHead() {
+	public Head getDefaultHead() throws Exception {
 		List<Head> heads = getHeads();
 		if (heads == null || heads.isEmpty()) {
-			return null;
+            throw new Exception("No default head available.");
 		}
 		return heads.get(0);
 	}

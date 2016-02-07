@@ -158,28 +158,28 @@ public abstract class AbstractHead implements Head {
     }
 
 	@Override
-	public Camera getDefaultCamera() {
+	public Camera getDefaultCamera() throws Exception {
 		List<Camera> cameras = getCameras();
 		if (cameras == null || cameras.isEmpty()) {
-			return null;
+			throw new Exception("No default camera available on head " + getName());
 		}
 		return cameras.get(0);
 	}
 
 	@Override
-	public Nozzle getDefaultNozzle() {
+	public Nozzle getDefaultNozzle() throws Exception {
 		List<Nozzle> nozzles = getNozzles();
 		if (nozzles == null || nozzles.isEmpty()) {
-			return null;
+          throw new Exception("No default nozzle available on head " + getName());
 		}
 		return nozzles.get(0);
 	}
 
 	@Override
-	public PasteDispenser getDefaultPasteDispenser() {
+	public PasteDispenser getDefaultPasteDispenser() throws Exception {
 		List<PasteDispenser> dispensers = getPasteDispensers();
 		if (dispensers == null || dispensers.isEmpty()) {
-			return null;
+          throw new Exception("No default paste dispenser available on head " + getName());
 		}
 		return dispensers.get(0);
 	}

@@ -33,7 +33,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.driver.wizards.TinygDriverConfigurationWizard;
+import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -97,14 +97,14 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         }
 
         if (!connected) {
-            throw new Error(
+            throw new Exception(
                     String.format(
                             "Unable to receive connection response from TinyG. Check your port and baud rate, and that you are running at least version %f of TinyG",
                             minimumRequiredVersion));
         }
 
         if (connectedVersion < minimumRequiredVersion) {
-            throw new Error(
+            throw new Exception(
                     String.format(
                             "This driver requires TinyG version %.2f or higher. You are running version %.2f",
                             minimumRequiredVersion, connectedVersion));
@@ -431,7 +431,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public Wizard getConfigurationWizard() {
         // TODO Auto-generated method stub
-        return new TinygDriverConfigurationWizard(this);
+        return new AbstractSerialPortDriverConfigurationWizard(this);
     }
 
     @Override

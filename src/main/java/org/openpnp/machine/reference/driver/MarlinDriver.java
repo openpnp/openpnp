@@ -214,7 +214,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 		}
 		
 		if (!connected)  {
-			throw new Error(
+			throw new Exception(
 				String.format("Unable to receive connection response from Grbl. Check your port and baud rate, and that you are running at least build %d of Grbl", 
 						minimumRequiredBuildNumber));
 		}

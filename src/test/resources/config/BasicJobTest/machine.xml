@@ -1,0 +1,76 @@
+<!--
+    Legend:
+        Actuator:   .
+        Nozzle:     *
+        Camera:     o
+
+    Sample Machine Head Looks like:
+        .    o
+        
+        *    *
+ -->
+ <openpnp-machine>
+   <machine class="org.openpnp.machine.reference.ReferenceMachine">
+      <driver class="org.openpnp.machine.reference.driver.test.TestDriver"/>
+      <heads>
+        <head class="org.openpnp.machine.reference.ReferenceHead" id="H1">
+            <nozzles>
+                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" current-nozzle-tip-id="NT1" changer-enabled="true">
+                    <head-offsets x="10" y="0" z="0" rotation="0" units="Millimeters" />
+                    <nozzle-tips>
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="false">
+                    		<compatible-package-ids>
+                    			<id>0603</id>
+                    		</compatible-package-ids>
+	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                    	</nozzle-tip>
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="false">
+                    		<compatible-package-ids>
+                    			<id>0805</id>
+                    		</compatible-package-ids>
+	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                    	</nozzle-tip>
+                    </nozzle-tips>
+                </nozzle>
+                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N2" current-nozzle-tip-id="NT1" changer-enabled="true">
+                    <head-offsets x="20" y="0" z="0" rotation="0" units="Millimeters" />
+                    <nozzle-tips>
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="false">
+                    		<compatible-package-ids>
+                    			<id>0603</id>
+                    		</compatible-package-ids>
+	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                    	</nozzle-tip>
+                    	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="false">
+                    		<compatible-package-ids>
+                    			<id>0805</id>
+                    		</compatible-package-ids>
+	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+                    	</nozzle-tip>
+                    </nozzle-tips>
+                </nozzle>
+            </nozzles>
+            <actuators>
+                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" index="0">
+                    <head-offsets x="10" y="10" z="0" rotation="0" units="Millimeters" />
+                </actuator>
+            </actuators>
+        </head>
+      </heads>
+      <feeders>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTubeFeeder" id="F1" enabled="true" part-id="R-0805-10K">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </feeder>
+      </feeders>
+      <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
+      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" />
+   </machine>
+</openpnp-machine>

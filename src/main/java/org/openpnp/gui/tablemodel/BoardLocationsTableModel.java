@@ -38,21 +38,27 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 	
 	private String[] columnNames = new String[] { 
 			"Board", 
+			"Width",
+			"Height",
 			"Side", 
 			"X",
 			"Y", 
 			"Z", 
 			"ø",
+			"Enabled?",
 			"Check Fids?"
 	};
 	
 	private Class[] columnTypes = new Class[] {
 			String.class,
+			LengthCellValue.class,
+			LengthCellValue.class,
 			Side.class,
 			LengthCellValue.class,
 			LengthCellValue.class,
 			LengthCellValue.class,
 			String.class,
+			Boolean.class,
 			Boolean.class
 	};
 	
@@ -105,34 +111,51 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 				boardLocation.getBoard().setName((String) aValue);
 			}
 			else if (columnIndex == 1) {
+				LengthCellValue value = (LengthCellValue) aValue;
+				Length length = value.getLength();
+				Location location = boardLocation.getBoard().getDimensions();
+				location = Length.setLocationField(configuration, location, length, Length.Field.X);
+				boardLocation.getBoard().setDimensions(location);
+			}
+			else if (columnIndex == 2) {
+				LengthCellValue value = (LengthCellValue) aValue;
+				Length length = value.getLength();
+				Location location = boardLocation.getBoard().getDimensions();
+				location = Length.setLocationField(configuration, location, length, Length.Field.Y);
+				boardLocation.getBoard().setDimensions(location);
+			}
+			else if (columnIndex == 3) {
 				boardLocation.setSide((Side) aValue);
 				fireTableCellUpdated(rowIndex, columnIndex);
 			}
-			else if (columnIndex == 2) {
+			else if (columnIndex == 4) {
 				LengthCellValue value = (LengthCellValue) aValue;
 				Length length = value.getLength();
 				Location location = boardLocation.getLocation();
 				location = Length.setLocationField(configuration, location, length, Length.Field.X);
 				boardLocation.setLocation(location);
 			}
-			else if (columnIndex == 3) {
+			else if (columnIndex == 5) {
 				LengthCellValue value = (LengthCellValue) aValue;
 				Length length = value.getLength();
 				Location location = boardLocation.getLocation();
 				location = Length.setLocationField(configuration, location, length, Length.Field.Y);
 				boardLocation.setLocation(location);
 			}
-			else if (columnIndex == 4) {
+			else if (columnIndex == 6) {
 				LengthCellValue value = (LengthCellValue) aValue;
 				Length length = value.getLength();
 				Location location = boardLocation.getLocation();
 				location = Length.setLocationField(configuration, location, length, Length.Field.Z);
 				boardLocation.setLocation(location);
 			}
-            else if (columnIndex == 5) {
+            else if (columnIndex == 7) {
                 boardLocation.setLocation(boardLocation.getLocation().derive(null, null, null, Double.parseDouble(aValue.toString())));
             }
-            else if (columnIndex == 6) {
+            else if (columnIndex == 8) {
+                boardLocation.setEnabled((Boolean) aValue);
+            }
+            else if (columnIndex == 9) {
                 boardLocation.setCheckFiducials((Boolean) aValue);
             }
 		}
@@ -144,20 +167,27 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
 		BoardLocation boardLocation = job.getBoardLocations().get(row);
 		Location loc = boardLocation.getLocation();
+		Location dim = boardLocation.getBoard().getDimensions();
 		switch (col) {
 		case 0:
 			return boardLocation.getBoard().getName();
 		case 1:
-			return boardLocation.getSide();
+			return new LengthCellValue(dim.getLengthX());
 		case 2:
-			return new LengthCellValue(loc.getLengthX());
+			return new LengthCellValue(dim.getLengthY());
 		case 3:
-			return new LengthCellValue(loc.getLengthY());
+			return boardLocation.getSide();
 		case 4:
+			return new LengthCellValue(loc.getLengthX());
+		case 5:
+			return new LengthCellValue(loc.getLengthY());
+		case 6:
 			return new LengthCellValue(loc.getLengthZ());
-        case 5:
+        case 7:
             return String.format(Locale.US,configuration.getLengthDisplayFormat(), loc.getRotation(), "");
-        case 6:
+        case 8:
+            return boardLocation.isEnabled();
+        case 9:
             return boardLocation.isCheckFiducials();
 		default:
 			return null;

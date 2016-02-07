@@ -324,8 +324,15 @@ public class NullDriver implements ReferenceDriver {
         }
     }
     
+    public double getFeedRateMmPerMinute() {
+		return feedRateMmPerMinute;
+	}
 
-    @Override
+	public void setFeedRateMmPerMinute(double feedRateMmPerMinute) {
+		this.feedRateMmPerMinute = feedRateMmPerMinute;
+	}
+
+	@Override
     public void close() throws IOException {
         // TODO Auto-generated method stub
         

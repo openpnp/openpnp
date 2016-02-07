@@ -14,9 +14,9 @@ before_deploy:
 - tar -xzf install4j_unix_6_0_4.tar.gz
 - ./install4j6/bin/install4jc -L $INSTALL4J_LICENSE_KEY
 - mvn package
-- wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_45.tar.gz
-- wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_45.tar.gz
-- wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_45.tar.gz
+- wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_66.tar.gz
+- wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_66.tar.gz
+- wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_66.tar.gz
 - ./install4j6/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
 
 deploy:
