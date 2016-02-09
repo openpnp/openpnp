@@ -297,7 +297,7 @@ public class MainFrame extends JFrame {
 		panel.add(machineControlsPanel);
 
 		// Add global hotkeys for the arrow keys
-		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<KeyStroke, Action>();
+		final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<>();
 
 		int mask = KeyEvent.CTRL_DOWN_MASK;
 		

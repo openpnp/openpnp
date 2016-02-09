@@ -52,7 +52,7 @@ public class Ports {
      */
     public List<Port> getPort() {
         if (port == null) {
-            port = new ArrayList<Port>();
+            port = new ArrayList<>();
         }
         return this.port;
     }

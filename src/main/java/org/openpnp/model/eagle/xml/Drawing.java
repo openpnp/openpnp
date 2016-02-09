@@ -140,7 +140,7 @@ public class Drawing {
      */
     public List<Object> getLibraryOrSchematicOrBoard() {
         if (libraryOrSchematicOrBoard == null) {
-            libraryOrSchematicOrBoard = new ArrayList<Object>();
+            libraryOrSchematicOrBoard = new ArrayList<>();
         }
         return this.libraryOrSchematicOrBoard;
     }

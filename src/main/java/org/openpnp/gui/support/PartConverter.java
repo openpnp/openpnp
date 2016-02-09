@@ -27,7 +27,7 @@ import org.openpnp.model.Part;
 
 public class PartConverter extends Converter<Part, String> {
 	private Configuration configuration; 
-	private IdentifiableObjectToStringConverter<Part> toStringConverter = new IdentifiableObjectToStringConverter<Part>();
+	private IdentifiableObjectToStringConverter<Part> toStringConverter = new IdentifiableObjectToStringConverter<>();
 	
 	public PartConverter(Configuration configuration) {
 		this.configuration = configuration;

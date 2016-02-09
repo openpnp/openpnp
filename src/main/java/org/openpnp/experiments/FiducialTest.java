@@ -80,7 +80,7 @@ public class FiducialTest {
     static public Point fiducial(Mat gray, int min, int max) throws Exception {
         final List<MatOfPoint> contours = new ArrayList<>();
         // final List<Rect> box = new ArrayList<>();
-        final List<RotatedRect> box = new ArrayList<RotatedRect>();
+        final List<RotatedRect> box = new ArrayList<>();
         final List<Double> dist = new ArrayList<>();
         final Mat dummy = new Mat();
         // final Mat gray= OpenCvUtils.toMat(image,Highgui.IMREAD_GRAYSCALE);

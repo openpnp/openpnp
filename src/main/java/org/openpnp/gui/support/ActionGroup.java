@@ -27,7 +27,7 @@ import java.util.Set;
 import javax.swing.Action;
 
 public class ActionGroup {
-	private Set<Action> actions = new HashSet<Action>();
+	private Set<Action> actions = new HashSet<>();
 	
 	public ActionGroup(Action... actions) {
 		for (Action action : actions) {

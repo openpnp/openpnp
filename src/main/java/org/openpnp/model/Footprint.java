@@ -40,7 +40,7 @@ public class Footprint {
     private LengthUnit units = LengthUnit.Millimeters;
     
     @ElementList(inline=true, required=false)
-    private ArrayList<Pad> pads = new ArrayList<Pad>();
+    private ArrayList<Pad> pads = new ArrayList<>();
     
     @Attribute(required=false)
     private double bodyWidth;

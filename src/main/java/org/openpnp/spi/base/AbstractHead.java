@@ -27,16 +27,16 @@ public abstract class AbstractHead implements Head {
     protected String name;
     
     @ElementList(required=false)
-    protected IdentifiableList<Nozzle> nozzles = new IdentifiableList<Nozzle>();
+    protected IdentifiableList<Nozzle> nozzles = new IdentifiableList<>();
     
     @ElementList(required=false)
-    protected IdentifiableList<Actuator> actuators = new IdentifiableList<Actuator>();
+    protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
     
     @ElementList(required=false)
-    protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
+    protected IdentifiableList<Camera> cameras = new IdentifiableList<>();
     
     @ElementList(required=false)
-    protected IdentifiableList<PasteDispenser> pasteDispensers = new IdentifiableList<PasteDispenser>();
+    protected IdentifiableList<PasteDispenser> pasteDispensers = new IdentifiableList<>();
     
     public AbstractHead() {
         this.id = Configuration.createId();

@@ -216,7 +216,7 @@ public class BasicJobTest {
      * field.
      */
     public static class BasicJobTestDriverDelegate extends TestDriverDelegate {
-        private Queue<ExpectedOp> expectedOps = new LinkedList<ExpectedOp>();
+        private Queue<ExpectedOp> expectedOps = new LinkedList<>();
 
         public void expectMove(String description, HeadMountable hm, Location location, double speed) {
             ExpectedMove o = new ExpectedMove(description, hm, location, speed);

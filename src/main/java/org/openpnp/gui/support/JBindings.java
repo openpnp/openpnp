@@ -50,7 +50,7 @@ public class JBindings {
 			String sourcePropertyName, 
 			TS component, 
 			String targetPropertyName) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, (BindingListener[]) null);
+		return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName, null, (BindingListener[]) null);
 	}
 	
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
@@ -59,7 +59,7 @@ public class JBindings {
 			TS component, 
 			String targetPropertyName, 
 			Converter<SV, TV> converter) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, (BindingListener[]) null);
+		return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName, converter, (BindingListener[]) null);
 	}
 
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
@@ -69,7 +69,7 @@ public class JBindings {
 			String targetPropertyName, 
 			Converter<SV, TV> converter,
 			BindingListener... listeners) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, converter, listeners);
+		return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName, converter, listeners);
 	}
 
 	public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(
@@ -78,7 +78,7 @@ public class JBindings {
 			TS component, 
 			String targetPropertyName, 
 			BindingListener... listeners) {
-		return new WrappedBinding<SS, SV, TS, TV>(source, sourcePropertyName, component, targetPropertyName, null, listeners);
+		return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName, null, listeners);
 	}
 
 	public static class WrappedBinding<SS, SV, TS extends JComponent, TV> {
@@ -100,7 +100,7 @@ public class JBindings {
 				BindingListener... listeners) {
 			this.source = source;
 			this.sourceProperty = BeanProperty.create(sourcePropertyName);
-			this.wrapper = new Wrapper<SV>(sourceProperty.getValue(source));
+			this.wrapper = new Wrapper<>(sourceProperty.getValue(source));
 			BeanProperty<Wrapper<SV>, SV> wrapperProperty = BeanProperty.create("value");
 			BeanProperty<TS, TV> targetProperty = BeanProperty.create(targetPropertyName);
 			wrappedBinding = Bindings.createAutoBinding(

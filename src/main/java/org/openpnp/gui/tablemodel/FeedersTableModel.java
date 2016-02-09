@@ -47,7 +47,7 @@ public class FeedersTableModel extends AbstractTableModel {
 	}
 
 	public void refresh() {
-		feeders = new ArrayList<Feeder>(configuration.getMachine().getFeeders());
+		feeders = new ArrayList<>(configuration.getMachine().getFeeders());
 		fireTableDataChanged();
 	}
 

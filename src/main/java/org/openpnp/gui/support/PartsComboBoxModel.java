@@ -33,7 +33,7 @@ import org.openpnp.model.Part;
 
 @SuppressWarnings("serial")
 public class PartsComboBoxModel extends DefaultComboBoxModel implements PropertyChangeListener {
-	private IdentifiableComparator<Part> comparator = new IdentifiableComparator<Part>();
+	private IdentifiableComparator<Part> comparator = new IdentifiableComparator<>();
 	
 	public PartsComboBoxModel() {
 		addAllElements();
@@ -41,7 +41,7 @@ public class PartsComboBoxModel extends DefaultComboBoxModel implements Property
 	}
 	
 	private void addAllElements() {
-		ArrayList<Part> parts = new ArrayList<Part>(Configuration.get().getParts());
+		ArrayList<Part> parts = new ArrayList<>(Configuration.get().getParts());
 		Collections.sort(parts, comparator);
 		for (Part part : parts) {
 			addElement(part);

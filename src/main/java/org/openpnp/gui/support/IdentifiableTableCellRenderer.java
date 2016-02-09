@@ -27,7 +27,7 @@ import org.openpnp.model.Identifiable;
 
 @SuppressWarnings("serial")
 public class IdentifiableTableCellRenderer<T extends Identifiable> extends DefaultTableCellRenderer {
-	IdentifiableObjectToStringConverter<T> converter = new IdentifiableObjectToStringConverter<T>();
+	IdentifiableObjectToStringConverter<T> converter = new IdentifiableObjectToStringConverter<>();
 	
 	@Override
 	protected void setValue(Object value) {

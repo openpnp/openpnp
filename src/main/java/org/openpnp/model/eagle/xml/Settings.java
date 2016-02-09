@@ -52,7 +52,7 @@ public class Settings {
      */
     public List<Setting> getSetting() {
         if (setting == null) {
-            setting = new ArrayList<Setting>();
+            setting = new ArrayList<>();
         }
         return this.setting;
     }

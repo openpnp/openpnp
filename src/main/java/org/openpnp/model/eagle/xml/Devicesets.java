@@ -52,7 +52,7 @@ public class Devicesets {
      */
     public List<Deviceset> getDeviceset() {
         if (deviceset == null) {
-            deviceset = new ArrayList<Deviceset>();
+            deviceset = new ArrayList<>();
         }
         return this.deviceset;
     }

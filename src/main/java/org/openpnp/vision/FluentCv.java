@@ -355,7 +355,7 @@ public class FluentCv {
 	}
 	
 	public List<String> getStoredTags() {
-		return new ArrayList<String>(stored.keySet());
+		return new ArrayList<>(stored.keySet());
 	}
 	
 	public FluentCv write(File file) throws Exception {
@@ -431,7 +431,7 @@ public class FluentCv {
 			double maxDistance,
 			String...tag
 			) {
-		List<float[]> results = new ArrayList<float[]>();
+		List<float[]> results = new ArrayList<>();
     	for (int i = 0; i < this.mat.cols(); i++) {
     		float[] circle = new float[3];
     		this.mat.get(0, i, circle);
@@ -468,7 +468,7 @@ public class FluentCv {
 			return store(this.mat, tag);
 		}
 		
-    	List<Point> points = new ArrayList<Point>();
+    	List<Point> points = new ArrayList<>();
     	// collect the circles into a list of points
     	for (int i = 0; i < this.mat.cols(); i++) {
     		float[] circle = new float[3];
@@ -483,7 +483,7 @@ public class FluentCv {
     	Point b = line[1];
 		
     	// filter the points by distance from the resulting line
-		List<float[]> results = new ArrayList<float[]>();
+		List<float[]> results = new ArrayList<>();
 		for (int i = 0; i < this.mat.cols(); i++) {
     		float[] circle = new float[3];
     		this.mat.get(0, i, circle);
@@ -633,7 +633,7 @@ public class FluentCv {
 	public FluentCv getContourMaxRects(List<MatOfPoint> contours, List<RotatedRect> rect) {
 		List<Point> contoursCombined = new ArrayList<>();
 		for (MatOfPoint mp : contours) {
-			List<Point> points = new ArrayList<Point>();
+			List<Point> points = new ArrayList<>();
 			Converters.Mat_to_vector_Point(mp, points);
 			for (Point point : points) {
 				contoursCombined.add(point);

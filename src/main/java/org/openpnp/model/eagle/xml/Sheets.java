@@ -52,7 +52,7 @@ public class Sheets {
      */
     public List<Sheet> getSheet() {
         if (sheet == null) {
-            sheet = new ArrayList<Sheet>();
+            sheet = new ArrayList<>();
         }
         return this.sheet;
     }

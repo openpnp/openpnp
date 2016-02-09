@@ -75,7 +75,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
+        ArrayList<PropertySheetHolder> children = new ArrayList<>();
         children.add(new SimplePropertySheetHolder("Nozzles", getNozzles()));
         children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
         children.add(new SimplePropertySheetHolder("Actuators", getActuators()));

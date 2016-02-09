@@ -84,7 +84,7 @@ public class Designrules {
      */
     public List<Description> getDescription() {
         if (description == null) {
-            description = new ArrayList<Description>();
+            description = new ArrayList<>();
         }
         return this.description;
     }
@@ -113,7 +113,7 @@ public class Designrules {
      */
     public List<Param> getParam() {
         if (param == null) {
-            param = new ArrayList<Param>();
+            param = new ArrayList<>();
         }
         return this.param;
     }

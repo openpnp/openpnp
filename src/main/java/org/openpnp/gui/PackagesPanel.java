@@ -95,7 +95,7 @@ public class PackagesPanel extends JPanel {
 		
 		setLayout(new BorderLayout(0, 0));
 		packagesTableModel = new PackagesTableModel(configuration);
-		packagesTableSorter = new TableRowSorter<PackagesTableModel>(packagesTableModel);
+		packagesTableSorter = new TableRowSorter<>(packagesTableModel);
 
 		JPanel toolbarAndSearch = new JPanel();
 		add(toolbarAndSearch, BorderLayout.NORTH);

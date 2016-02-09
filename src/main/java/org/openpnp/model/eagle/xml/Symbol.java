@@ -127,7 +127,7 @@ public class Symbol {
      */
     public List<Object> getPolygonOrWireOrTextOrDimensionOrPinOrCircleOrRectangleOrFrame() {
         if (polygonOrWireOrTextOrDimensionOrPinOrCircleOrRectangleOrFrame == null) {
-            polygonOrWireOrTextOrDimensionOrPinOrCircleOrRectangleOrFrame = new ArrayList<Object>();
+            polygonOrWireOrTextOrDimensionOrPinOrCircleOrRectangleOrFrame = new ArrayList<>();
         }
         return this.polygonOrWireOrTextOrDimensionOrPinOrCircleOrRectangleOrFrame;
     }

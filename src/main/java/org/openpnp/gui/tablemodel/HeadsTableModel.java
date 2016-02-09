@@ -40,7 +40,7 @@ public class HeadsTableModel extends AbstractTableModel {
 		this.configuration = configuration;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
-                heads = new ArrayList<Head>(configuration.getMachine().getHeads());
+                heads = new ArrayList<>(configuration.getMachine().getHeads());
                 fireTableDataChanged();
             }
         });

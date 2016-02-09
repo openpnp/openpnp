@@ -52,7 +52,7 @@ public class Variantdefs {
      */
     public List<Variantdef> getVariantdef() {
         if (variantdef == null) {
-            variantdef = new ArrayList<Variantdef>();
+            variantdef = new ArrayList<>();
         }
         return this.variantdef;
     }

@@ -54,7 +54,7 @@ public class Packages {
      */
     public List<Package> getPackage() {
         if (_package == null) {
-            _package = new ArrayList<Package>();
+            _package = new ArrayList<>();
         }
         return this._package;
     }

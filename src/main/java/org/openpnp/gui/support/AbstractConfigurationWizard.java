@@ -53,7 +53,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 	protected JPanel contentPanel;
 	private JScrollPane scrollPane;
 	
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
+	private List<WrappedBinding> wrappedBindings = new ArrayList<>();
 	private ApplyResetBindingListener listener;
 	
 	public AbstractConfigurationWizard() {

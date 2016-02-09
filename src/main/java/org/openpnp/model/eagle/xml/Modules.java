@@ -52,7 +52,7 @@ public class Modules {
      */
     public List<Module> getModule() {
         if (module == null) {
-            module = new ArrayList<Module>();
+            module = new ArrayList<>();
         }
         return this.module;
     }

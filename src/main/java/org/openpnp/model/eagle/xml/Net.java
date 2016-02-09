@@ -113,7 +113,7 @@ public class Net {
      */
     public List<Segment> getSegment() {
         if (segment == null) {
-            segment = new ArrayList<Segment>();
+            segment = new ArrayList<>();
         }
         return this.segment;
     }

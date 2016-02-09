@@ -49,7 +49,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 	public PackagesTableModel(Configuration configuration) {
 		this.configuration = configuration;
 		configuration.addPropertyChangeListener("packages", this);
-		packages = new ArrayList<Package>(configuration.getPackages());
+		packages = new ArrayList<>(configuration.getPackages());
 		
 	}
 
@@ -107,7 +107,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 
 	@Override
 	public void propertyChange(PropertyChangeEvent arg0) {
-		packages = new ArrayList<Package>(configuration.getPackages());
+		packages = new ArrayList<>(configuration.getPackages());
 		fireTableDataChanged();
 	}
 }

@@ -52,7 +52,7 @@ public class Elements {
      */
     public List<Element> getElement() {
         if (element == null) {
-            element = new ArrayList<Element>();
+            element = new ArrayList<>();
         }
         return this.element;
     }

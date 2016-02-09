@@ -59,7 +59,7 @@ public class ReferenceMachine extends AbstractMachine {
 	
 	private boolean enabled;
 	
-	private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<Class<? extends Feeder>>();
+	private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 	
 	public ReferenceDriver getDriver() {
 		return driver;
@@ -117,12 +117,12 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        ArrayList<PropertySheetHolder> children = new ArrayList<PropertySheetHolder>();
+        ArrayList<PropertySheetHolder> children = new ArrayList<>();
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
         children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
-        children.add(new SimplePropertySheetHolder("Job Processors", new ArrayList<JobProcessor>(jobProcessors.values())));
+        children.add(new SimplePropertySheetHolder("Job Processors", new ArrayList<>(jobProcessors.values())));
         return children.toArray(new PropertySheetHolder[]{});
     }
     
@@ -145,7 +145,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
 	public List<Class<? extends Feeder>> getCompatibleFeederClasses() {
-		List<Class<? extends Feeder>> l = new ArrayList<Class<? extends Feeder>>();
+		List<Class<? extends Feeder>> l = new ArrayList<>();
         l.add(ReferenceStripFeeder.class);
         l.add(ReferenceTrayFeeder.class);
 		l.add(ReferenceDragFeeder.class);
@@ -156,7 +156,7 @@ public class ReferenceMachine extends AbstractMachine {
 
 	@Override
 	public List<Class<? extends Camera>>  getCompatibleCameraClasses() {
-		List<Class<? extends Camera>> l = new ArrayList<Class<? extends Camera>>();
+		List<Class<? extends Camera>> l = new ArrayList<>();
 		l.add(LtiCivilCamera.class);
 		l.add(VfwCamera.class);
         l.add(OpenCvCamera.class);

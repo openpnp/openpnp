@@ -82,7 +82,7 @@ public class PartsPanel extends JPanel {
 		
 		setLayout(new BorderLayout(0, 0));
 		partsTableModel = new PartsTableModel();
-		partsTableSorter = new TableRowSorter<PartsTableModel>(partsTableModel);
+		partsTableSorter = new TableRowSorter<>(partsTableModel);
 
 		JPanel panel_5 = new JPanel();
 		add(panel_5, BorderLayout.NORTH);

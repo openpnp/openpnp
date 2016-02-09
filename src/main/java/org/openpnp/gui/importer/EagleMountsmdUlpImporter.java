@@ -93,7 +93,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
     
 	private static List<Placement> parseFile(File file, Side side, boolean createMissingParts) throws Exception {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		ArrayList<Placement> placements = new ArrayList<Placement>();
+		ArrayList<Placement> placements = new ArrayList<>();
 		String line;
 		while ((line = reader.readLine()) != null) {
 			line = line.trim();
@@ -291,7 +291,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
                 topFile = new File(textFieldTopFile.getText());
                 bottomFile = new File(textFieldBottomFile.getText());
                 board = new Board();
-                List<Placement> placements = new ArrayList<Placement>();
+                List<Placement> placements = new ArrayList<>();
                 try {
                     if (topFile.exists()) {
                         placements.addAll(parseFile(topFile, Side.Top, chckbxCreateMissingParts.isSelected()));

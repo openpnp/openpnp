@@ -98,7 +98,7 @@ public class ClassSelectionDialog<T> extends JDialog {
 		DefaultListModel listModel = new DefaultListModel();
 		list.setModel(listModel);
 		for (Class<? extends T> clz : classes) {
-			listModel.addElement(new ClassListItem<T>(clz));
+			listModel.addElement(new ClassListItem<>(clz));
 		}
 
 		list.addListSelectionListener(new ListSelectionListener() {

@@ -37,7 +37,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             .getLogger(ReferenceNozzleTip.class);
 
     @ElementList(required = false, entry = "id")
-    private Set<String> compatiblePackageIds = new HashSet<String>();
+    private Set<String> compatiblePackageIds = new HashSet<>();
     
     @Attribute(required = false)
     private boolean allowIncompatiblePackages;
@@ -49,7 +49,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
 
-    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<org.openpnp.model.Package>();
+    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
     
     public ReferenceNozzleTip() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -77,7 +77,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	}
     
 	public Set<org.openpnp.model.Package> getCompatiblePackages() {
-        return new HashSet<org.openpnp.model.Package>(compatiblePackages);
+        return new HashSet<>(compatiblePackages);
     }
 
     public void setCompatiblePackages(

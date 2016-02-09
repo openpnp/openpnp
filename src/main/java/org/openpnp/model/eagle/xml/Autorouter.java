@@ -52,7 +52,7 @@ public class Autorouter {
      */
     public List<Pass> getPass() {
         if (pass == null) {
-            pass = new ArrayList<Pass>();
+            pass = new ArrayList<>();
         }
         return this.pass;
     }

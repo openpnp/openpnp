@@ -151,7 +151,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
 		table = new AutoSelectTextTable(tableModel);
-		tableSorter = new TableRowSorter<FeedersTableModel>(tableModel);
+		tableSorter = new TableRowSorter<>(tableModel);
 
 		final JSplitPane splitPane = new JSplitPane();
 		splitPane.setContinuousLayout(true);
@@ -278,7 +278,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				return;
 			}
 
-			ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<Feeder>(
+			ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<>(
 					JOptionPane.getFrameForComponent(FeedersPanel.this),
 					"Select Feeder...",
 					"Please select a Feeder implemention from the list below.",

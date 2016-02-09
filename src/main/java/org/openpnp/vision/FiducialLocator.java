@@ -281,7 +281,7 @@ public class FiducialLocator {
                 }
             }
         }
-        ArrayList<Placement> results = new ArrayList<Placement>();
+        ArrayList<Placement> results = new ArrayList<>();
         results.add(maxA);
         results.add(maxB);
         return results;
@@ -289,7 +289,7 @@ public class FiducialLocator {
     
     private static IdentifiableList<Placement> getFiducials(BoardLocation boardLocation) {
         Board board = boardLocation.getBoard();
-        IdentifiableList<Placement> fiducials = new IdentifiableList<Placement>();
+        IdentifiableList<Placement> fiducials = new IdentifiableList<>();
         for (Placement placement : board.getPlacements()) {
             if (placement.getType() == Type.Fiducial
                     && placement.getSide() == boardLocation.getSide()) {

@@ -52,7 +52,7 @@ public class Gates {
      */
     public List<Gate> getGate() {
         if (gate == null) {
-            gate = new ArrayList<Gate>();
+            gate = new ArrayList<>();
         }
         return this.gate;
     }

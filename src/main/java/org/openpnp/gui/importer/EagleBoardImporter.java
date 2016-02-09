@@ -118,9 +118,9 @@ public class EagleBoardImporter implements BoardImporter {
 		String packageId = "";
 		Part part = null;
 		
-		List<BoardPad> pads = new ArrayList<BoardPad>();
+		List<BoardPad> pads = new ArrayList<>();
 		
-		ArrayList<Placement> placements = new ArrayList<Placement>();
+		ArrayList<Placement> placements = new ArrayList<>();
 		//we don't use the 'side' parameter as we can read this from the .brd file
 		//in the future we could use the side parameter to restrict this from only parsing one side or the other or both
 		
@@ -564,7 +564,7 @@ public class EagleBoardImporter implements BoardImporter {
             public void actionPerformed(ActionEvent e) {
                 boardFile = new File(textFieldBoardFile.getText());
                 board = new Board();
-                List<Placement> placements = new ArrayList<Placement>();
+                List<Placement> placements = new ArrayList<>();
                 try {
                     if (boardFile.exists()) {
                     	if (chckbxImportTop.isSelected() && chckbxImportBottom.isSelected())

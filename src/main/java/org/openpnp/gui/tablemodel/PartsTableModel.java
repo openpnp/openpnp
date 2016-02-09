@@ -55,7 +55,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 
 	public PartsTableModel() {
 		Configuration.get().addPropertyChangeListener("parts", this);
-		parts = new ArrayList<Part>(Configuration.get().getParts());
+		parts = new ArrayList<>(Configuration.get().getParts());
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 
 	@Override
 	public void propertyChange(PropertyChangeEvent arg0) {
-		parts = new ArrayList<Part>(Configuration.get().getParts());
+		parts = new ArrayList<>(Configuration.get().getParts());
 		fireTableDataChanged();
 	}
 }

@@ -52,7 +52,7 @@ public class Connects {
      */
     public List<Connect> getConnect() {
         if (connect == null) {
-            connect = new ArrayList<Connect>();
+            connect = new ArrayList<>();
         }
         return this.connect;
     }

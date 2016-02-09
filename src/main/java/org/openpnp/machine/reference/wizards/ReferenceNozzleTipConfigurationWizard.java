@@ -79,7 +79,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
     private JTable table;
     private PackagesTableModel tableModel;
     
-    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<org.openpnp.model.Package>();
+    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
     
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -279,7 +279,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
         }
 
         public void refresh() {
-            packages = new ArrayList<org.openpnp.model.Package>(Configuration.get().getPackages());
+            packages = new ArrayList<>(Configuration.get().getPackages());
             fireTableDataChanged();
         }
 
