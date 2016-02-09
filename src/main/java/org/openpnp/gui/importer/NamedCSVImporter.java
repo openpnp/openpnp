@@ -127,13 +127,13 @@ public class CSVParseDemo {
 //////////////////////////////////////////////////////////
 //	if((str.indexOf("val")!=-1||str.indexOf("comment"))&&str.indexOf("val")!=-1&&str.indexOf("val")!=-1&&
 
-	static final String Refs[] = { "Designator", "designator", "Part", "part", "Component", "component", "RefDes" , "Ref" };
-	static final String Vals[] = { "Value", "value", "Val", "val", "Comment" , "comment" }; 
-	static final String Packs[] = { "Footprint", "footprint","Package", "package", "Pattern" , "pattern" };
-	static final String Xs[] = { "X", "x", "X (mm)", "x (mm)", "Ref X", "ref x" , "PosX" }; 
-	static final String Ys[] = { "Y", "x", "Y (mm)", "x (mm)", "Ref Y", "ref x" , "PosY" }; 
-	static final String Rots[] = { "Rotation", "rotation", "Rot", "rot" , "Rotate" };
-	static final String TBs[] = {  "Layer", "layer", "Side", "side", "TB" , "tb" };
+	private static final String Refs[] = { "Designator", "designator", "Part", "part", "Component", "component", "RefDes" , "Ref" };
+	private static final String Vals[] = { "Value", "value", "Val", "val", "Comment" , "comment" };
+	private static final String Packs[] = { "Footprint", "footprint","Package", "package", "Pattern" , "pattern" };
+	private static final String Xs[] = { "X", "x", "X (mm)", "x (mm)", "Ref X", "ref x" , "PosX" };
+	private static final String Ys[] = { "Y", "x", "Y (mm)", "x (mm)", "Ref Y", "ref x" , "PosY" };
+	private static final String Rots[] = { "Rotation", "rotation", "Rot", "rot" , "Rotate" };
+	private static final String TBs[] = {  "Layer", "layer", "Side", "side", "TB" , "tb" };
 //////////////////////////////////////////////////////////
 	static private int Ref=-1,Val=-1,Pack=-1,X=-1,Y=-1,Rot=-1,TB=-1,Len=0; 
 	static private char comma=',';
