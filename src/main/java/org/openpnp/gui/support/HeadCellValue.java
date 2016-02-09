@@ -64,4 +64,9 @@ public class HeadCellValue {
 		}
 		return ((HeadCellValue) obj).head == this.head;
 	}
+
+	@Override
+	public int hashCode() {
+		return this.head != null ? this.head.hashCode() : 0;
+	}
 }

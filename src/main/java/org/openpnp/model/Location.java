@@ -295,4 +295,20 @@ public class Location {
                 this.y == that.y && this.z == that.z && 
                 this.rotation == that.rotation; 
     }
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		result = this.units != null ? this.units.hashCode() : 0;
+		temp = Double.doubleToLongBits(this.x);
+		result = 31 * result + (int) (temp ^ temp >>> 32);
+		temp = Double.doubleToLongBits(this.y);
+		result = 31 * result + (int) (temp ^ temp >>> 32);
+		temp = Double.doubleToLongBits(this.z);
+		result = 31 * result + (int) (temp ^ temp >>> 32);
+		temp = Double.doubleToLongBits(this.rotation);
+		result = 31 * result + (int) (temp ^ temp >>> 32);
+		return result;
+	}
 }
