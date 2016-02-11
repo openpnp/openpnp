@@ -69,12 +69,12 @@ public class Configuration extends AbstractModelObject {
 	private static final String PREF_VERTICAL_SCROLL_UNIT_INCREMENT = "Configuration.verticalScrollUnitIncrement";
 	private static final int PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF = 16;
 	
-	private LinkedHashMap<String, Package> packages = new LinkedHashMap<String, Package>();
-	private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
+	private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
+	private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
 	private Machine machine;
-	private LinkedHashMap<File, Board> boards = new LinkedHashMap<File, Board>();
+	private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
 	private boolean loaded;
-	private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<ConfigurationListener>());
+	private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
 	private File configurationDirectory;
 	private Preferences prefs;
 	
@@ -305,7 +305,7 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	public List<Package> getPackages() {
-		return Collections.unmodifiableList(new ArrayList<Package>(packages.values()));
+		return Collections.unmodifiableList(new ArrayList<>(packages.values()));
 	}
 	
 	public void addPackage(Package pkg) {
@@ -329,7 +329,7 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	public List<Part> getParts() {
-		return Collections.unmodifiableList(new ArrayList<Part>(parts.values()));
+		return Collections.unmodifiableList(new ArrayList<>(parts.values()));
 	}
 	
 	public void addPart(Part part) {
@@ -346,7 +346,7 @@ public class Configuration extends AbstractModelObject {
 	}
 	
 	public List<Board> getBoards() {
-		return Collections.unmodifiableList(new ArrayList<Board>(boards.values()));
+		return Collections.unmodifiableList(new ArrayList<>(boards.values()));
 	}
 	
 	public Machine getMachine() {
@@ -395,7 +395,7 @@ public class Configuration extends AbstractModelObject {
 	private void savePackages(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		PackagesConfigurationHolder holder = new PackagesConfigurationHolder();
-		holder.packages = new ArrayList<Package>(packages.values());
+		holder.packages = new ArrayList<>(packages.values());
 		serializer.write(holder, new ByteArrayOutputStream());
 		serializer.write(holder, file);
 	}
@@ -411,7 +411,7 @@ public class Configuration extends AbstractModelObject {
 	private void saveParts(File file) throws Exception {
 		Serializer serializer = createSerializer();
 		PartsConfigurationHolder holder = new PartsConfigurationHolder();
-		holder.parts = new ArrayList<Part>(parts.values());
+		holder.parts = new ArrayList<>(parts.values());
 		serializer.write(holder, new ByteArrayOutputStream());
 		serializer.write(holder, file);
 	}
@@ -448,7 +448,7 @@ public class Configuration extends AbstractModelObject {
 	
 	public void saveJob(Job job, File file) throws Exception {
 		Serializer serializer = createSerializer();
-		Set<Board> boards = new HashSet<Board>();
+		Set<Board> boards = new HashSet<>();
 		// Fix the paths to any boards in the Job
 		for (BoardLocation boardLocation : job.getBoardLocations()) {
 			Board board = boardLocation.getBoard();
@@ -517,7 +517,7 @@ public class Configuration extends AbstractModelObject {
 	@Root(name="openpnp-packages")
 	public static class PackagesConfigurationHolder {
 		@ElementList(inline=true, entry="package", required=false)
-		private ArrayList<Package> packages = new ArrayList<Package>();
+		private ArrayList<Package> packages = new ArrayList<>();
 	}
 	
 	/**
@@ -526,6 +526,6 @@ public class Configuration extends AbstractModelObject {
 	@Root(name="openpnp-parts")
 	public static class PartsConfigurationHolder {
 		@ElementList(inline=true, entry="part", required=false)
-		private ArrayList<Part> parts = new ArrayList<Part>();
+		private ArrayList<Part> parts = new ArrayList<>();
 	}
 }

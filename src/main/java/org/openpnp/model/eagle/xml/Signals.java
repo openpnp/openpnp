@@ -52,7 +52,7 @@ public class Signals {
      */
     public List<Signal> getSignal() {
         if (signal == null) {
-            signal = new ArrayList<Signal>();
+            signal = new ArrayList<>();
         }
         return this.signal;
     }

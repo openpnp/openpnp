@@ -39,7 +39,7 @@ public abstract class AbstractCamera implements Camera {
     @Attribute(required=false)
     protected long settleTimeMs = 250;
     
-    protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<ListenerEntry>());
+    protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
     
     protected Head head;
     
@@ -138,7 +138,7 @@ public abstract class AbstractCamera implements Camera {
     }
     
     protected void broadcastCapture(BufferedImage img) {
-        for (ListenerEntry listener : new ArrayList<ListenerEntry>(listeners)) {
+        for (ListenerEntry listener : new ArrayList<>(listeners)) {
             if (listener.lastFrameSent < (System.currentTimeMillis() - (1000 / listener.maximumFps))) {
                 listener.listener.frameReceived(img);
                 listener.lastFrameSent = System.currentTimeMillis();

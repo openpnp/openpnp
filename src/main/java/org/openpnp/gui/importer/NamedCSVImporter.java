@@ -238,7 +238,7 @@ for ( String as[]; (as = csvParser.getLine()) != null; )
 
 	private static List<Placement> parseFile(File file, boolean createMissingParts) throws Exception {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		ArrayList<Placement> placements = new ArrayList<Placement>();
+		ArrayList<Placement> placements = new ArrayList<>();
 		String line;
 
 		for(int i=0;i++<10&&(line = reader.readLine()) != null;) {
@@ -425,7 +425,7 @@ for ( String as[]; (as = csvParser.getLine()) != null; )
 		    logger.debug("Parsing "+textFieldTopFile.getText()+" CSV FIle");
 	            topFile = new File(textFieldTopFile.getText());
 	            board = new Board();
-	            List<Placement> placements = new ArrayList<Placement>();
+	            List<Placement> placements = new ArrayList<>();
 	            try {
 	                if (topFile.exists()) {
 	                    placements.addAll(parseFile(topFile, chckbxCreateMissingParts.isSelected()));

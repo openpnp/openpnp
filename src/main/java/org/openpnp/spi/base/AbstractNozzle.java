@@ -16,7 +16,7 @@ import org.simpleframework.xml.ElementList;
 
 public abstract class AbstractNozzle implements Nozzle {
     @ElementList(required=false)
-    	protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<NozzleTip>();
+    	protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<>();
 
     @Attribute
     protected String id;

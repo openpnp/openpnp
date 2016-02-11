@@ -16,7 +16,7 @@ public class Outline {
         @ElementList(entry="line", inline=true, required=false, type=Outline.Line.class),
         @ElementList(entry="circle", inline=true, required=false, type=Outline.Circle.class)
     })
-    private ArrayList<Outline.OutlineElement> elements = new ArrayList<Outline.OutlineElement>();
+    private ArrayList<Outline.OutlineElement> elements = new ArrayList<>();
     
     @Attribute
     private LengthUnit units = LengthUnit.Millimeters;

@@ -65,7 +65,7 @@ public class Segment {
      */
     public List<Object> getPinrefOrPortrefOrWireOrJunctionOrLabel() {
         if (pinrefOrPortrefOrWireOrJunctionOrLabel == null) {
-            pinrefOrPortrefOrWireOrJunctionOrLabel = new ArrayList<Object>();
+            pinrefOrPortrefOrWireOrJunctionOrLabel = new ArrayList<>();
         }
         return this.pinrefOrPortrefOrWireOrJunctionOrLabel;
     }

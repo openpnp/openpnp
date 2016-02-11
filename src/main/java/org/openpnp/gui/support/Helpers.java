@@ -74,7 +74,7 @@ public class Helpers {
 	 * @param propertyName The name of a String property.
 	 */
 	public static String createUniqueName(String prefix, Collection existingObjects, String propertyName) {
-		HashSet<String> names = new HashSet<String>();
+		HashSet<String> names = new HashSet<>();
 		BeanProperty<Object, String> property = BeanProperty.create(propertyName);
 		for (Object o : existingObjects) {
 			if (o != null) {

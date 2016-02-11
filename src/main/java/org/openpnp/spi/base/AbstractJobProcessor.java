@@ -23,7 +23,7 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractJobProcessor.class);
 
     protected Job job;
-    protected Set<JobProcessorListener> listeners = new HashSet<JobProcessorListener>();
+    protected Set<JobProcessorListener> listeners = new HashSet<>();
     protected JobProcessorDelegate delegate = new DefaultJobProcessorDelegate();
     protected JobState state;
     protected Thread thread;

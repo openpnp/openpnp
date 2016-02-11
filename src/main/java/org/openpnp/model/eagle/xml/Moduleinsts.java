@@ -52,7 +52,7 @@ public class Moduleinsts {
      */
     public List<Moduleinst> getModuleinst() {
         if (moduleinst == null) {
-            moduleinst = new ArrayList<Moduleinst>();
+            moduleinst = new ArrayList<>();
         }
         return this.moduleinst;
     }

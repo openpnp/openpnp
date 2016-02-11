@@ -127,7 +127,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         double rangeMin = Math.max(threshold, corr * maxVal);
         double rangeMax = maxVal;
         
-        List<TemplateMatch> matches = new ArrayList<TemplateMatch>();
+        List<TemplateMatch> matches = new ArrayList<>();
         for (Point point : matMaxima(resultMat, rangeMin, rangeMax)) {
             TemplateMatch match = new TemplateMatch();
             int x = point.x;
@@ -281,7 +281,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     
     static List<Point> matMaxima(Mat mat, double rangeMin,
             double rangeMax) {
-        List<Point> locations = new ArrayList<Point>();
+        List<Point> locations = new ArrayList<>();
 
         int rEnd = mat.rows() - 1;
         int cEnd = mat.cols() - 1;

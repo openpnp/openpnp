@@ -32,7 +32,7 @@ import org.openpnp.model.Configuration;
 
 @SuppressWarnings("serial")
 public class PackagesComboBoxModel extends DefaultComboBoxModel implements PropertyChangeListener {
-	private IdentifiableComparator<org.openpnp.model.Package> comparator = new IdentifiableComparator<org.openpnp.model.Package>();
+	private IdentifiableComparator<org.openpnp.model.Package> comparator = new IdentifiableComparator<>();
 
 	public PackagesComboBoxModel() {
 		addAllElements();
@@ -40,7 +40,7 @@ public class PackagesComboBoxModel extends DefaultComboBoxModel implements Prope
 	}
 	
 	private void addAllElements() {
-		ArrayList<org.openpnp.model.Package> packages = new ArrayList<org.openpnp.model.Package>(Configuration.get().getPackages());
+		ArrayList<org.openpnp.model.Package> packages = new ArrayList<>(Configuration.get().getPackages());
 		Collections.sort(packages, comparator);
 		for (org.openpnp.model.Package pkg : packages) {
 			addElement(pkg);

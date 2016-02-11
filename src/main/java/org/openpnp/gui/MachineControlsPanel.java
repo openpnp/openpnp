@@ -176,7 +176,7 @@ public class MachineControlsPanel extends JPanel {
 	
 	private void setUnits(LengthUnit units) {
 		if (units == LengthUnit.Millimeters) {
-			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
+			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
 			incrementsLabels.put(1, new JLabel("0.01"));
 			incrementsLabels.put(2, new JLabel("0.1"));
 			incrementsLabels.put(3, new JLabel("1.0"));
@@ -185,7 +185,7 @@ public class MachineControlsPanel extends JPanel {
 			sliderIncrements.setLabelTable(incrementsLabels);
 		}
 		else if (units == LengthUnit.Inches) {
-			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<Integer, JLabel>();
+			Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
 			incrementsLabels.put(1, new JLabel("0.001"));
 			incrementsLabels.put(2, new JLabel("0.01"));
 			incrementsLabels.put(3, new JLabel("0.1"));

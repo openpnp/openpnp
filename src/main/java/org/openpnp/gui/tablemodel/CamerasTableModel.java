@@ -67,7 +67,7 @@ public class CamerasTableModel extends AbstractTableModel {
 	}
 	
 	public void refresh() {
-		cameras = new ArrayList<Camera>(Configuration.get().getMachine().getCameras());
+		cameras = new ArrayList<>(Configuration.get().getMachine().getCameras());
 		for (Head head : Configuration.get().getMachine().getHeads()) {
 	        cameras.addAll(head.getCameras());
 		}

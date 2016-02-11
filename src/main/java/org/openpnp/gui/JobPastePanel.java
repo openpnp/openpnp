@@ -194,7 +194,7 @@ public class JobPastePanel extends JPanel {
     }
     
     public List<BoardPad> getSelections() {
-        ArrayList<BoardPad> rows = new ArrayList<BoardPad>();
+        ArrayList<BoardPad> rows = new ArrayList<>();
         if (boardLocation == null) {
             return rows;
         }
@@ -222,7 +222,7 @@ public class JobPastePanel extends JPanel {
             padClasses.add(Pad.Ellipse.class);
             // See note on Pad.Line
 //            padClasses.add(Pad.Line.class);
-            ClassSelectionDialog<Pad> dialog = new ClassSelectionDialog<Pad>(
+            ClassSelectionDialog<Pad> dialog = new ClassSelectionDialog<>(
                     JOptionPane.getFrameForComponent(JobPastePanel.this),
                     "Select Pad...",
                     "Please select a pad type from the list below.",

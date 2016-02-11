@@ -52,7 +52,7 @@ public class Attributes {
      */
     public List<Attribute> getAttribute() {
         if (attribute == null) {
-            attribute = new ArrayList<Attribute>();
+            attribute = new ArrayList<>();
         }
         return this.attribute;
     }

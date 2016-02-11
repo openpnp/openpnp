@@ -171,7 +171,7 @@ public class Class {
      */
     public List<Clearance> getClearance() {
         if (clearance == null) {
-            clearance = new ArrayList<Clearance>();
+            clearance = new ArrayList<>();
         }
         return this.clearance;
     }

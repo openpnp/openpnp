@@ -71,7 +71,7 @@ public class Plain {
      */
     public List<Object> getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole() {
         if (polygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole == null) {
-            polygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole = new ArrayList<Object>();
+            polygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole = new ArrayList<>();
         }
         return this.polygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole;
     }

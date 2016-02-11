@@ -52,7 +52,7 @@ public class Layers {
      */
     public List<Layer> getLayer() {
         if (layer == null) {
-            layer = new ArrayList<Layer>();
+            layer = new ArrayList<>();
         }
         return this.layer;
     }

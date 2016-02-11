@@ -105,7 +105,7 @@ public class CameraView extends JComponent implements CameraListener {
 	 */
 	private int maximumFps;
 
-	private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<Object, Reticle>();
+	private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
 	private JPopupMenu popupMenu;
 
@@ -181,7 +181,7 @@ public class CameraView extends JComponent implements CameraListener {
 	
 	private boolean showImageInfo;
 	
-	private List<CameraViewActionListener> actionListeners = new ArrayList<CameraViewActionListener>();
+	private List<CameraViewActionListener> actionListeners = new ArrayList<>();
 	
 	private CameraViewFilter cameraViewFilter;
 	
@@ -732,7 +732,7 @@ public class CameraView extends JComponent implements CameraListener {
 		g2d.setStroke(new BasicStroke(1.0f));
 		g2d.setFont(g2d.getFont().deriveFont(12.0f));
 		String[] lines = text.split("\n");
-		List<TextLayout> textLayouts = new ArrayList<TextLayout>();
+		List<TextLayout> textLayouts = new ArrayList<>();
 		int textWidth = 0, textHeight = 0;
 		for (String line : lines) {
 			TextLayout textLayout = new TextLayout(line, g2d.getFont(),
@@ -782,7 +782,7 @@ public class CameraView extends JComponent implements CameraListener {
         g2d.setStroke(new BasicStroke(1.0f));
         g2d.setFont(g2d.getFont().deriveFont(12.0f));
         String[] lines = text.split("\n");
-        List<TextLayout> textLayouts = new ArrayList<TextLayout>();
+        List<TextLayout> textLayouts = new ArrayList<>();
         int textWidth = 0, textHeight = 0;
         for (String line : lines) {
             TextLayout textLayout = new TextLayout(line, g2d.getFont(),

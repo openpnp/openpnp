@@ -288,7 +288,7 @@ public class Polygon {
      */
     public List<Vertex> getVertex() {
         if (vertex == null) {
-            vertex = new ArrayList<Vertex>();
+            vertex = new ArrayList<>();
         }
         return this.vertex;
     }

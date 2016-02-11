@@ -211,7 +211,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
     public class PropertySheetHolderTreeNode implements TreeNode {
         private final PropertySheetHolder obj;
         private final TreeNode parent;
-        private final ArrayList<PropertySheetHolderTreeNode> children = new ArrayList<PropertySheetHolderTreeNode>();
+        private final ArrayList<PropertySheetHolderTreeNode> children = new ArrayList<>();
         
         public PropertySheetHolderTreeNode(PropertySheetHolder obj, TreeNode parent) {
             this.obj = obj;

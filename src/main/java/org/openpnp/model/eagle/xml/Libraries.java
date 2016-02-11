@@ -52,7 +52,7 @@ public class Libraries {
      */
     public List<Library> getLibrary() {
         if (library == null) {
-            library = new ArrayList<Library>();
+            library = new ArrayList<>();
         }
         return this.library;
     }

@@ -54,7 +54,7 @@ public class SimulatorDriver implements ReferenceDriver {
     @Attribute(required = false)
     private double feedRateMmPerMinute;
     
-    private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
+    private HashMap<Head, Location> headLocations = new HashMap<>();
     
     private boolean enabled;
     

@@ -89,7 +89,7 @@ public class Eagle {
      */
     public List<Object> getCompatibilityOrDrawing() {
         if (compatibilityOrDrawing == null) {
-            compatibilityOrDrawing = new ArrayList<Object>();
+            compatibilityOrDrawing = new ArrayList<>();
         }
         return this.compatibilityOrDrawing;
     }

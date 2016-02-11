@@ -52,7 +52,7 @@ public class Busses {
      */
     public List<Bus> getBus() {
         if (bus == null) {
-            bus = new ArrayList<Bus>();
+            bus = new ArrayList<>();
         }
         return this.bus;
     }

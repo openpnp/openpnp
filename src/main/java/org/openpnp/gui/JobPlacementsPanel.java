@@ -246,7 +246,7 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     public List<Placement> getSelections() {
-        ArrayList<Placement> placements = new ArrayList<Placement>();
+        ArrayList<Placement> placements = new ArrayList<>();
         if (boardLocation == null) {
             return placements;
         }

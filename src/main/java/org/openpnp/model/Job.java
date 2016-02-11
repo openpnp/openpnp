@@ -38,7 +38,7 @@ import org.simpleframework.xml.core.Commit;
 @Root(name="openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
 	@ElementList
-	private ArrayList<BoardLocation> boardLocations = new ArrayList<BoardLocation>();
+	private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
 	
 	private transient File file;
 	private transient boolean dirty;
@@ -61,7 +61,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 
 	public void addBoardLocation(BoardLocation boardLocation) {
 		Object oldValue = boardLocations;
-		boardLocations = new ArrayList<BoardLocation>(boardLocations);
+		boardLocations = new ArrayList<>(boardLocations);
 		boardLocations.add(boardLocation);
 		firePropertyChange("boardLocations", oldValue, boardLocations);
 		boardLocation.addPropertyChangeListener(this);
@@ -69,7 +69,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 	
 	public void removeBoardLocation(BoardLocation boardLocation) {
 		Object oldValue = boardLocations;
-		boardLocations = new ArrayList<BoardLocation>(boardLocations);
+		boardLocations = new ArrayList<>(boardLocations);
 		boardLocations.remove(boardLocation);
 		firePropertyChange("boardLocations", oldValue, boardLocations);
 		boardLocation.removePropertyChangeListener(this);

@@ -108,7 +108,7 @@ public class ReferenceHeadConfigurationWizard extends JPanel implements Wizard {
 	private JScrollPane scrollPane;
 	private JPanel panelMain;
 	
-	private List<WrappedBinding> wrappedBindings = new ArrayList<WrappedBinding>();
+	private List<WrappedBinding> wrappedBindings = new ArrayList<>();
 	
 	// TODO: Most of what this class did is deprecated and has been moved into
 	// Nozzles, Actuators and Cameras. We may still want to do softlimits, but

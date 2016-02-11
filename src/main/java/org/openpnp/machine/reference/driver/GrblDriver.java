@@ -64,7 +64,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	private Object commandLock = new Object();
 	private boolean connected;
 	private long connectedBuildNumber;
-	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
+	private Queue<String> responseQueue = new ConcurrentLinkedQueue<>();
 	
 	public GrblDriver() {
 	}
@@ -314,7 +314,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
 	}
 
 	private List<String> drainResponseQueue() {
-		List<String> responses = new ArrayList<String>();
+		List<String> responses = new ArrayList<>();
 		String response;
 		while ((response = responseQueue.poll()) != null) {
 			responses.add(response);

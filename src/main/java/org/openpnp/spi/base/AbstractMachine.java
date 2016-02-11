@@ -44,13 +44,13 @@ public abstract class AbstractMachine implements Machine {
      */
 
     @ElementList
-    protected IdentifiableList<Head> heads = new IdentifiableList<Head>();
+    protected IdentifiableList<Head> heads = new IdentifiableList<>();
     
     @ElementList(required=false)
-    protected IdentifiableList<Feeder> feeders = new IdentifiableList<Feeder>();
+    protected IdentifiableList<Feeder> feeders = new IdentifiableList<>();
     
     @ElementList(required=false)
-    protected IdentifiableList<Camera> cameras = new IdentifiableList<Camera>();
+    protected IdentifiableList<Camera> cameras = new IdentifiableList<>();
     
     @Deprecated
     @Element(required=false)
@@ -63,7 +63,7 @@ public abstract class AbstractMachine implements Machine {
     @ElementMap(entry="jobProcessor", key="type", attribute=true, inline=false, required=false)
     protected Map<JobProcessor.Type, JobProcessor> jobProcessors = new HashMap<>();
     
-    protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<MachineListener>());
+    protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
     
     protected ThreadPoolExecutor executor;
     
@@ -218,7 +218,7 @@ public abstract class AbstractMachine implements Machine {
                         1, 
                         1,
                         TimeUnit.SECONDS,
-                        new LinkedBlockingQueue<Runnable>());
+                        new LinkedBlockingQueue<>());
             }
         }
         

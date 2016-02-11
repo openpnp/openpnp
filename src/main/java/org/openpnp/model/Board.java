@@ -104,14 +104,14 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	
 	public void addFiducial(Fiducial fiducial) {
 		ArrayList<Fiducial> oldValue = fiducials;
-		fiducials = new ArrayList<Fiducial>(fiducials);
+		fiducials = new ArrayList<>(fiducials);
 		fiducials.add(fiducial);
 		firePropertyChange("fiducials", oldValue, fiducials);
 	}
 	
 	public void removeFiducial(Fiducial fiducial) {
 		ArrayList<Fiducial> oldValue = fiducials;
-		fiducials = new ArrayList<Fiducial>(fiducials);
+		fiducials = new ArrayList<>(fiducials);
 		fiducials.remove(fiducial);
 		firePropertyChange("fiducials", oldValue, fiducials);
 	}
@@ -122,7 +122,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	
 	public void addPlacement(Placement placement) {
 		Object oldValue = placements;
-		placements = new ArrayList<Placement>(placements);
+		placements = new ArrayList<>(placements);
 		placements.add(placement);
 		firePropertyChange("placements", oldValue, placements);
 		if (placement != null) {
@@ -132,7 +132,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
 	
 	public void removePlacement(Placement placement) {
 		Object oldValue = placements;
-		placements = new ArrayList<Placement>(placements);
+		placements = new ArrayList<>(placements);
 		placements.remove(placement);
 		firePropertyChange("placements", oldValue, placements);
 		if (placement != null) {
@@ -146,7 +146,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
     
     public void addSolderPastePad(BoardPad pad) {
         Object oldValue = solderPastePads;
-        solderPastePads = new ArrayList<BoardPad>(solderPastePads);
+        solderPastePads = new ArrayList<>(solderPastePads);
         solderPastePads.add(pad);
         firePropertyChange("solderPastePads", oldValue, solderPastePads);
         if (pad != null) {
@@ -156,7 +156,7 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
     
     public void removeSolderPastePad(BoardPad pad) {
         Object oldValue = solderPastePads;
-        solderPastePads = new ArrayList<BoardPad>(solderPastePads);
+        solderPastePads = new ArrayList<>(solderPastePads);
         solderPastePads.remove(pad);
         firePropertyChange("solderPastePads", oldValue, solderPastePads);
         if (pad != null) {

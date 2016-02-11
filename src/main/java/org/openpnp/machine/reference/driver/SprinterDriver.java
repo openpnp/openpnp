@@ -165,7 +165,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 	private Object commandLock = new Object();
 	private boolean connected;
 //	private double connectedVersion;
-	private Queue<String> responseQueue = new ConcurrentLinkedQueue<String>();
+	private Queue<String> responseQueue = new ConcurrentLinkedQueue<>();
 	
 	public SprinterDriver() {
 	}
@@ -424,7 +424,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
 	}
 
 	private List<String> drainResponseQueue() {
-		List<String> responses = new ArrayList<String>();
+		List<String> responses = new ArrayList<>();
 		String response;
 		while ((response = responseQueue.poll()) != null) {
 			responses.add(response);

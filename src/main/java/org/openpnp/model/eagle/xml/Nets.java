@@ -52,7 +52,7 @@ public class Nets {
      */
     public List<Net> getNet() {
         if (net == null) {
-            net = new ArrayList<Net>();
+            net = new ArrayList<>();
         }
         return this.net;
     }

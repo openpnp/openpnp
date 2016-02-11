@@ -141,7 +141,7 @@ public class Pass {
      */
     public List<Param> getParam() {
         if (param == null) {
-            param = new ArrayList<Param>();
+            param = new ArrayList<>();
         }
         return this.param;
     }

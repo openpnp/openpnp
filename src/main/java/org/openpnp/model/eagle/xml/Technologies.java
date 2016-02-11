@@ -52,7 +52,7 @@ public class Technologies {
      */
     public List<Technology> getTechnology() {
         if (technology == null) {
-            technology = new ArrayList<Technology>();
+            technology = new ArrayList<>();
         }
         return this.technology;
     }

@@ -52,7 +52,7 @@ public class Errors {
      */
     public List<Approved> getApproved() {
         if (approved == null) {
-            approved = new ArrayList<Approved>();
+            approved = new ArrayList<>();
         }
         return this.approved;
     }

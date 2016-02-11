@@ -52,7 +52,7 @@ public class Symbols {
      */
     public List<Symbol> getSymbol() {
         if (symbol == null) {
-            symbol = new ArrayList<Symbol>();
+            symbol = new ArrayList<>();
         }
         return this.symbol;
     }

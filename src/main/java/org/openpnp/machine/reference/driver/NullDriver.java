@@ -57,7 +57,7 @@ public class NullDriver implements ReferenceDriver {
     @Attribute(required = false)
     private double feedRateMmPerMinute = 5000;
     
-    private HashMap<Head, Location> headLocations = new HashMap<Head, Location>();
+    private HashMap<Head, Location> headLocations = new HashMap<>();
     
     private boolean enabled;
 

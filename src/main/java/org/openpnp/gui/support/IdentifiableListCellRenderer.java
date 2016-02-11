@@ -31,7 +31,7 @@ import org.openpnp.model.Identifiable;
 
 @SuppressWarnings("serial")
 public class IdentifiableListCellRenderer<T extends Identifiable> extends DefaultListCellRenderer {
-	IdentifiableObjectToStringConverter<T> converter = new IdentifiableObjectToStringConverter<T>();
+	IdentifiableObjectToStringConverter<T> converter = new IdentifiableObjectToStringConverter<>();
 	
 	@Override
 	public Component getListCellRendererComponent(JList arg0, Object arg1,

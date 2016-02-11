@@ -30,7 +30,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     @Attribute(required = false)
     private String placeHolder;
     
-    protected Set<PlacementSolution> solutions = new LinkedHashSet<PlacementSolution>();
+    protected Set<PlacementSolution> solutions = new LinkedHashSet<>();
     
     @Override
     public void setJob(Job job) {
@@ -71,7 +71,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
      */
     @Override
     public synchronized Set<PlacementSolution> getNextPlacementSolutions(Head head) {
-        Set<PlacementSolution> results = new LinkedHashSet<PlacementSolution>();
+        Set<PlacementSolution> results = new LinkedHashSet<>();
         Machine machine = Configuration.get().getMachine();
         for (Nozzle nozzle : head.getNozzles()) {
             for (WeightedPlacementSolution solution : getWeightedSolutions(machine, nozzle)) {
@@ -96,7 +96,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     }
     
     protected List<WeightedPlacementSolution> getWeightedSolutions(Machine machine, Nozzle nozzle) {
-        List<WeightedPlacementSolution> weightedSolutions = new ArrayList<WeightedPlacementSolution>();
+        List<WeightedPlacementSolution> weightedSolutions = new ArrayList<>();
         for (PlacementSolution solution : solutions) {
             Part part = solution.placement.getPart();
             if (part == null) {
@@ -127,7 +127,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     }
     
     private static Set<NozzleTip> getCompatibleNozzleTips(Nozzle nozzle, Part part) {
-        Set<NozzleTip> nozzleTips = new HashSet<NozzleTip>();
+        Set<NozzleTip> nozzleTips = new HashSet<>();
         for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
             if (nozzleTip.canHandle(part)) {
                 nozzleTips.add(nozzleTip);
@@ -137,7 +137,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
     }
     
     private static Set<Feeder> getCompatibleFeeders(Machine machine, Nozzle nozzle, Part part) {
-        Set<Feeder> feeders = new HashSet<Feeder>();
+        Set<Feeder> feeders = new HashSet<>();
         for (Feeder feeder : machine.getFeeders()) {
             if (feeder.getPart() == part && feeder.isEnabled()) {
                 feeders.add(feeder);

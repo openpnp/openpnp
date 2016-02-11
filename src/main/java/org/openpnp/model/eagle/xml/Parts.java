@@ -52,7 +52,7 @@ public class Parts {
      */
     public List<Part> getPart() {
         if (part == null) {
-            part = new ArrayList<Part>();
+            part = new ArrayList<>();
         }
         return this.part;
     }

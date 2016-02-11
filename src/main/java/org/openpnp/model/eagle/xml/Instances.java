@@ -52,7 +52,7 @@ public class Instances {
      */
     public List<Instance> getInstance() {
         if (instance == null) {
-            instance = new ArrayList<Instance>();
+            instance = new ArrayList<>();
         }
         return this.instance;
     }

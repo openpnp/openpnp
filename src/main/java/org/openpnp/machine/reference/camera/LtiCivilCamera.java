@@ -110,7 +110,7 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
 	}
 
 	public List<String> getDeviceIds() throws Exception {
-		ArrayList<String> deviceIds = new ArrayList<String>();
+		ArrayList<String> deviceIds = new ArrayList<>();
 		for (CaptureDeviceInfo captureDeviceInfo : (List<CaptureDeviceInfo>) captureSystem.getCaptureDeviceInfoList()) {
 			deviceIds.add(captureDeviceInfo.getDeviceID());
 		}

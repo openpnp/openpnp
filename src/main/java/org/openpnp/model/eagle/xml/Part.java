@@ -223,7 +223,7 @@ public class Part {
      */
     public List<Attribute> getAttribute() {
         if (attribute == null) {
-            attribute = new ArrayList<Attribute>();
+            attribute = new ArrayList<>();
         }
         return this.attribute;
     }
@@ -252,7 +252,7 @@ public class Part {
      */
     public List<Variant> getVariant() {
         if (variant == null) {
-            variant = new ArrayList<Variant>();
+            variant = new ArrayList<>();
         }
         return this.variant;
     }

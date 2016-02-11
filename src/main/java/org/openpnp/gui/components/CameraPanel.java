@@ -44,7 +44,7 @@ public class CameraPanel extends JPanel {
 	private static final String SHOW_NONE_ITEM = "Show None";
 	private static final String SHOW_ALL_ITEM = "Show All";
 
-	private Map<Camera, CameraView> cameraViews = new LinkedHashMap<Camera, CameraView>();
+	private Map<Camera, CameraView> cameraViews = new LinkedHashMap<>();
 
 	private JComboBox camerasCombo;
 	private JPanel camerasPanel;

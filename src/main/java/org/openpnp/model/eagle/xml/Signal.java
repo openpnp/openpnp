@@ -156,7 +156,7 @@ public class Signal {
      */
     public List<Object> getContactrefOrPolygonOrWireOrVia() {
         if (contactrefOrPolygonOrWireOrVia == null) {
-            contactrefOrPolygonOrWireOrVia = new ArrayList<Object>();
+            contactrefOrPolygonOrWireOrVia = new ArrayList<>();
         }
         return this.contactrefOrPolygonOrWireOrVia;
     }
