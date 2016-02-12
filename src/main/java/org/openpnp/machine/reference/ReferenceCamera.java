@@ -166,7 +166,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
         
         if (rotation != 0) {
-            xform.rotate(Math.toRadians(-rotation), image.getWidth() / 2, image.getHeight() / 2);
+            xform.rotate(Math.toRadians(-rotation), image.getWidth() / 2.0D, image.getHeight() / 2.0D);
         }
         
         g2d.drawImage(image, xform, null);

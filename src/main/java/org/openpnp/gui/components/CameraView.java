@@ -1095,8 +1095,8 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
-        double offsetX = (scaledWidth / 2) - (x - imageX);
-        double offsetY = (scaledHeight / 2) - (y - imageY);
+        double offsetX = (scaledWidth / 2.0D) - (x - imageX);
+        double offsetY = (scaledHeight / 2.0D) - (y - imageY);
 
         // Invert the X so that the offsets represent a bottom left to
         // top right coordinate system.
@@ -1133,8 +1133,8 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Find the difference in X and Y from the center of the image
         // to the mouse click.
-        double offsetX = (scaledWidth / 2) - (x - imageX);
-        double offsetY = (scaledHeight / 2) - (y - imageY) + 1;
+        double offsetX = (scaledWidth / 2.0D) - (x - imageX);
+        double offsetY = (scaledHeight / 2.0D) - (y - imageY) + 1;
 
         // Invert the X so that the offsets represent a bottom left to
         // top right coordinate system.
