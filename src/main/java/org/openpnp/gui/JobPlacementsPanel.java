@@ -412,13 +412,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Placement placement = getSelection();
-            Feeder feeder = null;
-            for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                if (f.getPart() == placement.getPart()) {
-                    feeder = f;
-                }
-            }
-            MainFrame.feedersPanel.showFeeder(feeder);
+            MainFrame.feedersPanel.showFeederForPart(placement.getPart());
         }
     };
     

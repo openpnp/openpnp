@@ -211,18 +211,35 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	}
 	
 	/**
-	 * Activate the Feeders tab and show the specified Feeder.
+	 * Activate the Feeders tab and show the Feeder for the specified Part. If
+	 * none exists, prompt the user to create a new one.
 	 * @param feeder
 	 */
-	public void showFeeder(Feeder feeder) {
+	public void showFeederForPart(Part part) {
 	    mainFrame.showTab("Feeders");
-	    table.getSelectionModel().clearSelection();
-	    for (int i = 0; i < tableModel.getRowCount(); i++) {
-	        if (tableModel.getFeeder(i) == feeder) {
-	            table.getSelectionModel().setSelectionInterval(0, i);
-	            return;
-	        }
-	    }
+
+        Feeder feeder = findFeeder(part);
+        if (feeder == null) {
+            newFeeder(part);
+        }
+        else {
+            table.getSelectionModel().clearSelection();
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                if (tableModel.getFeeder(i).getPart() == part) {
+                    table.getSelectionModel().setSelectionInterval(0, i);
+                    break;
+                }
+            }
+        }
+	}
+	
+	private Feeder findFeeder(Part part) {
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            if (tableModel.getFeeder(i).getPart() == part) {
+                return tableModel.getFeeder(i);
+            }
+        }
+        return null;
 	}
 
 	private Feeder getSelectedFeeder() {
@@ -259,6 +276,49 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 	@Override
 	public void wizardCancelled(Wizard wizard) {
 	}
+	
+	private void newFeeder(Part part) {
+        if (Configuration.get().getParts().size() == 0) {
+            MessageBoxes
+                    .errorBox(
+                            getTopLevelAncestor(),
+                            "Error",
+                            "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
+            return;
+        }
+
+        String title;
+        if (part == null) {
+            title = "Select Feeder...";
+        }
+        else {
+            title = "Select Feeder for " + part.getId() + "...";
+        }
+        ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<>(
+                JOptionPane.getFrameForComponent(FeedersPanel.this),
+                title,
+                "Please select a Feeder implemention from the list below.",
+                configuration.getMachine().getCompatibleFeederClasses());
+        dialog.setVisible(true);
+        Class<? extends Feeder> feederClass = dialog.getSelectedClass();
+        if (feederClass == null) {
+            return;
+        }
+        try {
+            Feeder feeder = feederClass.newInstance();
+
+            feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
+            
+            configuration.getMachine().addFeeder(feeder);
+            tableModel.refresh();
+            Helpers.selectLastTableRow(table);
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(
+                    JOptionPane.getFrameForComponent(FeedersPanel.this),
+                    "Feeder Error", e);
+        }
+	}
 
 	public Action newFeederAction = new AbstractAction() {
 		{
@@ -269,39 +329,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if (Configuration.get().getParts().size() == 0) {
-				MessageBoxes
-						.errorBox(
-								getTopLevelAncestor(),
-								"Error",
-								"There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
-				return;
-			}
-
-			ClassSelectionDialog<Feeder> dialog = new ClassSelectionDialog<>(
-					JOptionPane.getFrameForComponent(FeedersPanel.this),
-					"Select Feeder...",
-					"Please select a Feeder implemention from the list below.",
-					configuration.getMachine().getCompatibleFeederClasses());
-			dialog.setVisible(true);
-			Class<? extends Feeder> feederClass = dialog.getSelectedClass();
-			if (feederClass == null) {
-				return;
-			}
-			try {
-				Feeder feeder = feederClass.newInstance();
-
-				feeder.setPart(Configuration.get().getParts().get(0));
-				
-				configuration.getMachine().addFeeder(feeder);
-				tableModel.refresh();
-				Helpers.selectLastTableRow(table);
-			}
-			catch (Exception e) {
-				MessageBoxes.errorBox(
-						JOptionPane.getFrameForComponent(FeedersPanel.this),
-						"Feeder Error", e);
-			}
+		    newFeeder(null);
 		}
 	};
 
