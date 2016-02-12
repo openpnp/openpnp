@@ -248,12 +248,12 @@ public class AutoSelectTextTable extends JTable
 		this.isSelectAllForKeyEvent = isSelectAllForKeyEvent;
 	}
 	
-    public void changeSelection(final int row, final int column, boolean toggle, boolean extend)
-    {
-        super.changeSelection(row, column, toggle, extend);
-        editCellAt(row, column);
-        transferFocus();
-    } 
+//    public void changeSelection(final int row, final int column, boolean toggle, boolean extend)
+//    {
+//        super.changeSelection(row, column, toggle, extend);
+//        editCellAt(row, column);
+//        transferFocus();
+//    } 
 
 //
 //  Static, convenience methods
