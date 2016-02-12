@@ -163,7 +163,7 @@ public class LocationButtonsPanel extends JPanel {
 			UiUtils.messageBoxOnException(() -> {
 				Location l = getCamera().getLocation();
 				Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY,
-						textFieldZ, textFieldC);
+						null, textFieldC);
 			});
 		}
 	};
