@@ -24,8 +24,6 @@ import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonObject;
-
 public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
 
@@ -44,7 +42,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     @Attribute(required=false)
     private boolean homeZ = false;
     
-    protected double x, y, z, c, c2;
+    protected double x, y, zA, c, c2;
     private Thread readerThread;
     private boolean disconnectRequested;
     private Object commandLock = new Object();
@@ -80,19 +78,23 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     
     @Override
     public void home(ReferenceHead head) throws Exception {
-        // After homing completes the Z axis is at the home switch location,
-        // which is not 0. The home switch location has been set in the firmware
-        // so the firmware's position is correct. We just need to move to zero
-        // and update the position.
-        
         if (homeZ) {
             // Home Z
-            sendCommand("G28 Z0", 60 * 1000);
+            sendCommand("G28 Z0", 10 * 1000);
             // Move Z to 0
             sendCommand("G0 Z0");
         }
+        else {
+            // We "home" Z by turning off the steppers, allowing the
+            // spring to pull the nozzle back up to home.
+            sendCommand("M84");
+            // And call that zero
+            sendCommand("G92 Z0");
+            // And wait a tick just to let things settle down
+            Thread.sleep(250);
+        }
         // Home X and Y
-        sendCommand("G28 X0 Y0");
+        sendCommand("G28 X0 Y0", 60 * 1000);
         // Zero out the two "extruders"
         sendCommand("T1");
         sendCommand("G92 E0");
@@ -124,7 +126,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     public Location getLocation(ReferenceHeadMountable hm) {
         if (hm instanceof ReferenceNozzle) {
         	ReferenceNozzle nozzle = (ReferenceNozzle) hm;
-            double z = Math.sin(Math.toRadians(this.z)) * zCamRadius;
+            double z = Math.sin(Math.toRadians(this.zA)) * zCamRadius;
             if (((ReferenceNozzle) hm).getName().equals("N2")) {
                 z = -z;
             }
@@ -134,7 +136,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                     .getHeadOffsets());
         }
         else {
-            return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm
+            return new Location(LengthUnit.Millimeters, x, y, zA, c).add(hm
                     .getHeadOffsets());
         }
     }
@@ -195,15 +197,19 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             	this.c2 = c;
             }
         }
-        if (!Double.isNaN(z) && z != this.z) {
+        
+        if (!Double.isNaN(z)) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
             logger.debug("nozzle {} {} {}", new Object[] { z, zCamRadius, a });
             if (nozzle.getName().equals("N2")) {
                 a = -a;
             }
-            sb.append(String.format(Locale.US, "Z%2.2f ", a));
-            this.z = a;
+            if (a != this.zA) {
+                sb.append(String.format(Locale.US, "Z%2.2f ", a));
+                this.zA = a;
+            }
         }
+        
         if (sb.length() > 0) {
             sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
             sendCommand("G0 " + sb.toString());
@@ -335,7 +341,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                         y = Double.parseDouble(comp.split(":")[1]);
                     }
                     else if (comp.startsWith("Z:")) {
-                        z = Double.parseDouble(comp.split(":")[1]);
+                        zA = Double.parseDouble(comp.split(":")[1]);
                     }
                     else if (comp.startsWith("E:")) {
                         c = Double.parseDouble(comp.split(":")[1]);
@@ -356,7 +362,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
         }
         sendCommand("T0");
-        logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] { x, y, z, c, c2 });
+        logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] { x, y, zA, c, c2 });
     }
     
     public synchronized void disconnect() {
