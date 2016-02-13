@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.swing.Action;
@@ -23,6 +23,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonObject;
 
 public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
@@ -47,7 +49,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     private boolean disconnectRequested;
     private Object commandLock = new Object();
     private boolean connected;
-    private Queue<String> responseQueue = new ConcurrentLinkedQueue<>();
+    private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private boolean n1Picked, n2Picked;
     
     @Override
@@ -85,7 +87,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         
         if (homeZ) {
             // Home Z
-            sendCommand("G28 Z0");
+            sendCommand("G28 Z0", 60 * 1000);
             // Move Z to 0
             sendCommand("G0 Z0");
         }
@@ -266,10 +268,15 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         readerThread = new Thread(this);
         readerThread.start();
             
-        do {
-            // Consume any buffered incoming data, including startup messages
-            responses = sendCommand(null, 200);
-        } while (!responses.isEmpty());
+        try {
+            do {
+                // Consume any buffered incoming data, including startup messages
+                responses = sendCommand(null, 200);
+            } while (!responses.isEmpty());
+        }
+        catch (Exception e) {
+            // ignore timeouts
+        }
             
         
     	// Send a request to force Smoothie to respond and clear any buffers.
@@ -375,25 +382,44 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     }
 
     protected List<String> sendCommand(String command) throws Exception {
-        return sendCommand(command, -1);
+        return sendCommand(command, 5000);
     }
     
     protected List<String> sendCommand(String command, long timeout) throws Exception {
-        synchronized (commandLock) {
-            if (command != null) {
-                logger.debug("sendCommand({}, {})", command, timeout);
-                logger.debug(">> " + command);
-                output.write(command.getBytes());
-                output.write("\n".getBytes());
-            }
-            if (timeout == -1) {
-                commandLock.wait();
-            }
-            else {
-                commandLock.wait(timeout);
+        List<String> responses = new ArrayList<>();
+        
+        // Read any responses that might be queued up so that when we wait
+        // for a response to a command we actually wait for the one we expect.
+        responseQueue.drainTo(responses);
+
+        // Send the command, if one was specified
+        if (command != null) {
+            logger.debug("sendCommand({}, {})", command, timeout);
+            logger.debug(">> " + command);
+            output.write(command.getBytes());
+            output.write("\n".getBytes());
+        }
+
+        String response = null;
+        if (timeout == -1) {
+            // Wait forever for a response to return from the reader.
+            response = responseQueue.take();
+        }
+        else {
+            // Wait up to timeout milliseconds for a response to return from
+            // the reader.
+            response = responseQueue.poll(timeout, TimeUnit.MILLISECONDS);
+            if (response == null) {
+                throw new Exception("Timeout waiting for response to " + command);
             }
         }
-        List<String> responses = drainResponseQueue();
+        // And if we got one, add it to the list of responses we'll return.
+        responses.add(response);
+        
+        // Read any additional responses that came in after the initial one.
+        responseQueue.drainTo(responses);
+
+        logger.debug("{} => {}", command, responses);
         return responses;
     }
     
