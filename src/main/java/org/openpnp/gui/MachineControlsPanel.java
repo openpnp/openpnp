@@ -215,7 +215,6 @@ public class MachineControlsPanel extends JPanel {
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		homeAction.setEnabled(enabled);
-		goToZeroAction.setEnabled(enabled);
 		jogControlsPanel.setEnabled(enabled);
 		targetCameraAction.setEnabled(enabled);
 		targetToolAction.setEnabled(enabled);
@@ -535,19 +534,7 @@ public class MachineControlsPanel extends JPanel {
 	};
 	
 	@SuppressWarnings("serial")
-	public Action goToZeroAction = new AbstractAction("Go To Zero") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			UiUtils.submitUiMachineTask(() -> {
-				selectedNozzle.moveToSafeZ(1.0);
-				// Move to 0, 0, 0, 0.
-				selectedNozzle.moveTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), 1.0);
-			});
-		}
-	};
-	
-	@SuppressWarnings("serial")
-	public Action homeAction = new AbstractAction("Home") {
+	public Action homeAction = new AbstractAction("Home", Icons.home) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			UiUtils.submitUiMachineTask(() -> {

@@ -22,12 +22,9 @@
 package org.openpnp.gui;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -35,12 +32,15 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
+import javax.swing.border.TitledBorder;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -49,6 +49,11 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.UiUtils;
+
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left,
@@ -91,151 +96,170 @@ public class JogControlsPanel extends JPanel {
 		cMinusAction.setEnabled(enabled);
 		pickAction.setEnabled(enabled);
 		placeAction.setEnabled(enabled);
-		for (Component c : panelActuators.getComponents()) {
-			c.setEnabled(enabled);
-		}
+		safezAction.setEnabled(enabled);
+        xyZeroAction.setEnabled(enabled);
+        zZeroAction.setEnabled(enabled);
+        cZeroAction.setEnabled(enabled);
+        for (Component c : panelActuators.getComponents()) {
+            c.setEnabled(enabled);
+        }
+        for (Component c : panelDispensers.getComponents()) {
+            c.setEnabled(enabled);
+        }
 	}
 
-	private void jog(final int x, final int y, final int z, final int c) {
-		UiUtils.submitUiMachineTask(() -> {
-		    Location l = machineControlsPanel.getSelectedNozzle().getLocation().convertToUnits(Configuration.get().getSystemUnits());
-			double xPos = l.getX();
-			double yPos = l.getY();
-			double zPos = l.getZ();
-			double cPos = l.getRotation();
+    private void jog(final int x, final int y, final int z, final int c) {
+        UiUtils.submitUiMachineTask(() -> {
+            Location l = machineControlsPanel.getSelectedNozzle().getLocation().convertToUnits(Configuration.get().getSystemUnits());
+            double xPos = l.getX();
+            double yPos = l.getY();
+            double zPos = l.getZ();
+            double cPos = l.getRotation();
 
-			double jogIncrement = new Length(machineControlsPanel
-					.getJogIncrement(), configuration.getSystemUnits())
-					.getValue();
+            double jogIncrement = new Length(machineControlsPanel
+                    .getJogIncrement(), configuration.getSystemUnits())
+                    .getValue();
 
-			if (x > 0) {
-				xPos += jogIncrement;
-			}
-			else if (x < 0) {
-				xPos -= jogIncrement;
-			}
+            if (x > 0) {
+                xPos += jogIncrement;
+            }
+            else if (x < 0) {
+                xPos -= jogIncrement;
+            }
 
-			if (y > 0) {
-				yPos += jogIncrement;
-			}
-			else if (y < 0) {
-				yPos -= jogIncrement;
-			}
+            if (y > 0) {
+                yPos += jogIncrement;
+            }
+            else if (y < 0) {
+                yPos -= jogIncrement;
+            }
 
-			if (z > 0) {
-				zPos += jogIncrement;
-			}
-			else if (z < 0) {
-				zPos -= jogIncrement;
-			}
+            if (z > 0) {
+                zPos += jogIncrement;
+            }
+            else if (z < 0) {
+                zPos -= jogIncrement;
+            }
 
-			if (c > 0) {
-				cPos += jogIncrement;
-			}
-			else if (c < 0) {
-				cPos -= jogIncrement;
-			}
-			
-			machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
-		});
-	}
+            if (c > 0) {
+                cPos += jogIncrement;
+            }
+            else if (c < 0) {
+                cPos -= jogIncrement;
+            }
+            
+            machineControlsPanel.getSelectedNozzle().moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
+        });
+    }
+
+    private void zero(boolean xy, boolean z, boolean c) {
+        UiUtils.submitUiMachineTask(() -> {
+            Location l = machineControlsPanel.getSelectedNozzle().getLocation().convertToUnits(Configuration.get().getSystemUnits());
+            l = l.derive(xy ? 0d : null, xy ? 0d : null, z ? 0d : null, c ? 0d : null);
+            machineControlsPanel.getSelectedNozzle().moveTo(l, 1.0);
+        });
+    }
 
 	private void createUi() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		add(panel);
 
 		JPanel panelControls = new JPanel();
-		add(panelControls);
-		GridBagLayout gbl_panelControls = new GridBagLayout();
-		gbl_panelControls.rowHeights = new int[] { 25, 25, 25, 25, 25, 25 };
-		panelControls.setLayout(gbl_panelControls);
-
-		JButton btnYPlus = new JButton(yPlusAction);
-		btnYPlus.setFocusable(false);
-		btnYPlus.setPreferredSize(new Dimension(55, 50));
-		GridBagConstraints gbc_btnYPlus = new GridBagConstraints();
-		gbc_btnYPlus.insets = new Insets(0, 0, 5, 0);
-		gbc_btnYPlus.gridheight = 2;
-		gbc_btnYPlus.fill = GridBagConstraints.BOTH;
-		gbc_btnYPlus.gridx = 3;
-		gbc_btnYPlus.gridy = 0;
-		panelControls.add(btnYPlus, gbc_btnYPlus);
-
-		JButton btnZPlus = new JButton(zPlusAction);
-		btnZPlus.setFocusable(false);
-		btnZPlus.setPreferredSize(new Dimension(50, 29));
-		GridBagConstraints gbc_btnZPlus = new GridBagConstraints();
-		gbc_btnZPlus.insets = new Insets(0, 5, 5, 0);
-		gbc_btnZPlus.gridheight = 3;
-		gbc_btnZPlus.fill = GridBagConstraints.BOTH;
-		gbc_btnZPlus.gridx = 5;
-		gbc_btnZPlus.gridy = 0;
-		panelControls.add(btnZPlus, gbc_btnZPlus);
-
-		JButton btnXMinus = new JButton(xMinusAction);
-		btnXMinus.setFocusable(false);
-		btnXMinus.setPreferredSize(new Dimension(55, 50));
-		GridBagConstraints gbc_btnXMinus = new GridBagConstraints();
-		gbc_btnXMinus.insets = new Insets(0, 0, 5, 5);
-		gbc_btnXMinus.fill = GridBagConstraints.BOTH;
-		gbc_btnXMinus.gridheight = 2;
-		gbc_btnXMinus.gridx = 2;
-		gbc_btnXMinus.gridy = 2;
-		panelControls.add(btnXMinus, gbc_btnXMinus);
-
-		JButton btnXPlus = new JButton(xPlusAction);
-		btnXPlus.setFocusable(false);
-		btnXPlus.setPreferredSize(new Dimension(55, 50));
-		GridBagConstraints gbc_btnXPlus = new GridBagConstraints();
-		gbc_btnXPlus.insets = new Insets(0, 5, 5, 0);
-		gbc_btnXPlus.gridheight = 2;
-		gbc_btnXPlus.fill = GridBagConstraints.BOTH;
-		gbc_btnXPlus.gridx = 4;
-		gbc_btnXPlus.gridy = 2;
-		panelControls.add(btnXPlus, gbc_btnXPlus);
-
-		JButton btnCPlus = new JButton(cPlusAction);
-		btnCPlus.setFocusable(false);
-		btnCPlus.setPreferredSize(new Dimension(50, 29));
-		GridBagConstraints gbc_btnCPlus = new GridBagConstraints();
-		gbc_btnCPlus.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCPlus.gridheight = 4;
-		gbc_btnCPlus.fill = GridBagConstraints.BOTH;
-		gbc_btnCPlus.gridx = 0;
-		gbc_btnCPlus.gridy = 1;
-		panelControls.add(btnCPlus, gbc_btnCPlus);
-
-		JButton btnCMinus = new JButton(cMinusAction);
-		btnCMinus.setFocusable(false);
-		btnCMinus.setPreferredSize(new Dimension(50, 29));
-		GridBagConstraints gbc_btnCMinus = new GridBagConstraints();
-		gbc_btnCMinus.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCMinus.gridheight = 4;
-		gbc_btnCMinus.fill = GridBagConstraints.BOTH;
-		gbc_btnCMinus.gridx = 1;
-		gbc_btnCMinus.gridy = 1;
-		panelControls.add(btnCMinus, gbc_btnCMinus);
-
-		JButton btnZMinus = new JButton(zMinusAction);
-		btnZMinus.setFocusable(false);
-		btnZMinus.setPreferredSize(new Dimension(50, 29));
-		GridBagConstraints gbc_btnZMinus = new GridBagConstraints();
-		gbc_btnZMinus.insets = new Insets(5, 5, 0, 0);
-		gbc_btnZMinus.gridheight = 3;
-		gbc_btnZMinus.fill = GridBagConstraints.BOTH;
-		gbc_btnZMinus.gridx = 5;
-		gbc_btnZMinus.gridy = 3;
-		panelControls.add(btnZMinus, gbc_btnZMinus);
-
-		JButton btnYMinus = new JButton(yMinusAction);
-		btnYMinus.setFocusable(false);
-		btnYMinus.setPreferredSize(new Dimension(55, 50));
-		GridBagConstraints gbc_btnYMinus = new GridBagConstraints();
-		gbc_btnYMinus.insets = new Insets(5, 0, 0, 0);
-		gbc_btnYMinus.gridheight = 2;
-		gbc_btnYMinus.fill = GridBagConstraints.BOTH;
-		gbc_btnYMinus.gridx = 3;
-		gbc_btnYMinus.gridy = 4;
-		panelControls.add(btnYMinus, gbc_btnYMinus);
+		panel.add(panelControls);
+		panelControls.setLayout(new FormLayout(new ColumnSpec[] {
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,},
+		    new RowSpec[] {
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
+		
+		JButton homeButton = new JButton(machineControlsPanel.homeAction);
+		homeButton.setHideActionText(true);
+		panelControls.add(homeButton, "2, 2");
+		
+		JLabel lblXy = new JLabel("X/Y");
+		lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
+		lblXy.setHorizontalAlignment(SwingConstants.CENTER);
+		panelControls.add(lblXy, "8, 2, fill, default");
+		
+		JLabel lblZ = new JLabel("Z");
+		lblZ.setHorizontalAlignment(SwingConstants.CENTER);
+		lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
+		panelControls.add(lblZ, "14, 2");
+		
+		JButton yPlusButton = new JButton(yPlusAction);
+		yPlusButton.setHideActionText(true);
+		panelControls.add(yPlusButton, "8, 4");
+		
+		JButton zUpButton = new JButton(zPlusAction);
+		zUpButton.setHideActionText(true);
+		panelControls.add(zUpButton, "14, 4");
+		
+		JButton xMinusButton = new JButton(xMinusAction);
+		xMinusButton.setHideActionText(true);
+		panelControls.add(xMinusButton, "6, 6");
+		
+		JButton homeXyButton = new JButton(xyZeroAction);
+		homeXyButton.setHideActionText(true);
+		panelControls.add(homeXyButton, "8, 6");
+		
+		JButton xPlusButton = new JButton(xPlusAction);
+		xPlusButton.setHideActionText(true);
+		panelControls.add(xPlusButton, "10, 6");
+		
+		JButton homeZButton = new JButton(zZeroAction);
+		homeZButton.setHideActionText(true);
+		panelControls.add(homeZButton, "14, 6");
+		
+		JButton yMinusButton = new JButton(yMinusAction);
+		yMinusButton.setHideActionText(true);
+		panelControls.add(yMinusButton, "8, 8");
+		
+		JButton zDownButton = new JButton(zMinusAction);
+		zDownButton.setHideActionText(true);
+		panelControls.add(zDownButton, "14, 8");
+		
+		JLabel lblC = new JLabel("C");
+		lblC.setHorizontalAlignment(SwingConstants.CENTER);
+		lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
+		panelControls.add(lblC, "2, 12");
+		
+		JButton counterclockwiseButton = new JButton(cPlusAction);
+		counterclockwiseButton.setHideActionText(true);
+		panelControls.add(counterclockwiseButton, "6, 12");
+		
+		JButton homeCButton = new JButton(cZeroAction);
+		homeCButton.setHideActionText(true);
+		panelControls.add(homeCButton, "8, 12");
+		
+		JButton clockwiseButton = new JButton(cMinusAction);
+		clockwiseButton.setHideActionText(true);
+		panelControls.add(clockwiseButton, "10, 12");
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		add(tabbedPane);
@@ -249,10 +273,6 @@ public class JogControlsPanel extends JPanel {
 		tabbedPane.addTab("Actuators", null, panelActuators, null);
 		FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
 		fl_panelActuators.setAlignment(FlowLayout.LEFT);
-
-		JButton btnHome = new JButton(machineControlsPanel.homeAction);
-		btnHome.setFocusable(false);
-		panelSpecial.add(btnHome);
 		
 		JButton btnPick = new JButton(pickAction);
 		panelSpecial.add(btnPick);
@@ -270,7 +290,7 @@ public class JogControlsPanel extends JPanel {
 	}
 
 	@SuppressWarnings("serial")
-	public Action yPlusAction = new AbstractAction("Y+") {
+	public Action yPlusAction = new AbstractAction("Y+", Icons.arrowUp) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 1, 0, 0);
@@ -278,7 +298,7 @@ public class JogControlsPanel extends JPanel {
 	};
 
 	@SuppressWarnings("serial")
-	public Action yMinusAction = new AbstractAction("Y-") {
+	public Action yMinusAction = new AbstractAction("Y-", Icons.arrowDown) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, -1, 0, 0);
@@ -286,7 +306,7 @@ public class JogControlsPanel extends JPanel {
 	};
 
 	@SuppressWarnings("serial")
-	public Action xPlusAction = new AbstractAction("X+") {
+	public Action xPlusAction = new AbstractAction("X+", Icons.arrowRight) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(1, 0, 0, 0);
@@ -294,7 +314,7 @@ public class JogControlsPanel extends JPanel {
 	};
 
 	@SuppressWarnings("serial")
-	public Action xMinusAction = new AbstractAction("X-") {
+	public Action xMinusAction = new AbstractAction("X-", Icons.arrowLeft) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(-1, 0, 0, 0);
@@ -302,7 +322,7 @@ public class JogControlsPanel extends JPanel {
 	};
 
 	@SuppressWarnings("serial")
-	public Action zPlusAction = new AbstractAction("Z+") {
+	public Action zPlusAction = new AbstractAction("Z+", Icons.arrowUp) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, 1, 0);
@@ -310,7 +330,7 @@ public class JogControlsPanel extends JPanel {
 	};
 
 	@SuppressWarnings("serial")
-	public Action zMinusAction = new AbstractAction("Z-") {
+	public Action zMinusAction = new AbstractAction("Z-", Icons.arrowDown) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, -1, 0);
@@ -318,20 +338,44 @@ public class JogControlsPanel extends JPanel {
 	};
 
 	@SuppressWarnings("serial")
-	public Action cPlusAction = new AbstractAction("C+") {
+	public Action cPlusAction = new AbstractAction("C+", Icons.rotateCounterclockwise) {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			jog(0, 0, 0, 1);
 		}
 	};
 
-	@SuppressWarnings("serial")
-	public Action cMinusAction = new AbstractAction("C-") {
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			jog(0, 0, 0, -1);
-		}
-	};
+    @SuppressWarnings("serial")
+    public Action cMinusAction = new AbstractAction("C-", Icons.rotateClockwise) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            jog(0, 0, 0, -1);
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action xyZeroAction = new AbstractAction("Zero XY", Icons.zero) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            zero(true, false, false);
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action zZeroAction = new AbstractAction("Zero Z", Icons.zero) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            zero(false, true, false);
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action cZeroAction = new AbstractAction("Zero C", Icons.zero) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            zero(false, false, true);
+        }
+    };
 
     @SuppressWarnings("serial")
     public Action pickAction = new AbstractAction("Pick") {

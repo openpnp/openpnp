@@ -237,8 +237,6 @@ public class MainFrame extends JFrame {
 		}
 		mnUnits.add(menuItem);
 		
-		mnView.add(machineControlsPanel.showHideJogControlsWindowAction);
-
 		// Job Control
 		//////////////////////////////////////////////////////////////////////
 		JMenu mnJob = new JMenu("Job Control");
@@ -253,8 +251,8 @@ public class MainFrame extends JFrame {
 		JMenu mnCommands = new JMenu("Machine");
 		menuBar.add(mnCommands);
 
-		mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
-		mnCommands.add(new JMenuItem(machineControlsPanel.goToZeroAction));
+        mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
+        mnCommands.add(new JMenuItem(machineControlsPanel.showHideJogControlsWindowAction));
 		
 		// Help
 		/////////////////////////////////////////////////////////////////////
