@@ -154,6 +154,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
         textFieldChangerStartZ.setColumns(5);
         
         changerStartLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerStartX, textFieldChangerStartY, textFieldChangerStartZ, (JTextField) null);
+        changerStartLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerStartLocationButtonsPanel, "10, 4, fill, default");
         
         lblMiddleLocation = new JLabel("Middle Location");
@@ -172,6 +173,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
         textFieldChangerMidZ.setColumns(5);
         
         changerMidLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerMidX, textFieldChangerMidY, textFieldChangerMidZ, (JTextField) null);
+        changerMidLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerMidLocationButtonsPanel, "10, 6, fill, default");
         
         lblEndLocation = new JLabel("End Location");
@@ -190,6 +192,7 @@ public class ReferenceNozzleTipConfigurationWizard extends
         textFieldChangerEndZ.setColumns(5);
         
         changerEndLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerEndX, textFieldChangerEndY, textFieldChangerEndZ, (JTextField) null);
+        changerEndLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerEndLocationButtonsPanel, "10, 8, fill, default");
     }
     

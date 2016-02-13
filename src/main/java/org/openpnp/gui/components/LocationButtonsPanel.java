@@ -58,7 +58,7 @@ public class LocationButtonsPanel extends JPanel {
 	private JButton buttonCenterTool;
 	private JButton buttonCaptureCamera;
 	private JButton buttonCaptureTool;
-
+	
 	public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY,
 			JTextField textFieldZ, JTextField textFieldC) {
 		FlowLayout flowLayout = (FlowLayout) getLayout();
@@ -84,10 +84,22 @@ public class LocationButtonsPanel extends JPanel {
 		buttonCenterTool = new JButton(positionToolAction);
 		buttonCenterTool.setHideActionText(true);
 		add(buttonCenterTool);
+		
+		buttonCenterToolNoSafeZ = new JButton(positionToolNoSafeZAction);
+		buttonCenterToolNoSafeZ.setHideActionText(true);
 
 		setActuatorName(null);
 	}
-
+	
+	public void setShowPositionToolNoSafeZ(boolean b) {
+	    if (b) {
+	        add(buttonCenterToolNoSafeZ);
+	    }
+	    else {
+	        remove(buttonCenterToolNoSafeZ);
+	    }
+	}
+	
 	public void setActuatorName(String actuatorName) {
 		this.actuatorName = actuatorName;
 		if (actuatorName == null || actuatorName.trim().length() == 0) {
@@ -224,22 +236,39 @@ public class LocationButtonsPanel extends JPanel {
 		}
 	};
 
-	private Action positionToolAction = new AbstractAction("Position Tool",
-			Icons.centerTool) {
-		{
-			putValue(Action.SHORT_DESCRIPTION,
-					"Position the tool over the center of the location.");
-		}
+    private Action positionToolAction = new AbstractAction("Position Tool",
+            Icons.centerTool) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the center of the location.");
+        }
 
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			UiUtils.submitUiMachineTask(() -> {
-				HeadMountable tool = getTool();
-	            Location location = getParsedLocation();
-			    MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
-			});
-		}
-	};
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = getTool();
+                Location location = getParsedLocation();
+                MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
+            });
+        }
+    };
+
+    private Action positionToolNoSafeZAction = new AbstractAction("Position Tool (Without Safe Z)",
+            Icons.centerToolNoSafeZ) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the center of the location without first moving to Safe Z.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = getTool();
+                Location location = getParsedLocation();
+                tool.moveTo(location, 1.0);
+            });
+        }
+    };
 
 	private Action positionActuatorAction = new AbstractAction(
 			"Position Actuator", Icons.centerPin) {
@@ -257,4 +286,5 @@ public class LocationButtonsPanel extends JPanel {
 			});
 		}
 	};
+	private JButton buttonCenterToolNoSafeZ;
 }

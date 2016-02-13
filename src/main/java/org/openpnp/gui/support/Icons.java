@@ -16,6 +16,7 @@ public class Icons {
     
     public static Icon centerCamera = getIcon("/icons/position-camera.svg");
     public static Icon centerTool = getIcon("/icons/position-nozzle.svg");
+    public static Icon centerToolNoSafeZ = getIcon("/icons/position-nozzle-no-safe-z.svg");
     public static Icon centerPin = getIcon("/icons/position-actuator.svg");
     
     public static Icon start = getIcon("/icons/control-start.svg");
