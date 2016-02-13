@@ -486,24 +486,16 @@ public class MachineControlsPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			setEnabled(false);
-			Configuration.get().getMachine().submit(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					Configuration.get().getMachine().setEnabled(false);
-					return null;
-				}
-			}, new FutureCallback<Void>() {
-				@Override
-				public void onSuccess(Void result) {
-					setEnabled(true);
-				}
-
-				@Override
-				public void onFailure(Throwable t) {
-					MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", t.getMessage());
-					setEnabled(true);
-				}
-			}, true);
+			new Thread(() -> {
+	            try {
+	                Configuration.get().getMachine().setEnabled(false);
+	                setEnabled(true);
+	            }
+	            catch (Exception t) {
+	                MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", t.getMessage());
+	                setEnabled(true);
+	            }
+			}).start();
 		}
 	};
 	
@@ -511,25 +503,17 @@ public class MachineControlsPanel extends JPanel {
 	private Action startMachineAction = new AbstractAction("START") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			setEnabled(false);
-			Configuration.get().getMachine().submit(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					Configuration.get().getMachine().setEnabled(true);
-					return null;
-				}
-			}, new FutureCallback<Void>() {
-				@Override
-				public void onSuccess(Void result) {
-					setEnabled(true);
-				}
-
-				@Override
-				public void onFailure(Throwable t) {
-					MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", t.getMessage());
-					setEnabled(true);
-				}
-			}, true);
+            setEnabled(false);
+            new Thread(() -> {
+                try {
+                    Configuration.get().getMachine().setEnabled(true);
+                    setEnabled(true);
+                }
+                catch (Exception t) {
+                    MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed", t.getMessage());
+                    setEnabled(true);
+                }
+            }).start();
 		}
 	};
 	
