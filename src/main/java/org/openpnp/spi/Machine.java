@@ -55,16 +55,30 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 	public Feeder getFeeder(String id);
 	
 	
-	/**
-	 * Gets a List of Cameras attached to the Machine that are not attached
-	 * to Heads.
-	 * @return
-	 */
-	
-	public List<Camera> getCameras();
-	
-	public Camera getCamera(String id);
-	
+    /**
+     * Gets a List of Cameras attached to the Machine that are not attached
+     * to Heads.
+     * @return
+     */
+    public List<Camera> getCameras();
+    
+    public Camera getCamera(String id);
+    
+    /**
+     * Get a list of Actuators that are attached to this Machine and not to a Head.
+     * @return
+     */
+    public List<Actuator> getActuators();
+    
+    /**
+     * Get the Actuator attached to this Machine and not to a Head that has the specified id.
+     * @param id
+     * @return
+     */
+    public Actuator getActuator(String id);
+    
+    public Actuator getActuatorByName(String name);
+    
 	/**
 	 * Commands all Heads to move to their home positions and reset their current positions
 	 * to 0,0,0,0. Depending on the head configuration of the machine the home positions may
@@ -114,10 +128,10 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 	
 	public void removeFeeder(Feeder feeder);
 	
-	public void addCamera(Camera camera) throws Exception;
+    public void addCamera(Camera camera) throws Exception;
 
-	public void removeCamera(Camera camera);
-	
+    public void removeCamera(Camera camera);
+    
 	public Map<JobProcessor.Type, JobProcessor> getJobProcessors();
 	
     public Future<Object> submit(Runnable runnable);

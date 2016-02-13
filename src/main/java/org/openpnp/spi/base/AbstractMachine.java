@@ -1,6 +1,5 @@
 package org.openpnp.spi.base;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -51,6 +51,9 @@ public abstract class AbstractMachine implements Machine {
     
     @ElementList(required=false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<>();
+    
+    @ElementList(required=false)
+    protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
     
     @Deprecated
     @Element(required=false)
@@ -108,6 +111,26 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<Actuator> getActuators() {
+        return Collections.unmodifiableList(actuators);
+    }
+
+    @Override
+    public Actuator getActuator(String id) {
+        return actuators.get(id);
+    }
+    
+    @Override
+    public Actuator getActuatorByName(String name) {
+        for (Actuator actuator : actuators) {
+            if (actuator.getName().equals(name)) {
+                return actuator;
+            }
+        }
+        return null;
     }
 
     @Override

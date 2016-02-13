@@ -121,6 +121,7 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
         children.add(new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors", new ArrayList<>(jobProcessors.values())));
         return children.toArray(new PropertySheetHolder[]{});
