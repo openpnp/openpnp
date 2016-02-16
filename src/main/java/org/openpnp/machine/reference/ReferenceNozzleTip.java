@@ -59,8 +59,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 for (String id : compatiblePackageIds) {
                     org.openpnp.model.Package pkg = configuration.getPackage(id);
                     if (pkg == null) {
-                        throw new Exception("Package " + id
-                                + " not found for ReferenceNozzleTip.");
+                        continue;
                     }
                     compatiblePackages.add(pkg);
                 }
