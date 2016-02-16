@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.openpnp.gui.support.Wizard;
@@ -131,7 +132,8 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         Set<PlacementSolution> solutions;
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
 		    solutions = new HashSet<>(solutions);
-		    for (PlacementSolution solution : solutions) {
+		    for (Iterator<PlacementSolution> i = solutions.iterator(); i.hasNext(); ) {
+		        PlacementSolution solution = i.next();
                 BoardLocation bl = solution.boardLocation;
                 Part part = solution.placement.getPart();
                 Feeder feeder = solution.feeder;
@@ -145,7 +147,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                         return;
                     }
                     jobPlanner.replanPlacementSolution(solution);
-                    solutions.remove(solution);
+                    i.remove();
                     continue;
                 }
         
@@ -155,7 +157,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                         return;
                     }
                     jobPlanner.replanPlacementSolution(solution);
-                    solutions.remove(solution);
+                    i.remove();
                     continue;
                 }
         
@@ -165,7 +167,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                         return;
                     }
                     jobPlanner.replanPlacementSolution(solution);
-                    solutions.remove(solution);
+                    i.remove();
                     continue;
                 }
                 
@@ -177,7 +179,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                         return;
                     }
                     jobPlanner.replanPlacementSolution(solution);
-                    solutions.remove(solution);
+                    i.remove();
                     continue;
                 }
 								
@@ -187,7 +189,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                         return;
                     }
                     jobPlanner.replanPlacementSolution(solution);
-                    solutions.remove(solution);
+                    i.remove();
                     continue;
 				}
 				
@@ -202,7 +204,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 				    // to be placed
 				    feeder.setEnabled(false);
 				    jobPlanner.replanPlacementSolution(solution);
-				    solutions.remove(solution);
+                    i.remove();
 				    break;
 				}
 				
