@@ -142,6 +142,8 @@ To test that your offsets are correct you can use the red positioning buttons ne
 2. Press the position camera button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg). OpenPnP will move the head so that the mark is now centered in the camera and in perfect focus.
 3. Now press the position nozzle button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg) and the nozzle should move back to it's place touching the mark.
 
+* IF machine does not behave as it should be consider to delete other image camera created at program install. Newly defined down looking camera should be first in list of cameras from Machine Setup tab, ReferenceMachine>heads>referencehead H1>Cameras. 
+
 Actuators
 ---------
 
