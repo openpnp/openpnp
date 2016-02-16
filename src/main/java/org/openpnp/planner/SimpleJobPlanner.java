@@ -16,6 +16,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.JobPlanner.PlacementSolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -98,6 +99,16 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         return results.size() > 0 ? results : null;
     }
     
+    @Override
+    public void replanPlacementSolution(PlacementSolution placementSolution) {
+        if (placementSolution instanceof WeightedPlacementSolution) {
+            solutions.add(((WeightedPlacementSolution) placementSolution).originalSolution);
+        }
+        else {
+            solutions.add(placementSolution);
+        }
+    }
+
     protected List<WeightedPlacementSolution> getWeightedSolutions(Machine machine, Nozzle nozzle) {
         List<WeightedPlacementSolution> weightedSolutions = new ArrayList<>();
         for (PlacementSolution solution : solutions) {

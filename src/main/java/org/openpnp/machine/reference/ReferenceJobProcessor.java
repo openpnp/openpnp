@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.openpnp.gui.support.Wizard;
@@ -49,10 +50,6 @@ import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO: Rewrite this as a FSM where each place we would normally check if 
-// job should continue is just a state.
-// TODO Safe Z should be a Job property, and the user should be able to set it during job setup to be as low as
-// possible to make things faster.
 public class ReferenceJobProcessor extends AbstractJobProcessor {
 	private static final Logger logger = LoggerFactory.getLogger(ReferenceJobProcessor.class);
 	
@@ -130,9 +127,10 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 		Head head = machine.getHeads().get(0);
 		
 		jobPlanner.setJob(job);
-
+		
         Set<PlacementSolution> solutions;
 		while ((solutions = jobPlanner.getNextPlacementSolutions(head)) != null) {
+		    solutions = new HashSet<>(solutions);
 		    for (PlacementSolution solution : solutions) {
                 BoardLocation bl = solution.boardLocation;
                 Part part = solution.placement.getPart();
@@ -141,15 +139,71 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                 Nozzle nozzle = solution.nozzle;
                 NozzleTip nozzleTip = solution.nozzleTip;
                 
+                if (nozzle == null) {
+                    fireJobEncounteredError(JobError.HeadError, "No Nozzle available to service Placement " + placement);
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    jobPlanner.replanPlacementSolution(solution);
+                    solutions.remove(solution);
+                    continue;
+                }
+        
+                if (feeder == null) {
+                    fireJobEncounteredError(JobError.FeederError, "No viable Feeders found for Part " + part.getId());
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    jobPlanner.replanPlacementSolution(solution);
+                    solutions.remove(solution);
+                    continue;
+                }
+        
+                if (nozzleTip == null) {
+                    fireJobEncounteredError(JobError.HeadError, "No viable NozzleTips found for Part / Feeder " + part.getId());
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    jobPlanner.replanPlacementSolution(solution);
+                    solutions.remove(solution);
+                    continue;
+                }
+                
                 firePartProcessingStarted(solution.boardLocation, solution.placement);
                 
                 if (!changeNozzleTip(nozzle, nozzleTip)) {
-                    return;
+                    fireJobEncounteredError(JobError.HeadError, "NozzleTip change failed " + nozzleTip.getName());
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    jobPlanner.replanPlacementSolution(solution);
+                    solutions.remove(solution);
+                    continue;
                 }
 								
 				if (!nozzle.getNozzleTip().canHandle(part)) {
                     fireJobEncounteredError(JobError.PickError, "Selected nozzle tip is not compatible with part");
-                    return;
+                    if (!shouldJobProcessingContinue()) {
+                        return;
+                    }
+                    jobPlanner.replanPlacementSolution(solution);
+                    solutions.remove(solution);
+                    continue;
+				}
+				
+				try {
+				    if (!feed(nozzle, feeder)) {
+				        return;
+				    }
+				}
+				catch (Exception e) {
+				    // if the feed failed we disable the feeder, replan
+				    // the solution and remove it from the set of solutions
+				    // to be placed
+				    feeder.setEnabled(false);
+				    jobPlanner.replanPlacementSolution(solution);
+				    solutions.remove(solution);
+				    break;
 				}
 				
 				if (!pick(nozzle, feeder, bl, placement)) {
@@ -326,7 +380,6 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
     // TODO: Should not bail if there are no fids on the board. Figure out
     // the UI for that.
     protected void checkFiducials() throws Exception {
-        FiducialLocator locator = new FiducialLocator();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             if (!boardLocation.isEnabled()) {
                 continue;
@@ -334,8 +387,12 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
             if (!boardLocation.isCheckFiducials()) {
                 continue;
             }
-            Location location = locator.locateBoard(boardLocation);
+            Location location = FiducialLocator.locateBoard(boardLocation);
             boardLocation.setLocation(location);
+            
+            if (!shouldJobProcessingContinue()) {
+                return;
+            }
         }
     }
 	
@@ -407,7 +464,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         // End NozzleTip Changer
 	}
 	
-	protected boolean pick(Nozzle nozzle, Feeder feeder, BoardLocation bl, Placement placement) {
+	protected boolean feed(Nozzle nozzle, Feeder feeder) throws Exception {
         fireDetailedStatusUpdated(String.format("Move nozzle %s to Safe-Z at (%s).", nozzle.getName(), nozzle.getLocation()));        
 
         if (!shouldJobProcessingContinue()) {
@@ -430,19 +487,12 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         }
 
         // Request that the Feeder feeds the part
-        while (true) {
-        	if (!shouldJobProcessingContinue()) {
-        		return false;
-        	}
-            try {
-                feeder.feed(nozzle);
-                break;
-            }
-            catch (Exception e) {
-                fireJobEncounteredError(JobError.FeederError, e.getMessage());
-            }
-        }
+        feeder.feed(nozzle);
         
+        return true;
+	}
+	
+	protected boolean pick(Nozzle nozzle, Feeder feeder, BoardLocation bl, Placement placement) {
         // Now that the Feeder has done it's feed operation we can get
         // the pick location from it.
         Location pickLocation;
