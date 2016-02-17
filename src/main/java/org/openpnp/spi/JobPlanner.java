@@ -55,20 +55,4 @@ public interface JobPlanner {
      * @return
      */
     Set<PlacementSolution> getNextPlacementSolutions(Head head);
-    
-    /**
-     * Add the given PlacementSolution back to the planner's queue so that
-     * it is eligable for planning again. This is called when the planned
-     * solution failed for some reason and the JobProcessor wishes to
-     * try it again. The primary use case for this is when a feed failure
-     * happens and the JobProcessor wants to try a different feeder.
-     * 
-     * It is expected that if the JobProcessor calls this then it has
-     * already made some change to the configuration that would allow
-     * the Planner to make a difference decision about the solution. The
-     * most likely situation is that an empty feeder has been disabled.
-     * 
-     * @param placementSolution
-     */
-    void replanPlacementSolution(PlacementSolution placementSolution);
 }

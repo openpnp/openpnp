@@ -16,7 +16,6 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.JobPlanner.PlacementSolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -76,9 +75,6 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         Machine machine = Configuration.get().getMachine();
         for (Nozzle nozzle : head.getNozzles()) {
             for (WeightedPlacementSolution solution : getWeightedSolutions(machine, nozzle)) {
-                // Check to make sure a prior solution in this loop didn't
-                // already consume the solution. This is the "do not conflict"
-                // part from the above comment.
                 if (solutions.contains(solution.originalSolution)) {
                     results.add((PlacementSolution) solution);
                     solutions.remove(solution.originalSolution);
@@ -90,25 +86,15 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         // in the job then we failed to either find a nozzletip or feeder
         // for a placement. We return the solutions as they are, which includes
         // nulls for feeder and nozzle.
-        // With the recent change of allowing null feeders and nozzle tips
-        // in the planned results this shouldn't ever actually happen, but
-        // it's here as a safety catch.
+        // TODO: It would be better if we filled in what we *could* find
+        // so that the processor will give the user the correct error.
+        // Or we could just throw the error here.
         if (results.size() == 0 && solutions.size() > 0) {
             return solutions;
         }
         return results.size() > 0 ? results : null;
     }
     
-    @Override
-    public void replanPlacementSolution(PlacementSolution placementSolution) {
-        if (placementSolution instanceof WeightedPlacementSolution) {
-            solutions.add(((WeightedPlacementSolution) placementSolution).originalSolution);
-        }
-        else {
-            solutions.add(placementSolution);
-        }
-    }
-
     protected List<WeightedPlacementSolution> getWeightedSolutions(Machine machine, Nozzle nozzle) {
         List<WeightedPlacementSolution> weightedSolutions = new ArrayList<>();
         for (PlacementSolution solution : solutions) {
@@ -118,8 +104,6 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
             }
             Set<NozzleTip> compatibleNozzleTips = getCompatibleNozzleTips(nozzle, part);
             Set<Feeder> compatibleFeeders = getCompatibleFeeders(machine, nozzle, part);
-            compatibleNozzleTips.add(null);
-            compatibleFeeders.add(null);
             for (NozzleTip nozzleTip : compatibleNozzleTips) {
                 for (Feeder feeder : compatibleFeeders) {
                     WeightedPlacementSolution weightedSolution = new WeightedPlacementSolution(
@@ -131,18 +115,9 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                             feeder);
                     weightedSolution.weight = 1;
                     weightedSolution.originalSolution = solution;
-                    
-                    if (nozzleTip == null) {
-                        weightedSolution.weight += 1000;
-                    }
-                    else if (nozzle.getNozzleTip() != nozzleTip) {
+                    if (nozzle.getNozzleTip() != nozzleTip) {
                         weightedSolution.weight++;
                     }
-                    
-                    if (feeder == null) {
-                        weightedSolution.weight += 1000;
-                    }
-                    
                     weightedSolutions.add(weightedSolution);
                 }
             }
