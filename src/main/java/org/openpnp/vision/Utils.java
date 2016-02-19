@@ -48,7 +48,7 @@ import com.Ostermiller.util.*;
 
 public class Utils {
     static {
-        //nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
