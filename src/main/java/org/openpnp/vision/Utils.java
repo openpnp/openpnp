@@ -82,7 +82,7 @@ public class Utils {
 	arr = StringHelper.split(arr[1],"]");
 	if(arr.length<=2) return null;
 	arr = StringHelper.split(arr[0],":");
-	Location loc = new Location();
+	Location loc = new Location(LengthUnit.Millimeters);
 	Double x=null,y=null,c=0.;
 	if(arr.length>=2) {
 	  x=parseDouble(arr[0]);
