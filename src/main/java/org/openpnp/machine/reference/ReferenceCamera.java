@@ -79,7 +79,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     protected int offsetY = 0;
     
     @Element(required=false)
-    private LensCalibrationParams calibration;
+    private LensCalibrationParams calibration = new LensCalibrationParams();
     
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
