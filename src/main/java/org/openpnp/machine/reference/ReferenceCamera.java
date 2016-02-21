@@ -96,7 +96,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private int calibrationGridWidth = 4;
     private int calibrationGridHeight = 11;
     private double calibrationObjectSize = 15;
-    private int calibrationDelay = 1000;
+    private int calibrationDelay = 1500;
     
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -290,6 +290,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 	
 	public void beginCalibration(CalibrationCallback callback) {
 	    this.calibrationCallback = callback;
+	    calibration.enabled = false;
 	    calibrationLastImageTime = 0;
 	    calibrationImagesCaptured = 0;
 	    calibrationImagePoints = new ArrayList<>();

@@ -1,43 +1,36 @@
 package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.opencv.core.Mat;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Camera;
-import org.openpnp.util.OpenCvUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.awt.event.ActionEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceCameraConfigurationWizard extends
@@ -424,7 +417,8 @@ public class ReferenceCameraConfigurationWizard extends
         addWrappedBinding(referenceCamera.getCalibration(), "distCoeff2", distCoeff3Tf, "text", doubleConverterCalibration);
         addWrappedBinding(referenceCamera.getCalibration(), "distCoeff3", distCoeff4Tf, "text", doubleConverterCalibration);
         addWrappedBinding(referenceCamera.getCalibration(), "distCoeff4", distCoeff5Tf, "text", doubleConverterCalibration);
-        addWrappedBinding(referenceCamera.getCalibration(), "enabled", calibrationEnabledChk, "selected");
+        bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled", calibrationEnabledChk, "selected");
+//        addWrappedBinding(referenceCamera.getCalibration(), "enabled", calibrationEnabledChk, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         ComponentDecorators.decorateWithAutoSelect(textFieldOffsetX);
@@ -464,7 +458,11 @@ public class ReferenceCameraConfigurationWizard extends
             btnStartLensCalibration.setAction(cancelCalibration);
             
             CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
-            cameraView.setText("Go to http://openpnp.org/camera-calibration for detailed instructions on this process.\nWhen you have your calibration card ready, hold it\nin front of the camera so that the entire card is visible.");
+            String message = 
+                    "Go to https://github.com/openpnp/openpnp/wiki/Camera-Lens-Calibration for detailed instructions.\n" +
+                    "When you have your calibration card ready, hold it in front of the camera so that the entire card is visible.\n" +
+                    "Each time the screen flashes an image is captured. After the flash you should move the card to a new orientation.";
+            cameraView.setText(message);
             cameraView.flash();
             
             referenceCamera.beginCalibration((progressCurrent, progressMax, finished) -> {
@@ -473,7 +471,7 @@ public class ReferenceCameraConfigurationWizard extends
                     btnStartLensCalibration.setAction(startCalibration);
                 }
                 else {
-                    cameraView.setText(String.format("Captured %d of %d, keep going!", progressCurrent, progressMax));
+                    cameraView.setText(String.format("Captured %d of %d.\nMove the card to a new position and angle each time the screen flashes.", progressCurrent, progressMax));
                 }
                 cameraView.flash();
             });
