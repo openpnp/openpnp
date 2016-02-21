@@ -348,7 +348,7 @@ public class ReferenceCameraConfigurationWizard extends
             cameraView.setText(message);
             cameraView.flash();
             
-            referenceCamera.beginCalibration((progressCurrent, progressMax, finished) -> {
+            referenceCamera.startCalibration((progressCurrent, progressMax, finished) -> {
                 if (finished) {
                     cameraView.setText(null);
                     startLensCalibrationBtn.setAction(startCalibration);

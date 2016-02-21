@@ -25,16 +25,11 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.MatOfPoint3f;
-import org.opencv.core.Point3;
-import org.opencv.core.Size;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
@@ -43,6 +38,9 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.LensCalibration;
+import org.openpnp.vision.LensCalibration.LensModel;
+import org.openpnp.vision.LensCalibration.Pattern;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -81,22 +79,17 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     protected int offsetY = 0;
     
     @Element(required=false)
-    private LensCalibration calibration = new LensCalibration();
+    private LensCalibrationParams calibration;
+    
+    private boolean calibrating;
+    private CalibrationCallback calibrationCallback;
+    private int calibrationCountGoal = 25;
     
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
     
-    private boolean calibrating;
-    private CalibrationCallback calibrationCallback;
-    private long calibrationLastImageTime;
-    private static int calibrationImagesMax = 25;
-    private int calibrationImagesCaptured;
-    private List<Mat> calibrationImagePoints = new ArrayList<>();
-    private List<Mat> calibrationObjectPoints = new ArrayList<>();
-    private int calibrationGridWidth = 4;
-    private int calibrationGridHeight = 11;
-    private double calibrationObjectSize = 15;
-    private int calibrationDelay = 1500;
+    
+    private LensCalibration lensCalibration;
     
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -177,46 +170,53 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 	}
 
 	protected BufferedImage transformImage(BufferedImage image) {
-	    if (calibrating) {
-	        image = processCalibrationImage(image);
-	    }
+	    Mat mat = OpenCvUtils.toMat(image);
 	    
-        if (calibration.isEnabled()) {
-            Mat mat = OpenCvUtils.toMat(image);
-            mat = undistort(mat);
-            image = OpenCvUtils.toBufferedImage(mat);
-        }
-	    
-        if (rotation == 0 && !flipX && !flipY && offsetX == 0 && offsetY == 0) {
-            return image;
-        }
+        mat = calibrate(mat);
         
-        BufferedImage out = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-        Graphics2D g2d = out.createGraphics();
-        AffineTransform xform = new AffineTransform();
-
-        xform.translate(offsetX, offsetY);
+        mat = undistort(mat);
         
-        if (flipY) {
-            xform.scale(-1, 1); 
-            xform.translate(-image.getWidth(), 0);
-        }
-        
-        if (flipX) {
-            xform.scale(1, -1); 
-            xform.translate(0, -image.getHeight());
-        }
-        
+        // apply affine transformations
         if (rotation != 0) {
-            xform.rotate(Math.toRadians(-rotation), image.getWidth() / 2.0D, image.getHeight() / 2.0D);
+            // TODO: Fix cropping of rotated image:
+            // http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
+            Point center = new Point(mat.width() / 2D, mat.height() / 2D);
+            Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
+            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
         }
         
-        g2d.drawImage(image, xform, null);
-        g2d.dispose();
-        return out;
+        if (offsetX != 0 || offsetY != 0) {
+            Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
+                {
+                    put(0, 0, 1, 0, offsetX);
+                    put(1, 0, 0, 1, offsetY);
+                }
+            };
+            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+        }
+
+        if (flipX || flipY) {
+            int flipCode;
+            if (flipX && flipY) {
+                flipCode = -1;
+            }
+            else {
+                flipCode = flipX ? 0 : 1;
+            }
+            Mat dst = new Mat();
+            Core.flip(mat, dst, flipCode);
+            mat = dst;
+        }
+        
+        image = OpenCvUtils.toBufferedImage(mat);
+        
+        return image;
     }
 	
 	private Mat undistort(Mat mat) {
+	    if (!calibration.isEnabled()) {
+	        return mat;
+	    }
         Mat dst = new Mat();
         Imgproc.undistort(
                 mat, 
@@ -226,86 +226,55 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return dst;
 	}
 	
-	private BufferedImage processCalibrationImage(BufferedImage image) {
-	    Mat mat = OpenCvUtils.toMat(image);
-        Size patternSize = new Size(calibrationGridWidth, calibrationGridHeight);
-        MatOfPoint2f corners = new MatOfPoint2f();
-        boolean found = Calib3d.findCirclesGridDefault(
-                mat, 
-                patternSize, 
-                corners,
-                Calib3d.CALIB_CB_ASYMMETRIC_GRID);
-        if (!found) {
-            return image;
-        }
-        Calib3d.drawChessboardCorners(
-                mat, 
-                patternSize, 
-                corners, 
-                found);
-        
-        if (System.currentTimeMillis() - calibrationLastImageTime > calibrationDelay) {
-            calibrationLastImageTime = System.currentTimeMillis();
-            calibrationImagesCaptured++;
-            calibrationImagePoints.add(corners);
-            MatOfPoint3f obj = new MatOfPoint3f();
-            for( int i = 0; i < patternSize.height; i++ ) {
-                for( int j = 0; j < patternSize.width; j++ ) {
-                    obj.push_back(new MatOfPoint3f(new Point3((2 * j + i % 2) * calibrationObjectSize, i * calibrationObjectSize, 0)));
-                }
-            }
-            calibrationObjectPoints.add(obj);
-            if (calibrationImagesCaptured >= calibrationImagesMax) {
+	private Mat calibrate(Mat mat) {
+	    if (!calibrating) {
+	        return mat;
+	    }
+	    
+        int count = lensCalibration.getPatternFoundCount(); 
+	    
+	    Mat appliedMat = lensCalibration.apply(mat);
+	    if (appliedMat == null) {
+	        // nothing was found in the image
+	        return mat;
+	    }
+	    
+	    if (count != lensCalibration.getPatternFoundCount()) {
+	        // a new image was counted, so let the caller know
+	        if (lensCalibration.getPatternFoundCount() == calibrationCountGoal) {
+	            calibrationCallback.callback(lensCalibration.getPatternFoundCount(), calibrationCountGoal, true);
+	            lensCalibration.calibrate();
+                calibration.setCameraMatrixMat(lensCalibration.getCameraMatrix());
+                calibration.setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
+                calibration.setEnabled(true);
                 calibrating = false;
-                calibrationCallback.callback(calibrationImagesCaptured, calibrationImagesMax, true);
-                List<Mat> rvecs = new ArrayList<>();
-                List<Mat> tvecs = new ArrayList<>();
-                Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
-                Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
-                cameraMatrix.put(0, 0, 1);
-                cameraMatrix.put(1, 1, 1);
-                Calib3d.calibrateCamera(
-                        calibrationObjectPoints, 
-                        calibrationImagePoints, 
-                        mat.size(), 
-                        cameraMatrix, 
-                        distortionCoefficients, 
-                        rvecs, 
-                        tvecs);
-                calibration.cameraMatrix = cameraMatrix;
-                calibration.distortionCoefficients = distortionCoefficients;
-                calibration.enabled = true;
-            }
-            else {
-                calibrationCallback.callback(calibrationImagesCaptured, calibrationImagesMax, false);
-            }
-        }
-        
-        return OpenCvUtils.toBufferedImage(mat);
+	        }
+	        else {
+	            calibrationCallback.callback(lensCalibration.getPatternFoundCount(), calibrationCountGoal, false);
+	        }
+	    }
+	    
+	    return appliedMat;
 	}
 	
-	public interface CalibrationCallback {
-	    public void callback(int progressCurrent, int progressMax, boolean complete);
-	}
-	
-	public void beginCalibration(CalibrationCallback callback) {
+	public void startCalibration(CalibrationCallback callback) {
 	    this.calibrationCallback = callback;
-	    calibration.enabled = false;
-	    calibrationLastImageTime = 0;
-	    calibrationImagesCaptured = 0;
-	    calibrationImagePoints = new ArrayList<>();
+	    calibration.setEnabled(false);
+	    lensCalibration = new LensCalibration(
+	            LensModel.Pinhole, 
+	            Pattern.AsymmetricCirclesGrid, 
+	            4, 
+	            11, 
+	            15,
+	            750);
 	    calibrating = true;
-	}
-	
-	public void completeCalibration() {
-	    calibrating = false;
 	}
 	
 	public void cancelCalibration() {
 	    calibrating = false;
 	}
 	
-    public LensCalibration getCalibration() {
+    public LensCalibrationParams getCalibration() {
         return calibration;
     }
 
@@ -331,8 +300,11 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void close() throws IOException {
     }
     
+    public interface CalibrationCallback {
+        public void callback(int progressCurrent, int progressMax, boolean complete);
+    }
 
-    public static class LensCalibration {
+    public static class LensCalibrationParams {
         @Attribute(required=false)
         private boolean enabled = false;
         
