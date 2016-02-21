@@ -10,20 +10,34 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.opencv.core.Mat;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.OpenCvUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.awt.event.ActionEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceCameraConfigurationWizard extends
@@ -56,6 +70,26 @@ public class ReferenceCameraConfigurationWizard extends
     private JLabel lblOffsetY;
     private JTextField textFieldOffsetX;
     private JTextField textFieldOffsetY;
+    private JPanel panelLensCalibration;
+    private JLabel lblCameraMatrix;
+    private JTextField camMatrix1Tf;
+    private JTextField camMatrix2Tf;
+    private JTextField camMatrix3Tf;
+    private JTextField camMatrix4Tf;
+    private JTextField camMatrix5Tf;
+    private JTextField camMatrix6Tf;
+    private JTextField camMatrix7Tf;
+    private JTextField camMatrix8Tf;
+    private JTextField camMatrix9Tf;
+    private JLabel lblDistortionCoefficients;
+    private JTextField distCoeff1Tf;
+    private JTextField distCoeff2Tf;
+    private JTextField distCoeff3Tf;
+    private JTextField distCoeff4Tf;
+    private JTextField distCoeff5Tf;
+    private JLabel lblApplyCalibration;
+    private JCheckBox calibrationEnabledChk;
+    private JButton btnStartLensCalibration;
     
     
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
@@ -124,7 +158,7 @@ public class ReferenceCameraConfigurationWizard extends
                                                         
         
         panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Transformation", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
         		FormSpecs.RELATED_GAP_COLSPEC,
@@ -225,6 +259,109 @@ public class ReferenceCameraConfigurationWizard extends
         panelLocation.add(textFieldLocationRotation, "8, 4, fill, default");
         textFieldLocationRotation.setColumns(8);
         
+        panelLensCalibration = new JPanel();
+        panelLensCalibration.setBorder(new TitledBorder(null, "Lens Calibration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelLensCalibration);
+        panelLensCalibration.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        btnStartLensCalibration = new JButton(startCalibration);
+        panelLensCalibration.add(btnStartLensCalibration, "2, 2, 11, 1");
+        
+        lblApplyCalibration = new JLabel("Apply Calibration?");
+        panelLensCalibration.add(lblApplyCalibration, "2, 4, right, default");
+        
+        calibrationEnabledChk = new JCheckBox("");
+        panelLensCalibration.add(calibrationEnabledChk, "4, 4");
+        
+        lblCameraMatrix = new JLabel("Camera Matrix");
+        panelLensCalibration.add(lblCameraMatrix, "2, 6, right, default");
+        
+        camMatrix1Tf = new JTextField();
+        panelLensCalibration.add(camMatrix1Tf, "4, 6, fill, default");
+        camMatrix1Tf.setColumns(10);
+        
+        camMatrix2Tf = new JTextField();
+        panelLensCalibration.add(camMatrix2Tf, "6, 6, fill, default");
+        camMatrix2Tf.setColumns(10);
+        
+        camMatrix3Tf = new JTextField();
+        panelLensCalibration.add(camMatrix3Tf, "8, 6, fill, default");
+        camMatrix3Tf.setColumns(10);
+        
+        camMatrix4Tf = new JTextField();
+        panelLensCalibration.add(camMatrix4Tf, "4, 8, fill, default");
+        camMatrix4Tf.setColumns(10);
+        
+        camMatrix5Tf = new JTextField();
+        panelLensCalibration.add(camMatrix5Tf, "6, 8, fill, default");
+        camMatrix5Tf.setColumns(10);
+        
+        camMatrix6Tf = new JTextField();
+        panelLensCalibration.add(camMatrix6Tf, "8, 8, fill, default");
+        camMatrix6Tf.setColumns(10);
+        
+        camMatrix7Tf = new JTextField();
+        panelLensCalibration.add(camMatrix7Tf, "4, 10, fill, default");
+        camMatrix7Tf.setColumns(10);
+        
+        camMatrix8Tf = new JTextField();
+        panelLensCalibration.add(camMatrix8Tf, "6, 10, fill, default");
+        camMatrix8Tf.setColumns(10);
+        
+        camMatrix9Tf = new JTextField();
+        panelLensCalibration.add(camMatrix9Tf, "8, 10, fill, default");
+        camMatrix9Tf.setColumns(10);
+        
+        lblDistortionCoefficients = new JLabel("Distortion Coefficients");
+        panelLensCalibration.add(lblDistortionCoefficients, "2, 14, right, default");
+        
+        distCoeff1Tf = new JTextField();
+        panelLensCalibration.add(distCoeff1Tf, "4, 14, fill, default");
+        distCoeff1Tf.setColumns(10);
+        
+        distCoeff2Tf = new JTextField();
+        panelLensCalibration.add(distCoeff2Tf, "6, 14, fill, default");
+        distCoeff2Tf.setColumns(10);
+        
+        distCoeff3Tf = new JTextField();
+        panelLensCalibration.add(distCoeff3Tf, "8, 14, fill, default");
+        distCoeff3Tf.setColumns(10);
+        
+        distCoeff4Tf = new JTextField();
+        panelLensCalibration.add(distCoeff4Tf, "10, 14, fill, default");
+        distCoeff4Tf.setColumns(10);
+        
+        distCoeff5Tf = new JTextField();
+        panelLensCalibration.add(distCoeff5Tf, "12, 14, fill, default");
+        distCoeff5Tf.setColumns(10);
+        
         try {
             // Causes WindowBuilder to fail, so just throw away the error.
             if (referenceCamera.getHead() == null) {
@@ -246,6 +383,7 @@ public class ReferenceCameraConfigurationWizard extends
     	IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();
+        DoubleConverter doubleConverterCalibration = new DoubleConverter("%s");
 
         if (referenceCamera.getHead() == null) {
             // fixed camera
@@ -271,7 +409,22 @@ public class ReferenceCameraConfigurationWizard extends
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
         addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
-
+        
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix0", camMatrix1Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix1", camMatrix2Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix2", camMatrix3Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix3", camMatrix4Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix4", camMatrix5Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix5", camMatrix6Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix6", camMatrix7Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix7", camMatrix8Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "cameraMatrix8", camMatrix9Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "distCoeff0", distCoeff1Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "distCoeff1", distCoeff2Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "distCoeff2", distCoeff3Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "distCoeff3", distCoeff4Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "distCoeff4", distCoeff5Tf, "text", doubleConverterCalibration);
+        addWrappedBinding(referenceCamera.getCalibration(), "enabled", calibrationEnabledChk, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         ComponentDecorators.decorateWithAutoSelect(textFieldOffsetX);
@@ -286,5 +439,57 @@ public class ReferenceCameraConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
+        
+        ComponentDecorators.decorateWithAutoSelect(camMatrix1Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix2Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix3Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix4Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix5Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix6Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix7Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix8Tf);
+        ComponentDecorators.decorateWithAutoSelect(camMatrix9Tf);
+        ComponentDecorators.decorateWithAutoSelect(distCoeff1Tf);
+        ComponentDecorators.decorateWithAutoSelect(distCoeff2Tf);
+        ComponentDecorators.decorateWithAutoSelect(distCoeff3Tf);
+        ComponentDecorators.decorateWithAutoSelect(distCoeff4Tf);
+        ComponentDecorators.decorateWithAutoSelect(distCoeff5Tf);
     }
+    
+    private Action startCalibration = new AbstractAction("Start Lens Calibration") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            MainFrame.cameraPanel.setSelectedCamera(referenceCamera);
+            
+            btnStartLensCalibration.setAction(cancelCalibration);
+            
+            CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
+            cameraView.setText("Go to http://openpnp.org/camera-calibration for detailed instructions on this process.\nWhen you have your calibration card ready, hold it\nin front of the camera so that the entire card is visible.");
+            cameraView.flash();
+            
+            referenceCamera.beginCalibration((progressCurrent, progressMax, finished) -> {
+                if (finished) {
+                    cameraView.setText(null);
+                    btnStartLensCalibration.setAction(startCalibration);
+                }
+                else {
+                    cameraView.setText(String.format("Captured %d of %d, keep going!", progressCurrent, progressMax));
+                }
+                cameraView.flash();
+            });
+        }
+    };
+    
+    private Action cancelCalibration = new AbstractAction("Cancel Lens Calibration") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            btnStartLensCalibration.setAction(startCalibration);
+            
+            referenceCamera.cancelCalibration();
+            
+            CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
+            cameraView.setText(null);
+            cameraView.flash();
+        }
+    };
 }

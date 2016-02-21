@@ -24,21 +24,38 @@ package org.openpnp.machine.reference;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point3;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
+    static {
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }    
+
     protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceCamera.class);
     
@@ -62,9 +79,24 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     @Attribute(required=false)
     protected int offsetY = 0;
-
+    
+    @Element(required=false)
+    private LensCalibration calibration = new LensCalibration();
+    
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
+    
+    private boolean calibrating;
+    private CalibrationCallback calibrationCallback;
+    private long calibrationLastImageTime;
+    private static int calibrationImagesMax = 25;
+    private int calibrationImagesCaptured;
+    private List<Mat> calibrationImagePoints = new ArrayList<>();
+    private List<Mat> calibrationObjectPoints = new ArrayList<>();
+    private int calibrationGridWidth = 4;
+    private int calibrationGridHeight = 11;
+    private double calibrationObjectSize = 15;
+    private int calibrationDelay = 1000;
     
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -145,6 +177,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 	}
 
 	protected BufferedImage transformImage(BufferedImage image) {
+	    if (calibrating) {
+	        image = processCalibrationImage(image);
+	    }
+	    
+        if (calibration.isEnabled()) {
+            Mat mat = OpenCvUtils.toMat(image);
+            mat = undistort(mat);
+            image = OpenCvUtils.toBufferedImage(mat);
+        }
+	    
         if (rotation == 0 && !flipX && !flipY && offsetX == 0 && offsetY == 0) {
             return image;
         }
@@ -173,13 +215,103 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         g2d.dispose();
         return out;
     }
+	
+	private Mat undistort(Mat mat) {
+        Mat dst = new Mat();
+        Imgproc.undistort(
+                mat, 
+                dst, 
+                calibration.getCameraMatrixMat(), 
+                calibration.getDistortionCoefficientsMat());
+        return dst;
+	}
+	
+	private BufferedImage processCalibrationImage(BufferedImage image) {
+	    Mat mat = OpenCvUtils.toMat(image);
+        Size patternSize = new Size(calibrationGridWidth, calibrationGridHeight);
+        MatOfPoint2f corners = new MatOfPoint2f();
+        boolean found = Calib3d.findCirclesGridDefault(
+                mat, 
+                patternSize, 
+                corners,
+                Calib3d.CALIB_CB_ASYMMETRIC_GRID);
+        if (!found) {
+            return image;
+        }
+        Calib3d.drawChessboardCorners(
+                mat, 
+                patternSize, 
+                corners, 
+                found);
+        
+        if (System.currentTimeMillis() - calibrationLastImageTime > calibrationDelay) {
+            calibrationLastImageTime = System.currentTimeMillis();
+            calibrationImagesCaptured++;
+            calibrationImagePoints.add(corners);
+            MatOfPoint3f obj = new MatOfPoint3f();
+            for( int i = 0; i < patternSize.height; i++ ) {
+                for( int j = 0; j < patternSize.width; j++ ) {
+                    obj.push_back(new MatOfPoint3f(new Point3((2 * j + i % 2) * calibrationObjectSize, i * calibrationObjectSize, 0)));
+                }
+            }
+            calibrationObjectPoints.add(obj);
+            if (calibrationImagesCaptured >= calibrationImagesMax) {
+                calibrating = false;
+                calibrationCallback.callback(calibrationImagesCaptured, calibrationImagesMax, true);
+                List<Mat> rvecs = new ArrayList<>();
+                List<Mat> tvecs = new ArrayList<>();
+                Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
+                Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
+                cameraMatrix.put(0, 0, 1);
+                cameraMatrix.put(1, 1, 1);
+                Calib3d.calibrateCamera(
+                        calibrationObjectPoints, 
+                        calibrationImagePoints, 
+                        mat.size(), 
+                        cameraMatrix, 
+                        distortionCoefficients, 
+                        rvecs, 
+                        tvecs);
+                calibration.cameraMatrix = cameraMatrix;
+                calibration.distortionCoefficients = distortionCoefficients;
+                calibration.enabled = true;
+            }
+            else {
+                calibrationCallback.callback(calibrationImagesCaptured, calibrationImagesMax, false);
+            }
+        }
+        
+        return OpenCvUtils.toBufferedImage(mat);
+	}
+	
+	public interface CalibrationCallback {
+	    public void callback(int progressCurrent, int progressMax, boolean complete);
+	}
+	
+	public void beginCalibration(CalibrationCallback callback) {
+	    this.calibrationCallback = callback;
+	    calibrationLastImageTime = 0;
+	    calibrationImagesCaptured = 0;
+	    calibrationImagePoints = new ArrayList<>();
+	    calibrating = true;
+	}
+	
+	public void completeCalibration() {
+	    calibrating = false;
+	}
+	
+	public void cancelCalibration() {
+	    calibrating = false;
+	}
+	
+    public LensCalibration getCalibration() {
+        return calibration;
+    }
 
     @Override
     public Location getLocation() {
         // If this is a fixed camera we just treat the head offsets as it's
         // table location.
-        // TODO: This is prety confusing and should be cleaned up and
-        // clarified.
         if (getHead() == null) {
             return getHeadOffsets();
         }
@@ -196,5 +328,184 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public void close() throws IOException {
+    }
+    
+
+    public static class LensCalibration {
+        @Attribute(required=false)
+        private boolean enabled = false;
+        
+        @Element(name="cameraMatrix", required=false)
+        private double[] cameraMatrixArr = new double[9];
+        
+        @Element(name="distortionCoefficients", required=false)
+        private double[] distortionCoefficientsArr = new double[5];
+        
+        private Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        private Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
+        
+        @Commit
+        private void commit() {
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        @Persist
+        private void persist() {
+            cameraMatrix.get(0, 0, cameraMatrixArr);
+            distortionCoefficients.get(0, 0, distortionCoefficientsArr);
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Mat getCameraMatrixMat() {
+            return cameraMatrix;
+        }
+
+        public void setCameraMatrixMat(Mat cameraMatrix) {
+            this.cameraMatrix = cameraMatrix;
+        }
+
+        public Mat getDistortionCoefficientsMat() {
+            return distortionCoefficients;
+        }
+
+        public void setDistortionCoefficientsMat(Mat distortionCoefficients) {
+            this.distortionCoefficients = distortionCoefficients;
+        }
+        
+        // This is really gross, but it's the easiest/only way to make these
+        // properties bindable.
+        public double getCameraMatrix0() {
+            return cameraMatrixArr[0];
+        }
+        
+        public void setCameraMatrix0(double value) {
+            cameraMatrixArr[0] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+        
+        public double getCameraMatrix1() {
+            return cameraMatrixArr[1];
+        }
+        
+        public void setCameraMatrix1(double value) {
+            cameraMatrixArr[1] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix2() {
+            return cameraMatrixArr[2];
+        }
+        
+        public void setCameraMatrix2(double value) {
+            cameraMatrixArr[2] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix3() {
+            return cameraMatrixArr[3];
+        }
+        
+        public void setCameraMatrix3(double value) {
+            cameraMatrixArr[3] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix4() {
+            return cameraMatrixArr[4];
+        }
+        
+        public void setCameraMatrix4(double value) {
+            cameraMatrixArr[4] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix5() {
+            return cameraMatrixArr[5];
+        }
+        
+        public void setCameraMatrix5(double value) {
+            cameraMatrixArr[5] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix6() {
+            return cameraMatrixArr[6];
+        }
+        
+        public void setCameraMatrix6(double value) {
+            cameraMatrixArr[6] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix7() {
+            return cameraMatrixArr[7];
+        }
+        
+        public void setCameraMatrix7(double value) {
+            cameraMatrixArr[7] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+
+        public double getCameraMatrix8() {
+            return cameraMatrixArr[8];
+        }
+        
+        public void setCameraMatrix8(double value) {
+            cameraMatrixArr[8] = value;
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+        }
+        
+        public double getDistCoeff0() {
+            return distortionCoefficientsArr[0];
+        }
+        
+        public void setDistCoeff0(double value) {
+            distortionCoefficientsArr[0] = value;
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        public double getDistCoeff1() {
+            return distortionCoefficientsArr[1];
+        }
+        
+        public void setDistCoeff1(double value) {
+            distortionCoefficientsArr[1] = value;
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        public double getDistCoeff2() {
+            return distortionCoefficientsArr[2];
+        }
+        
+        public void setDistCoeff2(double value) {
+            distortionCoefficientsArr[2] = value;
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        public double getDistCoeff3() {
+            return distortionCoefficientsArr[3];
+        }
+        
+        public void setDistCoeff3(double value) {
+            distortionCoefficientsArr[3] = value;
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        public double getDistCoeff4() {
+            return distortionCoefficientsArr[4];
+        }
+        
+        public void setDistCoeff4(double value) {
+            distortionCoefficientsArr[4] = value;
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
     }
 }

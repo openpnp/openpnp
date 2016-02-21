@@ -204,7 +204,6 @@ public class PackagesPanel extends JPanel {
                     cameraView.removeReticle(FootprintPanel.class.getName());       
                 }
                 catch (Exception e1) {
-                    e1.printStackTrace();
                 }
             }     
         });
