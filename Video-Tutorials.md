@@ -1,5 +1,8 @@
 Video tutorials to help with specific tasks in OpenPnP.
 
+## Setup and Calibration
+* Camera Lens Calibration: https://www.youtube.com/watch?v=LNa2LNSpa68
+
 ## Feeders
 
 * Strip Feeder Auto Setup: https://www.youtube.com/watch?v=Fs-SwSq5AZw
