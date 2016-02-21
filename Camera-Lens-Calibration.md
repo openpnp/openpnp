@@ -1,6 +1,4 @@
-## This feature is not yet complete. This documentation is a work in progress.
-
-Implemented in https://github.com/openpnp/openpnp/issues/226.
+## WARNING: This is a new very feature. If you run into problems, please file a bug report.
 
 Camera lens calibration allows OpenPnP to learn about the parameters of the camera lens you are using and then apply a undistort algorithm to remove any distortion of the image caused by the lens. This is especially useful in fisheye lenses as it can make straight lines look straight when they would typically be curved by the lens.
 
@@ -21,3 +19,4 @@ When the process is complete OpenPnP will enable the undistort function and if a
 References:
 http://docs.opencv.org/2.4/doc/tutorials/calib3d/camera_calibration/camera_calibration.html
 http://opencv-java-tutorials.readthedocs.org/en/latest/09-camera-calibration.html
+https://github.com/openpnp/openpnp/issues/226
