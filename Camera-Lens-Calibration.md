@@ -14,7 +14,7 @@ Start the calibration process and follow the on screen instructions. You will se
 
 Calibration works best when the pattern is captured in many difference orientations and positions. Make sure to move the card around: turn it, angle it towards and away from the camera, move it around within the view of the camera, etc.
 
-You can see a video of the process being performed at: YOUTUBE LINK
+You can see a video of the process being performed at: [TBD YOUTUBE LINK]
 
 When the process is complete OpenPnP will enable the undistort function and if all went well your camera view should now appear undistorted. You can toggle the "Apply Calibration?" checkbox back and forth to see the before and after results.
 
