@@ -125,14 +125,14 @@ The easiest way to think of head offsets is to imagine the distance that any obj
 
 To set up your offsets, follow these steps:
 
-1. Go to the Machine Setup tab, select your primary Nozzle from the tree on the left and set the Offsets to 0, 0, 0 in the fields on the right. Press Apply.
-2. Place something on the bed of the machine that can be marked by the nozzle. A piece of double sided tape or a small, flattened blob of Silly Putty will work. This is our target.
-3. Jog the machine so that the primary nozzle is over the target and then lower the nozzle until it makes a clear mark on the target.
+1. Go to the Machine Setup tab, select your primary down-looking Camera from the tree on the left, select the second tab on the right and set the Offsets to 0, 0, 0 in the fields on the right. Press Apply.
+2. Place something on the bed of the machine that can be marked by the nozzle. A piece of a small, flattened blob of putty or clay will work. Silly Putty works perfectly. This is our target.
+3. Jog the machine so that the primary Nozzle is over the target and then lower the nozzle until it makes a clear mark on the target.
 4. Click the X, Y and Z, DRO one time each. They will turn blue and show 0.000. They are now in relative coordinate mode and will show the distance you have moved since clicking them until you click them again.
 5. Jog the machine so that the down-looking camera is over the mark on the target, perfectly centered and in focus.
-6. Find the down-looking camera in the Machine Setup tab and find the Offsets fields in the panel on the right. It's currently on the second tab.
-7. Set the offsets to the X, Y and Z shown in the DROs. Press Apply.
-8. For each additional Nozzle, Camera or Actuator you need to setup, simply jog the machine so that the Nozzle, Camera or Actuator, is focused on (for Cameras) or touching (for Nozzles and Actuators) the mark on the target and record the offsets in the appropriate fields.
+6. Find the Nozzle in the Machine Setup tab and find the Offsets fields in the panel on the right. It's currently on the second tab.
+7. Set the offsets to the X, Y and Z shown in the DROs. Press Apply. Note: For many machines it's not necessary to set the Z offset. It's only used in more complex setups.
+8. For each additional Nozzle, Camera or Actuator you need to setup, follow this same process.
 
 #### Testing
 
@@ -142,7 +142,7 @@ To test that your offsets are correct you can use the red positioning buttons ne
 2. Press the position camera button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg). OpenPnP will move the head so that the mark is now centered in the camera and in perfect focus.
 3. Now press the position nozzle button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg) and the nozzle should move back to it's place touching the mark.
 
-* IF machine does not behave as it should be consider to delete other image camera created at program install. Newly defined down looking camera should be first in list of cameras from Machine Setup tab, ReferenceMachine>heads>referencehead H1>Cameras. 
+* If machine does not behave as it should, consider deleting the image camera created at program install. Newly defined down looking camera should be first in list of cameras from Machine Setup tab, ReferenceMachine > Heads > ReferenceHead H1 > Cameras.
 
 Actuators
 ---------
