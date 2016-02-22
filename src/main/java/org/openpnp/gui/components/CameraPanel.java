@@ -144,11 +144,13 @@ public class CameraPanel extends JPanel {
 						selectedCameraView = cameraView;
 					}
 				}
-				for (int i = 0; i < (columns * columns) - cameraViews.size(); i++) {
-					JPanel panel = new JPanel();
-					panel.setBackground(Color.black);
-					camerasPanel.add(panel);
-				}
+                if (cameraViews.size() > 2) {
+                    for (int i = 0; i < (columns * columns) - cameraViews.size(); i++) {
+                        JPanel panel = new JPanel();
+                        panel.setBackground(Color.black);
+                        camerasPanel.add(panel);
+                    }
+                }
 				selectedCameraView = null;
 			}
 			else {

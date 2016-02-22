@@ -218,7 +218,7 @@ public class PartsPanel extends JPanel {
 		public void actionPerformed(ActionEvent arg0) {
 		    int ret = JOptionPane.showConfirmDialog(
 		            getTopLevelAncestor(), 
-		            "Are you sure you want to delete " + getSelectedPart().getId(),
+		            "Are you sure you want to delete " + getSelectedPart().getId() + "?",
 		            "Delete " + getSelectedPart().getId() + "?",
 		            JOptionPane.YES_NO_OPTION);
 		    if (ret == JOptionPane.YES_OPTION) {
