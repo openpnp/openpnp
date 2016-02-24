@@ -183,7 +183,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Point center = new Point(mat.width() / 2D, mat.height() / 2D);
             Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
             Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-		mapMatrix.release();
+	    mapMatrix.release();
         }
         
         if (offsetX != 0 || offsetY != 0) {
@@ -194,6 +194,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 }
             };
             Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+            mapMatrix.release();
         }
 
         if (flipX || flipY) {
