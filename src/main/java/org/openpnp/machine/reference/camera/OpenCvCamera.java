@@ -63,18 +63,38 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 	public OpenCvCamera() {
 	}
 	
+	private Mat mat = new Mat();
+	private int ok = 8;
+	
 	@Override
 	public synchronized BufferedImage capture() {
 	    if (thread == null) {
 	        setDeviceIndex(deviceIndex);
 	    }
 		try {
-		    Mat mat = new Mat();
-		    if (!fg.read(mat)) {
+		    if (!fg.read(mat)) do {
+		    	try { Thread.sleep( 25); } catch(Exception e1) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep( 75); } catch(Exception e2) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep(200); } catch(Exception e3) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep(300); } catch(Exception e4) {;} if(fg.read(mat)) { break; } 
+		    	if(ok-- != 0) { return null; } ok = 5; // 3 Second interval
+		      do {
+		    	setDeviceIndex(deviceIndex);
+		    	try { Thread.sleep(1000); } catch(Exception e5) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep(500); } catch(Exception e6) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep(200); } catch(Exception e7) {;} if(fg.read(mat)) { break; } 
+
+		    	try { Thread.sleep(2000); } catch(Exception e8) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep(300); } catch(Exception e9) {;} if(fg.read(mat)) { break; } 
+		    	try { Thread.sleep(300); } catch(Exception e0) {;} if(fg.read(mat)) { break; } 
+
 		        return null;
-		    }
+		      } while(0);
+		      // wait that image is stabilized a bit AGC AWC ...
+		    	try { Thread.sleep(300); } catch(Exception x0) {;} if(!fg.read(mat)) { return null; } 
+		    	try { Thread.sleep(200); } catch(Exception x1) {;} if(!fg.read(mat)) { return null; }
+      		    } while(0);
 		    BufferedImage img = OpenCvUtils.toBufferedImage(mat);
-		    mat.release();
 		    return transformImage(img);
 		}
 		catch (Exception e) {
