@@ -89,11 +89,11 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 		    	try { Thread.sleep(300); } catch(Exception e0) {;} if(fg.read(mat)) { break; } 
 
 		        return null;
-		      } while(0);
+		      } while(false);
 		      // wait that image is stabilized a bit AGC AWC ...
 		    	try { Thread.sleep(300); } catch(Exception x0) {;} if(!fg.read(mat)) { return null; } 
 		    	try { Thread.sleep(200); } catch(Exception x1) {;} if(!fg.read(mat)) { return null; }
-      		    } while(0);
+      		    } while(false);
 		    BufferedImage img = OpenCvUtils.toBufferedImage(mat);
 		    return transformImage(img);
 		}
