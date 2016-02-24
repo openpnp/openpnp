@@ -183,6 +183,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Point center = new Point(mat.width() / 2D, mat.height() / 2D);
             Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
             Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+	    mapMatrix.release();
         }
         
         if (offsetX != 0 || offsetY != 0) {
@@ -193,6 +194,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 }
             };
             Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+            mapMatrix.release();
         }
 
         if (flipX || flipY) {
@@ -209,7 +211,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
         
         image = OpenCvUtils.toBufferedImage(mat);
-        
+       	mat.release(); 
         return image;
     }
 	
@@ -217,12 +219,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 	    if (!calibration.isEnabled()) {
 	        return mat;
 	    }
-        Mat dst = new Mat();
+        Mat dst = mat.clone();
         Imgproc.undistort(
                 mat, 
                 dst, 
                 calibration.getCameraMatrixMat(), 
                 calibration.getDistortionCoefficientsMat());
+	mat.release();
         return dst;
 	}
 	
