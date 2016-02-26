@@ -53,7 +53,7 @@ import com.google.gson.JsonSyntaxException;
  * Disabled axes don't send status reports, so movement wait lock never happens.
  * Probably short moves also won't.
  */
-public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
+public class TinygDriverZPneumatic extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory
             .getLogger(TinygDriver.class);
     private static final double minimumRequiredVersion = 0.95;
@@ -73,7 +73,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     private double connectedVersion;
     private JsonParser parser = new JsonParser();
 
-    public TinygDriver() {
+    public TinygDriverZPneumatic() {
     }
 
     @Override
@@ -126,8 +126,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         // Make sure we are in absolute mode
         sendCommand("G90");
         
-        // disable queue reporting
-        //sendCommand("$qv=0");
+        //sendCommand("$qv=0", 1);
         
         // Reset all axes to 0, in case the firmware was not reset on
         // connect.
@@ -145,7 +144,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void home(ReferenceHead head) throws Exception {
         // TODO: figure out how to home
-        sendCommand("G28.2 X0 Y0");
+        sendCommand("G28.2  X0 Y0");
 
         // TODO: This homeLocation really needs to be Head specific.
         Location homeLocation = this.homeLocation
@@ -171,6 +170,18 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         double y = location.getY();
         double z = location.getZ();
         double c = location.getRotation();
+        
+        ReferenceNozzle nozzle = null;
+        if (hm instanceof ReferenceNozzle) {
+            nozzle = (ReferenceNozzle) hm;
+        }
+        
+        /*
+         * Only move Z if it's a Nozzle.
+         */
+        if (nozzle == null) {
+            z = Double.NaN;
+        }
 
         StringBuffer sb = new StringBuffer();
         if (!Double.isNaN(x) && x != this.x) {
@@ -179,12 +190,25 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         if (!Double.isNaN(y) && y != this.y) {
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
         }
-        if (!Double.isNaN(z) && z != this.z) {
-            sb.append(String.format(Locale.US, "Z%2.2f ", z));
-        }
+//        if (!Double.isNaN(z) && z != this.z) {
+//            sb.append(String.format(Locale.US, "Z%2.2f ", z));
+//        }
         if (!Double.isNaN(c) && c != this.c) {
             sb.append(String.format(Locale.US, "A%2.2f ", c));
         }
+        
+        
+        if (!Double.isNaN(z) && z != this.z && z>=0 ) {
+            synchronized (movementWaitLock) {
+            	JsonObject response = sendCommand("M11");
+            	Thread.sleep(300);
+            	//if (getResponseStatusCode(response) == 0) {
+	             //   waitForMovementComplete();
+	            //}
+	        }
+        }
+        
+        
         if (sb.length() > 0) {
             sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute
                     * speed));
@@ -197,6 +221,19 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                 }
             }
         }
+        
+        if (!Double.isNaN(z) && z != this.z && z<0 ) {
+            synchronized (movementWaitLock) {
+            	JsonObject response = sendCommand("M10");
+            	Thread.sleep(300);
+            	//if (getResponseStatusCode(response) == 0) {
+	            //    waitForMovementComplete();
+	            //}
+	        }
+        }
+        
+        
+        
         if (!Double.isNaN(x)) {
             this.x = x;
         }
