@@ -1,15 +1,22 @@
 package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -56,6 +63,9 @@ public class ReferenceCameraConfigurationWizard extends
     private JLabel lblOffsetY;
     private JTextField textFieldOffsetX;
     private JTextField textFieldOffsetY;
+    private JPanel panelLensCalibration;
+    private JLabel lblApplyCalibration;
+    private JCheckBox calibrationEnabledChk;
     
     
     public ReferenceCameraConfigurationWizard(ReferenceCamera referenceCamera) {
@@ -124,7 +134,7 @@ public class ReferenceCameraConfigurationWizard extends
                                                         
         
         panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Transformation", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
         		FormSpecs.RELATED_GAP_COLSPEC,
@@ -225,6 +235,39 @@ public class ReferenceCameraConfigurationWizard extends
         panelLocation.add(textFieldLocationRotation, "8, 4, fill, default");
         textFieldLocationRotation.setColumns(8);
         
+        panelLensCalibration = new JPanel();
+        panelLensCalibration.setBorder(new TitledBorder(null, "Lens Calibration", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelLensCalibration);
+        panelLensCalibration.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        startLensCalibrationBtn = new JButton(startCalibration);
+        panelLensCalibration.add(startLensCalibrationBtn, "2, 2, 3, 1");
+        
+        lblApplyCalibration = new JLabel("Apply Calibration?");
+        panelLensCalibration.add(lblApplyCalibration, "2, 4, right, default");
+        
+        calibrationEnabledChk = new JCheckBox("");
+        panelLensCalibration.add(calibrationEnabledChk, "4, 4");
+        
         try {
             // Causes WindowBuilder to fail, so just throw away the error.
             if (referenceCamera.getHead() == null) {
@@ -271,7 +314,9 @@ public class ReferenceCameraConfigurationWizard extends
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
         addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
-
+        
+        bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled", calibrationEnabledChk, "selected");
+//        addWrappedBinding(referenceCamera.getCalibration(), "enabled", calibrationEnabledChk, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         ComponentDecorators.decorateWithAutoSelect(textFieldOffsetX);
@@ -287,4 +332,46 @@ public class ReferenceCameraConfigurationWizard extends
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
+    
+    private Action startCalibration = new AbstractAction("Start Lens Calibration") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            MainFrame.cameraPanel.setSelectedCamera(referenceCamera);
+            
+            startLensCalibrationBtn.setAction(cancelCalibration);
+            
+            CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
+            String message = 
+                    "Go to https://github.com/openpnp/openpnp/wiki/Camera-Lens-Calibration for detailed instructions.\n" +
+                    "When you have your calibration card ready, hold it in front of the camera so that the entire card is visible.\n" +
+                    "Each time the screen flashes an image is captured. After the flash you should move the card to a new orientation.";
+            cameraView.setText(message);
+            cameraView.flash();
+            
+            referenceCamera.startCalibration((progressCurrent, progressMax, finished) -> {
+                if (finished) {
+                    cameraView.setText(null);
+                    startLensCalibrationBtn.setAction(startCalibration);
+                }
+                else {
+                    cameraView.setText(String.format("Captured %d of %d.\nMove the card to a new position and angle each time the screen flashes.", progressCurrent, progressMax));
+                }
+                cameraView.flash();
+            });
+        }
+    };
+    
+    private Action cancelCalibration = new AbstractAction("Cancel Lens Calibration") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            startLensCalibrationBtn.setAction(startCalibration);
+            
+            referenceCamera.cancelCalibration();
+            
+            CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
+            cameraView.setText(null);
+            cameraView.flash();
+        }
+    };
+    private JButton startLensCalibrationBtn;
 }
