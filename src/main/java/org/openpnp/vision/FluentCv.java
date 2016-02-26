@@ -668,6 +668,8 @@ public class FluentCv {
 		if (tag != null && tag.length > 0) {
 			// Clone so that future writes to the pipeline Mat
 			// don't overwrite our stored one.
+			mat = stored.get(tag[0]);
+                        if(mat!=null) { mat.release(); }
 			stored.put(tag[0], this.mat.clone());
 		}
 		return this;
