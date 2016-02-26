@@ -204,7 +204,6 @@ public class PackagesPanel extends JPanel {
                     cameraView.removeReticle(FootprintPanel.class.getName());       
                 }
                 catch (Exception e1) {
-                    e1.printStackTrace();
                 }
             }     
         });
@@ -274,7 +273,7 @@ public class PackagesPanel extends JPanel {
             }
             int ret = JOptionPane.showConfirmDialog(
                     getTopLevelAncestor(), 
-                    "Are you sure you want to delete " + getSelectedPackage().getId(),
+                    "Are you sure you want to delete " + getSelectedPackage().getId() + "?",
                     "Delete " + getSelectedPackage().getId() + "?",
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {

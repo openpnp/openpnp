@@ -24,21 +24,36 @@ package org.openpnp.machine.reference;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.Closeable;
 import java.io.IOException;
 
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.LensCalibration;
+import org.openpnp.vision.LensCalibration.LensModel;
+import org.openpnp.vision.LensCalibration.Pattern;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
+    static {
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+    }    
+
     protected final static Logger logger = LoggerFactory
             .getLogger(ReferenceCamera.class);
     
@@ -62,9 +77,19 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     @Attribute(required=false)
     protected int offsetY = 0;
-
+    
+    @Element(required=false)
+    private LensCalibrationParams calibration = new LensCalibrationParams();
+    
+    private boolean calibrating;
+    private CalibrationCallback calibrationCallback;
+    private int calibrationCountGoal = 25;
+    
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
+    
+    
+    private LensCalibration lensCalibration;
     
     public ReferenceCamera() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -145,41 +170,121 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 	}
 
 	protected BufferedImage transformImage(BufferedImage image) {
-        if (rotation == 0 && !flipX && !flipY && offsetX == 0 && offsetY == 0) {
-            return image;
-        }
+	    Mat mat = OpenCvUtils.toMat(image);
+	    
+        mat = calibrate(mat);
         
-        BufferedImage out = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-        Graphics2D g2d = out.createGraphics();
-        AffineTransform xform = new AffineTransform();
-
-        xform.translate(offsetX, offsetY);
+        mat = undistort(mat);
         
-        if (flipY) {
-            xform.scale(-1, 1); 
-            xform.translate(-image.getWidth(), 0);
-        }
-        
-        if (flipX) {
-            xform.scale(1, -1); 
-            xform.translate(0, -image.getHeight());
-        }
-        
+        // apply affine transformations
         if (rotation != 0) {
-            xform.rotate(Math.toRadians(-rotation), image.getWidth() / 2.0D, image.getHeight() / 2.0D);
+            // TODO: Fix cropping of rotated image:
+            // http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
+            Point center = new Point(mat.width() / 2D, mat.height() / 2D);
+            Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
+            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+	    mapMatrix.release();
         }
         
-        g2d.drawImage(image, xform, null);
-        g2d.dispose();
-        return out;
+        if (offsetX != 0 || offsetY != 0) {
+            Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
+                {
+                    put(0, 0, 1, 0, offsetX);
+                    put(1, 0, 0, 1, offsetY);
+                }
+            };
+            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+            mapMatrix.release();
+        }
+
+        if (flipX || flipY) {
+            int flipCode;
+            if (flipX && flipY) {
+                flipCode = -1;
+            }
+            else {
+                flipCode = flipX ? 0 : 1;
+            }
+            Mat dst = new Mat();
+            Core.flip(mat, dst, flipCode);
+            mat = dst;
+        }
+        
+        image = OpenCvUtils.toBufferedImage(mat);
+       	mat.release(); 
+        return image;
+    }
+	
+	private Mat undistort(Mat mat) {
+	    if (!calibration.isEnabled()) {
+	        return mat;
+	    }
+        Mat dst = mat.clone();
+        Imgproc.undistort(
+                mat, 
+                dst, 
+                calibration.getCameraMatrixMat(), 
+                calibration.getDistortionCoefficientsMat());
+	mat.release();
+        return dst;
+	}
+	
+	private Mat calibrate(Mat mat) {
+	    if (!calibrating) {
+	        return mat;
+	    }
+	    
+        int count = lensCalibration.getPatternFoundCount(); 
+	    
+	    Mat appliedMat = lensCalibration.apply(mat);
+	    if (appliedMat == null) {
+	        // nothing was found in the image
+	        return mat;
+	    }
+	    
+	    if (count != lensCalibration.getPatternFoundCount()) {
+	        // a new image was counted, so let the caller know
+	        if (lensCalibration.getPatternFoundCount() == calibrationCountGoal) {
+	            calibrationCallback.callback(lensCalibration.getPatternFoundCount(), calibrationCountGoal, true);
+	            lensCalibration.calibrate();
+                calibration.setCameraMatrixMat(lensCalibration.getCameraMatrix());
+                calibration.setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
+                calibration.setEnabled(true);
+                calibrating = false;
+	        }
+	        else {
+	            calibrationCallback.callback(lensCalibration.getPatternFoundCount(), calibrationCountGoal, false);
+	        }
+	    }
+	    
+	    return appliedMat;
+	}
+	
+	public void startCalibration(CalibrationCallback callback) {
+	    this.calibrationCallback = callback;
+	    calibration.setEnabled(false);
+	    lensCalibration = new LensCalibration(
+	            LensModel.Pinhole, 
+	            Pattern.AsymmetricCirclesGrid, 
+	            4, 
+	            11, 
+	            15,
+	            750);
+	    calibrating = true;
+	}
+	
+	public void cancelCalibration() {
+	    calibrating = false;
+	}
+	
+    public LensCalibrationParams getCalibration() {
+        return calibration;
     }
 
     @Override
     public Location getLocation() {
         // If this is a fixed camera we just treat the head offsets as it's
         // table location.
-        // TODO: This is prety confusing and should be cleaned up and
-        // clarified.
         if (getHead() == null) {
             return getHeadOffsets();
         }
@@ -196,5 +301,59 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public void close() throws IOException {
+    }
+    
+    public interface CalibrationCallback {
+        public void callback(int progressCurrent, int progressMax, boolean complete);
+    }
+
+    public static class LensCalibrationParams {
+        @Attribute(required=false)
+        private boolean enabled = false;
+        
+        @Element(name="cameraMatrix", required=false)
+        private double[] cameraMatrixArr = new double[9];
+        
+        @Element(name="distortionCoefficients", required=false)
+        private double[] distortionCoefficientsArr = new double[5];
+        
+        private Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        private Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
+        
+        @Commit
+        private void commit() {
+            cameraMatrix.put(0, 0, cameraMatrixArr);
+            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        }
+        
+        @Persist
+        private void persist() {
+            cameraMatrix.get(0, 0, cameraMatrixArr);
+            distortionCoefficients.get(0, 0, distortionCoefficientsArr);
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Mat getCameraMatrixMat() {
+            return cameraMatrix;
+        }
+
+        public void setCameraMatrixMat(Mat cameraMatrix) {
+            this.cameraMatrix = cameraMatrix;
+        }
+
+        public Mat getDistortionCoefficientsMat() {
+            return distortionCoefficients;
+        }
+
+        public void setDistortionCoefficientsMat(Mat distortionCoefficients) {
+            this.distortionCoefficients = distortionCoefficients;
+        }
     }
 }
