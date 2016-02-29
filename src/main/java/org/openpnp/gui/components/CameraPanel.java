@@ -37,6 +37,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
@@ -58,26 +59,22 @@ public class CameraPanel extends JPanel {
     private static final String PREF_SELECTED_CAMERA_VIEW = "JobPanel.dividerPosition";
     private Preferences prefs = Preferences.userNodeForPackage(CameraPanel.class);
 	
-	
 	public CameraPanel() {
 		createUi();
-		
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
-        // TODO STOPSHIP: Still not quite working.
 		Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
+                for (Head head : Configuration.get().getMachine().getHeads()) {
+                    for (Camera camera : head.getCameras()) {
+                        addCamera(camera);
+                    }
+                }
+                for (Camera camera : configuration.getMachine().getCameras()) {
+                    addCamera(camera);
+                }
+                
                 String selectedCameraView = prefs.get(PREF_SELECTED_CAMERA_VIEW, null); 
                 if (selectedCameraView != null) {
-                    System.out.println("Loaded " + selectedCameraView);
                     for (int i = 0; i < camerasCombo.getItemCount(); i++) {
                         Object o = camerasCombo.getItemAt(i);
                         if (o.toString().equals(selectedCameraView)) {
