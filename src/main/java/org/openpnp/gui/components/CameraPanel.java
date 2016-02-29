@@ -27,13 +27,17 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.CameraItem;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
@@ -51,8 +55,44 @@ public class CameraPanel extends JPanel {
 	
 	private CameraView selectedCameraView;
 	
+	
+    private static final String PREF_SELECTED_CAMERA_VIEW = "JobPanel.dividerPosition";
+    private Preferences prefs = Preferences.userNodeForPackage(CameraPanel.class);
+	
 	public CameraPanel() {
 		createUi();
+		Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                for (Head head : Configuration.get().getMachine().getHeads()) {
+                    for (Camera camera : head.getCameras()) {
+                        addCamera(camera);
+                    }
+                }
+                for (Camera camera : configuration.getMachine().getCameras()) {
+                    addCamera(camera);
+                }
+                
+                String selectedCameraView = prefs.get(PREF_SELECTED_CAMERA_VIEW, null); 
+                if (selectedCameraView != null) {
+                    for (int i = 0; i < camerasCombo.getItemCount(); i++) {
+                        Object o = camerasCombo.getItemAt(i);
+                        if (o.toString().equals(selectedCameraView)) {
+                            camerasCombo.setSelectedItem(o);
+                        }
+                    }
+                }
+                camerasCombo.addActionListener((event) -> {
+                    try {
+                        prefs.put(PREF_SELECTED_CAMERA_VIEW, camerasCombo.getSelectedItem().toString());
+                        prefs.flush();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+		});
 	}
 
 	public void addCamera(Camera camera) {
@@ -144,13 +184,13 @@ public class CameraPanel extends JPanel {
 						selectedCameraView = cameraView;
 					}
 				}
-                if (cameraViews.size() > 2) {
-                    for (int i = 0; i < (columns * columns) - cameraViews.size(); i++) {
-                        JPanel panel = new JPanel();
-                        panel.setBackground(Color.black);
-                        camerasPanel.add(panel);
-                    }
-                }
+				if (cameraViews.size() > 2) {
+	                for (int i = 0; i < (columns * columns) - cameraViews.size(); i++) {
+	                    JPanel panel = new JPanel();
+	                    panel.setBackground(Color.black);
+	                    camerasPanel.add(panel);
+	                }
+				}
 				selectedCameraView = null;
 			}
 			else {
