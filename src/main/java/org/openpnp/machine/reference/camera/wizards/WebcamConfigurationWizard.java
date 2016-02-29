@@ -55,7 +55,7 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
 
 	private JPanel panelGeneral;
     private JComboBox comboBoxDeviceId;
-    private JCheckBox chckbxTest;
+    private JCheckBox chckbxGray;
 
 	public WebcamConfigurationWizard(Webcams camera) {
 	    super(camera);
@@ -88,8 +88,8 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
 		comboBoxDeviceId = new JComboBox(deviceIds);
 		panelGeneral.add(comboBoxDeviceId, "4, 2, left, default");
 		
-		chckbxTest = new JCheckBox("Force Grayscale?");
-		panelGeneral.add(chckbxTest, "2, 4, 3, 1");
+		chckbxGray = new JCheckBox("Force Grayscale?");
+		panelGeneral.add(chckbxGray, "2, 4, 3, 1");
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
 		// The order of the properties is important. We want all the booleans
 		// to be set before we set the driver because setting the driver
 		// applies all the settings.
-        addWrappedBinding(camera, "test", chckbxTest, "selected");
+        addWrappedBinding(camera, "forceGray", chckbxGray, "selected");
         addWrappedBinding(camera, "deviceId", comboBoxDeviceId, "selectedItem");
 	}
 
@@ -122,7 +122,6 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
 
 	@Override
 	public void webcamFound(WebcamDiscoveryEvent event) {
-			System.out.format("Webcam connected: %s \n", event.getWebcam().getName());
 		if(camera.getDeviceId().equals(event.getWebcam().getName())) {
 			System.out.format("Webcam connected: %s \n", event.getWebcam().getName());
 		}
@@ -131,7 +130,6 @@ public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizar
 
 	@Override
 	public void webcamGone(WebcamDiscoveryEvent event) {
-			System.out.format("Webcam disconnected: %s \n", event.getWebcam().getName());
 		if(camera.getDeviceId().equals(event.getWebcam().getName())) {
 			System.out.format("Webcam disconnected: %s \n", event.getWebcam().getName());
 		}
