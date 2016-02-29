@@ -331,7 +331,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 		    Camera camera = getSelectedCamera();
             int ret = JOptionPane.showConfirmDialog(
                     getTopLevelAncestor(), 
-                    "Are you sure you want to delete " + camera.getName(),
+                    "Are you sure you want to delete " + camera.getName() + "?",
                     "Delete " + camera.getName() + "?",
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {

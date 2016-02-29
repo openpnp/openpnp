@@ -82,12 +82,6 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
 		}
 		panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
 		
-		lblUndistort = new JLabel("Apply Calibration?");
-		panelGeneral.add(lblUndistort, "2, 4");
-		
-		checkBoxUndistort = new JCheckBox("");
-		panelGeneral.add(checkBoxUndistort, "4, 4");
-		
 		lblPreferredWidth = new JLabel("Preferred Width");
 		panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
 		
@@ -115,7 +109,6 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
 	    super.createBindings();
         addWrappedBinding(camera, "preferredWidth", textFieldPreferredWidth, "text", intConverter);
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text", intConverter);
-		addWrappedBinding(camera.getCalibration(), "enabled", checkBoxUndistort, "selected");
 		// Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 		
@@ -132,8 +125,6 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     }
 
     private JComboBox comboBoxDeviceIndex;
-	private JCheckBox checkBoxUndistort;
-	private JLabel lblUndistort;
 	private JLabel lblPreferredWidth;
 	private JLabel lblPreferredHeight;
 	private JTextField textFieldPreferredWidth;

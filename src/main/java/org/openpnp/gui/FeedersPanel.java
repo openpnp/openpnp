@@ -344,7 +344,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(
                     getTopLevelAncestor(), 
-                    "Are you sure you want to delete " + getSelectedFeeder().getName(),
+                    "Are you sure you want to delete " + getSelectedFeeder().getName() + "?",
                     "Delete " + getSelectedFeeder().getName() + "?",
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
