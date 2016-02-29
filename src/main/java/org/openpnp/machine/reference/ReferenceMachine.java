@@ -36,6 +36,7 @@ import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
+import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
