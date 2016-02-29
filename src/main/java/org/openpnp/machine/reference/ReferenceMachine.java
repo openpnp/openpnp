@@ -158,6 +158,7 @@ public class ReferenceMachine extends AbstractMachine {
 	@Override
 	public List<Class<? extends Camera>>  getCompatibleCameraClasses() {
 		List<Class<? extends Camera>> l = new ArrayList<>();
+		l.add(Webcams.class);
 		l.add(LtiCivilCamera.class);
 		l.add(VfwCamera.class);
         l.add(OpenCvCamera.class);
