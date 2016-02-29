@@ -66,7 +66,7 @@ public class Webcams extends ReferenceCamera implements Runnable , WebcamImageTr
 	
 	protected Webcam webcam;
 	private Thread thread;
-	private boolean test;
+	private boolean forceGray;
 	private BufferedImage image;
 
 	private static final JHGrayFilter GRAY = new JHGrayFilter();
@@ -152,15 +152,14 @@ public class Webcams extends ReferenceCamera implements Runnable , WebcamImageTr
 				webcam=cam;
 			}
 		}
-		if(webcam==null) {	// Workaround ???
-			//webcam =  Webcam.getWebcamByName(deviceId);
+		if(webcam==null) {	
 			return;
 		}
 		if(preferredWidth!=0&&preferredHeight!=0) {
 			webcam.setViewSize(new Dimension(preferredWidth,preferredHeight));
 		}
 		webcam.open();
-		if(test) { webcam.setImageTransformer(this); }
+		if(forceGray) { webcam.setImageTransformer(this); }
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -170,8 +169,8 @@ public class Webcams extends ReferenceCamera implements Runnable , WebcamImageTr
 		thread.start();
 	}
 	
-    public void setTest(boolean val) { test=val; }
-    public boolean isTest() { return test; }
+    public void setForceGray(boolean val) { forceGray=val; }
+    public boolean isForceGray() { return forceGray; }
 
     public int getPreferredWidth() {
         return preferredWidth;
