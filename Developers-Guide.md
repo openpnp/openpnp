@@ -32,6 +32,8 @@ Please try to adhere to the existing code style as much as possible. Understand 
 
 OpenPnP closely follows the [Google Java Style](https://google.github.io/styleguide/javaguide.html). While there may be existing code in OpenPnP that does not follow the style exactly, any new code must follow the style.
 
+There is an Eclipse formatter definition [here](https://github.com/openpnp/openpnp/blob/develop/OpenPnP_Eclipse_Formatter.xml). You can import this into Eclipse and use it to format your code to be sure it's following the standard.
+
 Two things in particular are extremely important:
 
 1. [Naming of variables and classes](https://google.github.io/styleguide/javaguide.html#s5-naming).
