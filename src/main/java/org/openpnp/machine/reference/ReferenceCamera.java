@@ -179,39 +179,31 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         
         mat = undistort(mat);
         
-        // apply affine transformations
+     // apply affine transformations
         if (rotation != 0) {
-		double rot = rotation;
-		                rot+=45;
-                if(rot<0) { rot+=360; }
+                double rot = rotation;  // local variable that can be changed
+                if(rot<0) { rot+=360; } // only positive quadrant
+                int quadrant = (int) (rot/90.+.5);
+                rot -= quadrant*90;
 
-                if(rot>=90*3) {
-                        // rotate 90º clockwise
-                        Core.flip(mat.t(), mat, 1);
-                        rot-=90*3;
+                switch(quadrant) {
+                        case 3:
+                                Core.flip(mat.t(), mat, 1);
+                                break;
+                        case 2:
+                                Core.flip(mat, mat, -1);
+                                break;
+                        case 1:
+                                Core.flip(mat.t(), mat, 0);
+                                break;
                 }
 
-                if(rot>=90*2) {
-                        // rotate 180º 
-                        Core.flip(mat, mat, -1);
-                        rot-=90*2;
+                if(rot!=0.) {
+                        Point center = new Point(mat.width() / 2D, mat.height() / 2D);
+                        Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rot, 1.0);
+                        Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+                        mapMatrix.release();
                 }
-
-                if(rot>=90*1) {
-                        // rotate 90º counter-clockwise
-                        Core.flip(mat.t(), mat, 0);
-                        rot-=90*1;
-                }
-                rot -= 45;
-                if(rot>180.) { rot-=360; }
-                if(rot>13.||rot<-13.) { rot=0.; }
-
-		if(rot!=0.) {
-            		Point center = new Point(mat.width() / 2D, mat.height() / 2D);
-            		Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rot, 1.0);
-            		Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-	    		mapMatrix.release();
-		}
         }
         
         if (offsetX != 0 || offsetY != 0) {
