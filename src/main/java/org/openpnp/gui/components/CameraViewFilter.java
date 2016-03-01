@@ -5,5 +5,5 @@ import java.awt.image.BufferedImage;
 import org.openpnp.spi.Camera;
 
 public interface CameraViewFilter {
-	public BufferedImage filterCameraImage(Camera camera, BufferedImage image);
+    public BufferedImage filterCameraImage(Camera camera, BufferedImage image);
 }

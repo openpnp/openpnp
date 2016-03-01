@@ -8,89 +8,90 @@ import org.simpleframework.xml.Attribute;
 
 public abstract class Pad extends AbstractModelObject {
     @Attribute
-    protected LengthUnit units = LengthUnit.Millimeters; 
-    
+    protected LengthUnit units = LengthUnit.Millimeters;
+
     public abstract Shape getShape();
+
     public abstract Pad convertToUnits(LengthUnit units);
-    
+
     public LengthUnit getUnits() {
         return units;
     }
-    
+
     public void setUnits(LengthUnit units) {
         Object oldValue = units;
         this.units = units;
         firePropertyChange("units", oldValue, units);
     }
-    
+
     // TODO: Line doesn't really work as a shape, so I am removing it
     // until we really have a need for it at which point it can be revisited.
-//    public static class Line extends Pad {
-//        @Attribute
-//        private double x1;
-//        
-//        @Attribute
-//        private double y1;
-//        
-//        @Attribute
-//        private double x2;
-//        
-//        @Attribute
-//        private double y2;
-//        
-//        public double getX1() {
-//            return x1;
-//        }
-//
-//        public void setX1(double x1) {
-//            double oldValue = this.x1;
-//            this.x1 = x1;
-//            firePropertyChange("x1", oldValue, x1);
-//        }
-//        
-//        public double getY1() {
-//            return y1;
-//        }
-//
-//        public void setY1(double y1) {
-//            double oldValue = this.y1;
-//            this.y1 = y1;
-//            firePropertyChange("y1", oldValue, y1);
-//        }
-//        
-//        public double getX2() {
-//            return x2;
-//        }
-//
-//        public void setX2(double x2) {
-//            double oldValue = this.x2;
-//            this.x2 = x2;
-//            firePropertyChange("x2", oldValue, x2);
-//        }
-//        
-//        public double getY2() {
-//            return y2;
-//        }
-//
-//        public void setY2(double y2) {
-//            double oldValue = this.y2;
-//            this.y2 = y2;
-//            firePropertyChange("y2", oldValue, y2);
-//        }
-//        
-//        public Shape getShape() {
-//            return new Line2D.Double(
-//                    x1,
-//                    y1,
-//                    x2,
-//                    y2);
-//        }
-//    }
-    
+    // public static class Line extends Pad {
+    // @Attribute
+    // private double x1;
+    //
+    // @Attribute
+    // private double y1;
+    //
+    // @Attribute
+    // private double x2;
+    //
+    // @Attribute
+    // private double y2;
+    //
+    // public double getX1() {
+    // return x1;
+    // }
+    //
+    // public void setX1(double x1) {
+    // double oldValue = this.x1;
+    // this.x1 = x1;
+    // firePropertyChange("x1", oldValue, x1);
+    // }
+    //
+    // public double getY1() {
+    // return y1;
+    // }
+    //
+    // public void setY1(double y1) {
+    // double oldValue = this.y1;
+    // this.y1 = y1;
+    // firePropertyChange("y1", oldValue, y1);
+    // }
+    //
+    // public double getX2() {
+    // return x2;
+    // }
+    //
+    // public void setX2(double x2) {
+    // double oldValue = this.x2;
+    // this.x2 = x2;
+    // firePropertyChange("x2", oldValue, x2);
+    // }
+    //
+    // public double getY2() {
+    // return y2;
+    // }
+    //
+    // public void setY2(double y2) {
+    // double oldValue = this.y2;
+    // this.y2 = y2;
+    // firePropertyChange("y2", oldValue, y2);
+    // }
+    //
+    // public Shape getShape() {
+    // return new Line2D.Double(
+    // x1,
+    // y1,
+    // x2,
+    // y2);
+    // }
+    // }
+
     public static class Ellipse extends Pad {
         @Attribute
         private double width;
-        
+
         @Attribute
         private double height;
 
@@ -115,11 +116,7 @@ public abstract class Pad extends AbstractModelObject {
         }
 
         public Shape getShape() {
-            return new Ellipse2D.Double(
-                    -width / 2, 
-                    -height / 2, 
-                    width, 
-                    height);
+            return new Ellipse2D.Double(-width / 2, -height / 2, width, height);
         }
 
         @Override
@@ -132,11 +129,11 @@ public abstract class Pad extends AbstractModelObject {
         }
     }
 
-    
+
     public static class Circle extends Pad {
         @Attribute
         private double radius;
-        
+
         public double getRadius() {
             return radius;
         }
@@ -148,11 +145,7 @@ public abstract class Pad extends AbstractModelObject {
         }
 
         public Shape getShape() {
-            return new Ellipse2D.Double(
-                    -radius, 
-                    -radius, 
-                    radius * 2, 
-                    radius * 2);
+            return new Ellipse2D.Double(-radius, -radius, radius * 2, radius * 2);
         }
 
         @Override
@@ -163,17 +156,17 @@ public abstract class Pad extends AbstractModelObject {
             return that;
         }
     }
-    
+
     public static class RoundRectangle extends Pad {
         @Attribute
         private double width;
-        
+
         @Attribute
         private double height;
-        
-        @Attribute(required=false)
+
+        @Attribute(required = false)
         private double roundness;
-        
+
         public double getWidth() {
             return width;
         }
@@ -205,13 +198,8 @@ public abstract class Pad extends AbstractModelObject {
         }
 
         public Shape getShape() {
-            return new RoundRectangle2D.Double(
-                    -width / 2,
-                    -height / 2,
-                    width,
-                    height,
-                    width / 1.0 * roundness,
-                    height / 1.0 * roundness);
+            return new RoundRectangle2D.Double(-width / 2, -height / 2, width, height,
+                    width / 1.0 * roundness, height / 1.0 * roundness);
         }
 
         @Override
@@ -223,5 +211,5 @@ public abstract class Pad extends AbstractModelObject {
             // don't convert roundness because it's a percentage
             return that;
         }
-    }    
+    }
 }

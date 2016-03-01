@@ -15,27 +15,27 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
 public abstract class AbstractNozzle implements Nozzle {
-    @ElementList(required=false)
-    	protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<>();
+    @ElementList(required = false)
+    protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<>();
 
     @Attribute
     protected String id;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     protected String name;
-    
+
     protected Head head;
 
     public AbstractNozzle() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
     }
-    
+
     @Override
     public List<NozzleTip> getNozzleTips() {
         return Collections.unmodifiableList(nozzleTips);
     }
-	
+
     @Override
     public String getId() {
         return id;

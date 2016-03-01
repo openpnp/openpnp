@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.driver;
@@ -46,24 +44,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An example of the simplest possible driver that can support multiple heads.
- * This driver maintains a set of coordinates for each Head that it is asked to
- * handle and simply logs all commands sent to it.
+ * An example of the simplest possible driver that can support multiple heads. This driver maintains
+ * a set of coordinates for each Head that it is asked to handle and simply logs all commands sent
+ * to it.
  */
 public class NullDriver implements ReferenceDriver {
-    private final static Logger logger = LoggerFactory
-            .getLogger(NullDriver.class);
-    
+    private final static Logger logger = LoggerFactory.getLogger(NullDriver.class);
+
     @Attribute(required = false)
     private double feedRateMmPerMinute = 5000;
-    
+
     private HashMap<Head, Location> headLocations = new HashMap<>();
-    
+
     private boolean enabled;
 
     /**
-     * Gets the Location object being tracked for a specific Head. This is the
-     * absolute coordinates of a virtual Head on the machine.
+     * Gets the Location object being tracked for a specific Head. This is the absolute coordinates
+     * of a virtual Head on the machine.
      * 
      * @param head
      * @return
@@ -76,9 +73,9 @@ public class NullDriver implements ReferenceDriver {
         }
         return l;
     }
-    
+
     protected void setHeadLocation(Head head, Location l) {
-        headLocations.put(head,  l);
+        headLocations.put(head, l);
     }
 
     @Override
@@ -89,10 +86,9 @@ public class NullDriver implements ReferenceDriver {
     }
 
     /**
-     * Return the Location of a specific ReferenceHeadMountable on the machine.
-     * We get the coordinates for the Head the object is attached to, and then
-     * we add the offsets assigned to the object to make the coordinates correct
-     * for that object.
+     * Return the Location of a specific ReferenceHeadMountable on the machine. We get the
+     * coordinates for the Head the object is attached to, and then we add the offsets assigned to
+     * the object to make the coordinates correct for that object.
      */
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
@@ -100,17 +96,16 @@ public class NullDriver implements ReferenceDriver {
     }
 
     /**
-     * Commands the driver to move the given ReferenceHeadMountable to the
-     * specified Location at the given speed. Please see the comments for this
-     * method in the code for some important considerations when writing your
-     * own driver.
+     * Commands the driver to move the given ReferenceHeadMountable to the specified Location at the
+     * given speed. Please see the comments for this method in the code for some important
+     * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location,
-            double speed) throws Exception {
-        logger.debug("moveTo({}, {}, {})", new Object[] { hm, location, speed });
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+            throws Exception {
+        logger.debug("moveTo({}, {}, {})", new Object[] {hm, location, speed});
         checkEnabled();
-        
+
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
         location = location.subtract(hm.getHeadOffsets());
@@ -121,28 +116,27 @@ public class NullDriver implements ReferenceDriver {
 
         // Get the current location of the Head that we'll move
         Location hl = getHeadLocation(hm.getHead());
-        
+
         if (feedRateMmPerMinute > 0) {
             simulateMovement(hm, location, hl, speed);
         }
-        
+
         // Now that movement is complete, update the stored Location to the new
         // Location, unless the incoming Location specified an axis with a value
         // of NaN. NaN is interpreted to mean "Don't move this axis" so we don't
         // update the value, either.
 
-        hl = hl.derive(
-                Double.isNaN(location.getX()) ? null : location.getX(),
+        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
                 Double.isNaN(location.getY()) ? null : location.getY(),
                 Double.isNaN(location.getZ()) ? null : location.getZ(),
                 Double.isNaN(location.getRotation()) ? null : location.getRotation());
 
         setHeadLocation(hm.getHead(), hl);
     }
-    
+
     /**
-     * Simulates true machine movement, which takes time, by tracing the
-     * required movement lines over a period of time based on the input speed.
+     * Simulates true machine movement, which takes time, by tracing the required movement lines
+     * over a period of time based on the input speed.
      * 
      * @param hm
      * @param location
@@ -150,8 +144,8 @@ public class NullDriver implements ReferenceDriver {
      * @param speed
      * @throws Exception
      */
-    protected void simulateMovement(ReferenceHeadMountable hm, Location location,
-            Location hl, double speed) throws Exception {
+    protected void simulateMovement(ReferenceHeadMountable hm, Location location, Location hl,
+            double speed) throws Exception {
         double x = hl.getX();
         double y = hl.getY();
         double z = hl.getZ();
@@ -164,8 +158,7 @@ public class NullDriver implements ReferenceDriver {
         double x2 = Double.isNaN(location.getX()) ? x : location.getX();
         double y2 = Double.isNaN(location.getY()) ? y : location.getY();
         double z2 = Double.isNaN(location.getZ()) ? z : location.getZ();
-        double c2 = Double.isNaN(location.getRotation()) ? c : location
-                .getRotation();
+        double c2 = Double.isNaN(location.getRotation()) ? c : location.getRotation();
 
         c2 = c2 % 360.0;
 
@@ -248,8 +241,7 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value)
-            throws Exception {
+    public void actuate(ReferenceActuator actuator, double value) throws Exception {
         logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
@@ -258,20 +250,19 @@ public class NullDriver implements ReferenceDriver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on)
-            throws Exception {
+    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         logger.debug("actuate({}, {})", actuator, on);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
         }
     }
-    
+
     @Override
-    public void dispense(ReferencePasteDispenser dispenser,
-            Location startLocation, Location endLocation,
-            long dispenseTimeMilliseconds) throws Exception {
-        logger.debug("dispense({}, {}, {}, {})", new Object[] { dispenser, startLocation, endLocation, dispenseTimeMilliseconds });
+    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
+            Location endLocation, long dispenseTimeMilliseconds) throws Exception {
+        logger.debug("dispense({}, {}, {}, {})",
+                new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
         checkEnabled();
         Thread.sleep(dispenseTimeMilliseconds);
     }
@@ -301,9 +292,7 @@ public class NullDriver implements ReferenceDriver {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard())
-        };
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
@@ -323,18 +312,18 @@ public class NullDriver implements ReferenceDriver {
             throw new Exception("Driver is not yet enabled!");
         }
     }
-    
+
     public double getFeedRateMmPerMinute() {
-		return feedRateMmPerMinute;
-	}
+        return feedRateMmPerMinute;
+    }
 
-	public void setFeedRateMmPerMinute(double feedRateMmPerMinute) {
-		this.feedRateMmPerMinute = feedRateMmPerMinute;
-	}
+    public void setFeedRateMmPerMinute(double feedRateMmPerMinute) {
+        this.feedRateMmPerMinute = feedRateMmPerMinute;
+    }
 
-	@Override
+    @Override
     public void close() throws IOException {
         // TODO Auto-generated method stub
-        
-    }  
+
+    }
 }

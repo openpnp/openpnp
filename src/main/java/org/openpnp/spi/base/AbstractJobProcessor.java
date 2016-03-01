@@ -39,34 +39,34 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
             this.delegate = delegate;
         }
     }
-    
+
     @Override
     public void addListener(JobProcessorListener listener) {
         listeners.add(listener);
     }
-    
+
     @Override
     public void removeListener(JobProcessorListener listener) {
         listeners.remove(listener);
     }
-    
+
     @Override
     public Job getJob() {
         return job;
     }
-    
+
     @Override
     public JobState getState() {
         return state;
     }
-    
+
     // TODO: Change this, and most of the other properties on here to bound
     // properties.
     @Override
     public void load(Job job) {
         stop();
         this.job = job;
-        
+
         fireJobLoaded();
     }
 
@@ -82,14 +82,14 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
         thread = new Thread(this);
         thread.start();
     }
-    
+
     @Override
     public void pause() {
         logger.debug("pause()");
         state = JobState.Paused;
         fireJobStateChanged();
     }
-    
+
     @Override
     public void step() throws Exception {
         logger.debug("step()");
@@ -102,7 +102,7 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
             resume();
         }
     }
-    
+
     @Override
     public void resume() {
         logger.debug("resume()");
@@ -112,7 +112,7 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
             runLock.notifyAll();
         }
     }
-    
+
     @Override
     public void stop() {
         logger.debug("stop()");
@@ -124,9 +124,8 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
     }
 
     /**
-     * Checks if the Job has been Paused or Stopped. If it has been Paused this method
-     * blocks until the Job is Resumed. If the Job has been Stopped it returns false and
-     * the loop should break.
+     * Checks if the Job has been Paused or Stopped. If it has been Paused this method blocks until
+     * the Job is Resumed. If the Job has been Stopped it returns false and the loop should break.
      */
     protected boolean shouldJobProcessingContinue() {
         if (pauseAtNextStep) {
@@ -153,64 +152,64 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
         }
         return true;
     }
-    
+
     protected void fireJobEncounteredError(JobError error, String description) {
         logger.debug("fireJobEncounteredError({}, {})", error, description);
         for (JobProcessorListener listener : listeners) {
             listener.jobEncounteredError(error, description);
         }
     }
-    
+
     private void fireJobLoaded() {
         logger.debug("fireJobLoaded()");
         for (JobProcessorListener listener : listeners) {
             listener.jobLoaded(job);
         }
     }
-    
+
     protected void fireJobStateChanged() {
         logger.debug("fireJobStateChanged({})", state);
         for (JobProcessorListener listener : listeners) {
             listener.jobStateChanged(state);
         }
     }
-    
+
     protected void firePartProcessingStarted(BoardLocation board, Placement placement) {
         logger.debug("firePartProcessingStarted({}, {})", board, placement);
         for (JobProcessorListener listener : listeners) {
             listener.partProcessingStarted(board, placement);
         }
     }
-    
+
     protected void firePartPicked(BoardLocation board, Placement placement) {
         logger.debug("firePartPicked({}, {})", board, placement);
         for (JobProcessorListener listener : listeners) {
             listener.partPicked(board, placement);
         }
     }
-    
+
     protected void firePartPlaced(BoardLocation board, Placement placement) {
         logger.debug("firePartPlaced({}, {})", board, placement);
         for (JobProcessorListener listener : listeners) {
             listener.partPlaced(board, placement);
         }
     }
-    
+
     protected void firePartProcessingComplete(BoardLocation board, Placement placement) {
         logger.debug("firePartProcessingComplete({}, {})", board, placement);
         for (JobProcessorListener listener : listeners) {
             listener.partProcessingCompleted(board, placement);
         }
     }
-    
+
     protected void fireDetailedStatusUpdated(String status) {
         logger.debug("fireDetailedStatusUpdated({})", status);
         for (JobProcessorListener listener : listeners) {
             listener.detailedStatusUpdated(status);
         }
     }
-    
-    
+
+
     @Override
     public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName();
@@ -224,17 +223,15 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard())
-        };
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
-    
+
     @Override
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public Icon getPropertySheetHolderIcon() {
         // TODO Auto-generated method stub
@@ -245,8 +242,7 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
 
     class DefaultJobProcessorDelegate implements JobProcessorDelegate {
         @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part,
-                Feeder feeder) {
+        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
             return PickRetryAction.SkipAndContinue;
         }
     }

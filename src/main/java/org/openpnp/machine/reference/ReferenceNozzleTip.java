@@ -29,15 +29,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-    private final static Logger logger = LoggerFactory
-            .getLogger(ReferenceNozzleTip.class);
+    private final static Logger logger = LoggerFactory.getLogger(ReferenceNozzleTip.class);
 
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
-    
+
     @Attribute(required = false)
     private boolean allowIncompatiblePackages;
-    
+
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
@@ -46,12 +45,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
 
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
-    
+
     public ReferenceNozzleTip() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
+            public void configurationLoaded(Configuration configuration) throws Exception {
                 for (String id : compatiblePackageIds) {
                     org.openpnp.model.Package pkg = configuration.getPackage(id);
                     if (pkg == null) {
@@ -65,18 +63,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public boolean canHandle(Part part) {
-        boolean result = allowIncompatiblePackages
-                || compatiblePackages.contains(part.getPackage());
-		logger.debug("{}.canHandle({}) => {}", new Object[]{getName(), part.getId(), result});
-		return result;
-	}
-    
-	public Set<org.openpnp.model.Package> getCompatiblePackages() {
+        boolean result =
+                allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
+        logger.debug("{}.canHandle({}) => {}", new Object[] {getName(), part.getId(), result});
+        return result;
+    }
+
+    public Set<org.openpnp.model.Package> getCompatiblePackages() {
         return new HashSet<>(compatiblePackages);
     }
 
-    public void setCompatiblePackages(
-            Set<org.openpnp.model.Package> compatiblePackages) {
+    public void setCompatiblePackages(Set<org.openpnp.model.Package> compatiblePackages) {
         this.compatiblePackages.clear();
         this.compatiblePackages.addAll(compatiblePackages);
         compatiblePackageIds.clear();
@@ -86,14 +83,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     @Override
-	public String toString() {
-		return getName();
-	}
+    public String toString() {
+        return getName();
+    }
 
-	@Override
-	public Wizard getConfigurationWizard() {
-	    return new ReferenceNozzleTipConfigurationWizard(this);
-	}
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceNozzleTipConfigurationWizard(this);
+    }
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -105,20 +102,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] {
-                unloadAction,
-                loadAction
-        };
+        return new Action[] {unloadAction, loadAction};
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard())
-        };
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     public boolean isAllowIncompatiblePackages() {
@@ -152,7 +144,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerEndLocation(Location changerEndLocation) {
         this.changerEndLocation = changerEndLocation;
     }
-    
+
     private Nozzle getParentNozzle() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
@@ -165,36 +157,34 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-    
+
     public Action loadAction = new AbstractAction("Load") {
         {
             putValue(SMALL_ICON, Icons.load);
             putValue(NAME, "Load");
-            putValue(SHORT_DESCRIPTION,
-                    "Load the currently selected nozzle tip.");
+            putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
         }
-        
+
         @Override
         public void actionPerformed(final ActionEvent arg0) {
-        	UiUtils.submitUiMachineTask(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 getParentNozzle().loadNozzleTip(ReferenceNozzleTip.this);
-        	});
+            });
         }
     };
-    
+
     public Action unloadAction = new AbstractAction("Unoad") {
         {
             putValue(SMALL_ICON, Icons.unload);
             putValue(NAME, "Unload");
-            putValue(SHORT_DESCRIPTION,
-                    "Unoad the currently loaded nozzle tip.");
+            putValue(SHORT_DESCRIPTION, "Unoad the currently loaded nozzle tip.");
         }
-        
+
         @Override
         public void actionPerformed(final ActionEvent arg0) {
-        	UiUtils.submitUiMachineTask(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 getParentNozzle().unloadNozzleTip();
-        	});
+            });
         }
     };
 }

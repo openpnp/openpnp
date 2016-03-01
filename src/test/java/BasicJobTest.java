@@ -36,18 +36,16 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.Files;
 
 public class BasicJobTest {
-    private final static Logger logger = LoggerFactory
-            .getLogger(TestDriver.class);
+    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
 
     /**
-     * Creates a basic job in memory and attempts to run it. The Driver is
-     * monitored to make sure it performs a pre-defined set of expected moves.
-     * This test is intended to test the primary motions and operation of the
-     * entire system, including feeding, picking, placing and basic job
+     * Creates a basic job in memory and attempts to run it. The Driver is monitored to make sure it
+     * performs a pre-defined set of expected moves. This test is intended to test the primary
+     * motions and operation of the entire system, including feeding, picking, placing and basic job
      * processing.
      * 
-     * TODO: Don't ignore additional movements after the expected movements
-     * complete. This should cause the test to fail and it does not currently.
+     * TODO: Don't ignore additional movements after the expected movements complete. This should
+     * cause the test to fail and it does not currently.
      * 
      * @throws Exception
      */
@@ -56,18 +54,15 @@ public class BasicJobTest {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
-        
+
         // Copy the required configuration files over to the new configuration
         // directory.
-        FileUtils.copyURLToFile(
-        		ClassLoader.getSystemResource("config/BasicJobTest/machine.xml"),
-        		new File(workingDirectory, "machine.xml"));
-        FileUtils.copyURLToFile(
-        		ClassLoader.getSystemResource("config/BasicJobTest/packages.xml"),
-        		new File(workingDirectory, "packages.xml"));
-        FileUtils.copyURLToFile(
-        		ClassLoader.getSystemResource("config/BasicJobTest/parts.xml"),
-        		new File(workingDirectory, "parts.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/machine.xml"),
+                new File(workingDirectory, "machine.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/packages.xml"),
+                new File(workingDirectory, "packages.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/parts.xml"),
+                new File(workingDirectory, "parts.xml"));
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
@@ -90,22 +85,30 @@ public class BasicJobTest {
         Nozzle n1 = h1.getNozzle("N1");
         Nozzle n2 = h1.getNozzle("N2");
 
-        delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0), 1.0);
+        delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
+                1.0);
         delegate.expectPick(n1);
-        
-        delegate.expectMove("Move N2 to F1", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0), 1.0);
+
+        delegate.expectMove("Move N2 to F1", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
+                1.0);
         delegate.expectPick(n2);
-        
-        delegate.expectMove("Move N1 to R1, Safe-Z", n1, new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
-        delegate.expectMove("Move N1 to R1, Z", n1, new Location(LengthUnit.Millimeters, 0, 10, 0.825500, 45), 1.0);
+
+        delegate.expectMove("Move N1 to R1, Safe-Z", n1,
+                new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
+        delegate.expectMove("Move N1 to R1, Z", n1,
+                new Location(LengthUnit.Millimeters, 0, 10, 0.825500, 45), 1.0);
         delegate.expectPlace(n1);
-        delegate.expectMove("Move N1 to R1, Safe-Z", n1, new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
-        
-        delegate.expectMove("Move N2 to R2, Safe-Z", n2, new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
-        delegate.expectMove("Move N2 to R2, Z", n2, new Location(LengthUnit.Millimeters, 00, 20, 0.825500, 90), 1.0);
+        delegate.expectMove("Move N1 to R1, Safe-Z", n1,
+                new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
+
+        delegate.expectMove("Move N2 to R2, Safe-Z", n2,
+                new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+        delegate.expectMove("Move N2 to R2, Z", n2,
+                new Location(LengthUnit.Millimeters, 00, 20, 0.825500, 90), 1.0);
         delegate.expectPlace(n2);
-        delegate.expectMove("Move N2 to R2, Safe-Z", n2, new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
-        
+        delegate.expectMove("Move N2 to R2, Safe-Z", n2,
+                new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+
         jobProcessor.load(job);
         machine.setEnabled(true);
         synchronized (notifier) {
@@ -123,14 +126,11 @@ public class BasicJobTest {
         Board board = new Board();
         board.setName("test");
 
-        board.addPlacement(createPlacement("R1", "R-0805-10K", 10, 10, 0, 45,
-                Side.Top));
-        board.addPlacement(createPlacement("R2", "R-0805-10K", 20, 20, 0, 90,
-                Side.Top));
+        board.addPlacement(createPlacement("R1", "R-0805-10K", 10, 10, 0, 45, Side.Top));
+        board.addPlacement(createPlacement("R2", "R-0805-10K", 20, 20, 0, 90, Side.Top));
 
         BoardLocation boardLocation = new BoardLocation(board);
-        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0,
-                0));
+        boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
         boardLocation.setSide(Side.Top);
 
         job.addBoardLocation(boardLocation);
@@ -138,21 +138,18 @@ public class BasicJobTest {
         return job;
     }
 
-    public static Placement createPlacement(String id, String partId, double x,
-            double y, double z, double rotation, Side side) {
+    public static Placement createPlacement(String id, String partId, double x, double y, double z,
+            double rotation, Side side) {
         Placement placement = new Placement(id);
         placement.setPart(Configuration.get().getPart(partId));
-        placement.setLocation(new Location(LengthUnit.Millimeters, x, y, z,
-                rotation));
+        placement.setLocation(new Location(LengthUnit.Millimeters, x, y, z, rotation));
         placement.setSide(side);
         return placement;
     }
 
-    public static class BasicJobTestJobProcessorDelegate implements
-            JobProcessorDelegate {
+    public static class BasicJobTestJobProcessorDelegate implements JobProcessorDelegate {
         @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part,
-                Feeder feeder) {
+        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
             return null;
         }
     }
@@ -165,8 +162,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void jobLoaded(Job job) {
-        }
+        public void jobLoaded(Job job) {}
 
         @Override
         public void jobStateChanged(JobState state) {
@@ -187,38 +183,33 @@ public class BasicJobTest {
         }
 
         @Override
-        public void partProcessingStarted(BoardLocation board,
-                Placement placement) {
+        public void partProcessingStarted(BoardLocation board, Placement placement) {
             logger.info("Start " + placement.getId());
         }
 
         @Override
-        public void partPicked(BoardLocation board, Placement placement) {
-        }
+        public void partPicked(BoardLocation board, Placement placement) {}
 
         @Override
-        public void partPlaced(BoardLocation board, Placement placement) {
-        }
+        public void partPlaced(BoardLocation board, Placement placement) {}
 
         @Override
-        public void partProcessingCompleted(BoardLocation board,
-                Placement placement) {
+        public void partProcessingCompleted(BoardLocation board, Placement placement) {
             logger.info("Finish " + placement.getId());
         }
 
         @Override
-        public void detailedStatusUpdated(String status) {
-        }
+        public void detailedStatusUpdated(String status) {}
     }
 
     /**
-     * TODO: Allow passing of null for the expect methods to ignore a particular
-     * field.
+     * TODO: Allow passing of null for the expect methods to ignore a particular field.
      */
     public static class BasicJobTestDriverDelegate extends TestDriverDelegate {
         private Queue<ExpectedOp> expectedOps = new LinkedList<>();
 
-        public void expectMove(String description, HeadMountable hm, Location location, double speed) {
+        public void expectMove(String description, HeadMountable hm, Location location,
+                double speed) {
             ExpectedMove o = new ExpectedMove(description, hm, location, speed);
             expectedOps.add(o);
         }
@@ -236,8 +227,8 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location,
-                double speed) throws Exception {
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+                throws Exception {
             if (expectedOps.isEmpty()) {
                 throw new Exception("Unexpected Move " + location + ".");
             }
@@ -245,15 +236,13 @@ public class BasicJobTest {
                 ExpectedOp op = expectedOps.remove();
 
                 if (!(op instanceof ExpectedMove)) {
-                    throw new Exception("Unexpected Move " + location
-                            + ". Expected " + op);
+                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
                 }
 
                 ExpectedMove move = (ExpectedMove) op;
 
                 if (!move.location.equals(location) || hm != move.headMountable) {
-                    throw new Exception("Unexpected Move " + location
-                            + ". Expected " + op);
+                    throw new Exception("Unexpected Move " + location + ". Expected " + op);
                 }
             }
         }
@@ -266,15 +255,13 @@ public class BasicJobTest {
             else {
                 ExpectedOp op = expectedOps.remove();
                 if (!(op instanceof ExpectedPick)) {
-                    throw new Exception("Unexpected Pick " + nozzle
-                            + ". Expected " + op);
+                    throw new Exception("Unexpected Pick " + nozzle + ". Expected " + op);
                 }
 
                 ExpectedPick pick = (ExpectedPick) op;
 
                 if (pick.nozzle != nozzle) {
-                    throw new Exception("Unexpected Pick " + nozzle
-                            + ". Expected " + op);
+                    throw new Exception("Unexpected Pick " + nozzle + ". Expected " + op);
                 }
             }
         }
@@ -287,29 +274,25 @@ public class BasicJobTest {
             else {
                 ExpectedOp op = expectedOps.remove();
                 if (!(op instanceof ExpectedPlace)) {
-                    throw new Exception("Unexpected Place " + nozzle
-                            + ". Expected " + op);
+                    throw new Exception("Unexpected Place " + nozzle + ". Expected " + op);
                 }
 
                 ExpectedPlace place = (ExpectedPlace) op;
 
                 if (place.nozzle != nozzle) {
-                    throw new Exception("Unexpected Place " + nozzle
-                            + ". Expected " + op);
+                    throw new Exception("Unexpected Place " + nozzle + ". Expected " + op);
                 }
             }
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, boolean on)
-                throws Exception {
+        public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
             // TODO Auto-generated method stub
             super.actuate(actuator, on);
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, double value)
-                throws Exception {
+        public void actuate(ReferenceActuator actuator, double value) throws Exception {
             // TODO Auto-generated method stub
             super.actuate(actuator, value);
         }
@@ -366,7 +349,7 @@ public class BasicJobTest {
 
             @Override
             public String toString() {
-                return "Move (" + description + ") "+ headMountable + " " + location.toString();
+                return "Move (" + description + ") " + headMountable + " " + location.toString();
             }
         }
     }

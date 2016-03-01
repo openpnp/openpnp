@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
@@ -69,8 +67,8 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ReferenceDragFeederConfigurationWizard extends
-        AbstractReferenceFeederConfigurationWizard {
+public class ReferenceDragFeederConfigurationWizard
+        extends AbstractReferenceFeederConfigurationWizard {
     private final ReferenceDragFeeder feeder;
 
     private JTextField textFieldFeedStartX;
@@ -116,19 +114,15 @@ public class ReferenceDragFeederConfigurationWizard extends
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
         panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General Settings",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelGeneral.setBorder(new TitledBorder(null, "General Settings", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
 
         panelFields.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblFeedRate = new JLabel("Feed Speed (0 - 1)");
         panelGeneral.add(lblFeedRate, "2, 2");
@@ -146,28 +140,18 @@ public class ReferenceDragFeederConfigurationWizard extends
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panelLocations
-                .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("left:default:grow"), },
-                        new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
-                                FormSpecs.DEFAULT_ROWSPEC,
-                                FormSpecs.RELATED_GAP_ROWSPEC,
-                                FormSpecs.DEFAULT_ROWSPEC,
-                                FormSpecs.RELATED_GAP_ROWSPEC,
-                                FormSpecs.DEFAULT_ROWSPEC,
-                                FormSpecs.RELATED_GAP_ROWSPEC,
-                                FormSpecs.DEFAULT_ROWSPEC, }));
+        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelLocations.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 4");
@@ -193,9 +177,8 @@ public class ReferenceDragFeederConfigurationWizard extends
         panelLocations.add(textFieldFeedStartZ, "8, 6");
         textFieldFeedStartZ.setColumns(8);
 
-        locationButtonsPanelFeedStart = new LocationButtonsPanel(
-                textFieldFeedStartX, textFieldFeedStartY, textFieldFeedStartZ,
-                null);
+        locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX,
+                textFieldFeedStartY, textFieldFeedStartZ, null);
         panelLocations.add(locationButtonsPanelFeedStart, "10, 6");
 
         JLabel lblFeedEndLocation = new JLabel("Feed End Location");
@@ -213,19 +196,18 @@ public class ReferenceDragFeederConfigurationWizard extends
         panelLocations.add(textFieldFeedEndZ, "8, 8");
         textFieldFeedEndZ.setColumns(8);
 
-        locationButtonsPanelFeedEnd = new LocationButtonsPanel(
-                textFieldFeedEndX, textFieldFeedEndY, textFieldFeedEndZ, null);
+        locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
+                textFieldFeedEndZ, null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
-//
+        //
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
         panelFields.add(panelVision);
         panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
 
         panelVisionEnabled = new JPanel();
-        FlowLayout fl_panelVisionEnabled = (FlowLayout) panelVisionEnabled
-                .getLayout();
+        FlowLayout fl_panelVisionEnabled = (FlowLayout) panelVisionEnabled.getLayout();
         fl_panelVisionEnabled.setAlignment(FlowLayout.LEFT);
         panelVision.add(panelVisionEnabled);
 
@@ -237,19 +219,14 @@ public class ReferenceDragFeederConfigurationWizard extends
 
         panelVisionTemplateAndAoe = new JPanel();
         panelVision.add(panelVisionTemplateAndAoe);
-        panelVisionTemplateAndAoe
-                .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+        panelVisionTemplateAndAoe.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.LABEL_COMPONENT_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         panelTemplate = new JPanel();
-        panelTemplate.setBorder(new TitledBorder(new EtchedBorder(
-                EtchedBorder.LOWERED, null, null), "Template Image",
-                TitledBorder.LEADING, TitledBorder.TOP, null,
+        panelTemplate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
         panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));
@@ -257,8 +234,7 @@ public class ReferenceDragFeederConfigurationWizard extends
         labelTemplateImage = new JLabel("");
         labelTemplateImage.setAlignmentX(Component.CENTER_ALIGNMENT);
         panelTemplate.add(labelTemplateImage);
-        labelTemplateImage.setBorder(new BevelBorder(BevelBorder.LOWERED, null,
-                null, null, null));
+        labelTemplateImage.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         labelTemplateImage.setMinimumSize(new Dimension(150, 150));
         labelTemplateImage.setMaximumSize(new Dimension(150, 150));
         labelTemplateImage.setHorizontalAlignment(SwingConstants.CENTER);
@@ -272,31 +248,22 @@ public class ReferenceDragFeederConfigurationWizard extends
         panel.add(btnChangeTemplateImage);
         btnChangeTemplateImage.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        btnCancelChangeTemplateImage = new JButton(
-                cancelSelectTemplateImageAction);
+        btnCancelChangeTemplateImage = new JButton(cancelSelectTemplateImageAction);
         panel.add(btnCancelChangeTemplateImage);
 
         panelAoE = new JPanel();
-        panelAoE.setBorder(new TitledBorder(null, "Area of Interest",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelAoE.setBorder(new TitledBorder(null, "Area of Interest", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
         panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
         panelAoE.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblX_1 = new JLabel("X");
         panelAoE.add(lblX_1, "2, 2");
@@ -345,90 +312,69 @@ public class ReferenceDragFeederConfigurationWizard extends
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        DoubleConverter doubleConverter =
+                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
 
-        addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text",
-                doubleConverter);
+        addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", doubleConverter);
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation",
-                feedStartLocation, "location");
-        addWrappedBinding(feedStartLocation, "lengthX", textFieldFeedStartX,
-                "text", lengthConverter);
-        addWrappedBinding(feedStartLocation, "lengthY", textFieldFeedStartY,
-                "text", lengthConverter);
-        addWrappedBinding(feedStartLocation, "lengthZ", textFieldFeedStartZ,
-                "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
+        addWrappedBinding(feedStartLocation, "lengthX", textFieldFeedStartX, "text",
+                lengthConverter);
+        addWrappedBinding(feedStartLocation, "lengthY", textFieldFeedStartY, "text",
+                lengthConverter);
+        addWrappedBinding(feedStartLocation, "lengthZ", textFieldFeedStartZ, "text",
+                lengthConverter);
 
         MutableLocationProxy feedEndLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "feedEndLocation",
-                feedEndLocation, "location");
-        addWrappedBinding(feedEndLocation, "lengthX", textFieldFeedEndX,
-                "text", lengthConverter);
-        addWrappedBinding(feedEndLocation, "lengthY", textFieldFeedEndY,
-                "text", lengthConverter);
-        addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ,
-                "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, feeder, "feedEndLocation", feedEndLocation, "location");
+        addWrappedBinding(feedEndLocation, "lengthX", textFieldFeedEndX, "text", lengthConverter);
+        addWrappedBinding(feedEndLocation, "lengthY", textFieldFeedEndY, "text", lengthConverter);
+        addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ, "text", lengthConverter);
 
-        addWrappedBinding(feeder, "vision.enabled", chckbxVisionEnabled,
-                "selected");
-        addWrappedBinding(feeder, "vision.templateImage", labelTemplateImage,
-                "icon", imageConverter);
+        addWrappedBinding(feeder, "vision.enabled", chckbxVisionEnabled, "selected");
+        addWrappedBinding(feeder, "vision.templateImage", labelTemplateImage, "icon",
+                imageConverter);
 
-        addWrappedBinding(feeder, "vision.areaOfInterest.x", textFieldAoiX,
-                "text", intConverter);
-        addWrappedBinding(feeder, "vision.areaOfInterest.y", textFieldAoiY,
-                "text", intConverter);
+        addWrappedBinding(feeder, "vision.areaOfInterest.x", textFieldAoiX, "text", intConverter);
+        addWrappedBinding(feeder, "vision.areaOfInterest.y", textFieldAoiY, "text", intConverter);
 
-        addWrappedBinding(feeder, "vision.areaOfInterest.width",
-                textFieldAoiWidth, "text", intConverter);
-        addWrappedBinding(feeder, "vision.areaOfInterest.height",
-                textFieldAoiHeight, "text", intConverter);
+        addWrappedBinding(feeder, "vision.areaOfInterest.width", textFieldAoiWidth, "text",
+                intConverter);
+        addWrappedBinding(feeder, "vision.areaOfInterest.height", textFieldAoiHeight, "text",
+                intConverter);
 
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiX);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
 
         BeanProperty actuatorIdProperty = BeanProperty.create("actuatorId");
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder,
-                actuatorIdProperty, locationButtonsPanelFeedStart,
-                actuatorIdProperty).bind();
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder,
-                actuatorIdProperty, locationButtonsPanelFeedEnd,
-                actuatorIdProperty).bind();
+        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
+                locationButtonsPanelFeedStart, actuatorIdProperty).bind();
+        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
+                locationButtonsPanelFeedEnd, actuatorIdProperty).bind();
     }
 
     @SuppressWarnings("serial")
     private Action selectTemplateImageAction = new AbstractAction("Select") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	Camera camera = MainFrame
-            			.machineControlsPanel
-            			.getSelectedTool()
-            			.getHead()
-            			.getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel
-                        .setSelectedCamera(camera);
-                
+            UiUtils.messageBoxOnException(() -> {
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+
                 cameraView.setSelectionEnabled(true);
                 // org.openpnp.model.Rectangle r =
                 // feeder.getVision().getTemplateImageCoordinates();
@@ -442,31 +388,24 @@ public class ReferenceDragFeederConfigurationWizard extends
                 }
                 btnChangeTemplateImage.setAction(confirmSelectTemplateImageAction);
                 cancelSelectTemplateImageAction.setEnabled(true);
-        	});
+            });
         }
     };
 
     @SuppressWarnings("serial")
-    private Action confirmSelectTemplateImageAction = new AbstractAction(
-            "Confirm") {
+    private Action confirmSelectTemplateImageAction = new AbstractAction("Confirm") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	Camera camera = MainFrame
-            			.machineControlsPanel
-            			.getSelectedTool()
-            			.getHead()
-            			.getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel
-                        .setSelectedCamera(camera);
-                
+            UiUtils.messageBoxOnException(() -> {
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+
                 BufferedImage image = cameraView.captureSelectionImage();
                 if (image == null) {
-                    MessageBoxes
-                            .errorBox(
-                                    ReferenceDragFeederConfigurationWizard.this,
-                                    "No Image Selected",
-                                    "Please select an area of the camera image using the mouse.");
+                    MessageBoxes.errorBox(ReferenceDragFeederConfigurationWizard.this,
+                            "No Image Selected",
+                            "Please select an area of the camera image using the mouse.");
                 }
                 else {
                     labelTemplateImage.setIcon(new ImageIcon(image));
@@ -474,28 +413,23 @@ public class ReferenceDragFeederConfigurationWizard extends
                 cameraView.setSelectionEnabled(false);
                 btnChangeTemplateImage.setAction(selectTemplateImageAction);
                 cancelSelectTemplateImageAction.setEnabled(false);
-        	});
+            });
         }
     };
 
     @SuppressWarnings("serial")
-    private Action cancelSelectTemplateImageAction = new AbstractAction(
-            "Cancel") {
+    private Action cancelSelectTemplateImageAction = new AbstractAction("Cancel") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	Camera camera = MainFrame
-            			.machineControlsPanel
-            			.getSelectedTool()
-            			.getHead()
-            			.getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel
-                        .setSelectedCamera(camera);
-                
+            UiUtils.messageBoxOnException(() -> {
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+
                 btnChangeTemplateImage.setAction(selectTemplateImageAction);
                 cancelSelectTemplateImageAction.setEnabled(false);
                 cameraView.setSelectionEnabled(false);
-        	});
+            });
         }
     };
 
@@ -503,29 +437,23 @@ public class ReferenceDragFeederConfigurationWizard extends
     private Action selectAoiAction = new AbstractAction("Select") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	Camera camera = MainFrame
-            			.machineControlsPanel
-            			.getSelectedTool()
-            			.getHead()
-            			.getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel
-                        .setSelectedCamera(camera);
-                
+            UiUtils.messageBoxOnException(() -> {
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+
                 btnChangeAoi.setAction(confirmSelectAoiAction);
                 cancelSelectAoiAction.setEnabled(true);
 
                 cameraView.setSelectionEnabled(true);
-                org.openpnp.model.Rectangle r = feeder.getVision()
-                        .getAreaOfInterest();
+                org.openpnp.model.Rectangle r = feeder.getVision().getAreaOfInterest();
                 if (r == null || r.getWidth() == 0 || r.getHeight() == 0) {
                     cameraView.setSelection(0, 0, 100, 100);
                 }
                 else {
-                    cameraView.setSelection(r.getX(), r.getY(), r.getWidth(),
-                            r.getHeight());
+                    cameraView.setSelection(r.getX(), r.getY(), r.getWidth(), r.getHeight());
                 }
-        	});
+            });
         }
     };
 
@@ -533,15 +461,11 @@ public class ReferenceDragFeederConfigurationWizard extends
     private Action confirmSelectAoiAction = new AbstractAction("Confirm") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	Camera camera = MainFrame
-            			.machineControlsPanel
-            			.getSelectedTool()
-            			.getHead()
-            			.getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel
-                        .setSelectedCamera(camera);
-                
+            UiUtils.messageBoxOnException(() -> {
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
 
@@ -551,13 +475,11 @@ public class ReferenceDragFeederConfigurationWizard extends
                     public void run() {
                         textFieldAoiX.setText(Integer.toString(rect.x));
                         textFieldAoiY.setText(Integer.toString(rect.y));
-                        textFieldAoiWidth.setText(Integer
-                                .toString(rect.width));
-                        textFieldAoiHeight.setText(Integer
-                                .toString(rect.height));
+                        textFieldAoiWidth.setText(Integer.toString(rect.width));
+                        textFieldAoiHeight.setText(Integer.toString(rect.height));
                     }
                 });
-        	});
+            });
         }
     };
 
@@ -565,21 +487,17 @@ public class ReferenceDragFeederConfigurationWizard extends
     private Action cancelSelectAoiAction = new AbstractAction("Cancel") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	Camera camera = MainFrame
-            			.machineControlsPanel
-            			.getSelectedTool()
-            			.getHead()
-            			.getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel
-                        .setSelectedCamera(camera);
-                
+            UiUtils.messageBoxOnException(() -> {
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
                 cameraView.setSelectionEnabled(false);
-        	});
+            });
         }
     };
 }

@@ -4,7 +4,7 @@ import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConf
 
 public class OpenBuildsDriverWizard extends AbstractSerialPortDriverConfigurationWizard {
     private final OpenBuildsDriver driver;
-    
+
     public OpenBuildsDriverWizard(OpenBuildsDriver driver) {
         super(driver);
         this.driver = driver;

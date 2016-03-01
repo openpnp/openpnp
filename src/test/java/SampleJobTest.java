@@ -28,17 +28,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.Files;
 
 public class SampleJobTest {
-    private final static Logger logger = LoggerFactory
-            .getLogger(TestDriver.class);
+    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
 
     /**
-     * Loads the pnp-test job that is included in the samples and attempts
-     * to run it within a test harness. The job is expected to complete
-     * successfully without throwing any exceptions.
+     * Loads the pnp-test job that is included in the samples and attempts to run it within a test
+     * harness. The job is expected to complete successfully without throwing any exceptions.
      * 
-     * This test is intended to exercise the basic job processing functions,
-     * image processing, vision, feeder handling and fiducial handling. It's
-     * intended to act as a smoke test for large changes.
+     * This test is intended to exercise the basic job processing functions, image processing,
+     * vision, feeder handling and fiducial handling. It's intended to act as a smoke test for large
+     * changes.
      */
     @Test
     public void testSampleJob() throws Exception {
@@ -53,13 +51,13 @@ public class SampleJobTest {
 
         NullDriver driver = (NullDriver) machine.getDriver();
         driver.setFeedRateMmPerMinute(0);
-        
-        Camera camera =  machine.getDefaultHead().getDefaultCamera();
-//        File videoFile = new File("target");
-//        videoFile = new File(videoFile, "SampleJobTest.mp4");
-//        MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
-//        camera.startContinuousCapture(encoder, 25);
-        
+
+        Camera camera = machine.getDefaultHead().getDefaultCamera();
+        // File videoFile = new File("target");
+        // videoFile = new File(videoFile, "SampleJobTest.mp4");
+        // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
+        // camera.startContinuousCapture(encoder, 25);
+
         TestCompleteNotifier notifier = new TestCompleteNotifier();
 
         JobProcessor jobProcessor = machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace);
@@ -77,18 +75,16 @@ public class SampleJobTest {
             jobProcessor.start();
             notifier.wait();
         }
-//        camera.stopContinuousCapture(encoder);
-//        encoder.finish();
+        // camera.stopContinuousCapture(encoder);
+        // encoder.finish();
         if (notifier.failed) {
             throw notifier.exception;
         }
     }
 
-    public static class SampleJobTestJobProcessorDelegate implements
-            JobProcessorDelegate {
+    public static class SampleJobTestJobProcessorDelegate implements JobProcessorDelegate {
         @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part,
-                Feeder feeder) {
+        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
             return null;
         }
     }
@@ -101,8 +97,7 @@ public class SampleJobTest {
         }
 
         @Override
-        public void jobLoaded(Job job) {
-        }
+        public void jobLoaded(Job job) {}
 
         @Override
         public void jobStateChanged(JobState state) {
@@ -123,64 +118,59 @@ public class SampleJobTest {
         }
 
         @Override
-        public void partProcessingStarted(BoardLocation board,
-                Placement placement) {
+        public void partProcessingStarted(BoardLocation board, Placement placement) {
             logger.info("Start " + placement.getId());
         }
 
         @Override
-        public void partPicked(BoardLocation board, Placement placement) {
-        }
+        public void partPicked(BoardLocation board, Placement placement) {}
 
         @Override
-        public void partPlaced(BoardLocation board, Placement placement) {
-        }
+        public void partPlaced(BoardLocation board, Placement placement) {}
 
         @Override
-        public void partProcessingCompleted(BoardLocation board,
-                Placement placement) {
+        public void partProcessingCompleted(BoardLocation board, Placement placement) {
             logger.info("Finish " + placement.getId());
         }
 
         @Override
-        public void detailedStatusUpdated(String status) {
-        }
+        public void detailedStatusUpdated(String status) {}
     }
-    
+
     public static class TestCompleteNotifier {
         public boolean failed;
         public Exception exception;
     }
-    
+
     public static class MpegEncodingCameraListener implements CameraListener {
-    	private SequenceEncoder enc;
-    	private boolean finished = false;
-    	
-    	public MpegEncodingCameraListener(File file) throws Exception {
+        private SequenceEncoder enc;
+        private boolean finished = false;
+
+        public MpegEncodingCameraListener(File file) throws Exception {
             enc = new SequenceEncoder(file);
-    	}
-    	
-		@Override
-		public synchronized void frameReceived(BufferedImage img) {
-			if (finished) {
-				return;
-			}
-			try {
-				Graphics g =  img.getGraphics();
-				g.setColor(Color.white);
-				g.drawLine(0, img.getHeight() / 2, img.getWidth(), img.getHeight() / 2);
-				g.drawLine(img.getWidth() / 2, 0, img.getWidth() / 2, img.getHeight());
-				g.dispose();
-	    		enc.encodeImage(img);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-		public synchronized void finish() throws Exception {
-			finished = true;
-			enc.finish();
-		}
+        }
+
+        @Override
+        public synchronized void frameReceived(BufferedImage img) {
+            if (finished) {
+                return;
+            }
+            try {
+                Graphics g = img.getGraphics();
+                g.setColor(Color.white);
+                g.drawLine(0, img.getHeight() / 2, img.getWidth(), img.getHeight() / 2);
+                g.drawLine(img.getWidth() / 2, 0, img.getWidth() / 2, img.getHeight());
+                g.dispose();
+                enc.encodeImage(img);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public synchronized void finish() throws Exception {
+            finished = true;
+            enc.finish();
+        }
     }
 }

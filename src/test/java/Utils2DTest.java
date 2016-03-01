@@ -95,7 +95,8 @@ public class Utils2DTest {
             throws Exception {
         if (value > target + plusMinus) {
             throw new Exception(name + " " + value + " is greater than " + (target + plusMinus));
-        } else if (value < target - plusMinus) {
+        }
+        else if (value < target - plusMinus) {
             throw new Exception(name + " " + value + " is less than " + (target - plusMinus));
         }
     }

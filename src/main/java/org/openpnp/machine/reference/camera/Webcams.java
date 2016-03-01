@@ -83,7 +83,8 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         try {
             BufferedImage img = webcam.getImage();
             return transformImage(img);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return null;
         }
     }
@@ -108,12 +109,14 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
                     image = redImage;
                 }
                 broadcastCapture(image);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
             try {
                 Thread.sleep(1000 / 30);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 break;
             }
         }
@@ -129,7 +132,8 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             thread.interrupt();
             try {
                 thread.join();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
             thread = null;
@@ -152,7 +156,8 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             if (forceGray) {
                 webcam.setImageTransformer(this);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return;
         }
@@ -205,7 +210,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard()) };
+                new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
 
@@ -231,7 +236,8 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             thread.interrupt();
             try {
                 thread.join();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
 
             }
             webcam.close();
