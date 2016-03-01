@@ -78,6 +78,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Attribute(required=false)
     protected int offsetY = 0;
     
+    @Attribute(required=false)
+    protected double zoom = 1;
+    
     @Element(required=false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
     
@@ -178,12 +181,37 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         
         // apply affine transformations
         if (rotation != 0) {
-            // TODO: Fix cropping of rotated image:
-            // http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
-            Point center = new Point(mat.width() / 2D, mat.height() / 2D);
-            Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
-            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-	    mapMatrix.release();
+		double rot = rotation;
+		                rot+=45;
+                if(rot<0) { rot+=360; }
+
+                if(rot>=90*3) {
+                        // rotate 90º clockwise
+                        Core.flip(mat.t(), mat, 1);
+                        rot-=90*3;
+                }
+
+                if(rot>=90*2) {
+                        // rotate 180º 
+                        Core.flip(mat, mat, -1);
+                        rot-=90*2;
+                }
+
+                if(rot>=90*1) {
+                        // rotate 90º counter-clockwise
+                        Core.flip(mat.t(), mat, 0);
+                        rot-=90*1;
+                }
+                rot -= 45;
+                if(rot>180.) { rot-=360; }
+                if(rot>13.||rot<-13.) { rot=0.; }
+
+		if(rot!=0.) {
+            		Point center = new Point(mat.width() / 2D, mat.height() / 2D);
+            		Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rot, 1.0);
+            		Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+	    		mapMatrix.release();
+		}
         }
         
         if (offsetX != 0 || offsetY != 0) {
@@ -205,12 +233,19 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             else {
                 flipCode = flipX ? 0 : 1;
             }
-            Mat dst = new Mat();
-            Core.flip(mat, dst, flipCode);
-            mat = dst;
+            Core.flip(mat, mat, flipCode);
         }
         
-        image = OpenCvUtils.toBufferedImage(mat);
+	if(zoom>1.0) {
+		int w=(int)((double)mat.width()/zoom+.5);
+		int h=(int)((double)mat.height()/zoom+.5);
+        	image = OpenCvUtils.toBufferedImage(mat.submat(
+				(mat.width()-w)/2,(mat.height()-h)/2,
+		                (mat.width()+w)/2,(mat.height()+h)/2
+		));
+	} else {
+        	image = OpenCvUtils.toBufferedImage(mat);
+	}
        	mat.release(); 
         return image;
     }
