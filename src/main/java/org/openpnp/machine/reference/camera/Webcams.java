@@ -68,7 +68,9 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         return GRAY.filter(image, null);
     }
 
-    Webcams() {}
+    public Webcams() {
+
+    }
 
     @Override
     public synchronized BufferedImage capture() {
