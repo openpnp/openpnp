@@ -79,8 +79,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.JobProcessor;
 
 /**

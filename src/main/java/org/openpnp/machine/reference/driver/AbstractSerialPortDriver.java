@@ -8,17 +8,17 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.Icon;
 
-import jssc.SerialPort;
-import jssc.SerialPortException;
-import jssc.SerialPortList;
-import jssc.SerialPortTimeoutException;
-
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.model.Location;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jssc.SerialPort;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
+import jssc.SerialPortTimeoutException;
 /**
  * A base class for basic SerialPort based Drivers. Includes functions
  * for connecting, disconnecting, reading and sending lines. 

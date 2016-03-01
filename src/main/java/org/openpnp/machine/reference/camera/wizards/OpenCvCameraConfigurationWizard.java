@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.Color;
 
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;

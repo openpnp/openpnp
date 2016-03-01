@@ -27,7 +27,6 @@ import java.awt.event.ActionListener;
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;

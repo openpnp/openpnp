@@ -37,7 +37,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -73,7 +72,6 @@ import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
-import com.google.common.util.concurrent.FutureCallback;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;

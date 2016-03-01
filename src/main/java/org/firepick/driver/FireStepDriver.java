@@ -54,10 +54,6 @@ import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-
 
 public class FireStepDriver extends AbstractSerialPortDriver implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(FireStepDriver.class);

@@ -24,8 +24,6 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -49,9 +47,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.reticle.OutlineReticle;
-import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;

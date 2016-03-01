@@ -51,7 +51,6 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;

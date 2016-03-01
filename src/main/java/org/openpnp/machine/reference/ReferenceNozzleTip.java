@@ -1,18 +1,14 @@
 package org.openpnp.machine.reference;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JComponent;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;

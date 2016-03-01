@@ -33,20 +33,12 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
+import com.github.sarxos.webcam.WebcamDiscoveryEvent;
+import com.github.sarxos.webcam.WebcamDiscoveryListener;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import java.awt.Dimension;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
-
-import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamDiscoveryEvent;
-import com.github.sarxos.webcam.WebcamDiscoveryListener;
 
 
 

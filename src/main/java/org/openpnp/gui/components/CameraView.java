@@ -59,9 +59,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;

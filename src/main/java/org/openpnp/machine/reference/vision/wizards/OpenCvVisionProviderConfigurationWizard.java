@@ -21,11 +21,11 @@
 
 package org.openpnp.machine.reference.vision.wizards;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.OpenCvVisionProvider;
-import javax.swing.JLabel;
 
 @SuppressWarnings("serial")
 public class OpenCvVisionProviderConfigurationWizard extends AbstractConfigurationWizard {

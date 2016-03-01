@@ -1,7 +1,7 @@
 import org.junit.Test;
+import org.openpnp.model.Board.Side;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Board.Side;
 import org.openpnp.util.Utils2D;
 
 public class Utils2DTest {

@@ -23,8 +23,6 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
@@ -51,9 +49,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ClassSelectionDialog;
-import org.openpnp.gui.components.reticle.OutlineReticle;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -63,7 +59,6 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Outline;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
