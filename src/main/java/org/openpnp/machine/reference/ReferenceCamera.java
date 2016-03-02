@@ -30,6 +30,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
@@ -79,7 +80,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     protected int offsetY = 0;
     
     @Attribute(required=false)
-    protected double zoom = 1;
+    protected double zoom = 0;
+    @Attribute(required=false)
+    protected double ratio = 1;
     
     @Element(required=false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
@@ -228,16 +231,23 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Core.flip(mat, mat, flipCode);
         }
         
-	if(zoom>1.0) {
+        
+        { double scale = zoom; if (scale<0) { scale=-scale; }
+	  if(scale>1.0) {
 		int w=(int)((double)mat.width()/zoom+.5);
-		int h=(int)((double)mat.height()/zoom+.5);
-        	image = OpenCvUtils.toBufferedImage(mat.submat(
-				(mat.width()-w)/2,(mat.height()-h)/2,
-		                (mat.width()+w)/2,(mat.height()+h)/2
-		));
-	} else {
+		int h=(int)((double)mat.height()/zoom*ratio+.5);
+		int x=(mat.width()-w)/2;
+                int y=(mat.height()-h)/2;
+          	Mat img = new Mat(mat,new Rect(x,y,w,h));
+          	if(zoom<0.) {
+    			Imgproc.resize(img, img, mat.size());
+          	}
+	  	image = toBufferedImage(img);
+	  	img.release();
+	  } else {
         	image = OpenCvUtils.toBufferedImage(mat);
-	}
+	  }
+        }
        	mat.release(); 
         return image;
     }
