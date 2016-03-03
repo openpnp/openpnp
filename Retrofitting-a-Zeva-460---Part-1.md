@@ -22,8 +22,6 @@ mm.
 I have chosen TinyG. There are few shortcomings with it. There are a very limited number of ports output or input. Also a member from Openpnp group told me that tinyg does not report back when finises a movement instruction and therefore dwell commands are not that efficient.  
 I have modified a bit the code for TinyG in order to have separate commands for spindle M4-M5, spindle_dir M10-M11 and coolant M8-M9.
 I still need some outputs for "Tape Knock", component 90 degrees rotation and mechanical centering...   
-
-
 I plan for next release to move on Smoothie. In the past I have made some pcb's for this and I have developed easy modules for it.  MAin advantage of smoothie would be the fact that allows a large number of inputs and outputs.  
 For this retrofit are needed a lot of outputs (Example nozzle change , mechanical centering etc)
 
