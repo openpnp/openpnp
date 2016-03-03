@@ -1,16 +1,16 @@
 This page it's on his very early stages. Please come back on some time. Also please bare in mind that English it's not my mother tongue - positive criticism it's welcome.
 
-First of all I would like to give a big thank you to Jason and guys from group that helped me. I would like to thank you Christophe from TinyG forum that has given me for free a pcb for his CncBooster - a Tinyg board driverless (with this board I am running now)
+First of all I would like to give a big thank you to Jason and guys from group that helped me without their help I would not have been reached this point. I would like to thank you Christophe from TinyG forum that has given me for free a pcb for his CncBooster - a Tinyg board driverless (with this board I am running now).
 
 You will see from description that retrofit that I have realized it's on his early stages but functional. Will follow some other parts that will enhance machine functionality.
 I will try to describe it as general as possible to make this page a guideline for similar machine.
 
 1. Get documentation on your machine  
-For this I have subscribed to  https://ca.groups.yahoo.com/neo/groups/zevatech/info . In section files you will find documentation for Zeva PM460.
+For this I have subscribed to  https://ca.groups.yahoo.com/neo/groups/zevatech/info . In section files you will find documentation for Zeva PM460 (and also other Zeva machines).
 
 2. Identify motion control system and transmission type/raport  
-Zeva uses 5 phase stepper motors for X and Y Axis. Those have 0,72 degrees per step. Since original drives where supposed to require as input a quadrature signal , I have changed the original driver with newer ones that accept step and dir signal and happens to have lower micro-stepping and require supply to 220v.(to do add details on those).  
-After a little more research on datasheet of new drivers I have realized that older ones may accept as driving input step & dir as well (it's just a micro-switch setting)  
+Zeva uses 5 phase stepper motors for X and Y Axis. Those motors have 0,72 degrees per step. Since original drives where supposed to require as input a quadrature signal , following suggestion from a fellow that does the same retrofitting I have changed the original driver with newer ones RKD514L-C. The biggest advantage for new stepper drivers is that you may find documentation and also that are accepting step and dir input signals ,  + happens to have lower micro-stepping + require supply to 220v.  
+After a little more research on datasheet of new drivers I have realized that older ones may accept as driving input step & dir as well (it's just a micro-switch setting) so if someone would like to make a fast start (or cheaper), you may leave this as they are.     
 On both axis are same number of teeth at pulleys (just on Y axis pulleys are wider but same no of teeth). Small pulley that is on motor shaft has 15 teeth. Big pulley has 36 teeth  and the pulley that drives the effective transmission belt has 20 teeth.   
 Making a simple calculation results an equivalent stepper motor with 0.3 degrees per step.
 Machine uses transmission belt with a pitch of 3mm HTD + 0.3 degrees per step results a 0.05 mm / step.
@@ -20,10 +20,10 @@ mm.
 
 3. Decide on your motion control  
 I have chosen TinyG. There are few shortcomings with it. There are a very limited number of ports output or input. Also a member from Openpnp group told me that tinyg does not report back when finises a movement instruction and therefore dwell commands are not that efficient.  
-I have modified a bit the code for TinyG in order to have separate commands for spindle M4-M5, spindle_dir M10-M11 and coolant M8-M9.
+I have modified a bit the code for TinyG in order to have separate commands for spindle M4-M5, spindle_dir M10-M11 and coolant M8-M9. (to do upload on git my release of TinyG)
 I still need some outputs for "Tape Knock", component 90 degrees rotation and mechanical centering...   
-I plan for next release to move on Smoothie. In the past I have made some pcb's for this and I have developed easy modules for it.  MAin advantage of smoothie would be the fact that allows a large number of inputs and outputs.  
-For this retrofit are needed a lot of outputs (Example nozzle change , mechanical centering etc)
+I plan for next release to move on Smoothie. In the past I have made some pcb's for this and I have developed easy modules for it.  Main advantage of smoothie would be the fact that allows a large number of inputs and outputs.  
+For this retrofit are needed a lot of outputs (Example nozzle change , mechanical centering etc)  
 
 4. Add vision camera  
 In this moment OpenPnP support only uplooking camera. Following some advices from liteplacer forum I have bought an Andonstar endoscope camera.  Generally has a good quality image and has a nice focus feature , however I am fully satisfied about this : if you move the cable that gets in, image will rotate and get out of focus.   
