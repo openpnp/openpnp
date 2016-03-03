@@ -28,15 +28,12 @@ For this retrofit are needed a lot of outputs (Example nozzle change , mechanica
 4. Add vision camera  
 In this moment OpenPnP support only uplooking camera. Following some advices from liteplacer forum I have bought an Andonstar endoscope camera.  Generally has a good quality image and has a nice focus feature , however I am fully satisfied about this : if you move the cable that gets in, image will rotate and get out of focus.   
 Good thing it's that camera comes as a simple replacement for machine existent "laser pointer".
-
-![andonstar endoscope camera adaptor](https://plus.google.com/107318571191916561952/posts/1o2khV81xyJ)
-
-![andonstar camera mounted on placement head](https://plus.google.com/107318571191916561952/posts/fz586b5sAUt)  
-
+ ![andonstar endoscope camera adaptor](https://plus.google.com/107318571191916561952/posts/1o2khV81xyJ)
+ ![andonstar camera mounted on placement head](https://plus.google.com/107318571191916561952/posts/fz586b5sAUt)  
 5. Integrate motion control with existing machine electronics  
 I am talking here about movement signals, endstop optocouplers and drive signals for penumatic valves.
 All pneumatic valves are at 24v. I have used for driving those an ULN2807 connected over board (to do add pictures).
-For connecting machine's optocouplers I have connected to existing board with some 1n4148 diodes to avoid to inject 24v in tinyg board.
+For connecting machine's optocouplers I have connected to existing board with some 1n4148 diodes to avoid to inject 24v in tinyg board.  
 
 6. Modified a bit OpenPnp TinyGDriver to support pneumatic movement  
 It's a simple new class called TinyGDriverZPneumatic.    
@@ -44,8 +41,10 @@ Note about Pneumatic Z : Initially I was very sorry that my machine does not hav
 
 To do next : 
 * implement original feeders. This seems to be pretty easy. I just have to trigger a pneumatic ventil for "Tape Knock" just that I don't have that output port available.
+* implement mechanical centering while movement (this has to be synchronized with movement)
 * add a stepper motor for rotation. This is needed since machine originally was supporting only rotation by 90 degrees. I need to rotate at 45 degrees for one of my boards.
 * make a new electronic to support a large number of outputs and inputs. I am considering Smoothie since I have some experience on it or Ting2 due to his S curve ramping motors driving.  
 * support multiple nozzles/meaning to drive nozzle changer - this requires a new electronic
 * add stepper on Z - I am not convinced anymore about this
 * add uplooking camera - when OpenPnP will have it
+* implement a flying vision? - too futuristic for now - I will try to use mechanical or uplooking camera ..
