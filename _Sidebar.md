@@ -12,5 +12,5 @@ OpenPnP
 * [Importing Centroid Data](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data)
 * [Developer's Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide)
 * [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ)
-* [Retrofitting a Zeva 460]https://github.com/openpnp/openpnp/wiki/Retrofitting-a-Zeva-460---Part-1)
+* [Retrofitting a Zeva 460](https://github.com/openpnp/openpnp/wiki/Retrofitting-a-Zeva-460---Part-1)
 
