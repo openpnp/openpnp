@@ -6,17 +6,19 @@ I will try to describe it as general as possible to make this page a guideline f
 For this I have subscribed to  https://ca.groups.yahoo.com/neo/groups/zevatech/info . In section files you will find documentation for Zeva PM460.
 
 2. Identify motion control system and transmission type/raport  
-Zeva uses 5 phase stepper motors for X and Y Axis. Those have 0,72 degrees per step. I have changed the original driver with newer ones that happens to have lower micro-stepping and require supply to 220v.(to do add details on those).   
+Zeva uses 5 phase stepper motors for X and Y Axis. Those have 0,72 degrees per step. Since original drives where supposed to require as input a quadrature signal , I have changed the original driver with newer ones that accept step and dir signal and happens to have lower micro-stepping and require supply to 220v.(to do add details on those).  
+After a little more research on datasheet of new drivers I have realized that older ones may accept as driving input step & dir as well (it's just a micro-switch setting)  
 On both axis are same number of teeth at pulleys (just on Y axis pulleys are wider but same no of teeth). Small pulley that is on motor shaft has 15 teeth. Big pulley has 36 teeth  and the pulley that drives the effective transmission belt has 20 teeth.   
 Making a simple calculation results an equivalent stepper motor with 0.3 degrees per step.
 Machine uses transmission belt with a pitch of 3mm HTD + 0.3 degrees per step results a 0.05 mm / step.
-Drivers that I have now support large microstepping but I have used only 1/8 so results the smaller step of 0.00625
+Drivers that I have now support large micro-stepping but I have used only 1/8 so results the smaller step of 0.00625
 mm.  
 
 
 3. Decide on your motion control  
 I have chosen TinyG. There are few shortcomings with it. There are a very limited number of ports output or input. Also a member from Openpnp group told me that tinyg does not report back when finises a movement instruction and therefore dwell commands are not that efficient.  
-I plan for next release to move on Smoothie. In the past I have made some pcb's for this and I have developed easy modules for it.
+I plan for next release to move on Smoothie. In the past I have made some pcb's for this and I have developed easy modules for it.  MAin advantage of smoothie would be the fact that allows a large number of inputs and outputs.  
+For this retrofit are needed a lot of outputs (Example nozzle change , mechanical centering etc)
 
 4. Add vision camera  
 In this moment OpenPnP support only uplooking camera. Following some advices from liteplacer forum I have bought an Andonstar endoscope camera.  Generally has a good quality image and has a nice focus feature , however I am fully satisfied about this : if you move the cable that gets in, image will rotate and get out of focus.   
