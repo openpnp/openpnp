@@ -25,7 +25,8 @@ The following Gcodes are currently sent by the driver:
 
 Function      | Gcode
 ------------- | -------------
-Home          | G92 X Y Z A
+Home          | G28.2 X0 Y0 Z0 A0
+Zero Coords.  | G92 X Y Z A
 Move          | G1 X Y Z A F
 Pick          | M4
 Place         | M5
