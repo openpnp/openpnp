@@ -1,4 +1,4 @@
-This page it's on his very early stages. Please come back on some time.
+This page it's on his very early stages. Please come back on some time. Also please bare in mind that English it's not my mother tongue - positive criticism it's welcome.
 
 First of all I would like to give a big thank you to Jason and guys from group that helped me. I would like to thank you Christophe from TinyG forum that has given me for free a pcb for his CncBooster - a Tinyg board driverless (with this board I am running now)
 
