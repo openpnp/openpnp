@@ -84,6 +84,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                 // {"r":{"fv":0.950,"f":[1,0,10,2853]}}
                 connectedVersion = response.get("r").getAsJsonObject().get("fv").getAsDouble();
                 connected = true;
+                response = sendCommand("{\"qv\":0}", 500);
                 break;
             }
             catch (Exception e) {
@@ -132,8 +133,12 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void home(ReferenceHead head) throws Exception {
-        // TODO: figure out how to home
-        // sendCommand("G28.2");
+        synchronized (movementWaitLock) {
+            JsonObject response = sendCommand("G28.2 X0 Y0 Z0 A0");
+            if (getResponseStatusCode(response) == 0) {
+                waitForMovementComplete();
+            }
+        }
 
         // TODO: This homeLocation really needs to be Head specific.
         Location homeLocation = this.homeLocation.convertToUnits(LengthUnit.Millimeters);
