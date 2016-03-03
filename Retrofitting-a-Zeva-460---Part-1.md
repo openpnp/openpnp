@@ -1,4 +1,7 @@
 This page it's on his very early stages. Please come back on some time.
+
+First of all I would like to give a big thank you to Jason and guys from group that helped me. I would like to thank you Christophe from TinyG forum that has given me for free a pcb for his CncBooster - a Tinyg board driverless (with this board I am running now)
+
 You will see from description that retrofit that I have realized it's on his early stages but functional. Will follow some other parts that will enhance machine functionality.
 I will try to describe it as general as possible to make this page a guideline for similar machine.
 
@@ -17,6 +20,10 @@ mm.
 
 3. Decide on your motion control  
 I have chosen TinyG. There are few shortcomings with it. There are a very limited number of ports output or input. Also a member from Openpnp group told me that tinyg does not report back when finises a movement instruction and therefore dwell commands are not that efficient.  
+I have modified a bit the code for TinyG in order to have separate commands for spindle M4-M5, spindle_dir M10-M11 and coolant M8-M9.
+I still need some outputs for "Tape Knock", component 90 degrees rotation and mechanical centering...   
+
+
 I plan for next release to move on Smoothie. In the past I have made some pcb's for this and I have developed easy modules for it.  MAin advantage of smoothie would be the fact that allows a large number of inputs and outputs.  
 For this retrofit are needed a lot of outputs (Example nozzle change , mechanical centering etc)
 
@@ -28,5 +35,19 @@ Good thing it's that camera comes as a simple replacement for machine existent "
 
 ![andonstar camera mounted on placement head](https://plus.google.com/107318571191916561952/posts/fz586b5sAUt)  
 
-4. Integrate motion control with existing machine electronics  
+5. Integrate motion control with existing machine electronics  
 I am talking here about movement signals, endstop optocouplers and drive signals for penumatic valves.
+All pneumatic valves are at 24v. I have used for driving those an ULN2807 connected over board (to do add pictures).
+For connecting machine's optocouplers I have connected to existing board with some 1n4148 diodes to avoid to inject 24v in tinyg board.
+
+6. Modified a bit OpenPnp TinyGDriver to support pneumatic movement  
+It's a simple new class called TinyGDriverZPneumatic.    
+Note about Pneumatic Z : Initially I was very sorry that my machine does not have stepper motor on Z. Now I like it so much that I don't want to change it anymore ! 
+
+To do next : 
+* implement original feeders. This seems to be pretty easy. I just have to trigger a pneumatic ventil for "Tape Knock" just that I don't have that output port available.
+* add a stepper motor for rotation. This is needed since machine originally was supporting only rotation by 90 degrees. I need to rotate at 45 degrees for one of my boards.
+* make a new electronic to support a large number of outputs and inputs. I am considering Smoothie since I have some experience on it or Ting2 due to his S curve ramping motors driving.  
+* support multiple nozzles/meaning to drive nozzle changer - this requires a new electronic
+* add stepper on Z - I am not convinced anymore about this
+* add uplooking camera - when OpenPnP will have it
