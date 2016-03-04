@@ -1,5 +1,6 @@
 /*
  	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ 	Copyright (C) 2016 cri-s <phone.cri@gmail.com>
  	
  	This file is part of OpenPnP.
  	
@@ -28,9 +29,7 @@ import java.io.IOException;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
@@ -75,9 +74,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     @Attribute(required=false)
     protected int offsetX = 0;
-    
     @Attribute(required=false)
     protected int offsetY = 0;
+    @Attribute(required=false)
+    protected int sizeX = 0;
+    @Attribute(required=false)
+    protected int sizeY = 0;
     
     @Attribute(required=false)
     protected double zoom = 0;
@@ -177,47 +179,68 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
 	protected BufferedImage transformImage(BufferedImage image) {
 	    Mat mat = OpenCvUtils.toMat(image);
-	    
+		if(mat.empty()||mat.nativeObj==0) { return image;}
+
         mat = calibrate(mat);
         
         mat = undistort(mat);
         
-     // apply affine transformations
+        // apply affine transformations
         if (rotation != 0) {
-                double rot = rotation;  // local variable that can be changed
-                if(rot<0) { rot+=360; } // only positive quadrant
-                int quadrant = (int) (rot/90.+.5);
-                rot -= quadrant*90;
+		double rot = rotation;	// local variable that can be changed
+		if(rot<0) { rot+=360; }	// only positive quadrant
+		int quadrant = (int) (rot/90.+.5);
+		rot -= quadrant*90;
 
-                switch(quadrant) {
-                        case 3:
-                                Core.flip(mat.t(), mat, 1);
-                                break;
-                        case 2:
-                                Core.flip(mat, mat, -1);
-                                break;
-                        case 1:
-                                Core.flip(mat.t(), mat, 0);
-                                break;
-                }
-
-                if(rot!=0.) {
-                        Point center = new Point(mat.width() / 2D, mat.height() / 2D);
-                        Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rot, 1.0);
-                        Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-                        mapMatrix.release();
-                }
-        }
+		switch(quadrant) {
+			case 3:		
+				Core.flip(mat.t(), mat, 1);
+				break;
+			case 2:
+				Core.flip(mat, mat, -1);
+				break;
+			case 1:
+				Core.flip(mat.t(), mat, 0);
+				break;
+		}
+		
+		if(rot!=0.) {
+            		Point center = new Point(mat.width() / 2D, mat.height() / 2D);
+            		Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rot, 1.0);
+            		Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+	    		mapMatrix.release();
+		}
+	}
         
-        if (offsetX != 0 || offsetY != 0) {
-            Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
-                {
-                    put(0, 0, 1, 0, offsetX);
-                    put(1, 0, 0, 1, offsetY);
-                }
-            };
-            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-            mapMatrix.release();
+	if(zoom>1.0) {
+		sizeX =(int)((double)mat.width()/zoom+.5);
+		sizeY =(int)((double)mat.height()/zoom*ratio+.5);
+		offsetX = (mat.width ()-sizeX)/2;
+		offsetY = (mat.height()-sizeY)/2;
+	}
+
+        if (offsetX != 0 || offsetY != 0 || sizeX !=0 || sizeY !=0) {
+	    int w = sizeX, h = sizeY;
+	    if(w+offsetX>mat.width ()) { w=0; }
+	    if(h+offsetX>mat.height()) { h=0; }
+	    if(sizeX<0||sizeY<0) {
+		if(sizeX<0&&sizeY<0) { sizeX=sizeY=w=h=0; } // ERROR
+		if(sizeX<0) { w=h; }	// RECTANGULAR ROI
+		if(sizeY<0) { h=w; }	// RECTANGULAR ROI
+	    }
+	    if(w==0) { w=mat.width ()-offsetX; }
+	    if(h==0) { h=mat.height()-offsetY; }
+//	    mat = mat.submat(offsetX,offsetY,offsetX+w,offsetY+h);
+     	    mat = new Mat(mat,new Rect(offsetX,offsetY,w,h));
+	    if(sizeX<0||sizeY<0 && w>0 && h>0) {
+		final Scalar black = new Scalar(0,0,0);
+		final Scalar white = new Scalar(255,255,255);
+		Mat mask = new Mat(w,h, CvType.CV_8UC1);
+		mask.setTo(white);
+		Core.circle(mask,new Point(w/2,h/2),w/2,black,-1);
+		mat.setTo(black,mask);
+		mask.release();
+	    }
         }
 
         if (flipX || flipY) {
@@ -231,23 +254,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Core.flip(mat, mat, flipCode);
         }
         
-        
-        { double scale = zoom; if (scale<0) { scale=-scale; }
-	  if(scale>1.0) {
-		int w=(int)((double)mat.width()/zoom+.5);
-		int h=(int)((double)mat.height()/zoom*ratio+.5);
-		int x=(mat.width()-w)/2;
-                int y=(mat.height()-h)/2;
-          	Mat img = new Mat(mat,new Rect(x,y,w,h));
-          	if(zoom<0.) {
-    			Imgproc.resize(img, img, mat.size());
-          	}
-	  	image = toBufferedImage(img);
-	  	img.release();
-	  } else {
-        	image = OpenCvUtils.toBufferedImage(mat);
-	  }
-        }
+        image = OpenCvUtils.toBufferedImage(mat);
+
        	mat.release(); 
         return image;
     }
