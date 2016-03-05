@@ -152,10 +152,11 @@ public class OpenCvVisionProvider implements VisionProvider {
             }
         });
 
-        saveDebugImage("template", templateMat);
-        saveDebugImage("camera", imageMat);
-        saveDebugImage("result", resultMat);
-        saveDebugImage("debug", debugMat);
+        long t = System.currentTimeMillis();
+        saveDebugImage(t + "_0_template", templateMat);
+        saveDebugImage(t + "_1_camera", imageMat);
+        saveDebugImage(t + "_2_result", resultMat);
+        saveDebugImage(t + "_3_debug", debugMat);
 
         return matches;
     }
