@@ -12,23 +12,15 @@ A fiducial in OpenPnP is defined by a package with a footprint that specifies wh
 
 ## Creating a Fiducial Package
 
-Currently, creating fiducials in OpenPnP is a manual process that requires editing the `packages.xml` configuration file. You only need to perform this process once per type of fiducial you use. This experience will improve in the future, but for now here is how you do it:
+You only need to perform this process once per type of fiducial you use.
 
-1. Close OpenPnP if it's running.
-2. Find your `packages.xml` and open it in your favorite text editor. For help finding the file see the [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located)
-3. Add a package definition to the file, following the syntax of the other packages in the file. Here is an example for a 1mm circle fiducial.
-    ```
-    <package id="FIDUCIAL-1X2">
-        <outline units="Millimeters"/>
-        <footprint units="Millimeters">
-          <pad name="1" x="0.0" y="0.0" width="1.0" height="1.0" rotation="0.0" roundness="100.0"/>
-        </footprint>
-    </package>
-    ```
-    This example contains a single pad, centered at 0,0 with a width of 1mm and a height of 1mm and a roundness of 100%, making this a circle.
-
-4. Once your package is defined, save the file and start OpenPnP. In the Packages tab you should see your new fiducial package. 
-5. Go to the Parts tab and create a new Part to represent your fiducial. This is the part you will assign to placements to represent fiducials on boards. Set it's package to the fiducial package you created.
+1. Create or select an existing Package from the Packages tab.
+2. On the right of the window you should see a Footprint tab. Select this and you will see the Footprint editor.
+3. Set the Body Width and Body Height to 0, and set the Units to the units of your Fiducial.
+4. Click the Add button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-add.svg) to add a new Pad. A Fiducial will typically have just one pad.
+5. Set the name of the Pad to anything you like. I typically just use "1".
+6. Set the X and Y position of the Pad to 0, and set the Width and Height to the diameter of the Fiducial. If the Fidicual is round set the Roundness to 100%. For example, a 1mm round fiducial would be defined as X = 0, Y = 0, Width = 1, Height = 1, Roundness = 100%.
+7. Go to the Parts tab and create a new Part to represent your fiducial. This is the part you will assign to placements to represent fiducials on boards. Set it's package to the fiducial package you created.
 
 ## Using Fiducials in Boards
 
