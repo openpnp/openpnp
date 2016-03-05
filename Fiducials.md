@@ -28,7 +28,7 @@ Once you have defined your fiducial part, package and footprint you are ready to
 
 For additional information on using your fiducials, please watch this video tutorial showing how to use fiducials: https://www.youtube.com/watch?v=xvmdvTroZj8
 
-## Debugging
+## Troubleshooting
 
 If OpenPnP is not finding your fiducials, try the following:
 
