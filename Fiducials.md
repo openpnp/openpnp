@@ -42,12 +42,14 @@ If OpenPnP is not finding your fiducials, try the following:
 
 1. Look at https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging to see how to turn on debug logging.
 2. Add 2 new lines to your log4j.properties file:
-```
-log4j.logger.org.openpnp.machine.reference.vision=debug
-log4j.logger.org.openpnp.vision=debug
-```
+
+    ```
+    log4j.logger.org.openpnp.machine.reference.vision=debug
+    log4j.logger.org.openpnp.vision=debug
+    ```
+
 3. Restart OpenPnP and try to run your fidicual check again.
 4. After you run it there will be a new directory in your `.openpnp` [directory](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) called `org.openpnp.machine.reference.vision.OpenCvVisionProvider` and under that directory will be some images. The images show the process of trying to find the fiducials.
 
-If you understand computer vision tasks a bit, take a look at the images and see if you can find any problems. Common problems are lighting and size related. If you can't, please post your images to [the OpenPnP mailing list](http://groups.google.com/group/openpnp) and someone will try to help.
+  If you understand computer vision tasks a bit, take a look at the images and see if you can find any problems. Common problems are lighting and size related. If you can't, please post your images to [the OpenPnP mailing list](http://groups.google.com/group/openpnp) and someone will try to help.
 
