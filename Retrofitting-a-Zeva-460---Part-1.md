@@ -1,12 +1,11 @@
-This page it's on his very early stages. Please come back on some time. Also please bare in mind that English it's not my mother tongue - positive criticism it's welcome.
+This page it's on his very early stages. Please come back on some time. Also please bare in mind that English it's not my mother tongue - positive criticism it's welcome.  
 
-First of all I would like to give a big thank you to Jason and guys from group that helped me. Without their help I would not have been reached this point. I would like to thank you as well to Christophe from TinyG forum that has given me for free a pcb of his CncBooster - a Tinyg board driverless (with this board I am running now).
+First of all I would like to give a big thank you to Jason and guys from group that helped me. Without their help I would not have been reached this point. I would like to thank you as well to Christophe from TinyG forum that has given me for free a pcb of his CncBooster - a Tinyg board driverless (with this board I am running now).  
 
 You will see from description that retrofit that I have realized it's on his early stages but functional. Will follow some other parts that will enhance machine functionality.
 I will try to describe it as general as possible to make this page a guideline for similar machine. 
 
 ![img_20160306_200118](https://cloud.githubusercontent.com/assets/670552/13561503/6f6f699c-e436-11e5-9353-78c87a3bfcb9.jpg)  
-
 1. Get documentation on your machine  
 For this I have subscribed to  https://ca.groups.yahoo.com/neo/groups/zevatech/info . In section files you will find documentation for Zeva PM460 (and also other Zeva machines).  
 
@@ -35,7 +34,6 @@ The same , Andonstar endoscope has a ring-led around objective : in order to avo
 Good thing it's that camera comes as a simple replacement for machine existent "laser pointer".
 ![endoscope and mounting adaptor](https://cloud.githubusercontent.com/assets/670552/13505265/1d5e9446-e181-11e5-8d32-328604c4e129.jpg)
 ![nozzle and camera impl](https://cloud.githubusercontent.com/assets/670552/13505269/2492ec58-e181-11e5-980e-b4803dbe5795.jpg)  
-
 5. Integrate motion control with existing machine electronics  
 I am talking here about movement signals, endstop optocouplers and drive signals for penumatic valves.
 All pneumatic valves are at 24v. I have used for driving those an ULN2807 connected over board (to do add pictures).
@@ -43,8 +41,9 @@ For connecting machine's optocouplers I have connected to existing board with so
 
 6. Modified a bit OpenPnp TinyGDriver to support pneumatic movement  
 It's a simple new class called TinyGDriverZPneumatic that instead of Z movement sends M10 - M11 to actionate the pneumatic Z.    
-Note about Pneumatic Z : Initially I was very sorry that my machine does not have stepper motor on Z. Now I kind of like it .   
-Please be aware that even it's a small actuator there are some drawbacks : * hits so hard the surface than all components are shaken. (in my case I have started with a loosen stripfeeder and this actuator was shaken so hard that components where jumping of their sits).  
+Note about Pneumatic Z : Initially I was very sorry that my machine does not have stepper motor on Z. Now I kind of like it.   
+Please be aware that even it's a small actuator there are some drawbacks :  
+* hits so hard the surface than all components are shaken. (in my case I have started with a loosen stripfeeder and this actuator was shaken so hard that components where jumping of their sits).
 * pneumatic push period should be considered - there is a thread.sleep instruction that maybe has to be tuned from case to case.   
 
 To do next : 
