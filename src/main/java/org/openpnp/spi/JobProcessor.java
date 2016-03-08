@@ -6,33 +6,21 @@ import org.openpnp.model.Job;
 
 public interface JobProcessor extends WizardConfigurable, PropertySheetHolder {
     public enum JobState {
-        Stopped,
-        Running,
-        Paused,
+        Stopped, Running, Paused,
     }
-    
+
     public enum JobError {
-        MachineHomingError,
-        MachineMovementError,
-        MachineRejectedJobError,
-        FeederError,
-        HeadError,
-        PickError,
-        PlaceError,
-        PartError
+        MachineHomingError, MachineMovementError, MachineRejectedJobError, FeederError, HeadError, PickError, PlaceError, PartError
     }
-    
+
     public enum PickRetryAction {
-        RetryWithFeed,
-        RetryWithoutFeed,
-        SkipAndContinue,
+        RetryWithFeed, RetryWithoutFeed, SkipAndContinue,
     }
-    
+
     public enum Type {
-        PickAndPlace,
-        SolderPaste
+        PickAndPlace, SolderPaste
     }
-    
+
     public abstract void setDelegate(JobProcessorDelegate delegate);
 
     public abstract void addListener(JobProcessorListener listener);
@@ -53,14 +41,14 @@ public interface JobProcessor extends WizardConfigurable, PropertySheetHolder {
     public abstract void start() throws Exception;
 
     /**
-     * Pause a running Job. The Job will stop running at the next opportunity and retain
-     * it's state so that it can be resumed. 
+     * Pause a running Job. The Job will stop running at the next opportunity and retain it's state
+     * so that it can be resumed.
      */
     public abstract void pause();
 
     /**
-     * Advances the Job one step. If the Job is not currently started this will
-     * start the Job first.
+     * Advances the Job one step. If the Job is not currently started this will start the Job first.
+     * 
      * @throws Exception
      */
     public abstract void step() throws Exception;
@@ -71,8 +59,8 @@ public interface JobProcessor extends WizardConfigurable, PropertySheetHolder {
     public abstract void resume();
 
     /**
-     * Stop a running Job. The Job will stop immediately and will reset to it's 
-     * freshly loaded state. All state about parts already placed will be lost.
+     * Stop a running Job. The Job will stop immediately and will reset to it's freshly loaded
+     * state. All state about parts already placed will be lost.
      */
     public abstract void stop();
 

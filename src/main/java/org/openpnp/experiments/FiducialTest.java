@@ -1,6 +1,5 @@
 /**
- * FiducialTest code provided by Cri S. Demonstrates round fiducial finding
- * using contours.
+ * FiducialTest code provided by Cri S. Demonstrates round fiducial finding using contours.
  */
 
 package org.openpnp.experiments;
@@ -39,7 +38,7 @@ public class FiducialTest {
     static {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
-    }    
+    }
 
     public static void showResult(String name, Mat img) {
         // Imgproc.resize(img, img, new Size(640, 480));
@@ -57,13 +56,12 @@ public class FiducialTest {
             // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                     .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "EXIT");
-            frame.getRootPane().getActionMap()
-                    .put("EXIT", new AbstractAction() {
-                        public void actionPerformed(ActionEvent e) {
-                            // frame.dispose();
-                            System.exit(0);
-                        }
-                    });
+            frame.getRootPane().getActionMap().put("EXIT", new AbstractAction() {
+                public void actionPerformed(ActionEvent e) {
+                    // frame.dispose();
+                    System.exit(0);
+                }
+            });
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -94,8 +92,7 @@ public class FiducialTest {
         Imgproc.threshold(bw, bw, 100, 255, 0);
         showResult("Canny", bw);
         // scan blobs
-        Imgproc.findContours(bw, contours, dummy, Imgproc.RETR_LIST,
-                Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(bw, contours, dummy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         // get dimension, in java bit different
 
         final MatOfPoint2f temp = new MatOfPoint2f();
@@ -112,8 +109,7 @@ public class FiducialTest {
             l = Imgproc.arcLength(temp, true);
             a = Imgproc.contourArea(contours.get(i));
             t = (a / (Math.PI * Math.pow(box.get(i).size.width / 2, 2)));
-            if (f <= 0.8 || f >= 1.2 || t >= 1.2 || t <= 0.8
-                    || box.get(i).size.width < min
+            if (f <= 0.8 || f >= 1.2 || t >= 1.2 || t <= 0.8 || box.get(i).size.width < min
                     || box.get(i).size.width > max || a < 100.) {
                 contours.remove(i);
                 continue;
@@ -152,8 +148,8 @@ public class FiducialTest {
             Imgproc.drawContours(dst, contours, i, new Scalar(0, 0, 255), 2); // java
                                                                               // thing
             Core.circle(dst, ret, 4, new Scalar(0, 255, 255), -1);
-            Core.circle(dst, new Point(r.x + r.width / 2, r.y + r.height / 2),
-                    4, new Scalar(0, 0, 255), -1);
+            Core.circle(dst, new Point(r.x + r.width / 2, r.y + r.height / 2), 4,
+                    new Scalar(0, 0, 255), -1);
             showResult("found", dst);
             // <<<<<<<<<<< end of debug
             // do java problem, it don't have supixel resulution, as cv version
@@ -168,16 +164,13 @@ public class FiducialTest {
 
     public static void main(String[] args) throws Exception {
         int min = 0, max = 999999;
-        args = new String[] {
-                "",
+        args = new String[] {"",
                 "/Users/jason/.openpnp/org.openpnp.machine.reference.vision.OpenCvVisionProvider/camera_41173395697117969.png",
-                "/Users/jason/Desktop/result.png"
-        };
+                "/Users/jason/Desktop/result.png"};
         if (args.length > 2)
             ;
         else {
-            System.out
-                    .println("Usage: <prg> <image> <result> [ <min-pixel> <max-pixel> ]");
+            System.out.println("Usage: <prg> <image> <result> [ <min-pixel> <max-pixel> ]");
             return;
         }
         if (args.length > 4) {

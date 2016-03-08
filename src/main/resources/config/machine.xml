@@ -27,12 +27,6 @@
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
                   <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
                </camera>
-               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="d66asdf53-05e1-4629-baae-b614c5ed8320" name="Wide" looking="Down" rotation="0.0" fps="24" width="5000" height="4000">
-                  <units-per-pixel units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
-                  <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
-                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-                  <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
-               </camera>
             </cameras>
             <paste-dispensers>
                <paste-dispenser class="org.openpnp.machine.reference.ReferencePasteDispenser" id="53050ccf-59a0-4d9f-a8d3-6216f5412e4e" name="D1">

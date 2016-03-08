@@ -25,22 +25,22 @@ import org.slf4j.LoggerFactory;
 
 public class SimpleJobPlanner extends AbstractJobPlanner {
     private final static Logger logger = LoggerFactory.getLogger(SimpleJobPlanner.class);
-    
+
     @SuppressWarnings("unused")
     @Attribute(required = false)
     private String placeHolder;
-    
+
     protected Set<PlacementSolution> solutions = new LinkedHashSet<>();
-    
+
     @Override
     public void setJob(Job job) {
         super.setJob(job);
         solutions.clear();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
-        	if (!boardLocation.isEnabled()) {
-        		continue;
-        	}
-        	
+            if (!boardLocation.isEnabled()) {
+                continue;
+            }
+
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (placement.getType() != Type.Place) {
                     continue;
@@ -49,25 +49,24 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
                 if (placement.getSide() != boardLocation.getSide()) {
                     continue;
                 }
-                
-                solutions.add(new PlacementSolution(placement, boardLocation, null, null, null, null));
+
+                solutions.add(
+                        new PlacementSolution(placement, boardLocation, null, null, null, null));
             }
         }
-        
+
         logger.debug("Planned {} solutions", solutions.size());
     }
 
     /**
-     * For N nozzles, create a list of every possible remaining solutions
-     * along with a weight. Weight is a cost of 0 or more with things like
-     * a nozzle change increasing the weight.
-     * Once all solutions are identified. Sort each list by weight and take the
-     * N lowest weighted solutions that do not conflict with each other.
+     * For N nozzles, create a list of every possible remaining solutions along with a weight.
+     * Weight is a cost of 0 or more with things like a nozzle change increasing the weight. Once
+     * all solutions are identified. Sort each list by weight and take the N lowest weighted
+     * solutions that do not conflict with each other.
      *
-     * TODO: Is there a situation where the order in which we take the weighted
-     * solutions from their lists would cause successive nozzles to have to
-     * use less optimal solutions? I feel like this is a possible issue but
-     * I haven't been able to come up with an example case.
+     * TODO: Is there a situation where the order in which we take the weighted solutions from their
+     * lists would cause successive nozzles to have to use less optimal solutions? I feel like this
+     * is a possible issue but I haven't been able to come up with an example case.
      */
     @Override
     public synchronized Set<PlacementSolution> getNextPlacementSolutions(Head head) {
@@ -94,7 +93,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         }
         return results.size() > 0 ? results : null;
     }
-    
+
     protected List<WeightedPlacementSolution> getWeightedSolutions(Machine machine, Nozzle nozzle) {
         List<WeightedPlacementSolution> weightedSolutions = new ArrayList<>();
         for (PlacementSolution solution : solutions) {
@@ -107,12 +106,8 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
             for (NozzleTip nozzleTip : compatibleNozzleTips) {
                 for (Feeder feeder : compatibleFeeders) {
                     WeightedPlacementSolution weightedSolution = new WeightedPlacementSolution(
-                            solution.placement,
-                            solution.boardLocation,
-                            nozzle.getHead(),
-                            nozzle,
-                            nozzleTip,
-                            feeder);
+                            solution.placement, solution.boardLocation, nozzle.getHead(), nozzle,
+                            nozzleTip, feeder);
                     weightedSolution.weight = 1;
                     weightedSolution.originalSolution = solution;
                     if (nozzle.getNozzleTip() != nozzleTip) {
@@ -125,7 +120,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         Collections.sort(weightedSolutions, weightComparator);
         return weightedSolutions;
     }
-    
+
     private static Set<NozzleTip> getCompatibleNozzleTips(Nozzle nozzle, Part part) {
         Set<NozzleTip> nozzleTips = new HashSet<>();
         for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
@@ -135,7 +130,7 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         }
         return nozzleTips;
     }
-    
+
     private static Set<Feeder> getCompatibleFeeders(Machine machine, Nozzle nozzle, Part part) {
         Set<Feeder> feeders = new HashSet<>();
         for (Feeder feeder : machine.getFeeders()) {
@@ -145,21 +140,21 @@ public class SimpleJobPlanner extends AbstractJobPlanner {
         }
         return feeders;
     }
-    
-    static Comparator<WeightedPlacementSolution> weightComparator = new Comparator<WeightedPlacementSolution>() {
-        @Override
-        public int compare(WeightedPlacementSolution o1, WeightedPlacementSolution o2) {
-            return Double.compare(o1.weight, o2.weight);
-        }
-    };
+
+    static Comparator<WeightedPlacementSolution> weightComparator =
+            new Comparator<WeightedPlacementSolution>() {
+                @Override
+                public int compare(WeightedPlacementSolution o1, WeightedPlacementSolution o2) {
+                    return Double.compare(o1.weight, o2.weight);
+                }
+            };
 
     static class WeightedPlacementSolution extends PlacementSolution {
         public double weight;
         public PlacementSolution originalSolution;
-        
-        public WeightedPlacementSolution(Placement placement,
-                BoardLocation boardLocation, Head head, Nozzle nozzle,
-                NozzleTip nozzleTip, Feeder feeder) {
+
+        public WeightedPlacementSolution(Placement placement, BoardLocation boardLocation,
+                Head head, Nozzle nozzle, NozzleTip nozzleTip, Feeder feeder) {
             super(placement, boardLocation, head, nozzle, nozzleTip, feeder);
         }
     }

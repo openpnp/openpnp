@@ -197,7 +197,8 @@ public class FootprintPanel extends JPanel {
             cameraView.removeReticle(FootprintPanel.class.getName());
             Reticle reticle = new FootprintReticle(footprint);
             cameraView.setReticle(FootprintPanel.class.getName(), reticle);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }

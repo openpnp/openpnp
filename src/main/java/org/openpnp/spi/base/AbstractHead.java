@@ -22,27 +22,27 @@ public abstract class AbstractHead implements Head {
 
     @Attribute
     protected String id;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     protected String name;
-    
-    @ElementList(required=false)
+
+    @ElementList(required = false)
     protected IdentifiableList<Nozzle> nozzles = new IdentifiableList<>();
-    
-    @ElementList(required=false)
+
+    @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
-    
-    @ElementList(required=false)
+
+    @ElementList(required = false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<>();
-    
-    @ElementList(required=false)
+
+    @ElementList(required = false)
     protected IdentifiableList<PasteDispenser> pasteDispensers = new IdentifiableList<>();
-    
+
     public AbstractHead() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
     }
-    
+
     @SuppressWarnings("unused")
     @Commit
     private void commit() {
@@ -59,7 +59,7 @@ public abstract class AbstractHead implements Head {
             pasteDispenser.setHead(this);
         }
     }
-    
+
     @Override
     public String getId() {
         return id;
@@ -84,7 +84,7 @@ public abstract class AbstractHead implements Head {
     public Actuator getActuator(String id) {
         return actuators.get(id);
     }
-    
+
     @Override
     public Actuator getActuatorByName(String name) {
         for (Actuator actuator : actuators) {
@@ -114,7 +114,7 @@ public abstract class AbstractHead implements Head {
     public void removeCamera(Camera camera) {
         cameras.remove(camera);
     }
-    
+
     @Override
     public void moveToSafeZ(double speed) throws Exception {
         for (Nozzle nozzle : nozzles) {
@@ -130,7 +130,7 @@ public abstract class AbstractHead implements Head {
             dispenser.moveToSafeZ(speed);
         }
     }
-    
+
     @Override
     public String getName() {
         return name;
@@ -139,8 +139,8 @@ public abstract class AbstractHead implements Head {
     @Override
     public void setName(String name) {
         this.name = name;
-    }   
-    
+    }
+
     @Override
     public List<PasteDispenser> getPasteDispensers() {
         return Collections.unmodifiableList(pasteDispensers);
@@ -157,30 +157,30 @@ public abstract class AbstractHead implements Head {
         return null;
     }
 
-	@Override
-	public Camera getDefaultCamera() throws Exception {
-		List<Camera> cameras = getCameras();
-		if (cameras == null || cameras.isEmpty()) {
-			throw new Exception("No default camera available on head " + getName());
-		}
-		return cameras.get(0);
-	}
+    @Override
+    public Camera getDefaultCamera() throws Exception {
+        List<Camera> cameras = getCameras();
+        if (cameras == null || cameras.isEmpty()) {
+            throw new Exception("No default camera available on head " + getName());
+        }
+        return cameras.get(0);
+    }
 
-	@Override
-	public Nozzle getDefaultNozzle() throws Exception {
-		List<Nozzle> nozzles = getNozzles();
-		if (nozzles == null || nozzles.isEmpty()) {
-          throw new Exception("No default nozzle available on head " + getName());
-		}
-		return nozzles.get(0);
-	}
+    @Override
+    public Nozzle getDefaultNozzle() throws Exception {
+        List<Nozzle> nozzles = getNozzles();
+        if (nozzles == null || nozzles.isEmpty()) {
+            throw new Exception("No default nozzle available on head " + getName());
+        }
+        return nozzles.get(0);
+    }
 
-	@Override
-	public PasteDispenser getDefaultPasteDispenser() throws Exception {
-		List<PasteDispenser> dispensers = getPasteDispensers();
-		if (dispensers == null || dispensers.isEmpty()) {
-          throw new Exception("No default paste dispenser available on head " + getName());
-		}
-		return dispensers.get(0);
-	}
+    @Override
+    public PasteDispenser getDefaultPasteDispenser() throws Exception {
+        List<PasteDispenser> dispensers = getPasteDispensers();
+        if (dispensers == null || dispensers.isEmpty()) {
+            throw new Exception("No default paste dispenser available on head " + getName());
+        }
+        return dispensers.get(0);
+    }
 }

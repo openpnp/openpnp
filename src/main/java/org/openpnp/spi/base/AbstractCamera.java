@@ -23,44 +23,43 @@ import org.simpleframework.xml.Element;
 public abstract class AbstractCamera implements Camera {
     @Attribute
     protected String id;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     protected String name;
-    
+
     @Attribute
     protected Looking looking = Looking.Down;
-    
+
     @Element
     protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
-    
-    @Element(required=false)
+
+    @Element(required = false)
     protected VisionProvider visionProvider;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     protected long settleTimeMs = 250;
-    
+
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
-    
+
     protected Head head;
-    
+
     protected Integer width;
-    
+
     protected Integer height;
-    
+
     public AbstractCamera() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
+            public void configurationLoaded(Configuration configuration) throws Exception {
                 if (visionProvider != null) {
                     visionProvider.setCamera(AbstractCamera.this);
                 }
             }
         });
     }
-    
+
     @Override
     public String getId() {
         return id;
@@ -85,12 +84,12 @@ public abstract class AbstractCamera implements Camera {
     public void setHead(Head head) {
         this.head = head;
     }
-    
+
     @Override
     public Location getUnitsPerPixel() {
         return unitsPerPixel;
     }
-    
+
     @Override
     public void setUnitsPerPixel(Location unitsPerPixel) {
         this.unitsPerPixel = unitsPerPixel;
@@ -105,7 +104,7 @@ public abstract class AbstractCamera implements Camera {
     public Looking getLooking() {
         return looking;
     }
-    
+
     @Override
     public void startContinuousCapture(CameraListener listener, int maximumFps) {
         listeners.add(new ListenerEntry(listener, maximumFps));
@@ -115,7 +114,7 @@ public abstract class AbstractCamera implements Camera {
     public void stopContinuousCapture(CameraListener listener) {
         listeners.remove(new ListenerEntry(listener, 0));
     }
-    
+
     @Override
     public void setVisionProvider(VisionProvider visionProvider) {
         this.visionProvider = visionProvider;
@@ -126,26 +125,27 @@ public abstract class AbstractCamera implements Camera {
     public VisionProvider getVisionProvider() {
         return visionProvider;
     }
-    
+
     public BufferedImage settleAndCapture() {
-    	try {
-    		Thread.sleep(getSettleTimeMs());
-    	}
-    	catch (Exception e) {
-    		
-    	}
-    	return capture();
+        try {
+            Thread.sleep(getSettleTimeMs());
+        }
+        catch (Exception e) {
+
+        }
+        return capture();
     }
-    
+
     protected void broadcastCapture(BufferedImage img) {
         for (ListenerEntry listener : new ArrayList<>(listeners)) {
-            if (listener.lastFrameSent < (System.currentTimeMillis() - (1000 / listener.maximumFps))) {
+            if (listener.lastFrameSent < (System.currentTimeMillis()
+                    - (1000 / listener.maximumFps))) {
                 listener.listener.frameReceived(img);
                 listener.lastFrameSent = System.currentTimeMillis();
             }
         }
     }
-    
+
     @Override
     public int getWidth() {
         if (width == null) {
@@ -165,16 +165,16 @@ public abstract class AbstractCamera implements Camera {
         }
         return height;
     }
-    
+
     public long getSettleTimeMs() {
-		return settleTimeMs;
-	}
-    
-    public void setSettleTimeMs(long settleTimeMs) {
-    	this.settleTimeMs = settleTimeMs;
+        return settleTimeMs;
     }
 
-	@Override
+    public void setSettleTimeMs(long settleTimeMs) {
+        this.settleTimeMs = settleTimeMs;
+    }
+
+    @Override
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureCamera;
     }

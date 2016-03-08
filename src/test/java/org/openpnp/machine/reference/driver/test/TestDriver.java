@@ -20,20 +20,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestDriver implements ReferenceDriver {
-    private final static Logger logger = LoggerFactory
-            .getLogger(TestDriver.class);
-    
-    @Attribute(required=false)
+    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
+
+    @Attribute(required = false)
     private String dummy;
-    
+
     private Location location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-    
+
     private ReferenceDriver delegate = new TestDriverDelegate();
-    
+
     public void setDelegate(ReferenceDriver delegate) {
         this.delegate = delegate;
     }
-    
+
     @Override
     public Wizard getConfigurationWizard() {
         return null;
@@ -47,8 +46,8 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location,
-            double speed) throws Exception {
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+            throws Exception {
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
         location = location.subtract(hm.getHeadOffsets());
@@ -59,18 +58,17 @@ public class TestDriver implements ReferenceDriver {
 
         // Get the current location of the Head that we'll move
         Location hl = this.location;
-        
-        hl = hl.derive(
-                Double.isNaN(location.getX()) ? null : location.getX(),
+
+        hl = hl.derive(Double.isNaN(location.getX()) ? null : location.getX(),
                 Double.isNaN(location.getY()) ? null : location.getY(),
                 Double.isNaN(location.getZ()) ? null : location.getZ(),
                 Double.isNaN(location.getRotation()) ? null : location.getRotation());
 
         if (!this.location.equals(hl)) {
             this.location = hl;
-            
-            logger.debug("moveTo({}, {}, {})", new Object[] { hm, this.location, speed });
-            
+
+            logger.debug("moveTo({}, {}, {})", new Object[] {hm, this.location, speed});
+
             delegate.moveTo(hm, this.location, speed);
         }
     }
@@ -93,31 +91,27 @@ public class TestDriver implements ReferenceDriver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on)
-            throws Exception {
+    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         logger.debug("actuate({}, {})", actuator, on);
         delegate.actuate(actuator, on);
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value)
-            throws Exception {
+    public void actuate(ReferenceActuator actuator, double value) throws Exception {
         logger.debug("actuate({}, {})", actuator, value);
         delegate.actuate(actuator, value);
     }
-    
+
     @Override
-    public void dispense(ReferencePasteDispenser dispenser,
-            Location startLocation, Location endLocation,
-            long dispenseTimeMilliseconds) throws Exception {
-    }
+    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
+            Location endLocation, long dispenseTimeMilliseconds) throws Exception {}
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
         logger.debug("setEnabled({})", enabled);
         delegate.setEnabled(enabled);
     }
-    
+
     public static class TestDriverDelegate implements ReferenceDriver {
 
         @Override
@@ -129,14 +123,14 @@ public class TestDriver implements ReferenceDriver {
         @Override
         public void home(ReferenceHead head) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, Location location,
-                double speed) throws Exception {
+        public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+                throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -148,41 +142,38 @@ public class TestDriver implements ReferenceDriver {
         @Override
         public void pick(ReferenceNozzle nozzle) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
         public void place(ReferenceNozzle nozzle) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, boolean on)
-                throws Exception {
+        public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, double value)
-                throws Exception {
+        public void actuate(ReferenceActuator actuator, double value) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
-        
+
         @Override
-        public void dispense(ReferencePasteDispenser dispenser,
-                Location startLocation, Location endLocation,
-                long dispenseTimeMilliseconds) throws Exception {
+        public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
+                Location endLocation, long dispenseTimeMilliseconds) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
         public void setEnabled(boolean enabled) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -214,11 +205,11 @@ public class TestDriver implements ReferenceDriver {
             // TODO Auto-generated method stub
             return null;
         }
-        
+
         @Override
         public void close() throws IOException {
             // TODO Auto-generated method stub
-            
+
         }
     }
 
@@ -251,10 +242,10 @@ public class TestDriver implements ReferenceDriver {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public void close() throws IOException {
         // TODO Auto-generated method stub
-        
+
     }
 }

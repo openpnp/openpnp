@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.gui;
@@ -26,8 +24,6 @@ import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -61,7 +57,6 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorDelegate;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
@@ -85,7 +80,6 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.JobError;
 import org.openpnp.spi.JobProcessor.JobState;
 import org.openpnp.spi.JobProcessor.PickRetryAction;
-import org.openpnp.spi.Locatable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
@@ -97,8 +91,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory
-            .getLogger(JobPanel.class);
+    private static final Logger logger = LoggerFactory.getLogger(JobPanel.class);
 
     final private Configuration configuration;
     final private MainFrame frame;
@@ -129,7 +122,7 @@ public class JobPanel extends JPanel {
 
     private final JobPlacementsPanel jobPlacementsPanel;
     private final JobPastePanel jobPastePanel;
-    
+
     private JTabbedPane tabbedPane;
 
     public JobPanel(Configuration configuration, MainFrame frame,
@@ -142,8 +135,7 @@ public class JobPanel extends JPanel {
         jobSaveActionGroup.setEnabled(false);
 
         boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction,
-                captureCameraBoardLocationAction,
-                captureToolBoardLocationAction,
+                captureCameraBoardLocationAction, captureToolBoardLocationAction,
                 moveCameraToBoardLocationAction, moveToolToBoardLocationAction,
                 twoPointLocateBoardLocationAction, fiducialCheckAction);
         boardLocationSelectionActionGroup.setEnabled(false);
@@ -156,21 +148,18 @@ public class JobPanel extends JPanel {
 
         boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
         boardLocationsTable.setAutoCreateRowSorter(true);
-        boardLocationsTable
-                .setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(
-                sidesComboBox));
+        boardLocationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        boardLocationsTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
 
-        boardLocationsTable.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+        boardLocationsTable.getSelectionModel()
+                .addListSelectionListener(new ListSelectionListener() {
                     @Override
                     public void valueChanged(ListSelectionEvent e) {
                         if (e.getValueIsAdjusting()) {
                             return;
                         }
                         BoardLocation boardLocation = getSelectedBoardLocation();
-                        boardLocationSelectionActionGroup
-                                .setEnabled(boardLocation != null);
+                        boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
                         jobPastePanel.setBoardLocation(boardLocation);
                     }
@@ -181,22 +170,18 @@ public class JobPanel extends JPanel {
         splitPane = new JSplitPane();
         splitPane.setBorder(null);
         splitPane.setContinuousLayout(true);
-        splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
-                PREF_DIVIDER_POSITION_DEF));
-        splitPane.addPropertyChangeListener("dividerLocation",
-                new PropertyChangeListener() {
-                    @Override
-                    public void propertyChange(PropertyChangeEvent evt) {
-                        prefs.putInt(PREF_DIVIDER_POSITION,
-                                splitPane.getDividerLocation());
-                    }
-                });
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
+            }
+        });
 
         JPanel pnlBoards = new JPanel();
-        pnlBoards.setBorder(new TitledBorder(new EtchedBorder(
-                EtchedBorder.LOWERED, null, null), "Boards",
-                TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+        pnlBoards.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "Boards", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         pnlBoards.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBarBoards = new JToolBar();
@@ -223,29 +208,24 @@ public class JobPanel extends JPanel {
         btnRemoveBoard.setHideActionText(true);
         toolBarBoards.add(btnRemoveBoard);
         toolBarBoards.addSeparator();
-        JButton btnCaptureCameraBoardLocation = new JButton(
-                captureCameraBoardLocationAction);
+        JButton btnCaptureCameraBoardLocation = new JButton(captureCameraBoardLocationAction);
         btnCaptureCameraBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnCaptureCameraBoardLocation);
 
-        JButton btnCaptureToolBoardLocation = new JButton(
-                captureToolBoardLocationAction);
+        JButton btnCaptureToolBoardLocation = new JButton(captureToolBoardLocationAction);
         btnCaptureToolBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnCaptureToolBoardLocation);
 
-        JButton btnPositionCameraBoardLocation = new JButton(
-                moveCameraToBoardLocationAction);
+        JButton btnPositionCameraBoardLocation = new JButton(moveCameraToBoardLocationAction);
         btnPositionCameraBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionCameraBoardLocation);
 
-        JButton btnPositionToolBoardLocation = new JButton(
-                moveToolToBoardLocationAction);
+        JButton btnPositionToolBoardLocation = new JButton(moveToolToBoardLocationAction);
         btnPositionToolBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionToolBoardLocation);
         toolBarBoards.addSeparator();
 
-        JButton btnTwoPointBoardLocation = new JButton(
-                twoPointLocateBoardLocationAction);
+        JButton btnTwoPointBoardLocation = new JButton(twoPointLocateBoardLocationAction);
         toolBarBoards.add(btnTwoPointBoardLocation);
         btnTwoPointBoardLocation.setHideActionText(true);
 
@@ -262,14 +242,14 @@ public class JobPanel extends JPanel {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         pnlRight.add(tabbedPane, BorderLayout.CENTER);
-        
+
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 Machine machine = Configuration.get().getMachine();
                 JobProcessor.Type type = getSelectedJobProcessorType();
                 setJobProcessor(machine.getJobProcessors().get(type));
             }
-        });        
+        });
 
         jobPastePanel = new JobPastePanel(this);
         jobPlacementsPanel = new JobPlacementsPanel(this);
@@ -278,12 +258,11 @@ public class JobPanel extends JPanel {
 
         mnOpenRecent = new JMenu("Open Recent Job...");
         loadRecentJobs();
-        
+
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
+            public void configurationComplete(Configuration configuration) throws Exception {
                 Machine machine = configuration.getMachine();
-                
+
                 machine.addListener(machineListener);
 
                 for (JobProcessor jobProcessor : machine.getJobProcessors().values()) {
@@ -297,7 +276,8 @@ public class JobPanel extends JPanel {
                     // the JobProcessor but this fails on some Linux based systems,
                     // so here we detect if it failed and force setting it.
                     if (jobProcessor == null) {
-                        setJobProcessor(machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace));
+                        setJobProcessor(
+                                machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace));
                     }
                 }
                 if (machine.getJobProcessors().get(JobProcessor.Type.SolderPaste) != null) {
@@ -306,10 +286,11 @@ public class JobPanel extends JPanel {
                     // the JobProcessor but this fails on some Linux based systems,
                     // so here we detect if it failed and force setting it.
                     if (jobProcessor == null) {
-                        setJobProcessor(machine.getJobProcessors().get(JobProcessor.Type.SolderPaste));
+                        setJobProcessor(
+                                machine.getJobProcessors().get(JobProcessor.Type.SolderPaste));
                     }
                 }
-                
+
                 // Create an empty Job if one is not loaded
                 if (jobProcessor.getJob() == null) {
                     Job job = new Job();
@@ -318,7 +299,7 @@ public class JobPanel extends JPanel {
             }
         });
     }
-    
+
     public JobProcessor.Type getSelectedJobProcessorType() {
         String activeTabTitle = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
         if (activeTabTitle.equals("Solder Paste")) {
@@ -331,30 +312,30 @@ public class JobPanel extends JPanel {
             throw new Error("Unknown job tab title: " + activeTabTitle);
         }
     }
-    
+
     /**
-     * Unregister the listener and delegate for the JobProcessor, set the new
-     * JobProcessor and add the listener and delegate back. If a job was
-     * previously loaded into the JobProcessor, load it into the new one.
+     * Unregister the listener and delegate for the JobProcessor, set the new JobProcessor and add
+     * the listener and delegate back. If a job was previously loaded into the JobProcessor, load it
+     * into the new one.
      * 
-     * The sequencing of making this work is a bit complex. When the app is
-     * starting the following happens:
-     * 1. The UI is created and shown. At this time no JobProcessor is set.
-     * 2. The Configuration is loaded and the completion listener is called.
-     * 3. The Configuration listener checks which JobProcessors are registered
-     * and adds tabs for each.
-     * 4. The first tab that is added causes a selection event to happen, which
-     * fires a ChangeEvent on the ChangeListener above.
-     * 5. The ChangeListener checks which tab was selected and calls this
-     * method with the appropriate JobProcessor.
+     * The sequencing of making this work is a bit complex. When the app is starting the following
+     * happens: 1. The UI is created and shown. At this time no JobProcessor is set. 2. The
+     * Configuration is loaded and the completion listener is called. 3. The Configuration listener
+     * checks which JobProcessors are registered and adds tabs for each. 4. The first tab that is
+     * added causes a selection event to happen, which fires a ChangeEvent on the ChangeListener
+     * above. 5. The ChangeListener checks which tab was selected and calls this method with the
+     * appropriate JobProcessor.
+     * 
      * @param jobProcessor
      */
     private void setJobProcessor(JobProcessor jobProcessor) {
         Job job = null;
         if (this.jobProcessor != null) {
             job = this.jobProcessor.getJob();
-            if (this.jobProcessor.getState() != null && this.jobProcessor.getState() != JobProcessor.JobState.Stopped) {
-                throw new AssertionError("this.jobProcessor.getState() " + this.jobProcessor.getState() + " != JobProcessor.JobState.Stopped");
+            if (this.jobProcessor.getState() != null
+                    && this.jobProcessor.getState() != JobProcessor.JobState.Stopped) {
+                throw new AssertionError("this.jobProcessor.getState() "
+                        + this.jobProcessor.getState() + " != JobProcessor.JobState.Stopped");
             }
             this.jobProcessor.removeListener(jobProcessorListener);
             this.jobProcessor.setDelegate(null);
@@ -366,7 +347,7 @@ public class JobPanel extends JPanel {
             jobProcessor.load(job);
         }
     }
-    
+
     public JobPlacementsPanel getJobPlacementsPanel() {
         return jobPlacementsPanel;
     }
@@ -397,8 +378,7 @@ public class JobPanel extends JPanel {
         }
         // update with what we have now
         for (int i = 0; i < recentJobs.size(); i++) {
-            prefs.put(PREF_RECENT_FILES + "_" + i, recentJobs.get(i)
-                    .getAbsolutePath());
+            prefs.put(PREF_RECENT_FILES + "_" + i, recentJobs.get(i).getAbsolutePath());
         }
         updateRecentJobsMenu();
     }
@@ -417,8 +397,7 @@ public class JobPanel extends JPanel {
     }
 
     public void refreshSelectedBoardRow() {
-        boardLocationsTableModel.fireTableRowsUpdated(
-                boardLocationsTable.getSelectedRow(),
+        boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(),
                 boardLocationsTable.getSelectedRow());
     }
 
@@ -429,14 +408,13 @@ public class JobPanel extends JPanel {
         }
         else {
             index = boardLocationsTable.convertRowIndexToModel(index);
-            return JobPanel.this.jobProcessor.getJob().getBoardLocations()
-                    .get(index);
+            return JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
         }
     }
 
     /**
-     * Checks if there are any modifications that need to be saved. Prompts the
-     * user if there are. Returns true if it's okay to exit.
+     * Checks if there are any modifications that need to be saved. Prompts the user if there are.
+     * Returns true if it's okay to exit.
      * 
      * @return
      */
@@ -453,8 +431,7 @@ public class JobPanel extends JPanel {
     private boolean checkForJobModifications() {
         if (jobProcessor.getJob().isDirty()) {
             Job job = jobProcessor.getJob();
-            String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job
-                    .getFile().getName());
+            String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName());
             int result = JOptionPane.showConfirmDialog(frame,
                     "Do you want to save your changes to " + name + "?" + "\n"
                             + "If you don't save, your changes will be lost.",
@@ -472,23 +449,18 @@ public class JobPanel extends JPanel {
     private boolean checkForBoardModifications() {
         for (Board board : configuration.getBoards()) {
             if (board.isDirty()) {
-                int result = JOptionPane
-                        .showConfirmDialog(
-                                getTopLevelAncestor(),
-                                "Do you want to save your changes to "
-                                        + board.getFile().getName()
-                                        + "?"
-                                        + "\n"
-                                        + "If you don't save, your changes will be lost.",
-                                "Save " + board.getFile().getName() + "?",
-                                JOptionPane.YES_NO_CANCEL_OPTION);
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "Do you want to save your changes to " + board.getFile().getName() + "?"
+                                + "\n" + "If you don't save, your changes will be lost.",
+                        "Save " + board.getFile().getName() + "?",
+                        JOptionPane.YES_NO_CANCEL_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
                     try {
                         configuration.saveBoard(board);
                     }
                     catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Board Save Error", e.getMessage());
+                        MessageBoxes.errorBox(getTopLevelAncestor(), "Board Save Error",
+                                e.getMessage());
                         return false;
                     }
                 }
@@ -519,8 +491,7 @@ public class JobPanel extends JPanel {
     }
 
     private boolean saveJobAs() {
-        FileDialog fileDialog = new FileDialog(frame, "Save Job As...",
-                FileDialog.SAVE);
+        FileDialog fileDialog = new FileDialog(frame, "Save Job As...", FileDialog.SAVE);
         fileDialog.setFilenameFilter(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -538,13 +509,9 @@ public class JobPanel extends JPanel {
             }
             File file = new File(new File(fileDialog.getDirectory()), filename);
             if (file.exists()) {
-                int ret = JOptionPane
-                        .showConfirmDialog(
-                                getTopLevelAncestor(),
-                                file.getName()
-                                        + " already exists. Do you want to replace it?",
-                                "Replace file?", JOptionPane.YES_NO_OPTION,
-                                JOptionPane.WARNING_MESSAGE);
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        file.getName() + " already exists. Do you want to replace it?",
+                        "Replace file?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (ret != JOptionPane.YES_OPTION) {
                     return false;
                 }
@@ -560,18 +527,15 @@ public class JobPanel extends JPanel {
     }
 
     /**
-     * Updates the Job controls based on the Job state and the Machine's
-     * readiness.
+     * Updates the Job controls based on the Job state and the Machine's readiness.
      */
     private void updateJobActions() {
         JobState state = jobProcessor.getState();
         if (state == JobState.Stopped) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
-            startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON,
-                    Icons.start);
-            startPauseResumeJobAction.putValue(
-                    AbstractAction.SHORT_DESCRIPTION,
+            startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.start);
+            startPauseResumeJobAction.putValue(AbstractAction.SHORT_DESCRIPTION,
                     "Start processing the job.");
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(true);
@@ -580,10 +544,8 @@ public class JobPanel extends JPanel {
         else if (state == JobState.Running) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause");
-            startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON,
-                    Icons.pause);
-            startPauseResumeJobAction.putValue(
-                    AbstractAction.SHORT_DESCRIPTION,
+            startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.pause);
+            startPauseResumeJobAction.putValue(AbstractAction.SHORT_DESCRIPTION,
                     "Pause processing of the job.");
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(false);
@@ -592,10 +554,8 @@ public class JobPanel extends JPanel {
         else if (state == JobState.Paused) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume");
-            startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON,
-                    Icons.start);
-            startPauseResumeJobAction.putValue(
-                    AbstractAction.SHORT_DESCRIPTION,
+            startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.start);
+            startPauseResumeJobAction.putValue(AbstractAction.SHORT_DESCRIPTION,
                     "Resume processing of the job.");
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(true);
@@ -613,10 +573,8 @@ public class JobPanel extends JPanel {
 
     private void updateTitle() {
         Job job = jobProcessor.getJob();
-        String title = String.format("OpenPnP - %s%s",
-                job.isDirty() ? "*" : "",
-                (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile()
-                        .getName()));
+        String title = String.format("OpenPnP - %s%s", job.isDirty() ? "*" : "",
+                (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName()));
         frame.setTitle(title);
     }
 
@@ -637,8 +595,7 @@ public class JobPanel extends JPanel {
         }
 
         try {
-            Board importedBoard = boardImporter
-                    .importBoard((Frame) getTopLevelAncestor());
+            Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
             if (importedBoard != null) {
                 Board existingBoard = getSelectedBoardLocation().getBoard();
                 for (Placement placement : importedBoard.getPlacements()) {
@@ -649,7 +606,8 @@ public class JobPanel extends JPanel {
                     // interface to be more intuitive. The Gerber importer tends
                     // to return everything in Inches, so this is a method to
                     // try to get it closer to what the user expects to see.
-                    pad.setLocation(pad.getLocation().convertToUnits(getSelectedBoardLocation().getLocation().getUnits()));
+                    pad.setLocation(pad.getLocation()
+                            .convertToUnits(getSelectedBoardLocation().getLocation().getUnits()));
                     existingBoard.addSolderPastePad(pad);
                 }
                 jobPlacementsPanel.setBoardLocation(getSelectedBoardLocation());
@@ -679,8 +637,7 @@ public class JobPanel extends JPanel {
                 if (fileDialog.getFile() == null) {
                     return;
                 }
-                File file = new File(new File(fileDialog.getDirectory()),
-                        fileDialog.getFile());
+                File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
                 Job job = configuration.loadJob(file);
                 jobProcessor.load(job);
                 addRecentJob(file);
@@ -731,8 +688,7 @@ public class JobPanel extends JPanel {
                     jobProcessor.start();
                 }
                 catch (Exception e) {
-                    MessageBoxes.errorBox(frame, "Job Start Error",
-                            e.getMessage());
+                    MessageBoxes.errorBox(frame, "Job Start Error", e.getMessage());
                 }
             }
             else if (state == JobState.Paused) {
@@ -748,8 +704,7 @@ public class JobPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.step);
             putValue(NAME, "Step");
-            putValue(SHORT_DESCRIPTION,
-                    "Process one step of the job and pause.");
+            putValue(SHORT_DESCRIPTION, "Process one step of the job and pause.");
         }
 
         @Override
@@ -780,14 +735,12 @@ public class JobPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.neww);
             putValue(NAME, "New Board...");
-            putValue(SHORT_DESCRIPTION,
-                    "Create a new board and add it to the job.");
+            putValue(SHORT_DESCRIPTION, "Create a new board and add it to the job.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FileDialog fileDialog = new FileDialog(frame,
-                    "Save New Board As...", FileDialog.SAVE);
+            FileDialog fileDialog = new FileDialog(frame, "Save New Board As...", FileDialog.SAVE);
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -803,8 +756,7 @@ public class JobPanel extends JPanel {
                 if (!filename.toLowerCase().endsWith(".board.xml")) {
                     filename = filename + ".board.xml";
                 }
-                File file = new File(new File(fileDialog.getDirectory()),
-                        filename);
+                File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
@@ -815,8 +767,7 @@ public class JobPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, "Unable to create new board",
-                        e.getMessage());
+                MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage());
             }
         }
     };
@@ -842,8 +793,7 @@ public class JobPanel extends JPanel {
                 if (fileDialog.getFile() == null) {
                     return;
                 }
-                File file = new File(new File(fileDialog.getDirectory()),
-                        fileDialog.getFile());
+                File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
 
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
@@ -855,8 +805,7 @@ public class JobPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, "Board load failed",
-                        e.getMessage());
+                MessageBoxes.errorBox(frame, "Board load failed", e.getMessage());
             }
         }
     };
@@ -865,8 +814,7 @@ public class JobPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Remove Board");
-            putValue(SHORT_DESCRIPTION,
-                    "Remove the selected board from the job.");
+            putValue(SHORT_DESCRIPTION, "Remove the selected board from the job.");
         }
 
         @Override
@@ -874,10 +822,9 @@ public class JobPanel extends JPanel {
             int index = boardLocationsTable.getSelectedRow();
             if (index != -1) {
                 index = boardLocationsTable.convertRowIndexToModel(index);
-                BoardLocation boardLocation = JobPanel.this.jobProcessor
-                        .getJob().getBoardLocations().get(index);
-                JobPanel.this.jobProcessor.getJob().removeBoardLocation(
-                        boardLocation);
+                BoardLocation boardLocation =
+                        JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
+                JobPanel.this.jobProcessor.getJob().removeBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
             }
         }
@@ -893,15 +840,15 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
-            	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
-            	Camera camera = tool.getHead().getDefaultCamera();
+            UiUtils.messageBoxOnException(() -> {
+                HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                Camera camera = tool.getHead().getDefaultCamera();
                 double z = getSelectedBoardLocation().getLocation().getZ();
-                getSelectedBoardLocation().setLocation(camera.getLocation().derive(null, null, z, null));
-                boardLocationsTableModel.fireTableRowsUpdated(
-                        boardLocationsTable.getSelectedRow(),
+                getSelectedBoardLocation()
+                        .setLocation(camera.getLocation().derive(null, null, z, null));
+                boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(),
                         boardLocationsTable.getSelectedRow());
-        	});
+            });
         }
     };
 
@@ -909,57 +856,53 @@ public class JobPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.captureTool);
             putValue(NAME, "Capture Tool Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the board's location to the tool's current position.");
+            putValue(SHORT_DESCRIPTION, "Set the board's location to the tool's current position.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
-                double z = getSelectedBoardLocation().getLocation().getZ();
-                getSelectedBoardLocation().setLocation(tool.getLocation().derive(null, null, z, null));
-            boardLocationsTableModel.fireTableRowsUpdated(
-                    boardLocationsTable.getSelectedRow(),
+            HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+            double z = getSelectedBoardLocation().getLocation().getZ();
+            getSelectedBoardLocation().setLocation(tool.getLocation().derive(null, null, z, null));
+            boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(),
                     boardLocationsTable.getSelectedRow());
         }
     };
 
-    public final Action moveCameraToBoardLocationAction = new AbstractAction(
-            "Move Camera To Board Location") {
-        {
-            putValue(SMALL_ICON, Icons.centerCamera);
-            putValue(NAME, "Move Camera To Board Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Position the camera at the board's location.");
-        }
+    public final Action moveCameraToBoardLocationAction =
+            new AbstractAction("Move Camera To Board Location") {
+                {
+                    putValue(SMALL_ICON, Icons.centerCamera);
+                    putValue(NAME, "Move Camera To Board Location");
+                    putValue(SHORT_DESCRIPTION, "Position the camera at the board's location.");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.submitUiMachineTask(() -> {
-        		HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
-            	Camera camera = tool.getHead().getDefaultCamera();
-            	MainFrame.cameraPanel.ensureCameraVisible(camera);
-                Location location = getSelectedBoardLocation().getLocation();
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-        	});
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                        Camera camera = tool.getHead().getDefaultCamera();
+                        MainFrame.cameraPanel.ensureCameraVisible(camera);
+                        Location location = getSelectedBoardLocation().getLocation();
+                        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                    });
+                }
+            };
 
     public final Action moveToolToBoardLocationAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerTool);
             putValue(NAME, "Move Tool To Board Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Position the tool at the board's location.");
+            putValue(SHORT_DESCRIPTION, "Position the tool at the board's location.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.submitUiMachineTask(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
                 Location location = getSelectedBoardLocation().getLocation();
                 MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
-        	});
+            });
         }
     };
 
@@ -973,9 +916,9 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.messageBoxOnException(() -> {
+            UiUtils.messageBoxOnException(() -> {
                 new TwoPlacementBoardLocationProcess(frame, JobPanel.this);
-        	});
+            });
         }
     };
 
@@ -989,7 +932,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.submitUiMachineTask(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 Location location = FiducialLocator.locateBoard(getSelectedBoardLocation());
                 getSelectedBoardLocation().setLocation(location);
                 refreshSelectedBoardRow();
@@ -997,7 +940,7 @@ public class JobPanel extends JPanel {
                 Camera camera = tool.getHead().getDefaultCamera();
                 MainFrame.cameraPanel.ensureCameraVisible(camera);
                 MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
-        	});
+            });
         }
     };
 
@@ -1049,8 +992,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void jobEncounteredError(JobError error, String description) {
-            MessageBoxes.errorBox(frame, error.toString(), description
-                    + "\n\nThe job will be paused.");
+            MessageBoxes.errorBox(frame, error.toString(),
+                    description + "\n\nThe job will be paused.");
             // TODO: Implement a way to retry, abort, etc.
             jobProcessor.pause();
         }
@@ -1058,8 +1001,7 @@ public class JobPanel extends JPanel {
 
     private final JobProcessorDelegate jobProcessorDelegate = new JobProcessorDelegate() {
         @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part,
-                Feeder feeder) {
+        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
             return PickRetryAction.SkipAndContinue;
         }
     };
@@ -1077,11 +1019,12 @@ public class JobPanel extends JPanel {
         }
     };
 
-    private final PropertyChangeListener titlePropertyChangeListener = new PropertyChangeListener() {
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            updateTitle();
-            jobSaveActionGroup.setEnabled(jobProcessor.getJob().isDirty());
-        }
-    };
+    private final PropertyChangeListener titlePropertyChangeListener =
+            new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    updateTitle();
+                    jobSaveActionGroup.setEnabled(jobProcessor.getJob().isDirty());
+                }
+            };
 }

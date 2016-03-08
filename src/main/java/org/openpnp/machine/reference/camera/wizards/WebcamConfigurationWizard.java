@@ -28,24 +28,28 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.machine.reference.camera.LtiCivilCamera;
+import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
+import com.github.sarxos.webcam.WebcamDiscoveryEvent;
+import com.github.sarxos.webcam.WebcamDiscoveryListener;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class LtiCivilCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
-    private final LtiCivilCamera camera;
+
+
+public class WebcamConfigurationWizard extends ReferenceCameraConfigurationWizard
+        implements WebcamDiscoveryListener {
+    private final Webcams camera;
 
     private JPanel panelGeneral;
     private JComboBox comboBoxDeviceId;
-    private JCheckBox chckbxForceGrayscale;
+    private JCheckBox chckbxGray;
 
-    public LtiCivilCameraConfigurationWizard(LtiCivilCamera camera) {
+    public WebcamConfigurationWizard(Webcams camera) {
         super(camera);
-
         this.camera = camera;
 
         panelGeneral = new JPanel();
@@ -71,8 +75,8 @@ public class LtiCivilCameraConfigurationWizard extends ReferenceCameraConfigurat
         comboBoxDeviceId = new JComboBox(deviceIds);
         panelGeneral.add(comboBoxDeviceId, "4, 2, left, default");
 
-        chckbxForceGrayscale = new JCheckBox("Force Grayscale?");
-        panelGeneral.add(chckbxForceGrayscale, "2, 4, 3, 1");
+        chckbxGray = new JCheckBox("Force Grayscale?");
+        panelGeneral.add(chckbxGray, "2, 4, 3, 1");
     }
 
     @Override
@@ -81,8 +85,49 @@ public class LtiCivilCameraConfigurationWizard extends ReferenceCameraConfigurat
         // The order of the properties is important. We want all the booleans
         // to be set before we set the driver because setting the driver
         // applies all the settings.
-        addWrappedBinding(camera, "forceGrayscale", chckbxForceGrayscale, "selected");
+        addWrappedBinding(camera, "forceGray", chckbxGray, "selected");
         addWrappedBinding(camera, "deviceId", comboBoxDeviceId, "selectedItem");
+    }
+
+    private void updateList() {
+        comboBoxDeviceId.removeAllItems();
+        try {
+            int i = 0;
+            String id = null;
+            for (String s : camera.getDeviceIds().toArray(new String[] {})) {
+                comboBoxDeviceId.addItem(s);
+                if (s.equals(camera.getDeviceId())) {
+                    id = s;
+                }
+                i++;
+            }
+            if (id != null) {
+                comboBoxDeviceId.setSelectedItem(id);
+            }
+        }
+        catch (Exception e) {
+            ;
+        }
+        comboBoxDeviceId.repaint();
+        panelGeneral.revalidate(); // for JFrame up to Java7 is there only validate()
+        panelGeneral.repaint();
+    }
+
+
+    @Override
+    public void webcamFound(WebcamDiscoveryEvent event) {
+        if (camera.getDeviceId().equals(event.getWebcam().getName())) {
+            System.out.format("Webcam connected: %s \n", event.getWebcam().getName());
+        }
+        updateList();
+    }
+
+    @Override
+    public void webcamGone(WebcamDiscoveryEvent event) {
+        if (camera.getDeviceId().equals(event.getWebcam().getName())) {
+            System.out.format("Webcam disconnected: %s \n", event.getWebcam().getName());
+        }
+        updateList();
     }
 
 }

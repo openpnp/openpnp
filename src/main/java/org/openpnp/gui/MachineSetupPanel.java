@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.gui;
@@ -51,7 +49,6 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
@@ -62,88 +59,84 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class MachineSetupPanel extends JPanel implements WizardContainer {
-	private final static Logger logger = LoggerFactory
-			.getLogger(MachineSetupPanel.class);
+    private final static Logger logger = LoggerFactory.getLogger(MachineSetupPanel.class);
 
-	private static final String PREF_DIVIDER_POSITION = "MachineSetupPanel.dividerPosition";
-	private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    private static final String PREF_DIVIDER_POSITION = "MachineSetupPanel.dividerPosition";
+    private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
-	private JTextField searchTextField;
+    private JTextField searchTextField;
 
-	private Preferences prefs = Preferences
-			.userNodeForPackage(MachineSetupPanel.class);
-	private JTree tree;
-	private JTabbedPane tabbedPane;
-	private JToolBar toolBar;
+    private Preferences prefs = Preferences.userNodeForPackage(MachineSetupPanel.class);
+    private JTree tree;
+    private JTabbedPane tabbedPane;
+    private JToolBar toolBar;
 
-	public MachineSetupPanel() {
-		setLayout(new BorderLayout(0, 0));
+    public MachineSetupPanel() {
+        setLayout(new BorderLayout(0, 0));
 
-		JPanel panel = new JPanel();
-		add(panel, BorderLayout.NORTH);
-		panel.setLayout(new BorderLayout(0, 0));
+        JPanel panel = new JPanel();
+        add(panel, BorderLayout.NORTH);
+        panel.setLayout(new BorderLayout(0, 0));
 
-		toolBar = new JToolBar();
-		toolBar.setFloatable(false);
-		panel.add(toolBar, BorderLayout.CENTER);
+        toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        panel.add(toolBar, BorderLayout.CENTER);
 
-		JPanel panel_1 = new JPanel();
-		panel.add(panel_1, BorderLayout.EAST);
+        JPanel panel_1 = new JPanel();
+        panel.add(panel_1, BorderLayout.EAST);
 
-		JLabel lblSearch = new JLabel("Search");
-		panel_1.add(lblSearch);
+        JLabel lblSearch = new JLabel("Search");
+        panel_1.add(lblSearch);
 
-		searchTextField = new JTextField();
+        searchTextField = new JTextField();
         searchTextField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent e) {
                 search();
             }
-            
+
             @Override
             public void insertUpdate(DocumentEvent e) {
                 search();
             }
-            
+
             @Override
             public void changedUpdate(DocumentEvent e) {
                 search();
             }
         });
-		panel_1.add(searchTextField);
-		searchTextField.setColumns(15);
+        panel_1.add(searchTextField);
+        searchTextField.setColumns(15);
 
-		final JSplitPane splitPane = new JSplitPane();
-		splitPane.setContinuousLayout(true);
-		splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
-				PREF_DIVIDER_POSITION_DEF));
-		splitPane.addPropertyChangeListener("dividerLocation",
-				new PropertyChangeListener() {
-					@Override
-					public void propertyChange(PropertyChangeEvent evt) {
-						prefs.putInt(PREF_DIVIDER_POSITION,
-								splitPane.getDividerLocation());
-					}
-				});
-		add(splitPane, BorderLayout.CENTER);
+        final JSplitPane splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
+            }
+        });
+        add(splitPane, BorderLayout.CENTER);
 
         JScrollPane scrollPane = new JScrollPane();
         splitPane.setLeftComponent(scrollPane);
-        
+
         tree = new JTree();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setCellRenderer(treeCellRenderer);
         scrollPane.setViewportView(tree);
-        
+
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         splitPane.setRightComponent(tabbedPane);
-        
+
         tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
                 tabbedPane.removeAll();
                 toolBar.removeAll();
-                
+
                 TreePath path = tree.getSelectionPath();
                 for (Object o : path.getPath()) {
                     PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
@@ -157,8 +150,9 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                         }
                     }
                 }
-                
-                PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) path.getLastPathComponent();
+
+                PropertySheetHolderTreeNode node =
+                        (PropertySheetHolderTreeNode) path.getLastPathComponent();
                 if (node != null) {
                     PropertySheet[] propertySheets = node.obj.getPropertySheets();
                     if (propertySheets != null) {
@@ -174,45 +168,40 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                         }
                     }
                 }
-                
+
                 revalidate();
                 repaint();
             }
         });
-        
+
         Configuration.get().addListener(new ConfigurationListener() {
             @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
-            }
-            
+            public void configurationLoaded(Configuration configuration) throws Exception {}
+
             @Override
-            public void configurationComplete(Configuration configuration)
-                    throws Exception {
-                tree.setModel(new DefaultTreeModel(new PropertySheetHolderTreeNode(Configuration.get().getMachine(), null)));
+            public void configurationComplete(Configuration configuration) throws Exception {
+                tree.setModel(new DefaultTreeModel(
+                        new PropertySheetHolderTreeNode(Configuration.get().getMachine(), null)));
                 for (int i = 0; i < tree.getRowCount(); i++) {
                     tree.expandRow(i);
                 }
             }
         });
-	}
+    }
 
-	private void search() {
-	}
+    private void search() {}
 
-	@Override
-	public void wizardCompleted(Wizard wizard) {
-	}
+    @Override
+    public void wizardCompleted(Wizard wizard) {}
 
-	@Override
-	public void wizardCancelled(Wizard wizard) {
-	}
-	
+    @Override
+    public void wizardCancelled(Wizard wizard) {}
+
     public class PropertySheetHolderTreeNode implements TreeNode {
         private final PropertySheetHolder obj;
         private final TreeNode parent;
         private final ArrayList<PropertySheetHolderTreeNode> children = new ArrayList<>();
-        
+
         public PropertySheetHolderTreeNode(PropertySheetHolder obj, TreeNode parent) {
             this.obj = obj;
             this.parent = parent;
@@ -223,11 +212,11 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                 }
             }
         }
-        
+
         public PropertySheetHolder getPropertySheetHolder() {
             return obj;
         }
-        
+
         @Override
         public TreeNode getChildAt(int childIndex) {
             return children.get(childIndex);
@@ -268,20 +257,20 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             return obj.getPropertySheetHolderTitle();
         }
     }
-    
+
     private TreeCellRenderer treeCellRenderer = new DefaultTreeCellRenderer() {
         // http://stackoverflow.com/questions/20691946/set-icon-to-each-node-in-jtree
         @Override
-        public Component getTreeCellRendererComponent(JTree tree,
-            Object value, boolean selected, boolean expanded,
-            boolean leaf, int row, boolean hasFocus) {
-                super.getTreeCellRendererComponent(tree, value, selected,expanded, leaf, row, hasFocus);
-                if (value instanceof PropertySheetHolderTreeNode) {
-                    PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) value;
-                    PropertySheetHolder psh = node.getPropertySheetHolder();
-                    setIcon(psh.getPropertySheetHolderIcon());
-                }
-                return this;
-        }    
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
+                boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row,
+                    hasFocus);
+            if (value instanceof PropertySheetHolderTreeNode) {
+                PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) value;
+                PropertySheetHolder psh = node.getPropertySheetHolder();
+                setIcon(psh.getPropertySheetHolderIcon());
+            }
+            return this;
+        }
     };
 }

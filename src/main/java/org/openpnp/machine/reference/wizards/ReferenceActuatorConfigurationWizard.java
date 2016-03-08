@@ -117,7 +117,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
     public void createBindings() {
         System.out.println(Configuration.get().getMachine().getActuators());
         System.out.println(Configuration.get().getMachine().getActuatorByName("AM1"));
-        
+
         LengthConverter lengthConverter = new LengthConverter();
 
         MutableLocationProxy headOffsets = new MutableLocationProxy();
