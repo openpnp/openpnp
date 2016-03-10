@@ -7,6 +7,7 @@ import javax.swing.table.AbstractTableModel;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
+@SuppressWarnings("serial")
 public class StagesTableModel extends AbstractTableModel {
     private static String[] columnNames = {
             "Name",
@@ -18,12 +19,18 @@ public class StagesTableModel extends AbstractTableModel {
             String.class
     };
     
-    private final CvPipeline pipeline;
     private final List<CvStage> stages;
     
     public StagesTableModel(CvPipeline pipeline) {
-        this.pipeline = pipeline;
         this.stages = pipeline.getStages();
+    }
+    
+    public void refresh() {
+        fireTableDataChanged();
+    }
+    
+    public CvStage getStage(int rowIndex) {
+        return stages.get(rowIndex);
     }
     
     @Override
@@ -33,7 +40,7 @@ public class StagesTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        CvStage stage = stages.get(rowIndex);
+        CvStage stage = getStage(rowIndex);
         switch (columnIndex) {
             case 0:
                 return stage.getName();

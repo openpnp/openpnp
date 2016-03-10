@@ -1,5 +1,6 @@
 package org.openpnp.vision.pipeline;
 
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,15 +39,35 @@ public class CvPipeline {
     private Mat workingImage;
     
     public void add(String name, CvStage stage) {
+        if (name == null) {
+            name = generateUniqueName();
+        }
         stage.setName(name);
-        add(stage);
+        stages.add(stage);
     }
     
     public void add(CvStage stage) {
-        if (stage.getName() == null) {
-            stage.setName(generateName());
+        add(stage.getName(), stage);
+    }
+    
+    public void insert(String name, CvStage stage, int index) {
+        if (name == null) {
+            name = generateUniqueName();
         }
-        stages.add(stage);
+        stage.setName(name);
+        stages.add(index, stage);
+    }
+    
+    public void insert(CvStage stage, int index) {
+        insert(stage.getName(), stage, index);
+    }
+    
+    public void remove(String name) {
+        remove(getStage(name));
+    }
+    
+    public void remove(CvStage stage) {
+        stages.remove(stage);
     }
     
     public List<CvStage> getStages() {
@@ -63,7 +84,11 @@ public class CvPipeline {
     }
     
     public Result getResult(String name) {
-        return results.get(getStage(name));
+        return getResult(getStage(name));
+    }
+    
+    public Result getResult(CvStage stage) {
+        return results.get(stage);
     }
     
     public Mat getWorkingImage() {
@@ -116,7 +141,24 @@ public class CvPipeline {
         results.clear();
     }
     
-    private String generateName() {
+    public String toXmlString() throws Exception {
+        Serializer ser = Configuration.createSerializer();
+        StringWriter sw = new StringWriter();
+        ser.write(this, sw);
+        return sw.toString();
+    }
+    
+    public void fromXmlString(String s) throws Exception {
+        Serializer ser = Configuration.createSerializer();
+        StringReader sr = new StringReader(s);
+        CvPipeline pipeline = ser.read(CvPipeline.class, sr);
+        stages.clear();
+        for (CvStage stage : pipeline.getStages()) {
+            add(stage);
+        }
+    }
+    
+    private String generateUniqueName() {
         for (int i = 0; ; i++) {
             String name = "" + i;
             if (getStage(name) == null) {
@@ -127,14 +169,19 @@ public class CvPipeline {
     
     public static void main(String[] args) throws Exception {
         CvPipeline pipeline = new CvPipeline();
-        pipeline.add(new LoadImage().setPath("/Users/jason/Desktop/t.png"));
-        pipeline.add(new ConvertColor().setConversion(FluentCv.ColorCode.Bgr2Gray));
-        pipeline.add(new SaveImage().setPath("/Users/jason/Desktop/t_gray.png"));
+//        pipeline.add(new LoadImage().setPath("/Users/jason/Desktop/t.png"));
+//        pipeline.add(new ConvertColor().setConversion(FluentCv.ColorCode.Bgr2Gray));
+//        pipeline.add(new SaveImage().setPath("/Users/jason/Desktop/t_gray.png"));
         pipeline.process();
         
-        Serializer s = Configuration.createSerializer();
-        StringWriter sw = new StringWriter();
-        s.write(pipeline, sw);
-        System.out.println(sw.toString());
+        System.out.println(pipeline.toXmlString());
+        
+        String s = pipeline.toXmlString();
+        
+        pipeline = new CvPipeline();
+        
+        pipeline.fromXmlString(s);
+        
+        System.out.println(pipeline.toXmlString());
     }
 }

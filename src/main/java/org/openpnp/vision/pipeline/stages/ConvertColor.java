@@ -12,15 +12,14 @@ import org.simpleframework.xml.Attribute;
  */
 public class ConvertColor extends CvStage {
     @Attribute
-    private FluentCv.ColorCode conversion;
+    private FluentCv.ColorCode conversion = FluentCv.ColorCode.Bgr2Gray;
     
     public FluentCv.ColorCode getConversion() {
         return conversion;
     }
 
-    public ConvertColor setConversion(FluentCv.ColorCode conversion) {
+    public void setConversion(FluentCv.ColorCode conversion) {
         this.conversion = conversion;
-        return this;
     }
 
     @Override
