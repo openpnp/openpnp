@@ -282,7 +282,6 @@ public class PackagesPanel extends JPanel {
         }
     };
 
-    // TODO: add to enable group
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);

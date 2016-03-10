@@ -52,8 +52,8 @@ public class StagesTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        // TODO Auto-generated method stub
-        super.setValueAt(aValue, rowIndex, columnIndex);
+        CvStage stage = getStage(rowIndex);
+        stage.setName(aValue.toString());
     }
 
     @Override

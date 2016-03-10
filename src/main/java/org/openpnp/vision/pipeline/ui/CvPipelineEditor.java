@@ -1,10 +1,15 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.beans.Introspector;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +33,7 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Configuration;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
@@ -77,6 +83,16 @@ public class CvPipelineEditor extends JPanel {
         JButton btnRemove = new JButton(deleteStageAction);
         btnRemove.setHideActionText(true);
         toolbar.add(btnRemove);
+        
+        toolbar.addSeparator();
+        
+        JButton copyButton = new JButton(copyAction);
+        copyButton.setHideActionText(true);
+        toolbar.add(copyButton);
+        
+        JButton pasteButton = new JButton(pasteAction);
+        pasteButton.setHideActionText(true);
+        toolbar.add(pasteButton);
 
         JSplitPane leftRightSplitPane = new JSplitPane();
         add(leftRightSplitPane, BorderLayout.CENTER);
@@ -209,6 +225,48 @@ public class CvPipelineEditor extends JPanel {
         }
     };
 
+    public final Action copyAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            putValue(NAME, "Copy Pipeline to Clipboard");
+            putValue(SHORT_DESCRIPTION,
+                    "Copy the pipeline to the clipboard in text format.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                StringSelection stringSelection = new StringSelection(pipeline.toXmlString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+            }
+        }
+    };
+
+    public final Action pasteAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            putValue(NAME, "Create Pipeline from Clipboard");
+            putValue(SHORT_DESCRIPTION, "Create a new pipeline from a definition on the clipboard.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                pipeline.fromXmlString(s);
+                stagesTableModel.refresh();
+                Helpers.selectLastTableRow(stagesTable);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+            }
+        }
+    };
 
     public static void main(String[] args) throws Exception {
         // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
