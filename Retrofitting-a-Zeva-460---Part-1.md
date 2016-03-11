@@ -6,7 +6,7 @@ You will see from description that retrofit that I have realized it's on his ear
 I will try to describe it as general as possible to make this page a guideline for similar machine.  
 
 
-![img_20160306_200118](https://cloud.githubusercontent.com/assets/670552/13561503/6f6f699c-e436-11e5-9353-78c87a3bfcb9.jpg)   
+![pm460machine1](https://cloud.githubusercontent.com/assets/670552/13706382/8a84b9ec-e7ad-11e5-8ede-192188d5c24e.jpg)  
 
 ### 1. Get documentation on your machine  
 For this I have subscribed to  https://ca.groups.yahoo.com/neo/groups/zevatech/info . In section files you will find documentation for Zeva PM460 (and also other Zeva machines).   
