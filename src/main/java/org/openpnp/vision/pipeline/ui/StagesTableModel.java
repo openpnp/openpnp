@@ -8,7 +8,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
 @SuppressWarnings("serial")
-public class StagesTableModel extends AbstractTableModel {
+public class StagesTableModel extends AbstractTableModel implements Reorderable {
     private static String[] columnNames = {
             "Name",
             "Stage"
@@ -20,8 +20,10 @@ public class StagesTableModel extends AbstractTableModel {
     };
     
     private final List<CvStage> stages;
+    private final CvPipeline pipeline;
     
     public StagesTableModel(CvPipeline pipeline) {
+        this.pipeline = pipeline;
         this.stages = pipeline.getStages();
     }
     
@@ -29,6 +31,17 @@ public class StagesTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
     
+    @Override
+    public void reorder(int fromIndex, int toIndex) {
+        CvStage stage = getStage(fromIndex);
+        pipeline.remove(stage);
+        if (fromIndex < toIndex) {
+            toIndex--;
+        }
+        pipeline.insert(stage, toIndex);
+        refresh();
+    }
+
     public CvStage getStage(int rowIndex) {
         return stages.get(rowIndex);
     }
