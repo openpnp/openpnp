@@ -10,7 +10,6 @@ import org.openpnp.util.HslColor;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

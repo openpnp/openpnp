@@ -12,17 +12,16 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.UIManager;
 
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.BlurGaussian;
-import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
-import org.openpnp.vision.pipeline.stages.DrawCircles;
+import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
+import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.ReadImage;
-import org.openpnp.vision.pipeline.stages.WriteImage;
 import org.openpnp.vision.pipeline.stages.Threshold;
+import org.openpnp.vision.pipeline.stages.WriteImage;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -84,14 +83,8 @@ public class CvPipelineEditor extends JPanel {
     }
 
     public void process() {
-        try {
-            getPipeline().process();
-            resultsPanel.refresh();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Pipeline Processing Error", e);
-        }
+        getPipeline().process();
+        resultsPanel.refresh();
     }
 
     public void stageSelected(CvStage stage) {

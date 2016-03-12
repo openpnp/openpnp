@@ -146,12 +146,18 @@ public class CvPipeline {
         return workingImage;
     }
 
-    public void process() throws Exception {
+    public void process() {
         release();
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
-            Result result = stage.process(this);
+            Result result = null;
+            try {
+                result = stage.process(this);
+            }
+            catch (Exception e) {
+                result = new Result(null, e);
+            }
             processingTimeNs = System.nanoTime() - processingTimeNs;
 
             Mat image = null;
