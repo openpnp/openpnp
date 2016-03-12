@@ -75,14 +75,14 @@ public class CvPipelineEditor extends JPanel {
                 inputAndOutputSplitPane.setDividerLocation(0.25);
             }
         });
-        
+
         process();
     }
-    
+
     public CvPipeline getPipeline() {
         return pipeline;
     }
-    
+
     public void process() {
         try {
             getPipeline().process();
@@ -93,11 +93,11 @@ public class CvPipelineEditor extends JPanel {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Pipeline Processing Error", e);
         }
     }
-    
+
     public void stageSelected(CvStage stage) {
         resultsPanel.setSelectedStage(stage);
     }
-    
+
     public static Set<Class<? extends CvStage>> getStageClasses() {
         return Collections.unmodifiableSet(stageClasses);
     }
@@ -117,7 +117,17 @@ public class CvPipelineEditor extends JPanel {
         }
 
         CvPipeline pipeline = new CvPipeline();
-//        pipeline.fromXmlString("<cv-pipeline>\n   <stages>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.LoadImage\" name=\"0\" file=\"/Users/jason/Desktop/t.png\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\" conversion=\"Bgr2Gray\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"3\" kernel-size=\"21\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.EdgeDetectCanny\" name=\"4\" threshold-1=\"40.0\" threshold-2=\"180.0\"/>\n            <cv-stage class=\"org.openpnp.vision.pipeline.stages.SaveImage\" name=\"2\" file=\"/Users/jason/Desktop/t_gray.png\"/>\n   </stages>\n</cv-pipeline>");
+        // pipeline.fromXmlString("<cv-pipeline>\n <stages>\n <cv-stage
+        // class=\"org.openpnp.vision.pipeline.stages.LoadImage\" name=\"0\"
+        // file=\"/Users/jason/Desktop/t.png\"/>\n <cv-stage
+        // class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\"
+        // conversion=\"Bgr2Gray\"/>\n <cv-stage
+        // class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"3\"
+        // kernel-size=\"21\"/>\n <cv-stage
+        // class=\"org.openpnp.vision.pipeline.stages.EdgeDetectCanny\" name=\"4\"
+        // threshold-1=\"40.0\" threshold-2=\"180.0\"/>\n <cv-stage
+        // class=\"org.openpnp.vision.pipeline.stages.SaveImage\" name=\"2\"
+        // file=\"/Users/jason/Desktop/t_gray.png\"/>\n </stages>\n</cv-pipeline>");
 
         JFrame frame = new JFrame("CvPipelineEditor");
         frame.setSize(1024, 768);

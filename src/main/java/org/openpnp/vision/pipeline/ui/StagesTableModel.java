@@ -9,28 +9,22 @@ import org.openpnp.vision.pipeline.CvStage;
 
 @SuppressWarnings("serial")
 public class StagesTableModel extends AbstractTableModel implements Reorderable {
-    private static String[] columnNames = {
-            "Name",
-            "Stage"
-    };
-    
-    private static Class<?>[] columnClasses = {
-            String.class,
-            String.class
-    };
-    
+    private static String[] columnNames = {"Name", "Stage"};
+
+    private static Class<?>[] columnClasses = {String.class, String.class};
+
     private final List<CvStage> stages;
     private final CvPipeline pipeline;
-    
+
     public StagesTableModel(CvPipeline pipeline) {
         this.pipeline = pipeline;
         this.stages = pipeline.getStages();
     }
-    
+
     public void refresh() {
         fireTableDataChanged();
     }
-    
+
     @Override
     public void reorder(int fromIndex, int toIndex) {
         CvStage stage = getStage(fromIndex);
@@ -45,7 +39,7 @@ public class StagesTableModel extends AbstractTableModel implements Reorderable 
     public CvStage getStage(int rowIndex) {
         return stages.get(rowIndex);
     }
-    
+
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return columnIndex == 0;

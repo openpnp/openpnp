@@ -7,15 +7,15 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Converts the color of the current working image to the specified conversion. 
+ * Converts the color of the current working image to the specified conversion.
  */
 public class DetectEdgesCanny extends CvStage {
     @Attribute
     double threshold1 = 40;
-    
+
     @Attribute
     double threshold2 = 180;
-    
+
     public double getThreshold1() {
         return threshold1;
     }

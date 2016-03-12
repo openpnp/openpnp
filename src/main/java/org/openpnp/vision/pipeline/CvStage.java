@@ -56,5 +56,22 @@ public abstract class CvStage {
         public Result(Mat image) {
             this(image, null, 0);
         }
+
+        public static class Circle {
+            public double x;
+            public double y;
+            public double diameter;
+
+            public Circle(double x, double y, double diameter) {
+                this.x = x;
+                this.y = y;
+                this.diameter = diameter;
+            }
+
+            @Override
+            public String toString() {
+                return "Circle [x=" + x + ", y=" + y + ", diameter=" + diameter + "]";
+            }
+        }
     }
 }

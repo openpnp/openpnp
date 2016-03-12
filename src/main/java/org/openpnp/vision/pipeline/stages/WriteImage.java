@@ -8,13 +8,13 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Save the working image to the specified path. The format is chosen based
- * on the filename's extension.
+ * Save the working image to the specified path. The format is chosen based on the filename's
+ * extension.
  */
 public class WriteImage extends CvStage {
     @Attribute
     private File file = new File("");
-    
+
     public File getFile() {
         return file;
     }

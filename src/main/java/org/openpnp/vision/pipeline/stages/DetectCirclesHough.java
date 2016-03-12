@@ -97,33 +97,16 @@ public class DetectCirclesHough extends CvStage {
         Mat output = new Mat();
         Imgproc.HoughCircles(mat, output, Imgproc.CV_HOUGH_GRADIENT, dp, minDistance, param1,
                 param2, minDiameter / 2, maxDiameter / 2);
-        List<Circle> circles = new ArrayList<>();
+        List<Result.Circle> circles = new ArrayList<>();
         for (int i = 0; i < output.cols(); i++) {
             double[] circle = output.get(0, i);
             double x = circle[0];
             double y = circle[1];
             double radius = circle[2];
-            circles.add(new Circle(x, y, radius * 2.0));
+            circles.add(new Result.Circle(x, y, radius * 2.0));
         }
         output.release();
 
         return new Result(null, circles);
-    }
-
-    public static class Circle {
-        public double x;
-        public double y;
-        public double diameter;
-
-        public Circle(double x, double y, double diameter) {
-            this.x = x;
-            this.y = y;
-            this.diameter = diameter;
-        }
-
-        @Override
-        public String toString() {
-            return "Circle [x=" + x + ", y=" + y + ", diameter=" + diameter + "]";
-        }
     }
 }

@@ -10,16 +10,20 @@ import org.openpnp.util.HslColor;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.stages.DetectCirclesHough.Circle;
+import org.openpnp.vision.pipeline.CvStage.Result.Circle;
+import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.convert.Convert;
 
 public class DrawCircles extends CvStage {
-    @Attribute(required=false)
+    @Element(required = false)
+    @Convert(ColorConverter.class)
     private Color color = null;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     private String modelStageName = null;
-    
+
     public Color getColor() {
         return color;
     }
@@ -46,13 +50,15 @@ public class DrawCircles extends CvStage {
             return null;
         }
         Mat mat = pipeline.getWorkingImage();
-        List<Circle> circles = (List<Circle>) result.model;
+        List<Result.Circle> circles = (List<Result.Circle>) result.model;
         for (int i = 0; i < circles.size(); i++) {
-            Circle circle = circles.get(i);
+            Result.Circle circle = circles.get(i);
             Color color = this.color == null ? FluentCv.indexedColor(i) : this.color;
             Color centerColor = new HslColor(color).getComplementary();
-            Core.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2), FluentCv.colorToScalar(color), 2);
-            Core.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor), 2);
+            Core.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2),
+                    FluentCv.colorToScalar(color), 2);
+            Core.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor),
+                    2);
         }
         return null;
     }

@@ -12,6 +12,8 @@ import java.beans.Introspector;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -116,7 +118,7 @@ public class PipelinePanel extends JPanel {
                 }
             }
         });
-        
+
         stagesTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -165,10 +167,17 @@ public class PipelinePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            ClassSelectionDialog<CvStage> dialog =
-                    new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(PipelinePanel.this),
-                            "New Stage", "Please select a stage implemention from the list below.",
-                            new ArrayList<>(editor.getStageClasses()));
+            List<Class<? extends CvStage>> stageClasses = new ArrayList<>(editor.getStageClasses());
+            stageClasses.sort(new Comparator<Class<? extends CvStage>>() {
+                @Override
+                public int compare(Class<? extends CvStage> o1, Class<? extends CvStage> o2) {
+                    return o1.getSimpleName().toLowerCase()
+                            .compareTo(o2.getSimpleName().toLowerCase());
+                }
+            });
+            ClassSelectionDialog<CvStage> dialog = new ClassSelectionDialog<>(
+                    JOptionPane.getFrameForComponent(PipelinePanel.this), "New Stage",
+                    "Please select a stage implemention from the list below.", stageClasses);
             dialog.setVisible(true);
             Class<? extends CvStage> stageClass = dialog.getSelectedClass();
             if (stageClass == null) {
@@ -182,8 +191,8 @@ public class PipelinePanel extends JPanel {
                 editor.process();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this),
-                        "Error", e);
+                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
+                        e);
             }
         }
     };

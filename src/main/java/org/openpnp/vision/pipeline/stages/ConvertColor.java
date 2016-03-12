@@ -8,12 +8,12 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Converts the color of the current working image to the specified conversion. 
+ * Converts the color of the current working image to the specified conversion.
  */
 public class ConvertColor extends CvStage {
     @Attribute
     private FluentCv.ColorCode conversion = FluentCv.ColorCode.Bgr2Gray;
-    
+
     public FluentCv.ColorCode getConversion() {
         return conversion;
     }
