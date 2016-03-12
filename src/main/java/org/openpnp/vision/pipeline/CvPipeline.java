@@ -98,8 +98,11 @@ public class CvPipeline {
     }
 
     public CvStage getStage(String name) {
+        if (name == null) {
+            return null;
+        }
         for (CvStage stage : stages) {
-            if (name.equals(stage.getName())) {
+            if (stage.getName().equals(name)) {
                 return stage;
             }
         }
@@ -114,6 +117,9 @@ public class CvPipeline {
      * @return
      */
     public Result getResult(String name) {
+        if (name == null) {
+            return null;
+        }
         return getResult(getStage(name));
     }
 
@@ -125,6 +131,9 @@ public class CvPipeline {
      * @return
      */
     public Result getResult(CvStage stage) {
+        if (stage == null) {
+            return null;
+        }
         return results.get(stage);
     }
 
@@ -141,35 +150,37 @@ public class CvPipeline {
         release();
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
-            long t = System.nanoTime();
+            long processingTimeNs = System.nanoTime();
             Result result = stage.process(this);
-            t = System.nanoTime() - t;
+            processingTimeNs = System.nanoTime() - processingTimeNs;
 
-            // If no result is returned we at least want to store the processing time, so we
-            // create an empty one.
-            if (result == null) {
-                result = new Result(null, null, t);
+            Mat image = null;
+            Object model = null;
+            if (result != null) {
+                image = result.image;
+                model = result.model;
             }
 
-            // Store the result for later.
-            results.put(stage, result);
-
-            // If the result did not contain an image we're done.
-            if (result.image == null) {
-                continue;
-            }
-            // Update the result with a clone of the returned image so that it is not modified
-            // later.
-            results.put(stage, new Result(result.image.clone(), result.model, t));
-
-            // If the result image is different from the workingImage, release the working
-            // image and then replace it with the result.
-            if (result.image != workingImage) {
+            // If the result image is null and there is a working image, replace the result image
+            // replace the result image with a clone of the working image.
+            if (image == null) {
                 if (workingImage != null) {
+                    image = workingImage.clone();
+                }
+            }
+            // If the result image is not null:
+            // Release the working image if the result image is different.
+            // Replace the working image with the result image.
+            // Clone the result image for storage.
+            else {
+                if (workingImage != null && workingImage != image) {
                     workingImage.release();
                 }
-                workingImage = result.image;
+                workingImage = image;
+                image = image.clone();
             }
+
+            results.put(stage, new Result(image, model, processingTimeNs));
         }
     }
 

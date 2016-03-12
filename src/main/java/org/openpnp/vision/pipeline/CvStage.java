@@ -16,13 +16,15 @@ public abstract class CvStage {
      * Perform an operation in a pipeline. Typical implementations will call
      * CvPipeline#getWorkingImage(), perform some type of operation on the image and will return a
      * Result containing a modified image and model data about features found in the image.
+     *
+     * If the stage only modifies the working image, it is sufficient to just return null, and this
+     * will typically be the most common case.
      * 
      * @param pipeline
-     * @return A Result object containing a modified or new image along with optional model data.
-     *         This method may also return null which indicates that no model data or image is to be
-     *         stored for later retrieval. In either case the call may modify the working image. Any
-     *         image that gets returned as a result is cloned before storage so that further
-     *         modifications of it will not change the stored result.
+     * @return Null or a Result object containing an optional image and optional model. If the
+     *         return value is null the pipeline will store a copy of the working image as the
+     *         result for this stage. Otherwise it will set the working image to the result image
+     *         and store the result image.
      * @throws Exception
      */
     public abstract Result process(CvPipeline pipeline) throws Exception;
@@ -46,7 +48,7 @@ public abstract class CvStage {
             this.model = model;
             this.processingTimeNs = processingTimeNs;
         }
-        
+
         public Result(Mat image, Object model) {
             this(image, model, 0);
         }

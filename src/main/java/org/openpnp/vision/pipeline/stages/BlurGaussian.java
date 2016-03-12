@@ -12,7 +12,7 @@ import org.simpleframework.xml.Attribute;
  */
 public class BlurGaussian extends CvStage {
     @Attribute
-    int kernelSize = 3;
+    private int kernelSize = 3;
 
     public int getKernelSize() {
         return kernelSize;
@@ -26,6 +26,6 @@ public class BlurGaussian extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
         Imgproc.GaussianBlur(mat, mat, new Size(kernelSize, kernelSize), 0);
-        return new Result(mat);
+        return null;
     }
 }

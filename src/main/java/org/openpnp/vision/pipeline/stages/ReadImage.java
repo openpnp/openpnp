@@ -10,7 +10,7 @@ import org.simpleframework.xml.Attribute;
 /**
  * Replace the working image with the image loaded from a given path.
  */
-public class LoadImage extends CvStage {
+public class ReadImage extends CvStage {
     @Attribute
     private File file = new File("");
 

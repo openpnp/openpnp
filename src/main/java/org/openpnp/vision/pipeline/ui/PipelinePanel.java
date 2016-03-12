@@ -183,7 +183,7 @@ public class PipelinePanel extends JPanel {
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this),
-                        "Feeder Error", e);
+                        "Error", e);
             }
         }
     };

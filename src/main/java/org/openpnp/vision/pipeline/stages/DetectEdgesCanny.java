@@ -9,7 +9,7 @@ import org.simpleframework.xml.Attribute;
 /**
  * Converts the color of the current working image to the specified conversion. 
  */
-public class EdgeDetectCanny extends CvStage {
+public class DetectEdgesCanny extends CvStage {
     @Attribute
     double threshold1 = 40;
     
@@ -36,6 +36,6 @@ public class EdgeDetectCanny extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
         Imgproc.Canny(mat, mat, threshold1, threshold2);
-        return new Result(mat);
+        return null;
     }
 }

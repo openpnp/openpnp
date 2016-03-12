@@ -11,6 +11,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
@@ -70,7 +71,7 @@ public class ResultsPanel extends JPanel {
         modelPanel.setLayout(new BorderLayout(0, 0));
 
         modelTextPane = new JTextPane();
-        modelPanel.add(modelTextPane);
+        modelPanel.add(new JScrollPane(modelTextPane));
 
         add(splitPane, BorderLayout.CENTER);
 
@@ -119,7 +120,19 @@ public class ResultsPanel extends JPanel {
             }
         }
 
-        modelTextPane.setText(model == null ? "" : model.toString());
+        if (model instanceof List) {
+            String s = "";
+            for (Object o : ((List) model)) {
+                if (o != null) {
+                    s += o.toString();
+                }
+                s += "\n";
+            }
+            modelTextPane.setText(s);
+        }
+        else {
+            modelTextPane.setText(model == null ? "" : model.toString());
+        }
         matView.setMat(image);
         resultStageNameLabel.setText(result == null || selectedStage == null ? ""
                 : (selectedStage.getName() + " (" + (result.processingTimeNs / 1000000.0)

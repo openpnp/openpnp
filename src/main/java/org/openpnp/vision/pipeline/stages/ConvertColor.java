@@ -26,6 +26,6 @@ public class ConvertColor extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
         Imgproc.cvtColor(mat, mat, conversion.getCode());
-        return new Result(mat);
+        return null;
     }
 }
