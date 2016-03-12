@@ -81,7 +81,7 @@ public class ResultsPanel extends JPanel {
         addHierarchyListener(new HierarchyListener() {
             @Override
             public void hierarchyChanged(HierarchyEvent e) {
-                splitPane.setDividerLocation(0.5);
+                splitPane.setDividerLocation(0.8);
             }
         });
     }
@@ -99,7 +99,7 @@ public class ResultsPanel extends JPanel {
         }
         updateAllEverything();
     }
-    
+
     public void setSelectedStage(CvStage stage) {
         this.selectedStage = stage;
         updateAllEverything();
@@ -121,7 +121,9 @@ public class ResultsPanel extends JPanel {
 
         modelTextPane.setText(model == null ? "" : model.toString());
         matView.setMat(image);
-        resultStageNameLabel.setText(selectedStage == null ? "" : (selectedStage.getName() + " (" + (result.processingTimeNs / 1000000.0) + " ms)"));
+        resultStageNameLabel.setText(result == null || selectedStage == null ? ""
+                : (selectedStage.getName() + " (" + (result.processingTimeNs / 1000000.0)
+                        + " ms)"));
 
         if (selectedStage == null) {
             firstResultAction.setEnabled(false);

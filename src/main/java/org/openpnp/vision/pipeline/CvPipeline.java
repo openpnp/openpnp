@@ -18,13 +18,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A CvPipeline performs computer operations on a working image by processing in series a list of
- * CvStage instances. Each CvStage instance can modify the working image and return a new image
- * along with data extracted from the image. After processing the image users can get access to the
- * images and models from each stage.
+ * A CvPipeline performs computer vision operations on a working image by processing in series a
+ * list of CvStage instances. Each CvStage instance can modify the working image and return a new
+ * image along with data extracted from the image. After processing the image callers can get access
+ * to the images and models from each stage.
  * 
  * CvPipeline is serializable using toXmlString and fromXmlString. This makes it easy to export
  * pipelines and exchange them with others.
+ * 
+ * This work takes inspiration from several existing projects:
+ * 
+ * FireSight by Karl Lew and Šimon Fojtů: https://github.com/firepick1/FireSight
+ * 
+ * RoboRealm: http://www.roborealm.com/
  */
 @Root
 public class CvPipeline {
@@ -138,13 +144,13 @@ public class CvPipeline {
             long t = System.nanoTime();
             Result result = stage.process(this);
             t = System.nanoTime() - t;
-            
+
             // If no result is returned we at least want to store the processing time, so we
             // create an empty one.
             if (result == null) {
                 result = new Result(null, null, t);
             }
-            
+
             // Store the result for later.
             results.put(stage, result);
 
@@ -155,7 +161,7 @@ public class CvPipeline {
             // Update the result with a clone of the returned image so that it is not modified
             // later.
             results.put(stage, new Result(result.image.clone(), result.model, t));
-            
+
             // If the result image is different from the workingImage, release the working
             // image and then replace it with the result.
             if (result.image != workingImage) {

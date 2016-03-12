@@ -19,7 +19,6 @@ import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.EdgeDetectCanny;
 import org.openpnp.vision.pipeline.stages.LoadImage;
-import org.openpnp.vision.pipeline.stages.ModelTest;
 import org.openpnp.vision.pipeline.stages.SaveImage;
 
 /**
@@ -32,20 +31,9 @@ import org.openpnp.vision.pipeline.stages.SaveImage;
  * stage.
  * 
  * The core CvStage classes are automatically registered during startup.
- * 
- * TODO:
- * 
- * Deleting a stage that causes a process error (like LoadImage in the demo) seems to screw everything up.
- * 
- * Scaling the image larger than it's original size causes it to disappear.
  */
 @SuppressWarnings("serial")
 public class CvPipelineEditor extends JPanel {
-    /*
-     * http://docs.oracle.com/javase/tutorial/uiswing/dnd/intro.html
-     * 
-     * http://stackoverflow.com/questions/638807/how-do-i-drag-and-drop-a-row-in-a-jtable
-     */
     static {
         stageClasses = new HashSet<>();
         registerStageClass(ConvertColor.class);
@@ -53,7 +41,6 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(SaveImage.class);
         registerStageClass(EdgeDetectCanny.class);
         registerStageClass(BlurGaussian.class);
-        registerStageClass(ModelTest.class);
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;
@@ -96,7 +83,7 @@ public class CvPipelineEditor extends JPanel {
             resultsPanel.refresh();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", e);
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Pipeline Processing Error", e);
         }
     }
     
@@ -123,7 +110,7 @@ public class CvPipelineEditor extends JPanel {
         }
 
         CvPipeline pipeline = new CvPipeline();
-        pipeline.fromXmlString("<cv-pipeline>\n   <stages>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.LoadImage\" name=\"0\" file=\"/Users/jason/Desktop/t.png\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\" conversion=\"Bgr2Gray\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"3\" kernel-size=\"21\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.EdgeDetectCanny\" name=\"4\" threshold-1=\"40.0\" threshold-2=\"180.0\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ModelTest\" name=\"5\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.SaveImage\" name=\"2\" file=\"/Users/jason/Desktop/t_gray.png\"/>\n   </stages>\n</cv-pipeline>");
+        pipeline.fromXmlString("<cv-pipeline>\n   <stages>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.LoadImage\" name=\"0\" file=\"/Users/jason/Desktop/t.png\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\" conversion=\"Bgr2Gray\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"3\" kernel-size=\"21\"/>\n      <cv-stage class=\"org.openpnp.vision.pipeline.stages.EdgeDetectCanny\" name=\"4\" threshold-1=\"40.0\" threshold-2=\"180.0\"/>\n            <cv-stage class=\"org.openpnp.vision.pipeline.stages.SaveImage\" name=\"2\" file=\"/Users/jason/Desktop/t_gray.png\"/>\n   </stages>\n</cv-pipeline>");
 
         JFrame frame = new JFrame("CvPipelineEditor");
         frame.setSize(1024, 768);

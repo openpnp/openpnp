@@ -26,6 +26,8 @@ import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
@@ -112,6 +114,13 @@ public class PipelinePanel extends JPanel {
                         ex.printStackTrace();
                     }
                 }
+            }
+        });
+        
+        stagesTable.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                editor.process();
             }
         });
 

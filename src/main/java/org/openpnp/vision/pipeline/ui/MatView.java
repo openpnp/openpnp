@@ -37,34 +37,50 @@ public class MatView extends JComponent {
         }
         
         Insets ins = getInsets();
-        int sourceWidth = image.getWidth();
-        int sourceHeight = image.getHeight();
-        int width = getWidth() - ins.left - ins.right;
-        int height = getHeight() - ins.top - ins.bottom;
-
-        double destWidth = width, destHeight = height;
+        double sourceWidth = image.getWidth();
+        double sourceHeight = image.getHeight();
+        double destWidth = getWidth() - ins.left - ins.right;
+        double destHeight = getHeight() - ins.top - ins.bottom;
+        
+        /**
+         * We want to fit both axes in the given destWidth and destHeight while maintaining
+         * the aspect ratio.
+         * If the frame is smaller in either or both axes than the original will need to be
+         * scaled to fill the space as completely as possible while still maintaining the
+         * aspect ratio.
+         * 1. Determine the source size of the image: sourceWidth, sourceHeight.
+         * 2. Determine the max size each axis can be: destWidth, destHeight.
+         * 3. Calculate how much each axis needs to be scaled to fit.
+         * 4. Use the larger of the two and scale the opposite axis by the aspect ratio + the scaling ratio.
+         */
 
         double widthRatio = sourceWidth / destWidth;
         double heightRatio = sourceHeight / destHeight;
 
-        int scaledHeight, scaledWidth;
+        double scaledHeight, scaledWidth;
         
         if (heightRatio > widthRatio) {
             double aspectRatio = sourceWidth / sourceHeight;
-            scaledHeight = (int) destHeight;
-            scaledWidth = (int) (scaledHeight * aspectRatio);
+            scaledHeight = destHeight;
+            scaledWidth = (scaledHeight * aspectRatio);
         }
         else {
             double aspectRatio = sourceHeight / sourceWidth;
-            scaledWidth = (int) destWidth;
-            scaledHeight = (int) (scaledWidth * aspectRatio);
+            scaledWidth = destWidth;
+            scaledHeight = (scaledWidth * aspectRatio);
         }
 
-        int imageX = (int) (ins.left + (width / 2) - (scaledWidth / 2));
-        int imageY = (int) (ins.top + (height / 2) - (scaledHeight / 2));
-
+        int imageX = (int) (ins.left + (destWidth / 2) - (scaledWidth / 2));
+        int imageY = (int) (ins.top + (destHeight / 2) - (scaledHeight / 2));
+        
         Graphics2D g2d = (Graphics2D) g;
 
-        g2d.drawImage(image, imageX, imageY, scaledWidth, scaledHeight, null);
+        g2d.drawImage(
+                image, 
+                imageX, 
+                imageY, 
+                (int) scaledWidth, 
+                (int) scaledHeight, 
+                null);
     }
 }
