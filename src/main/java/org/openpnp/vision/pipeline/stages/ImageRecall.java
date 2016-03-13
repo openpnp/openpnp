@@ -17,7 +17,6 @@ public class ImageRecall extends CvStage {
     }
 
     @Override
-    // TODO: This isn't working, probably the original image is getting overwritten somehow.
     public Result process(CvPipeline pipeline) throws Exception {
         if (modelStageName == null) {
             return null;
