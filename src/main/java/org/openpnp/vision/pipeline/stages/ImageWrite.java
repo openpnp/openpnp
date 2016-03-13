@@ -11,7 +11,7 @@ import org.simpleframework.xml.Attribute;
  * Save the working image to the specified path. The format is chosen based on the filename's
  * extension.
  */
-public class WriteImage extends CvStage {
+public class ImageWrite extends CvStage {
     @Attribute
     private File file = new File("");
 
