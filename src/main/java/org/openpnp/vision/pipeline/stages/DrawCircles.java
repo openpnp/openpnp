@@ -15,6 +15,9 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.convert.Convert;
 
+/**
+ * Draws circles from a List<Circle> onto the working image. 
+ */
 public class DrawCircles extends CvStage {
     @Element(required = false)
     @Convert(ColorConverter.class)

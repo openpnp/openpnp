@@ -7,7 +7,7 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Converts the color of the current working image to the specified conversion.
+ * Performs Canny edge detection on the working image, updating it with the results.
  */
 public class DetectEdgesCanny extends CvStage {
     @Attribute

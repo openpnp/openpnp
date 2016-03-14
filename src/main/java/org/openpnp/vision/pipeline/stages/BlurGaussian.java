@@ -8,7 +8,7 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Converts the color of the current working image to the specified conversion.
+ * Performs Gaussian blurring on the working image, updating it in place.
  */
 public class BlurGaussian extends CvStage {
     @Attribute

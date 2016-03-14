@@ -9,6 +9,9 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
+/**
+ * Finds circles in the working image and stores the results as a List<Circle> on the model. 
+ */
 public class DetectCirclesHough extends CvStage {
     @Attribute
     private int minDistance = 10;

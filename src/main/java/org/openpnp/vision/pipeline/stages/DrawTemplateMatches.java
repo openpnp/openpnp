@@ -16,7 +16,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.convert.Convert;
 
 /**
- * Draws KeyPoints contained in a List<KeyPoint> by referencing a previous stage's model data.
+ * Draws TemplatesMatches contained in a List<TemplateMatch> by referencing a previous stage's model data.
  */
 public class DrawTemplateMatches extends CvStage {
     @Element(required = false)
