@@ -20,8 +20,12 @@ public class DrawCircles extends CvStage {
     @Convert(ColorConverter.class)
     private Color color = null;
 
+    @Element(required = false)
+    @Convert(ColorConverter.class)
+    private Color centerColor = null;
+
     @Attribute(required = false)
-    private String modelStageName = null;
+    private String circlesStageName = null;
 
     public Color getColor() {
         return color;
@@ -30,21 +34,29 @@ public class DrawCircles extends CvStage {
     public void setColor(Color color) {
         this.color = color;
     }
-
-    public String getModelStageName() {
-        return modelStageName;
+    
+    public Color getCenterColor() {
+        return centerColor;
     }
 
-    public void setModelStageName(String modelStageName) {
-        this.modelStageName = modelStageName;
+    public void setCenterColor(Color centerColor) {
+        this.centerColor = centerColor;
+    }
+
+    public String getCirclesStageName() {
+        return circlesStageName;
+    }
+
+    public void setCirclesStageName(String modelStageName) {
+        this.circlesStageName = modelStageName;
     }
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (circlesStageName == null) {
             return null;
         }
-        Result result = pipeline.getResult(modelStageName);
+        Result result = pipeline.getResult(circlesStageName);
         if (result == null || result.model == null) {
             return null;
         }
@@ -53,7 +65,7 @@ public class DrawCircles extends CvStage {
         for (int i = 0; i < circles.size(); i++) {
             Result.Circle circle = circles.get(i);
             Color color = this.color == null ? FluentCv.indexedColor(i) : this.color;
-            Color centerColor = new HslColor(color).getComplementary();
+            Color centerColor = this.centerColor == null ? new HslColor(color).getComplementary() : this.centerColor;
             Core.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2),
                     FluentCv.colorToScalar(color), 2);
             Core.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor),

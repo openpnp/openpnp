@@ -73,5 +73,28 @@ public abstract class CvStage {
                 return "Circle [x=" + x + ", y=" + y + ", diameter=" + diameter + "]";
             }
         }
+
+        public static class TemplateMatch {
+            public double x;
+            public double y;
+            public double templateWidth;
+            public double templateHeight;
+            public double score;
+
+            public TemplateMatch(double x, double y, double templateWidth, double templateHeight,
+                    double score) {
+                this.x = x;
+                this.y = y;
+                this.templateWidth = templateWidth;
+                this.templateHeight = templateHeight;
+                this.score = score;
+            }
+
+            @Override
+            public String toString() {
+                return "TemplateMatch [x=" + x + ", y=" + y + ", templateWidth=" + templateWidth
+                        + ", templateHeight=" + templateHeight + ", score=" + score + "]";
+            }
+        }
     }
 }

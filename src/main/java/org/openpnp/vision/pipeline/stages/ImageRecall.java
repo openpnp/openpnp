@@ -6,22 +6,22 @@ import org.simpleframework.xml.Attribute;
 
 public class ImageRecall extends CvStage {
     @Attribute(required = false)
-    private String modelStageName = null;
+    private String imageStageName = null;
 
-    public String getModelStageName() {
-        return modelStageName;
+    public String getImageStageName() {
+        return imageStageName;
     }
 
-    public void setModelStageName(String modelStageName) {
-        this.modelStageName = modelStageName;
+    public void setImageStageName(String imageStageName) {
+        this.imageStageName = imageStageName;
     }
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (imageStageName == null) {
             return null;
         }
-        Result result = pipeline.getResult(modelStageName);
+        Result result = pipeline.getResult(imageStageName);
         if (result == null || result.image == null) {
             return null;
         }

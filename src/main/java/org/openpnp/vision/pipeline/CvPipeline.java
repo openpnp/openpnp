@@ -31,6 +31,13 @@ import org.slf4j.LoggerFactory;
  * FireSight by Karl Lew and Šimon Fojtů: https://github.com/firepick1/FireSight
  * 
  * RoboRealm: http://www.roborealm.com/
+ * 
+ * TODO: Need to make result images from getResult() unmodifiable, otherwise it can screw things
+ * up for further stages. Comes up in match template converting the template to gray.
+ * 
+ * TODO: Add measuring to image window.
+ * 
+ * TODO: Add info showing pixel coordinates when mouse is in image window.
  */
 @Root
 public class CvPipeline {

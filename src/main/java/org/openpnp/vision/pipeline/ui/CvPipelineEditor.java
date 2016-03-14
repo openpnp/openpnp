@@ -19,10 +19,12 @@ import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
+import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
+import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
 import org.openpnp.vision.pipeline.stages.ImageWrite;
-import org.openpnp.vision.pipeline.stages.ModelSet;
+import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.Threshold;
 
 /**
@@ -40,16 +42,18 @@ import org.openpnp.vision.pipeline.stages.Threshold;
 public class CvPipelineEditor extends JPanel {
     static {
         stageClasses = new HashSet<>();
-        registerStageClass(ConvertColor.class);
-        registerStageClass(ImageRead.class);
-        registerStageClass(ImageWrite.class);
-        registerStageClass(DetectEdgesCanny.class);
         registerStageClass(BlurGaussian.class);
-        registerStageClass(Threshold.class);
+        registerStageClass(ConvertColor.class);
         registerStageClass(DetectCirclesHough.class);
+        registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DrawCircles.class);
+        registerStageClass(DrawKeyPoints.class);
+        registerStageClass(DrawTemplateMatches.class);
+        registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
-        registerStageClass(ModelSet.class);
+        registerStageClass(ImageWrite.class);
+        registerStageClass(MatchTemplate.class);
+        registerStageClass(Threshold.class);
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;
