@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.opencv.core.Mat;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -32,9 +33,6 @@ import org.slf4j.LoggerFactory;
  * 
  * RoboRealm: http://www.roborealm.com/
  * 
- * TODO: Need to make result images from getResult() unmodifiable, otherwise it can screw things
- * up for further stages. Comes up in match template converting the template to gray.
- * 
  * TODO: Add measuring to image window.
  * 
  * TODO: Add info showing pixel coordinates when mouse is in image window.
@@ -54,6 +52,8 @@ public class CvPipeline {
     private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
 
     private Mat workingImage;
+
+    private Camera camera;
 
     /**
      * Add the given CvStage to the end of the pipeline using the given name. If name is null a
@@ -151,6 +151,14 @@ public class CvPipeline {
      */
     public Mat getWorkingImage() {
         return workingImage;
+    }
+
+    public void setCamera(Camera camera) {
+        this.camera = camera;
+    }
+
+    public Camera getCamera() {
+        return camera;
     }
 
     public void process() {

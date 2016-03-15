@@ -15,18 +15,29 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result.TemplateMatch;
 import org.simpleframework.xml.Attribute;
 
+/**
+ * OpenCV based image template matching with local maxima detection improvements from FireSight:
+ * https://github.com/firepick1/FireSight. Scans the working image for matches of a template image
+ * and returns a list of matches.
+ */
 public class MatchTemplate extends CvStage {
+    /**
+     * Name of a prior stage to load the template image from.
+     */
     @Attribute
     private String templateStageName;
 
     /**
-     * TODO: Document
+     * If maxVal is below this value, then no matches will be reported. Default is 0.7.
      */
     @Attribute
     private double threshold = 0.7f;
 
     /**
-     * TODO: Document
+     * Normalized recognition threshold in the interval [0,1]. Used to determine best match of
+     * candidates. For CV_TM_CCOEFF, CV_TM_CCOEFF_NORMED, CV_TM_CCORR, and CV_TM_CCORR_NORMED
+     * methods, this is a minimum threshold for positive recognition; for all other methods, it is a
+     * maximum threshold. Default is 0.85.
      */
     @Attribute
     private double corr = 0.85f;

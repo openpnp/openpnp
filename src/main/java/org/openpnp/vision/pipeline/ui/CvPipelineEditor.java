@@ -21,6 +21,7 @@ import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
 import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
+import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
 import org.openpnp.vision.pipeline.stages.ImageWrite;
@@ -49,6 +50,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DrawCircles.class);
         registerStageClass(DrawKeyPoints.class);
         registerStageClass(DrawTemplateMatches.class);
+        registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
         registerStageClass(ImageWrite.class);
