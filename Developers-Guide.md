@@ -60,14 +60,6 @@ In addition to the automated tests, it's a good idea to run a manual test using 
 3. Run the job. You should see the camera image move and the machine should simulate picking and placing the entire job.
 4. Verify that the job runs and completes without errors. Watch the camera view and see if anything strange is happening.
 
-# The GUI
-
-The GUI is the core user facing component of OpenPnP. OpenPnP is, for all intents and purposes, the GUI. When the term "OpenPnP" is used without referencing the hardware or firmware it should be taken to mean the GUI and the rest of this document will refer to it in that manner.
-
-The GUI is meant to be generally useful for a variety of PnP machines and users. When making changes, consider how those changes will affect other users and other machines.
-
-Everything below assumes you are working in the `gui/` subdirectory of the repository.
-
 # Building OpenPnP
 
 ## Prerequisites
