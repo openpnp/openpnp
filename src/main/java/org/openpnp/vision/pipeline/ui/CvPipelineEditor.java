@@ -1,6 +1,7 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Point;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.util.Collections;
@@ -26,6 +27,8 @@ import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
 import org.openpnp.vision.pipeline.stages.ImageWrite;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
+import org.openpnp.vision.pipeline.stages.ReadModelProperty;
+import org.openpnp.vision.pipeline.stages.SetModel;
 import org.openpnp.vision.pipeline.stages.Threshold;
 
 /**
@@ -55,6 +58,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ImageRecall.class);
         registerStageClass(ImageWrite.class);
         registerStageClass(MatchTemplate.class);
+        registerStageClass(ReadModelProperty.class);
         registerStageClass(Threshold.class);
     }
 
@@ -120,6 +124,7 @@ public class CvPipelineEditor extends JPanel {
         }
 
         CvPipeline pipeline = new CvPipeline();
+        pipeline.add(new SetModel(new Point(10, 20)));
 
         JFrame frame = new JFrame("CvPipelineEditor");
         frame.setSize(1024, 768);
