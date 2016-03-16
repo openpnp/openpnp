@@ -419,7 +419,6 @@ public class CameraView extends JComponent implements CameraListener {
      * Calculates a bunch of scaling data that we cache to speed up painting. This is recalculated
      * when the size of the component or the size of the source changes. This method is
      * synchronized, along with paintComponent() so that the updates to the cached data are atomic.
-     * TODO: Also need to update if the camera's units per pixels changes.
      */
     private synchronized void calculateScalingData() {
         BufferedImage image = lastFrame;

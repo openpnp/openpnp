@@ -39,11 +39,16 @@ public class Icons {
     public static Icon arrowLeft = getIcon("/icons/ic_arrow_back_black_18px.svg");
     public static Icon arrowRight = getIcon("/icons/ic_arrow_forward_black_18px.svg");
     public static Icon home = getIcon("/icons/ic_home_black_18px.svg");
-    public static Icon refresh = getIcon("/icons/ic_home_black_18px.svg");
+    public static Icon refresh = getIcon("/icons/ic_refresh_black_18px.svg");
     public static Icon rotateClockwise = getIcon("/icons/ic_rotate_clockwise_black_18px.svg");
     public static Icon rotateCounterclockwise =
             getIcon("/icons/ic_rotate_counterclockwise_black_18px.svg");
     public static Icon zero = getIcon("/icons/ic_exposure_zero_black_18px.svg");
+    
+    public static Icon navigateFirst = getIcon("/icons/ic_first_page_black_18px.svg");
+    public static Icon navigateLast = getIcon("/icons/ic_last_page_black_18px.svg");
+    public static Icon navigatePrevious = getIcon("/icons/ic_chevron_left_black_18px.svg");
+    public static Icon navigateNext = getIcon("/icons/ic_chevron_right_black_18px.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
