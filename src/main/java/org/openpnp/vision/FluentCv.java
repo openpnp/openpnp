@@ -107,9 +107,18 @@ public class FluentCv {
     }
 
     public enum ColorCode {
-        Bgr2Gray(Imgproc.COLOR_BGR2GRAY), Rgb2Gray(Imgproc.COLOR_RGB2GRAY), Gray2Bgr(
-                Imgproc.COLOR_GRAY2BGR), Gray2Rgb(Imgproc.COLOR_GRAY2RGB), Bgr2Hls(
-                        Imgproc.COLOR_BGR2HLS), Hls2Bgr(Imgproc.COLOR_HLS2BGR),;
+        Bgr2Gray(Imgproc.COLOR_BGR2GRAY),
+        Rgb2Gray(Imgproc.COLOR_RGB2GRAY),
+        Gray2Bgr(Imgproc.COLOR_GRAY2BGR),
+        Gray2Rgb(Imgproc.COLOR_GRAY2RGB),
+        Bgr2Hls(Imgproc.COLOR_BGR2HLS),
+        Hls2Bgr(Imgproc.COLOR_HLS2BGR),
+        Bgr2HlsFull(Imgproc.COLOR_BGR2HLS_FULL),
+        Hls2BgrFull(Imgproc.COLOR_HLS2BGR_FULL),
+        Bgr2Hsv(Imgproc.COLOR_BGR2HSV),
+        Hsv2Bgr(Imgproc.COLOR_HSV2BGR),
+        Bgr2HsvFull(Imgproc.COLOR_BGR2HSV_FULL),
+        Hsv2BgrFull(Imgproc.COLOR_HSV2BGR_FULL);
 
         private int code;
 

@@ -37,10 +37,10 @@ import org.openpnp.spi.JobPlanner.PlacementSolution;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FiducialLocator;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -69,8 +69,15 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
     @Element(required = false)
     private JobPlanner jobPlanner;
+    
+    @Element(required = false)
+    private CvPipeline bottomVisionPipeline = new CvPipeline();
 
     public ReferenceJobProcessor() {}
+    
+    public CvPipeline getBottomVisionPipeline() {
+        return bottomVisionPipeline;
+    }
 
     @SuppressWarnings("unused")
     @Commit
@@ -162,25 +169,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                 Placement placement = solution.placement;
                 Part part = placement.getPart();
 
-                fireDetailedStatusUpdated(String.format("Perform bottom vision"));
-
-                if (!shouldJobProcessingContinue()) {
-                    return;
-                }
-
-                Location bottomVisionOffsets;
-                try {
-                    bottomVisionOffsets = performBottomVision(machine, part, nozzle);
-                }
-                catch (Exception e) {
-                    fireJobEncounteredError(JobError.PartError, e.getMessage());
-                    return;
-                }
-
                 Location placementLocation = placement.getLocation();
-                if (bottomVisionOffsets != null) {
-                    placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
-                }
                 placementLocation = Utils2D.calculateBoardPlacementLocation(bl, placementLocation);
 
                 // Update the placementLocation with the proper Z value. This is
@@ -338,35 +327,6 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
             Location location = locator.locateBoard(boardLocation);
             boardLocation.setLocation(location);
         }
-    }
-
-    protected Location performBottomVision(Machine machine, Part part, Nozzle nozzle)
-            throws Exception {
-        // TODO: I think this stuff actually belongs in VisionProvider but
-        // I have not yet fully thought through the API.
-
-        // Find the first fixed camera
-        if (machine.getCameras().isEmpty()) {
-            // TODO: return null for now to indicate that no vision was
-            // calculated. In the future we may want this to be based on
-            // configuration.
-            return null;
-        }
-        Camera camera = machine.getCameras().get(0);
-
-        // Get it's vision provider
-        VisionProvider vp = camera.getVisionProvider();
-        if (vp == null) {
-            // TODO: return null for now to indicate that no vision was
-            // calculated. In the future we may want this to be based on
-            // configuration.
-            return null;
-        }
-
-        // Perform the operation. Note that similar to feeding and nozzle
-        // tip changing, it is up to the VisionProvider to move the camera
-        // and nozzle to where it needs to be.
-        return vp.getPartBottomOffsets(part, nozzle);
     }
 
     protected boolean changeNozzleTip(Nozzle nozzle, NozzleTip nozzleTip) {

@@ -19,15 +19,24 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceJobProcessor;
+import org.openpnp.model.Configuration;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -48,18 +57,41 @@ public class ReferenceJobProcessorConfigurationWizard extends AbstractConfigurat
         contentPanel.add(panelGeneral);
         panelGeneral
                 .setLayout(
-                        new FormLayout(
-                                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
-                                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC,
-                                        ColumnSpec.decode("default:grow"),
-                                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec
-                                                .decode("default:grow"),
-                                FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                                FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                        new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                        new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         chckbxDemoMode = new JCheckBox("Demo Mode?");
         panelGeneral.add(chckbxDemoMode, "2, 2");
+        
+        JButton btnBottomVision = new JButton("Bottom Vision");
+        btnBottomVision.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // TODO: Move this into CvPipelineEditor as showDialog for convenience.
+                CvPipeline pipeline = jobProcessor.getBottomVisionPipeline();
+                pipeline.setCamera(Configuration.get().getMachine().getCameras().get(0));
+                CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+                JDialog dialog = new JDialog(MainFrame.mainFrame, "Bottom Vision Pipeline");
+                dialog.getContentPane().setLayout(new BorderLayout());
+                dialog.getContentPane().add(editor);
+                dialog.setSize(1024,  768);
+                dialog.setVisible(true);
+            }
+        });
+        panelGeneral.add(btnBottomVision, "2, 4");
     }
 
     @Override

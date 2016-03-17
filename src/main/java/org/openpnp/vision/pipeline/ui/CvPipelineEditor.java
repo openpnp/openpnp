@@ -1,7 +1,6 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Point;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.util.Collections;
@@ -21,14 +20,17 @@ import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
+import org.openpnp.vision.pipeline.stages.DrawRotatedRects;
 import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
 import org.openpnp.vision.pipeline.stages.ImageWrite;
+import org.openpnp.vision.pipeline.stages.MaskCircle;
+import org.openpnp.vision.pipeline.stages.MaskHsv;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
+import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
-import org.openpnp.vision.pipeline.stages.SetModel;
 import org.openpnp.vision.pipeline.stages.Threshold;
 
 /**
@@ -52,12 +54,16 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DrawCircles.class);
         registerStageClass(DrawKeyPoints.class);
+        registerStageClass(DrawRotatedRects.class);
         registerStageClass(DrawTemplateMatches.class);
         registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
         registerStageClass(ImageWrite.class);
+        registerStageClass(MaskCircle.class);
+        registerStageClass(MaskHsv.class);
         registerStageClass(MatchTemplate.class);
+        registerStageClass(MinAreaRect.class);
         registerStageClass(ReadModelProperty.class);
         registerStageClass(Threshold.class);
     }
@@ -124,7 +130,6 @@ public class CvPipelineEditor extends JPanel {
         }
 
         CvPipeline pipeline = new CvPipeline();
-        pipeline.add(new SetModel(new Point(10, 20)));
 
         JFrame frame = new JFrame("CvPipelineEditor");
         frame.setSize(1024, 768);
