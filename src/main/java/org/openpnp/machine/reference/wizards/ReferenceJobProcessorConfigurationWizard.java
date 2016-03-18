@@ -23,11 +23,16 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -35,6 +40,12 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceJobProcessor;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
@@ -47,6 +58,11 @@ public class ReferenceJobProcessorConfigurationWizard extends AbstractConfigurat
     private final ReferenceJobProcessor jobProcessor;
     private JPanel panelGeneral;
     private JCheckBox chckbxDemoMode;
+    private JTextField heightTextField;
+    private JLabel lblNewLabel;
+    private JButton btnGo;
+    private JLabel lblName;
+    private JTextField nameTextField;
 
     public ReferenceJobProcessorConfigurationWizard(ReferenceJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -67,8 +83,14 @@ public class ReferenceJobProcessorConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -92,6 +114,82 @@ public class ReferenceJobProcessorConfigurationWizard extends AbstractConfigurat
             }
         });
         panelGeneral.add(btnBottomVision, "2, 4");
+        
+        lblNewLabel = new JLabel("Height");
+        panelGeneral.add(lblNewLabel, "2, 6");
+        
+        lblName = new JLabel("Name");
+        panelGeneral.add(lblName, "4, 6");
+        
+        heightTextField = new JTextField();
+        panelGeneral.add(heightTextField, "2, 8, fill, default");
+        heightTextField.setColumns(10);
+        
+        btnGo = new JButton("Go");
+        btnGo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                goBottomVisionTestThing();
+            }
+        });
+        
+        nameTextField = new JTextField();
+        panelGeneral.add(nameTextField, "4, 8, fill, default");
+        nameTextField.setColumns(10);
+        panelGeneral.add(btnGo, "6, 8");
+    }
+    
+    private void goBottomVisionTestThing() {
+        UiUtils.submitUiMachineTask(() -> {
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            Nozzle nozzle = Configuration.get().getMachine().getDefaultHead().getDefaultNozzle();
+            Camera bottomCamera = Configuration.get().getMachine().getCameras().get(0);
+            Location originalLocation = camera.getLocation();
+
+            String name = nameTextField.getText();
+            double height = Double.parseDouble(heightTextField.getText());
+            double z = -21.3 + height;
+            System.out.println("height " + height);
+            System.out.println("z " + z);
+
+            // pick the part currently under the camera
+            Location pickLocation = originalLocation.derive(null, null, z, null);
+            System.out.println("pickLocation " + pickLocation);
+            MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+            nozzle.pick();
+            Thread.sleep(750);
+
+            // image the part
+            Location imageLocation = bottomCamera.getLocation();
+            imageLocation = imageLocation.add(new Location(LengthUnit.Millimeters, 0, 0, height, 0));
+            System.out.println("imageLocation " + imageLocation);
+            
+            BufferedImage image;
+            
+            MovableUtils.moveToLocationAtSafeZ(nozzle, imageLocation, 1.0);
+            Thread.sleep(500);
+            image = bottomCamera.settleAndCapture();
+            ImageIO.write(image, "png", new File("/Users/jason/Desktop/test/" + name + "_r00.png"));
+
+            imageLocation = imageLocation.derive(null, null, null, 45d);
+            MovableUtils.moveToLocationAtSafeZ(nozzle, imageLocation, 1.0);
+            Thread.sleep(500);
+            image = bottomCamera.settleAndCapture();
+            ImageIO.write(image, "png", new File("/Users/jason/Desktop/test/" + name + "_r45.png"));
+
+            imageLocation = imageLocation.derive(null, null, null, 90d);
+            MovableUtils.moveToLocationAtSafeZ(nozzle, imageLocation, 1.0);
+            Thread.sleep(500);
+            image = bottomCamera.settleAndCapture();
+            ImageIO.write(image, "png", new File("/Users/jason/Desktop/test/" + name + "_r90.png"));
+
+            // replace the part
+            MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+            nozzle.place();
+            Thread.sleep(750);
+            
+            // move camera back to where it started
+            MovableUtils.moveToLocationAtSafeZ(camera, originalLocation, 1.0);
+        });
     }
 
     @Override

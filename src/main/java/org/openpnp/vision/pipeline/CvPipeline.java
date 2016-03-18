@@ -168,6 +168,9 @@ public class CvPipeline {
             long processingTimeNs = System.nanoTime();
             Result result = null;
             try {
+                if (!stage.isEnabled()) {
+                    throw new Exception("Stage not enabled.");
+                }
                 result = stage.process(this);
             }
             catch (Exception e) {
