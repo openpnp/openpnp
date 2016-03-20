@@ -19,8 +19,8 @@ import org.simpleframework.xml.Attribute;
 public abstract class CvStage {
     @Attribute
     private String name;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     private boolean enabled = true;
 
     /**
@@ -47,7 +47,7 @@ public abstract class CvStage {
     public void setName(String name) {
         this.name = name;
     }
-    
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -55,7 +55,7 @@ public abstract class CvStage {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     public String getCategory() {
         try {
             Stage a = getClass().getAnnotation(Stage.class);
@@ -65,7 +65,7 @@ public abstract class CvStage {
             return null;
         }
     }
-    
+
     public String getDescription() {
         try {
             Stage a = getClass().getAnnotation(Stage.class);
@@ -75,7 +75,7 @@ public abstract class CvStage {
             return null;
         }
     }
-    
+
     public String getDescription(String propertyName) {
         try {
             Property a = getClass().getDeclaredField(propertyName).getAnnotation(Property.class);
@@ -85,14 +85,14 @@ public abstract class CvStage {
             return null;
         }
     }
-    
+
     public BeanInfo getBeanInfo() {
         return new CvStageBeanInfo();
     }
     
     public class CvStageBeanInfo implements BeanInfo {
         private final BeanInfo beanInfo;
-        
+
         public CvStageBeanInfo() {
             try {
                 beanInfo = Introspector.getBeanInfo(CvStage.this.getClass(), CvStage.class);
@@ -106,7 +106,7 @@ public abstract class CvStage {
         public BeanDescriptor getBeanDescriptor() {
             BeanDescriptor bd = beanInfo.getBeanDescriptor();
             if (bd == null) {
-                bd = new BeanDescriptor(CvStage.this.getClass()); 
+                bd = new BeanDescriptor(CvStage.this.getClass());
             }
             bd.setShortDescription(CvStage.this.getDescription());
             return bd;
@@ -151,7 +151,7 @@ public abstract class CvStage {
             return null;
         }
     }
-    
+
     public static class Result {
         final public Mat image;
         final public Object model;
@@ -195,8 +195,7 @@ public abstract class CvStage {
             public double height;
             public double score;
 
-            public TemplateMatch(double x, double y, double width, double height,
-                    double score) {
+            public TemplateMatch(double x, double y, double width, double height, double score) {
                 this.x = x;
                 this.y = y;
                 this.width = width;
@@ -206,8 +205,8 @@ public abstract class CvStage {
 
             @Override
             public String toString() {
-                return "TemplateMatch [x=" + x + ", y=" + y + ", width=" + width
-                        + ", height=" + height + ", score=" + score + "]";
+                return "TemplateMatch [x=" + x + ", y=" + y + ", width=" + width + ", height="
+                        + height + ", score=" + score + "]";
             }
         }
     }

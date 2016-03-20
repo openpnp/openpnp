@@ -7,21 +7,23 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.UIManager;
 
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.BlurGaussian;
+import org.openpnp.vision.pipeline.stages.BottomVisionCriS;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
+import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
+import org.openpnp.vision.pipeline.stages.DrawContours;
 import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
 import org.openpnp.vision.pipeline.stages.DrawRotatedRects;
 import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
+import org.openpnp.vision.pipeline.stages.FindContours;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
@@ -49,13 +51,17 @@ public class CvPipelineEditor extends JPanel {
     static {
         stageClasses = new HashSet<>();
         registerStageClass(BlurGaussian.class);
+        registerStageClass(BottomVisionCriS.class);
         registerStageClass(ConvertColor.class);
         registerStageClass(DetectCirclesHough.class);
         registerStageClass(DetectEdgesCanny.class);
+        registerStageClass(DetectEdgesRobertsCross.class);
         registerStageClass(DrawCircles.class);
+        registerStageClass(DrawContours.class);
         registerStageClass(DrawKeyPoints.class);
         registerStageClass(DrawRotatedRects.class);
         registerStageClass(DrawTemplateMatches.class);
+        registerStageClass(FindContours.class);
         registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
@@ -117,25 +123,5 @@ public class CvPipelineEditor extends JPanel {
 
     public static void registerStageClass(Class<? extends CvStage> cls) {
         stageClasses.add(cls);
-    }
-
-    public static void main(String[] args) throws Exception {
-        // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }
-
-        CvPipeline pipeline = new CvPipeline();
-
-        JFrame frame = new JFrame("CvPipelineEditor");
-        frame.setSize(1024, 768);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(new CvPipelineEditor(pipeline));
-        frame.setVisible(true);
     }
 }
