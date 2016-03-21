@@ -6,11 +6,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.TimeoutException;
 
+import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,10 +134,34 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
     }
 
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return null;
+    }
+    
     /**
      * SerialInputStream and SerialOutputStream are from the pull request referenced in:
      * https://github.com/scream3r/java-simple-serial-connector/issues/17
