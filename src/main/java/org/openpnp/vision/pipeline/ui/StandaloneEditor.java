@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.File;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListModel;
@@ -29,6 +30,7 @@ public class StandaloneEditor extends JFrame {
     private JTextField textField;
     private File directory;
     private CvPipelineEditor editor;
+    private DefaultListModel<String> listModel;
 
     public StandaloneEditor() {
         CvPipeline pipeline = new CvPipeline();
@@ -50,7 +52,7 @@ public class StandaloneEditor extends JFrame {
         JScrollPane scrollPane = new JScrollPane();
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        DefaultListModel<String> listModel = new DefaultListModel<>();
+        listModel = new DefaultListModel<>();
         JList<String> list = new JList<>(listModel);
         scrollPane.setViewportView(list);
 
@@ -65,14 +67,7 @@ public class StandaloneEditor extends JFrame {
         textField.setAction(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                directory = new File(textField.getText());
-                listModel.clear();
-                for (File file : directory.listFiles()) {
-                    if (!file.isFile()) {
-                        continue;
-                    }
-                    listModel.addElement(file.getName());
-                }
+                setInputDirectory(new File(textField.getText()));
             }
         });
 
@@ -84,8 +79,7 @@ public class StandaloneEditor extends JFrame {
                 j.setMultiSelectionEnabled(false);
                 if (j.showOpenDialog(StandaloneEditor.this) == JFileChooser.APPROVE_OPTION) {
                     File directory = j.getSelectedFile();
-                    textField.setText(directory.getAbsolutePath());
-                    textField.getAction().actionPerformed(null);
+                    setInputDirectory(directory);
                 }
             }
         });
@@ -123,8 +117,32 @@ public class StandaloneEditor extends JFrame {
         });
 
 
+        String defaultInputDirectoryPath =
+                Preferences.userNodeForPackage(getClass()).get("inputDirectory", null);
+        if (defaultInputDirectoryPath != null) {
+            File defaultInputDirectory = new File(defaultInputDirectoryPath);
+            if (defaultInputDirectory.exists()) {
+                setInputDirectory(defaultInputDirectory);
+            }
+        }
+
         setVisible(true);
     }
+
+    private void setInputDirectory(File inputDirectory) {
+        textField.setText(inputDirectory.getAbsolutePath());
+        directory = new File(textField.getText());
+        listModel.clear();
+        for (File file : directory.listFiles()) {
+            if (!file.isFile()) {
+                continue;
+            }
+            listModel.addElement(file.getName());
+        }
+        Preferences.userNodeForPackage(getClass()).put("inputDirectory",
+                inputDirectory.getAbsolutePath());
+    }
+
 
     public static void main(String[] args) throws Exception {
         // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
