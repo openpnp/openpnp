@@ -38,6 +38,15 @@ public class MinAreaRect extends CvStage {
     public void setThresholdMax(int thresholdMax) {
         this.thresholdMax = thresholdMax;
     }
+    
+    
+    STOPSHIP
+    /*
+     * THinking in terms of minarearect for contours, this stage probably needs to be changed to
+     * take a list of points or contours or whatever and find the min area rect. it should not
+     * do the filtering itself. that should be done by a prior stage.
+     */
+    STOPSHIP
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {

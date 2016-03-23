@@ -25,6 +25,8 @@ import org.openpnp.util.VisionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: Add the Part as context to the pipeline and use the height to scale the circle mask
+// to account for the smaller circle as the nozzle raises.
 public class BottomVision {
     private static final Logger logger = LoggerFactory.getLogger(BottomVision.class);
 
