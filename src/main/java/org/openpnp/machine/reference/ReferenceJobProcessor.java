@@ -70,19 +70,19 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
     @Element(required = false)
     private JobPlanner jobPlanner;
-    
+
     // TODO: This will be moved into BottomVision and referenced there instead.
     @Element(required = false)
     private CvPipeline bottomVisionPipeline = new CvPipeline();
-    
+
     BottomVision bottomVision;
 
     public ReferenceJobProcessor() {}
-    
+
     public CvPipeline getBottomVisionPipeline() {
         return bottomVisionPipeline;
     }
-    
+
     @SuppressWarnings("unused")
     @Commit
     private void commit() {
@@ -102,7 +102,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         fireJobStateChanged();
 
         Machine machine = Configuration.get().getMachine();
-        
+
         bottomVision = new BottomVision(bottomVisionPipeline);
 
         preProcessJob(machine);
@@ -175,14 +175,22 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                 Placement placement = solution.placement;
                 Part part = placement.getPart();
 
+                Location bottomVisionOffsets = null;
                 try {
-                    bottomVision.findOffsets(part, nozzle);
+                    bottomVisionOffsets = bottomVision.findOffsets(part, nozzle);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
                 }
-                
+
                 Location placementLocation = placement.getLocation();
+                if (bottomVisionOffsets != null) {
+                    // derotate the offset using the identified angle
+                    bottomVisionOffsets =
+                            bottomVisionOffsets.rotateXy(-bottomVisionOffsets.getRotation());
+                    // apply the offset and the angle to the placement
+                    placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
+                }
                 placementLocation = Utils2D.calculateBoardPlacementLocation(bl, placementLocation);
 
                 // Update the placementLocation with the proper Z value. This is
@@ -206,7 +214,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         state = JobState.Stopped;
         fireJobStateChanged();
     }
-    
+
     // TODO: This needs to be it's own class and the job processor needs to
     // be more abstract. Then we can have job processors that process
     // job types like demo, pnp, solder, etc.

@@ -1,13 +1,10 @@
 package org.openpnp.vision;
 
-import java.util.List;
-
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -28,7 +25,6 @@ public class BottomVision {
     private CvPipeline pipeline;
 
     public BottomVision(CvPipeline pipeline) {
-        System.out.println(pipeline.getStages());
         this.pipeline = pipeline;
     }
 
@@ -44,21 +40,19 @@ public class BottomVision {
         startLocation = startLocation.add(partHeightLocation).derive(null, null, null, 0d);
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation, 1.0);
-        
+
         pipeline.setCamera(camera);
         pipeline.process();
-        
+
         CameraView cameraView = MainFrame.mainFrame.cameraPanel.getCameraView(camera);
-        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 3000);
-        
+        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1500);
+
         Result result = pipeline.getResult("result");
         RotatedRect rect = (RotatedRect) result.model;
-        System.out.println("rect " + rect);
 
         // Create the offsets object. This is the physical distance from
         // the center of the camera to the located part.
-        Location offsets =
-                VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+        Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
         // We assume that the part is never picked more than 45º rotated
         // so if OpenCV tells us it's rotated more than 45º we correct
@@ -73,12 +67,12 @@ public class BottomVision {
                 angle -= 90;
             }
         }
+
         // Set the angle on the offsets.
-        offsets = offsets.derive(null, null, null, angle);
-        System.out.println("offsets " + offsets);
+        offsets = offsets.derive(null, null, null, -angle);
 
         nozzle.moveToSafeZ(1.0);
-        return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+        return offsets;
     }
 
     private Camera getBottomVisionCamera() throws Exception {
