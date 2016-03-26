@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Stage {
-    public String description();
+    public String description() default "";
 
-    public String category();
+    public String category() default "";
 }
