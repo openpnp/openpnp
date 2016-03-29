@@ -49,6 +49,7 @@ public class BottomVision {
 
         Result result = pipeline.getResult("result");
         RotatedRect rect = (RotatedRect) result.model;
+        logger.debug("Result rect {}", rect);
 
         // Create the offsets object. This is the physical distance from
         // the center of the camera to the located part.
@@ -70,6 +71,7 @@ public class BottomVision {
 
         // Set the angle on the offsets.
         offsets = offsets.derive(null, null, null, -angle);
+        logger.debug("Final offsets {}", offsets);
 
         nozzle.moveToSafeZ(1.0);
         return offsets;
