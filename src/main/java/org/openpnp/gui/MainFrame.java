@@ -66,7 +66,6 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
-import org.openpnp.gui.components.NavigationView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
@@ -168,7 +167,7 @@ public class MainFrame extends JFrame {
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
         machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
-        navigationPanel = new NavigationView();
+        navigationPanel = new FxNavigationView();
 
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -387,14 +386,19 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
-        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        panelCameraAndInstructions.add(tabbedPane, BorderLayout.CENTER);
 
-        tabbedPane.addTab("Cameras", null, cameraPanel, null);
         cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
-        tabbedPane.addTab("Navigation", null, navigationPanel, null);
+        if (System.getProperty("enableNav", null) != null) {
+            camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
+            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
+            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);            
+            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
+        }
+        else {
+            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
+        }
 
         panelBottom = new JTabbedPane(JTabbedPane.TOP);
         splitPaneTopBottom.setRightComponent(panelBottom);
@@ -652,6 +656,6 @@ public class MainFrame extends JFrame {
     private JButton btnInstructionsCancel;
     private JTextPane lblInstructions;
     private JPanel panel_2;
-    private JTabbedPane tabbedPane;
+    private JTabbedPane camerasAndNavTabbedPane;
     private JPanel panel_3;
 }
