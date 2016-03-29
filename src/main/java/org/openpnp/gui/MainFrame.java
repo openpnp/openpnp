@@ -66,6 +66,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
+import org.openpnp.gui.components.NavigationView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
@@ -167,6 +168,7 @@ public class MainFrame extends JFrame {
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
         machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
+        navigationPanel = new NavigationView();
 
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -392,7 +394,7 @@ public class MainFrame extends JFrame {
         cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
-        tabbedPane.addTab("Navigation", null, navigationPanel = new FxNavigationView(), null);
+        tabbedPane.addTab("Navigation", null, navigationPanel, null);
 
         panelBottom = new JTabbedPane(JTabbedPane.TOP);
         splitPaneTopBottom.setRightComponent(panelBottom);
