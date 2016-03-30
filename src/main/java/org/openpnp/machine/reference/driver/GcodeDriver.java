@@ -17,10 +17,15 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Current thinking: Just make anything that there can be multiples of (Nozzles, Cameras, Actuators)
+ * a map so people can customize as much as they want.
+ * 
  * Things to consider:
  * Idea during drive: To make this really awesome we need to finish the UI for adding actuators,
  * nozzles, nozzletips and then make a UI in the driver config to 1) create axes and 2) map axes
@@ -48,18 +53,42 @@ import org.slf4j.LoggerFactory;
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
     
+    @Attribute(required=false)
     protected LengthUnit units = LengthUnit.Millimeters;
+    @Attribute(required=false)
     protected int maxFeedRate = 1000;
+    
+    @Element(required=false)
     protected String onConnect = "";
+    
+    @Element(required=false)
     protected String onDisconnect = "";
+    
+    @Element(required=false)
     protected String onEnable = "";
+    
+    @Element(required=false)
     protected String onDisable = "M84";
+    
+    @Element(required=false)
     protected String onHome = "G28 X0 Y0 Z0 C0";
+    
+    @Element(required=false)
     protected String onGetLocation = "";
+    
+    @Element(required=false)
     protected String onMove = "G1 ";
+    
+    @Element(required=false)
     protected String onPick = "";
+    
+    @Element(required=false)
     protected String onPlace = "";
+    
+    @Element(required=false)
     protected String onActuateBoolean = "";
+    
+    @Element(required=false)
     protected String onActuateDouble = "";
 
     private Thread readerThread;

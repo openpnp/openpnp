@@ -24,6 +24,7 @@ import javax.swing.Action;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -35,12 +36,11 @@ import org.slf4j.LoggerFactory;
  * on paper, as it were. It will have an actuator attached and you will be able to choose
  * to either toggle the feeder with a delay or send a double. The line below is there so this
  * doesn't get pushed before it's worked on. Right now it's just a skeleton and idea.
+ * STOPSHIP
  */
 
-STOPSHIP
-
-public class ReferenceActuatorFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceActuatorFeeder.class);
+public class ReferenceAutoFeeder extends ReferenceFeeder {
+    private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoFeeder.class);
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -52,8 +52,7 @@ public class ReferenceActuatorFeeder extends ReferenceFeeder {
 
     @Override
     public Wizard getConfigurationWizard() {
-//        return new ReferenceTubeFeederConfigurationWizard(this);
-        return null;
+        return new ReferenceAutoFeederConfigurationWizard(this);
     }
 
     @Override
