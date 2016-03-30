@@ -16,6 +16,7 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
+import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
@@ -164,12 +165,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         unloadNozzleTip();
         logger.debug("{}.loadNozzleTip({}): Start", new Object[] {getName(), nozzleTip.getName()});
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        logger.debug("{}.loadNozzleTip({}): moveToSafeZ",
-                new Object[] {getName(), nozzleTip.getName()});
-        moveToSafeZ(1.0);
         logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                 new Object[] {getName(), nozzleTip.getName()});
-        moveTo(nt.getChangerStartLocation(), 1.0);
+        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), 1.0);
         logger.debug("{}.loadNozzleTip({}): moveTo Mid Location",
                 new Object[] {getName(), nozzleTip.getName()});
         moveTo(nt.getChangerMidLocation(), 0.25);
@@ -193,10 +191,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         logger.debug("{}.unloadNozzleTip(): Start", new Object[] {getName()});
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        logger.debug("{}.unloadNozzleTip(): moveToSafeZ", new Object[] {getName()});
-        moveToSafeZ(1.0);
         logger.debug("{}.unloadNozzleTip(): moveTo End Location", new Object[] {getName()});
-        moveTo(nt.getChangerEndLocation(), 1.0);
+        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), 1.0);
         logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", new Object[] {getName()});
         moveTo(nt.getChangerMidLocation(), 1.0);
         logger.debug("{}.unloadNozzleTip(): moveTo Start Location", new Object[] {getName()});

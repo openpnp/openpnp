@@ -347,6 +347,10 @@ public class JobPanel extends JPanel {
             jobProcessor.load(job);
         }
     }
+    
+    public JobProcessor getJobProcessor() {
+        return jobProcessor;
+    }
 
     public JobPlacementsPanel getJobPlacementsPanel() {
         return jobPlacementsPanel;

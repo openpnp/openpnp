@@ -57,10 +57,12 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
@@ -1072,7 +1074,15 @@ public class CameraView extends JComponent implements CameraListener {
         Location location = camera.getLocation().add(offsets);
         // And move there.
         UiUtils.submitUiMachineTask(() -> {
-            MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+            if (camera.getHead() == null) {
+                // move the nozzle to the camera
+                Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+            }
+            else {
+                // move the camera to the location
+                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+            }
         });
     }
 
