@@ -33,6 +33,7 @@ import org.openpnp.vision.pipeline.stages.MaskCircle;
 import org.openpnp.vision.pipeline.stages.MaskHsv;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.MinAreaRect;
+import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.Threshold;
@@ -73,6 +74,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MaskHsv.class);
         registerStageClass(MatchTemplate.class);
         registerStageClass(MinAreaRect.class);
+        registerStageClass(Normalize.class);
         registerStageClass(ReadModelProperty.class);
         registerStageClass(SetColor.class);
         registerStageClass(Threshold.class);
