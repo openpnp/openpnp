@@ -13,6 +13,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
+import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
@@ -159,7 +160,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
 
     @Override
     public Wizard getConfigurationWizard() {
-        return null;
+        return new AbstractSerialPortDriverConfigurationWizard(this);
     }
     
     /**

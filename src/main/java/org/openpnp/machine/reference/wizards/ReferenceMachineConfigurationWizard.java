@@ -8,6 +8,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.openbuilds.OpenBuildsDriver;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GrblDriver;
 import org.openpnp.machine.reference.driver.LinuxCNC;
 import org.openpnp.machine.reference.driver.MarlinDriver;
@@ -41,6 +42,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         contentPanel.add(comboBoxDriver, "4, 2, fill, default");
 
         comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
+        comboBoxDriver.addItem(GcodeDriver.class.getCanonicalName());
         comboBoxDriver.addItem(GrblDriver.class.getCanonicalName());
         comboBoxDriver.addItem(LinuxCNC.class.getCanonicalName());
         comboBoxDriver.addItem(MarlinDriver.class.getCanonicalName());

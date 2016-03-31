@@ -2,13 +2,12 @@ package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -16,265 +15,50 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Current thinking: Just make anything that there can be multiples of (Nozzles, Cameras, Actuators)
- * a map so people can customize as much as they want.
- * 
- * Things to consider:
- * Idea during drive: To make this really awesome we need to finish the UI for adding actuators,
- * nozzles, nozzletips and then make a UI in the driver config to 1) create axes and 2) map axes
- * to headmountables. 
- * 
- * In fact, creating the concept of axes in the driver might be a good way to solve a lot of
- * different problems like deciding which things move under which commands. For example, if
- * there is one X, one Y and two Z and you map the two nozzles to the two Zs and the camera
- * doesn't get one, so we know the camera never moves in Z.
- * 
- * We'll just support one head, but multiple Zs and Cs. Need to figure out how to keep the offsets
- * straight in that case.
- *      Although, with the variable system it might be trivial to support multiple heads if
- *      everything else works. Table it for now.
- * Need to be able to query for position and figure out how to deal with the different positions of
- * each HeadMountable.
- * Initial idea is to have fixed X and Y and then a map of HeadMountable Locations for the Zs and Cs.
- * Started work on variable system, seems reasonable to start.
- * Might be better to have actuators gcode be a map by name or something. You might want to send
- * very different gcode to actuate a feeder than you would, for instance, turn on an LED. 
- *  Think more about how one would actuate a complex feeder like Justins.
- * 
- * Would be cool if this could be used with TCP or serial.
- */
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
-    
-    @Attribute(required=false)
-    protected LengthUnit units = LengthUnit.Millimeters;
-    @Attribute(required=false)
-    protected int maxFeedRate = 1000;
-    
-    @Element(required=false)
-    protected String onConnect = "";
-    
-    @Element(required=false)
-    protected String onDisconnect = "";
-    
-    @Element(required=false)
-    protected String onEnable = "";
-    
-    @Element(required=false)
-    protected String onDisable = "M84";
-    
-    @Element(required=false)
-    protected String onHome = "G28 X0 Y0 Z0 C0";
-    
-    @Element(required=false)
-    protected String onGetLocation = "";
-    
-    @Element(required=false)
-    protected String onMove = "G1 ";
-    
-    @Element(required=false)
-    protected String onPick = "";
-    
-    @Element(required=false)
-    protected String onPlace = "";
-    
-    @Element(required=false)
-    protected String onActuateBoolean = "";
-    
-    @Element(required=false)
-    protected String onActuateDouble = "";
 
+    @Attribute(required = false)
+    protected LengthUnit units = LengthUnit.Millimeters;
+
+    @Attribute(required = false)
+    protected int maxFeedRate = 1000;
+
+    protected String commandConfirmRegex = "ok.*";
+
+    protected String connectCommand = "G21\nG90\nM82";
+
+    protected String enableCommand = null;
+
+    protected String disableCommand = "M84";
+
+    protected String homeCommand = "M84\nG4P500\nG28 X0 Y0\nG92 X0 Y0 Z0 E0";
+
+    protected String moveToCommand =
+            "G0{X:X%.4f}{Y:Y%.4f}{Z:Z%.4f}{Rotation:E%.4f}F{FeedRate:%.0f}\nM400";
+
+    protected String pickCommand = "M3";
+
+    protected String placeCommand = "M5";
+
+    protected String actuateBooleanCommand = "G4S1";
+
+    protected String actuateDoubleCommand = "G4S1";
+
+    protected String syncCommand = "M114";
+
+    protected String syncRegex = ".*X:.*Y:.*";
+
+    protected double x, y, z, c;
     private Thread readerThread;
     private boolean disconnectRequested;
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
-    
-    protected double x, y;
-    protected Map<HeadMountable, Location> hmLocations = new HashMap<>();
-
-    @Override
-    public void setEnabled(boolean enabled) throws Exception {
-        if (enabled && !connected) {
-            connect();
-        }
-        if (connected) {
-            if (enabled) {
-                sendCommand(onEnable);
-            }
-            else {
-                sendCommand(onDisable);
-            }
-        }
-    }
-
-    @Override
-    public void home(ReferenceHead head) throws Exception {
-        sendCommand(onHome);
-        // Update position
-        getCurrentPosition();
-    }
-
-
-    @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        String command = onActuateBoolean;
-        command = replaceVariable(command, "Name", actuator.getName());
-        command = replaceVariable(command, "Index", actuator.getIndex());
-        command = replaceVariable(command, "BooleanValue", on);
-        sendCommand(command);
-    }
-
-    @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        String command = onActuateDouble;
-        command = replaceVariable(command, "Name", actuator.getName());
-        command = replaceVariable(command, "Index", actuator.getIndex());
-        command = replaceVariable(command, "DoubleValue", value);
-        sendCommand(command);
-    }
-
-
-    @Override
-    public Location getLocation(ReferenceHeadMountable hm) {
-        if (hm instanceof ReferenceNozzle) {
-            ReferenceNozzle nozzle = (ReferenceNozzle) hm;
-            double z = Math.sin(Math.toRadians(this.zA)) * zCamRadius;
-            if (((ReferenceNozzle) hm).getName().equals("N2")) {
-                z = -z;
-            }
-            z += zCamWheelRadius + zGap;
-            int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
-            return new Location(LengthUnit.Millimeters, x, y, z, tool == 0 ? c : c2)
-                    .add(hm.getHeadOffsets());
-        }
-        else {
-            return new Location(LengthUnit.Millimeters, x, y, zA, c).add(hm.getHeadOffsets());
-        }
-        
-    }
-
-    @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
-            throws Exception {
-        location = location.subtract(hm.getHeadOffsets());
-
-        location = location.convertToUnits(LengthUnit.Millimeters);
-
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
-        double c = location.getRotation();
-
-        ReferenceNozzle nozzle = null;
-        if (hm instanceof ReferenceNozzle) {
-            nozzle = (ReferenceNozzle) hm;
-        }
-
-        /*
-         * Only move Z if it's a Nozzle.
-         */
-        if (nozzle == null) {
-            z = Double.NaN;
-        }
-
-        StringBuffer sb = new StringBuffer();
-        if (!Double.isNaN(x) && x != this.x) {
-            sb.append(String.format(Locale.US, "X%2.2f ", x));
-            this.x = x;
-        }
-        if (!Double.isNaN(y) && y != this.y) {
-            sb.append(String.format(Locale.US, "Y%2.2f ", y));
-            this.y = y;
-        }
-        int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
-        if (!Double.isNaN(c) && c != (tool == 0 ? this.c : this.c2)) {
-            // If there is an E move we need to set the tool before
-            // performing any commands otherwise we may move the wrong tool.
-            sendCommand(String.format(Locale.US, "T%d", tool));
-            if (sb.length() == 0) {
-                // If the move won't contain an X or Y component but will
-                // have an E component we need to send the E component as a
-                // solo move because Smoothie won't move only E and Z at
-                // the same time.
-                sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute));
-                dwell();
-            }
-            else {
-                sb.append(String.format(Locale.US, "E%2.2f ", c));
-            }
-            if (tool == 0) {
-                this.c = c;
-            }
-            else {
-                this.c2 = c;
-            }
-        }
-
-        if (!Double.isNaN(z)) {
-            double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
-            logger.debug("nozzle {} {} {}", new Object[] {z, zCamRadius, a});
-            if (nozzle.getName().equals("N2")) {
-                a = -a;
-            }
-            if (a != this.zA) {
-                sb.append(String.format(Locale.US, "Z%2.2f ", a));
-                this.zA = a;
-            }
-        }
-
-        if (sb.length() > 0) {
-            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
-            sendCommand("G0 " + sb.toString());
-            dwell();
-        }
-    }
-
-    @Override
-    public void pick(ReferenceNozzle nozzle) throws Exception {
-        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
-            pump(true);
-            n1Exhaust(false);
-            n1Vacuum(true);
-            n1Picked = true;
-        }
-        else {
-            pump(true);
-            n2Exhaust(false);
-            n2Vacuum(true);
-            n2Picked = true;
-        }
-    }
-
-    @Override
-    public void place(ReferenceNozzle nozzle) throws Exception {
-        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
-            n1Picked = false;
-            if (!n1Picked && !n2Picked) {
-                pump(false);
-            }
-            n1Vacuum(false);
-            n1Exhaust(true);
-            Thread.sleep(500);
-            n1Exhaust(false);
-        }
-        else {
-            n2Picked = false;
-            if (!n1Picked && !n2Picked) {
-                pump(false);
-            }
-            n2Vacuum(false);
-            n2Exhaust(true);
-            Thread.sleep(500);
-            n2Exhaust(false);
-        }
-    }
 
     public synchronized void connect() throws Exception {
         super.connect();
@@ -292,28 +76,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         readerThread = new Thread(this);
         readerThread.start();
 
-        try {
-            do {
-                // Consume any buffered incoming data, including startup messages
-                responses = sendCommand(null, 200);
-            } while (!responses.isEmpty());
-        }
-        catch (Exception e) {
-            // ignore timeouts
-        }
-
-
-        // Send a request to force Smoothie to respond and clear any buffers.
-        // On my machine, at least, this causes Smoothie to re-send it's
-        // startup message and I can't figure out why, but this works
-        // around it.
-        responses = sendCommand("M114", 5000);
-        // Continue to read responses until we get the one that is the
-        // result of the M114 command. When we see that we're connected.
+        responses = sendGcode(syncCommand, 5000);
         long t = System.currentTimeMillis();
+        // Check for the correct response for up to 5 seconds.
         while (System.currentTimeMillis() - t < 5000) {
             for (String response : responses) {
-                if (response.contains("X:")) {
+                if (response.matches(syncRegex)) {
                     connected = true;
                     break;
                 }
@@ -335,52 +103,116 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // Turn off the stepper drivers
         setEnabled(false);
 
-        // Set mm coordinate mode
-        sendCommand("G21");
-        // Set absolute positioning mode
-        sendCommand("G90");
-        // Set absolute mode for extruder
-        sendCommand("M82");
-        getCurrentPosition();
+        // Send startup Gcode
+        sendGcode(connectCommand);
     }
 
-    protected void getCurrentPosition() throws Exception {
-        List<String> responses;
-        sendCommand("T0");
-        responses = sendCommand("M114");
-        for (String response : responses) {
-            if (response.contains("X:")) {
-                String[] comps = response.split(" ");
-                for (String comp : comps) {
-                    if (comp.startsWith("X:")) {
-                        x = Double.parseDouble(comp.split(":")[1]);
-                    }
-                    else if (comp.startsWith("Y:")) {
-                        y = Double.parseDouble(comp.split(":")[1]);
-                    }
-                    else if (comp.startsWith("Z:")) {
-                        zA = Double.parseDouble(comp.split(":")[1]);
-                    }
-                    else if (comp.startsWith("E:")) {
-                        c = Double.parseDouble(comp.split(":")[1]);
-                    }
-                }
+    @Override
+    public void setEnabled(boolean enabled) throws Exception {
+        if (enabled && !connected) {
+            connect();
+        }
+        if (connected) {
+            if (enabled) {
+                sendGcode(enableCommand);
+            }
+            else {
+                sendGcode(disableCommand);
             }
         }
-        sendCommand("T1");
-        responses = sendCommand("M114");
-        for (String response : responses) {
-            if (response.contains("X:")) {
-                String[] comps = response.split(" ");
-                for (String comp : comps) {
-                    if (comp.startsWith("E:")) {
-                        c2 = Double.parseDouble(comp.split(":")[1]);
-                    }
-                }
-            }
+    }
+
+    @Override
+    public void home(ReferenceHead head) throws Exception {
+        sendGcode(homeCommand, -1);
+    }
+
+    @Override
+    public Location getLocation(ReferenceHeadMountable hm) {
+        Location location = new Location(units, x, y, z, c).add(hm.getHeadOffsets());
+        if (!(hm instanceof Nozzle)) {
+            location = location.derive(null, null, 0d, null);
         }
-        sendCommand("T0");
-        logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] {x, y, zA, c, c2});
+        return location;
+    }
+
+    @Override
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+            throws Exception {
+        location = location.convertToUnits(units);
+
+        location = location.subtract(hm.getHeadOffsets());
+
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        double c = location.getRotation();
+
+        ReferenceNozzle nozzle = null;
+        if (hm instanceof ReferenceNozzle) {
+            nozzle = (ReferenceNozzle) hm;
+        }
+
+        // Only move Z if it's the Nozzle.
+        if (!(hm instanceof Nozzle)) {
+            z = Double.NaN;
+        }
+
+        // Handle NaNs, which means don't move this axis for this move.
+        if (Double.isNaN(x)) {
+            x = this.x;
+        }
+        if (Double.isNaN(x)) {
+            y = this.y;
+        }
+        if (Double.isNaN(x)) {
+            z = this.z;
+        }
+        if (Double.isNaN(x)) {
+            c = this.c;
+        }
+
+        String command = moveToCommand;
+        command = substituteVariable(command, "X", x == this.x ? null : x);
+        command = substituteVariable(command, "Y", y == this.y ? null : y);
+        command = substituteVariable(command, "Z", z == this.z ? null : z);
+        command = substituteVariable(command, "Rotation", c == this.c ? null : c);
+        command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+        sendGcode(command);
+
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.c = c;
+    }
+
+    @Override
+    public void pick(ReferenceNozzle nozzle) throws Exception {
+        sendGcode(pickCommand);
+    }
+
+    @Override
+    public void place(ReferenceNozzle nozzle) throws Exception {
+        sendGcode(placeCommand);
+    }
+
+
+    @Override
+    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+        String command = actuateBooleanCommand;
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "BooleanValue", on);
+        sendGcode(command);
+    }
+
+    @Override
+    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+        String command = actuateDoubleCommand;
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "DoubleValue", value);
+        sendGcode(command);
     }
 
     public synchronized void disconnect() {
@@ -405,6 +237,22 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         disconnectRequested = false;
     }
 
+    protected List<String> sendGcode(String gCode) throws Exception {
+        return sendGcode(gCode, 5000);
+    }
+
+    protected List<String> sendGcode(String gCode, long timeout) throws Exception {
+        if (gCode == null) {
+            return new ArrayList<>();
+        }
+        List<String> responses = new ArrayList<>();
+        for (String command : gCode.split("\n")) {
+            command = command.trim();
+            responses.addAll(sendCommand(command));
+        }
+        return responses;
+    }
+
     protected List<String> sendCommand(String command) throws Exception {
         return sendCommand(command, 5000);
     }
@@ -416,29 +264,44 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // for a response to a command we actually wait for the one we expect.
         responseQueue.drainTo(responses);
 
+        logger.debug("sendCommand({}, {})", command, timeout);
+
         // Send the command, if one was specified
         if (command != null) {
-            logger.debug("sendCommand({}, {})", command, timeout);
             logger.debug(">> " + command);
             output.write(command.getBytes());
             output.write("\n".getBytes());
         }
 
-        String response = null;
+        // Collect responses till we find one with ok or error or we timeout. Return
+        // the collected responses.
         if (timeout == -1) {
-            // Wait forever for a response to return from the reader.
-            response = responseQueue.take();
+            timeout = Long.MAX_VALUE;
         }
-        else {
-            // Wait up to timeout milliseconds for a response to return from
-            // the reader.
-            response = responseQueue.poll(timeout, TimeUnit.MILLISECONDS);
+        long t = System.currentTimeMillis();
+        boolean found = false;
+        // Loop until we've timed out
+        while (System.currentTimeMillis() - t < timeout) {
+            // Wait to see if a response came in. We wait up until the number of seconds remaining
+            // in the timeout.
+            String response =
+                    responseQueue.poll(System.currentTimeMillis() - t, TimeUnit.MILLISECONDS);
+            // If no response yet, try again.
             if (response == null) {
-                throw new Exception("Timeout waiting for response to " + command);
+                continue;
+            }
+            // Store the response that was received
+            responses.add(response);
+            // If the response is an ok or error we're done
+            if (response.matches(commandConfirmRegex)) {
+                found = true;
+                break;
             }
         }
-        // And if we got one, add it to the list of responses we'll return.
-        responses.add(response);
+        // If no ok or error response was found it's an error
+        if (!found) {
+            throw new Exception("Timeout waiting for response to " + command);
+        }
 
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
@@ -469,13 +332,30 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     /**
      * Find matches of variables in the format {Name:Format} and replace them with the specified
      * value formatted using String.format with the specified Format. Format is optional and
-     * defaults to %s.
+     * defaults to %s. A null value replaces the variable with "".
      */
-    protected String replaceVariable(String command, String name, Object value) {
-        // find matches of {name optionally including format}
-        // parse the format and format the value
-        // replace the result.
-//        return command.replaceAll("(?i)" + Pattern.quote("{" + name + "}"), value);
-        return null;
+    static protected String substituteVariable(String command, String name, Object value) {
+        if (command == null) {
+            return command;
+        }
+        StringBuffer sb = new StringBuffer();
+        Matcher matcher = Pattern.compile("\\{(\\w+)(?::(.+?))?\\}").matcher(command);
+        while (matcher.find()) {
+            String n = matcher.group(1);
+            if (!n.equals(name)) {
+                continue;
+            }
+            String format = matcher.group(2);
+            if (format == null) {
+                format = "%s";
+            }
+            String v = "";
+            if (value != null) {
+                v = String.format(format, value);
+            }
+            matcher.appendReplacement(sb, v);
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 }
