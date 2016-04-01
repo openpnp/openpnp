@@ -400,6 +400,22 @@ public class JogControlsPanel extends JPanel {
 
             Machine machine = Configuration.get().getMachine();
 
+            for (Actuator actuator : machine.getActuators()) {
+                final Actuator actuator_f = actuator;
+                final JToggleButton actuatorButton =
+                        new JToggleButton(actuator_f.getName());
+                actuatorButton.setFocusable(false);
+                actuatorButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        final boolean state = actuatorButton.isSelected();
+                        UiUtils.submitUiMachineTask(() -> {
+                            actuator_f.actuate(state);
+                        });
+                    }
+                });
+                panelActuators.add(actuatorButton);
+            }
             for (final Head head : machine.getHeads()) {
                 for (Actuator actuator : head.getActuators()) {
                     final Actuator actuator_f = actuator;

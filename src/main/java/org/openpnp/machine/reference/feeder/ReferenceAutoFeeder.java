@@ -25,9 +25,12 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +45,26 @@ import org.slf4j.LoggerFactory;
 public class ReferenceAutoFeeder extends ReferenceFeeder {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoFeeder.class);
 
+    @Attribute(required=false)
+    protected String actuatorName;
+    
+    @Attribute(required=false)
+    protected double actuatorValue;
+    
     @Override
     public Location getPickLocation() throws Exception {
         return location;
     }
 
     @Override
-    public void feed(Nozzle nozzle) throws Exception {}
+    public void feed(Nozzle nozzle) throws Exception {
+        if (actuatorName == null) {
+            logger.warn("No actuatorName specified for feeder.");
+            return;
+        }
+        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        actuator.actuate(actuatorValue);
+    }
 
     @Override
     public Wizard getConfigurationWizard() {
