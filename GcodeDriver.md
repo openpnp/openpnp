@@ -8,7 +8,39 @@ In the video below there are two GcodeDrivers running. One is controlling the Sm
 
 Demonstration Video: https://www.youtube.com/watch?v=0ntYOy0s_8Y
 
-Sample Configuration
+# Release Plan
+## Release 1
+* [x] Four axes
+* [x] One nozzle
+* [x] Camera doesn't move in Z
+* [x] Definable Gcode
+* [x] Variables in Gcode
+* [x] Sub-Drivers
+* [x] Simple Actuator support (one gcode, variables)
+* [x] Home position (user will need to set it to non zero if they want it, and send gcode to make sure controller is in sync)
+* [x] Solo moves for axes
+ 
+## Release 2
+* Definable axes
+	* Define axes like X, Y, Z, C1, C2.
+	* Map HeadMountables to a list of Axes like:
+		* N1 -> X, Y, Z, C1
+		* N2 -> X, Y, Z, C2
+		* CAM1 -> X, Y
+	* Axes can have Transforms applied that mutate machine positions. Something like:
+		* double transform(HeadMountable, double position)
+	* If you map more than one device to the same axis a transform is required on that axis.
+* Mapping of HeadMountables to Axes
+* Axis transforms
+ 
+## Release 3
+* Map HeadMountables to Sub-Drivers
+* Improved actuator support (gcode per name, variables)
+* Get current position on startup
+* Position tracking during moves
+* Configuration Wizard
+
+# Sample Configuration
 ```
 <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine">
@@ -125,7 +157,7 @@ M803</place-command>
 </openpnp-machine>
 ```
 
-Arduino Sketch Shown in Video
+# Sample Arduino Sketch
 ```
 String inData;
 
