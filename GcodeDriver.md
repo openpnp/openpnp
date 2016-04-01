@@ -21,7 +21,7 @@ Demonstration Video: https://www.youtube.com/watch?v=0ntYOy0s_8Y
 * [x] Solo moves for axes
  
 ## Release 2
-* Definable axes
+* [ ] Definable axes
 	* Define axes like X, Y, Z, C1, C2.
 	* Map HeadMountables to a list of Axes like:
 		* N1 -> X, Y, Z, C1
@@ -30,15 +30,15 @@ Demonstration Video: https://www.youtube.com/watch?v=0ntYOy0s_8Y
 	* Axes can have Transforms applied that mutate machine positions. Something like:
 		* double transform(HeadMountable, double position)
 	* If you map more than one device to the same axis a transform is required on that axis.
-* Mapping of HeadMountables to Axes
-* Axis transforms
+* [ ] Mapping of HeadMountables to Axes
+* [ ] Axis transforms
  
 ## Release 3
-* Map HeadMountables to Sub-Drivers
-* Improved actuator support (gcode per name, variables)
-* Get current position on startup
-* Position tracking during moves
-* Configuration Wizard
+* [ ] Map HeadMountables to Sub-Drivers
+* [ ] Improved actuator support (gcode per name, variables)
+* [ ] Get current position on startup
+* [ ] Position tracking during moves
+* [ ] Configuration Wizard
 
 # Sample Configuration
 ```
