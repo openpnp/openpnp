@@ -10,13 +10,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,30 +34,53 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Attribute(required = false)
     protected int maxFeedRate = 1000;
 
-    protected String commandConfirmRegex = "ok.*";
+    @Element(required=false)
+    protected String commandConfirmRegex = "^ok.*";
 
+    @Element(required=false)
     protected String connectCommand = "G21\nG90\nM82";
 
-    protected String enableCommand = null;
+    @Element(required=false)
+    protected String enableCommand = "M810";
 
-    protected String disableCommand = "M84";
+    @Element(required=false)
+    protected String disableCommand = "M84\nM811";
 
+    @Element(required=false)
     protected String homeCommand = "M84\nG4P500\nG28 X0 Y0\nG92 X0 Y0 Z0 E0";
 
+    /**
+     * This command has special handling for the X, Y, Z and Rotation variables. If the
+     * move does not change one of these variables that variable is replaced with the empty
+     * string, removing it from the command. This allows Gcode to be sent containing only
+     * the components that are being used which is important for some controllers when
+     * moving an "extruder" for the C axis. The end result is that if a move contains
+     * only a change in the C axis only the C axis value will be sent.
+     */
+    @Element(required=false)
     protected String moveToCommand =
             "G0{X:X%.4f}{Y:Y%.4f}{Z:Z%.4f}{Rotation:E%.4f}F{FeedRate:%.0f}\nM400";
 
+    @Element(required=false)
     protected String pickCommand = "M3";
 
+    @Element(required=false)
     protected String placeCommand = "M5";
 
+    @Element(required=false)
     protected String actuateBooleanCommand = "G4S1";
 
+    @Element(required=false)
     protected String actuateDoubleCommand = "G4S1";
 
+    @Element(required=false)
     protected String syncCommand = "M114";
 
+    @Element(required=false)
     protected String syncRegex = ".*X:.*Y:.*";
+    
+    @ElementList(required=false)
+    protected List<ReferenceDriver> subDrivers = new ArrayList<>();
 
     protected double x, y, z, c;
     private Thread readerThread;
@@ -62,14 +90,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     public synchronized void connect() throws Exception {
         super.connect();
-
-        /**
-         * Connection process notes:
-         * 
-         * On some platforms, as soon as we open the serial port it will reset the controller and
-         * we'll start getting some data. On others, it may already be running and we will get
-         * nothing on connect.
-         */
 
         connected = false;
         List<String> responses;
@@ -97,9 +117,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                     "Unable to receive connection response. Check your port and baud rate"));
         }
 
-        // We are connected to at least the minimum required version now
-        // So perform some setup
-
         // Turn off the stepper drivers
         setEnabled(false);
 
@@ -120,11 +137,21 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 sendGcode(disableCommand);
             }
         }
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.setEnabled(enabled);
+        }
     }
 
     @Override
     public void home(ReferenceHead head) throws Exception {
+        // Home is sent with an infinite timeout since it's tough to tell how long it will
+        // take.
         sendGcode(homeCommand, -1);
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.home(head);
+        }
     }
 
     @Override
@@ -147,11 +174,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         double y = location.getY();
         double z = location.getZ();
         double c = location.getRotation();
-
-        ReferenceNozzle nozzle = null;
-        if (hm instanceof ReferenceNozzle) {
-            nozzle = (ReferenceNozzle) hm;
-        }
 
         // Only move Z if it's the Nozzle.
         if (!(hm instanceof Nozzle)) {
@@ -184,16 +206,28 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         this.y = y;
         this.z = z;
         this.c = c;
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.moveTo(hm, location, speed);
+        }
     }
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         sendGcode(pickCommand);
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.pick(nozzle);
+        }
     }
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
         sendGcode(placeCommand);
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.place(nozzle);
+        }
     }
 
 
@@ -204,6 +238,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "BooleanValue", on);
         sendGcode(command);
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.actuate(actuator, on);
+        }
     }
 
     @Override
@@ -213,6 +251,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "DoubleValue", value);
         sendGcode(command);
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.actuate(actuator, value);
+        }
     }
 
     public synchronized void disconnect() {
@@ -237,6 +279,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         disconnectRequested = false;
     }
 
+    @Override
+    public void close() throws IOException {
+        super.close();
+        
+        for (ReferenceDriver driver : subDrivers) {
+            driver.close();
+        }
+    }
+    
     protected List<String> sendGcode(String gCode) throws Exception {
         return sendGcode(gCode, 5000);
     }
@@ -357,5 +408,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         matcher.appendTail(sb);
         return sb.toString();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        ArrayList<PropertySheetHolder> children = new ArrayList<>();
+        if (!subDrivers.isEmpty()) {
+            children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
+        }
+        return children.toArray(new PropertySheetHolder[] {});
     }
 }
