@@ -6,7 +6,7 @@ GcodeDriver introduces a new concept to OpenPnP drivers: Sub-Drivers. Sub-Driver
 
 In the video below there are two GcodeDrivers running. One is controlling the Smoothieboard running the machine and one is controlling an Arduino running a simple sketch. This is intended to demonstrate how you can easily integrate additional hardware such as feeders.
 
-Demonstration Video: https://www.youtube.com/watch?v=0ntYOy0s_8Y
+Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/watch?v=0ntYOy0s_8Y
 
 # Release Plan
 ## Release 1
