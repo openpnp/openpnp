@@ -1,4 +1,4 @@
-# Pre-Release Warning: This feature is not yet released. The documentation is not complete.
+# Pre-Release Warning: This feature is not yet finished. The documentation is not complete.
 
 GcodeDriver is a universal driver that makes it possible to configure complex machines and add-on hardware such as feeders without having to write any custom driver code. All configuration is done through commands in the configuration files.
 
@@ -39,6 +39,14 @@ Demonstration Video: https://www.youtube.com/watch?v=0ntYOy0s_8Y
 * [ ] Get current position on startup
 * [ ] Position tracking during moves
 * [ ] Configuration Wizard
+
+# Configuration
+## Events
+TODO
+## Variables
+TODO
+## Miscellaneous
+TODO
 
 # Sample Configuration
 ```
