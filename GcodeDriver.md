@@ -2,6 +2,10 @@
 
 GcodeDriver is a universal driver that makes it possible to configure complex machines and add-on hardware such as feeders without having to write any custom driver code. All configuration is done through commands in the configuration files.
 
+GcodeDriver introduces a new concept to OpenPnP drivers: Sub-Drivers. Sub-Drivers allow you to embed multiple drivers in your configuration and each one can control a different device.
+
+In the video below there are two GcodeDrivers running. One is controlling the Smoothieboard running the machine and one is controlling an Arduino running a simple sketch. This is intended to demonstrate how you can easily integrate additional hardware such as feeders.
+
 Demonstration Video: https://www.youtube.com/watch?v=0ntYOy0s_8Y
 
 Sample Configuration
