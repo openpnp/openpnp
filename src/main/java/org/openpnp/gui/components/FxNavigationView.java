@@ -230,6 +230,9 @@ public class FxNavigationView extends JFXPanel {
     MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
+            if (head == null) {
+                return;
+            }
             // Reposition anything that might have moved.
             Platform.runLater(() -> {
                 for (Camera camera : head.getCameras()) {
