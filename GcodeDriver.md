@@ -41,11 +41,97 @@ Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/wat
 * [ ] Configuration Wizard
 
 # Configuration
-## Events
-TODO
-## Variables
-TODO
+## Gcodes
+
+This is a list of Gcode configuration variables available for the GcodeDriver. Each of these variables can be specified in the `machine.xml` or in the (TODO: configuration panel). When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
+
+### Variable Substitution
+
+All of the commands below support variable substitution. Variables are in the form of {VariableName:Format}. The variable names available to each command are listed with the command below. The format is a [Java style format string](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html), similar to printf. If no format is specified the format defaults to `%s`, which simply converts the variable's value to a string.
+
+In the commands below, if a command has variables available they are listed in a table after the command.
+
+### Gcode List
+
+* connect-command
+
+    Sent after the driver finishes connecting to the serial port. Can be used to send any initialization parameters the controller needs.
+
+* enable-command
+
+    Sent when the machine is enabled, primarily when the big START button is pressed. Can be used to turn on motors and lighting, start pumps, reset solenoids, etc.
+
+* disable-command
+
+    Sent when the machine is disabled, primarily when the big STOP button is pressed or before shutting down. Should turn off everything.
+
+* home-command
+
+    Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
+
+* move-to-command
+
+    This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis. The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
+
+    | Variable Name  |   Type   | Description |
+    | -------------- | -------- | ----------- |
+    | X              | Double   | The calculated X position for the move. |
+    | Y              | Double   | The calculated Y position for the move. |
+    | Z              | Double   | The calculated Z position for the move. |
+    | Rotation       | Double   | The calculated C or Rotation position for the move. |
+    | FeedRate       | Double   | The calculated feed rate for the move. |
+
+* pick-command
+
+    Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
+
+* place-command
+
+    Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
+
+* actuate-boolean-command
+
+    Sent whenever an Actuator's actuate(boolean) method is called. This is currently used by the ReferenceDragFeeder to fire a drag solenoid. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
+
+    | Variable Name  |   Type   | Description |
+    | -------------- | -------- | ----------- |
+    | Name           | String   | The user defined name of the actuator. |
+    | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+    | BooleanValue   | Boolean  | A Boolean representing whether the actuator was turned on or off. |
+
+* actuate-double-command
+
+    Sent whenever an Actuator's actuate(double) method is called. This is currently used by the ReferenceAutoFeeder to trigger a feed operation. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
+
+    | Variable Name  |   Type   | Description |
+    | -------------- | -------- | ----------- |
+    | Name           | String   | The user defined name of the actuator. |
+    | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+    | DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
+    | IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
+
+## Regular Expressions (Receiving Responses)
+
+* command-confirm-regex
+    
+    The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
+
 ## Miscellaneous
+
+* units
+
+    The units of measure that is used by the controller. Millimeters is most common, although Inches is supported as well.
+
+* max-feed-rate
+
+    The maximum feed rate value that will ever be sent in a move-to-command. The actual value sent will be less than or equal to this value.
+
+* connect-wait-time-milliseconds
+
+    Number of milliseconds to wait after connecting to the serial port before sending any commands. This is useful if you have a controller that resets on connect or takes a few seconds to start responding.
+
+## Sub-Drivers
+
 TODO
 
 # Sample Configuration
