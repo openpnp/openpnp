@@ -248,6 +248,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "DoubleValue", value);
+        command = substituteVariable(command, "IntegerValue", (int) value);
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
