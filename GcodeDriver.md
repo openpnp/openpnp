@@ -1,4 +1,4 @@
-# Pre-Release Warning: This feature is not yet finished. The documentation is not complete.
+# Pre-Release Warning: This feature is not yet finished. The documentation is not complete. See https://github.com/openpnp/openpnp/issues/106
 
 GcodeDriver is a universal driver that makes it possible to configure complex machines and add-on hardware such as feeders without having to write any custom driver code. All configuration is done through commands in the configuration files.
 
@@ -7,38 +7,6 @@ GcodeDriver introduces a new concept to OpenPnP drivers: Sub-Drivers. Sub-Driver
 In the video below there are two GcodeDrivers running. One is controlling the Smoothieboard running the machine and one is controlling an Arduino running a simple sketch. This is intended to demonstrate how you can easily integrate additional hardware such as feeders.
 
 Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/watch?v=0ntYOy0s_8Y
-
-# Release Plan
-## Release 1
-* [x] Four axes
-* [x] One nozzle
-* [x] Camera doesn't move in Z
-* [x] Definable Gcode
-* [x] Variables in Gcode
-* [x] Sub-Drivers
-* [x] Simple Actuator support (one gcode, variables)
-* [x] Home position (user will need to set it to non zero if they want it, and send gcode to make sure controller is in sync)
-* [x] Solo moves for axes
- 
-## Release 2
-* [ ] Definable axes
-	* Define axes like X, Y, Z, C1, C2.
-	* Map HeadMountables to a list of Axes like:
-		* N1 -> X, Y, Z, C1
-		* N2 -> X, Y, Z, C2
-		* CAM1 -> X, Y
-	* Axes can have Transforms applied that mutate machine positions. Something like:
-		* double transform(HeadMountable, double position)
-	* If you map more than one device to the same axis a transform is required on that axis.
-* [ ] Mapping of HeadMountables to Axes
-* [ ] Axis transforms
- 
-## Release 3
-* [ ] Map HeadMountables to Sub-Drivers
-* [ ] Improved actuator support (gcode per name, variables)
-* [ ] Get current position on startup
-* [ ] Position tracking during moves
-* [ ] Configuration Wizard
 
 # Configuration
 ## Variable Substitution
