@@ -31,10 +31,10 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -53,15 +53,16 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
     private JLabel lblSafeZ;
     private JTextField textFieldSafeZ;
     private JPanel headMountablePanel;
+    private JPanel generalPanel;
+    private JLabel lblIndex;
+    private JTextField indexTextField;
 
     public ReferenceActuatorConfigurationWizard(ReferenceActuator actuator) {
         this.actuator = actuator;
 
         headMountablePanel = new JPanel();
-        if (actuator.getHead() != null) {
-            contentPanel.add(headMountablePanel);
-        }
         headMountablePanel.setLayout(new BoxLayout(headMountablePanel, BoxLayout.Y_AXIS));
+        contentPanel.add(headMountablePanel);
 
         panelOffsets = new JPanel();
         headMountablePanel.add(panelOffsets);
@@ -111,14 +112,34 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
         textFieldSafeZ = new JTextField();
         panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
+        
+        generalPanel = new JPanel();
+        generalPanel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(generalPanel);
+        generalPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblIndex = new JLabel("Index");
+        generalPanel.add(lblIndex, "2, 2, right, default");
+        
+        indexTextField = new JTextField();
+        generalPanel.add(indexTextField, "4, 2, fill, default");
+        indexTextField.setColumns(10);
+        if (actuator.getHead() == null) {
+            headMountablePanel.setVisible(false);
+        }
     }
 
     @Override
     public void createBindings() {
-        System.out.println(Configuration.get().getMachine().getActuators());
-        System.out.println(Configuration.get().getMachine().getActuatorByName("AM1"));
-
         LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter intConverter = new IntegerConverter();
 
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");
@@ -126,7 +147,9 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
         addWrappedBinding(headOffsets, "lengthY", locationY, "text", lengthConverter);
         addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
+        addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
+        ComponentDecorators.decorateWithAutoSelect(indexTextField);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);

@@ -74,6 +74,10 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public int getIndex() {
         return index;
     }
+    
+    public void setIndex(int index) {
+        this.index = index;
+    }
 
     @Override
     public void actuate(boolean on) throws Exception {
