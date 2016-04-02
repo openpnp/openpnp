@@ -39,7 +39,7 @@ public class BottomVision {
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
         startLocation = startLocation.add(partHeightLocation).derive(null, null, null, 0d);
 
-        MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation, 1.0);
+        MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation, part.getSpeed());
 
         pipeline.setCamera(camera);
         pipeline.process();
@@ -73,7 +73,7 @@ public class BottomVision {
         offsets = offsets.derive(null, null, null, -angle);
         logger.debug("Final offsets {}", offsets);
 
-        nozzle.moveToSafeZ(1.0);
+        nozzle.moveToSafeZ(part.getSpeed());
         return offsets;
     }
 
