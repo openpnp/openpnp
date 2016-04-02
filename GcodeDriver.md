@@ -41,34 +41,59 @@ Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/wat
 * [ ] Configuration Wizard
 
 # Configuration
-## Gcodes
-
-This is a list of Gcode configuration variables available for the GcodeDriver. Each of these variables can be specified in the `machine.xml` or in the (TODO: configuration panel). When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
-
-### Variable Substitution
+## Variable Substitution
 
 All of the commands below support variable substitution. Variables are in the form of {VariableName:Format}. The variable names available to each command are listed with the command below. The format is a [Java style format string](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html), similar to printf. If no format is specified the format defaults to `%s`, which simply converts the variable's value to a string.
 
 In the commands below, if a command has variables available they are listed in a table after the command.
 
-### Gcode List
+## Command List
+
+This is a list of Gcode configuration options available for the GcodeDriver. Each of these options can be specified in the `machine.xml` or in the (TODO: configuration panel). When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
+
+Commands may contain newline characters. Each line is sent to the controller in turn, waiting for a response before sending the next.
 
 * connect-command
 
     Sent after the driver finishes connecting to the serial port. Can be used to send any initialization parameters the controller needs.
 
+    Example:
+    ```
+G21 ; Set millimeters mode
+G90 ; Set absolute positioning mode
+M82 ; Set absolute mode for extruder
+    ```
+
 * enable-command
 
     Sent when the machine is enabled, primarily when the big START button is pressed. Can be used to turn on motors and lighting, start pumps, reset solenoids, etc.
 
+    Example:
+    ```
+M810 ; Turn on LED lighting
+    ```
 * disable-command
 
     Sent when the machine is disabled, primarily when the big STOP button is pressed or before shutting down. Should turn off everything.
+
+    Example:
+    ```
+M84 ; Disable steppers
+M811 ; Turn off LED lighting
+    ```
 
 * home-command
 
     Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
 
+
+    Example:
+    ```
+M84 ; Disable steppers, resetting the Z axis
+G4P500 ; Wait half a second for the Z axis to settle
+G28 X0 Y0 ; Home X and Y
+G92 X0 Y0 Z0 E0 ; Reset machine coordinates to zero.
+    ```
 * move-to-command
 
     This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis. The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
@@ -81,13 +106,34 @@ In the commands below, if a command has variables available they are listed in a
     | Rotation       | Double   | The calculated C or Rotation position for the move. |
     | FeedRate       | Double   | The calculated feed rate for the move. |
 
+    Example:
+    ```
+G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move
+M400 ; Wait for moves to complete before returning
+    ```
+
 * pick-command
 
     Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
 
+    Example:
+    ```
+M808 ; Turn on pump
+M800 ; Turn on nozzle 1 vacuum solenoid
+    ```
+
 * place-command
 
     Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
+
+    Example:
+    ```
+M809 ; Turn off pump
+M801 ; Turn off nozzle 1 vacuum solenoid
+M802 ; Turn on nozzle 1 exhaust solenoid
+G4P250 ; Wait 250 milliseconds
+M803 ; Turn off nozzle 1 exhaust solenoid
+```
 
 * actuate-boolean-command
 
