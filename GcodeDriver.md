@@ -166,7 +166,7 @@ M803 ; Turn off nozzle 1 exhaust solenoid
 
 * units
 
-    The units of measure that is used by the controller. Millimeters is most common, although Inches is supported as well.
+    The units of measure that is used by the controller. Millimeters is most common, although Inches is supported as well. This is primarily used internally to convert location data before sending moveTo commands.
 
 * max-feed-rate
 
