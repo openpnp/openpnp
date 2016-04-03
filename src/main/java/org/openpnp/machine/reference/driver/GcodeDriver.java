@@ -17,6 +17,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -416,5 +417,29 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
+    }
+    
+    public static class Axis {
+        public enum LocationField {
+            X,
+            Y,
+            Z,
+            Rotation
+        };
+        
+        @Attribute
+        public String name;
+        
+        @Attribute
+        public LocationField locationField;
+        
+        @Element
+        public AxisTransform transform;
+        
+        public double coordinate; 
+    }
+    
+    public interface AxisTransform {
+        public double transform(HeadMountable hm, double coordinate);
     }
 }
