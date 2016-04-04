@@ -199,9 +199,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             else {
                 flipCode = flipX ? 0 : 1;
             }
-            Mat dst = new Mat();
-            Core.flip(mat, dst, flipCode);
-            mat = dst;
+            Core.flip(mat, mat, flipCode);
         }
 
         image = OpenCvUtils.toBufferedImage(mat);

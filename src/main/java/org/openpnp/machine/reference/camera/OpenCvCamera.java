@@ -65,17 +65,19 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         if (thread == null) {
             setDeviceIndex(deviceIndex);
         }
+        Mat mat = new Mat();
         try {
-            Mat mat = new Mat();
             if (!fg.read(mat)) {
                 return null;
             }
             BufferedImage img = OpenCvUtils.toBufferedImage(mat);
-            mat.release();
             return transformImage(img);
         }
         catch (Exception e) {
             return null;
+        }
+        finally {
+            mat.release();
         }
     }
 

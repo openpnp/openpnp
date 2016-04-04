@@ -177,6 +177,7 @@ public class LensCalibration {
                     Imgproc.cvtColor(mat, matGray, Imgproc.COLOR_BGR2GRAY);
                     Imgproc.cornerSubPix(matGray, imagePoints, new Size(11, 11), new Size(-1, -1),
                             new TermCriteria(TermCriteria.EPS + TermCriteria.COUNT, 30, 0.1));
+                    matGray.release();
                 }
                 break;
             case CirclesGrid:
