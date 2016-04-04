@@ -48,7 +48,10 @@ public class OpenCvUtils {
             type = BufferedImage.TYPE_BYTE_GRAY;
             Mat tmp = new Mat();
             m.convertTo(tmp, CvType.CV_8UC1, 255);
-            m = tmp;
+            // Copy the results into the original Mat and release our temp copy so that when
+            // the caller releases the original Mat there is no memory leak.
+            tmp.copyTo(m);
+            tmp.release();
         }
         if (type == null) {
             throw new Error(String.format("Unsupported Mat: type %d, channels %d, depth %d",
