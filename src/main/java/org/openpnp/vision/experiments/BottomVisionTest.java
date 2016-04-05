@@ -23,6 +23,8 @@ import org.openpnp.util.HslColor;
 import org.openpnp.util.Utils2D;
 
 public class BottomVisionTest extends JComponent {
+    private static final Random random = new Random(0xdeadbeef);
+    
     Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 15);
     Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 20);
     Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 30, 30, 0, 10);
@@ -78,7 +80,7 @@ public class BottomVisionTest extends JComponent {
     }
     
     private static int rand(int min, int max) {
-        return new Random().nextInt(max) + min;
+        return random.nextInt(max) + min;
     }
 
     @Override
@@ -123,8 +125,7 @@ public class BottomVisionTest extends JComponent {
 
         // Rotate the point 0,0 using the bottom offsets as a center point by the angle that is
         // the difference between the bottom vision angle and the calculated global placement angle.
-        Location location = rotateXyCenterPoint(
-                new Location(LengthUnit.Millimeters), 
+        Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(
                 bottomVisionOffsets, 
                 placementFinalLocation.getRotation() - bottomVisionOffsets.getRotation());
         
@@ -142,14 +143,6 @@ public class BottomVisionTest extends JComponent {
         return location;
     }
     
-    
-    private static Location rotateXyCenterPoint(Location location, Location center, double angle) {
-        location = location.subtract(center);
-        location = location.rotateXy(angle);
-        location = location.add(center);
-        return location;
-    }
-
     private void drawBoard(Graphics2D g) {
         AffineTransform tx = g.getTransform();
 
