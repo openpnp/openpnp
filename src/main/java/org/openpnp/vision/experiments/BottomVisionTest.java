@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
+import java.util.Random;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -31,9 +32,9 @@ public class BottomVisionTest extends JComponent {
 //    Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 200, 200, 0, 32);
     
     // so the old algorithm works if there is a boardlocation rotate but not a placement locatin rotate
-    final Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 15);
-    final Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 20);
-    final Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 30, 30, 0, 10);
+    Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 15);
+    Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 20);
+    Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 30, 30, 0, 10);
     Location nozzleLocation = calculateNozzlePosition(boardLocation, placementLocation, bottomVisionOffsets);
     
     int partSize = 50;
@@ -42,8 +43,26 @@ public class BottomVisionTest extends JComponent {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                nozzleLocation = nozzleLocation.derive((double) e.getX(), (double) (getHeight() - e.getY()), 0d, null);
-                System.out.println(nozzleLocation);
+                Random r = new Random();
+                boardLocation = new Location(
+                        LengthUnit.Millimeters, 
+                        rand(200, 600),
+                        rand(100, 500),
+                        0,
+                        rand(0, 90));
+                placementLocation = new Location(
+                        LengthUnit.Millimeters, 
+                        rand(10, 100),
+                        rand(10, 100),
+                        0,
+                        rand(0, 90));
+                bottomVisionOffsets = new Location(
+                        LengthUnit.Millimeters, 
+                        rand(10, 100),
+                        rand(10, 100),
+                        0,
+                        rand(0, 45));
+                nozzleLocation = calculateNozzlePosition(boardLocation, placementLocation, bottomVisionOffsets);
                 repaint();
             }
         });
@@ -71,6 +90,10 @@ public class BottomVisionTest extends JComponent {
                 repaint();
             }
         });
+    }
+    
+    private static int rand(int min, int max) {
+        return new Random().nextInt(max) + min;
     }
 
     @Override
@@ -129,28 +152,21 @@ public class BottomVisionTest extends JComponent {
     // think of the part sitting on the placement location driving the nozzle around in a circle around it
     // think of the part sitting on the placement location driving the nozzle around in a circle around it
     private static Location calculateNozzlePosition(Location boardLocation, Location placementLocation, Location bottomVisionOffsets) {
-        // Start block
-        // This block gets the right X, Y, but we need to figure out the rotation
         Location location  = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top,
                 0, placementLocation);
         location = location.derive(null, null, null, 0d);
         location = location.subtract(bottomVisionOffsets);
-        // End block
-        
         // location now represents the placement's final location
+        
+        // partLocation is the location of the part on the nozzle
         Location partLocation = location.add(bottomVisionOffsets);
         
-        double centerX = partLocation.getX();
-        double centerY = partLocation.getY();
-        double point2x = location.getX();
-        double point2y = location.getY();
-        double angle = boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation();
-        double radians = Math.toRadians(angle);
+        // we want to rotate location by the difference in degrees between the bottom vision offsets
+        // and the total placement rotation
+        location = rotateXyCenterPoint(location, partLocation, boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation());
         
-        double newX = centerX + (point2x-centerX)*Math.cos(radians) - (point2y-centerY)*Math.sin(radians);
-        double newY = centerY + (point2x-centerX)*Math.sin(radians) + (point2y-centerY)*Math.cos(radians);
-        
-        location = location.derive(newX, newY, null, boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation());
+        // and we set the angle to the angle we rotated by
+        location = location.derive(null, null, null, boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation());
         
         System.out.println(location);
         
@@ -163,7 +179,15 @@ public class BottomVisionTest extends JComponent {
         return location;
     }
     
-// this code gets the position right, but the angle is wrong by what looks like the placement angle    
+    private static Location rotateXyCenterPoint(Location location, Location center, double angle) {
+        location = location.subtract(center);
+        location = location.rotateXy(angle);
+        location = location.add(center);
+        return location;
+    }
+
+    
+    // this code gets the position right, but the angle is wrong by what looks like the placement angle    
 //    Location originalPlacementLocation = placementLocation;
 //    if (bottomVisionOffsets != null) {
 //        // derotate the offset using the identified angle
@@ -263,7 +287,7 @@ public class BottomVisionTest extends JComponent {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         JFrame frame = new JFrame("Bottom Vision Test");
         frame.setSize(1024, 768);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
