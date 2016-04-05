@@ -7,6 +7,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 
 import javax.swing.JComponent;
@@ -29,37 +31,43 @@ public class BottomVisionTest extends JComponent {
 //    Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 200, 200, 0, 32);
     
     // so the old algorithm works if there is a boardlocation rotate but not a placement locatin rotate
-    final Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 0);
+    final Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 15);
     final Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 20);
-    final Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 30, 30, 0, 8);
+    final Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 30, 30, 0, 10);
     Location nozzleLocation = calculateNozzlePosition(boardLocation, placementLocation, bottomVisionOffsets);
     
     int partSize = 50;
-    boolean show = true;
 
     public BottomVisionTest() {
-        Thread t = new Thread(() -> {
-            while (true) {
-                double r = nozzleLocation.getRotation();
-                r += 1;
-                if (r > 360) {
-                    r = 0;
-                }
-                nozzleLocation = nozzleLocation.derive(null, null, null, r);
-                repaint();
-                try {
-                    Thread.sleep(1000 / 10);
-                }
-                catch (Exception e) {
-
-                }
-            }
-        });
-//        t.start();
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                show = !show;
+                nozzleLocation = nozzleLocation.derive((double) e.getX(), (double) (getHeight() - e.getY()), 0d, null);
+                System.out.println(nozzleLocation);
+                repaint();
+            }
+        });
+        
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                nozzleLocation = nozzleLocation.derive((double) e.getX(), (double) (getHeight() - e.getY()), 0d, null);
+                System.out.println(nozzleLocation);
+                repaint();
+            }
+        });
+        
+        addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+//                double centerX = bottomVisionOffsets.getX();
+//                double centerY = bottomVisionOffsets.getY();
+//                double point2x = 
+//                double newX = centerX + (point2x-centerX)*Math.cos(x) - (point2y-centerY)*Math.sin(x);
+//                double newY = centerY + (point2x-centerX)*Math.sin(x) + (point2y-centerY)*Math.cos(x);                
+                
+                nozzleLocation = nozzleLocation.subtractWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, e.getWheelRotation() * 0.1));
+                System.out.println(nozzleLocation);
                 repaint();
             }
         });
@@ -93,10 +101,8 @@ public class BottomVisionTest extends JComponent {
 
         drawBoard(g2d);
 
-        if (show) {
 //            nozzleLocation = calculateNozzlePosition(boardLocation, placementLocation, bottomVisionOffsets);
             drawNozzle(g2d, nozzleLocation, Color.orange);
-        }
         
 //        drawNozzle(g2d, new Location(LengthUnit.Millimeters, 100, 100, 0, 90), Color.white);
         
@@ -123,18 +129,38 @@ public class BottomVisionTest extends JComponent {
     // think of the part sitting on the placement location driving the nozzle around in a circle around it
     // think of the part sitting on the placement location driving the nozzle around in a circle around it
     private static Location calculateNozzlePosition(Location boardLocation, Location placementLocation, Location bottomVisionOffsets) {
-        placementLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top,
+        // Start block
+        // This block gets the right X, Y, but we need to figure out the rotation
+        Location location  = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top,
                 0, placementLocation);
-        Location placementLocation2 = placementLocation;
-        placementLocation = placementLocation.derive(null, null, null, 0d);
-        placementLocation = placementLocation.subtract(bottomVisionOffsets);
-        // now rotate placementLocation using placementLocation2 as the center point
-//        placementLocation = placementLocation.subtract(placementLocation2);
-//        placementLocation = placementLocation.rotateXy(bottomVisionOffsets.getRotation());
-//        placementLocation = placementLocation.add(placementLocation2);
+        location = location.derive(null, null, null, 0d);
+        location = location.subtract(bottomVisionOffsets);
+        // End block
         
-        // try calculating the difference in angle between this current result and the placementLocation2 to see if that helps understand.
-        return placementLocation;
+        // location now represents the placement's final location
+        Location partLocation = location.add(bottomVisionOffsets);
+        
+        double centerX = partLocation.getX();
+        double centerY = partLocation.getY();
+        double point2x = location.getX();
+        double point2y = location.getY();
+        double angle = boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation();
+        double radians = Math.toRadians(angle);
+        
+        double newX = centerX + (point2x-centerX)*Math.cos(radians) - (point2y-centerY)*Math.sin(radians);
+        double newY = centerY + (point2x-centerX)*Math.sin(radians) + (point2y-centerY)*Math.cos(radians);
+        
+        location = location.derive(newX, newY, null, boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation());
+        
+        System.out.println(location);
+        
+        // empirical
+        // (522.000000, 371.000000, 0.000000, 26.700000 mm)
+        // calculated
+        // (520.844653, 371.369462, 0.000000, 25.000000 mm)
+
+        
+        return location;
     }
     
 // this code gets the position right, but the angle is wrong by what looks like the placement angle    
@@ -173,6 +199,7 @@ public class BottomVisionTest extends JComponent {
 
         // draw the nozzle
         drawCrossHair(g, location, color);
+        drawRectangle(g, location, partSize, partSize, color);
 
         g.translate(location.getX(), location.getY());
         g.rotate(Math.toRadians(location.getRotation()));
