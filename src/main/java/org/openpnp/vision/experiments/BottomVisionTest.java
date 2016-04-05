@@ -23,15 +23,6 @@ import org.openpnp.util.HslColor;
 import org.openpnp.util.Utils2D;
 
 public class BottomVisionTest extends JComponent {
-//    Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 5);
-//    Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 5);
-//    Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 200, 200, 0, 5);
-    
-//    Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 15);
-//    Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 45);
-//    Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 200, 200, 0, 32);
-    
-    // so the old algorithm works if there is a boardlocation rotate but not a placement locatin rotate
     Location boardLocation = new Location(LengthUnit.Millimeters, 500, 350, 0, 15);
     Location placementLocation = new Location(LengthUnit.Millimeters, 50, 50, 0, 20);
     Location bottomVisionOffsets = new Location(LengthUnit.Millimeters, 30, 30, 0, 10);
@@ -79,12 +70,6 @@ public class BottomVisionTest extends JComponent {
         addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-//                double centerX = bottomVisionOffsets.getX();
-//                double centerY = bottomVisionOffsets.getY();
-//                double point2x = 
-//                double newX = centerX + (point2x-centerX)*Math.cos(x) - (point2y-centerY)*Math.sin(x);
-//                double newY = centerY + (point2x-centerX)*Math.sin(x) + (point2y-centerY)*Math.cos(x);                
-                
                 nozzleLocation = nozzleLocation.subtractWithRotation(new Location(LengthUnit.Millimeters, 0, 0, 0, e.getWheelRotation() * 0.1));
                 System.out.println(nozzleLocation);
                 repaint();
@@ -124,34 +109,17 @@ public class BottomVisionTest extends JComponent {
 
         drawBoard(g2d);
 
-//            nozzleLocation = calculateNozzlePosition(boardLocation, placementLocation, bottomVisionOffsets);
-            drawNozzle(g2d, nozzleLocation, Color.orange);
-        
-//        drawNozzle(g2d, new Location(LengthUnit.Millimeters, 100, 100, 0, 90), Color.white);
+        drawNozzle(g2d, nozzleLocation, Color.orange);
         
         // end work
 
         g2d.setTransform(tx);
     }
     
-//    private static Location calculateNozzlePositionOld(Location boardLocation, Location placementLocation, Location bottomVisionOffsets) {
-//        Location originalPlacementLocation = placementLocation;
-//        if (bottomVisionOffsets != null) {
-//            // derotate the offset using the identified angle
-//            bottomVisionOffsets =
-//                    bottomVisionOffsets.rotateXy(-bottomVisionOffsets.getRotation());
-//            // apply the offset and the angle to the placement
-//            placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
-//        }
-//        placementLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top, 0, placementLocation);
-//        return placementLocation;
-//    }
-
-
-    // think of the part (offsets) sitting on the placement location driving the nozzle around in a circle around it
-    // think of the part sitting on the placement location driving the nozzle around in a circle around it
-    // think of the part sitting on the placement location driving the nozzle around in a circle around it
     private static Location calculateNozzlePosition(Location boardLocation, Location placementLocation, Location bottomVisionOffsets) {
+        
+        
+        
         Location location  = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top,
                 0, placementLocation);
         location = location.derive(null, null, null, 0d);
@@ -170,12 +138,6 @@ public class BottomVisionTest extends JComponent {
         
         System.out.println(location);
         
-        // empirical
-        // (522.000000, 371.000000, 0.000000, 26.700000 mm)
-        // calculated
-        // (520.844653, 371.369462, 0.000000, 25.000000 mm)
-
-        
         return location;
     }
     
@@ -185,21 +147,6 @@ public class BottomVisionTest extends JComponent {
         location = location.add(center);
         return location;
     }
-
-    
-    // this code gets the position right, but the angle is wrong by what looks like the placement angle    
-//    Location originalPlacementLocation = placementLocation;
-//    if (bottomVisionOffsets != null) {
-//        // derotate the offset using the identified angle
-//        bottomVisionOffsets =
-//                bottomVisionOffsets.rotateXy(-bottomVisionOffsets.getRotation());
-//        // apply the offset and the angle to the placement
-//        placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
-//    }
-//    placementLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top, 0, placementLocation);
-//    // subtract placementLocation's original angle
-//    placementLocation = placementLocation.subtractWithRotation(originalPlacementLocation.derive(0d, 0d, 0d, null));
-//    return placementLocation;
 
     private void drawBoard(Graphics2D g) {
         AffineTransform tx = g.getTransform();
@@ -253,12 +200,6 @@ public class BottomVisionTest extends JComponent {
         p2 = Utils2D.rotatePoint(new Point(0, 0), location.getRotation());
         g.drawLine((int) (location.getX() + p1.getX()), (int) (location.getY() + p1.getY()),
                 (int) (location.getX() + p2.getX()), (int) (location.getY() + p2.getY()));
-    }
-
-    private void drawCircle(Graphics2D g, double x, double y, double diameter, Color color) {
-        g.setColor(color);
-        g.drawArc((int) (x - diameter / 2), (int) (y - diameter / 2), (int) diameter,
-                (int) diameter, 0, 360);
     }
 
     private void drawRectangle(Graphics2D g, Location location, double width, double height,
