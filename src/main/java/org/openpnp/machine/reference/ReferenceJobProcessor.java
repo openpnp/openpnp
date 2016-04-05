@@ -23,8 +23,10 @@ import java.util.Set;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceJobProcessorConfigurationWizard;
+import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -183,15 +185,28 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
                     e.printStackTrace();
                 }
 
-                Location placementLocation = placement.getLocation();
+                Location placementLocation = Utils2D.calculateBoardPlacementLocation(bl, placement.getLocation());
+                
                 if (bottomVisionOffsets != null) {
-                    // derotate the offset using the identified angle
-                    bottomVisionOffsets =
-                            bottomVisionOffsets.rotateXy(-bottomVisionOffsets.getRotation());
-                    // apply the offset and the angle to the placement
-                    placementLocation = placementLocation.subtractWithRotation(bottomVisionOffsets);
+                    // Rotate the point 0,0 using the bottom offsets as a center point by the angle that is
+                    // the difference between the bottom vision angle and the calculated global placement angle.
+                    Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(
+                            bottomVisionOffsets, 
+                            placementLocation.getRotation() - bottomVisionOffsets.getRotation());
+                    
+                    // Set the angle to the difference mentioned above, aligning the part to the same angle as
+                    // the placement.
+                    location = location.derive(null, null, null, placementLocation.getRotation() - bottomVisionOffsets.getRotation());
+                    
+                    // Add the placement final location to move our local coordinate into global space
+                    location = location.add(placementLocation);
+
+                    // Subtract the bottom vision offsets to move the part to the final location, instead of
+                    // the nozzle.
+                    location = location.subtract(bottomVisionOffsets);
+                    
+                    placementLocation = location;
                 }
-                placementLocation = Utils2D.calculateBoardPlacementLocation(bl, placementLocation);
 
                 // Update the placementLocation with the proper Z value. This is
                 // the distance to the top of the board plus the height of
