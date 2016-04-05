@@ -117,29 +117,31 @@ public class BottomVisionTest extends JComponent {
     }
     
     private static Location calculateNozzlePosition(Location boardLocation, Location placementLocation, Location bottomVisionOffsets) {
-        
-        
-        
-        Location location  = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top,
+        // The calculated global placement location
+        Location placementFinalLocation  = Utils2D.calculateBoardPlacementLocation(boardLocation, Board.Side.Top,
                 0, placementLocation);
-        location = location.derive(null, null, null, 0d);
+
+        // Rotate the point 0,0 using the bottom offsets as a center point by the angle that is
+        // the difference between the bottom vision angle and the calculated global placement angle.
+        Location location = rotateXyCenterPoint(
+                new Location(LengthUnit.Millimeters), 
+                bottomVisionOffsets, 
+                placementFinalLocation.getRotation() - bottomVisionOffsets.getRotation());
+        
+        // Set the angle to the difference mentioned above, aligning the part to the same angle as
+        // the placement.
+        location = location.derive(null, null, null, placementFinalLocation.getRotation() - bottomVisionOffsets.getRotation());
+        
+        // Add the placement final location to move our local coordinate into global space
+        location = location.add(placementFinalLocation);
+
+        // Subtract the bottom vision offsets to move the part to the final location, instead of
+        // the nozzle.
         location = location.subtract(bottomVisionOffsets);
-        // location now represents the placement's final location
-        
-        // partLocation is the location of the part on the nozzle
-        Location partLocation = location.add(bottomVisionOffsets);
-        
-        // we want to rotate location by the difference in degrees between the bottom vision offsets
-        // and the total placement rotation
-        location = rotateXyCenterPoint(location, partLocation, boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation());
-        
-        // and we set the angle to the angle we rotated by
-        location = location.derive(null, null, null, boardLocation.getRotation() + placementLocation.getRotation() - bottomVisionOffsets.getRotation());
-        
-        System.out.println(location);
         
         return location;
     }
+    
     
     private static Location rotateXyCenterPoint(Location location, Location center, double angle) {
         location = location.subtract(center);
@@ -170,7 +172,7 @@ public class BottomVisionTest extends JComponent {
 
         // draw the nozzle
         drawCrossHair(g, location, color);
-        drawRectangle(g, location, partSize, partSize, color);
+        drawCircle(g, location, partSize, color);
 
         g.translate(location.getX(), location.getY());
         g.rotate(Math.toRadians(location.getRotation()));
@@ -180,6 +182,14 @@ public class BottomVisionTest extends JComponent {
         drawRectangle(g, bottomVisionOffsets, partSize, partSize, new HslColor(color).getComplementary());
 
         g.setTransform(tx);
+    }
+
+    private void drawCircle(Graphics2D g, Location location, double diameter, Color color) {
+        g.setColor(color);
+        double x = location.getX();
+        double y = location.getY();
+        g.drawArc((int) (x - diameter / 2), (int) (y - diameter / 2), (int) diameter,
+                (int) diameter, 0, 360);
     }
 
     private void drawCrossHair(Graphics2D g, Location location, Color color) {
