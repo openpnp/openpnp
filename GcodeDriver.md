@@ -84,6 +84,10 @@ M400 ; Wait for moves to complete before returning
 
     Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
 
+    | Variable Name  |   Type   | Description |
+    | -------------- | -------- | ----------- |
+    | Name           | String   | The user defined name of the nozzle. |
+
     Example:
     ```
 M808 ; Turn on pump
@@ -93,6 +97,10 @@ M800 ; Turn on nozzle 1 vacuum solenoid
 * place-command
 
     Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
+
+    | Variable Name  |   Type   | Description |
+    | -------------- | -------- | ----------- |
+    | Name           | String   | The user defined name of the nozzle. |
 
     Example:
     ```
@@ -112,6 +120,7 @@ M803 ; Turn off nozzle 1 exhaust solenoid
     | Name           | String   | The user defined name of the actuator. |
     | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
     | BooleanValue   | Boolean  | A Boolean representing whether the actuator was turned on or off. |
+    | IntegerValue   | Integer  | A Boolean interpreted as an integer, representing whether the actuator was turned on (1) or off (0). |
 
 * actuate-double-command
 
