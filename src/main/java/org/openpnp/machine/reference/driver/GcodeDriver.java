@@ -212,7 +212,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        sendGcode(pickCommand);
+    	String command = pickCommand;
+    	command = substituteVariable(command, "Name", nozzle.getName());
+        sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
@@ -221,7 +223,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        sendGcode(placeCommand);
+    	String command = placeCommand;
+    	command = substituteVariable(command, "Name", nozzle.getName());
+        sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
             driver.place(nozzle);
@@ -235,6 +239,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "BooleanValue", on);
+        command = substituteVariable(command, "IntegerValue", on ? 1 : 0);
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
@@ -348,7 +353,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 break;
             }
         }
-        // If a command was specified and no confirmaion was found it's a timeout error.
+        // If a command was specified and no confirmation was found it's a timeout error.
         if (command != null && !found) {
             throw new Exception("Timeout waiting for response to " + command);
         }
