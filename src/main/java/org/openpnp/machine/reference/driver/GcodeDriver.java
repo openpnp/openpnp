@@ -15,8 +15,10 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.Identifiable;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Named;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -138,7 +140,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void home(ReferenceHead head) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
-        sendGcode(homeCommand, -1);
+        String command = homeCommand;
+        command = substituteVariable(command, "Id", head.getId());
+        command = substituteVariable(command, "Name", head.getName());
+        sendGcode(command, -1);
 
         x = homeLocation.getX();
         y = homeLocation.getY();
@@ -192,6 +197,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         if (this.x != x || this.y != y || this.z != z || this.c != c) {
             String command = moveToCommand;
+            if (hm instanceof Identifiable) {
+                command = substituteVariable(command, "Id", ((Identifiable) hm).getId());
+            }
+            if (hm instanceof Named) {
+                command = substituteVariable(command, "Name", ((Named) hm).getName());
+            }
             command = substituteVariable(command, "X", x == this.x ? null : x);
             command = substituteVariable(command, "Y", y == this.y ? null : y);
             command = substituteVariable(command, "Z", z == this.z ? null : z);
@@ -213,7 +224,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
     	String command = pickCommand;
-    	command = substituteVariable(command, "Name", nozzle.getName());
+        command = substituteVariable(command, "Id", nozzle.getId());
+        command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
@@ -224,6 +236,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
     	String command = placeCommand;
+        command = substituteVariable(command, "Id", nozzle.getId());
     	command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
 
@@ -236,10 +249,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         String command = actuateBooleanCommand;
+        command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "BooleanValue", on);
-        command = substituteVariable(command, "IntegerValue", on ? 1 : 0);
+        command = substituteVariable(command, "True", on ? on : null);
+        command = substituteVariable(command, "False", on ? null : on);
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
@@ -250,6 +265,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
         String command = actuateDoubleCommand;
+        command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
         command = substituteVariable(command, "DoubleValue", value);
