@@ -26,6 +26,8 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
@@ -171,25 +173,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         mat = undistort(mat);
 
         // apply affine transformations
-        if (rotation != 0) {
-            // TODO: Fix cropping of rotated image:
-            // http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
-            Point center = new Point(mat.width() / 2D, mat.height() / 2D);
-            Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
-            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-            mapMatrix.release();
-        }
+        mat = rotate(mat, rotation);
 
-        if (offsetX != 0 || offsetY != 0) {
-            Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
-                {
-                    put(0, 0, 1, 0, offsetX);
-                    put(1, 0, 0, 1, offsetY);
-                }
-            };
-            Imgproc.warpAffine(mat, mat, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
-            mapMatrix.release();
-        }
+        mat = offset(mat, offsetX, offsetY);
 
         if (flipX || flipY) {
             int flipCode;
@@ -205,6 +191,54 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         image = OpenCvUtils.toBufferedImage(mat);
         mat.release();
         return image;
+    }
+    
+    private Mat rotate(Mat mat, double rotation) {
+        if (rotation == 0D) {
+        	return mat;
+        }
+
+        // See: http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
+        Point center = new Point(mat.width() / 2D, mat.height() / 2D);
+        Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
+        
+        // determine bounding rectangle
+        Rect bbox = new RotatedRect(center, mat.size(), rotation).boundingRect();
+        // adjust transformation matrix
+        double[] cx = mapMatrix.get(0, 2);
+        double[] cy = mapMatrix.get(1, 2);
+        cx[0] += bbox.width / 2D - center.x;
+        cy[0] += bbox.height / 2D - center.y;
+        mapMatrix.put(0, 2, cx);
+        mapMatrix.put(1, 2, cy);
+
+        Mat dst = new Mat(bbox.width, bbox.height, mat.type());
+        Imgproc.warpAffine(mat, dst, mapMatrix, bbox.size(), Imgproc.INTER_LINEAR);
+        mat.release();
+
+        mapMatrix.release();
+        
+        return dst;
+    }
+    
+    private Mat offset(Mat mat, int offsetX, int offsetY) {
+        if (offsetX == 0D && offsetY == 0D) {
+        	return mat;
+        }
+
+    	Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
+            {
+                put(0, 0, 1, 0, offsetX);
+                put(1, 0, 0, 1, offsetY);
+            }
+        };
+        
+        Mat dst = mat.clone();
+        Imgproc.warpAffine(mat, dst, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+
+        mapMatrix.release();
+        
+        return dst;
     }
 
     private Mat undistort(Mat mat) {
