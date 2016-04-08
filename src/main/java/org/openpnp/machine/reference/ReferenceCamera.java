@@ -82,6 +82,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
 
+    private Mat undistortionMap1;
+    private Mat undistortionMap2;
+
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
 
@@ -245,9 +248,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         if (!calibration.isEnabled()) {
             return mat;
         }
+
+        if (undistortionMap1 == null || undistortionMap2 == null) {
+            undistortionMap1 = new Mat();
+            undistortionMap2 = new Mat();
+            Mat rectification = Mat.eye(3, 3, CvType.CV_32F);
+            Imgproc.initUndistortRectifyMap(calibration.getCameraMatrixMat(), calibration.getDistortionCoefficientsMat(), rectification, calibration.getCameraMatrixMat(), mat.size(), CvType.CV_32FC1, undistortionMap1, undistortionMap2);
+        }
+
         Mat dst = mat.clone();
-        Imgproc.undistort(mat, dst, calibration.getCameraMatrixMat(),
-                calibration.getDistortionCoefficientsMat());
+        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
         mat.release();
         return dst;
     }
