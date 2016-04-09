@@ -288,6 +288,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 calibration
                         .setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
                 calibration.setEnabled(true);
+                
+                lensCalibration.close();
+                lensCalibration = null;
                 calibrating = false;
             }
             else {
@@ -308,6 +311,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     public void cancelCalibration() {
+    	if (calibrating) {
+    		lensCalibration.close();
+    	}
         calibrating = false;
     }
 
@@ -378,7 +384,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
 
         public void setCameraMatrixMat(Mat cameraMatrix) {
-            this.cameraMatrix = cameraMatrix;
+            this.cameraMatrix = cameraMatrix.clone();
         }
 
         public Mat getDistortionCoefficientsMat() {
@@ -386,7 +392,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
 
         public void setDistortionCoefficientsMat(Mat distortionCoefficients) {
-            this.distortionCoefficients = distortionCoefficients;
+            this.distortionCoefficients = distortionCoefficients.clone();
         }
     }
 }
