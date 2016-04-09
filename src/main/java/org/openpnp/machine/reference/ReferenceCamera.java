@@ -238,6 +238,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         
         Mat dst = mat.clone();
         Imgproc.warpAffine(mat, dst, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+        mat.release();
 
         mapMatrix.release();
         
@@ -254,11 +255,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             undistortionMap2 = new Mat();
             Mat rectification = Mat.eye(3, 3, CvType.CV_32F);
             Imgproc.initUndistortRectifyMap(calibration.getCameraMatrixMat(), calibration.getDistortionCoefficientsMat(), rectification, calibration.getCameraMatrixMat(), mat.size(), CvType.CV_32FC1, undistortionMap1, undistortionMap2);
+            rectification.release();
         }
 
         Mat dst = mat.clone();
         Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
         mat.release();
+        
         return dst;
     }
 
