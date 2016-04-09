@@ -84,7 +84,6 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.openpnp.vision.FiducialLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -347,7 +346,7 @@ public class JobPanel extends JPanel {
             jobProcessor.load(job);
         }
     }
-    
+
     public JobProcessor getJobProcessor() {
         return jobProcessor;
     }
@@ -937,7 +936,8 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Location location = FiducialLocator.locateBoard(getSelectedBoardLocation());
+                Location location = Configuration.get().getMachine().getFiducialLocator()
+                        .locateBoard(getSelectedBoardLocation());
                 getSelectedBoardLocation().setLocation(location);
                 refreshSelectedBoardRow();
                 HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();

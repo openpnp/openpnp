@@ -15,7 +15,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -24,6 +27,7 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.Type;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -66,6 +70,12 @@ public abstract class AbstractMachine implements Machine {
     @ElementMap(entry = "jobProcessor", key = "type", attribute = true, inline = false,
             required = false)
     protected Map<JobProcessor.Type, JobProcessor> jobProcessors = new HashMap<>();
+    
+    @Element(required = false)
+    protected PartAlignment partAlignment = new ReferenceBottomVision();
+    
+    @Element(required = false)
+    protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
 
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -304,5 +314,21 @@ public abstract class AbstractMachine implements Machine {
             throw new Exception("No default head available.");
         }
         return heads.get(0);
+    }
+
+    public PartAlignment getPartAlignment() {
+        return partAlignment;
+    }
+
+    public void setPartAlignment(PartAlignment partAlignment) {
+        this.partAlignment = partAlignment;
+    }
+
+    public FiducialLocator getFiducialLocator() {
+        return fiducialLocator;
+    }
+
+    public void setFiducialLocator(FiducialLocator fiducialLocator) {
+        this.fiducialLocator = fiducialLocator;
     }
 }

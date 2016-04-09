@@ -1,4 +1,4 @@
-package org.openpnp.vision;
+package org.openpnp.machine.reference.vision;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.swing.Action;
+import javax.swing.Icon;
+
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -23,11 +26,14 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,14 +41,11 @@ import org.slf4j.LoggerFactory;
  * Implements an algorithm for finding a set of fiducials on a board and returning the correct
  * orientation for the board.
  */
-public class FiducialLocator {
-    private static final Logger logger = LoggerFactory.getLogger(FiducialLocator.class);
+@Root
+public class ReferenceFiducialLocator implements FiducialLocator {
+    private static final Logger logger = LoggerFactory.getLogger(ReferenceFiducialLocator.class);
 
-    public FiducialLocator() {
-
-    }
-
-    public static Location locateBoard(BoardLocation boardLocation) throws Exception {
+    public Location locateBoard(BoardLocation boardLocation) throws Exception {
         // Find the fids in the board
         IdentifiableList<Placement> fiducials = getFiducials(boardLocation);
 
@@ -297,5 +300,34 @@ public class FiducialLocator {
             }
         }
         return fiducials;
+    }
+
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return "Fiducal Locator";
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

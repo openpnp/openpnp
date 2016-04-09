@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceJobProcessorConfigurationWizard;
-import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -33,6 +32,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.planner.SimpleJobPlanner;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.JobPlanner;
 import org.openpnp.spi.JobPlanner.PlacementSolution;
@@ -41,9 +41,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.util.Utils2D;
-import org.openpnp.vision.BottomVision;
-import org.openpnp.vision.FiducialLocator;
-import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -73,17 +70,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
     @Element(required = false)
     private JobPlanner jobPlanner;
 
-    // TODO: This will be moved into BottomVision and referenced there instead.
-    @Element(required = false)
-    private CvPipeline bottomVisionPipeline = new CvPipeline("               <bottom-vision-pipeline>\n                  <stages>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRead\" name=\"16\" enabled=\"false\" file=\"/Users/jason/Desktop/input 2.png\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" settle-first=\"true\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWrite\" name=\"15\" enabled=\"true\" file=\"/Users/jason/Desktop/input.png\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"10\" enabled=\"true\" kernel-size=\"9\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"4\" enabled=\"true\" diameter=\"525\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\" enabled=\"true\" conversion=\"Bgr2HsvFull\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskHsv\" name=\"2\" enabled=\"true\" hue-min=\"60\" hue-max=\"130\" saturation-min=\"0\" saturation-max=\"255\" value-min=\"0\" value-max=\"255\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"3\" enabled=\"true\" conversion=\"Hsv2BgrFull\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"6\" enabled=\"true\" conversion=\"Bgr2Gray\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.Threshold\" name=\"12\" enabled=\"true\" threshold=\"100\" auto=\"false\" invert=\"false\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.FindContours\" name=\"5\" enabled=\"true\" retrieval-mode=\"List\" approximation-method=\"None\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.FilterContours\" name=\"9\" enabled=\"true\" contours-stage-name=\"5\" min-area=\"50.0\" max-area=\"900000.0\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"11\" enabled=\"true\" diameter=\"0\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawContours\" name=\"7\" enabled=\"true\" contours-stage-name=\"9\" thickness=\"2\" index=\"-1\">\n                        <color r=\"255\" g=\"255\" b=\"255\" a=\"255\"/>\n                     </cv-stage>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MinAreaRect\" name=\"result\" enabled=\"true\" threshold-min=\"100\" threshold-max=\"255\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"14\" enabled=\"true\" image-stage-name=\"0\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawRotatedRects\" name=\"8\" enabled=\"true\" rotated-rects-stage-name=\"result\" thickness=\"2\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWrite\" name=\"13\" enabled=\"true\" file=\"/Users/jason/Desktop/result.png\"/>\n                  </stages>\n               </bottom-vision-pipeline>\n");
-
-    BottomVision bottomVision;
-
     public ReferenceJobProcessor() {}
-
-    public CvPipeline getBottomVisionPipeline() {
-        return bottomVisionPipeline;
-    }
 
     @SuppressWarnings("unused")
     @Commit
@@ -104,8 +91,6 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         fireJobStateChanged();
 
         Machine machine = Configuration.get().getMachine();
-
-        bottomVision = new BottomVision(bottomVisionPipeline);
 
         preProcessJob(machine);
 
@@ -179,7 +164,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
                 Location bottomVisionOffsets = null;
                 try {
-                    bottomVisionOffsets = bottomVision.findOffsets(part, nozzle);
+                    bottomVisionOffsets = machine.getPartAlignment().findOffsets(part, nozzle);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -352,7 +337,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
     // TODO: Should not bail if there are no fids on the board. Figure out
     // the UI for that.
     protected void checkFiducials() throws Exception {
-        FiducialLocator locator = new FiducialLocator();
+        FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             if (!boardLocation.isEnabled()) {
                 continue;

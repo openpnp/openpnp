@@ -125,6 +125,11 @@ public class ReferenceMachine extends AbstractMachine {
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
                 new ArrayList<>(jobProcessors.values())));
+        
+        List<PropertySheetHolder> vision = new ArrayList<>();
+        vision.add(getPartAlignment());
+        vision.add(getFiducialLocator());
+        children.add(new SimplePropertySheetHolder("Vision", vision));
         return children.toArray(new PropertySheetHolder[] {});
     }
 
