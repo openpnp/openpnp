@@ -21,97 +21,99 @@ This is a list of Gcode configuration options available for the GcodeDriver. Eac
 
 Commands may contain newline characters. Each line is sent to the controller in turn, waiting for a response before sending the next.
 
-* connect-command
+### connect-command
 
-    Sent after the driver finishes connecting to the serial port. Can be used to send any initialization parameters the controller needs.
+Sent after the driver finishes connecting to the serial port. Can be used to send any initialization parameters the controller needs.
 
-    Example:
-    ```
+Example:
+```
 G21 ; Set millimeters mode
 G90 ; Set absolute positioning mode
 M82 ; Set absolute mode for extruder
-    ```
+```
 
-* enable-command
+### enable-command
 
-    Sent when the machine is enabled, primarily when the big START button is pressed. Can be used to turn on motors and lighting, start pumps, reset solenoids, etc.
+Sent when the machine is enabled, primarily when the big START button is pressed. Can be used to turn on motors and lighting, start pumps, reset solenoids, etc.
 
-    Example:
-    ```
+Example:
+```
 M810 ; Turn on LED lighting
-    ```
-* disable-command
+```
 
-    Sent when the machine is disabled, primarily when the big STOP button is pressed or before shutting down. Should turn off everything.
+### disable-command
 
-    Example:
-    ```
+Sent when the machine is disabled, primarily when the big STOP button is pressed or before shutting down. Should turn off everything.
+
+Example:
+```
 M84 ; Disable steppers
 M811 ; Turn off LED lighting
-    ```
+```
 
-* home-command
+### home-command
 
-    Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
+Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
 
-    | Variable Name  |   Type   | Description |
-    | -------------- | -------- | ----------- |
-    | Id             | String   | User defined id of the head being homed. |
-    | Name           | String   | User defined name of the head being homed. |
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | User defined id of the head being homed. |
+| Name           | String   | User defined name of the head being homed. |
 
-    Example:
-    ```
+Example:
+```
 M84 ; Disable steppers, resetting the Z axis
 G4P500 ; Wait half a second for the Z axis to settle
 G28 X0 Y0 ; Home X and Y
 G92 X0 Y0 Z0 E0 ; Reset machine coordinates to zero.
-    ```
-* move-to-command
+```
 
-    This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis. The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
+### move-to-command
 
-    | Variable Name  |   Type   | Description |
-    | -------------- | -------- | ----------- |
-    | Id             | String   | User defined id of the HeadMountable (Nozzle, Camera, Actuator) being homed. |
-    | Name           | String   | User defined name of the HeadMountable (Nozzle, Camera, Actuator) being homed. |
-    | X              | Double   | The calculated X position for the move. |
-    | Y              | Double   | The calculated Y position for the move. |
-    | Z              | Double   | The calculated Z position for the move. |
-    | Rotation       | Double   | The calculated C or Rotation position for the move. |
-    | FeedRate       | Double   | The calculated feed rate for the move. |
+This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis. The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
 
-    Example:
-    ```
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | User defined id of the HeadMountable (Nozzle, Camera, Actuator) being homed. |
+| Name           | String   | User defined name of the HeadMountable (Nozzle, Camera, Actuator) being homed. |
+| X              | Double   | The calculated X position for the move. |
+| Y              | Double   | The calculated Y position for the move. |
+| Z              | Double   | The calculated Z position for the move. |
+| Rotation       | Double   | The calculated C or Rotation position for the move. |
+| FeedRate       | Double   | The calculated feed rate for the move. |
+
+Example:
+```
 G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move
 M400 ; Wait for moves to complete before returning
-    ```
+```
 
-* pick-command
+### pick-command
 
-    Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
+Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
 
-    | Variable Name  |   Type   | Description |
-    | -------------- | -------- | ----------- |
-    | Id             | String   | The user defined id of the nozzle. |
-    | Name           | String   | The user defined name of the nozzle. |
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | The user defined id of the nozzle. |
+| Name           | String   | The user defined name of the nozzle. |
 
-    Example:
-    ```
+Example:
+```
 M808 ; Turn on pump
 M800 ; Turn on nozzle 1 vacuum solenoid
-    ```
+```
 
-* place-command
+### place-command
 
-    Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
+Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
 
-    | Variable Name  |   Type   | Description |
-    | -------------- | -------- | ----------- |
-    | Id             | String   | The user defined id of the nozzle. |
-    | Name           | String   | The user defined name of the nozzle. |
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | The user defined id of the nozzle. |
+| Name           | String   | The user defined name of the nozzle. |
 
-    Example:
-    ```
+Example:
+```
 M809 ; Turn off pump
 M801 ; Turn off nozzle 1 vacuum solenoid
 M802 ; Turn on nozzle 1 exhaust solenoid
@@ -119,57 +121,57 @@ G4P250 ; Wait 250 milliseconds
 M803 ; Turn off nozzle 1 exhaust solenoid
 ```
 
-* actuate-boolean-command
+### actuate-boolean-command
 
-    Sent whenever an Actuator's actuate(boolean) method is called. This is currently used by the ReferenceDragFeeder to fire a drag solenoid. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
+Sent whenever an Actuator's actuate(boolean) method is called. This is currently used by the ReferenceDragFeeder to fire a drag solenoid. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
 
-    The `True` and `False` variables can be used to substitute any string for either a true or false value. By specifying a value as the format string and using both the `True` and `False` variables you can choose what will be sent in either case. See the example for details.
+The `True` and `False` variables can be used to substitute any string for either a true or false value. By specifying a value as the format string and using both the `True` and `False` variables you can choose what will be sent in either case. See the example for details.
 
-    | Variable Name  |   Type   | Description |
-    | -------------- | -------- | ----------- |
-    | Id             | String   | The user defined id of the actuator. |
-    | Name           | String   | The user defined name of the actuator. |
-    | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
-    | BooleanValue   | Boolean  | A Boolean representing whether the actuator was turned on or off. |
-    | True           | Boolean  | Boolean true if the actuator is turned on, or null if it's turned off. This can be used to include a string only when the value is true. See the example for details. |
-    | False          | Boolean  | Boolean false if the actuator is turned off, or null if it's turned on. This can be used to include a string only when the value is false. See the example for details. |
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | The user defined id of the actuator. |
+| Name           | String   | The user defined name of the actuator. |
+| Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+| BooleanValue   | Boolean  | A Boolean representing whether the actuator was turned on or off. |
+| True           | Boolean  | Boolean true if the actuator is turned on, or null if it's turned off. This can be used to include a string only when the value is true. See the example for details. |
+| False          | Boolean  | Boolean false if the actuator is turned off, or null if it's turned on. This can be used to include a string only when the value is false. See the example for details. |
 
-    Example:
-    ```
+Example:
+```
 M800 P{True:1}{False:0} ; Send "M800 P1" if the actuator is turned on, or "M800 P0" if the actuator is turned off.
 ```
 
-* actuate-double-command
+### actuate-double-command
 
-    Sent whenever an Actuator's actuate(double) method is called. This is currently used by the ReferenceAutoFeeder to trigger a feed operation. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
+Sent whenever an Actuator's actuate(double) method is called. This is currently used by the ReferenceAutoFeeder to trigger a feed operation. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
 
-    | Variable Name  |   Type   | Description |
-    | -------------- | -------- | ----------- |
-    | Id             | String   | The user defined id of the actuator. |
-    | Name           | String   | The user defined name of the actuator. |
-    | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
-    | DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
-    | IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | The user defined id of the actuator. |
+| Name           | String   | The user defined name of the actuator. |
+| Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+| DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
+| IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
 
 ## Regular Expressions (Receiving Responses)
 
-* command-confirm-regex
-    
-    The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
+### command-confirm-regex
+
+The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
 
 ## Miscellaneous
 
-* units
+### units
 
-    The units of measure that is used by the controller. Millimeters is most common, although Inches is supported as well. This is primarily used internally to convert location data before sending moveTo commands.
+The units of measure that is used by the controller. Millimeters is most common, although Inches is supported as well. This is primarily used internally to convert location data before sending moveTo commands.
 
-* max-feed-rate
+### max-feed-rate
 
-    The maximum feed rate value that will ever be sent in a move-to-command. The actual value sent will be less than or equal to this value.
+The maximum feed rate value that will ever be sent in a move-to-command. The actual value sent will be less than or equal to this value.
 
-* connect-wait-time-milliseconds
+### connect-wait-time-milliseconds
 
-    Number of milliseconds to wait after connecting to the serial port before sending any commands. This is useful if you have a controller that resets on connect or takes a few seconds to start responding.
+Number of milliseconds to wait after connecting to the serial port before sending any commands. This is useful if you have a controller that resets on connect or takes a few seconds to start responding.
 
 ## Sub-Drivers
 
