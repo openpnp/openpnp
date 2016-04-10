@@ -167,7 +167,6 @@ public class MainFrame extends JFrame {
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
         machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
-        navigationPanel = new FxNavigationView();
 
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -391,6 +390,7 @@ public class MainFrame extends JFrame {
                 TitledBorder.TOP, null, null));
 
         if (System.getProperty("enableNav", null) != null) {
+            navigationPanel = new FxNavigationView();
             camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
             camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);            
