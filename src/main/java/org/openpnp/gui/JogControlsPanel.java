@@ -45,7 +45,9 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -268,6 +270,9 @@ public class JogControlsPanel extends JPanel {
 
         JButton btnSafeZ = new JButton(safezAction);
         panelSpecial.add(btnSafeZ);
+        
+        JButton btnDiscard = new JButton(discardAction);
+        panelSpecial.add(btnDiscard);
 
         panelDispensers = new JPanel();
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
@@ -392,7 +397,30 @@ public class JogControlsPanel extends JPanel {
             });
         }
     };
-
+    
+    @SuppressWarnings("serial")
+    public Action discardAction = new AbstractAction("Discard") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                Location originalLocation = nozzle.getLocation();
+                // move to the discard location
+                MovableUtils.moveToLocationAtSafeZ(
+                        nozzle, 
+                        Configuration.get().getMachine().getDiscardLocation(),
+                        1.0);
+                // discard the part
+                nozzle.place();
+                // move back to the original location
+                MovableUtils.moveToLocationAtSafeZ(
+                        nozzle, 
+                        originalLocation,
+                        1.0);
+            });
+        }
+    };
+    
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {

@@ -33,8 +33,29 @@ public class ReferenceBottomVision implements PartAlignment {
     private static final Logger logger = LoggerFactory.getLogger(ReferenceBottomVision.class);
 
     @Element(required = false)
-    protected CvPipeline pipeline = new CvPipeline(
-            "               <bottom-vision-pipeline>\n                  <stages>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRead\" name=\"16\" enabled=\"false\" file=\"/Users/jason/Desktop/input 2.png\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" settle-first=\"true\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWrite\" name=\"15\" enabled=\"true\" file=\"/Users/jason/Desktop/input.png\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"10\" enabled=\"true\" kernel-size=\"9\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"4\" enabled=\"true\" diameter=\"525\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\" enabled=\"true\" conversion=\"Bgr2HsvFull\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskHsv\" name=\"2\" enabled=\"true\" hue-min=\"60\" hue-max=\"130\" saturation-min=\"0\" saturation-max=\"255\" value-min=\"0\" value-max=\"255\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"3\" enabled=\"true\" conversion=\"Hsv2BgrFull\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"6\" enabled=\"true\" conversion=\"Bgr2Gray\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.Threshold\" name=\"12\" enabled=\"true\" threshold=\"100\" auto=\"false\" invert=\"false\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.FindContours\" name=\"5\" enabled=\"true\" retrieval-mode=\"List\" approximation-method=\"None\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.FilterContours\" name=\"9\" enabled=\"true\" contours-stage-name=\"5\" min-area=\"50.0\" max-area=\"900000.0\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"11\" enabled=\"true\" diameter=\"0\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawContours\" name=\"7\" enabled=\"true\" contours-stage-name=\"9\" thickness=\"2\" index=\"-1\">\n                        <color r=\"255\" g=\"255\" b=\"255\" a=\"255\"/>\n                     </cv-stage>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.MinAreaRect\" name=\"result\" enabled=\"true\" threshold-min=\"100\" threshold-max=\"255\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"14\" enabled=\"true\" image-stage-name=\"0\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawRotatedRects\" name=\"8\" enabled=\"true\" rotated-rects-stage-name=\"result\" thickness=\"2\"/>\n                     <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWrite\" name=\"13\" enabled=\"true\" file=\"/Users/jason/Desktop/result.png\"/>\n                  </stages>\n               </bottom-vision-pipeline>\n");
+    protected CvPipeline pipeline = new CvPipeline("<pipeline>" + "            <stages>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" settle-first=\"true\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWriteDebug\" name=\"13\" enabled=\"true\" prefix=\"bv_source_\" suffix=\".png\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"10\" enabled=\"true\" kernel-size=\"9\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"4\" enabled=\"true\" diameter=\"525\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"1\" enabled=\"true\" conversion=\"Bgr2HsvFull\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskHsv\" name=\"2\" enabled=\"true\" hue-min=\"60\" hue-max=\"130\" saturation-min=\"0\" saturation-max=\"255\" value-min=\"0\" value-max=\"255\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"3\" enabled=\"true\" conversion=\"Hsv2BgrFull\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"6\" enabled=\"true\" conversion=\"Bgr2Gray\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.Threshold\" name=\"12\" enabled=\"true\" threshold=\"100\" auto=\"false\" invert=\"false\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.FindContours\" name=\"5\" enabled=\"true\" retrieval-mode=\"List\" approximation-method=\"None\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.FilterContours\" name=\"9\" enabled=\"true\" contours-stage-name=\"5\" min-area=\"50.0\" max-area=\"900000.0\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"11\" enabled=\"true\" diameter=\"0\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawContours\" name=\"7\" enabled=\"true\" contours-stage-name=\"9\" thickness=\"2\" index=\"-1\">"
+            + "                  <color r=\"255\" g=\"255\" b=\"255\" a=\"255\"/>"
+            + "               </cv-stage>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.MinAreaRect\" name=\"result\" enabled=\"true\" threshold-min=\"100\" threshold-max=\"255\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"14\" enabled=\"true\" image-stage-name=\"0\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawRotatedRects\" name=\"8\" enabled=\"true\" rotated-rects-stage-name=\"result\" thickness=\"2\"/>"
+            + "               <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWriteDebug\" name=\"15\" enabled=\"true\" prefix=\"bv_result_\" suffix=\".png\"/>"
+            + "            </stages>" + "         </pipeline>");
+
+
 
     @Attribute(required = false)
     protected boolean enabled = false;
@@ -101,7 +122,7 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
     }
-    
+
     public CvPipeline getPipeline() {
         try {
             pipeline.setCamera(getBottomVisionCamera());
@@ -111,11 +132,11 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         return pipeline;
     }
-    
+
     public void setPipeline(CvPipeline pipeline) {
         this.pipeline = pipeline;
     }
-    
+
     public boolean isEnabled() {
         return enabled;
     }

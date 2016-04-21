@@ -52,10 +52,19 @@ import org.slf4j.LoggerFactory;
  */
 
 /**
- * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/ holes 1.5mm hole
- * pitch 4mm first part center to reference hole linear is 2mm tape width is multiple of 4mm part
- * pitch is multiple of 4mm except for 0402 and smaller, where it is 2mm hole to part lateral is
- * tape width / 2 - 0.5mm
+ * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/ 
+ * 
+ * holes 1.5mm 
+ * 
+ * hole pitch 4mm
+ * 
+ * first part center to reference hole linear is 2mm
+ * 
+ * tape width is multiple of 4mm
+ * 
+ * part pitch is multiple of 4mm except for 0402 and smaller, where it is 2mm
+ * 
+ * hole to part lateral is tape width / 2 - 0.5mm
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);

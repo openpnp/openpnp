@@ -24,6 +24,9 @@ public class ImageRead extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        if (!file.exists()) {
+            return null;
+        }
         return new Result(Highgui.imread(file.getAbsolutePath()));
     }
 }

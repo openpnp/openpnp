@@ -15,6 +15,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -185,6 +186,13 @@ public abstract class AbstractJobProcessor implements JobProcessor, Runnable {
         logger.debug("firePartPicked({}, {})", board, placement);
         for (JobProcessorListener listener : listeners) {
             listener.partPicked(board, placement);
+        }
+    }
+
+    protected void firePartPicked(BoardLocation board, Placement placement, Nozzle nozzle) {
+        logger.debug("firePartPicked({}, {}, {})", new Object[] { board, placement, nozzle });
+        for (JobProcessorListener listener : listeners) {
+            listener.partPicked(board, placement, nozzle);
         }
     }
 

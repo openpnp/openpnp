@@ -507,6 +507,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
         }
 
         firePartPicked(bl, placement);
+        firePartPicked(bl, placement, nozzle);
 
         fireDetailedStatusUpdated(String.format("Move to safe Z at (%s).", nozzle.getLocation()));
 

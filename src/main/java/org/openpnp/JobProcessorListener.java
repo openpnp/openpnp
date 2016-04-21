@@ -24,6 +24,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.JobProcessor.JobError;
 import org.openpnp.spi.JobProcessor.JobState;
+import org.openpnp.spi.Nozzle;
 
 /**
  * Allows an interested listener to receive events as the JobProcessor does it's work. Methods in
@@ -59,6 +60,10 @@ public interface JobProcessorListener {
      */
     public void partPicked(BoardLocation board, Placement placement);
 
+    public default void partPicked(BoardLocation board, Placement placement, Nozzle nozzle) {
+        
+    }
+    
     /**
      * Fired when the JobProcessor has completed the place operation for the given Placement.
      * 
