@@ -53,7 +53,13 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,6 +149,9 @@ public class PartsPanel extends JPanel {
         btnNewPart.setToolTipText("");
         JButton btnDeletePart = toolBar.add(deletePartAction);
         btnDeletePart.setToolTipText("");
+        toolBar.addSeparator();
+        JButton btnAlign = toolBar.add(alignPartAction);
+        
     }
 
     private Part getSelectedPart() {
@@ -216,6 +225,41 @@ public class PartsPanel extends JPanel {
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().removePart(getSelectedPart());
             }
+        }
+    };
+    
+    public final Action alignPartAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.partAlign);
+            putValue(NAME, "Align Part");
+            putValue(SHORT_DESCRIPTION, "Feed, pick and and align the selected part.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                PartAlignment partAlignment = Configuration.get().getMachine().getPartAlignment();
+                Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                Part part = getSelectedPart();
+                Feeder feeder = null;
+                // find a feeder to feed
+                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+                    if (f.isEnabled() && f.getPart().equals(part)) {
+                        feeder = f;
+                    }
+                }
+                if (feeder == null) {
+                    throw new Exception("No valid feeder found for " + part.getId());
+                }
+                // feed the chosen feeder
+                feeder.feed(nozzle);
+                // pick the part
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                nozzle.pick();
+                // perform the alignment
+                partAlignment.findOffsets(part, nozzle);
+            });
         }
     };
 }

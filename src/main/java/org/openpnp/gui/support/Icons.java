@@ -34,6 +34,8 @@ public class Icons {
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
 
+    public static Icon partAlign = getIcon("/icons/part-align.svg");
+
     public static Icon arrowUp = getIcon("/icons/ic_arrow_upward_black_18px.svg");
     public static Icon arrowDown = getIcon("/icons/ic_arrow_downward_black_18px.svg");
     public static Icon arrowLeft = getIcon("/icons/ic_arrow_back_black_18px.svg");

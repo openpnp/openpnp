@@ -110,7 +110,6 @@ public class ReferenceBottomVision implements PartAlignment {
         offsets = offsets.derive(null, null, null, -angle);
         logger.debug("Final offsets {}", offsets);
 
-        nozzle.moveToSafeZ(part.getSpeed());
         return offsets;
     }
 

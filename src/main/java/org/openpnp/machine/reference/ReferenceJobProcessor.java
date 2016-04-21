@@ -40,6 +40,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractJobProcessor;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -537,6 +538,7 @@ public class ReferenceJobProcessor extends AbstractJobProcessor {
 
         // Move the nozzle to the placement Location at safe Z
         try {
+            nozzle.moveToSafeZ(placement.getPart().getSpeed());
             nozzle.moveTo(placementLocation.derive(null, null, Double.NaN, null),
                     placement.getPart().getSpeed());
         }
