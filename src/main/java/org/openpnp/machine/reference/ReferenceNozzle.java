@@ -12,6 +12,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -107,11 +108,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void pick() throws Exception {
+    public void pick(Part part) throws Exception {
         logger.debug("{}.pick()", getName());
+        if (part == null) {
+            throw new Exception("Can't pick null part");
+        }
         if (nozzleTip == null) {
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
+        this.part = part;
         driver.pick(this);
         machine.fireMachineHeadActivity(head);
         Thread.sleep(pickDwellMilliseconds);
@@ -124,12 +129,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             throw new Exception("Can't place, no nozzle tip loaded");
         }
         driver.place(this);
+        this.part = null;
         machine.fireMachineHeadActivity(head);
         Thread.sleep(placeDwellMilliseconds);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
+        // If there is a part on the nozzle we take the incoming speed value
+        // to be a percentage of the part's speed instead of a percentage of
+        // the max speed.
+        if (getPart() != null) {
+            speed = part.getSpeed() * speed;
+        }
         logger.debug("{}.moveTo({}, {})", new Object[] {getName(), location, speed});
         if (limitRotation && !Double.isNaN(location.getRotation())
                 && Math.abs(location.getRotation()) > 180) {
@@ -146,6 +158,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
+        // If there is a part on the nozzle we take the incoming speed value
+        // to be a percentage of the part's speed instead of a percentage of
+        // the max speed.
+        if (getPart() != null) {
+            speed = part.getSpeed() * speed;
+        }
         logger.debug("{}.moveToSafeZ({})", new Object[] {getName(), speed});
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,

@@ -180,7 +180,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 // have an E component we need to send the E component as a
                 // solo move because Smoothie won't move only E and Z at
                 // the same time.
-                sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute));
+                sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
                 dwell();
             }
             else {
@@ -207,7 +207,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
 
         if (sb.length() > 0) {
-            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
+            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute * speed));
             sendCommand("G0 " + sb.toString());
             dwell();
         }

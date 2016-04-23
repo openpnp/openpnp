@@ -76,7 +76,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
         startLocation = startLocation.add(partHeightLocation).derive(null, null, null, 0d);
 
-        MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation, part.getSpeed());
+        MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation, 1.0);
 
         pipeline.setCamera(camera);
         pipeline.process();

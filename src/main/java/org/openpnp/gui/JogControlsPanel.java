@@ -93,8 +93,7 @@ public class JogControlsPanel extends JPanel {
         zMinusAction.setEnabled(enabled);
         cPlusAction.setEnabled(enabled);
         cMinusAction.setEnabled(enabled);
-        pickAction.setEnabled(enabled);
-        placeAction.setEnabled(enabled);
+        discardAction.setEnabled(enabled);
         safezAction.setEnabled(enabled);
         xyZeroAction.setEnabled(enabled);
         zZeroAction.setEnabled(enabled);
@@ -262,15 +261,9 @@ public class JogControlsPanel extends JPanel {
         FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
         fl_panelActuators.setAlignment(FlowLayout.LEFT);
 
-        JButton btnPick = new JButton(pickAction);
-        panelSpecial.add(btnPick);
-
-        JButton btnPlace = new JButton(placeAction);
-        panelSpecial.add(btnPlace);
-
         JButton btnSafeZ = new JButton(safezAction);
         panelSpecial.add(btnSafeZ);
-        
+
         JButton btnDiscard = new JButton(discardAction);
         panelSpecial.add(btnDiscard);
 
@@ -369,26 +362,6 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action pickAction = new AbstractAction("Pick") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                machineControlsPanel.getSelectedNozzle().pick();
-            });
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action placeAction = new AbstractAction("Place") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                machineControlsPanel.getSelectedNozzle().place();
-            });
-        }
-    };
-
-    @SuppressWarnings("serial")
     public Action safezAction = new AbstractAction("Head Safe Z") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -397,7 +370,7 @@ public class JogControlsPanel extends JPanel {
             });
         }
     };
-    
+
     @SuppressWarnings("serial")
     public Action discardAction = new AbstractAction("Discard") {
         @Override
@@ -406,21 +379,16 @@ public class JogControlsPanel extends JPanel {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
                 Location originalLocation = nozzle.getLocation();
                 // move to the discard location
-                MovableUtils.moveToLocationAtSafeZ(
-                        nozzle, 
-                        Configuration.get().getMachine().getDiscardLocation(),
-                        1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle,
+                        Configuration.get().getMachine().getDiscardLocation(), 1.0);
                 // discard the part
                 nozzle.place();
                 // move back to the original location
-                MovableUtils.moveToLocationAtSafeZ(
-                        nozzle, 
-                        originalLocation,
-                        1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, originalLocation, 1.0);
             });
         }
     };
-    
+
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
@@ -430,8 +398,7 @@ public class JogControlsPanel extends JPanel {
 
             for (Actuator actuator : machine.getActuators()) {
                 final Actuator actuator_f = actuator;
-                final JToggleButton actuatorButton =
-                        new JToggleButton(actuator_f.getName());
+                final JToggleButton actuatorButton = new JToggleButton(actuator_f.getName());
                 actuatorButton.setFocusable(false);
                 actuatorButton.addActionListener(new ActionListener() {
                     @Override
