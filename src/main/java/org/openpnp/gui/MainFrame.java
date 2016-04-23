@@ -311,9 +311,9 @@ public class MainFrame extends JFrame {
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask),
                 machineControlsPanel.getJogControlsPanel().cMinusAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, mask),
-                machineControlsPanel.lowerIncrementAction);
+                machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
-                machineControlsPanel.raiseIncrementAction);
+                machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, mask),
                 machineControlsPanel.showHideJogControlsWindowAction);
 

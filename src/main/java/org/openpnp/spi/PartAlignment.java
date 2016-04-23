@@ -13,7 +13,8 @@ public interface PartAlignment extends PropertySheetHolder {
      * Perform the part alignment operation. The method must return a Location containing
      * the offsets on the nozzle of the aligned part and these offsets will be applied
      * by the JobProcessor. The offsets returned may be zero if the alignment process
-     * results in physical alignment of the part as in the case of pit based alignment.
+     * results in physical alignment of the part as in the case of pit based alignment. The
+     * Z portion of the Location is ignored.
      * @param part
      * @param nozzle
      * @return

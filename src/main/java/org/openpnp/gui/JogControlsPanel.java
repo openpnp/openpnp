@@ -19,12 +19,17 @@
 
 package org.openpnp.gui;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.FlowLayout;
+import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Hashtable;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -32,6 +37,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
@@ -41,6 +47,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
@@ -67,6 +74,7 @@ public class JogControlsPanel extends JPanel {
     private final Configuration configuration;
     private JPanel panelActuators;
     private JPanel panelDispensers;
+    private JSlider sliderIncrements;
 
     /**
      * Create the panel.
@@ -106,6 +114,44 @@ public class JogControlsPanel extends JPanel {
         }
     }
 
+    private void setUnits(LengthUnit units) {
+        if (units == LengthUnit.Millimeters) {
+            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
+            incrementsLabels.put(1, new JLabel("0.01 " + units.getShortName()));
+            incrementsLabels.put(2, new JLabel("0.1 " + units.getShortName()));
+            incrementsLabels.put(3, new JLabel("1.0 " + units.getShortName()));
+            incrementsLabels.put(4, new JLabel("10 " + units.getShortName()));
+            incrementsLabels.put(5, new JLabel("100 " + units.getShortName()));
+            sliderIncrements.setLabelTable(incrementsLabels);
+        }
+        else if (units == LengthUnit.Inches) {
+            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
+            incrementsLabels.put(1, new JLabel("0.001 " + units.getShortName()));
+            incrementsLabels.put(2, new JLabel("0.01 " + units.getShortName()));
+            incrementsLabels.put(3, new JLabel("0.1 " + units.getShortName()));
+            incrementsLabels.put(4, new JLabel("1.0 " + units.getShortName()));
+            incrementsLabels.put(5, new JLabel("10.0 " + units.getShortName()));
+            sliderIncrements.setLabelTable(incrementsLabels);
+        }
+        else {
+            throw new Error("setUnits() not implemented for " + units);
+        }
+        machineControlsPanel.updateDros();
+    }
+
+    public double getJogIncrement() {
+        if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
+            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
+        }
+        else if (configuration.getSystemUnits() == LengthUnit.Inches) {
+            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
+        }
+        else {
+            throw new Error(
+                    "getJogIncrement() not implemented for " + configuration.getSystemUnits());
+        }
+    }
+
     private void jog(final int x, final int y, final int z, final int c) {
         UiUtils.submitUiMachineTask(() -> {
             Location l = machineControlsPanel.getSelectedNozzle().getLocation()
@@ -115,8 +161,8 @@ public class JogControlsPanel extends JPanel {
             double zPos = l.getZ();
             double cPos = l.getRotation();
 
-            double jogIncrement = new Length(machineControlsPanel.getJogIncrement(),
-                    configuration.getSystemUnits()).getValue();
+            double jogIncrement =
+                    new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
 
             if (x > 0) {
                 xPos += jogIncrement;
@@ -163,12 +209,18 @@ public class JogControlsPanel extends JPanel {
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
+        JPanel panel_1 = new JPanel();
+        panel_1.setBorder(new TitledBorder(null, "Jog", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        add(panel_1);
+        panel_1.setLayout(new BorderLayout(0, 0));
+
         JPanel panel = new JPanel();
+        panel_1.add(panel, BorderLayout.CENTER);
         panel.setBorder(
-                new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        add(panel);
+                null);
 
         JPanel panelControls = new JPanel();
+        panelControls.setBorder(null);
         panel.add(panelControls);
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -248,6 +300,19 @@ public class JogControlsPanel extends JPanel {
         clockwiseButton.setHideActionText(true);
         panelControls.add(clockwiseButton, "10, 12");
 
+        JPanel panelIncrements = new JPanel();
+        panel_1.add(panelIncrements, BorderLayout.EAST);
+
+        sliderIncrements = new JSlider();
+        sliderIncrements.setOrientation(SwingConstants.VERTICAL);
+        panelIncrements.add(sliderIncrements);
+        sliderIncrements.setMajorTickSpacing(1);
+        sliderIncrements.setValue(1);
+        sliderIncrements.setSnapToTicks(true);
+        sliderIncrements.setPaintLabels(true);
+        sliderIncrements.setMinimum(1);
+        sliderIncrements.setMaximum(5);
+
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         add(tabbedPane);
 
@@ -271,7 +336,42 @@ public class JogControlsPanel extends JPanel {
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
         tabbedPane.addTab("Paste Dispensers", null, panelDispensers, null);
+
+        setFocusTraversalPolicy(focusPolicy);
+        setFocusTraversalPolicyProvider(true);
     }
+
+    private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
+        @Override
+        public Component getComponentAfter(Container aContainer, Component aComponent) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getComponentBefore(Container aContainer, Component aComponent) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getDefaultComponent(Container aContainer) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getFirstComponent(Container aContainer) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getInitialComponent(Window window) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getLastComponent(Container aContainer) {
+            return sliderIncrements;
+        }
+    };
 
     @SuppressWarnings("serial")
     public Action yPlusAction = new AbstractAction("Y+", Icons.arrowUp) {
@@ -389,9 +489,29 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
+    @SuppressWarnings("serial")
+    public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(
+                    Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(
+                    Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
+        }
+    };
+
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
+            setUnits(configuration.getSystemUnits());
+
             panelActuators.removeAll();
 
             Machine machine = Configuration.get().getMachine();

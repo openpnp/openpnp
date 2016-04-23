@@ -87,7 +87,6 @@ public class MachineControlsPanel extends JPanel {
     private JTextField textFieldC;
     private JTextField textFieldZ;
     private JButton btnStartStop;
-    private JSlider sliderIncrements;
     private JComboBox comboBoxNozzles;
 
 
@@ -166,44 +165,6 @@ public class MachineControlsPanel extends JPanel {
 
     public JogControlsPanel getJogControlsPanel() {
         return jogControlsPanel;
-    }
-
-    private void setUnits(LengthUnit units) {
-        if (units == LengthUnit.Millimeters) {
-            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.01"));
-            incrementsLabels.put(2, new JLabel("0.1"));
-            incrementsLabels.put(3, new JLabel("1.0"));
-            incrementsLabels.put(4, new JLabel("10"));
-            incrementsLabels.put(5, new JLabel("100"));
-            sliderIncrements.setLabelTable(incrementsLabels);
-        }
-        else if (units == LengthUnit.Inches) {
-            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.001"));
-            incrementsLabels.put(2, new JLabel("0.01"));
-            incrementsLabels.put(3, new JLabel("0.1"));
-            incrementsLabels.put(4, new JLabel("1.0"));
-            incrementsLabels.put(5, new JLabel("10.0"));
-            sliderIncrements.setLabelTable(incrementsLabels);
-        }
-        else {
-            throw new Error("setUnits() not implemented for " + units);
-        }
-        updateDros();
-    }
-
-    public double getJogIncrement() {
-        if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
-            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
-        }
-        else if (configuration.getSystemUnits() == LengthUnit.Inches) {
-            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
-        }
-        else {
-            throw new Error(
-                    "getJogIncrement() not implemented for " + configuration.getSystemUnits());
-        }
     }
 
     @Override
@@ -412,19 +373,6 @@ public class MachineControlsPanel extends JPanel {
         panelDrosSecondLine.add(btnTargetCamera);
         btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
 
-        JPanel panelIncrements = new JPanel();
-        add(panelIncrements);
-
-        sliderIncrements = new JSlider();
-        panelIncrements.add(sliderIncrements);
-        sliderIncrements.setMajorTickSpacing(1);
-        sliderIncrements.setValue(1);
-        sliderIncrements.setSnapToTicks(true);
-        sliderIncrements.setPaintLabels(true);
-        sliderIncrements.setPaintTicks(true);
-        sliderIncrements.setMinimum(1);
-        sliderIncrements.setMaximum(5);
-
         JPanel panelStartStop = new JPanel();
         add(panelStartStop);
         panelStartStop.setLayout(new BorderLayout(0, 0));
@@ -435,42 +383,7 @@ public class MachineControlsPanel extends JPanel {
         panelStartStop.add(btnStartStop);
         btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
         btnStartStop.setPreferredSize(new Dimension(160, 70));
-
-        setFocusTraversalPolicy(focusPolicy);
-        setFocusTraversalPolicyProvider(true);
     }
-
-    private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
-        @Override
-        public Component getComponentAfter(Container aContainer, Component aComponent) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getComponentBefore(Container aContainer, Component aComponent) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getDefaultComponent(Container aContainer) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getFirstComponent(Container aContainer) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getInitialComponent(Window window) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getLastComponent(Container aContainer) {
-            return sliderIncrements;
-        }
-    };
 
     @SuppressWarnings("serial")
     private Action stopMachineAction = new AbstractAction("STOP") {
@@ -538,24 +451,6 @@ public class MachineControlsPanel extends JPanel {
                 jogControlsWindow.setLocation(x, y);
                 putValue(AbstractAction.NAME, "Hide Jog Controls");
             }
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            sliderIncrements.setValue(
-                    Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            sliderIncrements.setValue(
-                    Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
 
@@ -720,7 +615,6 @@ public class MachineControlsPanel extends JPanel {
             }
             setSelectedNozzle(((NozzleItem) comboBoxNozzles.getItemAt(0)).getNozzle());
 
-            setUnits(configuration.getSystemUnits());
             machine.addListener(machineListener);
 
             btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
