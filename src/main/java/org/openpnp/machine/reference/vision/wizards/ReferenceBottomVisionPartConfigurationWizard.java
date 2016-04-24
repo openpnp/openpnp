@@ -48,13 +48,20 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("right:default"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 2");
@@ -68,6 +75,9 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 testAlignment();
             });
         });
+        
+        JLabel lblTest = new JLabel("Test");
+        panel.add(lblTest, "2, 4");
         panel.add(btnTestAlighment, "4, 4");
         
         chckbxCenterAfterTest = new JCheckBox("Center After Test");

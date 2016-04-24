@@ -39,7 +39,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("right:default"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
