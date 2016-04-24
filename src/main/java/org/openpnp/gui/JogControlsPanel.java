@@ -19,7 +19,6 @@
 
 package org.openpnp.gui;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.FlowLayout;
@@ -41,7 +40,6 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
-import javax.swing.border.EtchedBorder;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
@@ -209,20 +207,16 @@ public class JogControlsPanel extends JPanel {
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        add(panel_1);
-        panel_1.setLayout(new BorderLayout(0, 0));
-
         JPanel panel = new JPanel();
-        panel_1.add(panel, BorderLayout.CENTER);
+        add(panel);
         panel.setBorder(null);
 
         JPanel panelControls = new JPanel();
-        panelControls.setBorder(null);
         panel.add(panelControls);
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -237,6 +231,7 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
+        buttonStartStop.setIcon(Icons.powerOn);
         panelControls.add(buttonStartStop, "2, 2");
         buttonStartStop.setHideActionText(true);
 
@@ -249,6 +244,16 @@ public class JogControlsPanel extends JPanel {
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
         panelControls.add(lblZ, "14, 2");
+
+        sliderIncrements = new JSlider();
+        panelControls.add(sliderIncrements, "18, 2, 1, 11");
+        sliderIncrements.setOrientation(SwingConstants.VERTICAL);
+        sliderIncrements.setMajorTickSpacing(1);
+        sliderIncrements.setValue(1);
+        sliderIncrements.setSnapToTicks(true);
+        sliderIncrements.setPaintLabels(true);
+        sliderIncrements.setMinimum(1);
+        sliderIncrements.setMaximum(5);
 
         JButton homeButton = new JButton(machineControlsPanel.homeAction);
         // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
@@ -306,19 +311,6 @@ public class JogControlsPanel extends JPanel {
         JButton clockwiseButton = new JButton(cMinusAction);
         clockwiseButton.setHideActionText(true);
         panelControls.add(clockwiseButton, "10, 12");
-
-        JPanel panelIncrements = new JPanel();
-        panel_1.add(panelIncrements, BorderLayout.EAST);
-
-        sliderIncrements = new JSlider();
-        sliderIncrements.setOrientation(SwingConstants.VERTICAL);
-        panelIncrements.add(sliderIncrements);
-        sliderIncrements.setMajorTickSpacing(1);
-        sliderIncrements.setValue(1);
-        sliderIncrements.setSnapToTicks(true);
-        sliderIncrements.setPaintLabels(true);
-        sliderIncrements.setMinimum(1);
-        sliderIncrements.setMaximum(5);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         add(tabbedPane);
