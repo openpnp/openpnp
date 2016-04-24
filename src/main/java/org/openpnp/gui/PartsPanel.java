@@ -22,6 +22,9 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -33,6 +36,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -67,35 +72,39 @@ import org.slf4j.LoggerFactory;
 public class PartsPanel extends JPanel {
     private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
 
+    private static final String PREF_DIVIDER_POSITION = "PartsPanel.dividerPosition";
+    private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    private Preferences prefs = Preferences.userNodeForPackage(PartsPanel.class);
+
     final private Configuration configuration;
     final private Frame frame;
 
-    private PartsTableModel partsTableModel;
-    private TableRowSorter<PartsTableModel> partsTableSorter;
+    private PartsTableModel tableModel;
+    private TableRowSorter<PartsTableModel> tableSorter;
     private JTextField searchTextField;
-    private JTable partsTable;
-    private ActionGroup partSelectedActionGroup;
+    private JTable table;
+    private ActionGroup rowSelectedActionGroup;
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
         this.frame = frame;
-        
-        partSelectedActionGroup = new ActionGroup(deletePartAction, pickPartAction);
+
+        rowSelectedActionGroup = new ActionGroup(deletePartAction, pickPartAction);
 
         setLayout(new BorderLayout(0, 0));
-        partsTableModel = new PartsTableModel();
-        partsTableSorter = new TableRowSorter<>(partsTableModel);
+        tableModel = new PartsTableModel();
+        tableSorter = new TableRowSorter<>(tableModel);
 
-        JPanel panel_5 = new JPanel();
-        add(panel_5, BorderLayout.NORTH);
-        panel_5.setLayout(new BorderLayout(0, 0));
+        JPanel toolbarAndSearch = new JPanel();
+        add(toolbarAndSearch, BorderLayout.NORTH);
+        toolbarAndSearch.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        panel_5.add(toolBar);
+        toolbarAndSearch.add(toolBar);
 
         JPanel panel_1 = new JPanel();
-        panel_5.add(panel_1, BorderLayout.EAST);
+        toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
         JLabel lblSearch = new JLabel("Search");
         panel_1.add(lblSearch);
@@ -123,30 +132,34 @@ public class PartsPanel extends JPanel {
         JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
-        partsTable = new AutoSelectTextTable(partsTableModel);
-        partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        partsTable.setDefaultEditor(org.openpnp.model.Package.class,
-                new DefaultCellEditor(packagesCombo));
-        partsTable.setDefaultRenderer(org.openpnp.model.Package.class,
-                new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
-
-        add(new JScrollPane(partsTable), BorderLayout.CENTER);
-
-        partsTable.setRowSorter(partsTableSorter);
-
-        partsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-                Part part = getSelectedPart();
-
-                partSelectedActionGroup.setEnabled(part != null);
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
             }
         });
+        add(splitPane, BorderLayout.CENTER);
 
-        partSelectedActionGroup.setEnabled(false);
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        JPanel alignmentPanel = new JPanel();
+        alignmentPanel.setLayout(new BorderLayout());
+        tabbedPane.add("Alignment", new JScrollPane(alignmentPanel));
+
+        table = new AutoSelectTextTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setDefaultEditor(org.openpnp.model.Package.class,
+                new DefaultCellEditor(packagesCombo));
+        table.setDefaultRenderer(org.openpnp.model.Package.class,
+                new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
+
+        table.setRowSorter(tableSorter);
+
+        splitPane.setLeftComponent(new JScrollPane(table));
+        splitPane.setRightComponent(tabbedPane);
 
         JButton btnNewPart = toolBar.add(newPartAction);
         btnNewPart.setToolTipText("");
@@ -154,16 +167,39 @@ public class PartsPanel extends JPanel {
         btnDeletePart.setToolTipText("");
         toolBar.addSeparator();
         JButton btnAlign = toolBar.add(pickPartAction);
-        
+
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+                Part part = getSelectedPart();
+
+                rowSelectedActionGroup.setEnabled(part != null);
+
+                alignmentPanel.removeAll();
+
+                // TODO: Part config
+                // if (pkg != null) {
+                // footprintPanel.add(new FootprintPanel(pkg.getFootprint()), BorderLayout.CENTER);
+                // }
+
+                revalidate();
+                repaint();
+            }
+        });
+
+        rowSelectedActionGroup.setEnabled(false);
     }
 
     private Part getSelectedPart() {
-        int index = partsTable.getSelectedRow();
+        int index = table.getSelectedRow();
         if (index == -1) {
             return null;
         }
-        index = partsTable.convertRowIndexToModel(index);
-        return partsTableModel.getPart(index);
+        index = table.convertRowIndexToModel(index);
+        return tableModel.getPart(index);
     }
 
     private void search() {
@@ -176,7 +212,7 @@ public class PartsPanel extends JPanel {
             logger.warn("Search failed", e);
             return;
         }
-        partsTableSorter.setRowFilter(rf);
+        tableSorter.setRowFilter(rf);
     }
 
     public final Action newPartAction = new AbstractAction() {
@@ -206,8 +242,8 @@ public class PartsPanel extends JPanel {
                 part.setPackage(Configuration.get().getPackages().get(0));
 
                 configuration.addPart(part);
-                partsTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(partsTable);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
                 break;
             }
         }
@@ -230,7 +266,7 @@ public class PartsPanel extends JPanel {
             }
         }
     };
-    
+
     public final Action pickPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.load);

@@ -75,25 +75,24 @@ public class PackagesPanel extends JPanel {
 
     private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
 
     final private Configuration configuration;
     final private Frame frame;
 
-    private PackagesTableModel packagesTableModel;
-    private TableRowSorter<PackagesTableModel> packagesTableSorter;
+    private PackagesTableModel tableModel;
+    private TableRowSorter<PackagesTableModel> tableSorter;
     private JTextField searchTextField;
-    private JTable packagesTable;
-    private ActionGroup packageSelectedActionGroup;
-
-    private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
+    private JTable table;
+    private ActionGroup rowSelectedActionGroup;
 
     public PackagesPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
         this.frame = frame;
 
         setLayout(new BorderLayout(0, 0));
-        packagesTableModel = new PackagesTableModel(configuration);
-        packagesTableSorter = new TableRowSorter<>(packagesTableModel);
+        tableModel = new PackagesTableModel(configuration);
+        tableSorter = new TableRowSorter<>(tableModel);
 
         JPanel toolbarAndSearch = new JPanel();
         add(toolbarAndSearch, BorderLayout.NORTH);
@@ -131,8 +130,8 @@ public class PackagesPanel extends JPanel {
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setContinuousLayout(true);
-        // splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
-        // PREF_DIVIDER_POSITION_DEF));
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
         splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -142,17 +141,15 @@ public class PackagesPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        // JPanel settingsPanel = new JPanel();
-        // tabbedPane.add("Settings", settingsPanel);
         JPanel footprintPanel = new JPanel();
         footprintPanel.setLayout(new BorderLayout());
         tabbedPane.add("Footprint", new JScrollPane(footprintPanel));
 
 
-        packagesTable = new AutoSelectTextTable(packagesTableModel);
-        packagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table = new AutoSelectTextTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        packagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) {
@@ -161,7 +158,7 @@ public class PackagesPanel extends JPanel {
 
                 Package pkg = getSelectedPackage();
 
-                packageSelectedActionGroup.setEnabled(pkg != null);
+                rowSelectedActionGroup.setEnabled(pkg != null);
 
                 footprintPanel.removeAll();
 
@@ -174,14 +171,13 @@ public class PackagesPanel extends JPanel {
             }
         });
 
-        packagesTable.setRowSorter(packagesTableSorter);
+        table.setRowSorter(tableSorter);
 
-        splitPane.setLeftComponent(new JScrollPane(packagesTable));
+        splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
 
-        packageSelectedActionGroup =
-                new ActionGroup(deletePackageAction, copyPackageToClipboardAction);
-        packageSelectedActionGroup.setEnabled(false);
+        rowSelectedActionGroup = new ActionGroup(deletePackageAction, copyPackageToClipboardAction);
+        rowSelectedActionGroup.setEnabled(false);
 
         toolBar.add(newPackageAction);
         toolBar.add(deletePackageAction);
@@ -208,12 +204,12 @@ public class PackagesPanel extends JPanel {
     }
 
     private Package getSelectedPackage() {
-        int index = packagesTable.getSelectedRow();
+        int index = table.getSelectedRow();
         if (index == -1) {
             return null;
         }
-        index = packagesTable.convertRowIndexToModel(index);
-        return packagesTableModel.getPackage(index);
+        index = table.convertRowIndexToModel(index);
+        return tableModel.getPackage(index);
     }
 
     private void search() {
@@ -226,7 +222,7 @@ public class PackagesPanel extends JPanel {
             logger.warn("Search failed", e);
             return;
         }
-        packagesTableSorter.setRowFilter(rf);
+        tableSorter.setRowFilter(rf);
     }
 
     public final Action newPackageAction = new AbstractAction() {
@@ -248,8 +244,8 @@ public class PackagesPanel extends JPanel {
                 Package this_package = new Package(id);
 
                 configuration.addPackage(this_package);
-                packagesTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(packagesTable);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
                 break;
             }
         }
@@ -332,8 +328,8 @@ public class PackagesPanel extends JPanel {
                         break;
                     }
                 }
-                packagesTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(packagesTable);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
