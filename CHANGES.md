@@ -3,6 +3,16 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-04-23
 
+* Moved the jog controls from their dialog to the main window.
+
+	The jog controls are now always available and have been modified to take up less vertical
+	space. The large START / STOP button has been replaced with a smaller "Power" button
+	in the jog controls and the jog increment slider has been changed to vertical instead of
+	horizontal and also integrated into the jog controls.
+	
+	The end result is that the jog controls now take up about the same amount of space as the
+	big START button + increment slider used to except now they are visible all the time. 
+
 * Changed Nozzle.pick() to Nozzle.pick(Part) and added Nozzle.getPart()
 
     This change allows the Nozzle to be aware of what Part it has picked and also allows callers
