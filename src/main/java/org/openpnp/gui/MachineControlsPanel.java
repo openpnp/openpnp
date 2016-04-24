@@ -360,7 +360,7 @@ public class MachineControlsPanel extends JPanel {
         add(jogControlsPanel);
     }
 
-    public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn_Large) {
+    public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
@@ -498,8 +498,6 @@ public class MachineControlsPanel extends JPanel {
         startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
         startStopMachineAction.putValue(Action.SMALL_ICON,
                 enabled ? Icons.powerOff : Icons.powerOn);
-        startStopMachineAction.putValue(Action.LARGE_ICON_KEY,
-                enabled ? Icons.powerOff_Large : Icons.powerOn_Large);
     }
 
     private MachineListener machineListener = new MachineListener.Adapter() {

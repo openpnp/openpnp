@@ -236,13 +236,9 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JButton homeButton = new JButton(machineControlsPanel.homeAction);
-        // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
-        // homeAction referenced above so the icon doesn't render in the viewer. We set it here
-        // so the dialog looks right while editing.
-        homeButton.setIcon(Icons.home);
-        homeButton.setHideActionText(true);
-        panelControls.add(homeButton, "2, 2");
+        JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
+        panelControls.add(buttonStartStop, "2, 2");
+        buttonStartStop.setHideActionText(true);
 
         JLabel lblXy = new JLabel("X/Y");
         lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
@@ -253,6 +249,14 @@ public class JogControlsPanel extends JPanel {
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
         panelControls.add(lblZ, "14, 2");
+
+        JButton homeButton = new JButton(machineControlsPanel.homeAction);
+        // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
+        // homeAction referenced above so the icon doesn't render in the viewer. We set it here
+        // so the dialog looks right while editing.
+        homeButton.setIcon(Icons.home);
+        homeButton.setHideActionText(true);
+        panelControls.add(homeButton, "2, 4");
 
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);
@@ -315,13 +319,6 @@ public class JogControlsPanel extends JPanel {
         sliderIncrements.setPaintLabels(true);
         sliderIncrements.setMinimum(1);
         sliderIncrements.setMaximum(5);
-
-        JPanel panel_2 = new JPanel();
-        panel_1.add(panel_2, BorderLayout.WEST);
-
-        JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
-        buttonStartStop.setHideActionText(true);
-        panel_2.add(buttonStartStop);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         add(tabbedPane);
