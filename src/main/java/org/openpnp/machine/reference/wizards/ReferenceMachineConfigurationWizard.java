@@ -69,8 +69,6 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         comboBoxDriver.addItem(SprinterDriver.class.getCanonicalName());
         comboBoxDriver.addItem(TinygDriver.class.getCanonicalName());
         comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(org.firepick.driver.MarlinDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(org.firepick.driver.FireStepDriver.class.getCanonicalName());
 
         JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
