@@ -16,9 +16,12 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
@@ -33,6 +36,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private final PartSettings partSettings;
 
     private JCheckBox enabledCheckbox;
+    private JCheckBox chckbxCenterAfterTest;
 
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
             Part part) {
@@ -65,6 +69,10 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             });
         });
         panel.add(btnTestAlighment, "4, 4");
+        
+        chckbxCenterAfterTest = new JCheckBox("Center After Test");
+        chckbxCenterAfterTest.setSelected(true);
+        panel.add(chckbxCenterAfterTest, "6, 4");
 
         JLabel lblPipeline = new JLabel("Pipeline");
         panel.add(lblPipeline, "2, 6");
@@ -96,9 +104,41 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     private void testAlignment() throws Exception {
         Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+        
         // perform the alignment
-        bottomVision.findOffsets(part, nozzle);
-        // position the part over center
+        Location offsets = bottomVision.findOffsets(part, nozzle);
+        
+        if (!chckbxCenterAfterTest.isSelected()) {
+            return;
+        }
+
+        // position the part over camera center
+        Location cameraLocation = bottomVision.getBottomVisionCamera().getLocation();
+
+        // Rotate the point 0,0 using the bottom offsets as a center point by the angle
+        // that is
+        // the difference between the bottom vision angle and the calculated global
+        // placement angle.
+        Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(
+                offsets,
+                cameraLocation.getRotation() - offsets.getRotation());
+
+        // Set the angle to the difference mentioned above, aligning the part to the
+        // same angle as
+        // the placement.
+        location = location.derive(null, null, null,
+                cameraLocation.getRotation() - offsets.getRotation());
+
+        // Add the placement final location to move our local coordinate into global
+        // space
+        location = location.add(cameraLocation);
+
+        // Subtract the bottom vision offsets to move the part to the final location,
+        // instead of
+        // the nozzle.
+        location = location.subtract(offsets);
+        
+        nozzle.moveTo(location, 1.0);
     }
 
     private void editPipeline() throws Exception {
