@@ -171,7 +171,7 @@ public class ReferenceBottomVision implements PartAlignment {
         return null;
     }
 
-    protected PartSettings getPartSettings(Part part) {
+    public PartSettings getPartSettings(Part part) {
         PartSettings partSettings = this.partSettingsByPartId.get(part.getId());
         if (partSettings == null) {
             partSettings = new PartSettings(this);
@@ -193,7 +193,7 @@ public class ReferenceBottomVision implements PartAlignment {
         catch (Exception e) {
             e.printStackTrace();
         }
-        return new ReferenceBottomVisionPartConfigurationWizard(this, getPartSettings(part));
+        return new ReferenceBottomVisionPartConfigurationWizard(this, part);
     }
 
     @Root

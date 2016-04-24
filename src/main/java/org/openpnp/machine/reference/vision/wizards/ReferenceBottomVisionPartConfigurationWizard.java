@@ -16,6 +16,8 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -27,14 +29,16 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
+    private final Part part;
     private final PartSettings partSettings;
 
     private JCheckBox enabledCheckbox;
 
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
-            PartSettings partSettings) {
+            Part part) {
         this.bottomVision = bottomVision;
-        this.partSettings = partSettings;
+        this.part = part;
+        this.partSettings = bottomVision.getPartSettings(part);
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
@@ -45,6 +49,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
@@ -53,8 +58,16 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
+        JButton btnTestAlighment = new JButton("Test Alignment");
+        btnTestAlighment.addActionListener((e) -> {
+            UiUtils.submitUiMachineTask(() -> {
+                testAlignment();
+            });
+        });
+        panel.add(btnTestAlighment, "4, 4");
+
         JLabel lblPipeline = new JLabel("Pipeline");
-        panel.add(lblPipeline, "2, 4");
+        panel.add(lblPipeline, "2, 6");
 
         JButton editPipelineButton = new JButton("Edit");
         editPipelineButton.addActionListener(new ActionListener() {
@@ -64,14 +77,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 });
             }
         });
-        panel.add(editPipelineButton, "4, 4");
+        panel.add(editPipelineButton, "4, 6");
 
         JButton btnLoadDefault = new JButton("Reset to Default");
         btnLoadDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current part pipeline with the default pipeline. Are you sure?", null,
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
+                    "This will replace the current part pipeline with the default pipeline. Are you sure?",
+                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     partSettings.setPipeline(bottomVision.getPipeline().clone());
@@ -79,7 +91,14 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 });
             }
         });
-        panel.add(btnLoadDefault, "6, 4");
+        panel.add(btnLoadDefault, "6, 6");
+    }
+
+    private void testAlignment() throws Exception {
+        Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+        // perform the alignment
+        bottomVision.findOffsets(part, nozzle);
+        // position the part over center
     }
 
     private void editPipeline() throws Exception {
