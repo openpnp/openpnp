@@ -276,4 +276,14 @@ public class CvPipeline {
             }
         }
     }
+
+    @Override
+    public CvPipeline clone() throws CloneNotSupportedException {
+        try {
+            return new CvPipeline(toXmlString());
+        }
+        catch (Exception e) {
+            throw new CloneNotSupportedException(e.getMessage());
+        }
+    }
 }

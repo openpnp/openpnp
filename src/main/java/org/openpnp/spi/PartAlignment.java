@@ -1,5 +1,6 @@
 package org.openpnp.spi;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -21,4 +22,12 @@ public interface PartAlignment extends PropertySheetHolder {
      * @throws Exception
      */
     Location findOffsets(Part part, Nozzle nozzle) throws Exception;
+    
+    /**
+     * Get a Wizard for configuring the PartAlignment instance properties for a specific
+     * Part.
+     * @param part
+     * @return
+     */
+    Wizard getPartConfigurationWizard(Part part);
 }

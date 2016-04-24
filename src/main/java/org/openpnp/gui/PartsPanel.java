@@ -57,19 +57,22 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PackagesComboBoxModel;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-public class PartsPanel extends JPanel {
+public class PartsPanel extends JPanel implements WizardContainer {
     private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
 
     private static final String PREF_DIVIDER_POSITION = "PartsPanel.dividerPosition";
@@ -180,10 +183,15 @@ public class PartsPanel extends JPanel {
 
                 alignmentPanel.removeAll();
 
-                // TODO: Part config
-                // if (pkg != null) {
-                // footprintPanel.add(new FootprintPanel(pkg.getFootprint()), BorderLayout.CENTER);
-                // }
+                if (part != null) {
+                    PartAlignment partAlignment =
+                            Configuration.get().getMachine().getPartAlignment();
+                    Wizard wizard = partAlignment.getPartConfigurationWizard(part);
+                    if (wizard != null) {
+                        wizard.setWizardContainer(PartsPanel.this);
+                        alignmentPanel.add(wizard.getWizardPanel());
+                    }
+                }
 
                 revalidate();
                 repaint();
@@ -299,4 +307,10 @@ public class PartsPanel extends JPanel {
             });
         }
     };
+
+    @Override
+    public void wizardCompleted(Wizard wizard) {}
+
+    @Override
+    public void wizardCancelled(Wizard wizard) {}
 }
