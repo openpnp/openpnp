@@ -41,7 +41,7 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
-import javax.swing.border.TitledBorder;
+import javax.swing.border.EtchedBorder;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
@@ -210,14 +210,13 @@ public class JogControlsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(null, "Jog", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         add(panel_1);
         panel_1.setLayout(new BorderLayout(0, 0));
 
         JPanel panel = new JPanel();
         panel_1.add(panel, BorderLayout.CENTER);
-        panel.setBorder(
-                null);
+        panel.setBorder(null);
 
         JPanel panelControls = new JPanel();
         panelControls.setBorder(null);
@@ -238,6 +237,10 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton homeButton = new JButton(machineControlsPanel.homeAction);
+        // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
+        // homeAction referenced above so the icon doesn't render in the viewer. We set it here
+        // so the dialog looks right while editing.
+        homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
         panelControls.add(homeButton, "2, 2");
 
@@ -312,6 +315,13 @@ public class JogControlsPanel extends JPanel {
         sliderIncrements.setPaintLabels(true);
         sliderIncrements.setMinimum(1);
         sliderIncrements.setMaximum(5);
+
+        JPanel panel_2 = new JPanel();
+        panel_1.add(panel_2, BorderLayout.WEST);
+
+        JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
+        buttonStartStop.setHideActionText(true);
+        panel_2.add(buttonStartStop);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         add(tabbedPane);

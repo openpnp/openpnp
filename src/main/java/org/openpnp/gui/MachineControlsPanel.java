@@ -19,21 +19,15 @@
 
 package org.openpnp.gui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
-import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Hashtable;
 import java.util.Locale;
 
 import javax.swing.AbstractAction;
@@ -43,11 +37,9 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
@@ -57,7 +49,6 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -86,7 +77,6 @@ public class MachineControlsPanel extends JPanel {
     private JTextField textFieldY;
     private JTextField textFieldC;
     private JTextField textFieldZ;
-    private JButton btnStartStop;
     private JComboBox comboBoxNozzles;
 
 
@@ -98,7 +88,6 @@ public class MachineControlsPanel extends JPanel {
     private Color droSavedColor = new Color(0x90cce0);
 
     private JogControlsPanel jogControlsPanel;
-    private JDialog jogControlsWindow;
 
     private volatile double savedX = Double.NaN, savedY = Double.NaN, savedZ = Double.NaN,
             savedC = Double.NaN;
@@ -117,11 +106,6 @@ public class MachineControlsPanel extends JPanel {
         createUi();
 
         configuration.addListener(configurationListener);
-
-        jogControlsWindow = new JDialog(frame, "Jog Controls");
-        jogControlsWindow.setResizable(false);
-        jogControlsWindow.getContentPane().setLayout(new BorderLayout());
-        jogControlsWindow.getContentPane().add(jogControlsPanel);
     }
 
     public void setSelectedNozzle(Nozzle nozzle) {
@@ -373,48 +357,22 @@ public class MachineControlsPanel extends JPanel {
         panelDrosSecondLine.add(btnTargetCamera);
         btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
 
-        JPanel panelStartStop = new JPanel();
-        add(panelStartStop);
-        panelStartStop.setLayout(new BorderLayout(0, 0));
-
-        btnStartStop = new JButton(startMachineAction);
-        btnStartStop.setFocusable(true);
-        btnStartStop.setForeground(startColor);
-        panelStartStop.add(btnStartStop);
-        btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
-        btnStartStop.setPreferredSize(new Dimension(160, 70));
+        add(jogControlsPanel);
     }
 
-    @SuppressWarnings("serial")
-    private Action stopMachineAction = new AbstractAction("STOP") {
+    public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn_Large) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
             new Thread(() -> {
+                Machine machine = Configuration.get().getMachine();
+                boolean enable = !machine.isEnabled();
                 try {
-                    Configuration.get().getMachine().setEnabled(false);
+                    Configuration.get().getMachine().setEnabled(enable);
                     setEnabled(true);
                 }
                 catch (Exception t) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", t.getMessage());
-                    setEnabled(true);
-                }
-            }).start();
-        }
-    };
-
-    @SuppressWarnings("serial")
-    private Action startMachineAction = new AbstractAction("START") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            setEnabled(false);
-            new Thread(() -> {
-                try {
-                    Configuration.get().getMachine().setEnabled(true);
-                    setEnabled(true);
-                }
-                catch (Exception t) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed",
+                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure",
                             t.getMessage());
                     setEnabled(true);
                 }
@@ -429,28 +387,6 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 selectedNozzle.getHead().home();
             });
-        }
-    };
-
-    public Action showHideJogControlsWindowAction = new AbstractAction("Show Jog Controls") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            if (jogControlsWindow.isVisible()) {
-                // Hide
-                jogControlsWindow.setVisible(false);
-                putValue(AbstractAction.NAME, "Show Jog Controls");
-            }
-            else {
-                // Show
-                jogControlsWindow.setVisible(true);
-                jogControlsWindow.pack();
-                int x = (int) getLocationOnScreen().getX();
-                int y = (int) getLocationOnScreen().getY();
-                x += (getSize().getWidth() / 2) - (jogControlsWindow.getSize().getWidth() / 2);
-                y += getSize().getHeight();
-                jogControlsWindow.setLocation(x, y);
-                putValue(AbstractAction.NAME, "Hide Jog Controls");
-            }
         }
     };
 
@@ -558,45 +494,41 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
+    private void updateStartStopButton(boolean enabled) {
+        startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
+        startStopMachineAction.putValue(Action.SMALL_ICON,
+                enabled ? Icons.powerOff : Icons.powerOn);
+        startStopMachineAction.putValue(Action.LARGE_ICON_KEY,
+                enabled ? Icons.powerOff_Large : Icons.powerOn_Large);
+    }
+
     private MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
+            EventQueue.invokeLater(() -> updateDros());
         }
 
         @Override
         public void machineEnabled(Machine machine) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
             setEnabled(true);
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
+            EventQueue.invokeLater(() -> updateDros());
         }
 
         @Override
         public void machineEnableFailed(Machine machine, String reason) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
         }
 
         @Override
         public void machineDisabled(Machine machine, String reason) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
             setEnabled(false);
         }
 
         @Override
         public void machineDisableFailed(Machine machine, String reason) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
         }
     };
 
@@ -617,8 +549,7 @@ public class MachineControlsPanel extends JPanel {
 
             machine.addListener(machineListener);
 
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
         }
