@@ -146,7 +146,7 @@ public class PackagesPanel extends JPanel {
         // tabbedPane.add("Settings", settingsPanel);
         JPanel footprintPanel = new JPanel();
         footprintPanel.setLayout(new BorderLayout());
-        tabbedPane.add("Footprint", footprintPanel);
+        tabbedPane.add("Footprint", new JScrollPane(footprintPanel));
 
 
         packagesTable = new AutoSelectTextTable(packagesTableModel);
