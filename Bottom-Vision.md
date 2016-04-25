@@ -4,9 +4,9 @@
 
 Bottom Vision is a feature in OpenPnP that makes it possible to place components more accurately. Simply put, by using an up looking camera OpenPnP can identify if a part was picked with any offset or rotational error, determine what that error is and then apply a correction before placement. Bottom Vision can also be used to determine if a pick failure occurred.
 
-# Operating Description
+# Operating Theory
 
-The basic order of operations for bottom vision is:
+The basic idea for bottom vision is:
 
 1. Pick a part from a feeder.
 2. Center the nozzle over an Up looking camera and take an image.
@@ -26,7 +26,20 @@ To enable Bottom Vision visit Machine Setup -> Vision -> Bottom Vision, check th
 In the same window, click the Pipeline `Edit` button to view and edit the [[CvPipeline]] pipeline that will be used to locate parts. The default pipeline is described below. You will probably need to customize it a bit for your machine. Since this is a very new feature there is likely to be a lot of discussion and learning happening on [the mailing list](http://groups.google.com/group/openpnp). That should be your first stop for help.
 
 # Part Configuration
+
+Each Part in your Parts library can have it's own custom pipeline. In most cases the default pipeline will work but this allows you tweak the pipeline for troublesome parts or create entirely new pipelines when the default won't work.
+
+You can also enable or disable bottom vision on for each part.
+
+To access the bottom vision part settings go to the Parts tab in OpenPnP, select a part and look for the Alignment tab on the right.
+
 # Usage
+
+## Note: This section will be expanded soon.
+
+See https://www.youtube.com/watch?v=pRYQaFKhsuw for a short demonstration of how to pick, test and discard a part for bottom vision.
+
+When bottom vision is enabled in Machine Setup and for a specific part it will be used automatically during a job run. If the system is able to determine the offsets they will be applied. If the operation fails the placement will continue with no offset correction. This will be improved in the future to handle retry and discard.
 
 # Default Pipeline
 
@@ -52,5 +65,19 @@ The default pipeline is described below:
 16. DrawRotatedRects: Draw the `RotatedRect` in red overtop the recalled original image. If all went well we should now see the original input image with a red rectangle surrounding the part.
 17. ImageWriteDebug: Writes the resulting image out to a file for help with debugging.
 
+# Tips
+
+* Much of the purpose of the vision pipeline is to filter the image so that the only thing that is visible is the part you are interested in. The various Mask stages and Thresholds can help with this.
 
 # FAQ
+
+## How do I see debug images?
+
+See [this FAQ](https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging) for how to enable debug logging in general. For bottom vision, add:
+
+```
+org.openpnp.vision=DEBUG
+org.openpnp.machine.reference.vision=DEBUG
+```
+
+Once these lines are added and OpenPnP is restarted, each attempt at bottom vision will produce a pair of images in your `.openpnp/org.openpnp.vision.pipeline.stages.ImageWriteDebug` directory.
