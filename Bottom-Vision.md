@@ -17,7 +17,11 @@ Core to the working of Bottom Vision is the [[CvPipeline]]. The pipeline describ
 
 # Hardware Setup
 
-Connect and configure an Up looking camera. It should not be attached to a head. The lens should be set up such that when the nozzle is centered over the camera the largest part you intend to use fits within the frame. If you are using a fisheye lens or a lens with significant distortion, consider [[Camera Lens Calibration]].
+* Connect and configure an Up looking camera. It should not be attached to a head.
+
+* The lens should be set up such that when the nozzle is centered over the camera the largest part you intend to use fits within the frame. If you are using a fisheye lens or a lens with significant distortion, consider [[Camera Lens Calibration]].
+
+* Set the camera's location (in it's setup panel) such that the nozzle is centered and focused over the camera.
 
 # Global Configuration
 
