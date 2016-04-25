@@ -23,7 +23,9 @@ Connect and configure an Up looking camera. It should not be attached to a head.
 
 To enable Bottom Vision visit Machine Setup -> Vision -> Bottom Vision, check the `Enabled?` checkbox and press Apply.
 
-In the same window, click the Pipeline `Edit` button to view and edit the [[CvPipeline]] pipeline that will be used to locate parts. The default pipeline is described below. You will probably need to customize it a bit for your machine. Since this is a very new feature there is likely to be a lot of discussion and learning happening on [the mailing list](http://groups.google.com/group/openpnp). That should be your first stop for help.
+In the same window, click the Pipeline `Edit` button to view and edit the default pipeline that will be used to locate parts. The default pipeline is used when no part specific pipeline has been configured. The built in pipeline is described below.
+
+You will probably need to customize the pipeline a bit for your machine. Since this is a very new feature there is likely to be a lot of discussion and learning happening on [the mailing list](http://groups.google.com/group/openpnp). That should be your first stop for help.
 
 # Part Configuration
 
