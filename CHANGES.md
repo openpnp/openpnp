@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-04-24
+
+* Bottom Vision!
+
+	This is the first release of the Bottom Vision feature. This is a feature that has been
+	in development for quite a long time and along the way has picked up a number of small
+	but important features to go along with it.
+	
+	More information about Bottom Vision can be found at:
+	https://github.com/openpnp/openpnp/wiki/Bottom-Vision
+	 
+
 # 2016-04-23
 
 * Moved the jog controls from their dialog to the main window.
