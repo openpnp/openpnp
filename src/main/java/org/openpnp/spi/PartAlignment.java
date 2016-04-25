@@ -19,7 +19,7 @@ public interface PartAlignment extends PropertySheetHolder {
      * @param part
      * @param nozzle
      * @return
-     * @throws Exception
+     * @throws Exception if the alignment fails for any reason. The caller may retry.
      */
     Location findOffsets(Part part, Nozzle nozzle) throws Exception;
     
