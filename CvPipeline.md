@@ -8,6 +8,8 @@ CvPipeline stands for Computer Vision Pipeline and is a suite of classes and uti
 
 A short video showing some of the capabilities of CvPipeline can be found here: https://www.youtube.com/watch?v=iUEP0bILAU0
 
+This work is primarily inspired by FireSight by Karl Lew and Šimon Fojtů: https://github.com/firepick1/FireSight.
+
 # Components
 
 The CvPipeline suite includes the CvPipeline and CvStage classes, the CvPipelineEditor GUI component and a number of CvStage implementations that do the actual computer vision work. There is also a StandaloneEditor class that can be run directly to work with a new CvPipeline.
