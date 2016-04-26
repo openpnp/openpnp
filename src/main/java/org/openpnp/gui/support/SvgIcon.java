@@ -5,8 +5,8 @@
  *
  * Cameron McCormack <cam (at) mcc.id.au>
  *
- * Permission is hereby granted to use, copy, modify and distribte this
- * code for any purpose, without fee.
+ * Permission is hereby granted to use, copy, modify and distribte this code for any purpose,
+ * without fee.
  *
  * Initial version: April 21, 2005
  */
@@ -39,14 +39,14 @@ public class SvgIcon implements Icon {
      * The BufferedImage generated from the SVG document.
      */
     protected BufferedImage bufferedImage;
-    
+
     protected Image bufferedImageDisabled;
 
     /**
      * The width of the rendered image.
      */
     protected int width;
-    
+
     /**
      * The height of the rendered image.
      */
@@ -54,6 +54,7 @@ public class SvgIcon implements Icon {
 
     /**
      * Create a new SVGIcon object.
+     * 
      * @param uri The URI to read the SVG document from.
      */
     public SvgIcon(URL url, int width, int height) {
@@ -67,6 +68,7 @@ public class SvgIcon implements Icon {
 
     /**
      * Create a new SVGIcon object.
+     * 
      * @param uri The URI to read the SVG document from.
      */
     public SvgIcon(URL url) {
@@ -128,6 +130,7 @@ public class SvgIcon implements Icon {
 
         /**
          * Creates a new ARGB image with the specified dimension.
+         * 
          * @param width the image width in pixels
          * @param height the image height in pixels
          */
@@ -137,6 +140,7 @@ public class SvgIcon implements Icon {
 
         /**
          * Writes the specified image to the specified output.
+         * 
          * @param img the image to write
          * @param output the output where to store the image
          * @param TranscoderException if an error occured while storing the image

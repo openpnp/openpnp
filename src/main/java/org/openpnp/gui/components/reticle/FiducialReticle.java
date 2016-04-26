@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.gui.components.reticle;
@@ -83,18 +81,15 @@ public class FiducialReticle extends CrosshairReticle {
 
     @Override
     public void draw(Graphics2D g2d, LengthUnit cameraUnitsPerPixelUnits,
-            double cameraUnitsPerPixelX, double cameraUnitsPerPixelY,
-            double viewPortCenterX, double viewPortCenterY, int viewPortWidth,
-            int viewPortHeight, double rotation) {
+            double cameraUnitsPerPixelX, double cameraUnitsPerPixelY, double viewPortCenterX,
+            double viewPortCenterY, int viewPortWidth, int viewPortHeight, double rotation) {
 
-        super.draw(g2d, cameraUnitsPerPixelUnits, cameraUnitsPerPixelX,
-                cameraUnitsPerPixelY, viewPortCenterX, viewPortCenterY,
-                viewPortWidth, viewPortHeight, rotation);
+        super.draw(g2d, cameraUnitsPerPixelUnits, cameraUnitsPerPixelX, cameraUnitsPerPixelY,
+                viewPortCenterX, viewPortCenterY, viewPortWidth, viewPortHeight, rotation);
 
         g2d.setColor(color);
         g2d.setStroke(new BasicStroke(1f));
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         AffineTransform origTx = g2d.getTransform();
 
@@ -102,10 +97,10 @@ public class FiducialReticle extends CrosshairReticle {
         // AffineTransform rotates positive clockwise, so we invert the value.
         g2d.rotate(Math.toRadians(-rotation));
 
-        double pixelsPerUnitX = 1.0 / new Length(cameraUnitsPerPixelX,
-                cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
-        double pixelsPerUnitY = 1.0 / new Length(cameraUnitsPerPixelY,
-                cameraUnitsPerPixelUnits).convertToUnits(this.units).getValue();
+        double pixelsPerUnitX = 1.0 / new Length(cameraUnitsPerPixelX, cameraUnitsPerPixelUnits)
+                .convertToUnits(this.units).getValue();
+        double pixelsPerUnitY = 1.0 / new Length(cameraUnitsPerPixelY, cameraUnitsPerPixelUnits)
+                .convertToUnits(this.units).getValue();
 
         int width = (int) (size * pixelsPerUnitX);
         int height = (int) (size * pixelsPerUnitY);

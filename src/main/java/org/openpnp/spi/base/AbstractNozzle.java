@@ -7,6 +7,7 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -15,27 +16,29 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
 public abstract class AbstractNozzle implements Nozzle {
-    @ElementList(required=false)
-    	protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<NozzleTip>();
+    @ElementList(required = false)
+    protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<>();
 
     @Attribute
     protected String id;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     protected String name;
-    
+
     protected Head head;
+    
+    protected Part part;
 
     public AbstractNozzle() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
     }
-    
+
     @Override
     public List<NozzleTip> getNozzleTips() {
         return Collections.unmodifiableList(nozzleTips);
     }
-	
+
     @Override
     public String getId() {
         return id;
@@ -59,6 +62,11 @@ public abstract class AbstractNozzle implements Nozzle {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+    
+    @Override
+    public Part getPart() {
+        return part;
     }
 
     @Override

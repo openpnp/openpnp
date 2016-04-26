@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.driver;
@@ -47,15 +45,13 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 /**
- * TODO: Consider adding some type of heartbeat to the firmware.
- * TODO: The whole movement wait lock thing has to go. See if we can do a
- * P4 type command like the other drivers to wait for movement to complete.
- * Disabled axes don't send status reports, so movement wait lock never happens.
+ * TODO: Consider adding some type of heartbeat to the firmware. TODO: The whole movement wait lock
+ * thing has to go. See if we can do a P4 type command like the other drivers to wait for movement
+ * to complete. Disabled axes don't send status reports, so movement wait lock never happens.
  * Probably short moves also won't.
  */
 public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
-    private static final Logger logger = LoggerFactory
-            .getLogger(TinygDriver.class);
+    private static final Logger logger = LoggerFactory.getLogger(TinygDriver.class);
     private static final double minimumRequiredVersion = 0.95;
 
     @Attribute(required = false)
@@ -73,8 +69,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     private double connectedVersion;
     private JsonParser parser = new JsonParser();
 
-    public TinygDriver() {
-    }
+    public TinygDriver() {}
 
     @Override
     public synchronized void connect() throws Exception {
@@ -89,6 +84,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                 // {"r":{"fv":0.950,"f":[1,0,10,2853]}}
                 connectedVersion = response.get("r").getAsJsonObject().get("fv").getAsDouble();
                 connected = true;
+                response = sendCommand("{\"qv\":0}", 500);
                 break;
             }
             catch (Exception e) {
@@ -97,21 +93,18 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         }
 
         if (!connected) {
-            throw new Exception(
-                    String.format(
-                            "Unable to receive connection response from TinyG. Check your port and baud rate, and that you are running at least version %f of TinyG",
-                            minimumRequiredVersion));
+            throw new Exception(String.format(
+                    "Unable to receive connection response from TinyG. Check your port and baud rate, and that you are running at least version %f of TinyG",
+                    minimumRequiredVersion));
         }
 
         if (connectedVersion < minimumRequiredVersion) {
-            throw new Exception(
-                    String.format(
-                            "This driver requires TinyG version %.2f or higher. You are running version %.2f",
-                            minimumRequiredVersion, connectedVersion));
+            throw new Exception(String.format(
+                    "This driver requires TinyG version %.2f or higher. You are running version %.2f",
+                    minimumRequiredVersion, connectedVersion));
         }
 
-        logger.debug(String.format("Connected to TinyG Version: %.2f",
-                connectedVersion));
+        logger.debug(String.format("Connected to TinyG Version: %.2f", connectedVersion));
 
         // We are connected to at least the minimum required version now
         // So perform some setup
@@ -124,7 +117,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
         // Make sure we are in absolute mode
         sendCommand("G90");
-        
+
         // Reset all axes to 0, in case the firmware was not reset on
         // connect.
         sendCommand(String.format(Locale.US, "G92 X0 Y0 Z0 A0"));
@@ -140,15 +133,17 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void home(ReferenceHead head) throws Exception {
-        // TODO: figure out how to home
-        // sendCommand("G28.2");
+        synchronized (movementWaitLock) {
+            JsonObject response = sendCommand("G28.2 X0 Y0 Z0 A0");
+            if (getResponseStatusCode(response) == 0) {
+                waitForMovementComplete();
+            }
+        }
 
         // TODO: This homeLocation really needs to be Head specific.
-        Location homeLocation = this.homeLocation
-                .convertToUnits(LengthUnit.Millimeters);
-        sendCommand(String.format(Locale.US, "G92 X%2.2f Y%2.2f Z%2.2f A%2.2f",
-                homeLocation.getX(), homeLocation.getY(), homeLocation.getZ(),
-                homeLocation.getRotation()));
+        Location homeLocation = this.homeLocation.convertToUnits(LengthUnit.Millimeters);
+        sendCommand(String.format(Locale.US, "G92 X%2.2f Y%2.2f Z%2.2f A%2.2f", homeLocation.getX(),
+                homeLocation.getY(), homeLocation.getZ(), homeLocation.getRotation()));
 
         x = homeLocation.getX();
         y = homeLocation.getY();
@@ -157,8 +152,8 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, Location location,
-            double speed) throws Exception {
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
+            throws Exception {
         location = location.subtract(hm.getHeadOffsets());
 
         location = location.convertToUnits(LengthUnit.Millimeters);
@@ -182,8 +177,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
             sb.append(String.format(Locale.US, "A%2.2f ", c));
         }
         if (sb.length() > 0) {
-            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute
-                    * speed));
+            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute * speed));
             // TODO: Move this type of op into it's own method
             // sendCommandAndWaitForMovementComplete()
             synchronized (movementWaitLock) {
@@ -218,15 +212,13 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value)
-            throws Exception {
+    public void actuate(ReferenceActuator actuator, double value) throws Exception {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on)
-            throws Exception {
+    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
         if (actuator.getIndex() == 0) {
             sendCommand(on ? "M8" : "M9");
         }
@@ -234,8 +226,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
-        return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm
-                .getHeadOffsets());
+        return new Location(LengthUnit.Millimeters, x, y, z, c).add(hm.getHeadOffsets());
     }
 
     private int getResponseStatusCode(JsonObject o) {
@@ -254,7 +245,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         catch (Exception e) {
             logger.error("disconnect()", e);
         }
-        
+
         try {
             super.disconnect();
         }
@@ -268,8 +259,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         return sendCommand(command, -1);
     }
 
-    public synchronized JsonObject sendCommand(String command, long timeout)
-            throws Exception {
+    public synchronized JsonObject sendCommand(String command, long timeout) throws Exception {
         JsonObject response;
         synchronized (commandLock) {
             lastResponse = null;
@@ -294,8 +284,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         // job done for now. Later we should make it up to the sending command
         // to determine what to accept and what to fail.
         if (responseStatusCode != 0 && responseStatusCode != 60) {
-            throw new Exception("Command failed. Status code: "
-                    + responseStatusCode);
+            throw new Exception("Command failed. Status code: " + responseStatusCode);
         }
         return response;
     }
@@ -447,14 +436,12 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard())
-        };
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
-    }    
+    }
 }

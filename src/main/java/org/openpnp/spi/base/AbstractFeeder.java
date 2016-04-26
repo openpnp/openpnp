@@ -14,29 +14,28 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Attribute
     protected String id;
 
-    @Attribute(required=false)
+    @Attribute(required = false)
     protected String name;
-    
+
     @Attribute
     protected boolean enabled;
-    
+
     @Attribute
     protected String partId;
-    
+
     protected Part part;
-    
+
     public AbstractFeeder() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
-            public void configurationLoaded(Configuration configuration)
-                    throws Exception {
+            public void configurationLoaded(Configuration configuration) throws Exception {
                 part = configuration.getPart(partId);
             }
         });
     }
-    
+
     @Override
     public String getId() {
         return id;
@@ -51,7 +50,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     @Override
     public void setPart(Part part) {
         this.part = part;
@@ -62,7 +61,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public Part getPart() {
         return part;
     }
-    
+
     @Override
     public String getName() {
         return name;
@@ -76,5 +75,5 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Override
     public Icon getPropertySheetHolderIcon() {
         return Icons.editFeeder;
-    }  
+    }
 }
