@@ -34,6 +34,7 @@ public class StandaloneEditor extends JFrame {
 
     public StandaloneEditor() {
         CvPipeline pipeline = new CvPipeline();
+        pipeline.add(new ImageRead());
         setTitle("CvPipelineEditor");
         setSize(1328, 1022);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

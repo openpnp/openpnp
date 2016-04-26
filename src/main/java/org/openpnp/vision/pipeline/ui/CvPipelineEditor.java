@@ -13,6 +13,7 @@ import javax.swing.JSplitPane;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.BlurGaussian;
+import org.openpnp.vision.pipeline.stages.BlurMedian;
 import org.openpnp.vision.pipeline.stages.BottomVisionCriS;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
@@ -54,6 +55,7 @@ import org.openpnp.vision.pipeline.stages.Threshold;
 public class CvPipelineEditor extends JPanel {
     static {
         stageClasses = new HashSet<>();
+        registerStageClass(BlurMedian.class);
         registerStageClass(BlurGaussian.class);
         registerStageClass(BottomVisionCriS.class);
         registerStageClass(ConvertColor.class);
