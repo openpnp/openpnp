@@ -247,8 +247,9 @@ public class MainFrame extends JFrame {
         JMenu mnCommands = new JMenu("Machine");
         menuBar.add(mnCommands);
 
-        mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
+        mnCommands.addSeparator();
+        mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
 
         // Help
         /////////////////////////////////////////////////////////////////////

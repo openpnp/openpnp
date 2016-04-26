@@ -229,11 +229,14 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
-        buttonStartStop.setIcon(Icons.powerOn);
-        panelControls.add(buttonStartStop, "2, 2");
-        buttonStartStop.setHideActionText(true);
+        
+                JButton homeButton = new JButton(machineControlsPanel.homeAction);
+                // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
+                // homeAction referenced above so the icon doesn't render in the viewer. We set it here
+                // so the dialog looks right while editing.
+                homeButton.setIcon(Icons.home);
+                homeButton.setHideActionText(true);
+                panelControls.add(homeButton, "2, 2");
 
         JLabel lblXy = new JLabel("X/Y");
         lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
@@ -255,14 +258,6 @@ public class JogControlsPanel extends JPanel {
         sliderIncrements.setMinimum(1);
         sliderIncrements.setMaximum(5);
 
-        JButton homeButton = new JButton(machineControlsPanel.homeAction);
-        // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
-        // homeAction referenced above so the icon doesn't render in the viewer. We set it here
-        // so the dialog looks right while editing.
-        homeButton.setIcon(Icons.home);
-        homeButton.setHideActionText(true);
-        panelControls.add(homeButton, "2, 4");
-
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);
         panelControls.add(yPlusButton, "8, 4");
@@ -270,6 +265,11 @@ public class JogControlsPanel extends JPanel {
         JButton zUpButton = new JButton(zPlusAction);
         zUpButton.setHideActionText(true);
         panelControls.add(zUpButton, "14, 4");
+        
+                JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
+                buttonStartStop.setIcon(Icons.powerOn);
+                panelControls.add(buttonStartStop, "2, 6");
+                buttonStartStop.setHideActionText(true);
 
         JButton xMinusButton = new JButton(xMinusAction);
         xMinusButton.setHideActionText(true);
@@ -294,23 +294,23 @@ public class JogControlsPanel extends JPanel {
         JButton zDownButton = new JButton(zMinusAction);
         zDownButton.setHideActionText(true);
         panelControls.add(zDownButton, "14, 8");
-
-        JLabel lblC = new JLabel("C");
-        lblC.setHorizontalAlignment(SwingConstants.CENTER);
-        lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
-        panelControls.add(lblC, "2, 12");
-
-        JButton counterclockwiseButton = new JButton(cPlusAction);
-        counterclockwiseButton.setHideActionText(true);
-        panelControls.add(counterclockwiseButton, "6, 12");
-
-        JButton homeCButton = new JButton(cZeroAction);
-        homeCButton.setHideActionText(true);
-        panelControls.add(homeCButton, "8, 12");
-
-        JButton clockwiseButton = new JButton(cMinusAction);
-        clockwiseButton.setHideActionText(true);
-        panelControls.add(clockwiseButton, "10, 12");
+                                
+                                        JLabel lblC = new JLabel("C");
+                                        lblC.setHorizontalAlignment(SwingConstants.CENTER);
+                                        lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
+                                        panelControls.add(lblC, "4, 12");
+                        
+                                JButton counterclockwiseButton = new JButton(cPlusAction);
+                                counterclockwiseButton.setHideActionText(true);
+                                panelControls.add(counterclockwiseButton, "6, 12");
+                
+                        JButton homeCButton = new JButton(cZeroAction);
+                        homeCButton.setHideActionText(true);
+                        panelControls.add(homeCButton, "8, 12");
+                
+                        JButton clockwiseButton = new JButton(cMinusAction);
+                        clockwiseButton.setHideActionText(true);
+                        panelControls.add(clockwiseButton, "10, 12");
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         add(tabbedPane);
