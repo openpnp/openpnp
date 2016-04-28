@@ -56,6 +56,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
@@ -124,7 +125,7 @@ public class ReferenceDragFeederConfigurationWizard
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblFeedRate = new JLabel("Feed Speed (0 - 1)");
+        JLabel lblFeedRate = new JLabel("Feed Speed %");
         panelGeneral.add(lblFeedRate, "2, 2");
 
         textFieldFeedRate = new JTextField();
@@ -315,8 +316,9 @@ public class ReferenceDragFeederConfigurationWizard
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
+        PercentConverter percentConverter = new PercentConverter();
 
-        addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();

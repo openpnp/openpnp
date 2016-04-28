@@ -3,6 +3,11 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-04-27
 
+* Speed Values Normalized
+
+	Anywhere in the UI referring to a speed is now expressed as a percentage. This includes
+	the new speed limit slider, parts speed and drag feeder speed.
+
 * Global Speed Limit
 
 	There is now a slider in the jog controls that controls the overall speed of the machine

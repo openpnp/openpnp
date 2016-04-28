@@ -250,14 +250,14 @@ public class JogControlsPanel extends JPanel {
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
         panelControls.add(lblZ, "14, 2");
-        
-                JLabel lblDistance = new JLabel("Distance");
-                lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-                panelControls.add(lblDistance, "18, 2, center, center");
-        
-                JLabel lblSpeed = new JLabel("Speed");
-                lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-                panelControls.add(lblSpeed, "20, 2, center, center");
+
+        JLabel lblDistance = new JLabel("Distance");
+        lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        panelControls.add(lblDistance, "18, 2, center, center");
+
+        JLabel lblSpeed = new JLabel("Speed %");
+        lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        panelControls.add(lblSpeed, "20, 2, center, center");
 
         sliderIncrements = new JSlider();
         panelControls.add(sliderIncrements, "18, 3, 1, 10");
