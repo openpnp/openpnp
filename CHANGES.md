@@ -1,6 +1,15 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-04-27
+
+* Global Speed Limit
+
+	There is now a slider in the jog controls that controls the overall speed of the machine
+	from 0 - 100%. The speed is applied to all other speeds in the system. Specifically, if
+	you have a part specific speed the speed applied to that part will be the global speed
+	times the part speed.
+
 # 2016-04-24
 
 * Bottom Vision!

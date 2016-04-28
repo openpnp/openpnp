@@ -397,7 +397,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(), 1.0);
+                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation());
             });
         }
     };
@@ -409,7 +409,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation(), 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation());
             });
         }
     };

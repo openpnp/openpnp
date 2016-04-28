@@ -138,7 +138,7 @@ public class FxNavigationView extends JFXPanel {
             final Location location =
                     camera.getLocation().derive(point.getX(), point.getY(), null, null);
             UiUtils.submitUiMachineTask(() -> {
-                camera.moveTo(location, 1.0);
+                camera.moveTo(location);
             });
         }
     };

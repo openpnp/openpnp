@@ -301,9 +301,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 feeder.feed(nozzle);
                 // pick the part
                 Location pickLocation = feeder.getPickLocation();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                 nozzle.pick(part);
-                nozzle.moveToSafeZ(1.0);
+                nozzle.moveToSafeZ();
             });
         }
     };

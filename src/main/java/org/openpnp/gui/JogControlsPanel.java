@@ -40,6 +40,8 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
@@ -191,7 +193,7 @@ public class JogControlsPanel extends JPanel {
             }
 
             machineControlsPanel.getSelectedNozzle()
-                    .moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
+                    .moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos));
         });
     }
 
@@ -200,7 +202,7 @@ public class JogControlsPanel extends JPanel {
             Location l = machineControlsPanel.getSelectedNozzle().getLocation()
                     .convertToUnits(Configuration.get().getSystemUnits());
             l = l.derive(xy ? 0d : null, xy ? 0d : null, z ? 0d : null, c ? 0d : null);
-            machineControlsPanel.getSelectedNozzle().moveTo(l, 1.0);
+            machineControlsPanel.getSelectedNozzle().moveTo(l);
         });
     }
 
@@ -222,21 +224,22 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-        
-                JButton homeButton = new JButton(machineControlsPanel.homeAction);
-                // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
-                // homeAction referenced above so the icon doesn't render in the viewer. We set it here
-                // so the dialog looks right while editing.
-                homeButton.setIcon(Icons.home);
-                homeButton.setHideActionText(true);
-                panelControls.add(homeButton, "2, 2");
+
+        JButton homeButton = new JButton(machineControlsPanel.homeAction);
+        // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
+        // homeAction referenced above so the icon doesn't render in the viewer. We set it here
+        // so the dialog looks right while editing.
+        homeButton.setIcon(Icons.home);
+        homeButton.setHideActionText(true);
+        panelControls.add(homeButton, "2, 2");
 
         JLabel lblXy = new JLabel("X/Y");
         lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
@@ -247,9 +250,17 @@ public class JogControlsPanel extends JPanel {
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
         panelControls.add(lblZ, "14, 2");
+        
+                JLabel lblDistance = new JLabel("Distance");
+                lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+                panelControls.add(lblDistance, "18, 2, center, center");
+        
+                JLabel lblSpeed = new JLabel("Speed");
+                lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+                panelControls.add(lblSpeed, "20, 2, center, center");
 
         sliderIncrements = new JSlider();
-        panelControls.add(sliderIncrements, "18, 2, 1, 11");
+        panelControls.add(sliderIncrements, "18, 3, 1, 10");
         sliderIncrements.setOrientation(SwingConstants.VERTICAL);
         sliderIncrements.setMajorTickSpacing(1);
         sliderIncrements.setValue(1);
@@ -265,11 +276,27 @@ public class JogControlsPanel extends JPanel {
         JButton zUpButton = new JButton(zPlusAction);
         zUpButton.setHideActionText(true);
         panelControls.add(zUpButton, "14, 4");
-        
-                JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
-                buttonStartStop.setIcon(Icons.powerOn);
-                panelControls.add(buttonStartStop, "2, 6");
-                buttonStartStop.setHideActionText(true);
+
+        speedSlider = new JSlider();
+        speedSlider.setValue(100);
+        speedSlider.setPaintTicks(true);
+        speedSlider.setMinorTickSpacing(1);
+        speedSlider.setMajorTickSpacing(25);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setPaintLabels(true);
+        speedSlider.setOrientation(SwingConstants.VERTICAL);
+        panelControls.add(speedSlider, "20, 4, 1, 9");
+        speedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                Configuration.get().getMachine().setSpeed(speedSlider.getValue() * 0.01);
+            }
+        });
+
+        JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
+        buttonStartStop.setIcon(Icons.powerOn);
+        panelControls.add(buttonStartStop, "2, 6");
+        buttonStartStop.setHideActionText(true);
 
         JButton xMinusButton = new JButton(xMinusAction);
         xMinusButton.setHideActionText(true);
@@ -294,23 +321,23 @@ public class JogControlsPanel extends JPanel {
         JButton zDownButton = new JButton(zMinusAction);
         zDownButton.setHideActionText(true);
         panelControls.add(zDownButton, "14, 8");
-                                
-                                        JLabel lblC = new JLabel("C");
-                                        lblC.setHorizontalAlignment(SwingConstants.CENTER);
-                                        lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
-                                        panelControls.add(lblC, "4, 12");
-                        
-                                JButton counterclockwiseButton = new JButton(cPlusAction);
-                                counterclockwiseButton.setHideActionText(true);
-                                panelControls.add(counterclockwiseButton, "6, 12");
-                
-                        JButton homeCButton = new JButton(cZeroAction);
-                        homeCButton.setHideActionText(true);
-                        panelControls.add(homeCButton, "8, 12");
-                
-                        JButton clockwiseButton = new JButton(cMinusAction);
-                        clockwiseButton.setHideActionText(true);
-                        panelControls.add(clockwiseButton, "10, 12");
+
+        JLabel lblC = new JLabel("C");
+        lblC.setHorizontalAlignment(SwingConstants.CENTER);
+        lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
+        panelControls.add(lblC, "4, 12");
+
+        JButton counterclockwiseButton = new JButton(cPlusAction);
+        counterclockwiseButton.setHideActionText(true);
+        panelControls.add(counterclockwiseButton, "6, 12");
+
+        JButton homeCButton = new JButton(cZeroAction);
+        homeCButton.setHideActionText(true);
+        panelControls.add(homeCButton, "8, 12");
+
+        JButton clockwiseButton = new JButton(cMinusAction);
+        clockwiseButton.setHideActionText(true);
+        panelControls.add(clockwiseButton, "10, 12");
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         add(tabbedPane);
@@ -371,6 +398,10 @@ public class JogControlsPanel extends JPanel {
             return sliderIncrements;
         }
     };
+
+    public double getSpeed() {
+        return speedSlider.getValue() * 0.01D;
+    }
 
     @SuppressWarnings("serial")
     public Action yPlusAction = new AbstractAction("Y+", Icons.arrowUp) {
@@ -465,7 +496,7 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Configuration.get().getMachine().getDefaultHead().moveToSafeZ(1.0);
+                Configuration.get().getMachine().getDefaultHead().moveToSafeZ();
             });
         }
     };
@@ -478,10 +509,10 @@ public class JogControlsPanel extends JPanel {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
                 // move to the discard location
                 MovableUtils.moveToLocationAtSafeZ(nozzle,
-                        Configuration.get().getMachine().getDiscardLocation(), 1.0);
+                        Configuration.get().getMachine().getDiscardLocation());
                 // discard the part
                 nozzle.place();
-                nozzle.moveToSafeZ(1.0);
+                nozzle.moveToSafeZ();
             });
         }
     };
@@ -508,6 +539,7 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
             setUnits(configuration.getSystemUnits());
+            speedSlider.setValue((int) (configuration.getMachine().getSpeed() * 100));
 
             panelActuators.removeAll();
 
@@ -564,4 +596,5 @@ public class JogControlsPanel extends JPanel {
             setEnabled(machineControlsPanel.isEnabled());
         }
     };
+    private JSlider speedSlider;
 }

@@ -178,4 +178,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public FiducialLocator getFiducialLocator();
     
     public Location getDiscardLocation();
+    
+    public void setSpeed(double speed);
+    
+    public double getSpeed();
 }

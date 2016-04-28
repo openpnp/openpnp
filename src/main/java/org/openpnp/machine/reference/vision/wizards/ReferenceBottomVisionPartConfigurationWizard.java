@@ -148,7 +148,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         // the nozzle.
         location = location.subtract(offsets);
         
-        nozzle.moveTo(location, 1.0);
+        nozzle.moveTo(location);
     }
 
     private void editPipeline() throws Exception {

@@ -1077,11 +1077,11 @@ public class CameraView extends JComponent implements CameraListener {
             if (camera.getHead() == null) {
                 // move the nozzle to the camera
                 Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
             else {
                 // move the camera to the location
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
         });
     }

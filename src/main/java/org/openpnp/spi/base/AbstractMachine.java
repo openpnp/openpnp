@@ -31,6 +31,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.IdentifiableList;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
@@ -72,25 +73,31 @@ public abstract class AbstractMachine implements Machine {
     @ElementMap(entry = "jobProcessor", key = "type", attribute = true, inline = false,
             required = false)
     protected Map<JobProcessor.Type, JobProcessor> jobProcessors = new HashMap<>();
-    
+
     @Element(required = false)
     protected PartAlignment partAlignment = new ReferenceBottomVision();
-    
+
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
-    
+
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    protected double speed = 1.0D;
 
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
 
     protected ThreadPoolExecutor executor;
-    
+
     protected AbstractMachine() {}
 
     @SuppressWarnings("unused")
     @Commit
     private void commit() {
+        for (Head head : heads) {
+            head.setMachine(this);
+        }
         if (jobProcessors.isEmpty()) {
             jobProcessors.put(JobProcessor.Type.PickAndPlace, jobProcessor);
             jobProcessor = null;
@@ -343,5 +350,15 @@ public abstract class AbstractMachine implements Machine {
 
     public void setDiscardLocation(Location discardLocation) {
         this.discardLocation = discardLocation;
+    }
+
+    @Override
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    @Override
+    public double getSpeed() {
+        return speed;
     }
 }

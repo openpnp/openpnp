@@ -273,7 +273,7 @@ public class JobPastePanel extends JPanel {
 
                 Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
                         .getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
     };
@@ -292,7 +292,7 @@ public class JobPastePanel extends JPanel {
 
             PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(dispenser, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(dispenser, location);
             });
         }
     };

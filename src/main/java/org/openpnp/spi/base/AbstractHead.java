@@ -18,8 +18,6 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractHead implements Head {
-    protected Machine machine;
-
     @Attribute
     protected String id;
 
@@ -37,6 +35,8 @@ public abstract class AbstractHead implements Head {
 
     @ElementList(required = false)
     protected IdentifiableList<PasteDispenser> pasteDispensers = new IdentifiableList<>();
+
+    protected Machine machine;
 
     public AbstractHead() {
         this.id = Configuration.createId();
@@ -182,5 +182,20 @@ public abstract class AbstractHead implements Head {
             throw new Exception("No default paste dispenser available on head " + getName());
         }
         return dispensers.get(0);
+    }
+
+    @Override
+    public Machine getMachine() {
+        return machine;
+    }
+
+    @Override
+    public void setMachine(Machine machine) {
+        this.machine = machine;
+    }
+
+    @Override
+    public void moveToSafeZ() throws Exception {
+        moveToSafeZ(getMachine().getSpeed());
     }
 }

@@ -349,10 +349,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
 
                     try {
-                        nozzle.moveToSafeZ(1.0);
+                        nozzle.moveToSafeZ();
                         feeder.feed(nozzle);
                         Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                     }
                     catch (Exception e) {
                         MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);
@@ -377,12 +377,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
 
                     try {
-                        nozzle.moveToSafeZ(1.0);
+                        nozzle.moveToSafeZ();
                         feeder.feed(nozzle);
                         Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                         nozzle.pick(feeder.getPart());
-                        nozzle.moveToSafeZ(1.0);
+                        nozzle.moveToSafeZ();
                     }
                     catch (Exception e) {
                         MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);
@@ -407,7 +407,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
                         .getDefaultCamera();
                 Location pickLocation = feeder.getPickLocation();
-                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
             });
         }
     };
@@ -429,7 +429,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                     try {
                         Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                     }
                     catch (Exception e) {
                         MessageBoxes.errorBox(FeedersPanel.this, "Movement Error", e);

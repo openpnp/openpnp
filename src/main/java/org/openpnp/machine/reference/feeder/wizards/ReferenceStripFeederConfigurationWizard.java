@@ -366,7 +366,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             Configuration.get().getMachine().submit(new Callable<Void>() {
                 public Void call() throws Exception {
                     cameraView.setText("Checking first part...");
-                    autoSetupCamera.moveTo(action.getLocation(), 1.0);
+                    autoSetupCamera.moveTo(action.getLocation());
                     part1HoleLocations = findHoles(autoSetupCamera);
 
                     cameraView.setText("Now click on the center of the second part in the tape.");
@@ -401,7 +401,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             Configuration.get().getMachine().submit(new Callable<Void>() {
                 public Void call() throws Exception {
                     cameraView.setText("Checking second part...");
-                    autoSetupCamera.moveTo(action.getLocation(), 1.0);
+                    autoSetupCamera.moveTo(action.getLocation());
                     List<Location> part2HoleLocations = findHoles(autoSetupCamera);
 
                     List<Location> referenceHoles =
@@ -427,7 +427,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     });
 
                     feeder.setFeedCount(1);
-                    autoSetupCamera.moveTo(feeder.getPickLocation(), 1.0);
+                    autoSetupCamera.moveTo(feeder.getPickLocation());
                     feeder.setFeedCount(0);
 
                     cameraView.setText("Setup complete!");

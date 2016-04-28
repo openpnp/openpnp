@@ -432,7 +432,7 @@ public class NavigationView extends JComponent implements JobProcessorListener, 
             Location location = camera.getLocation().derive(clickLocation.getX(),
                     clickLocation.getY(), null, null);
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
         dragStart = null;
