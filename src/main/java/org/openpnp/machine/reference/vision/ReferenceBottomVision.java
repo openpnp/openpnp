@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.Icon;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
@@ -75,9 +74,6 @@ public class ReferenceBottomVision implements PartAlignment {
         pipeline.setCamera(camera);
         pipeline.process();
 
-        CameraView cameraView = MainFrame.mainFrame.cameraPanel.getCameraView(camera);
-        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 1500);
-
         Result result = pipeline.getResult("result");
         RotatedRect rect = (RotatedRect) result.model;
         logger.debug("Result rect {}", rect);
@@ -104,12 +100,19 @@ public class ReferenceBottomVision implements PartAlignment {
         offsets = offsets.derive(null, null, null, -angle);
         logger.debug("Final offsets {}", offsets);
 
+        CameraView cameraView = MainFrame.mainFrame.cameraPanel.getCameraView(camera);
+        String s = rect.size.toString() + " " + rect.angle + "°";
+        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
+                1500);
+
+
         return offsets;
     }
 
     public static CvPipeline createDefaultPipeline() {
         try {
-            String xml = IOUtils.toString(ReferenceBottomVision.class.getResource("ReferenceBottomVision-DefaultPipeline.xml"));
+            String xml = IOUtils.toString(ReferenceBottomVision.class
+                    .getResource("ReferenceBottomVision-DefaultPipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -179,7 +182,7 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         return partSettings;
     }
-    
+
     public Map<String, PartSettings> getPartSettingsByPartId() {
         return partSettingsByPartId;
     }
