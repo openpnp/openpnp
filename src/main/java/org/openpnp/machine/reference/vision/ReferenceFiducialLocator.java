@@ -160,7 +160,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Location location =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
         logger.debug("Looking for {} at {}", fid.getId(), location);
-        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+        MovableUtils.moveToLocationAtSafeZ(camera, location);
 
 
         for (int i = 0; i < 3; i++) {
@@ -174,7 +174,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             }
             logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
-            camera.moveTo(location, 1.0);
+            camera.moveTo(location);
         }
 
         return location;

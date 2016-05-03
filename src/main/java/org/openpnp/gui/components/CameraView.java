@@ -336,6 +336,10 @@ public class CameraView extends JComponent implements CameraListener {
         this.cameraViewFilter = cameraViewFilter;
     }
 
+    public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
+        showFilteredImage(filteredImage, null, milliseconds);
+    }
+
     /**
      * Show image instead of the camera image for milliseconds. After milliseconds elapses the view
      * goes back to showing the camera image. The image should be the same width and height as the
@@ -343,10 +347,17 @@ public class CameraView extends JComponent implements CameraListener {
      * briefly show the result of image processing. This is a shortcut to
      * setCameraViewFilter(CameraViewFilter) which simply removes itself after the specified time.
      * 
+     * In addition to showing the given image, if the text parameters is not null the text
+     * will be shown during the timeout using setText().
+     * 
      * @param image
+     * @param text
      * @param millseconds
      */
-    public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
+    public void showFilteredImage(BufferedImage filteredImage, String text, long milliseconds) {
+        if (text != null) {
+            setText(text);
+        }
         setCameraViewFilter(new CameraViewFilter() {
             long t = System.currentTimeMillis();
 
@@ -356,6 +367,9 @@ public class CameraView extends JComponent implements CameraListener {
                     return filteredImage;
                 }
                 else {
+                    if (text != null) {
+                        setText(null);
+                    }
                     setCameraViewFilter(null);
                     return image;
                 }
@@ -1077,11 +1091,11 @@ public class CameraView extends JComponent implements CameraListener {
             if (camera.getHead() == null) {
                 // move the nozzle to the camera
                 Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
             else {
                 // move the camera to the location
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
         });
     }

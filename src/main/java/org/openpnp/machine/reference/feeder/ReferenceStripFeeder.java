@@ -215,7 +215,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             expectedLocation = getPointAlongLine(lineLocations[0], lineLocations[1],
                     partPitch.multiply(feedCount - 1));
         }
-        MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation, 1.0);
+        MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
         // and look for the hole
         Location actualLocation = findClosestHole(camera);
         if (actualLocation == null) {

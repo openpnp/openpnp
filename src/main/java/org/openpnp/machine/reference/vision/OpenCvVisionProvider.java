@@ -238,13 +238,13 @@ public class OpenCvVisionProvider implements VisionProvider {
 
         // Position the part above the center of the camera.
         // First move to Safe-Z.
-        nozzle.moveToSafeZ(1.0);
+        nozzle.moveToSafeZ();
         // Then move to the camera in X, Y at Safe-Z and rotate the
         // part to 0.
-        nozzle.moveTo(camera.getLocation().derive(null, null, Double.NaN, 0.0), 1.0);
+        nozzle.moveTo(camera.getLocation().derive(null, null, Double.NaN, 0.0));
         // Then lower the part to the Camera's focal point in Z. Maintain the
         // part's rotation at 0.
-        nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN), 1.0);
+        nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN));
         // Grab an image.
         BufferedImage image = camera.settleAndCapture();
         // TODO: Do OpenCV magic
@@ -254,12 +254,12 @@ public class OpenCvVisionProvider implements VisionProvider {
         Thread.sleep(1000);
 
         // rotate the nozzle to simulate the part being oriented
-        nozzle.moveTo(nozzle.getLocation().derive(null, null, null, 45.0), 1.0);
+        nozzle.moveTo(nozzle.getLocation().derive(null, null, null, 45.0));
 
         Thread.sleep(1000);
 
         // Return to Safe-Z just to be safe.
-        nozzle.moveToSafeZ(1.0);
+        nozzle.moveToSafeZ();
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     }
 

@@ -23,11 +23,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
@@ -36,10 +36,11 @@ import org.openpnp.model.Part;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"Id", "Description", "Height", "Package", "Speed (0 - 1)"};
+            new String[] {"Id", "Description", "Height", "Package", "Speed %"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             Package.class, String.class};
     private List<Part> parts;
+    private PercentConverter percentConverter = new PercentConverter();
 
     public PartsTableModel() {
         Configuration.get().addPropertyChangeListener("parts", this);
@@ -99,10 +100,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
                 part.setPackage((Package) aValue);
             }
             else if (columnIndex == 4) {
-                double val = Double.parseDouble(aValue.toString());
-                val = Math.max(0, val);
-                val = Math.min(1, val);
-                part.setSpeed(val);
+                part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
         }
         catch (Exception e) {
@@ -122,8 +120,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
             case 3:
                 return part.getPackage();
             case 4:
-                return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
-                        part.getSpeed());
+                return percentConverter.convertForward(part.getSpeed());
             default:
                 return null;
         }

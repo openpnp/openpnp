@@ -118,4 +118,14 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
     public void setSafeZ(Length safeZ) {
         this.safeZ = safeZ;
     }
+
+    @Override
+    public void moveTo(Location location) throws Exception {
+        moveTo(location, getHead().getMachine().getSpeed());
+    }
+
+    @Override
+    public void moveToSafeZ() throws Exception {
+        moveToSafeZ(getHead().getMachine().getSpeed());
+    }
 }

@@ -32,6 +32,8 @@ public class VisionUtilsTest {
     }
 
     static class TestCamera implements Camera {
+        protected Head head;
+
         @Override
         public String getId() {
             // TODO Auto-generated method stub
@@ -40,14 +42,12 @@ public class VisionUtilsTest {
 
         @Override
         public Head getHead() {
-            // TODO Auto-generated method stub
-            return null;
+            return head;
         }
 
         @Override
         public void setHead(Head head) {
-            // TODO Auto-generated method stub
-
+            this.head = head;
         }
 
         @Override
@@ -200,6 +200,16 @@ public class VisionUtilsTest {
         public void setSettleTimeMs(long settleTimeMs) {
             // TODO Auto-generated method stub
 
+        }
+
+        @Override
+        public void moveTo(Location location) throws Exception {
+            moveTo(location, getHead().getMachine().getSpeed());
+        }
+
+        @Override
+        public void moveToSafeZ() throws Exception {
+            moveToSafeZ(getHead().getMachine().getSpeed());
         }
     }
 }

@@ -22,4 +22,8 @@ public class MovableUtils {
         hm.moveTo(location.derive(null, null, Double.NaN, null), speed);
         hm.moveTo(location, speed);
     }
+
+    public static void moveToLocationAtSafeZ(HeadMountable hm, Location location) throws Exception {
+        moveToLocationAtSafeZ(hm, location, hm.getHead().getMachine().getSpeed());
+    }
 }

@@ -887,7 +887,7 @@ public class JobPanel extends JPanel {
                         Camera camera = tool.getHead().getDefaultCamera();
                         MainFrame.cameraPanel.ensureCameraVisible(camera);
                         Location location = getSelectedBoardLocation().getLocation();
-                        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
                     });
                 }
             };
@@ -904,7 +904,7 @@ public class JobPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
                 Location location = getSelectedBoardLocation().getLocation();
-                MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(tool, location);
             });
         }
     };
@@ -943,7 +943,7 @@ public class JobPanel extends JPanel {
                 HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MainFrame.cameraPanel.ensureCameraVisible(camera);
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
     };

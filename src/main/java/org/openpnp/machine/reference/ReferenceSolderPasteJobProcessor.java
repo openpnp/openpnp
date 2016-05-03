@@ -58,7 +58,7 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
             }
 
             try {
-                head.moveToSafeZ(1.0);
+                head.moveToSafeZ();
             }
             catch (Exception e) {
                 fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());
@@ -86,7 +86,7 @@ public class ReferenceSolderPasteJobProcessor extends AbstractJobProcessor {
                     return;
                 }
                 try {
-                    MovableUtils.moveToLocationAtSafeZ(dispenser, location, 1.0);
+                    MovableUtils.moveToLocationAtSafeZ(dispenser, location);
                 }
                 catch (Exception e) {
                     fireJobEncounteredError(JobError.MachineMovementError, e.getMessage());

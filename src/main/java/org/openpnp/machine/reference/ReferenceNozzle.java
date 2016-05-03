@@ -185,7 +185,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
         logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                 new Object[] {getName(), nozzleTip.getName()});
-        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), 1.0);
+        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation());
         logger.debug("{}.loadNozzleTip({}): moveTo Mid Location",
                 new Object[] {getName(), nozzleTip.getName()});
         moveTo(nt.getChangerMidLocation(), 0.25);
@@ -210,7 +210,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         logger.debug("{}.unloadNozzleTip(): Start", new Object[] {getName()});
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
         logger.debug("{}.unloadNozzleTip(): moveTo End Location", new Object[] {getName()});
-        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), 1.0);
+        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation());
         logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", new Object[] {getName()});
         moveTo(nt.getChangerMidLocation(), 1.0);
         logger.debug("{}.unloadNozzleTip(): moveTo Start Location", new Object[] {getName()});
@@ -273,5 +273,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     public void setSafeZ(Length safeZ) {
         this.safeZ = safeZ;
+    }
+
+    @Override
+    public void moveTo(Location location) throws Exception {
+        moveTo(location, getHead().getMachine().getSpeed());
+    }
+
+    @Override
+    public void moveToSafeZ() throws Exception {
+        moveToSafeZ(getHead().getMachine().getSpeed());
     }
 }
