@@ -4,7 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FiniteStateMachine<State, Message, TaskReturnType> {
+    private static final Logger logger = LoggerFactory.getLogger(FiniteStateMachine.class);
+    
     private final State initialState;
     private State state;
 
@@ -25,7 +31,7 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
         if (transition == null) {
             throw new Exception("No defined transitions from " + state + " for " + message);
         }
-        System.out.println(message + " => " + state + " -> " + transition.toState);
+        logger.trace(message + " => " + state + " -> " + transition.toState);
         TaskReturnType ret = transition.task.task();
         this.state = transition.toState;
         return ret;

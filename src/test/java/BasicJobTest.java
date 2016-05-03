@@ -2,10 +2,10 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import javax.print.attribute.standard.JobState;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.openpnp.JobProcessorDelegate;
-import org.openpnp.JobProcessorListener;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -25,9 +25,6 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
-import org.openpnp.spi.JobProcessor.JobError;
-import org.openpnp.spi.JobProcessor.JobState;
-import org.openpnp.spi.JobProcessor.PickRetryAction;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.slf4j.Logger;
@@ -73,12 +70,6 @@ public class BasicJobTest {
         BasicJobTestDriverDelegate delegate = new BasicJobTestDriverDelegate();
         testDriver.setDelegate(delegate);
 
-        TestCompleteNotifier notifier = new TestCompleteNotifier();
-
-        JobProcessor jobProcessor = machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace);
-        jobProcessor.addListener(new BasicJobTestProcessorListener(notifier));
-        jobProcessor.setDelegate(new BasicJobTestJobProcessorDelegate());
-
         Job job = createSimpleJob();
 
         Head h1 = machine.getHead("H1");
@@ -109,15 +100,10 @@ public class BasicJobTest {
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
 
-        jobProcessor.load(job);
+        JobProcessor jobProcessor = machine.getPnpJobProcessor();
         machine.setEnabled(true);
-        synchronized (notifier) {
-            jobProcessor.start();
-            notifier.wait();
-        }
-        if (notifier.failed) {
-            throw notifier.exception;
-        }
+        jobProcessor.initialize(job);
+        while (jobProcessor.next());
     }
 
     private Job createSimpleJob() {
@@ -145,61 +131,6 @@ public class BasicJobTest {
         placement.setLocation(new Location(LengthUnit.Millimeters, x, y, z, rotation));
         placement.setSide(side);
         return placement;
-    }
-
-    public static class BasicJobTestJobProcessorDelegate implements JobProcessorDelegate {
-        @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
-            return null;
-        }
-    }
-
-    public static class BasicJobTestProcessorListener extends JobProcessorListener.Adapter {
-        final private TestCompleteNotifier notifier;
-
-        public BasicJobTestProcessorListener(TestCompleteNotifier notifier) {
-            this.notifier = notifier;
-        }
-
-        @Override
-        public void jobLoaded(Job job) {}
-
-        @Override
-        public void jobStateChanged(JobState state) {
-            if (state == JobState.Stopped) {
-                synchronized (notifier) {
-                    notifier.notifyAll();
-                }
-            }
-        }
-
-        @Override
-        public void jobEncounteredError(JobError error, String description) {
-            synchronized (notifier) {
-                notifier.failed = true;
-                notifier.exception = new Exception(error + " " + description);
-                notifier.notifyAll();
-            }
-        }
-
-        @Override
-        public void partProcessingStarted(BoardLocation board, Placement placement) {
-            logger.info("Start " + placement.getId());
-        }
-
-        @Override
-        public void partPicked(BoardLocation board, Placement placement) {}
-
-        @Override
-        public void partPlaced(BoardLocation board, Placement placement) {}
-
-        @Override
-        public void partProcessingCompleted(BoardLocation board, Placement placement) {
-            logger.info("Finish " + placement.getId());
-        }
-
-        @Override
-        public void detailedStatusUpdated(String status) {}
     }
 
     /**
@@ -352,10 +283,5 @@ public class BasicJobTest {
                 return "Move (" + description + ") " + headMountable + " " + location.toString();
             }
         }
-    }
-
-    public static class TestCompleteNotifier {
-        public boolean failed;
-        public Exception exception;
     }
 }

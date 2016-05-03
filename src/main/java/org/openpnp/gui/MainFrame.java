@@ -62,8 +62,6 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.ConfigurationListener;
-import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -78,7 +76,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.JobProcessor;
 
 /**
  * The main window of the application.
@@ -443,16 +440,6 @@ public class MainFrame extends JFrame {
                             + "OpenPnP will now exit.");
             System.exit(1);
         }
-
-        configuration.addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration) throws Exception {
-                for (JobProcessor jobProcessor : configuration.getMachine().getJobProcessors()
-                        .values()) {
-                    jobProcessor.addListener(jobProcessorListener);
-                }
-            }
-        });
     }
 
     private void registerBoardImporters() {
@@ -594,13 +581,6 @@ public class MainFrame extends JFrame {
         int index = panelBottom.indexOfTab(title);
         panelBottom.setSelectedIndex(index);
     }
-
-    private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
-        @Override
-        public void detailedStatusUpdated(String status) {
-            lblStatus.setText(status);
-        }
-    };
 
     private ComponentListener componentListener = new ComponentAdapter() {
         @Override

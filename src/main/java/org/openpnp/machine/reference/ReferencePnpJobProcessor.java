@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.openpnp.model.BoardLocation;
@@ -42,9 +43,12 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Root
 public class ReferencePnpJobProcessor implements PnpJobProcessor {
     private static final Logger logger = LoggerFactory.getLogger(ReferencePnpJobProcessor.class);
 
@@ -80,11 +84,11 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
 
     protected Job job;
 
-    protected List<JobPlacement> jobPlacements;
-
     protected Machine machine;
 
     protected Head head;
+
+    protected List<JobPlacement> jobPlacements;
 
     protected Map<Nozzle, JobPlacement> plannedPlacements = new HashMap<>();
 
@@ -140,10 +144,13 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             nextMessage = fsm.send(Message.Reset);
             return false;
         }
-        if (nextMessage == null) {
-            nextMessage = Message.Next;
-        }
-        nextMessage = fsm.send(nextMessage);
+        // TODO STOPSHIP: This does the full cycle stuff. Do we want it?
+        do {
+            if (nextMessage == null) {
+                nextMessage = Message.Next;
+            }
+            nextMessage = fsm.send(nextMessage);
+        } while (fsm.getState() != State.Plan);
         return true;
     }
 
@@ -161,25 +168,49 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
     }
 
     protected Message doPreFlight() throws Exception {
+        // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
         this.jobPlacements = new ArrayList<>();
-        for (BoardLocation boardLocation : job.getBoardLocations()) {
-            for (Placement placement : boardLocation.getBoard().getPlacements()) {
-                JobPlacement jp = new JobPlacement(boardLocation, placement);
 
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            // Only check enabled boards
+            if (!boardLocation.isEnabled()) {
+                continue;
+            }
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
+                // Ignore placements that aren't set to be placed
+                if (placement.getType() != Placement.Type.Place) {
+                    continue;
+                }
+
+                // Ignore placements that aren't on the side of the board we're processing.
+                if (placement.getSide() != boardLocation.getSide()) {
+                    continue;
+                }
+
+                JobPlacement jobPlacement = new JobPlacement(boardLocation, placement);
+
+                // Make sure the part is not null
                 if (placement.getPart() == null) {
-                    throw new Exception(String.format("Part not found for board %s, placement %s",
+                    throw new Exception(String.format("Part not found for board %s, placement %s.",
                             boardLocation.getBoard().getName(), placement.getId()));
                 }
 
+                // Verify that the part height is greater than zero. Catches a common configuration
+                // error.
+                if (placement.getPart().getHeight().getValue() <= 0D) {
+                    throw new Exception(String.format("Part height for %s must be greater than 0.",
+                            placement.getPart().getId()));
+                }
+
+                // Make sure there is at least one compatible nozzle tip available
                 findNozzleTip(placement.getPart());
 
+                // Make sure there is at least one compatible and enabled feeder available
                 findFeeder(placement.getPart());
 
-                // TODO: Optionally (based on config) validate part heights must be > 0
-
-                jobPlacements.add(jp);
+                jobPlacements.add(jobPlacement);
             }
         }
         return null;
@@ -196,6 +227,7 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             }
             Location location = locator.locateBoard(boardLocation);
             boardLocation.setLocation(location);
+            logger.info("Fiducial check for {}", boardLocation);
         }
         return null;
     }
@@ -203,11 +235,10 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
     protected Message doPlan() throws Exception {
         plannedPlacements.clear();
 
-        // Sort the placements by part height and get only the ones with
-        // the same height as the first.
-        List<JobPlacement> jobPlacements = this.jobPlacements.stream()
-                .sorted(Comparator.comparing(JobPlacement::getPartHeight))
-                .collect(Collectors.toList());
+        // Sort the placements by part height and filter out any that are already finished.
+        List<JobPlacement> jobPlacements = this.jobPlacements.stream().filter((jobPlacement) -> {
+            return !jobPlacement.finished;
+        }).sorted(Comparator.comparing(JobPlacement::getPartHeight)).collect(Collectors.toList());
 
         if (jobPlacements.isEmpty()) {
             return Message.Complete;
@@ -220,13 +251,10 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             return jobPlacement.getPartHeight() == firstHeight;
         }).collect(Collectors.toList());
 
-        // Get the list of nozzles we have available
-        List<Nozzle> nozzles = head.getNozzles();
-
         // And determine the best order to process the placements in to utilize the nozzle
         // tips we currently have loaded.
-        // TODO: just faked for now
-        for (Nozzle nozzle : nozzles) {
+        // TODO STOPSHIP: just faked for now
+        for (Nozzle nozzle : head.getNozzles()) {
             if (jobPlacements.isEmpty()) {
                 break;
             }
@@ -236,22 +264,165 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
     }
 
     protected Message doChangeNozzleTip() throws Exception {
+        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
+            Nozzle nozzle = entry.getKey();
+            JobPlacement jobPlacement = entry.getValue();
+            Placement placement = jobPlacement.placement;
+            Part part = placement.getPart();
+
+            // If the currently loaded NozzleTip can handle the Part we're good.
+            if (nozzle.getNozzleTip().canHandle(part)) {
+                continue;
+            }
+            // Otherwise find a compatible tip and load it
+            NozzleTip nozzleTip = findNozzleTip(part);
+            nozzle.unloadNozzleTip();
+            nozzle.loadNozzleTip(nozzleTip);
+        }
         return null;
     }
 
     protected Message doFeed() throws Exception {
+        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
+            Nozzle nozzle = entry.getKey();
+            JobPlacement jobPlacement = entry.getValue();
+            Placement placement = jobPlacement.placement;
+            Part part = placement.getPart();
+
+            while (true) {
+                // Find a compatible, enabled feeder
+                Feeder feeder = findFeeder(part);
+                jobPlacement.feeder = feeder;
+
+                // Feed the part
+                try {
+                    // Try to feed the part. If it fails, retry a couple times.
+                    retry(3, () -> {
+                        logger.info("Attempt Feed {} from {} with {}.",
+                                new Object[] {part.getId(), feeder.getName(), nozzle.getName()});
+
+                        feeder.feed(nozzle);
+
+                        logger.info("Fed {} from {} with {}.",
+                                new Object[] {part.getId(), feeder.getName(), nozzle.getName()});
+                    });
+
+                    break;
+                }
+                catch (Exception e) {
+                    logger.info("Feed {} from {} with {} failed!",
+                            new Object[] {part.getId(), feeder.getName(), nozzle.getName()});
+                    // If the feed fails, disable the feeder and continue. If there are no
+                    // more valid feeders the findFeeder() call above will throw and exit the
+                    // loop.
+                    feeder.setEnabled(false);
+                }
+
+            }
+        }
         return null;
     }
 
     protected Message doPick() throws Exception {
+        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
+            Nozzle nozzle = entry.getKey();
+            JobPlacement jobPlacement = entry.getValue();
+            Placement placement = jobPlacement.placement;
+            Part part = placement.getPart();
+
+            // Get the feeder that was used to feed
+            Feeder feeder = jobPlacement.feeder;
+
+            // Move to the pick location
+            MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+
+            // Pick
+            nozzle.pick(part);
+
+            // Retract
+            nozzle.moveToSafeZ();
+
+            logger.info("Pick {} from {} with {}",
+                    new Object[] {part.getId(), feeder.getName(), nozzle.getName()});
+        }
         return null;
     }
 
     protected Message doAlign() throws Exception {
+        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
+            Nozzle nozzle = entry.getKey();
+            JobPlacement jobPlacement = entry.getValue();
+            Placement placement = jobPlacement.placement;
+            Part part = placement.getPart();
+
+            Location alignmentOffsets = machine.getPartAlignment().findOffsets(part, nozzle);
+            jobPlacement.alignmentOffsets = alignmentOffsets;
+
+            logger.info("Align {} with {}", part.getId(), nozzle.getName());
+        }
+
         return null;
     }
 
     protected Message doPlace() throws Exception {
+        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
+            Nozzle nozzle = entry.getKey();
+            JobPlacement jobPlacement = entry.getValue();
+            BoardLocation boardLocation = jobPlacement.boardLocation;
+            Placement placement = jobPlacement.placement;
+            Part part = placement.getPart();
+
+            Location placementLocation =
+                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+
+            // If there are alignment offsets update the placement location with them
+            if (jobPlacement.alignmentOffsets != null) {
+                Location alignmentOffsets = jobPlacement.alignmentOffsets;
+                // Rotate the point 0,0 using the alignment offsets as a center point by the angle
+                // that is
+                // the difference between the alignment angle and the calculated global
+                // placement angle.
+                Location location =
+                        new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
+                                placementLocation.getRotation() - alignmentOffsets.getRotation());
+
+                // Set the angle to the difference mentioned above, aligning the part to the
+                // same angle as
+                // the placement.
+                location = location.derive(null, null, null,
+                        placementLocation.getRotation() - alignmentOffsets.getRotation());
+
+                // Add the placement final location to move our local coordinate into global
+                // space
+                location = location.add(placementLocation);
+
+                // Subtract the alignment offsets to move the part to the final location,
+                // instead of
+                // the nozzle.
+                location = location.subtract(alignmentOffsets);
+
+                placementLocation = location;
+            }
+
+            // Add the part's height to the placement location
+            placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
+                    0, part.getHeight().getValue(), 0));
+
+            // Move to the placement location
+            MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
+
+            // Place the part
+            nozzle.place();
+
+            // Retract
+            nozzle.moveToSafeZ();
+
+            // Mark the placement as finished
+            jobPlacement.finished = true;
+
+            logger.info("Place {} with {}", part.getId(), nozzle.getName());
+        }
+
         return null;
     }
 
@@ -317,9 +488,26 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         throw new Exception("No compatible, enabled feeder found for part " + part.getId());
     }
 
+    protected void retry(int maxTries, Retryable r) throws Exception {
+        for (int i = 0; i < maxTries; i++) {
+            try {
+                r.action();
+                break;
+            }
+            catch (Exception e) {
+                if (i == maxTries - 1) {
+                    throw e;
+                }
+            }
+        }
+    }
+
     public class JobPlacement {
         public final BoardLocation boardLocation;
         public final Placement placement;
+        public Feeder feeder;
+        public Location alignmentOffsets;
+        public boolean finished;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
@@ -330,6 +518,10 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
                     .getValue();
         }
+    }
+
+    public interface Retryable {
+        void action() throws Exception;
     }
 
     public static void main(String[] args) throws Exception {

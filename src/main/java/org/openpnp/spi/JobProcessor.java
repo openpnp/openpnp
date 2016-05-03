@@ -1,69 +1,19 @@
 package org.openpnp.spi;
 
-import org.openpnp.JobProcessorDelegate;
-import org.openpnp.JobProcessorListener;
 import org.openpnp.model.Job;
 
-public interface JobProcessor extends WizardConfigurable, PropertySheetHolder {
-    public enum JobState {
-        Stopped, Running, Paused,
-    }
-
-    public enum JobError {
-        MachineHomingError, MachineMovementError, MachineRejectedJobError, FeederError, HeadError, PickError, PlaceError, PartError
-    }
-
-    public enum PickRetryAction {
-        RetryWithFeed, RetryWithoutFeed, SkipAndContinue,
-    }
-
-    public enum Type {
-        PickAndPlace, SolderPaste
-    }
-
-    public abstract void setDelegate(JobProcessorDelegate delegate);
-
-    public abstract void addListener(JobProcessorListener listener);
-
-    public abstract void removeListener(JobProcessorListener listener);
-
-    public abstract Job getJob();
-
-    public abstract JobState getState();
-
-    // TODO: Change this, and most of the other properties on here to bound
-    // properties.
-    public abstract void load(Job job);
-
-    /**
-     * Start the Job. The Job must be in the Stopped state.
-     */
-    public abstract void start() throws Exception;
-
-    /**
-     * Pause a running Job. The Job will stop running at the next opportunity and retain it's state
-     * so that it can be resumed.
-     */
-    public abstract void pause();
-
-    /**
-     * Advances the Job one step. If the Job is not currently started this will start the Job first.
-     * 
-     * @throws Exception
-     */
-    public abstract void step() throws Exception;
-
-    /**
-     * Resume a running Job. The Job will resume from where it was paused.
-     */
-    public abstract void resume();
-
-    /**
-     * Stop a running Job. The Job will stop immediately and will reset to it's freshly loaded
-     * state. All state about parts already placed will be lost.
-     */
-    public abstract void stop();
-
-    public abstract void run();
-
+public interface JobProcessor {
+    void initialize(Job job) throws Exception;
+    
+    public boolean next() throws Exception;
+    
+    // TODO STOPSHIP: Might need nextCycle or something that does a complete cycle where next()
+    // just does one step. Or expose enough API that the caller can tell when a cycle is complete.
+    // 
+    // Actually, maybe next should perform a complete cycle by default, since that's actually
+    // what we want. It would just do while(state != Plan) and if it happened to throw
+    // an exception that's okay cause the FSM handles it.
+    // Could even add a step flag for debugging that actually does individual steps.
+    
+    public void abort() throws Exception;
 }

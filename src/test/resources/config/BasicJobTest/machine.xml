@@ -70,7 +70,5 @@
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          </feeder>
       </feeders>
-      <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
-      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" />
    </machine>
 </openpnp-machine>
