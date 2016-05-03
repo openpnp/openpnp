@@ -319,6 +319,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         List<String> responses = new ArrayList<>();
         for (String command : gCode.split("\n")) {
             command = command.trim();
+            if (command.length() == 0) {
+                continue;
+            }
             responses.addAll(sendCommand(command, timeout));
         }
         return responses;
