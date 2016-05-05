@@ -14,7 +14,7 @@ To calibrate the camera lens:
 
 ![screen shot 2016-02-21 at 2 35 27 pm](https://cloud.githubusercontent.com/assets/1182323/13205929/8a9f8272-d8a8-11e5-8509-7df8d5d4a59a.png)
 
-Calibration works best when the pattern is captured in many difference orientations and positions. Make sure to move the card around: turn it, angle it towards and away from the camera, move it around within the view of the camera, etc.
+Calibration works best when the pattern is captured in many different orientations and positions. Make sure to move the card around: turn it, angle it towards and away from the camera, move it around within the view of the camera, etc.
 
 4. When the process is complete OpenPnP will enable the undistort function and if all went well your camera view should now appear undistorted. You can toggle the "Apply Calibration?" checkbox back and forth to see the before and after results.
 
