@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.model.AbstractModelObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FiniteStateMachine<State, Message, TaskReturnType> {
+public class FiniteStateMachine<State, Message> extends AbstractModelObject {
     private static final Logger logger = LoggerFactory.getLogger(FiniteStateMachine.class);
-    
+
     private final State initialState;
     private State state;
 
@@ -18,10 +18,10 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
 
     public FiniteStateMachine(State initialState) {
         this.initialState = initialState;
-        this.state = initialState;
+        setState(initialState);
     }
 
-    public TaskReturnType send(Message message) throws Exception {
+    public void send(Message message) throws Exception {
         State state = getState();
         Map<Message, Transition> transitions = this.transitions.get(state);
         if (transitions == null) {
@@ -31,10 +31,15 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
         if (transition == null) {
             throw new Exception("No defined transitions from " + state + " for " + message);
         }
+        if (transition.task != null) {
+            transition.task.task();
+        }
+        setState(transition.toState);
         logger.trace(message + " => " + state + " -> " + transition.toState);
-        TaskReturnType ret = transition.task.task();
-        this.state = transition.toState;
-        return ret;
+    }
+
+    public void add(State fromState, Message message, State toState) {
+        add(fromState, message, toState, null);
     }
 
     public void add(State fromState, Message message, State toState, Task task) {
@@ -45,16 +50,22 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
         }
         t.put(message, new Transition(toState, task));
     }
+    
+    private void setState(State state) {
+        Object oldValue = getState();
+        this.state = state;
+        firePropertyChange("state", oldValue, state);
+    }
 
     public State getState() {
         return state;
     }
-    
+
     /**
      * Dump the FSM states to Graphviz format. It can be visualized using:
-     * http://www.webgraphviz.com/
-     * More information about the output format can be found at:
+     * http://www.webgraphviz.com/ More information about the output format can be found at:
      * http://www.graphviz.org/content/dot-language
+     * 
      * @return
      */
     public String toGraphviz() {
@@ -66,7 +77,8 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
                 sb.append("    rank=source;\n");
             }
             for (Entry<Message, Transition> t : entry.getValue().entrySet()) {
-                sb.append(String.format("    %s -> %s [ label = %s ];\n", entry.getKey(), t.getValue().toState, t.getKey()));
+                sb.append(String.format("    %s -> %s [ label = %s ];\n", entry.getKey(),
+                        t.getValue().toState, t.getKey()));
             }
             sb.append("  }\n");
         }
@@ -76,7 +88,7 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
 
     public class Transition {
         public final State toState;
-        public final Task<TaskReturnType> task;
+        public final Task task;
 
         public Transition(State toState, Task task) {
             this.toState = toState;
@@ -84,7 +96,7 @@ public class FiniteStateMachine<State, Message, TaskReturnType> {
         }
     }
 
-    public interface Task<T> {
-        T task() throws Exception;
+    public interface Task {
+        void task() throws Exception;
     }
 }
