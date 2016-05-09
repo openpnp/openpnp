@@ -86,11 +86,12 @@ public class JobPanel extends JPanel {
         Running,
         Stepping
     }
-    
+
     enum Message {
         StartOrPause,
         Step,
-        Stop
+        Abort,
+        Finished
     }
 
     @SuppressWarnings("unused")
@@ -129,25 +130,27 @@ public class JobPanel extends JPanel {
 
     private JobProcessor jobProcessor;
 
-    private FiniteStateMachine<State, Message, Void> fsm = new FiniteStateMachine<>(State.Stopped);
+    private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Stopped);
 
     public JobPanel(Configuration configuration, MainFrame frame,
             MachineControlsPanel machineControlsPanel) {
         this.configuration = configuration;
         this.frame = frame;
-        
-        
-        fsm.add(State.Stopped, Message.StartOrPause, State.Running, this::startJob);
-        fsm.add(State.Stopped, Message.Step, State.Stepping, this::stepJob);
-        
-        fsm.add(State.Running, Message.StartOrPause, State.Stepping, this::pauseJob);
-        fsm.add(State.Running, Message.Stop, State.Stopped, this::stopJob);
-        
-        fsm.add(State.Stepping, Message.StartOrPause, State.Running, this::resumeJob);
-        fsm.add(State.Stepping, Message.Step, State.Stepping, this::stepJob);
-        fsm.add(State.Stepping, Message.Stop, State.Stopped, this::stopJob);
 
-        
+
+        fsm.add(State.Stopped, Message.StartOrPause, State.Running, this::jobStart);
+        fsm.add(State.Stopped, Message.Step, State.Stepping, this::jobStart);
+
+        // No action is needed. The job is running and will exit when the state changes to Stepping.
+        fsm.add(State.Running, Message.StartOrPause, State.Stepping);
+        fsm.add(State.Running, Message.Abort, State.Stopped, this::jobAbort);
+        fsm.add(State.Running, Message.Finished, State.Stopped);
+
+        fsm.add(State.Stepping, Message.StartOrPause, State.Running, this::jobRun);
+        fsm.add(State.Stepping, Message.Step, State.Stepping, this::jobRun);
+        fsm.add(State.Stepping, Message.Abort, State.Stopped, this::jobAbort);
+        fsm.add(State.Stepping, Message.Finished, State.Stopped);
+
         jobSaveActionGroup = new ActionGroup(saveJobAction);
         jobSaveActionGroup.setEnabled(false);
 
@@ -288,6 +291,10 @@ public class JobPanel extends JPanel {
                 }
             }
         });
+
+        fsm.addPropertyChangeListener((e) -> {
+            updateJobActions();
+        });
     }
 
     public Job getJob() {
@@ -295,6 +302,10 @@ public class JobPanel extends JPanel {
     }
 
     public void setJob(Job job) {
+        if (this.job != null) {
+            this.job.removePropertyChangeListener("dirty", titlePropertyChangeListener);
+            this.job.removePropertyChangeListener("file", titlePropertyChangeListener);
+        }
         this.job = job;
         boardLocationsTableModel.setJob(job);
         job.addPropertyChangeListener("dirty", titlePropertyChangeListener);
@@ -625,7 +636,13 @@ public class JobPanel extends JPanel {
         }
     };
 
-    private Void startJob() throws Exception {
+    /**
+     * Initialize the job processor and start the run thread. The run thread will run one step and
+     * then either loop if the state is Running or exit if the state is Stepping.
+     * 
+     * @throws Exception
+     */
+    public void jobStart() throws Exception {
         String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
         if (title.equals("Solder Paste")) {
             jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
@@ -637,26 +654,68 @@ public class JobPanel extends JPanel {
             throw new Error("Programmer error: Unknown tab title.");
         }
         jobProcessor.initialize(job);
-        return null;
+        jobRun();
     }
-    
-    private Void pauseJob() throws Exception {
-        return null;
-    }
-    
-    private Void stepJob() throws Exception {
+
+    // TODO STOPSHIP: There is a failure mode where stepping or starting a job that fails
+    // during plan (or any state without a skip option) will blow everything up if the user
+    // hits skip. We either need to detect the case or add skip options to each step.
+    public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.next();
+            // Make sure the FSM has actually transitioned to either Running or Stepping
+            // before continuing so that we don't accidentally exit early. This breaks
+            // the potential race condition where this task may execute before the
+            // calling task (setting the FSM state) finishes.
+            while (fsm.getState() != State.Running && fsm.getState() != State.Stepping);
+            do {
+                if (!jobProcessor.next()) {
+                    fsm.send(Message.Finished);
+                }
+            } while (fsm.getState() == State.Running);
+            return null;
+        }, (e) -> {
+            
+        }, (t) -> {
+            int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
+                    "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                    new String[] {"Retry", "Skip", "Pause"}, "Retry");
+            System.out.println(result);
+            // Retry
+            if (result == 0) {
+                jobRun();
+            }
+            // Skip
+            else if (result == 1) {
+                UiUtils.messageBoxOnException(() -> {
+                    // TODO STOPSHIP: how do we handle an exception here? what state will it leave the job in?
+
+                    // Tell the job processor to skip the current placement and then call jobRun()
+                    // to start things back up, either running or stepping.
+                    jobProcessor.skip();
+                    jobRun();
+                });
+            }
+            // Pause or cancel dialog
+            else {
+                // We are either Running or Stepping. If Stepping, there is nothing to do. Just
+                // clear the dialog and let the user take control. If Running we need to transition
+                // to Stepping.
+                if (fsm.getState() == State.Running) {
+                    try {
+                        fsm.send(Message.StartOrPause);
+                    }
+                    catch (Exception e) {
+                        // TODO STOPSHIP: handle this. how?
+                    }
+                }
+            }
         });
-        return null;
     }
-    
-    private Void resumeJob() throws Exception {
-        return null;
-    }
-    
-    private Void stopJob() throws Exception {
-        return null;
+
+    private void jobAbort() {
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.abort();
+        });
     }
     
     public final Action startPauseResumeJobAction = new AbstractAction() {
@@ -668,14 +727,11 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
+            UiUtils.messageBoxOnException(() -> {
                 fsm.send(Message.StartOrPause);
-                updateJobActions();
             });
         }
     };
-    
-    // TODO STOPSHIP: Disable buttons while a step is running
 
     public final Action stepJobAction = new AbstractAction() {
         {
@@ -686,9 +742,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
+            UiUtils.messageBoxOnException(() -> {
                 fsm.send(Message.Step);
-                updateJobActions();
             });
         }
     };
@@ -702,9 +757,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                fsm.send(Message.Stop);
-                updateJobActions();
+            UiUtils.messageBoxOnException(() -> {
+                fsm.send(Message.Abort);
             });
         }
     };
@@ -955,8 +1009,17 @@ public class JobPanel extends JPanel {
 
         @Override
         public void machineDisabled(Machine machine, String reason) {
+            // TODO STOPSHIP: This fails. When we get this message the machine is already
+            // disabled so we can't perform the abort actions.
+            if (fsm.getState() != State.Stopped) {
+                try {
+                    fsm.send(Message.Abort);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             updateJobActions();
-            // TODO STOPSHIP: stop the job
         }
     };
 

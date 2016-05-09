@@ -24,9 +24,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javax.swing.Action;
+import javax.swing.Icon;
+
+import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobPlacement.Status;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -41,6 +44,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
@@ -54,8 +58,7 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
 
     enum State {
         Uninitialized,
-        Ready,
-        PreFlight,
+        JobCheck,
         FiducialCheck,
         Plan,
         ChangeNozzleTip,
@@ -63,8 +66,6 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         Pick,
         Align,
         Place,
-        Complete,
-        Aborted,
         Cleanup,
         Stopped
     }
@@ -74,13 +75,11 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         Next,
         Complete,
         Abort,
+        Skip,
         Reset
     }
 
-    private FiniteStateMachine<State, Message, Message> fsm =
-            new FiniteStateMachine<>(State.Uninitialized);
-
-    protected Message nextMessage;
+    private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
     protected Job job;
 
@@ -88,90 +87,130 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
 
     protected Head head;
 
-    protected List<JobPlacement> jobPlacements;
+    protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
-    protected Map<Nozzle, JobPlacement> plannedPlacements = new HashMap<>();
+    protected List<PlannedJobPlacement> plannedJobPlacements = new ArrayList<>();
 
+    protected Map<BoardLocation, Location> boardLocationOverrides = new HashMap<>();
+
+    /**
+     * Each JobPlacement gets a "complete" boolean and "skip" boolean.
+     * 
+     * We have a resetComplete() function that resets all complete states.
+     * 
+     * We call resetComplete at the end of each successful step.
+     * 
+     * Each step loops through each JobPlacement, does the action and sets complete or throws an
+     * Exception.
+     * 
+     * If a JP is already complete we skip it when looping through.
+     * 
+     * A Skip input sets skip for the current (top of list) JP and loops to the next one.
+     *
+     * We always do the placements in the same order, since they are in a list. It should be nozzle
+     * order.
+     * 
+     * We return control after each full step, which means we pick all parts, return, align all
+     * parts, return, etc.
+     * 
+     * The only time we ever call into a step twice is if the previous call had an error.
+     * 
+     * Once all errors are resolved (either via a fix or a skip) we continue to the next state.
+     * 
+     */
+    // TODO STOPSHIP somehow we need to handle failures on preflight. what does the user do?
     public ReferencePnpJobProcessor() {
-        fsm.add(State.Uninitialized, Message.Initialize, State.Ready, this::doReady);
+        fsm.add(State.Uninitialized, Message.Initialize, State.JobCheck, this::doInitialize);
 
-        fsm.add(State.Ready, Message.Next, State.PreFlight, this::doPreFlight);
-        fsm.add(State.Ready, Message.Abort, State.Aborted, this::doAbort);
+        fsm.add(State.JobCheck, Message.Next, State.FiducialCheck, this::doJobCheck);
+        fsm.add(State.JobCheck, Message.Abort, State.Cleanup);
 
-        fsm.add(State.PreFlight, Message.Next, State.FiducialCheck, this::doFiducialCheck);
-        fsm.add(State.PreFlight, Message.Abort, State.Aborted, this::doAbort);
+        fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doFiducialCheck);
+        fsm.add(State.FiducialCheck, Message.Abort, State.Cleanup);
 
-        fsm.add(State.FiducialCheck, Message.Next, State.Plan, this::doPlan);
-        fsm.add(State.FiducialCheck, Message.Abort, State.Aborted, this::doAbort);
+        fsm.add(State.Plan, Message.Next, State.ChangeNozzleTip, this::doPlan);
+        fsm.add(State.Plan, Message.Abort, State.Cleanup);
+        fsm.add(State.Plan, Message.Complete, State.Cleanup);
 
-        fsm.add(State.Plan, Message.Next, State.ChangeNozzleTip, this::doChangeNozzleTip);
-        fsm.add(State.Plan, Message.Abort, State.Aborted, this::doAbort);
-        fsm.add(State.Plan, Message.Complete, State.Complete, this::doComplete);
+        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip);
+        fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip);
+        fsm.add(State.ChangeNozzleTip, Message.Abort, State.Cleanup);
 
-        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doFeed);
-        fsm.add(State.ChangeNozzleTip, Message.Abort, State.Aborted, this::doAbort);
+        fsm.add(State.Feed, Message.Next, State.Pick, this::doFeed);
+        fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip);
+        fsm.add(State.Feed, Message.Abort, State.Cleanup);
 
-        fsm.add(State.Feed, Message.Next, State.Pick, this::doPick);
-        fsm.add(State.Feed, Message.Abort, State.Aborted, this::doAbort);
+        // TODO STOPSHIP make sure Skips are doing discard where needed
+        fsm.add(State.Pick, Message.Next, State.Align, this::doPick);
+        fsm.add(State.Pick, Message.Skip, State.Pick, this::doSkip);
+        fsm.add(State.Pick, Message.Abort, State.Cleanup);
 
-        fsm.add(State.Pick, Message.Next, State.Align, this::doAlign);
-        fsm.add(State.Pick, Message.Abort, State.Aborted, this::doAbort);
+        fsm.add(State.Align, Message.Next, State.Place, this::doAlign);
+        fsm.add(State.Align, Message.Skip, State.Align, this::doSkip);
+        fsm.add(State.Align, Message.Abort, State.Cleanup);
 
-        fsm.add(State.Align, Message.Next, State.Place, this::doPlace);
-        fsm.add(State.Align, Message.Abort, State.Aborted, this::doAbort);
+        fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
+        fsm.add(State.Place, Message.Skip, State.Place, this::doSkip);
+        fsm.add(State.Place, Message.Abort, State.Cleanup);
 
-        fsm.add(State.Place, Message.Next, State.Plan, this::doPlan);
-        fsm.add(State.Place, Message.Abort, State.Aborted, this::doAbort);
-
-        fsm.add(State.Complete, Message.Next, State.Cleanup, this::doCleanup);
-
-        fsm.add(State.Aborted, Message.Next, State.Cleanup, this::doCleanup);
-
-        fsm.add(State.Cleanup, Message.Next, State.Stopped, this::doStop);
+        fsm.add(State.Cleanup, Message.Next, State.Stopped, this::doCleanup);
 
         fsm.add(State.Stopped, Message.Reset, State.Uninitialized, this::doReset);
     }
 
-    public void initialize(Job job) throws Exception {
+    public synchronized void initialize(Job job) throws Exception {
         this.job = job;
-        nextMessage = fsm.send(Message.Initialize);
+        fsm.send(Message.Initialize);
     }
 
-    public boolean next() throws Exception {
-        // If we've reached the Stopped state the process is complete. We reset the FSM and
-        // return false to indicate that we're finished.
+    public synchronized boolean next() throws Exception {
+        fsm.send(Message.Next);
+
         if (fsm.getState() == State.Stopped) {
-            nextMessage = fsm.send(Message.Reset);
+            /*
+             * If we've reached the Stopped state the process is complete. We reset the FSM and
+             * return false to indicate that we're finished.
+             */
+            fsm.send(Message.Reset);
             return false;
         }
-        // TODO STOPSHIP: This does the full cycle stuff. Do we want it?
-        do {
-            if (nextMessage == null) {
-                nextMessage = Message.Next;
-            }
-            nextMessage = fsm.send(nextMessage);
-        } while (fsm.getState() != State.Plan);
+        else if (fsm.getState() == State.Plan && isJobComplete()) {
+            /*
+             * If we've reached the Plan state and there are no more placements to work on the job
+             * is complete. We send the Complete Message to start the cleanup process and loop until
+             * it's done.
+             */
+            fsm.send(Message.Complete);
+            while (next());
+            return false;
+        }
+
         return true;
     }
 
-    public void abort() throws Exception {
-        nextMessage = fsm.send(Message.Abort);
+    public synchronized void abort() throws Exception {
+        fsm.send(Message.Abort);
+
         // Run to completion, handles cleanup.
         while (next());
     }
 
-    protected Message doReady() throws Exception {
-        if (job == null) {
-            throw new Exception("Can't start a null Job.");
-        }
-        return null;
+    public synchronized void skip() throws Exception {
+        fsm.send(Message.Skip);
     }
 
-    protected Message doPreFlight() throws Exception {
+    protected void doInitialize() throws Exception {
+        if (job == null) {
+            throw new Exception("Can't initialize with a null Job.");
+        }
+    }
+
+    protected void doJobCheck() throws Exception {
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
-        this.jobPlacements = new ArrayList<>();
+        this.jobPlacements.clear();
+        this.boardLocationOverrides.clear();
 
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             // Only check enabled boards
@@ -213,10 +252,20 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
                 jobPlacements.add(jobPlacement);
             }
         }
-        return null;
+
+        // Everything looks good, so prepare the machine.
+
+        // Safe Z the machine
+        head.moveToSafeZ();
+        // Discard any currently picked parts
+        for (Nozzle nozzle : head.getNozzles()) {
+            if (nozzle.getPart() != null) {
+                discard(nozzle);
+            }
+        }
     }
 
-    protected Message doFiducialCheck() throws Exception {
+    protected void doFiducialCheck() throws Exception {
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             if (!boardLocation.isEnabled()) {
@@ -226,66 +275,84 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
                 continue;
             }
             Location location = locator.locateBoard(boardLocation);
-            boardLocation.setLocation(location);
+            boardLocationOverrides.put(boardLocation, location);
             logger.info("Fiducial check for {}", boardLocation);
         }
-        return null;
     }
 
-    protected Message doPlan() throws Exception {
-        plannedPlacements.clear();
+    protected void doPlan() throws Exception {
+        plannedJobPlacements.clear();
 
-        // Sort the placements by part height and filter out any that are already finished.
-        List<JobPlacement> jobPlacements = this.jobPlacements.stream().filter((jobPlacement) -> {
-            return !jobPlacement.finished;
-        }).sorted(Comparator.comparing(JobPlacement::getPartHeight)).collect(Collectors.toList());
+        // Get the list of unfinished placements and sort them by part height.
+        List<JobPlacement> jobPlacements = getPendingJobPlacements().stream()
+                .sorted(Comparator.comparing(JobPlacement::getPartHeight))
+                .collect(Collectors.toList());
 
         if (jobPlacements.isEmpty()) {
-            return Message.Complete;
+            return;
         }
 
         // Collect only the placements that have the same height as the first one. This
         // guarantees that we never place a taller part before a shorter one.
+        // TODO STOPSHIP: Is it okay to place the last part of one height and the
+        // first part of the next height in the same pass? If not, why?
+        // Or more generally, is it okay to fill all the nozzles with the next
+        // sets of parts as long as we never place a taller part before finishing all
+        // the shorter parts?
         double firstHeight = jobPlacements.get(0).getPartHeight();
         jobPlacements = jobPlacements.stream().filter(jobPlacement -> {
             return jobPlacement.getPartHeight() == firstHeight;
         }).collect(Collectors.toList());
-
+        
         // And determine the best order to process the placements in to utilize the nozzle
         // tips we currently have loaded.
-        // TODO STOPSHIP: just faked for now
+        // TODO STOPSHIP: Just take the first ones for now. Implement the above later.
         for (Nozzle nozzle : head.getNozzles()) {
             if (jobPlacements.isEmpty()) {
                 break;
             }
-            plannedPlacements.put(nozzle, jobPlacements.remove(0));
+            JobPlacement jp = jobPlacements.remove(0);
+            jp.status = Status.Processing;
+            plannedJobPlacements.add(new PlannedJobPlacement(nozzle, jp));
         }
-        return null;
+
+        logger.debug("Planned {} placements", plannedJobPlacements.size());
     }
 
-    protected Message doChangeNozzleTip() throws Exception {
-        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
-            Nozzle nozzle = entry.getKey();
-            JobPlacement jobPlacement = entry.getValue();
+    protected void doChangeNozzleTip() throws Exception {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            if (p.stepComplete) {
+                continue;
+            }
+
+            Nozzle nozzle = p.nozzle;
+            JobPlacement jobPlacement = p.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
 
             // If the currently loaded NozzleTip can handle the Part we're good.
             if (nozzle.getNozzleTip().canHandle(part)) {
+                logger.debug("No nozzle change needed for nozzle {}", nozzle.getName());
                 continue;
             }
             // Otherwise find a compatible tip and load it
             NozzleTip nozzleTip = findNozzleTip(part);
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
+
+            // Mark this step as complete
+            p.stepComplete = true;
         }
-        return null;
+        clearStepComplete();
     }
 
-    protected Message doFeed() throws Exception {
-        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
-            Nozzle nozzle = entry.getKey();
-            JobPlacement jobPlacement = entry.getValue();
+    protected void doFeed() throws Exception {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            if (p.stepComplete) {
+                continue;
+            }
+            Nozzle nozzle = p.nozzle;
+            JobPlacement jobPlacement = p.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
 
@@ -296,8 +363,9 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
 
                 // Feed the part
                 try {
-                    // Try to feed the part. If it fails, retry a couple times.
-                    retry(3, () -> {
+                    // Try to feed the part. If it fails, retry the specified number of times before
+                    // giving up.
+                    retry(1 + feeder.getRetryCount(), () -> {
                         logger.info("Attempt Feed {} from {} with {}.",
                                 new Object[] {part.getId(), feeder.getName(), nozzle.getName()});
 
@@ -315,18 +383,26 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
                     // If the feed fails, disable the feeder and continue. If there are no
                     // more valid feeders the findFeeder() call above will throw and exit the
                     // loop.
+                    // TODO STOPSHIP: Instead of disabling the feeder, which can be confusing for
+                    // users, create an internal list of feeders that have failed and check it
+                    // when deciding which to use next. We also probably need a status flag on
+                    // Feeder indicating that it has failed so that the user knows where to look
+                    // to try to fix problems. "last feed failed"
                     feeder.setEnabled(false);
                 }
-
             }
+            p.stepComplete = true;
         }
-        return null;
+        clearStepComplete();
     }
 
-    protected Message doPick() throws Exception {
-        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
-            Nozzle nozzle = entry.getKey();
-            JobPlacement jobPlacement = entry.getValue();
+    protected void doPick() throws Exception {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            if (p.stepComplete) {
+                continue;
+            }
+            Nozzle nozzle = p.nozzle;
+            JobPlacement jobPlacement = p.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
 
@@ -344,14 +420,20 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
 
             logger.info("Pick {} from {} with {}",
                     new Object[] {part.getId(), feeder.getName(), nozzle.getName()});
+
+            p.stepComplete = true;
         }
-        return null;
+
+        clearStepComplete();
     }
 
-    protected Message doAlign() throws Exception {
-        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
-            Nozzle nozzle = entry.getKey();
-            JobPlacement jobPlacement = entry.getValue();
+    protected void doAlign() throws Exception {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            if (p.stepComplete) {
+                continue;
+            }
+            Nozzle nozzle = p.nozzle;
+            JobPlacement jobPlacement = p.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
 
@@ -359,19 +441,31 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             jobPlacement.alignmentOffsets = alignmentOffsets;
 
             logger.info("Align {} with {}", part.getId(), nozzle.getName());
+
+            p.stepComplete = true;
         }
 
-        return null;
+        clearStepComplete();
     }
 
-    protected Message doPlace() throws Exception {
-        for (Entry<Nozzle, JobPlacement> entry : plannedPlacements.entrySet()) {
-            Nozzle nozzle = entry.getKey();
-            JobPlacement jobPlacement = entry.getValue();
-            BoardLocation boardLocation = jobPlacement.boardLocation;
+    protected void doPlace() throws Exception {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            if (p.stepComplete) {
+                continue;
+            }
+            Nozzle nozzle = p.nozzle;
+            JobPlacement jobPlacement = p.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
+            BoardLocation boardLocation = p.jobPlacement.boardLocation;
 
+            // TODO STOPSHIP: this handles the fid override, but it's ugly and I don't like it.
+            if (boardLocationOverrides.containsKey(boardLocation)) {
+                BoardLocation boardLocation2 = new BoardLocation(boardLocation.getBoard());
+                boardLocation2.setSide(boardLocation.getSide());
+                boardLocation2.setLocation(boardLocationOverrides.get(boardLocation));
+                boardLocation = boardLocation2;
+            }
             Location placementLocation =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
 
@@ -418,23 +512,16 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             nozzle.moveToSafeZ();
 
             // Mark the placement as finished
-            jobPlacement.finished = true;
+            jobPlacement.status = Status.Complete;
+            
+            p.stepComplete = true;
 
             logger.info("Place {} with {}", part.getId(), nozzle.getName());
         }
-
-        return null;
+        clearStepComplete();
     }
 
-    protected Message doComplete() throws Exception {
-        return null;
-    }
-
-    protected Message doAbort() throws Exception {
-        return null;
-    }
-
-    protected Message doCleanup() throws Exception {
+    protected void doCleanup() throws Exception {
         // Safe Z the machine
         head.moveToSafeZ();
         // Discard any currently picked parts
@@ -447,19 +534,39 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         // TODO: Move to park position instead.
         // https://github.com/openpnp/openpnp/issues/76
         machine.home();
-        return null;
     }
 
-    protected Message doStop() throws Exception {
-        return null;
-    }
-
-    protected Message doReset() throws Exception {
+    protected void doReset() throws Exception {
         this.job = null;
-        return null;
     }
 
+    /**
+     * Discard the picked part, if any. Remove the currently processing PlannedJobPlacement from
+     * the list and mark the JobPlacement as Skipped.
+     * @throws Exception
+     */
+    protected void doSkip() throws Exception {
+        if (plannedJobPlacements.size() > 0) {
+            PlannedJobPlacement plannedJobPlacement = plannedJobPlacements.remove(0);
+            JobPlacement jobPlacement = plannedJobPlacement.jobPlacement;
+            Nozzle nozzle = plannedJobPlacement.nozzle;
+            discard(nozzle);
+            jobPlacement.status = Status.Skipped;
+            logger.debug("Skipped {}", jobPlacement.placement);
+        }
+    }
+
+    /**
+     * Discard the Part, if any, on the given Nozzle. the Nozzle is returned to Safe Z at the end of
+     * the operation.
+     * 
+     * @param nozzle
+     * @throws Exception
+     */
     protected void discard(Nozzle nozzle) throws Exception {
+        if (nozzle.getPart() == null) {
+            return;
+        }
         // move to the discard location
         MovableUtils.moveToLocationAtSafeZ(nozzle,
                 Configuration.get().getMachine().getDiscardLocation());
@@ -468,6 +575,13 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         nozzle.moveToSafeZ();
     }
 
+    /**
+     * Find the first NozzleTip that is able to handle the given Part.
+     * 
+     * @param part
+     * @return
+     * @throws Exception If no compatible NozzleTip can be found.
+     */
     protected NozzleTip findNozzleTip(Part part) throws Exception {
         for (Nozzle nozzle : head.getNozzles()) {
             for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
@@ -479,6 +593,13 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         throw new Exception("No compatible nozzle tip found for part " + part.getId());
     }
 
+    /**
+     * Find the first enabled Feeder is that is able to feed the given Part.
+     * 
+     * @param part
+     * @return
+     * @throws Exception If no Feeder is found that is both enabled and is serving the Part.
+     */
     protected Feeder findFeeder(Part part) throws Exception {
         for (Feeder feeder : machine.getFeeders()) {
             if (feeder.getPart() == part && feeder.isEnabled()) {
@@ -488,6 +609,15 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         throw new Exception("No compatible, enabled feeder found for part " + part.getId());
     }
 
+    /**
+     * Call the Retryable's action method until it either does not throw an Exception or it is
+     * called maxTries number of times. If the method throws an Exception each time then this method
+     * will throw the final Exception.
+     * 
+     * @param maxTries
+     * @param r
+     * @throws Exception
+     */
     protected void retry(int maxTries, Retryable r) throws Exception {
         for (int i = 0; i < maxTries; i++) {
             try {
@@ -501,13 +631,61 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             }
         }
     }
+    
+    protected void clearStepComplete() {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            p.stepComplete = false;
+        }
+    }
 
-    public class JobPlacement {
+    protected List<JobPlacement> getPendingJobPlacements() {
+        return this.jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.status == Status.Pending;
+        }).collect(Collectors.toList());
+    }
+
+    protected boolean isJobComplete() {
+        return getPendingJobPlacements().isEmpty();
+    }
+    
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        return null;
+    }
+
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        return null;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return null;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return null;
+    }
+
+    public static class JobPlacement {
+        public enum Status {
+            Pending,
+            Processing,
+            Skipped,
+            Complete
+        }
+        
         public final BoardLocation boardLocation;
         public final Placement placement;
         public Feeder feeder;
         public Location alignmentOffsets;
-        public boolean finished;
+        public Status status = Status.Pending;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
@@ -520,71 +698,18 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         }
     }
 
-    public interface Retryable {
-        void action() throws Exception;
+    public static class PlannedJobPlacement {
+        public final Nozzle nozzle;
+        public final JobPlacement jobPlacement;
+        public boolean stepComplete;
+
+        public PlannedJobPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
+            this.nozzle = nozzle;
+            this.jobPlacement = jobPlacement;
+        }
     }
 
-    public static void main(String[] args) throws Exception {
-        ReferencePnpJobProcessor jp = new ReferencePnpJobProcessor();
-
-        System.out.println(jp.fsm.toGraphviz());
-
-        System.out.println(">>> cannot call next() without first initializing");
-        try {
-            jp.next();
-            throw new Error();
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-
-        System.out.println();
-        System.out.println(">>> a job runs to completion");
-        jp.initialize(new Job());
-        while (jp.next()) {
-        }
-
-        System.out.println();
-        System.out.println(">>> can reinitialize and run a job to completion");
-        jp.initialize(new Job());
-        while (jp.next()) {
-        }
-
-        // test abort
-        System.out.println();
-        System.out.println(">>> abort followed by next should fail");
-        jp.initialize(new Job());
-        for (int i = 0; i < 4; i++) {
-            jp.next();
-        }
-        jp.abort();
-        try {
-            // should fail because the processor has not been reinitialized.
-            jp.next();
-            throw new Error();
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-
-        System.out.println();
-        System.out.println(">>> can reinitialize and run after an abort");
-        jp.initialize(new Job());
-        while (jp.next()) {
-        }
-
-        System.out.println();
-        System.out.println(">>> reinitializing mid-job should fail");
-        jp.initialize(new Job());
-        for (int i = 0; i < 4; i++) {
-            jp.next();
-        }
-        try {
-            jp.initialize(new Job());
-            throw new Error();
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+    public interface Retryable {
+        void action() throws Exception;
     }
 }

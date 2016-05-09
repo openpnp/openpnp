@@ -21,6 +21,7 @@ package org.openpnp.machine.reference;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -124,9 +125,8 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
         children.add(
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
-        // TODO: STOPSHIP
-        // children.add(new SimplePropertySheetHolder("Job Processors",
-        // new ArrayList<>(jobProcessors.values())));
+        children.add(new SimplePropertySheetHolder("Job Processors",
+                Arrays.asList(getPnpJobProcessor()/*, getPasteDispenseJobProcessor()*/)));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         vision.add(getPartAlignment());

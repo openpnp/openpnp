@@ -10,22 +10,28 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import javax.swing.Action;
 
 import org.openpnp.CameraListener;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Root;
@@ -50,6 +56,12 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                configuration.getMachine().addListener(machineListener);
+            }
+        });
     }
 
     @Override
@@ -224,17 +236,19 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         return null;
     }
 
-    // TODO: STOPSHIP
-    // private JobProcessorListener jobListener = new JobProcessorListener.Adapter() {
-    // @Override
-    // public void partPicked(BoardLocation board, Placement placement, Nozzle nozzle) {
-    // nozzleParts.put(nozzle, placement.getPart());
-    // Random r = new Random();
-    // offsets = new Location(LengthUnit.Millimeters,
-    // Math.random() * 2 - 1,
-    // Math.random() * 2 - 1,
-    // 0, Math.random() * 30 - 15);
-    // System.out.println("Set offsets to " + offsets);
-    // }
-    // };
+    private MachineListener machineListener = new MachineListener.Adapter() {
+        @Override
+        public void machineHeadActivity(Machine machine, Head head) {
+            for (Nozzle nozzle : head.getNozzles()) {
+                Part part = nozzleParts.get(nozzle);
+                if (part == null || part != nozzle.getPart()) {
+                    nozzleParts.put(nozzle, nozzle.getPart());
+                    Random r = new Random();
+                    offsets = new Location(LengthUnit.Millimeters, Math.random() * 2 - 1,
+                            Math.random() * 2 - 1, 0, Math.random() * 30 - 15);
+                    System.out.println("Set offsets to " + offsets);
+                }
+            }
+        }
+    };
 }
