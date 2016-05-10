@@ -267,6 +267,11 @@ public abstract class AbstractMachine implements Machine {
                     exception = e;
                 }
 
+                // If there was an error cancel all pending tasks.
+                if (exception != null) {
+                    executor.shutdownNow();
+                }
+
                 // If a callback was supplied, call it with the results
                 if (callback != null) {
                     if (exception != null) {
@@ -275,11 +280,6 @@ public abstract class AbstractMachine implements Machine {
                     else {
                         callback.onSuccess(result);
                     }
-                }
-
-                // If there was an error cancel all pending tasks.
-                if (exception != null) {
-                    executor.shutdownNow();
                 }
 
                 // TODO: unlock driver

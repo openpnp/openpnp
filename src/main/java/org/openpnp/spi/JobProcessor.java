@@ -10,4 +10,6 @@ public interface JobProcessor extends PropertySheetHolder {
     public void abort() throws Exception;
     
     public void skip() throws Exception;
+    
+    public boolean canSkip();
 }

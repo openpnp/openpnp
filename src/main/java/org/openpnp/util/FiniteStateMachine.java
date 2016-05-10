@@ -22,33 +22,57 @@ public class FiniteStateMachine<State, Message> extends AbstractModelObject {
     }
 
     public void send(Message message) throws Exception {
+        while (message != null) {
+            State state = getState();
+            Map<Message, Transition> transitions = this.transitions.get(state);
+            if (transitions == null) {
+                throw new Exception("No defined transitions from " + state);
+            }
+            Transition transition = transitions.get(message);
+            if (transition == null) {
+                throw new Exception("No defined transitions from " + state + " for " + message);
+            }
+            if (transition.task != null) {
+                transition.task.task();
+            }
+            setState(transition.toState);
+            logger.trace(message + " => " + state + " -> " + transition.toState);
+            message = transition.nextMessage;
+        }
+    }
+    
+    public boolean canSend(Message message) {
         State state = getState();
         Map<Message, Transition> transitions = this.transitions.get(state);
         if (transitions == null) {
-            throw new Exception("No defined transitions from " + state);
+            return false;
         }
         Transition transition = transitions.get(message);
         if (transition == null) {
-            throw new Exception("No defined transitions from " + state + " for " + message);
+            return false;
         }
-        if (transition.task != null) {
-            transition.task.task();
-        }
-        setState(transition.toState);
-        logger.trace(message + " => " + state + " -> " + transition.toState);
+        return true;
     }
 
     public void add(State fromState, Message message, State toState) {
-        add(fromState, message, toState, null);
+        add(fromState, message, toState, null, null);
     }
 
     public void add(State fromState, Message message, State toState, Task task) {
+        add(fromState, message, toState, task, null);
+    }
+    
+    public void add(State fromState, Message message, State toState, Message nextMessage) {
+        add(fromState, message, toState, null, nextMessage);
+    }
+
+    public void add(State fromState, Message message, State toState, Task task, Message nextMessage) {
         Map<Message, Transition> t = transitions.get(fromState);
         if (t == null) {
             t = new HashMap<>();
             transitions.put(fromState, t);
         }
-        t.put(message, new Transition(toState, task));
+        t.put(message, new Transition(toState, task, nextMessage));
     }
     
     private void setState(State state) {
@@ -89,10 +113,12 @@ public class FiniteStateMachine<State, Message> extends AbstractModelObject {
     public class Transition {
         public final State toState;
         public final Task task;
+        public final Message nextMessage;
 
-        public Transition(State toState, Task task) {
+        public Transition(State toState, Task task, Message nextMessage) {
             this.toState = toState;
             this.task = task;
+            this.nextMessage = nextMessage;
         }
     }
 

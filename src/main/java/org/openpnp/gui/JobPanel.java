@@ -29,6 +29,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -657,9 +658,6 @@ public class JobPanel extends JPanel {
         jobRun();
     }
 
-    // TODO STOPSHIP: There is a failure mode where stepping or starting a job that fails
-    // during plan (or any state without a skip option) will blow everything up if the user
-    // hits skip. We either need to detect the case or add skip options to each step.
     public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
             // Make sure the FSM has actually transitioned to either Running or Stepping
@@ -676,17 +674,24 @@ public class JobPanel extends JPanel {
         }, (e) -> {
             
         }, (t) -> {
+            List<String> options = new ArrayList<>();
+            options.add("Retry");
+            if (jobProcessor.canSkip()) {
+                options.add("Skip");
+            }
+            options.add("Pause");
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
-                    new String[] {"Retry", "Skip", "Pause"}, "Retry");
-            System.out.println(result);
-            // Retry
-            if (result == 0) {
+                    options.toArray(), "Retry");
+            String selectedOption = options.get(result);
+            if (selectedOption.equals("Retry")) {
                 jobRun();
             }
             // Skip
-            else if (result == 1) {
+            else if (selectedOption.equals("Skip")) {
                 UiUtils.messageBoxOnException(() -> {
+                    // TODO STOPSHIP: This needs to be done in a machine context since skip now
+                    // moves the machine.
                     // TODO STOPSHIP: how do we handle an exception here? what state will it leave the job in?
 
                     // Tell the job processor to skip the current placement and then call jobRun()
