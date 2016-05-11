@@ -20,8 +20,10 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +57,6 @@ import org.slf4j.LoggerFactory;
 
 @Root
 public class ReferencePnpJobProcessor implements PnpJobProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(ReferencePnpJobProcessor.class);
-
     enum State {
         Uninitialized,
         PreFlight,
@@ -79,6 +79,53 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         Skip,
         Reset
     }
+
+    public static class JobPlacement {
+        public enum Status {
+            Pending,
+            Processing,
+            Skipped,
+            Complete
+        }
+
+        public final BoardLocation boardLocation;
+        public final Placement placement;
+        public Feeder feeder;
+        public Location alignmentOffsets;
+        public Status status = Status.Pending;
+
+        public JobPlacement(BoardLocation boardLocation, Placement placement) {
+            this.boardLocation = boardLocation;
+            this.placement = placement;
+        }
+
+        public double getPartHeight() {
+            return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
+                    .getValue();
+        }
+
+        @Override
+        public String toString() {
+            return placement.getId();
+        }
+    }
+
+    public static class PlannedJobPlacement {
+        public final Nozzle nozzle;
+        public final JobPlacement jobPlacement;
+        public boolean stepComplete;
+
+        public PlannedJobPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
+            this.nozzle = nozzle;
+            this.jobPlacement = jobPlacement;
+        }
+    }
+
+    public static interface Retryable {
+        void action() throws Exception;
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(ReferencePnpJobProcessor.class);
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -284,6 +331,48 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             return;
         }
 
+        /**
+         * Planner plan:
+         * 
+         * Get a list of job placements that each nozzle can handle.
+         * 
+         * Get the cartesian product of those lists.
+         * 
+         * Filter out any that have the same job placement more than once.
+         * 
+         * Sort by number of non-null placements.
+         * 
+         * Sort by number of placements per solution that do not require a nozzle change.
+         * 
+         * Take the first solution and apply it to the nozzles.
+         * 
+         * TODO STOPSHIP: Don't forget to prefer solutions with fewer nulls.
+         * 
+         * TODO STOPSHIP: Don't forget to add null to the lists.
+         */
+        // Create a List of Lists of JobPlacements that each Nozzle can handle.
+        List<List<JobPlacement>> lists = new ArrayList<>();
+        for (Nozzle nozzle : head.getNozzles()) {
+            lists.add(jobPlacements.stream().filter(jobPlacement -> {
+                return nozzleCanHandle(nozzle, jobPlacement.placement.getPart());
+            }).collect(Collectors.toList()));
+        }
+        // Get the cartesian product of those Lists
+        lists = cartesianProduct(lists);
+        // Filter out any results that contains the same JobPlacement more than once
+        lists.stream()
+            .filter(list -> {
+                return new HashSet<JobPlacement>(list).size() == list.size();
+            })
+            .collect(Collectors.toList());
+        // Sort by number of non-null placements, descending.
+        // TODO
+        // Sort by number of required nozzle changes, ascending.
+        // TODO
+        // Take the first result as the solution.
+        // TODO
+        System.out.println(lists);
+        
         // TODO STOPSHIP: This is just a standin for the real planner. It just takes the
         // first compatible placmement for each nozzle. The real planner will take order
         // into consideration.
@@ -292,7 +381,7 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
                 break;
             }
             // Find the first JobPlacement that the Nozzle can handle
-            for (Iterator<JobPlacement> i = jobPlacements.iterator(); i.hasNext(); ) {
+            for (Iterator<JobPlacement> i = jobPlacements.iterator(); i.hasNext();) {
                 JobPlacement jp = i.next();
                 if (nozzleCanHandle(nozzle, jp.placement.getPart())) {
                     // Remove the JobPlacement from the list so it doesn't get planned again.
@@ -543,30 +632,25 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         }
     }
 
-    protected void discardAll(Head head) throws Exception {
-        for (Nozzle nozzle : head.getNozzles()) {
-            discard(nozzle);
+    protected void clearStepComplete() {
+        for (PlannedJobPlacement p : plannedJobPlacements) {
+            p.stepComplete = false;
         }
     }
 
-    /**
-     * Discard the Part, if any, on the given Nozzle. the Nozzle is returned to Safe Z at the end of
-     * the operation.
-     * 
-     * @param nozzle
-     * @throws Exception
-     */
-    protected void discard(Nozzle nozzle) throws Exception {
-        if (nozzle.getPart() == null) {
-            return;
-        }
-        logger.debug("Discard {} from {}", nozzle.getPart(), nozzle);
-        // move to the discard location
-        MovableUtils.moveToLocationAtSafeZ(nozzle,
-                Configuration.get().getMachine().getDiscardLocation());
-        // discard the part
-        nozzle.place();
-        nozzle.moveToSafeZ();
+    protected List<JobPlacement> getPendingJobPlacements() {
+        return this.jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.status == Status.Pending;
+        }).collect(Collectors.toList());
+    }
+
+    protected boolean isJobComplete() {
+        return getPendingJobPlacements().isEmpty();
+    }
+
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName();
     }
 
     /**
@@ -588,16 +672,6 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
                 "No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
-    protected NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws Exception {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return nozzleTip;
-            }
-        }
-        throw new Exception("No compatible nozzle tip on nozzle " + nozzle.getName()
-                + " found for part " + part.getId());
-    }
-
     /**
      * Find the first enabled Feeder is that is able to feed the given Part.
      * 
@@ -612,59 +686,6 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
             }
         }
         throw new Exception("No compatible, enabled feeder found for part " + part.getId());
-    }
-
-    /**
-     * Call the Retryable's action method until it either does not throw an Exception or it is
-     * called maxTries number of times. If the method throws an Exception each time then this method
-     * will throw the final Exception.
-     * 
-     * @param maxTries
-     * @param r
-     * @throws Exception
-     */
-    protected void retry(int maxTries, Retryable r) throws Exception {
-        for (int i = 0; i < maxTries; i++) {
-            try {
-                r.action();
-                break;
-            }
-            catch (Exception e) {
-                if (i == maxTries - 1) {
-                    throw e;
-                }
-            }
-        }
-    }
-
-    protected void clearStepComplete() {
-        for (PlannedJobPlacement p : plannedJobPlacements) {
-            p.stepComplete = false;
-        }
-    }
-
-    protected List<JobPlacement> getPendingJobPlacements() {
-        return this.jobPlacements.stream().filter((jobPlacement) -> {
-            return jobPlacement.status == Status.Pending;
-        }).collect(Collectors.toList());
-    }
-    
-    protected boolean isJobComplete() {
-        return getPendingJobPlacements().isEmpty();
-    }
-    
-    public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
     }
 
     @Override
@@ -687,53 +708,113 @@ public class ReferencePnpJobProcessor implements PnpJobProcessor {
         return null;
     }
 
-    public static class JobPlacement {
-        public enum Status {
-            Pending,
-            Processing,
-            Skipped,
-            Complete
-        }
-
-        public final BoardLocation boardLocation;
-        public final Placement placement;
-        public Feeder feeder;
-        public Location alignmentOffsets;
-        public Status status = Status.Pending;
-
-        public JobPlacement(BoardLocation boardLocation, Placement placement) {
-            this.boardLocation = boardLocation;
-            this.placement = placement;
-        }
-
-        public double getPartHeight() {
-            return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
-                    .getValue();
+    /**
+     * Call the Retryable's action method until it either does not throw an Exception or it is
+     * called maxTries number of times. If the method throws an Exception each time then this method
+     * will throw the final Exception.
+     * 
+     * @param maxTries
+     * @param r
+     * @throws Exception
+     */
+    public static void retry(int maxTries, Retryable r) throws Exception {
+        for (int i = 0; i < maxTries; i++) {
+            try {
+                r.action();
+                break;
+            }
+            catch (Exception e) {
+                if (i == maxTries - 1) {
+                    throw e;
+                }
+            }
         }
     }
 
-    public static class PlannedJobPlacement {
-        public final Nozzle nozzle;
-        public final JobPlacement jobPlacement;
-        public boolean stepComplete;
-
-        public PlannedJobPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
-            this.nozzle = nozzle;
-            this.jobPlacement = jobPlacement;
+    public static void discardAll(Head head) throws Exception {
+        for (Nozzle nozzle : head.getNozzles()) {
+            discard(nozzle);
         }
     }
 
-    public static interface Retryable {
-        void action() throws Exception;
+    /**
+     * Discard the Part, if any, on the given Nozzle. the Nozzle is returned to Safe Z at the end of
+     * the operation.
+     * 
+     * @param nozzle
+     * @throws Exception
+     */
+    public static void discard(Nozzle nozzle) throws Exception {
+        if (nozzle.getPart() == null) {
+            return;
+        }
+        logger.debug("Discard {} from {}", nozzle.getPart(), nozzle);
+        // move to the discard location
+        MovableUtils.moveToLocationAtSafeZ(nozzle,
+                Configuration.get().getMachine().getDiscardLocation());
+        // discard the part
+        nozzle.place();
+        nozzle.moveToSafeZ();
     }
 
-    public static class Pair<A, B> {
-        public final A a;
-        public final B b;
-
-        public Pair(A a, B b) {
-            this.a = a;
-            this.b = b;
+    public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws Exception {
+        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+            if (nozzleTip.canHandle(part)) {
+                return nozzleTip;
+            }
         }
+        throw new Exception("No compatible nozzle tip on nozzle " + nozzle.getName()
+                + " found for part " + part.getId());
+    }
+
+    public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
+        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+            if (nozzleTip.canHandle(part)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Create the cartesian product of a list of lists. The results will contain every possible
+     * distinct combination of the elements of the input lists.
+     * 
+     * Example: cartesianProduct(Arrays.asList(Arrays.asList("A", "B"), Arrays.asList("1", "2")))
+     * [[A, 1], [A, 2], [B, 1], [B, 2]]
+     * 
+     * This method specifically allows for nulls in the input elements. Multiple nulls will be
+     * counted multiple times.
+     * 
+     * @param lists
+     * @return
+     */
+    public static <T> List<List<T>> cartesianProduct(List<List<T>> lists) {
+        List<List<T>> results = new ArrayList<>();
+        int[] indexes = new int[lists.size()];
+        while (indexes[0] < lists.get(0).size()) {
+            // Scan across the columns, adding the current element from each list to the current
+            // row and then add the row to the results.
+            List<T> result = new ArrayList<>();
+            for (int column = 0; column < lists.size(); column++) {
+                result.add(lists.get(column).get(indexes[column]));
+            }
+            results.add(result);
+            // Increment the column indexes starting from the right. If a column has reached it's
+            // limit, reset it to zero and increment the next one to the left, carrying to
+            // the beginning as needed.
+            for (int i = indexes.length - 1; i >= 0; i--) {
+                indexes[i]++;
+                if (indexes[i] < lists.get(i).size() || i == 0) {
+                    break;
+                }
+                indexes[i] = 0;
+            }
+        }
+        return results;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(cartesianProduct(Arrays.asList(Arrays.asList("A"))));
     }
 }

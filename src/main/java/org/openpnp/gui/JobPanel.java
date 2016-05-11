@@ -97,7 +97,7 @@ public class JobPanel extends JPanel {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(JobPanel.class);
-
+    
     final private Configuration configuration;
     final private MainFrame frame;
 
@@ -675,20 +675,25 @@ public class JobPanel extends JPanel {
             
         }, (t) -> {
             List<String> options = new ArrayList<>();
-            options.add("Retry");
+            String retryOption = "Try Again";
+            // TODO STOPSHIP: Will need to be "Pad" instead of "Placement" for solder.
+            String skipOption = "Skip This Placement";
+            String pauseOption = "Pause Job";
+            
+            options.add(retryOption);
             if (jobProcessor.canSkip()) {
-                options.add("Skip");
+                options.add(skipOption);
             }
-            options.add("Pause");
+            options.add(pauseOption);
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
-                    options.toArray(), "Retry");
+                    options.toArray(), retryOption);
             String selectedOption = options.get(result);
-            if (selectedOption.equals("Retry")) {
+            if (selectedOption.equals(retryOption)) {
                 jobRun();
             }
             // Skip
-            else if (selectedOption.equals("Skip")) {
+            else if (selectedOption.equals(skipOption)) {
                 UiUtils.messageBoxOnException(() -> {
                     // TODO STOPSHIP: This needs to be done in a machine context since skip now
                     // moves the machine.
