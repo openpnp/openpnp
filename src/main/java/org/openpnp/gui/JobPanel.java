@@ -657,7 +657,7 @@ public class JobPanel extends JPanel {
         jobProcessor.initialize(job);
         jobRun();
     }
-
+    
     public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
             // Make sure the FSM has actually transitioned to either Running or Stepping
@@ -676,8 +676,7 @@ public class JobPanel extends JPanel {
         }, (t) -> {
             List<String> options = new ArrayList<>();
             String retryOption = "Try Again";
-            // TODO STOPSHIP: Will need to be "Pad" instead of "Placement" for solder.
-            String skipOption = "Skip This Placement";
+            String skipOption = "Skip";
             String pauseOption = "Pause Job";
             
             options.add(retryOption);
@@ -695,14 +694,9 @@ public class JobPanel extends JPanel {
             // Skip
             else if (selectedOption.equals(skipOption)) {
                 UiUtils.messageBoxOnException(() -> {
-                    // TODO STOPSHIP: This needs to be done in a machine context since skip now
-                    // moves the machine.
-                    // TODO STOPSHIP: how do we handle an exception here? what state will it leave the job in?
-
                     // Tell the job processor to skip the current placement and then call jobRun()
                     // to start things back up, either running or stepping.
-                    jobProcessor.skip();
-                    jobRun();
+                    jobSkip();
                 });
             }
             // Pause or cancel dialog
@@ -715,10 +709,20 @@ public class JobPanel extends JPanel {
                         fsm.send(Message.StartOrPause);
                     }
                     catch (Exception e) {
-                        // TODO STOPSHIP: handle this. how?
+                        // Since we are checking if we're in the Running state this should not
+                        // ever happen. If it does, the Error will let us know.
+                        e.printStackTrace();
+                        throw new Error(e);
                     }
                 }
             }
+        });
+    }
+    
+    public void jobSkip() {
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.skip();
+            jobRun();
         });
     }
 

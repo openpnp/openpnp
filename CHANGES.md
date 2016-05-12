@@ -1,6 +1,55 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# Pending STOPSHIP
+
+* Job Processor Refactor
+
+	https://github.com/openpnp/openpnp/issues/265
+	
+	This is a major rewrite of the JobProcessor, which is the code the handles the actual
+	running of jobs. The purpose of this rewrite is to address many issues that have cropped
+	up over the years in the JobProcessor, primarily around error handling and retry. The
+	following changes are included:
+	
+	* Feed Retry: You can specify a retry count (default 3) in the feeder configuration and if a 
+	feed operation fails on a given feeder the operation will retry that many times before
+	disabling the feeder and advancing to the next available one. If no more feeders are available
+	for the part the feed operation fails and the user is notified.
+	https://github.com/openpnp/openpnp/issues/206
+	
+	* Job Error Recovery: If any part of a job fails the user is now presented a dialog offering
+	the options Retry, Skip, Pause to resolve it. No more "The job will be paused"
+	leaving the system broken. Retry will attempt to re-run the previous task. Skip will skip
+	processing the current placement. Pause pauses the job and hides the dialog so that the
+	user can make configuration changes to attempt to resolve the error. The job may be
+	continued with the Run or Step button.
+	
+	* Home After Job Complete: When a job completes normally the machine will return to home.
+	https://github.com/openpnp/openpnp/issues/76
+	
+	* Pre and Post Job Machine Cleanup: Before a job starts and after it either finishes or is
+	aborted, if any nozzles are holding a part the part will be discarded.
+	https://github.com/openpnp/openpnp/issues/102
+	
+* Show Camera Names in All Camera View
+
+	When the "All Cameras" view is selected, the name of each camera will be shown in in a little
+	box in the bottom left of the view. This makes it easier to know what you are looking at when
+	you have multiple cameras in action.
+	
+* FPS Limit Option in OpenCvCamera
+
+	You can now set an FPS limit in the OpenCvCamera wizard. The default is 24. This is helpful
+	to limit CPU usage on a machine with high resolution cameras.
+	
+* Removed Bottom Vision API from VisionProvider
+
+	Before the Bottom Vision feature was complete it had been stubbed into the VisionProvider
+	API. Since Bottom Vision is it's own first level object now this is no longer needed, so
+	it has been removed. Existing implementations should move to either ReferenceBottomVision
+	or to their own specific implementation of PartAlignment.
+
 # 2016-04-27
 
 * Speed Values Normalized

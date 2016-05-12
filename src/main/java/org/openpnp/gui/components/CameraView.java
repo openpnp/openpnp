@@ -22,6 +22,7 @@ package org.openpnp.gui.components;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -179,6 +180,8 @@ public class CameraView extends JComponent implements CameraListener {
 
     private long flashStartTimeMs;
     private long flashLengthMs = 250;
+    
+    private boolean showName = false;
 
     public CameraView() {
         setBackground(Color.black);
@@ -263,6 +266,14 @@ public class CameraView extends JComponent implements CameraListener {
 
     public Camera getCamera() {
         return camera;
+    }
+    
+    public void setShowName(boolean showName) {
+        this.showName = showName;
+    }
+    
+    public boolean isShowName() {
+        return this.showName;
     }
 
     public void setDefaultReticle(Reticle reticle) {
@@ -510,6 +521,11 @@ public class CameraView extends JComponent implements CameraListener {
             if (text != null) {
                 drawTextOverlay(g2d, 10, 10, text);
             }
+            
+            if (showName) {
+                Dimension dim = measureTextOverlay(g2d, camera.getName());
+                drawTextOverlay(g2d, 10, height - dim.height - 10, camera.getName());
+            }
 
             if (showImageInfo && text == null) {
                 drawImageInfo(g2d, 10, 10, image);
@@ -733,6 +749,25 @@ public class CameraView extends JComponent implements CameraListener {
             textLayout.draw(g2d, topLeftX + insets.left, yPen);
             yPen += interLineSpacing;
         }
+    }
+    
+    private static Dimension measureTextOverlay(Graphics2D g2d, String text) {
+        Insets insets = new Insets(10, 10, 10, 10);
+        int interLineSpacing = 4;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setStroke(new BasicStroke(1.0f));
+        g2d.setFont(g2d.getFont().deriveFont(12.0f));
+        String[] lines = text.split("\n");
+        List<TextLayout> textLayouts = new ArrayList<>();
+        int textWidth = 0, textHeight = 0;
+        for (String line : lines) {
+            TextLayout textLayout = new TextLayout(line, g2d.getFont(), g2d.getFontRenderContext());
+            textWidth = (int) Math.max(textWidth, textLayout.getBounds().getWidth());
+            textHeight += (int) textLayout.getBounds().getHeight() + interLineSpacing;
+            textLayouts.add(textLayout);
+        }
+        textHeight -= interLineSpacing;
+        return new Dimension(textWidth + insets.left + insets.right, textHeight + insets.top + insets.bottom);
     }
 
     private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,

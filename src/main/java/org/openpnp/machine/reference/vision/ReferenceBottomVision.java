@@ -75,6 +75,9 @@ public class ReferenceBottomVision implements PartAlignment {
         pipeline.process();
 
         Result result = pipeline.getResult("result");
+        if (!(result.model instanceof RotatedRect)) {
+            throw new Exception("Bottom vision alignment failed for part " + part.getId() + " on nozzle " + nozzle.getName() + ". No result found.");
+        }
         RotatedRect rect = (RotatedRect) result.model;
         logger.debug("Result rect {}", rect);
 
