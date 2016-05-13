@@ -126,15 +126,27 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
                 "Transformation", TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         contentPanel.add(panelGeneral);
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblRotation = new JLabel("Rotation");
         panelGeneral.add(lblRotation, "2, 2, right, default");
@@ -168,6 +180,26 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
 
         checkBoxFlipY = new JCheckBox("");
         panelGeneral.add(checkBoxFlipY, "4, 10");
+        
+        lblCropX = new JLabel("Crop Width");
+        panelGeneral.add(lblCropX, "2, 12, right, default");
+        
+        cropWidthTextField = new JTextField();
+        panelGeneral.add(cropWidthTextField, "4, 12");
+        cropWidthTextField.setColumns(10);
+        
+        lblNewLabel = new JLabel("(Use 0 for no crop)");
+        panelGeneral.add(lblNewLabel, "5, 12");
+        
+        lblCropHeight = new JLabel("Crop Height");
+        panelGeneral.add(lblCropHeight, "2, 14, right, default");
+        
+        cropHeightTextField = new JTextField();
+        panelGeneral.add(cropHeightTextField, "4, 14");
+        cropHeightTextField.setColumns(10);
+        
+        lblNewLabel_1 = new JLabel("(Use 0 for no crop)");
+        panelGeneral.add(lblNewLabel_1, "5, 14");
 
         panelLocation = new JPanel();
         panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
@@ -285,6 +317,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
         addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
+        addWrappedBinding(referenceCamera, "cropWidth", cropWidthTextField, "text", intConverter);
+        addWrappedBinding(referenceCamera, "cropHeight", cropHeightTextField, "text", intConverter);
 
         bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled",
                 calibrationEnabledChk, "selected");
@@ -304,6 +338,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cropWidthTextField);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cropHeightTextField);
     }
 
     private Action startCalibration = new AbstractAction("Start Lens Calibration") {
@@ -349,4 +385,10 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         }
     };
     private JButton startLensCalibrationBtn;
+    private JLabel lblCropX;
+    private JLabel lblCropHeight;
+    private JTextField cropWidthTextField;
+    private JTextField cropHeightTextField;
+    private JLabel lblNewLabel;
+    private JLabel lblNewLabel_1;
 }

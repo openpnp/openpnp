@@ -129,8 +129,8 @@ public class MachineControlsPanel extends JPanel {
     }
 
     /**
-     * Returns the selected Nozzle or PasteDispenser depending on which type of Job is selected.
-     * 
+     * Currently returns the selected Nozzle. Intended to eventually return either the selected
+     * Nozzle or PasteDispenser.
      * @return
      */
     public HeadMountable getSelectedTool() {

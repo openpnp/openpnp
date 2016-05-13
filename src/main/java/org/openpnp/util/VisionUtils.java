@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -71,7 +72,16 @@ public class VisionUtils {
         });
         return locations;
     }
-
+    
+    public static Camera getBottomVisionCamera() throws Exception {
+        for (Camera camera : Configuration.get().getMachine().getCameras()) {
+            if (camera.getLooking() == Camera.Looking.Up) {
+                return camera;
+            }
+        }
+        throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
+    }
+    
     public static double toPixels(Length length, Camera camera) {
         // convert inputs to the same units
         Location unitsPerPixel = camera.getUnitsPerPixel();

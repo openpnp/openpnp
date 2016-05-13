@@ -14,7 +14,6 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -57,7 +56,7 @@ public class ReferenceBottomVision implements PartAlignment {
             return new Location(LengthUnit.Millimeters);
         }
 
-        Camera camera = getBottomVisionCamera();
+        Camera camera = VisionUtils.getBottomVisionCamera();
 
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0.
@@ -76,7 +75,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
         Result result = pipeline.getResult("result");
         if (!(result.model instanceof RotatedRect)) {
-            throw new Exception("Bottom vision alignment failed for part " + part.getId() + " on nozzle " + nozzle.getName() + ". No result found.");
+            throw new Exception("Bottom vision alignment failed for part " + part.getId()
+                    + " on nozzle " + nozzle.getName() + ". No result found.");
         }
         RotatedRect rect = (RotatedRect) result.model;
         logger.debug("Result rect {}", rect);
@@ -121,15 +121,6 @@ public class ReferenceBottomVision implements PartAlignment {
         catch (Exception e) {
             throw new Error(e);
         }
-    }
-
-    public Camera getBottomVisionCamera() throws Exception {
-        for (Camera camera : Configuration.get().getMachine().getCameras()) {
-            if (camera.getLooking() == Camera.Looking.Up) {
-                return camera;
-            }
-        }
-        throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
     }
 
     public CvPipeline getPipeline() {
@@ -194,7 +185,7 @@ public class ReferenceBottomVision implements PartAlignment {
     public Wizard getPartConfigurationWizard(Part part) {
         PartSettings partSettings = getPartSettings(part);
         try {
-            partSettings.getPipeline().setCamera(getBottomVisionCamera());
+            partSettings.getPipeline().setCamera(VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
             e.printStackTrace();

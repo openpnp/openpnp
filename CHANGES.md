@@ -49,6 +49,23 @@ a complete change list, only those that may directly interest or affect users.
 	API. Since Bottom Vision is it's own first level object now this is no longer needed, so
 	it has been removed. Existing implementations should move to either ReferenceBottomVision
 	or to their own specific implementation of PartAlignment.
+	
+* Camera Crop
+
+	https://github.com/openpnp/openpnp/issues/171
+
+	You can now set a crop width and height on your camera. The crop is applied from the center,
+	so setting a crop of 200x200 will make the output from the camera only the center 200x200
+	pixels. This is useful for when you have a high resolution camera but only care about a
+	small portion of it. Cropping decreases the amount of data that is required to be processed
+	and cuts down CPU and memory usage.
+	
+* Nozzle Runout Compensation (Unfinished)
+
+	https://github.com/openpnp/openpnp/issues/235
+	
+	Uses bottom vision to find the runout in a nozzle and compensate for it making placement
+	more accurate.
 
 # 2016-04-27
 

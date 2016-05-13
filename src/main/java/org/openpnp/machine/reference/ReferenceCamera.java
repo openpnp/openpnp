@@ -75,6 +75,12 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Attribute(required = false)
     protected int offsetY = 0;
 
+    @Attribute(required = false)
+    protected int cropWidth = 0;
+
+    @Attribute(required = false)
+    protected int cropHeight = 0;
+
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
 
@@ -167,9 +173,27 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setOffsetY(int offsetY) {
         this.offsetY = offsetY;
     }
+    
+    public int getCropWidth() {
+        return cropWidth;
+    }
+
+    public void setCropWidth(int cropWidth) {
+        this.cropWidth = cropWidth;
+    }
+
+    public int getCropHeight() {
+        return cropHeight;
+    }
+
+    public void setCropHeight(int cropHeight) {
+        this.cropHeight = cropHeight;
+    }
 
     protected BufferedImage transformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
+        
+        mat = crop(mat);
 
         mat = calibrate(mat);
 
@@ -190,21 +214,36 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             }
             Core.flip(mat, mat, flipCode);
         }
-
+        
         image = OpenCvUtils.toBufferedImage(mat);
         mat.release();
         return image;
     }
     
+    private Mat crop(Mat mat) {
+        if (cropWidth != 0 || cropHeight != 0) {
+            Rect roi = new Rect(
+                    (int) ((mat.size().width / 2) - (cropWidth / 2)),
+                    (int) ((mat.size().height / 2) - (cropHeight / 2)),
+                    cropWidth,
+                    cropHeight);
+            Mat tmp = new Mat(mat, roi);
+            tmp.copyTo(mat);
+            tmp.release();
+        }
+        return mat;
+    }
+
     private Mat rotate(Mat mat, double rotation) {
         if (rotation == 0D) {
-        	return mat;
+            return mat;
         }
 
-        // See: http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
+        // See:
+        // http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
         Point center = new Point(mat.width() / 2D, mat.height() / 2D);
         Mat mapMatrix = Imgproc.getRotationMatrix2D(center, rotation, 1.0);
-        
+
         // determine bounding rectangle
         Rect bbox = new RotatedRect(center, mat.size(), rotation).boundingRect();
         // adjust transformation matrix
@@ -220,28 +259,28 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         mat.release();
 
         mapMatrix.release();
-        
+
         return dst;
     }
-    
+
     private Mat offset(Mat mat, int offsetX, int offsetY) {
         if (offsetX == 0D && offsetY == 0D) {
-        	return mat;
+            return mat;
         }
 
-    	Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
+        Mat mapMatrix = new Mat(2, 3, CvType.CV_32F) {
             {
                 put(0, 0, 1, 0, offsetX);
                 put(1, 0, 0, 1, offsetY);
             }
         };
-        
+
         Mat dst = mat.clone();
         Imgproc.warpAffine(mat, dst, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
         mat.release();
 
         mapMatrix.release();
-        
+
         return dst;
     }
 
@@ -254,14 +293,17 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             undistortionMap1 = new Mat();
             undistortionMap2 = new Mat();
             Mat rectification = Mat.eye(3, 3, CvType.CV_32F);
-            Imgproc.initUndistortRectifyMap(calibration.getCameraMatrixMat(), calibration.getDistortionCoefficientsMat(), rectification, calibration.getCameraMatrixMat(), mat.size(), CvType.CV_32FC1, undistortionMap1, undistortionMap2);
+            Imgproc.initUndistortRectifyMap(calibration.getCameraMatrixMat(),
+                    calibration.getDistortionCoefficientsMat(), rectification,
+                    calibration.getCameraMatrixMat(), mat.size(), CvType.CV_32FC1, undistortionMap1,
+                    undistortionMap2);
             rectification.release();
         }
 
         Mat dst = mat.clone();
         Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
         mat.release();
-        
+
         return dst;
     }
 
@@ -288,7 +330,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 calibration
                         .setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
                 calibration.setEnabled(true);
-                
+
                 lensCalibration.close();
                 lensCalibration = null;
                 calibrating = false;
@@ -311,9 +353,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     public void cancelCalibration() {
-    	if (calibrating) {
-    		lensCalibration.close();
-    	}
+        if (calibrating) {
+            lensCalibration.close();
+        }
         calibrating = false;
     }
 
