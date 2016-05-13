@@ -61,20 +61,6 @@ public interface VisionProvider {
     public Point[] locateTemplateMatches(int roiX, int roiY, int roiWidth, int roiHeight, int coiX,
             int coiY, BufferedImage templateImage) throws Exception;
 
-    /**
-     * Given a Part and a Nozzle it is hanging off, find the Part's offsets from center. This method
-     * can be used for either Flying or Bottom vision depending on the orientation of the Camera
-     * this VisionProvider references. A fixed Camera (Camera.getHead() == null) will perform bottom
-     * vision while a Head mounted camera (Camera.getHead() != null) will perform flying vision. The
-     * two are effectively the same since both use an image of the bottom of the part.
-     * 
-     * This method is responsible for moving the Nozzle as needed, specifically it should center the
-     * Nozzle over the camera before taking a picture.
-     * 
-     * @return
-     */
-    public Location getPartBottomOffsets(Part part, Nozzle nozzle) throws Exception;
-
     public static class TemplateMatch {
         public Location location;
         public double score;

@@ -53,14 +53,22 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblDeviceId = new JLabel("Device Index");
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
@@ -70,6 +78,13 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
             comboBoxDeviceIndex.addItem(new Integer(i));
         }
         panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
+        
+        lblFps = new JLabel("FPS");
+        panelGeneral.add(lblFps, "2, 4, right, default");
+        
+        fpsTextField = new JTextField();
+        panelGeneral.add(fpsTextField, "4, 4");
+        fpsTextField.setColumns(10);
 
         lblPreferredWidth = new JLabel("Preferred Width");
         panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
@@ -99,11 +114,13 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         addWrappedBinding(camera, "preferredWidth", textFieldPreferredWidth, "text", intConverter);
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
                 intConverter);
+        addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredHeight);
+        ComponentDecorators.decorateWithAutoSelect(fpsTextField);
     }
 
     @Override
@@ -121,4 +138,6 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     private JTextField textFieldPreferredHeight;
     private JLabel lbluseFor;
     private JLabel lbluseFor_1;
+    private JLabel lblFps;
+    private JTextField fpsTextField;
 }

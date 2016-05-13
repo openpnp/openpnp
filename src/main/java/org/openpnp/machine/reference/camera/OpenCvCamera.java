@@ -53,6 +53,8 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     private int preferredWidth;
     @Attribute(required = false)
     private int preferredHeight;
+    @Attribute(required = false)
+    private int fps = 24;
 
     private VideoCapture fg = new VideoCapture();
     private Thread thread;
@@ -101,7 +103,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
                 e.printStackTrace();
             }
             try {
-                Thread.sleep(1000 / 24);
+                Thread.sleep(1000 / fps);
             }
             catch (InterruptedException e) {
                 break;
@@ -161,6 +163,14 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public void setPreferredHeight(int preferredHeight) {
         this.preferredHeight = preferredHeight;
         setDirty(true);
+    }
+    
+    public int getFps() {
+        return fps;
+    }
+
+    public void setFps(int fps) {
+        this.fps = fps;
     }
 
     public boolean isDirty() {

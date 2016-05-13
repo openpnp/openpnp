@@ -1,6 +1,36 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-05-12
+
+* Show Camera Names in All Camera View
+
+	When the "All Cameras" view is selected, the name of each camera will be shown in in a little
+	box in the bottom left of the view. This makes it easier to know what you are looking at when
+	you have multiple cameras in action.
+	
+* FPS Limit Option in OpenCvCamera
+
+	You can now set an FPS limit in the OpenCvCamera wizard. The default is 24. This is helpful
+	to limit CPU usage on a machine with high resolution cameras.
+	
+* Removed Bottom Vision API from VisionProvider
+
+	Before the Bottom Vision feature was complete it had been stubbed into the VisionProvider
+	API. Since Bottom Vision is it's own first level object now this is no longer needed, so
+	it has been removed. Existing implementations should move to either ReferenceBottomVision
+	or to their own specific implementation of PartAlignment.
+	
+* Camera Crop
+
+	https://github.com/openpnp/openpnp/issues/171
+
+	You can now set a crop width and height on your camera. The crop is applied from the center,
+	so setting a crop of 200x200 will make the output from the camera only the center 200x200
+	pixels. This is useful for when you have a high resolution camera but only care about a
+	small portion of it. Cropping decreases the amount of data that is required to be processed
+	and cuts down CPU and memory usage.
+	
 # 2016-04-27
 
 * Speed Values Normalized
