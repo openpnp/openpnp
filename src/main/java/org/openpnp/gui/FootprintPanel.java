@@ -65,6 +65,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Dimension;
 
 @SuppressWarnings("serial")
 public class FootprintPanel extends JPanel {
@@ -150,6 +151,7 @@ public class FootprintPanel extends JPanel {
 
 
         JScrollPane tableScrollPane = new JScrollPane(table);
+        tableScrollPane.setPreferredSize(new Dimension(454, 100));
         tablePanel.add(tableScrollPane);
 
         showReticle();
@@ -197,7 +199,8 @@ public class FootprintPanel extends JPanel {
             cameraView.removeReticle(FootprintPanel.class.getName());
             Reticle reticle = new FootprintReticle(footprint);
             cameraView.setReticle(FootprintPanel.class.getName(), reticle);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -243,7 +246,7 @@ public class FootprintPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + getSelectedPad().getName(),
+                    "Are you sure you want to delete " + getSelectedPad().getName() + "?",
                     "Delete " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 footprint.removePad(getSelectedPad());

@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
@@ -52,8 +50,8 @@ import com.jgoodies.forms.layout.RowSpec;
 /**
  * TODO: This should become it's own property sheet which the feeders can include.
  */
-public abstract class AbstractReferenceFeederConfigurationWizard extends
-        AbstractConfigurationWizard {
+public abstract class AbstractReferenceFeederConfigurationWizard
+        extends AbstractConfigurationWizard {
     private final ReferenceFeeder feeder;
     private final boolean includePickLocation;
 
@@ -81,17 +79,13 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends
         this.includePickLocation = includePickLocation;
 
         panelPart = new JPanel();
-        panelPart.setBorder(new TitledBorder(null, "Part",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelPart.setBorder(
+                new TitledBorder(null, "Part", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelPart);
-        panelPart
-                .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"), }, new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+        panelPart.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
         try {
@@ -106,26 +100,24 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends
 
         if (includePickLocation) {
             panelLocation = new JPanel();
-            panelLocation.setBorder(new TitledBorder(new EtchedBorder(
-                    EtchedBorder.LOWERED, null, null), "Pick Location",
-                    TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0,
-                            0, 0)));
+            panelLocation.setBorder(new TitledBorder(
+                    new EtchedBorder(EtchedBorder.LOWERED, null, null), "Pick Location",
+                    TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
             contentPanel.add(panelLocation);
-            panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
-                    FormSpecs.RELATED_GAP_COLSPEC,
-                    ColumnSpec.decode("default:grow"),
-                    FormSpecs.RELATED_GAP_COLSPEC,
-                    ColumnSpec.decode("default:grow"),
-                    FormSpecs.RELATED_GAP_COLSPEC,
-                    ColumnSpec.decode("default:grow"),
-                    FormSpecs.RELATED_GAP_COLSPEC,
-                    ColumnSpec.decode("default:grow"),
-                    FormSpecs.RELATED_GAP_COLSPEC,
-                    ColumnSpec.decode("left:default:grow"), }, new RowSpec[] {
-                    FormSpecs.RELATED_GAP_ROWSPEC,
-                    FormSpecs.DEFAULT_ROWSPEC,
-                    FormSpecs.RELATED_GAP_ROWSPEC,
-                    FormSpecs.DEFAULT_ROWSPEC, }));
+            panelLocation
+                    .setLayout(new FormLayout(
+                            new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
+                                    ColumnSpec.decode("default:grow"),
+                                    FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec
+                                            .decode("default:grow"),
+                                    FormSpecs.RELATED_GAP_COLSPEC,
+                                    ColumnSpec.decode("default:grow"),
+                                    FormSpecs.RELATED_GAP_COLSPEC,
+                                    ColumnSpec.decode("default:grow"),
+                                    FormSpecs.RELATED_GAP_COLSPEC,
+                                    ColumnSpec.decode("left:default:grow"),},
+                            new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                                    FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
             lblX_1 = new JLabel("X");
             panelLocation.add(lblX_1, "2, 2");
@@ -155,8 +147,8 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends
             panelLocation.add(textFieldLocationC, "8, 4");
             textFieldLocationC.setColumns(8);
 
-            locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
-                    textFieldLocationY, textFieldLocationZ, textFieldLocationC);
+            locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY,
+                    textFieldLocationZ, textFieldLocationC);
             panelLocation.add(locationButtonsPanel, "10, 4");
         }
     }
@@ -164,29 +156,21 @@ public abstract class AbstractReferenceFeederConfigurationWizard extends
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
-        DoubleConverter doubleConverter = new DoubleConverter(Configuration
-                .get().getLengthDisplayFormat());
+        DoubleConverter doubleConverter =
+                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 
         if (includePickLocation) {
             MutableLocationProxy location = new MutableLocationProxy();
-            bind(UpdateStrategy.READ_WRITE, feeder, "location", location,
-                    "location");
-            addWrappedBinding(location, "lengthX", textFieldLocationX, "text",
-                    lengthConverter);
-            addWrappedBinding(location, "lengthY", textFieldLocationY, "text",
-                    lengthConverter);
-            addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text",
-                    lengthConverter);
-            addWrappedBinding(location, "rotation", textFieldLocationC, "text",
-                    doubleConverter);
-            ComponentDecorators
-                    .decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
-            ComponentDecorators
-                    .decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
-            ComponentDecorators
-                    .decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
+            bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
+            addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
+            addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
+            addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
+            addWrappedBinding(location, "rotation", textFieldLocationC, "text", doubleConverter);
+            ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
+            ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
+            ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
             ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
         }
     }

@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.camera.wizards;
@@ -38,8 +36,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class VfwCameraConfigurationWizard extends
-        ReferenceCameraConfigurationWizard {
+public class VfwCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
     private final VfwCamera camera;
 
     private JPanel panelGeneral;
@@ -55,24 +52,15 @@ public class VfwCameraConfigurationWizard extends
 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(
-                EtchedBorder.LOWERED, null, null), "General",
-                TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
-        panelGeneral
-                .setLayout(new FormLayout(new ColumnSpec[] {
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"), }, new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelGeneral.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblDeviceId = new JLabel("Driver");
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
@@ -84,7 +72,7 @@ public class VfwCameraConfigurationWizard extends
         catch (Exception e) {
             // TODO:
         }
-        
+
         comboBoxDriver = new JComboBox(deviceIds);
         panelGeneral.add(comboBoxDriver, "4, 2, left, default");
 

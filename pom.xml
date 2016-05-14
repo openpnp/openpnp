@@ -17,6 +17,11 @@
 	</properties>
 	<dependencies>
                 <dependency>
+                                <groupId>com.github.sarxos</groupId>
+                                <artifactId>webcam-capture</artifactId>
+                                <version>0.3.10</version>
+                </dependency>
+                <dependency>
                         <groupId>org.ostermiller</groupId>
                         <artifactId>utils</artifactId>
                         <version>1.07.00</version>
@@ -117,6 +122,11 @@
 		  <artifactId>jcodec-javase</artifactId>
 		  <version>0.1.9</version>
 		  <scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.tros</groupId>
+			<artifactId>l2fprod-properties-editor</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 	</dependencies>
 	<build>

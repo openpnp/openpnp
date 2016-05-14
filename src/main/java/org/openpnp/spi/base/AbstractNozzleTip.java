@@ -9,15 +9,15 @@ import org.simpleframework.xml.Attribute;
 public abstract class AbstractNozzleTip implements NozzleTip {
     @Attribute
     protected String id;
-    
-    @Attribute(required=false)
+
+    @Attribute(required = false)
     protected String name;
-    
+
     public AbstractNozzleTip() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
     }
-    
+
     @Override
     public String getId() {
         return id;
