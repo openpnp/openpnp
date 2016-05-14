@@ -333,7 +333,7 @@ public class JobPanel extends JPanel {
         recentJobs.clear();
         for (int i = 0; i < PREF_RECENT_FILES_MAX; i++) {
             String path = prefs.get(PREF_RECENT_FILES + "_" + i, null);
-            if (path != null) {
+            if (path != null && new File(path).exists()) {
                 File file = new File(path);
                 recentJobs.add(file);
             }
