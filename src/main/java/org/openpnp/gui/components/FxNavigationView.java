@@ -6,15 +6,11 @@ import java.util.Map;
 
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.JobProcessorListener;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
@@ -160,42 +156,36 @@ public class FxNavigationView extends JFXPanel {
         }
     };
 
-    JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
-        @Override
-        public void jobLoaded(final Job job) {
-            Platform.runLater(new Runnable() {
-                public void run() {
-                    boards.getChildren().clear();
-                    for (BoardLocation boardLocation : job.getBoardLocations()) {
-                        Location location =
-                                boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
-                        Group board = new Group();
-                        Location dims = boardLocation.getBoard().getDimensions()
-                                .convertToUnits(LengthUnit.Millimeters);
-                        double width = Math.max(dims.getX(), 10);
-                        double height = Math.max(dims.getY(), 10);
-                        board.getChildren().add(new Rectangle(width, height, Color.GREEN));
-                        board.setTranslateX(location.getX() - width / 2);
-                        board.setTranslateY(location.getY() - height / 2);
-                        boards.getChildren().add(board);
-                    }
-                }
-            });
-        }
-    };
+    // TODO broken in job processor refactor.
+    // JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
+    // @Override
+    // public void jobLoaded(final Job job) {
+    // Platform.runLater(new Runnable() {
+    // public void run() {
+    // boards.getChildren().clear();
+    // for (BoardLocation boardLocation : job.getBoardLocations()) {
+    // Location location =
+    // boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
+    // Group board = new Group();
+    // Location dims = boardLocation.getBoard().getDimensions()
+    // .convertToUnits(LengthUnit.Millimeters);
+    // double width = Math.max(dims.getX(), 10);
+    // double height = Math.max(dims.getY(), 10);
+    // board.getChildren().add(new Rectangle(width, height, Color.GREEN));
+    // board.setTranslateX(location.getX() - width / 2);
+    // board.setTranslateY(location.getY() - height / 2);
+    // boards.getChildren().add(board);
+    // }
+    // }
+    // });
+    // }
+    // };
 
     ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
             final Machine machine = configuration.getMachine();
             machine.addListener(machineListener);
-            // TODO: This doesn't really work in the new JobProcessor world
-            // because the JobProcessor gets swapped out when changing tabs.
-            // Need to figure out how to reference the current one and
-            // maintain listeners across switches.
-            for (JobProcessor jobProcessor : machine.getJobProcessors().values()) {
-                jobProcessor.addListener(jobProcessorListener);
-            }
             Platform.runLater(new Runnable() {
                 public void run() {
                     for (Camera camera : machine.getCameras()) {

@@ -66,7 +66,7 @@ public class UiUtils {
             @Override
             public void onSuccess(T result) {
                 try {
-                    SwingUtilities.invokeAndWait(() -> onSuccess.accept(result));
+                    SwingUtilities.invokeLater(() -> onSuccess.accept(result));
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -76,7 +76,7 @@ public class UiUtils {
             @Override
             public void onFailure(Throwable t) {
                 try {
-                    SwingUtilities.invokeAndWait(() -> onFailure.accept(t));
+                    SwingUtilities.invokeLater(() -> onFailure.accept(t));
                 }
                 catch (Exception e) {
                     e.printStackTrace();

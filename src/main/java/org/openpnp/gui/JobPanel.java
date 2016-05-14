@@ -29,6 +29,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -48,14 +49,10 @@ import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.JobProcessorDelegate;
-import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
@@ -71,17 +68,14 @@ import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
-import org.openpnp.spi.JobProcessor.JobError;
-import org.openpnp.spi.JobProcessor.JobState;
-import org.openpnp.spi.JobProcessor.PickRetryAction;
+import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.slf4j.Logger;
@@ -89,12 +83,24 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
+    enum State {
+        Stopped,
+        Running,
+        Stepping
+    }
+
+    enum Message {
+        StartOrPause,
+        Step,
+        Abort,
+        Finished
+    }
+
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(JobPanel.class);
-
+    
     final private Configuration configuration;
     final private MainFrame frame;
-    final private MachineControlsPanel machineControlsPanel;
 
     private static final String PREF_DIVIDER_POSITION = "JobPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -103,8 +109,6 @@ public class JobPanel extends JPanel {
 
     private static final String PREF_RECENT_FILES = "JobPanel.recentFiles";
     private static final int PREF_RECENT_FILES_MAX = 10;
-
-    private JobProcessor jobProcessor;
 
     private BoardLocationsTableModel boardLocationsTableModel;
     private JTable boardLocationsTable;
@@ -124,11 +128,30 @@ public class JobPanel extends JPanel {
 
     private JTabbedPane tabbedPane;
 
+    private Job job;
+
+    private JobProcessor jobProcessor;
+
+    private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Stopped);
+
     public JobPanel(Configuration configuration, MainFrame frame,
             MachineControlsPanel machineControlsPanel) {
         this.configuration = configuration;
         this.frame = frame;
-        this.machineControlsPanel = machineControlsPanel;
+
+
+        fsm.add(State.Stopped, Message.StartOrPause, State.Running, this::jobStart);
+        fsm.add(State.Stopped, Message.Step, State.Stepping, this::jobStart);
+
+        // No action is needed. The job is running and will exit when the state changes to Stepping.
+        fsm.add(State.Running, Message.StartOrPause, State.Stepping);
+        fsm.add(State.Running, Message.Abort, State.Stopped, this::jobAbort);
+        fsm.add(State.Running, Message.Finished, State.Stopped);
+
+        fsm.add(State.Stepping, Message.StartOrPause, State.Running, this::jobRun);
+        fsm.add(State.Stepping, Message.Step, State.Stepping, this::jobRun);
+        fsm.add(State.Stepping, Message.Abort, State.Stopped, this::jobAbort);
+        fsm.add(State.Stepping, Message.Finished, State.Stopped);
 
         jobSaveActionGroup = new ActionGroup(saveJobAction);
         jobSaveActionGroup.setEnabled(false);
@@ -142,7 +165,7 @@ public class JobPanel extends JPanel {
         boardLocationsTableModel = new BoardLocationsTableModel(configuration);
 
         // Suppress because adding the type specifiers breaks WindowBuilder.
-        @SuppressWarnings("rawtypes")
+        @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox sidesComboBox = new JComboBox(Side.values());
 
         boardLocationsTable = new AutoSelectTextTable(boardLocationsTableModel);
@@ -242,14 +265,6 @@ public class JobPanel extends JPanel {
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         pnlRight.add(tabbedPane, BorderLayout.CENTER);
 
-        tabbedPane.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                Machine machine = Configuration.get().getMachine();
-                JobProcessor.Type type = getSelectedJobProcessorType();
-                setJobProcessor(machine.getJobProcessors().get(type));
-            }
-        });
-
         jobPastePanel = new JobPastePanel(this);
         jobPlacementsPanel = new JobPlacementsPanel(this);
 
@@ -264,91 +279,43 @@ public class JobPanel extends JPanel {
 
                 machine.addListener(machineListener);
 
-                for (JobProcessor jobProcessor : machine.getJobProcessors().values()) {
-                    jobProcessor.addListener(jobProcessorListener);
-                    jobProcessor.setDelegate(jobProcessorDelegate);
+                if (machine.getPnpJobProcessor() != null) {
+                    tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
+                    machine.getPnpJobProcessor().addTextStatusListener(textStatusListener);
                 }
 
-                if (machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace) != null) {
-                    tabbedPane.addTab("Pick and Place", null, jobPlacementsPanel, null);
-                    // Creating the tab should fire off the selection event, setting
-                    // the JobProcessor but this fails on some Linux based systems,
-                    // so here we detect if it failed and force setting it.
-                    if (jobProcessor == null) {
-                        setJobProcessor(
-                                machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace));
-                    }
-                }
-                if (machine.getJobProcessors().get(JobProcessor.Type.SolderPaste) != null) {
+                if (machine.getPasteDispenseJobProcessor() != null) {
                     tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
-                    // Creating the tab should fire off the selection event, setting
-                    // the JobProcessor but this fails on some Linux based systems,
-                    // so here we detect if it failed and force setting it.
-                    if (jobProcessor == null) {
-                        setJobProcessor(
-                                machine.getJobProcessors().get(JobProcessor.Type.SolderPaste));
-                    }
+                    machine.getPasteDispenseJobProcessor().addTextStatusListener(textStatusListener);
                 }
 
                 // Create an empty Job if one is not loaded
-                if (jobProcessor.getJob() == null) {
-                    Job job = new Job();
-                    jobProcessor.load(job);
+                if (getJob() == null) {
+                    setJob(new Job());
                 }
             }
         });
+
+        fsm.addPropertyChangeListener((e) -> {
+            updateJobActions();
+        });
     }
 
-    public JobProcessor.Type getSelectedJobProcessorType() {
-        String activeTabTitle = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
-        if (activeTabTitle.equals("Solder Paste")) {
-            return JobProcessor.Type.SolderPaste;
-        }
-        else if (activeTabTitle.equals("Pick and Place")) {
-            return JobProcessor.Type.PickAndPlace;
-        }
-        else {
-            throw new Error("Unknown job tab title: " + activeTabTitle);
-        }
+    public Job getJob() {
+        return job;
     }
 
-    /**
-     * Unregister the listener and delegate for the JobProcessor, set the new JobProcessor and add
-     * the listener and delegate back. If a job was previously loaded into the JobProcessor, load it
-     * into the new one.
-     * 
-     * The sequencing of making this work is a bit complex. When the app is starting the following
-     * happens: 1. The UI is created and shown. At this time no JobProcessor is set. 2. The
-     * Configuration is loaded and the completion listener is called. 3. The Configuration listener
-     * checks which JobProcessors are registered and adds tabs for each. 4. The first tab that is
-     * added causes a selection event to happen, which fires a ChangeEvent on the ChangeListener
-     * above. 5. The ChangeListener checks which tab was selected and calls this method with the
-     * appropriate JobProcessor.
-     * 
-     * @param jobProcessor
-     */
-    private void setJobProcessor(JobProcessor jobProcessor) {
-        Job job = null;
-        if (this.jobProcessor != null) {
-            job = this.jobProcessor.getJob();
-            if (this.jobProcessor.getState() != null
-                    && this.jobProcessor.getState() != JobProcessor.JobState.Stopped) {
-                throw new AssertionError("this.jobProcessor.getState() "
-                        + this.jobProcessor.getState() + " != JobProcessor.JobState.Stopped");
-            }
-            this.jobProcessor.removeListener(jobProcessorListener);
-            this.jobProcessor.setDelegate(null);
+    public void setJob(Job job) {
+        if (this.job != null) {
+            this.job.removePropertyChangeListener("dirty", titlePropertyChangeListener);
+            this.job.removePropertyChangeListener("file", titlePropertyChangeListener);
         }
-        this.jobProcessor = jobProcessor;
-        jobProcessor.addListener(jobProcessorListener);
-        jobProcessor.setDelegate(jobProcessorDelegate);
-        if (job != null) {
-            jobProcessor.load(job);
-        }
-    }
-
-    public JobProcessor getJobProcessor() {
-        return jobProcessor;
+        this.job = job;
+        boardLocationsTableModel.setJob(job);
+        job.addPropertyChangeListener("dirty", titlePropertyChangeListener);
+        job.addPropertyChangeListener("file", titlePropertyChangeListener);
+        updateTitle();
+        updateJobActions();
     }
 
     public JobPlacementsPanel getJobPlacementsPanel() {
@@ -411,7 +378,7 @@ public class JobPanel extends JPanel {
         }
         else {
             index = boardLocationsTable.convertRowIndexToModel(index);
-            return JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
+            return getJob().getBoardLocations().get(index);
         }
     }
 
@@ -432,8 +399,7 @@ public class JobPanel extends JPanel {
     }
 
     private boolean checkForJobModifications() {
-        if (jobProcessor.getJob().isDirty()) {
-            Job job = jobProcessor.getJob();
+        if (getJob().isDirty()) {
             String name = (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName());
             int result = JOptionPane.showConfirmDialog(frame,
                     "Do you want to save your changes to " + name + "?" + "\n"
@@ -476,13 +442,13 @@ public class JobPanel extends JPanel {
     }
 
     private boolean saveJob() {
-        if (jobProcessor.getJob().getFile() == null) {
+        if (getJob().getFile() == null) {
             return saveJobAs();
         }
         else {
             try {
-                File file = jobProcessor.getJob().getFile();
-                configuration.saveJob(jobProcessor.getJob(), file);
+                File file = getJob().getFile();
+                configuration.saveJob(getJob(), file);
                 addRecentJob(file);
                 return true;
             }
@@ -519,7 +485,7 @@ public class JobPanel extends JPanel {
                     return false;
                 }
             }
-            configuration.saveJob(jobProcessor.getJob(), file);
+            configuration.saveJob(getJob(), file);
             addRecentJob(file);
             return true;
         }
@@ -533,8 +499,7 @@ public class JobPanel extends JPanel {
      * Updates the Job controls based on the Job state and the Machine's readiness.
      */
     private void updateJobActions() {
-        JobState state = jobProcessor.getState();
-        if (state == JobState.Stopped) {
+        if (fsm.getState() == State.Stopped) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Start");
             startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.start);
@@ -544,7 +509,7 @@ public class JobPanel extends JPanel {
             stepJobAction.setEnabled(true);
             tabbedPane.setEnabled(true);
         }
-        else if (state == JobState.Running) {
+        else if (fsm.getState() == State.Running) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Pause");
             startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.pause);
@@ -554,7 +519,7 @@ public class JobPanel extends JPanel {
             stepJobAction.setEnabled(false);
             tabbedPane.setEnabled(false);
         }
-        else if (state == JobState.Paused) {
+        else if (fsm.getState() == State.Stepping) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME, "Resume");
             startPauseResumeJobAction.putValue(AbstractAction.SMALL_ICON, Icons.start);
@@ -575,7 +540,6 @@ public class JobPanel extends JPanel {
     }
 
     private void updateTitle() {
-        Job job = jobProcessor.getJob();
         String title = String.format("OpenPnP - %s%s", job.isDirty() ? "*" : "",
                 (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName()));
         frame.setTitle(title);
@@ -642,7 +606,7 @@ public class JobPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
                 Job job = configuration.loadJob(file);
-                jobProcessor.load(job);
+                setJob(job);
                 addRecentJob(file);
             }
             catch (Exception e) {
@@ -658,7 +622,7 @@ public class JobPanel extends JPanel {
             if (!checkForModifications()) {
                 return;
             }
-            jobProcessor.load(new Job());
+            setJob(new Job());
         }
     };
 
@@ -676,6 +640,101 @@ public class JobPanel extends JPanel {
         }
     };
 
+    /**
+     * Initialize the job processor and start the run thread. The run thread will run one step and
+     * then either loop if the state is Running or exit if the state is Stepping.
+     * 
+     * @throws Exception
+     */
+    public void jobStart() throws Exception {
+        String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+        if (title.equals("Solder Paste")) {
+            jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
+        }
+        else if (title.equals("Pick and Place")) {
+            jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+        }
+        else {
+            throw new Error("Programmer error: Unknown tab title.");
+        }
+        jobProcessor.initialize(job);
+        jobRun();
+    }
+    
+    public void jobRun() {
+        UiUtils.submitUiMachineTask(() -> {
+            // Make sure the FSM has actually transitioned to either Running or Stepping
+            // before continuing so that we don't accidentally exit early. This breaks
+            // the potential race condition where this task may execute before the
+            // calling task (setting the FSM state) finishes.
+            while (fsm.getState() != State.Running && fsm.getState() != State.Stepping);
+            do {
+                if (!jobProcessor.next()) {
+                    fsm.send(Message.Finished);
+                }
+            } while (fsm.getState() == State.Running);
+            return null;
+        }, (e) -> {
+            
+        }, (t) -> {
+            List<String> options = new ArrayList<>();
+            String retryOption = "Try Again";
+            String skipOption = "Skip";
+            String pauseOption = "Pause Job";
+            
+            options.add(retryOption);
+            if (jobProcessor.canSkip()) {
+                options.add(skipOption);
+            }
+            options.add(pauseOption);
+            int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
+                    "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                    options.toArray(), retryOption);
+            String selectedOption = options.get(result);
+            if (selectedOption.equals(retryOption)) {
+                jobRun();
+            }
+            // Skip
+            else if (selectedOption.equals(skipOption)) {
+                UiUtils.messageBoxOnException(() -> {
+                    // Tell the job processor to skip the current placement and then call jobRun()
+                    // to start things back up, either running or stepping.
+                    jobSkip();
+                });
+            }
+            // Pause or cancel dialog
+            else {
+                // We are either Running or Stepping. If Stepping, there is nothing to do. Just
+                // clear the dialog and let the user take control. If Running we need to transition
+                // to Stepping.
+                if (fsm.getState() == State.Running) {
+                    try {
+                        fsm.send(Message.StartOrPause);
+                    }
+                    catch (Exception e) {
+                        // Since we are checking if we're in the Running state this should not
+                        // ever happen. If it does, the Error will let us know.
+                        e.printStackTrace();
+                        throw new Error(e);
+                    }
+                }
+            }
+        });
+    }
+    
+    public void jobSkip() {
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.skip();
+            jobRun();
+        });
+    }
+
+    private void jobAbort() {
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.abort();
+        });
+    }
+    
     public final Action startPauseResumeJobAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.start);
@@ -685,21 +744,9 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            JobState state = jobProcessor.getState();
-            if (state == JobState.Stopped) {
-                try {
-                    jobProcessor.start();
-                }
-                catch (Exception e) {
-                    MessageBoxes.errorBox(frame, "Job Start Error", e.getMessage());
-                }
-            }
-            else if (state == JobState.Paused) {
-                jobProcessor.resume();
-            }
-            else if (state == JobState.Running) {
-                jobProcessor.pause();
-            }
+            UiUtils.messageBoxOnException(() -> {
+                fsm.send(Message.StartOrPause);
+            });
         }
     };
 
@@ -712,12 +759,9 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            try {
-                jobProcessor.step();
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(frame, "Job Step Failed", e.getMessage());
-            }
+            UiUtils.messageBoxOnException(() -> {
+                fsm.send(Message.Step);
+            });
         }
     };
 
@@ -730,7 +774,9 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            jobProcessor.stop();
+            UiUtils.messageBoxOnException(() -> {
+                fsm.send(Message.Abort);
+            });
         }
     };
 
@@ -763,7 +809,7 @@ public class JobPanel extends JPanel {
 
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
-                jobProcessor.getJob().addBoardLocation(boardLocation);
+                getJob().addBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(boardLocationsTable);
@@ -800,7 +846,7 @@ public class JobPanel extends JPanel {
 
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
-                jobProcessor.getJob().addBoardLocation(boardLocation);
+                getJob().addBoardLocation(boardLocation);
                 // TODO: Move to a list property listener.
                 boardLocationsTableModel.fireTableDataChanged();
 
@@ -825,9 +871,8 @@ public class JobPanel extends JPanel {
             int index = boardLocationsTable.getSelectedRow();
             if (index != -1) {
                 index = boardLocationsTable.convertRowIndexToModel(index);
-                BoardLocation boardLocation =
-                        JobPanel.this.jobProcessor.getJob().getBoardLocations().get(index);
-                JobPanel.this.jobProcessor.getJob().removeBoardLocation(boardLocation);
+                BoardLocation boardLocation = getJob().getBoardLocations().get(index);
+                getJob().removeBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
             }
         }
@@ -963,7 +1008,7 @@ public class JobPanel extends JPanel {
             }
             try {
                 Job job = configuration.loadJob(file);
-                jobProcessor.load(job);
+                setJob(job);
                 addRecentJob(file);
             }
             catch (Exception e) {
@@ -973,43 +1018,6 @@ public class JobPanel extends JPanel {
         }
     }
 
-    private final JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
-        @Override
-        public void jobStateChanged(JobState state) {
-            updateJobActions();
-        }
-
-        @Override
-        public void jobLoaded(Job job) {
-            if (boardLocationsTableModel.getJob() != job) {
-                // If the same job is being loaded there is no reason to reset
-                // the table, so skip it. This allows us to leave the same
-                // row selected in the case of switching job processors and
-                // tabs.
-                boardLocationsTableModel.setJob(job);
-            }
-            job.addPropertyChangeListener("dirty", titlePropertyChangeListener);
-            job.addPropertyChangeListener("file", titlePropertyChangeListener);
-            updateTitle();
-            updateJobActions();
-        }
-
-        @Override
-        public void jobEncounteredError(JobError error, String description) {
-            MessageBoxes.errorBox(frame, error.toString(),
-                    description + "\n\nThe job will be paused.");
-            // TODO: Implement a way to retry, abort, etc.
-            jobProcessor.pause();
-        }
-    };
-
-    private final JobProcessorDelegate jobProcessorDelegate = new JobProcessorDelegate() {
-        @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
-            return PickRetryAction.SkipAndContinue;
-        }
-    };
-
     private final MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineEnabled(Machine machine) {
@@ -1018,8 +1026,17 @@ public class JobPanel extends JPanel {
 
         @Override
         public void machineDisabled(Machine machine, String reason) {
+            // TODO This fails. When we get this message the machine is already
+            // disabled so we can't perform the abort actions.
+            if (fsm.getState() != State.Stopped) {
+                try {
+                    fsm.send(Message.Abort);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             updateJobActions();
-            jobProcessor.stop();
         }
     };
 
@@ -1028,7 +1045,11 @@ public class JobPanel extends JPanel {
                 @Override
                 public void propertyChange(PropertyChangeEvent evt) {
                     updateTitle();
-                    jobSaveActionGroup.setEnabled(jobProcessor.getJob().isDirty());
+                    jobSaveActionGroup.setEnabled(getJob().isDirty());
                 }
             };
+            
+    private final TextStatusListener textStatusListener = text -> {
+        MainFrame.mainFrame.setStatus(text);
+    };
 }

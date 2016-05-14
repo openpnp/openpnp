@@ -61,6 +61,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Configuration.PartsConfigurationHolder;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
@@ -113,24 +114,34 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         panelPart = new JPanel();
         panelPart.setBorder(
-                new TitledBorder(null, "Part", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        comboBoxPart = new JComboBox();
+        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         try {
-            comboBoxPart.setModel(new PartsComboBoxModel());
         }
         catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
-        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "2, 2, 3, 1, left, default");
+                
+                lblPart = new JLabel("Part");
+                panelPart.add(lblPart, "2, 2, right, default");
+        
+                comboBoxPart = new JComboBox();
+                comboBoxPart.setModel(new PartsComboBoxModel());
+                comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
+                panelPart.add(comboBoxPart, "4, 2, left, default");
 
         lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
@@ -138,6 +149,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
+        
+        lblRetryCount = new JLabel("Retry Count");
+        panelPart.add(lblRetryCount, "2, 6, right, default");
+        
+        retryCountTf = new JTextField();
+        retryCountTf.setText("3");
+        panelPart.add(retryCountTf, "4, 6, fill, default");
+        retryCountTf.setColumns(3);
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -279,6 +298,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+        addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
@@ -305,6 +325,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
+        ComponentDecorators.decorateWithAutoSelect(retryCountTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
@@ -524,4 +545,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private JCheckBox chckbxUseVision;
     private JLabel lblUseVision;
+    private JLabel lblPart;
+    private JLabel lblRetryCount;
+    private JTextField retryCountTf;
 }

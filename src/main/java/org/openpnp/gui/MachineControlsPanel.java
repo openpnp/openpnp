@@ -53,7 +53,6 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
@@ -130,21 +129,12 @@ public class MachineControlsPanel extends JPanel {
     }
 
     /**
-     * Returns the selected Nozzle or PasteDispenser depending on which type of Job is selected.
-     * 
+     * Currently returns the selected Nozzle. Intended to eventually return either the selected
+     * Nozzle or PasteDispenser.
      * @return
      */
     public HeadMountable getSelectedTool() {
-        JobProcessor.Type jobProcessorType = MainFrame.jobPanel.getSelectedJobProcessorType();
-        if (jobProcessorType == JobProcessor.Type.PickAndPlace) {
-            return getSelectedNozzle();
-        }
-        else if (jobProcessorType == JobProcessor.Type.SolderPaste) {
-            return getSelectedPasteDispenser();
-        }
-        else {
-            throw new Error("Unknown tool type: " + jobProcessorType);
-        }
+        return getSelectedNozzle();
     }
 
     public JogControlsPanel getJogControlsPanel() {

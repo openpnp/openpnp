@@ -6,22 +6,13 @@ import java.io.File;
 import org.jcodec.api.awt.SequenceEncoder;
 import org.junit.Test;
 import org.openpnp.CameraListener;
-import org.openpnp.JobProcessorDelegate;
-import org.openpnp.JobProcessorListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor;
-import org.openpnp.spi.JobProcessor.JobError;
-import org.openpnp.spi.JobProcessor.JobState;
-import org.openpnp.spi.JobProcessor.PickRetryAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,88 +49,21 @@ public class SampleJobTest {
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
         // camera.startContinuousCapture(encoder, 25);
 
-        TestCompleteNotifier notifier = new TestCompleteNotifier();
-
-        JobProcessor jobProcessor = machine.getJobProcessors().get(JobProcessor.Type.PickAndPlace);
-        jobProcessor.addListener(new SampleJobTestProcessorListener(notifier));
-        jobProcessor.setDelegate(new SampleJobTestJobProcessorDelegate());
+        JobProcessor jobProcessor = machine.getPnpJobProcessor();
+        jobProcessor.addTextStatusListener((text) -> {
+            System.out.println(text);
+        });
 
         File jobFile = new File("samples");
         jobFile = new File(jobFile, "pnp-test");
         jobFile = new File(jobFile, "pnp-test.job.xml");
         Job job = Configuration.get().loadJob(jobFile);
 
-        jobProcessor.load(job);
         machine.setEnabled(true);
-        synchronized (notifier) {
-            jobProcessor.start();
-            notifier.wait();
-        }
+        jobProcessor.initialize(job);
+        while (jobProcessor.next());
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
-        if (notifier.failed) {
-            throw notifier.exception;
-        }
-    }
-
-    public static class SampleJobTestJobProcessorDelegate implements JobProcessorDelegate {
-        @Override
-        public PickRetryAction partPickFailed(BoardLocation board, Part part, Feeder feeder) {
-            return null;
-        }
-    }
-
-    public static class SampleJobTestProcessorListener extends JobProcessorListener.Adapter {
-        final private TestCompleteNotifier notifier;
-
-        public SampleJobTestProcessorListener(TestCompleteNotifier notifier) {
-            this.notifier = notifier;
-        }
-
-        @Override
-        public void jobLoaded(Job job) {}
-
-        @Override
-        public void jobStateChanged(JobState state) {
-            if (state == JobState.Stopped) {
-                synchronized (notifier) {
-                    notifier.notifyAll();
-                }
-            }
-        }
-
-        @Override
-        public void jobEncounteredError(JobError error, String description) {
-            synchronized (notifier) {
-                notifier.failed = true;
-                notifier.exception = new Exception(error + " " + description);
-                notifier.notifyAll();
-            }
-        }
-
-        @Override
-        public void partProcessingStarted(BoardLocation board, Placement placement) {
-            logger.info("Start " + placement.getId());
-        }
-
-        @Override
-        public void partPicked(BoardLocation board, Placement placement) {}
-
-        @Override
-        public void partPlaced(BoardLocation board, Placement placement) {}
-
-        @Override
-        public void partProcessingCompleted(BoardLocation board, Placement placement) {
-            logger.info("Finish " + placement.getId());
-        }
-
-        @Override
-        public void detailedStatusUpdated(String status) {}
-    }
-
-    public static class TestCompleteNotifier {
-        public boolean failed;
-        public Exception exception;
     }
 
     public static class MpegEncodingCameraListener implements CameraListener {

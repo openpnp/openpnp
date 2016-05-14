@@ -264,7 +264,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public String toString() {
-        return getName();
+        return getName() + " " + getId();
     }
 
     public Length getSafeZ() {

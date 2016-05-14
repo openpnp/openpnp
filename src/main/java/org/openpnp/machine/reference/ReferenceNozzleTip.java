@@ -98,7 +98,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public String toString() {
-        return getName();
+        return getName() + " " + getId();
     }
 
     @Override
