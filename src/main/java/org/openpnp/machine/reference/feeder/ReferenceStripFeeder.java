@@ -21,11 +21,13 @@ package org.openpnp.machine.reference.feeder;
 
 
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Action;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -52,9 +54,9 @@ import org.slf4j.LoggerFactory;
  */
 
 /**
- * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/ 
+ * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/
  * 
- * holes 1.5mm 
+ * holes 1.5mm
  * 
  * hole pitch 4mm
  * 
@@ -70,7 +72,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
 
     public enum TapeType {
-        WhitePaper("White Paper"), BlackPlastic("Black Plastic"), ClearPlastic("Clear Plastic");
+        WhitePaper("White Paper"),
+        BlackPlastic("Black Plastic"),
+        ClearPlastic("Clear Plastic");
 
         private String name;
 
@@ -235,13 +239,15 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     private Location findClosestHole(Camera camera) {
         List<Location> holeLocations = new ArrayList<>();
-        new FluentCv().setCamera(camera).settleAndCapture().toGray()
+        BufferedImage image = new FluentCv().setCamera(camera).settleAndCapture("original").toGray()
                 .blurGaussian(getHoleBlurKernelSize())
-                .findCirclesHough(getHoleDiameterMin(), getHoleDiameterMax(), getHolePitchMin())
-                .convertCirclesToLocations(holeLocations);
+                .findCirclesHough(getHoleDiameterMin(), getHoleDiameterMax(), getHolePitchMin(),
+                        "circles")
+                .convertCirclesToLocations(holeLocations).drawCircles("original").toBufferedImage();
         if (holeLocations.isEmpty()) {
             return null;
         }
+        MainFrame.cameraPanel.getCameraView(camera).showFilteredImage(image, 500);
         return holeLocations.get(0);
     }
 
