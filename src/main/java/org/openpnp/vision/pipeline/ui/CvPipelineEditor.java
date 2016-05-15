@@ -16,6 +16,7 @@ import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.openpnp.vision.pipeline.stages.BlurMedian;
 import org.openpnp.vision.pipeline.stages.BottomVisionCriS;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
+import org.openpnp.vision.pipeline.stages.ConvertModelToPoints;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
@@ -60,6 +61,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(BlurGaussian.class);
         registerStageClass(BottomVisionCriS.class);
         registerStageClass(ConvertColor.class);
+        registerStageClass(ConvertModelToPoints.class);
         registerStageClass(DetectCirclesHough.class);
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DetectEdgesRobertsCross.class);
