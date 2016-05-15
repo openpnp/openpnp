@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
+import org.opencv.core.RotatedRect;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
@@ -272,16 +273,28 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             Camera camera = VisionUtils.getBottomVisionCamera();
             calibrationPipeline.setCamera(camera);
             calibrationPipeline.process();
-            List<Result.Circle> circles =
-                    (List<Result.Circle>) calibrationPipeline.getResult("result").model;
-            List<Location> locations = circles.stream().map(circle -> {
-                return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-            }).sorted((a, b) -> {
-                double a1 = a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                double b1 = b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                return Double.compare(a1, b1);
-            }).collect(Collectors.toList());
-            Location location = locations.get(0);
+            Location location;
+            Object result = calibrationPipeline.getResult("result").model;
+            if (result instanceof List && ((List) result).get(0) instanceof Result.Circle) {
+                List<Result.Circle> circles = (List<Result.Circle>) result;
+                List<Location> locations = circles.stream().map(circle -> {
+                    return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                }).sorted((a, b) -> {
+                    double a1 =
+                            a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                    double b1 =
+                            b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                    return Double.compare(a1, b1);
+                }).collect(Collectors.toList());
+                location = locations.get(0);
+            }
+            else if (result instanceof RotatedRect) {
+                RotatedRect rect = (RotatedRect) result;
+                location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+            }
+            else {
+                throw new Exception("Unrecognized result " + result);
+            }
             MainFrame.mainFrame.cameraPanel.getCameraView(camera).showFilteredImage(
                     OpenCvUtils.toBufferedImage(calibrationPipeline.getWorkingImage()), 250);
             return location;
@@ -310,7 +323,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             if (!isCalibrated()) {
                 return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
             }
-            
+
             // Make sure the angle is between 0 and 360.
             while (angle < 0) {
                 angle += 360;
@@ -332,7 +345,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
             return new Location(offsetA.getUnits(), offsetX, offsetY, 0, 0);
         }
-        
+
         public void reset() {
             offsets = null;
         }
