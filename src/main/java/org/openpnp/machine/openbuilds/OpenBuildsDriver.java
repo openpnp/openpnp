@@ -106,7 +106,8 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         getCurrentPosition();
         if (!homed) {
             homed = true;
-            head.getDefaultCamera().moveTo(new Location(LengthUnit.Millimeters, 285.579718, 11.291723, 0, 0));
+            head.getDefaultCamera()
+                    .moveTo(new Location(LengthUnit.Millimeters, 285.579718, 11.291723, 0, 0));
         }
     }
 
@@ -184,7 +185,8 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             // We perform E moves solo because Smoothie doesn't like to make large E moves
             // with small X/Y moves, so we can't trust it to end up where we want it if we
             // do both at the same time.
-            sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
+            sendCommand(
+                    String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
             dwell();
             if (nozzleIndex == 0) {
                 this.c = c;
@@ -212,9 +214,10 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             dwell();
         }
     }
-    
+
     /**
      * Returns 0 or 1 for either the first or second Nozzle.
+     * 
      * @param nozzle
      * @return
      */
