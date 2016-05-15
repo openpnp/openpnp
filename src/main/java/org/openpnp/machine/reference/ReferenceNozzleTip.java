@@ -232,7 +232,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         List<CalibrationOffset> offsets;
 
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-            this.offsets = null;
+            reset();
 
             Nozzle nozzle = nozzleTip.getParentNozzle();
             Camera camera = VisionUtils.getBottomVisionCamera();
@@ -263,22 +263,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 offsets.add(new CalibrationOffset(offset, i));
             }
 
-            // The nozzle tip is now calibrated and calibration.getCalibratedLocation() can be
+            // The nozzle tip is now calibrated and calibration.getCalibratedOffset() can be
             // used.
             this.offsets = offsets;
-
-            // TESTS
-            // for (double i = 0; i <= 360; i += 15) {
-            // nozzle.moveTo(
-            // startLocation.add(new Location(LengthUnit.Millimeters, 10, 10, 0, 0)));
-            // nozzle.moveTo(startLocation.derive(null, null, null, i));
-            // Thread.sleep(1000);
-            //
-            // nozzle.moveTo(
-            // startLocation.add(new Location(LengthUnit.Millimeters, 10, 10, 0, 0)));
-            // nozzle.moveTo(getCalibratedLocation(startLocation.derive(null, null, null, i)));
-            // Thread.sleep(1000);
-            // }
         }
 
         public Location findCircle() throws Exception {
@@ -319,8 +306,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return Arrays.asList(a, b);
         }
 
-        public Location getCalibratedLocation(Location location) {
-            double angle = location.getRotation();
+        public Location getCalibratedOffset(double angle) {
+            if (!isCalibrated()) {
+                return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+            }
+            
             // Make sure the angle is between 0 and 360.
             while (angle < 0) {
                 angle += 360;
@@ -331,8 +321,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             List<CalibrationOffset> offsets = getOffsetPairForAngle(angle);
             CalibrationOffset a = offsets.get(0);
             CalibrationOffset b = offsets.get(1);
-            Location offsetA = a.offset.convertToUnits(location.getUnits());
-            Location offsetB = b.offset.convertToUnits(location.getUnits());
+            Location offsetA = a.offset;
+            Location offsetB = b.offset.convertToUnits(a.offset.getUnits());
 
             double ratio = (angle - a.angle) / (b.angle - a.angle);
             double deltaX = offsetB.getX() - offsetA.getX();
@@ -340,8 +330,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             double offsetX = offsetA.getX() + (deltaX * ratio);
             double offsetY = offsetA.getY() + (deltaY * ratio);
 
-            location = location.subtract(new Location(location.getUnits(), offsetX, offsetY, 0, 0));
-            return location;
+            return new Location(offsetA.getUnits(), offsetX, offsetY, 0, 0);
+        }
+        
+        public void reset() {
+            offsets = null;
         }
 
         public boolean isCalibrated() {

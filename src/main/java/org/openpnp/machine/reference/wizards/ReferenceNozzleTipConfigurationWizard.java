@@ -89,6 +89,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JPanel panelCalibration;
     private JButton btnEditPipeline;
     private JButton btnCalibrate;
+    private JButton btnReset;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -202,10 +203,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         contentPanel.add(panelCalibration);
         panelCalibration
                 .setLayout(
-                        new FormLayout(new ColumnSpec[] {FormSpecs.DEFAULT_COLSPEC,},
-                                new RowSpec[] {RowSpec.decode("23px"),
-                                        FormSpecs.RELATED_GAP_ROWSPEC,
-                                        FormSpecs.DEFAULT_ROWSPEC,}));
+                        new FormLayout(new ColumnSpec[] {
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                RowSpec.decode("23px"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnEditPipeline = new JButton("Edit Pipeline");
         btnEditPipeline.addActionListener(new ActionListener() {
@@ -224,6 +229,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
             }
         });
         panelCalibration.add(btnCalibrate, "1, 3");
+        
+        btnReset = new JButton("Reset");
+        btnReset.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                nozzleTip.getCalibration().reset();
+            }
+        });
+        panelCalibration.add(btnReset, "1, 5");
     }
 
     private void editCalibrationPipeline() throws Exception {
