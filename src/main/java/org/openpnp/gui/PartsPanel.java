@@ -24,8 +24,11 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -86,13 +89,15 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private TableRowSorter<PartsTableModel> tableSorter;
     private JTextField searchTextField;
     private JTable table;
-    private ActionGroup rowSelectedActionGroup;
+    private ActionGroup singleSelectionActionGroup;
+    private ActionGroup multiSelectionActionGroup;
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
         this.frame = frame;
 
-        rowSelectedActionGroup = new ActionGroup(deletePartAction, pickPartAction);
+        singleSelectionActionGroup = new ActionGroup(deletePartAction, pickPartAction);
+        multiSelectionActionGroup = new ActionGroup(deletePartAction);
 
         setLayout(new BorderLayout(0, 0));
         tableModel = new PartsTableModel();
@@ -153,7 +158,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         tabbedPane.add("Alignment", new JScrollPane(alignmentPanel));
 
         table = new AutoSelectTextTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(org.openpnp.model.Package.class,
                 new DefaultCellEditor(packagesCombo));
         table.setDefaultRenderer(org.openpnp.model.Package.class,
@@ -169,7 +174,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         JButton btnDeletePart = toolBar.add(deletePartAction);
         btnDeletePart.setToolTipText("");
         toolBar.addSeparator();
-        JButton btnAlign = toolBar.add(pickPartAction);
+        toolBar.add(pickPartAction);
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -177,12 +182,22 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
-                Part part = getSelectedPart();
 
-                rowSelectedActionGroup.setEnabled(part != null);
+                List<Part> selectedParts = getSelectedParts();
+
+                if (selectedParts.size() > 1) {
+                    singleSelectionActionGroup.setEnabled(false);
+                    multiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    multiSelectionActionGroup.setEnabled(false);
+                    singleSelectionActionGroup.setEnabled(!selectedParts.isEmpty());
+                }
 
                 alignmentPanel.removeAll();
 
+                Part part = getSelectedPart();
+                
                 if (part != null) {
                     PartAlignment partAlignment =
                             Configuration.get().getMachine().getPartAlignment();
@@ -198,16 +213,24 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
         });
 
-        rowSelectedActionGroup.setEnabled(false);
+        singleSelectionActionGroup.setEnabled(false);
     }
 
     private Part getSelectedPart() {
-        int index = table.getSelectedRow();
-        if (index == -1) {
+        List<Part> selectedParts = getSelectedParts();
+        if (selectedParts.size() != 1) {
             return null;
         }
-        index = table.convertRowIndexToModel(index);
-        return tableModel.getPart(index);
+        return selectedParts.get(0);
+    }
+
+    private List<Part> getSelectedParts() {
+        List<Part> parts = new ArrayList<>();
+        for (int selectedRow : table.getSelectedRows()) {
+            selectedRow = table.convertRowIndexToModel(selectedRow);
+            parts.add(tableModel.getPart(selectedRow));
+        }
+        return parts;
     }
 
     private void search() {
@@ -266,11 +289,23 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            List<Part> selectedParts = getSelectedParts();
+            List<String> ids = selectedParts.stream().map(Part::getId).collect(Collectors.toList());
+            String formattedIds;
+            if (ids.size() <= 3) {
+                formattedIds = String.join(", ", ids);
+            }
+            else {
+                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+            }
+            
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + getSelectedPart().getId() + "?",
-                    "Delete " + getSelectedPart().getId() + "?", JOptionPane.YES_NO_OPTION);
+                    "Are you sure you want to delete " + formattedIds + "?",
+                    "Delete " + selectedParts.size() + " parts?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                Configuration.get().removePart(getSelectedPart());
+                for (Part part : selectedParts) {
+                    Configuration.get().removePart(part);
+                }
             }
         }
     };
