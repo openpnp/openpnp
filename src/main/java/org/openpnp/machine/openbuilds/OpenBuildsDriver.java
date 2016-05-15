@@ -19,6 +19,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -124,7 +125,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         if (hm instanceof ReferenceNozzle) {
             ReferenceNozzle nozzle = (ReferenceNozzle) hm;
             double z = Math.sin(Math.toRadians(this.zA)) * zCamRadius;
-            if (((ReferenceNozzle) hm).getName().equals("N2")) {
+            if (getNozzleIndex(nozzle) == 1) {
                 z = -z;
             }
             z += zCamWheelRadius + zGap;
@@ -170,17 +171,17 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
             this.y = y;
         }
-        int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
-        if (!Double.isNaN(c) && c != (tool == 0 ? this.c : this.c2)) {
+        int nozzleIndex = getNozzleIndex(nozzle);
+        if (!Double.isNaN(c) && c != (nozzleIndex == 0 ? this.c : this.c2)) {
             // If there is an E move we need to set the tool before
             // performing any commands otherwise we may move the wrong tool.
-            sendCommand(String.format(Locale.US, "T%d", tool));
+            sendCommand(String.format(Locale.US, "T%d", nozzleIndex));
             // We perform E moves solo because Smoothie doesn't like to make large E moves
             // with small X/Y moves, so we can't trust it to end up where we want it if we
             // do both at the same time.
             sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
             dwell();
-            if (tool == 0) {
+            if (nozzleIndex == 0) {
                 this.c = c;
             }
             else {
@@ -191,7 +192,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         if (!Double.isNaN(z)) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
             logger.debug("nozzle {} {} {}", new Object[] {z, zCamRadius, a});
-            if (nozzle.getName().equals("N2")) {
+            if (nozzleIndex == 1) {
                 a = -a;
             }
             if (a != this.zA) {
@@ -206,10 +207,22 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             dwell();
         }
     }
+    
+    /**
+     * Returns 0 or 1 for either the first or second Nozzle.
+     * @param nozzle
+     * @return
+     */
+    private int getNozzleIndex(Nozzle nozzle) {
+        if (nozzle == null) {
+            return 0;
+        }
+        return nozzle.getHead().getNozzles().indexOf(nozzle);
+    }
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
+        if (getNozzleIndex(nozzle) == 0) {
             pump(true);
             n1Exhaust(false);
             n1Vacuum(true);
@@ -225,7 +238,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
+        if (getNozzleIndex(nozzle) == 0) {
             n1Picked = false;
             if (!n1Picked && !n2Picked) {
                 pump(false);
