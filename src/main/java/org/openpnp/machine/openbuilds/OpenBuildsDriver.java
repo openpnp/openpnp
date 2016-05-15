@@ -50,6 +50,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private boolean n1Picked, n2Picked;
+    private boolean homed;
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
@@ -72,7 +73,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 n2Exhaust(false);
                 led(false);
                 pump(false);
-
+                homed = false;
             }
         }
     }
@@ -103,6 +104,10 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         sendCommand("G92 E0");
         // Update position
         getCurrentPosition();
+        if (!homed) {
+            homed = true;
+            head.getDefaultCamera().moveTo(new Location(LengthUnit.Millimeters, 285.579718, 11.291723, 0, 0));
+        }
     }
 
 
