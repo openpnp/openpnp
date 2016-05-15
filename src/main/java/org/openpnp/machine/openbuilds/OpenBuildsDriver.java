@@ -175,17 +175,11 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             // If there is an E move we need to set the tool before
             // performing any commands otherwise we may move the wrong tool.
             sendCommand(String.format(Locale.US, "T%d", tool));
-            if (sb.length() == 0) {
-                // If the move won't contain an X or Y component but will
-                // have an E component we need to send the E component as a
-                // solo move because Smoothie won't move only E and Z at
-                // the same time.
-                sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
-                dwell();
-            }
-            else {
-                sb.append(String.format(Locale.US, "E%2.2f ", c));
-            }
+            // We perform E moves solo because Smoothie doesn't like to make large E moves
+            // with small X/Y moves, so we can't trust it to end up where we want it if we
+            // do both at the same time.
+            sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
+            dwell();
             if (tool == 0) {
                 this.c = c;
             }
