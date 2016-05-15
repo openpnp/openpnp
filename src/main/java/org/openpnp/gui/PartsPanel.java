@@ -97,7 +97,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
         this.frame = frame;
 
         singleSelectionActionGroup = new ActionGroup(deletePartAction, pickPartAction);
+        singleSelectionActionGroup.setEnabled(false);
         multiSelectionActionGroup = new ActionGroup(deletePartAction);
+        multiSelectionActionGroup.setEnabled(false);
 
         setLayout(new BorderLayout(0, 0));
         tableModel = new PartsTableModel();
@@ -183,20 +185,20 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     return;
                 }
 
-                List<Part> selectedParts = getSelectedParts();
+                List<Part> selections = getSelections();
 
-                if (selectedParts.size() > 1) {
+                if (selections.size() > 1) {
                     singleSelectionActionGroup.setEnabled(false);
                     multiSelectionActionGroup.setEnabled(true);
                 }
                 else {
                     multiSelectionActionGroup.setEnabled(false);
-                    singleSelectionActionGroup.setEnabled(!selectedParts.isEmpty());
+                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
                 }
 
                 alignmentPanel.removeAll();
 
-                Part part = getSelectedPart();
+                Part part = getSelection();
                 
                 if (part != null) {
                     PartAlignment partAlignment =
@@ -212,25 +214,23 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 repaint();
             }
         });
-
-        singleSelectionActionGroup.setEnabled(false);
     }
 
-    private Part getSelectedPart() {
-        List<Part> selectedParts = getSelectedParts();
-        if (selectedParts.size() != 1) {
+    private Part getSelection() {
+        List<Part> selections = getSelections();
+        if (selections.size() != 1) {
             return null;
         }
-        return selectedParts.get(0);
+        return selections.get(0);
     }
 
-    private List<Part> getSelectedParts() {
-        List<Part> parts = new ArrayList<>();
+    private List<Part> getSelections() {
+        List<Part> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            parts.add(tableModel.getPart(selectedRow));
+            selections.add(tableModel.getPart(selectedRow));
         }
-        return parts;
+        return selections;
     }
 
     private void search() {
@@ -289,8 +289,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            List<Part> selectedParts = getSelectedParts();
-            List<String> ids = selectedParts.stream().map(Part::getId).collect(Collectors.toList());
+            List<Part> selections = getSelections();
+            List<String> ids = selections.stream().map(Part::getId).collect(Collectors.toList());
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
@@ -301,9 +301,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + formattedIds + "?",
-                    "Delete " + selectedParts.size() + " parts?", JOptionPane.YES_NO_OPTION);
+                    "Delete " + selections.size() + " parts?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                for (Part part : selectedParts) {
+                for (Part part : selections) {
                     Configuration.get().removePart(part);
                 }
             }
@@ -321,7 +321,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-                Part part = getSelectedPart();
+                Part part = getSelection();
                 Feeder feeder = null;
                 // find a feeder to feed
                 for (Feeder f : Configuration.get().getMachine().getFeeders()) {
