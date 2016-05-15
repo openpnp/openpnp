@@ -50,6 +50,9 @@ More information can be found at:
 http://www.evl.uic.edu/ralph/508S98/coordinates.html
 http://en.wikipedia.org/wiki/Right-hand_rule
 
+The units for the X, Y and Z axises are set in the gui, the default is mm.  The units for the C axises is degrees, OpenPnP measures rotation in degrees and treats them like mm from the perspective of the controller.
+
+
 The User Interface
 ==================
 
