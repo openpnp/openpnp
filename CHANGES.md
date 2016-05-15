@@ -1,6 +1,12 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-05-15
+
+* Multi-Select on Parts and Packages Panels
+
+	You can now select multiple entries in the Parts and Packages panels for deletion. 
+
 # 2016-05-14
 
 * Job Processor Refactor
