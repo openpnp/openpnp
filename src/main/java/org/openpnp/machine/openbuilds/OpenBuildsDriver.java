@@ -135,8 +135,8 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 z = -z;
             }
             z += zCamWheelRadius + zGap;
-            int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
-            return new Location(LengthUnit.Millimeters, x, y, z, tool == 0 ? c : c2)
+            int nozzleIndex = getNozzleIndex(nozzle);
+            return new Location(LengthUnit.Millimeters, x, y, z, nozzleIndex == 0 ? c : c2)
                     .add(hm.getHeadOffsets());
         }
         else {
