@@ -11,12 +11,15 @@ import java.util.stream.Collectors;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
+import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
+import org.opencv.features2d.KeyPoint;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -225,102 +228,69 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         @Element(required = false)
-        private CvPipeline calibrationPipeline = new CvPipeline();
+        private CvPipeline pipeline = createDefaultPipeline();
 
         @Attribute(required = false)
-        double angleIncrement = 30;
+        private double angleIncrement = 15;
+        
+        @Attribute(required = false)
+        private boolean enabled;
+        
+        private boolean calibrating;
 
         List<CalibrationOffset> offsets;
 
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
-            reset();
-
-            Nozzle nozzle = nozzleTip.getParentNozzle();
-            Camera camera = VisionUtils.getBottomVisionCamera();
-
-            // Move to the camera with an angle of 0.
-            Location location = camera.getLocation();
-            location = location.derive(null, null, null, 0d);
-            MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-            for (int i = 0; i < 3; i++) {
-                // Locate the nozzle offsets.
-                Location offset = findCircle();
-
-                // Subtract the offsets and move to that position to center the nozzle.
-                location = location.subtract(offset);
-                nozzle.moveTo(location);
+            if (!isEnabled()) {
+                return;
             }
-            // This is our baseline location and should have the nozzle well centered over the
-            // camera.
-            Location startLocation = location;
+            try {
+                calibrating = true;
+                
+                reset();
 
-            // Now we rotate the nozzle 360 degrees at calibration.angleIncrement steps, find the
-            // nozzle using the camera and record the offsets.
-            List<CalibrationOffset> offsets = new ArrayList<>();
-            for (double i = 0; i < 360; i += angleIncrement) {
-                location = startLocation.derive(null, null, null, i);
-                nozzle.moveTo(location);
-                Location offset = findCircle();
-                offsets.add(new CalibrationOffset(offset, i));
-            }
+                Nozzle nozzle = nozzleTip.getParentNozzle();
+                Camera camera = VisionUtils.getBottomVisionCamera();
 
-            // The nozzle tip is now calibrated and calibration.getCalibratedOffset() can be
-            // used.
-            this.offsets = offsets;
-        }
+                // Move to the camera with an angle of 0.
+                Location location = camera.getLocation();
+                location = location.derive(null, null, null, 0d);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                for (int i = 0; i < 3; i++) {
+                    // Locate the nozzle offsets.
+                    Location offset = findCircle();
 
-        public Location findCircle() throws Exception {
-            Camera camera = VisionUtils.getBottomVisionCamera();
-            calibrationPipeline.setCamera(camera);
-            calibrationPipeline.process();
-            Location location;
-            Object result = calibrationPipeline.getResult("result").model;
-            if (result instanceof List && ((List) result).get(0) instanceof Result.Circle) {
-                List<Result.Circle> circles = (List<Result.Circle>) result;
-                List<Location> locations = circles.stream().map(circle -> {
-                    return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
-                }).sorted((a, b) -> {
-                    double a1 =
-                            a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                    double b1 =
-                            b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                    return Double.compare(a1, b1);
-                }).collect(Collectors.toList());
-                location = locations.get(0);
-            }
-            else if (result instanceof RotatedRect) {
-                RotatedRect rect = (RotatedRect) result;
-                location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
-            }
-            else {
-                throw new Exception("Unrecognized result " + result);
-            }
-            MainFrame.mainFrame.cameraPanel.getCameraView(camera).showFilteredImage(
-                    OpenCvUtils.toBufferedImage(calibrationPipeline.getWorkingImage()), 250);
-            return location;
-        }
-
-        /**
-         * Find the two closest offsets to the angle being requested. The offsets start at angle 0
-         * and go to angle 360 - angleIncrement in angleIncrement steps.
-         */
-        public List<CalibrationOffset> getOffsetPairForAngle(double angle) {
-            CalibrationOffset a = null, b = null;
-            if (angle >= offsets.get(offsets.size() - 1).angle) {
-                return Arrays.asList(offsets.get(offsets.size() - 1), offsets.get(0));
-            }
-            for (int i = 0; i < offsets.size(); i++) {
-                if (angle < offsets.get(i + 1).angle) {
-                    a = offsets.get(i);
-                    b = offsets.get(i + 1);
-                    break;
+                    // Subtract the offsets and move to that position to center the nozzle.
+                    location = location.subtract(offset);
+                    nozzle.moveTo(location);
                 }
+                // This is our baseline location and should have the nozzle well centered over the
+                // camera.
+                Location startLocation = location;
+
+                // Now we rotate the nozzle 360 degrees at calibration.angleIncrement steps, find the
+                // nozzle using the camera and record the offsets.
+                List<CalibrationOffset> offsets = new ArrayList<>();
+                for (double i = 0; i < 360; i += angleIncrement) {
+                    location = startLocation.derive(null, null, null, i);
+                    nozzle.moveTo(location);
+                    Location offset = findCircle();
+                    offsets.add(new CalibrationOffset(offset, i));
+                }
+
+                // The nozzle tip is now calibrated and calibration.getCalibratedOffset() can be
+                // used.
+                this.offsets = offsets;
+                
+                nozzle.moveToSafeZ();
             }
-            return Arrays.asList(a, b);
+            finally {
+                calibrating = false;
+            }
         }
 
         public Location getCalibratedOffset(double angle) {
-            if (!isCalibrated()) {
+            if (!isEnabled() || !isCalibrated()) {
                 return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
             }
 
@@ -346,6 +316,76 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             return new Location(offsetA.getUnits(), offsetX, offsetY, 0, 0);
         }
 
+        private Location findCircle() throws Exception {
+            Camera camera = VisionUtils.getBottomVisionCamera();
+            pipeline.setCamera(camera);
+            pipeline.process();
+            Location location;
+            Object result = pipeline.getResult("result").model;
+            if (result instanceof List) {
+                if (((List) result).get(0) instanceof Result.Circle) {
+                    List<Result.Circle> circles = (List<Result.Circle>) result;
+                    List<Location> locations = circles.stream().map(circle -> {
+                        return VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                    }).sorted((a, b) -> {
+                        double a1 =
+                                a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        double b1 =
+                                b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        return Double.compare(a1, b1);
+                    }).collect(Collectors.toList());
+                    location = locations.get(0);
+                }
+                else if (((List) result).get(0) instanceof KeyPoint) {
+                    KeyPoint keyPoint = ((List<KeyPoint>) result).get(0);
+                    location = VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
+                }
+                else {
+                    throw new Exception("Unrecognized result " + result);
+                }
+            }
+            else if (result instanceof RotatedRect) {
+                RotatedRect rect = (RotatedRect) result;
+                location = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+            }
+            else {
+                throw new Exception("Unrecognized result " + result);
+            }
+            MainFrame.mainFrame.cameraPanel.getCameraView(camera).showFilteredImage(
+                    OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            return location;
+        }
+
+        /**
+         * Find the two closest offsets to the angle being requested. The offsets start at angle 0
+         * and go to angle 360 - angleIncrement in angleIncrement steps.
+         */
+        private List<CalibrationOffset> getOffsetPairForAngle(double angle) {
+            CalibrationOffset a = null, b = null;
+            if (angle >= offsets.get(offsets.size() - 1).angle) {
+                return Arrays.asList(offsets.get(offsets.size() - 1), offsets.get(0));
+            }
+            for (int i = 0; i < offsets.size(); i++) {
+                if (angle < offsets.get(i + 1).angle) {
+                    a = offsets.get(i);
+                    b = offsets.get(i + 1);
+                    break;
+                }
+            }
+            return Arrays.asList(a, b);
+        }
+
+        public static CvPipeline createDefaultPipeline() {
+            try {
+                String xml = IOUtils.toString(ReferenceNozzleTip.class
+                        .getResource("ReferenceNozzleTip-Calibration-DefaultPipeline.xml"));
+                return new CvPipeline(xml);
+            }
+            catch (Exception e) {
+                throw new Error(e);
+            }
+        }
+
         public void reset() {
             offsets = null;
         }
@@ -353,14 +393,30 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public boolean isCalibrated() {
             return offsets != null && !offsets.isEmpty();
         }
-
-        public CvPipeline getCalibrationPipeline() throws Exception {
-            calibrationPipeline.setCamera(VisionUtils.getBottomVisionCamera());
-            return calibrationPipeline;
+        
+        public boolean isCalibrating() {
+            return calibrating;
+        }
+        
+        public boolean isEnabled() {
+            return enabled;
+        }
+        
+        public boolean isCalibrationNeeded() {
+            return isEnabled() && !isCalibrated() && !isCalibrating();
         }
 
-        public void setCalibrationPipeline(CvPipeline calibrationPipeline) {
-            this.calibrationPipeline = calibrationPipeline;
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public CvPipeline getPipeline() throws Exception {
+            pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+            return pipeline;
+        }
+
+        public void setPipeline(CvPipeline calibrationPipeline) {
+            this.pipeline = calibrationPipeline;
         }
     }
 }

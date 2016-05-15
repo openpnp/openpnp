@@ -90,6 +90,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JButton btnEditPipeline;
     private JButton btnCalibrate;
     private JButton btnReset;
+    private JLabel lblEnabled;
+    private JCheckBox calibrationEnabledCheckbox;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -201,16 +203,35 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelCalibration);
-        panelCalibration
-                .setLayout(
-                        new FormLayout(new ColumnSpec[] {
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                RowSpec.decode("23px"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panelCalibration.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        lblEnabled = new JLabel("Enabled?");
+        panelCalibration.add(lblEnabled, "2, 2, right, default");
+
+        calibrationEnabledCheckbox = new JCheckBox("");
+        panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
+
+        btnCalibrate = new JButton("Calibrate");
+        btnCalibrate.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                calibrate();
+            }
+        });
+        panelCalibration.add(btnCalibrate, "3, 3");
+
+        btnReset = new JButton("Reset");
+        btnReset.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                nozzleTip.getCalibration().reset();
+            }
+        });
+        panelCalibration.add(btnReset, "3, 5");
 
         btnEditPipeline = new JButton("Edit Pipeline");
         btnEditPipeline.addActionListener(new ActionListener() {
@@ -220,27 +241,11 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 });
             }
         });
-        panelCalibration.add(btnEditPipeline, "1, 1, left, top");
-
-        btnCalibrate = new JButton("Calibrate");
-        btnCalibrate.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                calibrate();
-            }
-        });
-        panelCalibration.add(btnCalibrate, "1, 3");
-        
-        btnReset = new JButton("Reset");
-        btnReset.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                nozzleTip.getCalibration().reset();
-            }
-        });
-        panelCalibration.add(btnReset, "1, 5");
+        panelCalibration.add(btnEditPipeline, "3, 7, left, top");
     }
 
     private void editCalibrationPipeline() throws Exception {
-        CvPipeline pipeline = nozzleTip.getCalibration().getCalibrationPipeline();
+        CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.mainFrame, "Calibration Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
@@ -291,6 +296,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
+        
+        addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);

@@ -338,8 +338,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cropWidthTextField);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cropHeightTextField);
+        ComponentDecorators.decorateWithAutoSelect(cropWidthTextField);
+        ComponentDecorators.decorateWithAutoSelect(cropHeightTextField);
     }
 
     private Action startCalibration = new AbstractAction("Start Lens Calibration") {

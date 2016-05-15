@@ -43,8 +43,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
-
-
+    
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -155,6 +154,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             location = location.derive(null, null, null, currentLocation.getRotation());
         }
 
+        // Check calibration.
+        if (nozzleTip != null && nozzleTip.getCalibration().isCalibrationNeeded()) {
+            logger.debug("NozzleTip is not yet calibrated, calibrating now.");
+            nozzleTip.getCalibration().calibrate(nozzleTip);
+        }
+        
         // If there is a part on the nozzle we take the incoming speed value
         // to be a percentage of the part's speed instead of a percentage of
         // the max speed.
@@ -220,6 +225,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         logger.debug("{}.loadNozzleTip({}): Finished",
                 new Object[] {getName(), nozzleTip.getName()});
         this.nozzleTip = (ReferenceNozzleTip) nozzleTip;
+        this.nozzleTip.getCalibration().reset();
         currentNozzleTipId = nozzleTip.getId();
     }
 

@@ -53,7 +53,8 @@ public class DrawKeyPoints extends CvStage {
         }
         Mat mat = pipeline.getWorkingImage();
         List<KeyPoint> keyPoints = (List<KeyPoint>) result.model;
-        MatOfKeyPoint matOfKeyPoints = new MatOfKeyPoint(keyPoints.toArray(new KeyPoint[] {}));
+        MatOfKeyPoint matOfKeyPoints = new MatOfKeyPoint();
+        matOfKeyPoints.fromList(keyPoints);
         if (color == null) {
             Features2d.drawKeypoints(mat, matOfKeyPoints, mat);
         }

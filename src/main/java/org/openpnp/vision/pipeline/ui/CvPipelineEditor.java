@@ -38,6 +38,7 @@ import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.SetColor;
+import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 
 /**
@@ -81,6 +82,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(Normalize.class);
         registerStageClass(ReadModelProperty.class);
         registerStageClass(SetColor.class);
+        registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
     }
 
