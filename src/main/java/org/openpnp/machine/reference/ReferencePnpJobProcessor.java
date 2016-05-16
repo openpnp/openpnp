@@ -282,14 +282,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // Make sure the part is not null
                 if (placement.getPart() == null) {
                     throw new Exception(String.format("Part not found for board %s, placement %s.",
-                            boardLocation.getBoard().getName(), placement));
+                            boardLocation.getBoard().getName(), placement.getId()));
                 }
 
                 // Verify that the part height is greater than zero. Catches a common configuration
                 // error.
                 if (placement.getPart().getHeight().getValue() <= 0D) {
                     throw new Exception(String.format("Part height for %s must be greater than 0.",
-                            placement.getPart()));
+                            placement.getPart().getId()));
                 }
 
                 // Make sure there is at least one compatible nozzle tip available

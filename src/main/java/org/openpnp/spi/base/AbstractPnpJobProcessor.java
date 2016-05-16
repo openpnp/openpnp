@@ -45,7 +45,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             }
         }
         throw new Exception(
-                "No compatible nozzle tip on nozzle " + nozzle + " found for part " + part);
+                "No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
     }
 
     public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
@@ -72,7 +72,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             catch (Exception e) {
             }
         }
-        throw new Exception("No compatible nozzle tip on any nozzle found for part " + part);
+        throw new Exception("No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
     /**
@@ -88,7 +88,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
                 return feeder;
             }
         }
-        throw new Exception("No compatible, enabled feeder found for part " + part);
+        throw new Exception("No compatible, enabled feeder found for part " + part.getId());
     }
 
 
