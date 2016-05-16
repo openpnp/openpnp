@@ -50,7 +50,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private boolean n1Picked, n2Picked;
-    private boolean homed;
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
@@ -73,7 +72,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 n2Exhaust(false);
                 led(false);
                 pump(false);
-                homed = false;
             }
         }
     }
@@ -104,11 +102,11 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         sendCommand("G92 E0");
         // Update position
         getCurrentPosition();
-        if (!homed) {
-            homed = true;
-            head.getDefaultCamera()
-                    .moveTo(new Location(LengthUnit.Millimeters, 285.579718, 11.291723, 0, 0));
-        }
+
+        // TODO STOPSHIP: Moves to alignment dot to make sure we're not out of alignment. Not
+        // intended for release.
+        head.getDefaultCamera()
+                .moveTo(new Location(LengthUnit.Millimeters, 285.579718, 11.291723, 0, 0));
     }
 
 
@@ -136,11 +134,12 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
             z += zCamWheelRadius + zGap;
             int nozzleIndex = getNozzleIndex(nozzle);
-            return new Location(LengthUnit.Millimeters, x, y, z, nozzleIndex == 0 ? c : c2)
-                    .add(hm.getHeadOffsets());
+            return new Location(LengthUnit.Millimeters, x, y, z,
+                    normalizeAngle(nozzleIndex == 0 ? c : c2)).add(hm.getHeadOffsets());
         }
         else {
-            return new Location(LengthUnit.Millimeters, x, y, zA, c).add(hm.getHeadOffsets());
+            return new Location(LengthUnit.Millimeters, x, y, zA, normalizeAngle(c))
+                    .add(hm.getHeadOffsets());
         }
     }
 
@@ -178,7 +177,28 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             this.y = y;
         }
         int nozzleIndex = getNozzleIndex(nozzle);
-        if (!Double.isNaN(c) && c != (nozzleIndex == 0 ? this.c : this.c2)) {
+        double oldC = (nozzleIndex == 0 ? this.c : this.c2);
+        if (!Double.isNaN(c) && c != oldC) {
+            // Normalize the new angle.
+            c = normalizeAngle(c);
+
+            // Get the delta between the current position and the new position in normalized
+            // degrees.
+            double delta = c - normalizeAngle(oldC);
+
+            // If the delta is greater than 180 we'll go the opposite direction instead to
+            // minimize travel time.
+            if (Math.abs(delta) > 180) {
+                if (delta < 0) {
+                    delta += 360;
+                }
+                else {
+                    delta -= 360;
+                }
+            }
+
+            c = oldC + delta;
+            
             // If there is an E move we need to set the tool before
             // performing any commands otherwise we may move the wrong tool.
             sendCommand(String.format(Locale.US, "T%d", nozzleIndex));
@@ -213,6 +233,16 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             sendCommand("G0 " + sb.toString());
             dwell();
         }
+    }
+
+    private double normalizeAngle(double angle) {
+        while (angle > 360) {
+            angle -= 360;
+        }
+        while (angle < 0) {
+            angle += 360;
+        }
+        return angle;
     }
 
     /**
@@ -372,6 +402,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
         }
         sendCommand("T0");
+
         logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] {x, y, zA, c, c2});
     }
 
