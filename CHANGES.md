@@ -1,6 +1,20 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-05-16
+
+* Nozzle Park
+
+	https://github.com/openpnp/openpnp/issues/76
+	
+	* There is now a per head park location. You can set the location in Machine Setup -> Heads.
+	
+	* The Zero buttons in the jog controls panel have been replaced with Park buttons. Each will
+	move the selected nozzle to the park location.
+	
+	* The Job Processor will now optionally park the nozzle after a job completes, instead of
+	re-homing. You can turn this option on in Machine Setup -> Job Processors.
+
 # 2016-05-15
 
 * Multi-Select on Parts and Packages Panels

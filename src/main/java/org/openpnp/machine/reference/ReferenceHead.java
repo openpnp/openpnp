@@ -26,6 +26,7 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
@@ -58,9 +59,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public Wizard getConfigurationWizard() {
-        // This Wizard is out of date and none of it currently works.
-        // return new ReferenceHeadConfigurationWizard(this);
-        return null;
+        return new ReferenceHeadConfigurationWizard(this);
     }
 
     @Override

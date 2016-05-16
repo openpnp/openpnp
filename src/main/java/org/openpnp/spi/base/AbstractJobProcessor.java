@@ -6,6 +6,8 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 
@@ -31,13 +33,17 @@ public abstract class AbstractJobProcessor implements JobProcessor {
         return null;
     }
 
-    @Override
     public PropertySheet[] getPropertySheets() {
-        return null;
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
+        return null;
+    }
+
+    @Override
+    public Wizard getConfigurationWizard() {
         return null;
     }
 
