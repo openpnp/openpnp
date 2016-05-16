@@ -29,7 +29,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobPlacement.Status;
+import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -48,6 +50,7 @@ import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,6 +128,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(ReferencePnpJobProcessor.class);
+
+    @Attribute(required = false)
+    protected boolean parkWhenComplete = false;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -628,14 +634,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         // Safe Z the machine
         head.moveToSafeZ();
+        
         // Discard any currently picked parts
         discardAll(head);
-        // Home the machine
-        // TODO: Move to park position instead.
-        // https://github.com/openpnp/openpnp/issues/76
 
-        fireTextStatus("Return to home.");
-        machine.home();
+        // Safe Z the machine
+        head.moveToSafeZ();
+
+        if (parkWhenComplete) {
+            fireTextStatus("Park nozzle.");
+            MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
+        }
     }
 
     protected void doReset() throws Exception {
@@ -673,6 +682,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected boolean isJobComplete() {
         return getPendingJobPlacements().isEmpty();
+    }
+    
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferencePnpJobProcessorConfigurationWizard(this);
+    }
+    
+    public boolean isParkWhenComplete() {
+        return parkWhenComplete;
+    }
+
+    public void setParkWhenComplete(boolean parkWhenComplete) {
+        this.parkWhenComplete = parkWhenComplete;
     }
 
     // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
