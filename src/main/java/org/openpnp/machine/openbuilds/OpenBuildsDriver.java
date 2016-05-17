@@ -22,6 +22,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,10 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
     @Attribute(required = false)
     private boolean homeZ = false;
+
+    @Element(required = false)
+    private Location alignmentDotLocation =
+            new Location(LengthUnit.Millimeters, 285.640, 10.874, 0, 0);
 
     protected double x, y, zA, c, c2;
     private Thread readerThread;
@@ -105,8 +110,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
         // TODO STOPSHIP: Moves to alignment dot to make sure we're not out of alignment. Not
         // intended for release.
-        head.getDefaultCamera()
-                .moveTo(new Location(LengthUnit.Millimeters, 285.579718, 11.291723, 0, 0));
+        head.getDefaultCamera().moveTo(alignmentDotLocation);
     }
 
 
@@ -198,7 +202,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
 
             c = oldC + delta;
-            
+
             // If there is an E move we need to set the tool before
             // performing any commands otherwise we may move the wrong tool.
             sendCommand(String.format(Locale.US, "T%d", nozzleIndex));

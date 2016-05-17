@@ -190,17 +190,17 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             return null;
         }
 
-        // getTemplateMatches returns results in order of score, but we're
-        // more interested in the result closest to the expected location
-        Collections.sort(matches, new Comparator<TemplateMatch>() {
-            @Override
-            public int compare(TemplateMatch o1, TemplateMatch o2) {
-                double d1 = o1.location.getLinearDistanceTo(camera.getLocation());
-                double d2 = o2.location.getLinearDistanceTo(camera.getLocation());
-                return Double.compare(d1, d2);
-            }
-        });
-
+//        // getTemplateMatches returns results in order of score, but we're
+//        // more interested in the result closest to the expected location
+//        Collections.sort(matches, new Comparator<TemplateMatch>() {
+//            @Override
+//            public int compare(TemplateMatch o1, TemplateMatch o2) {
+//                double d1 = o1.location.getLinearDistanceTo(camera.getLocation());
+//                double d2 = o2.location.getLinearDistanceTo(camera.getLocation());
+//                return Double.compare(d1, d2);
+//            }
+//        });
+//
         return matches.get(0).location;
     }
 
