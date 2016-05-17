@@ -137,6 +137,10 @@ whereas the XML would be:
 
 `      <driver class="org.openpnp.machine.reference.driver.TinygDriver" port-name="COM5" baud="115200" feed-rate-mm-per-minute="3000.0"/>`
 
+The framework used is http://simple.sourceforge.net/download/stream/doc/tutorial/tutorial.php and the style is based on http://simple.sourceforge.net/download/stream/doc/javadoc/org/simpleframework/xml/stream/HyphenStyle.html.
+
+Basically, in Java, property names are in lower camel case by convention ( http://c2.com/cgi/wiki?LowerCamelCase ) and the XML serializer just splits the words on capital letters and adds a hyphen. So, feed-rate-mm-per-minute becomes feedRateMmPerMinute.
+
 ### Service Provider Interface
 
 The [Service Provider Interface (SPI)](http://openpnp.org/doc/javadoc/org/openpnp/spi/package-frame.html) is a set of Java interfaces that specify OpenPnP's interface to the real world. Examples of things in the SPI are things like Machine definitions, Camera drivers, Vision Providers, Nozzles, Actuators, etc.
