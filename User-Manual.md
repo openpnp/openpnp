@@ -194,15 +194,18 @@ The only thing you need to configure in packages is the pads for fiducials. Norm
 
 eg. the Body Height field in the Footprint tab is not used at all currently. You can leave it blank.
 
+Feeders
+-------
+
+Feeder locations are simple locations.  In general no math is applied. The location you set is where the nozzle will go to pick.  The part height is not used here.
+
 Parts
 -----
 
 Part height is simply the height of the part as measured, typically with calipers or from a data sheet. Part height should only need to be measured and set once per part. A Part should represent an actual physical SKU. If you have a 47uF cap that is 6mm high and one that is 4mm high, those are different parts.
 
-Feeders
--------
+Parts refer to feeders from which they are picked and packages.  The package is currently only used for fiducials.
 
-Feeder locations are simple locations. No math is applied. The location you set is where the nozzle will go to pick.  The part height is not used here.
 
 Boards
 ------
