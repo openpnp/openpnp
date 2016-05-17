@@ -185,14 +185,24 @@ There are currently four types of feeders supported:
 
 4. ReferenceTubeFeeder: The simplest feeder which picks from the same location every time. Intended to be used with a vibratory tube feeder that presents a part at the same location repeatedly.
 
-Operation
-=========
+Configuration and Operation
+===========================
+
+Packages
+--------
+The only thing you need to configure in packages is the pads for fiducials. Normal parts / packages don't need any of the footprint data set. They may in the future, but it will likely always be optional.
+
+eg. the Body Height field in the Footprint tab is not used at all currently. You can leave it blank.
 
 Parts
 -----
 
-Packages
---------
+Part height is simply the height of the part as measured, typically with calipers or from a data sheet. Part height should only need to be measured and set once per part. A Part should represent an actual physical SKU. If you have a 47uF cap that is 6mm high and one that is 4mm high, those are different parts.
+
+Feeders
+-------
+
+Feeder locations are simple locations. No math is applied. The location you set is where the nozzle will go to pick.  The part height is not used here.
 
 Boards
 ------
@@ -202,6 +212,8 @@ Boards tell OpenPnP which parts to place and where to place them. Boards are sto
 Board files are independent from any user or machine. You can share Board files for a given PCB design and use the file to build that particular PCB.
 
 You will typically create a new Board file by importing data from your CAD software such as Eagle or KiCAD. Once you've created a Board file for a design there's no need to change it unless the design changes.
+
+PCB locations represent the 0,0,0 origin of the top of the PCB. This tells the machine where to find 0,0,0 on the board and it performs the math needed to find the individual placements from there. Part height is added when placing a part so that the needle stops at "part height" above the board.
 
 Jobs
 ----
