@@ -204,7 +204,7 @@ Parts
 
 Part height is simply the height of the part as measured, typically with calipers or from a data sheet. Part height should only need to be measured and set once per part. A Part should represent an actual physical SKU. If you have a 47uF cap that is 6mm high and one that is 4mm high, those are different parts.
 
-Parts refer to feeders from which they are picked and packages.  The package is currently only used for fiducials.
+Parts refer to a feeder from which they are picked and a package.  The package is currently only used for fiducials.
 
 
 Boards
