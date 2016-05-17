@@ -229,6 +229,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.send(Message.Skip);
     }
 
+    /*
+     * TODO Due to the Align Skip issue I think we'd be better off replacing this API with
+     * something like List<Message> getOptions(). This would return a list of options that the
+     * caller can take at a given step. Need to figure out a way to make this generic enough
+     * that other JP implementations can use it, thus it's probably not appropriate to just
+     * use Message, but instead maybe a PnpJobProcessor specific enum.
+     * Options would be things like:
+     *      * Skip Placement
+     *      * Try Later
+     *      * Retry Action
+     *      * Continue (Next)
+     *      
+     * Really just need to think about the way a user will want to respond to various error
+     * conditions that arise in each step and see if these can be generalized in a meaningful
+     * way.
+     */
     public boolean canSkip() {
         return fsm.canSend(Message.Skip);
     }
