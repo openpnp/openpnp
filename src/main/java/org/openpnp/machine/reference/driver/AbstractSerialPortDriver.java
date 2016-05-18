@@ -195,6 +195,38 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     public void setBaud(int baud) {
         this.baud = baud;
     }
+    
+    public FlowControl getFlowControl() {
+        return flowControl;
+    }
+
+    public void setFlowControl(FlowControl flowControl) {
+        this.flowControl = flowControl;
+    }
+
+    public DataBits getDataBits() {
+        return dataBits;
+    }
+
+    public void setDataBits(DataBits dataBits) {
+        this.dataBits = dataBits;
+    }
+
+    public StopBits getStopBits() {
+        return stopBits;
+    }
+
+    public void setStopBits(StopBits stopBits) {
+        this.stopBits = stopBits;
+    }
+
+    public Parity getParity() {
+        return parity;
+    }
+
+    public void setParity(Parity parity) {
+        this.parity = parity;
+    }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
