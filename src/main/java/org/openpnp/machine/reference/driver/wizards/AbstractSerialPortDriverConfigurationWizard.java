@@ -16,6 +16,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.border.TitledBorder;
+import javax.swing.JCheckBox;
 
 public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigurationWizard {
     private final AbstractSerialPortDriver driver;
@@ -25,6 +26,8 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
     private JComboBox stopBitsComboBox;
     private JComboBox dataBitsComboBox;
     private JComboBox parityComboBox;
+    private JCheckBox setDtrCheckbox;
+    private JCheckBox setRtsCheckbox;
 
     public AbstractSerialPortDriverConfigurationWizard(AbstractSerialPortDriver driver) {
         this.driver = driver;
@@ -40,6 +43,10 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -109,6 +116,18 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
 
         flowControlComboBox = new JComboBox(AbstractSerialPortDriver.FlowControl.values());
         panel.add(flowControlComboBox, "4, 12, fill, default");
+        
+        JLabel lblSetDtr = new JLabel("Set DTR");
+        panel.add(lblSetDtr, "2, 14");
+        
+        setDtrCheckbox = new JCheckBox("");
+        panel.add(setDtrCheckbox, "4, 14");
+        
+        JLabel lblSetRts = new JLabel("Set RTS");
+        panel.add(lblSetRts, "2, 16");
+        
+        setRtsCheckbox = new JCheckBox("");
+        panel.add(setRtsCheckbox, "4, 16");
 
         comboBoxPort.addPopupMenuListener(new PopupMenuListener() {
             @Override
@@ -153,5 +172,7 @@ public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigu
         addWrappedBinding(driver, "stopBits", stopBitsComboBox, "selectedItem");
         addWrappedBinding(driver, "dataBits", dataBitsComboBox, "selectedItem");
         addWrappedBinding(driver, "flowControl", flowControlComboBox, "selectedItem");
+        addWrappedBinding(driver, "setDtr", setDtrCheckbox, "selected");
+        addWrappedBinding(driver, "setRts", setRtsCheckbox, "selected");
     }
 }
