@@ -245,4 +245,21 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
+
+    public boolean isDemoMode() {
+        return getPnpJobProcessor() instanceof DemoPnpJobProcessor;
+    }
+
+    public void setDemoMode(boolean demoMode) {
+        if (demoMode) {
+            DemoPnpJobProcessor jp = new DemoPnpJobProcessor();
+            jp.setParkWhenComplete(true);
+            pnpJobProcessor = jp;
+        }
+        else {
+            ReferencePnpJobProcessor jp = new ReferencePnpJobProcessor();
+            jp.setParkWhenComplete(true);
+            pnpJobProcessor = jp;
+        }
+    }
 }

@@ -16,6 +16,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.openbuilds.OpenBuildsDriver;
+import org.openpnp.machine.reference.DemoPnpJobProcessor;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.GcodeDriver;
@@ -32,6 +33,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
 
 public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWizard {
 
@@ -42,6 +44,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JTextField discardYTf;
     private JTextField discardZTf;
     private JTextField discardCTf;
+    private JCheckBox demoModeCheckBox;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -50,12 +53,18 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         JLabel lblDriver = new JLabel("Driver");
-        panelGeneral.add(lblDriver, "2, 2");
+        panelGeneral.add(lblDriver, "2, 2, right, default");
 
         comboBoxDriver = new JComboBox();
         panelGeneral.add(comboBoxDriver, "4, 2");
@@ -69,6 +78,12 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         comboBoxDriver.addItem(SprinterDriver.class.getCanonicalName());
         comboBoxDriver.addItem(TinygDriver.class.getCanonicalName());
         comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
+        
+        JLabel lblDemoMode = new JLabel("Demo Mode");
+        panelGeneral.add(lblDemoMode, "2, 4");
+        
+        demoModeCheckBox = new JCheckBox("");
+        panelGeneral.add(demoModeCheckBox, "4, 4");
 
         JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -140,6 +155,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(discardLocation, "lengthY", discardYTf, "text", lengthConverter);
         addWrappedBinding(discardLocation, "lengthZ", discardZTf, "text", lengthConverter);
         addWrappedBinding(discardLocation, "rotation", discardCTf, "text", doubleConverter);
+        
+        addWrappedBinding(machine, "demoMode", demoModeCheckBox, "selected");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardXTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardYTf);
