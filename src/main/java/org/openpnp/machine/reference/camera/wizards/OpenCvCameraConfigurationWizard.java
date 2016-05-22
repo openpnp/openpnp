@@ -68,9 +68,15 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblDeviceId = new JLabel("Device Index");
+        JLabel lblDeviceId = new JLabel("USB Device Index");
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
 
         comboBoxDeviceIndex = new JComboBox();
@@ -79,32 +85,65 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         }
         panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
         
+        lbluseFor_di = new JLabel("(USB cameras only)");
+        panelGeneral.add(lbluseFor_di, "6, 2");
+        
+        lblIP = new JLabel("Network IP");
+        panelGeneral.add(lblIP, "2, 4, right, default");
+        
+        ipTextField = new JTextField();
+        panelGeneral.add(ipTextField, "4, 4");
+        ipTextField.setColumns(16);
+
+        lbluseFor_ip = new JLabel("(IP cameras only)");
+        panelGeneral.add(lbluseFor_ip, "6, 4");
+
+        lblUsername = new JLabel("Username");
+        panelGeneral.add(lblUsername, "2, 6, right, default");
+        
+        usernameTextField = new JTextField();
+        panelGeneral.add(usernameTextField, "4, 6");
+        usernameTextField.setColumns(16);
+
+        lbluseFor_un = new JLabel("(IP cameras only)");
+        panelGeneral.add(lbluseFor_un, "6, 6");
+
+        lblPassword = new JLabel("Password");
+        panelGeneral.add(lblPassword, "2, 8, right, default");
+        
+        passwordTextField = new JTextField();
+        panelGeneral.add(passwordTextField, "4, 8");
+        passwordTextField.setColumns(16);
+
+        lbluseFor_pw = new JLabel("(IP cameras only)");
+        panelGeneral.add(lbluseFor_pw, "6, 8");
+
         lblFps = new JLabel("FPS");
-        panelGeneral.add(lblFps, "2, 4, right, default");
+        panelGeneral.add(lblFps, "2, 10, right, default");
         
         fpsTextField = new JTextField();
-        panelGeneral.add(fpsTextField, "4, 4");
+        panelGeneral.add(fpsTextField, "4, 10");
         fpsTextField.setColumns(10);
 
         lblPreferredWidth = new JLabel("Preferred Width");
-        panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
+        panelGeneral.add(lblPreferredWidth, "2, 12, right, default");
 
         textFieldPreferredWidth = new JTextField();
-        panelGeneral.add(textFieldPreferredWidth, "4, 6, fill, default");
+        panelGeneral.add(textFieldPreferredWidth, "4, 12, fill, default");
         textFieldPreferredWidth.setColumns(10);
 
-        lbluseFor = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor, "6, 6");
+        lbluseFor_w = new JLabel("(Use 0 for native resolution)");
+        panelGeneral.add(lbluseFor_w, "6, 12");
 
         lblPreferredHeight = new JLabel("Preferred Height");
-        panelGeneral.add(lblPreferredHeight, "2, 8, right, default");
+        panelGeneral.add(lblPreferredHeight, "2, 14, right, default");
 
         textFieldPreferredHeight = new JTextField();
-        panelGeneral.add(textFieldPreferredHeight, "4, 8, fill, default");
+        panelGeneral.add(textFieldPreferredHeight, "4, 14, fill, default");
         textFieldPreferredHeight.setColumns(10);
 
-        lbluseFor_1 = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor_1, "6, 8");
+        lbluseFor_h = new JLabel("(Use 0 for native resolution)");
+        panelGeneral.add(lbluseFor_h, "6, 14");
     }
 
     @Override
@@ -115,12 +154,18 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
                 intConverter);
         addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
-        // Should always be last so that it doesn't trigger multiple camera reloads.
+        addWrappedBinding(camera, "ipCamUsername", usernameTextField, "text");
+        addWrappedBinding(camera, "ipCamPassword", passwordTextField, "text");
+        // These should always be last so that they don't trigger multiple camera reloads.
+        addWrappedBinding(camera, "ipCamHostIP", ipTextField, "text");
         addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredHeight);
         ComponentDecorators.decorateWithAutoSelect(fpsTextField);
+        ComponentDecorators.decorateWithAutoSelect(ipTextField);
+        ComponentDecorators.decorateWithAutoSelect(usernameTextField);
+        ComponentDecorators.decorateWithAutoSelect(passwordTextField);
     }
 
     @Override
@@ -136,8 +181,18 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     private JLabel lblPreferredHeight;
     private JTextField textFieldPreferredWidth;
     private JTextField textFieldPreferredHeight;
-    private JLabel lbluseFor;
-    private JLabel lbluseFor_1;
+    private JLabel lbluseFor_di;
+    private JLabel lbluseFor_ip;
+    private JLabel lbluseFor_un;
+    private JLabel lbluseFor_pw;
+    private JLabel lbluseFor_w;
+    private JLabel lbluseFor_h;
+    private JLabel lblIP;
+    private JTextField ipTextField;
+    private JLabel lblUsername;
+    private JTextField usernameTextField;
+    private JLabel lblPassword;
+    private JTextField passwordTextField;
     private JLabel lblFps;
     private JTextField fpsTextField;
 }
