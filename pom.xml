@@ -133,6 +133,11 @@
 			<artifactId>xalan</artifactId>
 			<version>2.7.2</version>
 		</dependency>
+		<dependency>
+			<groupId>de.onvif</groupId>
+			<artifactId>onvif-java-lib</artifactId>
+			<version>2016-03-16</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -264,6 +269,10 @@
 		<repository>
 			<id>openpnp</id>
 			<url>https://github.com/openpnp/openpnp-maven-repo/raw/develop</url>
+		</repository>
+		<repository>
+			<id>richard-sim</id>
+			<url>https://raw.github.com/richard-sim/openpnp-maven-repo/develop</url>
 		</repository>
 		<repository>
 			<id>javacv</id>
