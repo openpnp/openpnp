@@ -271,10 +271,6 @@
 			<url>https://github.com/openpnp/openpnp-maven-repo/raw/develop</url>
 		</repository>
 		<repository>
-			<id>richard-sim</id>
-			<url>https://raw.github.com/richard-sim/openpnp-maven-repo/develop</url>
-		</repository>
-		<repository>
 			<id>javacv</id>
 			<url>http://maven2.javacv.googlecode.com/git</url>
 		</repository>
