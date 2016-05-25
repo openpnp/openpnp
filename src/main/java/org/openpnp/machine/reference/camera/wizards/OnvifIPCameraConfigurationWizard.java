@@ -21,7 +21,6 @@ package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.Color;
 
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -30,7 +29,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.machine.reference.camera.OpenCvCamera;
+import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -39,13 +38,13 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
-    private final OpenCvCamera camera;
+public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurationWizard {
+    private final OnvifIPCamera camera;
 
     private JPanel panelGeneral;
 
-    public OpenCvCameraConfigurationWizard(OpenCvCamera camera) {
-        super(camera);
+	public OnvifIPCameraConfigurationWizard(OnvifIPCamera camera) {
+		super(camera);
 
         this.camera = camera;
 
@@ -68,46 +67,68 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblDeviceId = new JLabel("USB Device Index");
-        panelGeneral.add(lblDeviceId, "2, 2, right, default");
+        lblIP = new JLabel("Network IP");
+        panelGeneral.add(lblIP, "2, 2, right, default");
+        
+        ipTextField = new JTextField();
+        panelGeneral.add(ipTextField, "4, 2");
+        ipTextField.setColumns(16);
 
-        comboBoxDeviceIndex = new JComboBox();
-        for (int i = 0; i < 10; i++) {
-            comboBoxDeviceIndex.addItem(new Integer(i));
-        }
-        panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
+        lbluseFor_ip = new JLabel("(IP:port)");
+        panelGeneral.add(lbluseFor_ip, "6, 2");
+
+        lblUsername = new JLabel("Username");
+        panelGeneral.add(lblUsername, "2, 4, right, default");
         
-        lbluseFor_di = new JLabel("(physical camera to use)");
-        panelGeneral.add(lbluseFor_di, "6, 2");
+        usernameTextField = new JTextField();
+        panelGeneral.add(usernameTextField, "4, 4");
+        usernameTextField.setColumns(16);
+
+        lbluseFor_un = new JLabel("(normally required)");
+        panelGeneral.add(lbluseFor_un, "6, 4");
+
+        lblPassword = new JLabel("Password");
+        panelGeneral.add(lblPassword, "2, 6, right, default");
         
+        passwordTextField = new JTextField();
+        panelGeneral.add(passwordTextField, "4, 6");
+        passwordTextField.setColumns(16);
+
+        lbluseFor_pw = new JLabel("(leave blank for none)");
+        panelGeneral.add(lbluseFor_pw, "6, 6");
+
         lblFps = new JLabel("FPS");
-        panelGeneral.add(lblFps, "2, 4, right, default");
+        panelGeneral.add(lblFps, "2, 8, right, default");
         
         fpsTextField = new JTextField();
-        panelGeneral.add(fpsTextField, "4, 4");
+        panelGeneral.add(fpsTextField, "4, 8");
         fpsTextField.setColumns(10);
 
         lblPreferredWidth = new JLabel("Preferred Width");
-        panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
+        panelGeneral.add(lblPreferredWidth, "2, 10, right, default");
 
         textFieldPreferredWidth = new JTextField();
-        panelGeneral.add(textFieldPreferredWidth, "4, 6, fill, default");
+        panelGeneral.add(textFieldPreferredWidth, "4, 10, fill, default");
         textFieldPreferredWidth.setColumns(10);
 
-        lbluseFor_w = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor_w, "6, 6");
+        lbluseFor_w = new JLabel("(Use 0 for highest resolution)");
+        panelGeneral.add(lbluseFor_w, "6, 10");
 
         lblPreferredHeight = new JLabel("Preferred Height");
-        panelGeneral.add(lblPreferredHeight, "2, 8, right, default");
+        panelGeneral.add(lblPreferredHeight, "2, 12, right, default");
 
         textFieldPreferredHeight = new JTextField();
-        panelGeneral.add(textFieldPreferredHeight, "4, 8, fill, default");
+        panelGeneral.add(textFieldPreferredHeight, "4, 12, fill, default");
         textFieldPreferredHeight.setColumns(10);
 
-        lbluseFor_h = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor_h, "6, 8");
+        lbluseFor_h = new JLabel("(Use 0 for highest resolution)");
+        panelGeneral.add(lbluseFor_h, "6, 12");
     }
 
     @Override
@@ -118,30 +139,42 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
                 intConverter);
         addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
+        addWrappedBinding(camera, "username", usernameTextField, "text");
+        addWrappedBinding(camera, "password", passwordTextField, "text");
         // This should always be last so that it doesn't trigger multiple camera reloads.
-        addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
+        addWrappedBinding(camera, "hostIP", ipTextField, "text");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredHeight);
         ComponentDecorators.decorateWithAutoSelect(fpsTextField);
+        ComponentDecorators.decorateWithAutoSelect(ipTextField);
+        ComponentDecorators.decorateWithAutoSelect(usernameTextField);
+        ComponentDecorators.decorateWithAutoSelect(passwordTextField);
     }
 
     @Override
     protected void saveToModel() {
         super.saveToModel();
         if (camera.isDirty()) {
-            camera.setDeviceIndex(camera.getDeviceIndex());
+            camera.setHostIP(camera.getHostIP());
         }
     }
 
-    private JComboBox comboBoxDeviceIndex;
     private JLabel lblPreferredWidth;
     private JLabel lblPreferredHeight;
     private JTextField textFieldPreferredWidth;
     private JTextField textFieldPreferredHeight;
-    private JLabel lbluseFor_di;
+    private JLabel lbluseFor_ip;
+    private JLabel lbluseFor_un;
+    private JLabel lbluseFor_pw;
     private JLabel lbluseFor_w;
     private JLabel lbluseFor_h;
+    private JLabel lblIP;
+    private JTextField ipTextField;
+    private JLabel lblUsername;
+    private JTextField usernameTextField;
+    private JLabel lblPassword;
+    private JTextField passwordTextField;
     private JLabel lblFps;
     private JTextField fpsTextField;
 }

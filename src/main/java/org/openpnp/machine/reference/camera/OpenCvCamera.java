@@ -22,7 +22,6 @@ package org.openpnp.machine.reference.camera;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import javax.imageio.ImageIO;
 import javax.swing.Action;
 
 import org.opencv.core.Mat;
@@ -37,24 +36,6 @@ import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWiz
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.Attribute;
-
-import java.net.ConnectException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-
-import javax.xml.soap.SOAPException;
-
-import org.onvif.ver10.schema.JpegOptions;
-import org.onvif.ver10.schema.Profile;
-import org.onvif.ver10.schema.VideoEncoderConfiguration;
-import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
-import org.onvif.ver10.schema.VideoEncoding;
-import org.onvif.ver10.schema.VideoResolution;
-
-import de.onvif.soap.OnvifDevice;
-import de.onvif.soap.devices.InitialDevices;
-import de.onvif.soap.devices.MediaDevices;
 
 /**
  * A Camera implementation based on the OpenCV FrameGrabbers.
@@ -79,15 +60,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     private Thread thread;
     private boolean dirty = false;
     
-    @Attribute(required = false)
-    private String ipCamHostIP;
-    @Attribute(required = false)
-    private String ipCamUsername;
-    @Attribute(required = false)
-    private String ipCamPassword;
-    
-    private URL ipCamSnapshotURI;
-
     public OpenCvCamera() {}
 
     @Override
@@ -97,19 +69,11 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         }
         Mat mat = new Mat();
         try {
-        	if (isIPCamera()) {
-        		if (ipCamSnapshotURI == null) {
-        			return null;
-        		}
-                BufferedImage img = ImageIO.read(ipCamSnapshotURI);
-                return transformImage(img);
-        	} else {
-	            if (!fg.read(mat)) {
-	                return null;
-	            }
-	            BufferedImage img = OpenCvUtils.toBufferedImage(mat);
-	            return transformImage(img);
-        	}
+            if (!fg.read(mat)) {
+                return null;
+            }
+            BufferedImage img = OpenCvUtils.toBufferedImage(mat);
+            return transformImage(img);
         }
         catch (Exception e) {
         	e.printStackTrace();
@@ -148,10 +112,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         }
     }
     
-    private boolean isIPCamera() {
-    	return !ipCamHostIP.isEmpty();
-    }
-    
     private void initCamera() {
         if (thread != null) {
             thread.interrupt();
@@ -168,64 +128,16 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             width = null;
             height = null;
             
-        	ipCamSnapshotURI = null;
             if (fg.isOpened()) {
                 fg.release();
             }
             
-            if (isIPCamera()) {
-				try {
-					OnvifDevice nvt;
-					if (!ipCamUsername.isEmpty()) {
-					   nvt = new OnvifDevice(ipCamHostIP, ipCamUsername, ipCamPassword);
-					} else {
-					   nvt = new OnvifDevice(ipCamHostIP);
-					}
-					
-					InitialDevices devices = nvt.getDevices();
-					List<Profile> profiles = devices.getProfiles();
-					Profile profile = profiles.get(0);
-					String profileToken = profile.getToken();
-					MediaDevices media = nvt.getMedia();
-					if ((preferredWidth != 0) && (preferredHeight != 0)) {
-						VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
-						
-						videoEncoderConfiguration.setEncoding(VideoEncoding.JPEG);
-
-						VideoResolution videoResolution = videoEncoderConfiguration.getResolution();
-						videoResolution.setWidth(preferredWidth);
-						videoResolution.setHeight(preferredHeight);
-						videoEncoderConfiguration.setResolution(videoResolution);
-						
-						profile.setVideoEncoderConfiguration(videoEncoderConfiguration);
-						media.setVideoEncoderConfiguration(videoEncoderConfiguration);
-						
-						VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media.getVideoEncoderConfigurationOptions(profileToken);
-						JpegOptions jpegOptions = videoEncoderConfigurationOptions.getJPEG();
-						List<VideoResolution> jpegResolutions = jpegOptions.getResolutionsAvailable();
-						System.out.println("Supported JPEG resolutions:");
-						for (VideoResolution jpegResolution : jpegResolutions) {
-							System.out.println("    " + jpegResolution.getWidth() + "x" + jpegResolution.getHeight());
-						}
-					}
-
-					ipCamSnapshotURI = new URL(media.getSnapshotUri(profileToken));
-					System.out.println("Snapshot URI: " + ipCamSnapshotURI.toString());
-				} catch (ConnectException e) {
-					System.err.println("Could not connect to IP camera at " + ipCamHostIP + ".");
-				} catch (SOAPException e) {
-					e.printStackTrace();
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				}
-            } else {
-	            fg.open(deviceIndex);
-	            if (preferredWidth != 0) {
-	                fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
-	            }
-	            if (preferredHeight != 0) {
-	                fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
-	            }
+            fg.open(deviceIndex);
+            if (preferredWidth != 0) {
+                fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+            }
+            if (preferredHeight != 0) {
+                fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
             }
         }
         catch (Exception e) {
@@ -246,36 +158,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         initCamera();
     }
     
-    public String getIpCamHostIP() {
-    	return ipCamHostIP;
-    }
-    
-    public synchronized void setIpCamHostIP(String ipCamHostIP) {
-    	this.ipCamHostIP = ipCamHostIP;
-    	
-    	initCamera();
-    }
-    
-    public String getIpCamUsername() {
-    	return ipCamUsername;
-    }
-    
-    public synchronized void setIpCamUsername(String ipCamUsername) {
-    	this.ipCamUsername = ipCamUsername;
-    	
-    	initCamera();
-    }
-    
-    public String getIpCamPassword() {
-    	return ipCamPassword;
-    }
-    
-    public synchronized void setIpCamPassword(String ipCamPassword) {
-    	this.ipCamPassword = ipCamPassword;
-    	
-    	initCamera();
-    }
-
     public int getPreferredWidth() {
         return preferredWidth;
     }
