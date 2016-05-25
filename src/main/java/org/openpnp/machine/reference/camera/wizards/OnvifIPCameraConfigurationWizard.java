@@ -141,7 +141,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         addWrappedBinding(camera, "username", usernameTextField, "text");
         addWrappedBinding(camera, "password", passwordTextField, "text");
-        // This should always be last so that it doesn't trigger multiple camera reloads.
+        // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "hostIP", ipTextField, "text");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);

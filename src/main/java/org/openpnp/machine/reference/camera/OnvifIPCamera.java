@@ -155,26 +155,59 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 					Profile profile = profiles.get(0);
 					String profileToken = profile.getToken();
 					MediaDevices media = nvt.getMedia();
-					if ((preferredWidth != 0) && (preferredHeight != 0)) {
-						VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
+
+					VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media.getVideoEncoderConfigurationOptions(profileToken);
+					JpegOptions jpegOptions = videoEncoderConfigurationOptions.getJPEG();
+					List<VideoResolution> jpegResolutions = jpegOptions.getResolutionsAvailable();
+					int maxRes = -1;
+					int selectedResolutionIndex = -1;
+					// Step 1: Select the highest resolution available
+					System.out.println("Supported JPEG resolutions:");
+					for (int i=0; i<jpegResolutions.size(); i++) {
+						VideoResolution jpegResolution = jpegResolutions.get(i);
+						
+						int res = jpegResolution.getWidth() * jpegResolution.getHeight();
+						if (res > maxRes) {
+							maxRes = res;
+							selectedResolutionIndex = i;
+						}
+						
+						System.out.println("    " + jpegResolution.getWidth() + "x" + jpegResolution.getHeight());
+					}
+					// Step 2: If there's a preferredWidth or preferredHeight specified, select that (if it exists) instead
+					if ((preferredWidth != 0) || (preferredHeight != 0)) {
+						for (int i=0; i<jpegResolutions.size(); i++) {
+							VideoResolution jpegResolution = jpegResolutions.get(i);
+							
+							if (preferredWidth != 0) {
+								if (preferredHeight != 0) {
+									if ((jpegResolution.getWidth() == preferredWidth) && (jpegResolution.getHeight() == preferredHeight)) {
+										selectedResolutionIndex = i;
+										break;
+									}
+								} else if (jpegResolution.getWidth() == preferredWidth) {
+									selectedResolutionIndex = i;
+									break;
+								}
+							} else {
+								if (jpegResolution.getHeight() == preferredHeight) {
+									selectedResolutionIndex = i;
+									break;
+								}
+							}
+						}
+					}
+					
+					if (selectedResolutionIndex >= 0) {
+						VideoEncoderConfiguration videoEncoderConfiguration = MediaDevices.getVideoEncoderConfiguration(profile);
 						
 						videoEncoderConfiguration.setEncoding(VideoEncoding.JPEG);
 	
-						VideoResolution videoResolution = videoEncoderConfiguration.getResolution();
-						videoResolution.setWidth(preferredWidth);
-						videoResolution.setHeight(preferredHeight);
-						videoEncoderConfiguration.setResolution(videoResolution);
+						VideoResolution jpegResolution = jpegResolutions.get(selectedResolutionIndex);
+						videoEncoderConfiguration.setResolution(jpegResolution);
+						System.out.println(" -> Selected " + jpegResolution.getWidth() + "x" + jpegResolution.getHeight());
 						
-						profile.setVideoEncoderConfiguration(videoEncoderConfiguration);
 						media.setVideoEncoderConfiguration(videoEncoderConfiguration);
-						
-						VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media.getVideoEncoderConfigurationOptions(profileToken);
-						JpegOptions jpegOptions = videoEncoderConfigurationOptions.getJPEG();
-						List<VideoResolution> jpegResolutions = jpegOptions.getResolutionsAvailable();
-						System.out.println("Supported JPEG resolutions:");
-						for (VideoResolution jpegResolution : jpegResolutions) {
-							System.out.println("    " + jpegResolution.getWidth() + "x" + jpegResolution.getHeight());
-						}
 					}
 	
 					snapshotURI = new URL(media.getSnapshotUri(profileToken));
@@ -214,8 +247,9 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     	return hostIP;
     }
     
-    public synchronized void setHostIP(String ipCamHostIP) {
-    	this.hostIP = ipCamHostIP;
+    public synchronized void setHostIP(String hostIP) {
+    	this.hostIP = hostIP;
+        setDirty(true);
     	
     	initCamera();
     }
@@ -224,20 +258,18 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     	return username;
     }
     
-    public synchronized void setUsername(String ipCamUsername) {
-    	this.username = ipCamUsername;
-    	
-    	initCamera();
+    public synchronized void setUsername(String username) {
+    	this.username = username;
+        setDirty(true);
     }
     
     public String getPassword() {
     	return password;
     }
     
-    public synchronized void setPassword(String ipCamPassword) {
-    	this.password = ipCamPassword;
-    	
-    	initCamera();
+    public synchronized void setPassword(String password) {
+    	this.password = password;
+        setDirty(true);
     }
 
     public int getPreferredWidth() {

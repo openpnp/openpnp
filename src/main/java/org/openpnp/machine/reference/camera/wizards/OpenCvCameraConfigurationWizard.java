@@ -118,7 +118,7 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
                 intConverter);
         addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
-        // This should always be last so that it doesn't trigger multiple camera reloads.
+        // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);

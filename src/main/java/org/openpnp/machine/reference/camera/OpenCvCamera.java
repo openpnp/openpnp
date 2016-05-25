@@ -59,7 +59,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     private VideoCapture fg = new VideoCapture();
     private Thread thread;
     private boolean dirty = false;
-    
+
     public OpenCvCamera() {}
 
     @Override
@@ -76,7 +76,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             return transformImage(img);
         }
         catch (Exception e) {
-        	e.printStackTrace();
             return null;
         }
         finally {
@@ -128,10 +127,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             width = null;
             height = null;
             
-            if (fg.isOpened()) {
-                fg.release();
-            }
-            
             fg.open(deviceIndex);
             if (preferredWidth != 0) {
                 fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
@@ -146,6 +141,23 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         }
         thread = new Thread(this);
         thread.start();
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if (thread != null) {
+            thread.interrupt();
+            try {
+                thread.join();
+            }
+            catch (Exception e) {
+
+            }
+        }
+        if (fg.isOpened()) {
+            fg.release();
+        }
     }
 
     public int getDeviceIndex() {
@@ -219,22 +231,5 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public void close() throws IOException {
-        super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join();
-            }
-            catch (Exception e) {
-
-            }
-        }
-        if (fg.isOpened()) {
-            fg.release();
-        }
     }
 }
