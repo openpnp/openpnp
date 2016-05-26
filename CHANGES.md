@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-05-25
+
+* OpenBuilds Driver Rotation Improvements
+
+	The OpenBuilds Driver now treats the rotary axes as rotary axes, instead of linear ones. This
+	means that it will choose to turn the opposite direction if that is the faster way to reach
+	a given position. In other words, if you are trying to move from 355 degrees to 10 degrees
+	it will counterclockwise 15 degrees, passing through 360 degrees instead of clockwise 345
+	degrees passing through 180 degrees.
+	
+	This greatly improves performance related to the recent change to treat all rotation moves
+	as solo. 
+
 # 2016-05-16
 
 * Nozzle Park
