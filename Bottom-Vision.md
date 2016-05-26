@@ -1,7 +1,3 @@
-# Warning: Preliminary Documentation
-
-# Warning: This feature has just been released and is considered Alpha. Please report issues [here](https://github.com/openpnp/openpnp/issues).
-
 # Introduction
 
 Bottom Vision is a feature in OpenPnP that makes it possible to place components more accurately. Simply put, by using an up looking camera OpenPnP can identify if a part was picked with any offset or rotational error, determine what that error is and then apply a correction before placement. Bottom Vision can also be used to determine if a pick failure occurred.
