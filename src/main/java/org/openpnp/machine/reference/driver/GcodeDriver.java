@@ -39,6 +39,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int maxFeedRate = 1000;
 
     @Attribute(required = false)
+    protected int timeoutMilliseconds = 5000;
+
+    @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 0;
 
     @Element(required = false)
@@ -310,7 +313,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     }
 
     protected List<String> sendGcode(String gCode) throws Exception {
-        return sendGcode(gCode, 5000);
+        return sendGcode(gCode, timeoutMilliseconds);
     }
 
     protected List<String> sendGcode(String gCode, long timeout) throws Exception {
@@ -320,13 +323,16 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         List<String> responses = new ArrayList<>();
         for (String command : gCode.split("\n")) {
             command = command.trim();
+            if (command.length() == 0) {
+                continue;
+            }
             responses.addAll(sendCommand(command, timeout));
         }
         return responses;
     }
 
     protected List<String> sendCommand(String command) throws Exception {
-        return sendCommand(command, 5000);
+        return sendCommand(command, timeoutMilliseconds);
     }
 
     protected List<String> sendCommand(String command, long timeout) throws Exception {

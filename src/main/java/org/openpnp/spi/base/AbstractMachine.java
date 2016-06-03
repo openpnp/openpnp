@@ -1,10 +1,8 @@
 package org.openpnp.spi.base;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -15,19 +13,25 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.JobPlanner;
-import org.openpnp.spi.JobProcessor;
-import org.openpnp.spi.JobProcessor.Type;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PasteDispenseJobProcessor;
+import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.IdentifiableList;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -55,17 +59,11 @@ public abstract class AbstractMachine implements Machine {
     @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
 
-    @Deprecated
     @Element(required = false)
-    protected JobPlanner jobPlanner;
+    protected Location discardLocation = new Location(LengthUnit.Millimeters);
 
-    @Deprecated
-    @Element(required = false)
-    protected JobProcessor jobProcessor;
-
-    @ElementMap(entry = "jobProcessor", key = "type", attribute = true, inline = false,
-            required = false)
-    protected Map<JobProcessor.Type, JobProcessor> jobProcessors = new HashMap<>();
+    @Attribute(required = false)
+    protected double speed = 1.0D;
 
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -76,10 +74,8 @@ public abstract class AbstractMachine implements Machine {
     @SuppressWarnings("unused")
     @Commit
     private void commit() {
-        if (jobProcessors.isEmpty()) {
-            jobProcessors.put(JobProcessor.Type.PickAndPlace, jobProcessor);
-            jobProcessor = null;
-            jobPlanner = null;
+        for (Head head : heads) {
+            head.setMachine(this);
         }
     }
 
@@ -170,10 +166,7 @@ public abstract class AbstractMachine implements Machine {
         cameras.remove(camera);
     }
 
-    @Override
-    public Map<Type, JobProcessor> getJobProcessors() {
-        return Collections.unmodifiableMap(jobProcessors);
-    }
+
 
     public void fireMachineHeadActivity(Head head) {
         for (MachineListener listener : listeners) {
@@ -262,6 +255,11 @@ public abstract class AbstractMachine implements Machine {
                     exception = e;
                 }
 
+                // If there was an error cancel all pending tasks.
+                if (exception != null) {
+                    executor.shutdownNow();
+                }
+
                 // If a callback was supplied, call it with the results
                 if (callback != null) {
                     if (exception != null) {
@@ -270,11 +268,6 @@ public abstract class AbstractMachine implements Machine {
                     else {
                         callback.onSuccess(result);
                     }
-                }
-
-                // If there was an error cancel all pending tasks.
-                if (exception != null) {
-                    executor.shutdownNow();
                 }
 
                 // TODO: unlock driver
@@ -304,5 +297,23 @@ public abstract class AbstractMachine implements Machine {
             throw new Exception("No default head available.");
         }
         return heads.get(0);
+    }
+
+    public Location getDiscardLocation() {
+        return discardLocation;
+    }
+
+    public void setDiscardLocation(Location discardLocation) {
+        this.discardLocation = discardLocation;
+    }
+
+    @Override
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    @Override
+    public double getSpeed() {
+        return speed;
     }
 }

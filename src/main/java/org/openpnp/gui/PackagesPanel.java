@@ -32,8 +32,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -75,25 +78,30 @@ public class PackagesPanel extends JPanel {
 
     private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
 
     final private Configuration configuration;
     final private Frame frame;
 
-    private PackagesTableModel packagesTableModel;
-    private TableRowSorter<PackagesTableModel> packagesTableSorter;
+    private PackagesTableModel tableModel;
+    private TableRowSorter<PackagesTableModel> tableSorter;
     private JTextField searchTextField;
-    private JTable packagesTable;
-    private ActionGroup packageSelectedActionGroup;
-
-    private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
+    private JTable table;
+    private ActionGroup singleSelectionActionGroup;
+    private ActionGroup multiSelectionActionGroup;
 
     public PackagesPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
         this.frame = frame;
 
+        singleSelectionActionGroup = new ActionGroup(deletePackageAction, copyPackageToClipboardAction);
+        singleSelectionActionGroup.setEnabled(false);
+        multiSelectionActionGroup = new ActionGroup(deletePackageAction);
+        multiSelectionActionGroup.setEnabled(false);
+        
         setLayout(new BorderLayout(0, 0));
-        packagesTableModel = new PackagesTableModel(configuration);
-        packagesTableSorter = new TableRowSorter<>(packagesTableModel);
+        tableModel = new PackagesTableModel(configuration);
+        tableSorter = new TableRowSorter<>(tableModel);
 
         JPanel toolbarAndSearch = new JPanel();
         add(toolbarAndSearch, BorderLayout.NORTH);
@@ -131,8 +139,8 @@ public class PackagesPanel extends JPanel {
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setContinuousLayout(true);
-        // splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION,
-        // PREF_DIVIDER_POSITION_DEF));
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
         splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -142,26 +150,33 @@ public class PackagesPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        // JPanel settingsPanel = new JPanel();
-        // tabbedPane.add("Settings", settingsPanel);
         JPanel footprintPanel = new JPanel();
         footprintPanel.setLayout(new BorderLayout());
-        tabbedPane.add("Footprint", footprintPanel);
+        tabbedPane.add("Footprint", new JScrollPane(footprintPanel));
 
 
-        packagesTable = new AutoSelectTextTable(packagesTableModel);
-        packagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table = new AutoSelectTextTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        packagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
 
-                Package pkg = getSelectedPackage();
+                List<Package> selections = getSelections();
 
-                packageSelectedActionGroup.setEnabled(pkg != null);
+                if (selections.size() > 1) {
+                    singleSelectionActionGroup.setEnabled(false);
+                    multiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    multiSelectionActionGroup.setEnabled(false);
+                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+                }
+
+                Package pkg = getSelection();
 
                 footprintPanel.removeAll();
 
@@ -174,14 +189,10 @@ public class PackagesPanel extends JPanel {
             }
         });
 
-        packagesTable.setRowSorter(packagesTableSorter);
+        table.setRowSorter(tableSorter);
 
-        splitPane.setLeftComponent(new JScrollPane(packagesTable));
+        splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
-
-        packageSelectedActionGroup =
-                new ActionGroup(deletePackageAction, copyPackageToClipboardAction);
-        packageSelectedActionGroup.setEnabled(false);
 
         toolBar.add(newPackageAction);
         toolBar.add(deletePackageAction);
@@ -207,15 +218,22 @@ public class PackagesPanel extends JPanel {
         });
     }
 
-    private Package getSelectedPackage() {
-        int index = packagesTable.getSelectedRow();
-        if (index == -1) {
+    private Package getSelection() {
+        List<Package> selections = getSelections();
+        if (selections.size() != 1) {
             return null;
         }
-        index = packagesTable.convertRowIndexToModel(index);
-        return packagesTableModel.getPackage(index);
+        return selections.get(0);
     }
 
+    private List<Package> getSelections() {
+        List<Package> selections = new ArrayList<>();
+        for (int selectedRow : table.getSelectedRows()) {
+            selectedRow = table.convertRowIndexToModel(selectedRow);
+            selections.add(tableModel.getPackage(selectedRow));
+        }
+        return selections;
+    }
     private void search() {
         RowFilter<PackagesTableModel, Object> rf = null;
         // If current expression doesn't parse, don't update.
@@ -226,7 +244,7 @@ public class PackagesPanel extends JPanel {
             logger.warn("Search failed", e);
             return;
         }
-        packagesTableSorter.setRowFilter(rf);
+        tableSorter.setRowFilter(rf);
     }
 
     public final Action newPackageAction = new AbstractAction() {
@@ -248,8 +266,8 @@ public class PackagesPanel extends JPanel {
                 Package this_package = new Package(id);
 
                 configuration.addPackage(this_package);
-                packagesTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(packagesTable);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
                 break;
             }
         }
@@ -265,19 +283,34 @@ public class PackagesPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             // Check to make sure there are no parts using this package.
-            for (Part part : Configuration.get().getParts()) {
-                if (part.getPackage() == getSelectedPackage()) {
-                    MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                            getSelectedPackage().getId() + " cannot be deleted. It is used by "
-                                    + part.getId());
-                    return;
+            List<Package> selections = getSelections();
+            for (Package pkg : selections) {
+                for (Part part : Configuration.get().getParts()) {
+                    if (part.getPackage() == pkg) {
+                        MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                                getSelection().getId() + " cannot be deleted. It is used by "
+                                        + part.getId());
+                        return;
+                    }
                 }
             }
+            
+            List<String> ids = selections.stream().map(Package::getId).collect(Collectors.toList());
+            String formattedIds;
+            if (ids.size() <= 3) {
+                formattedIds = String.join(", ", ids);
+            }
+            else {
+                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+            }
+            
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + getSelectedPackage().getId() + "?",
-                    "Delete " + getSelectedPackage().getId() + "?", JOptionPane.YES_NO_OPTION);
+                    "Are you sure you want to delete " + formattedIds + "?",
+                    "Delete " + selections.size() + " packages?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                Configuration.get().removePackage(getSelectedPackage());
+                for (Package pkg : selections) {
+                    Configuration.get().removePackage(pkg);
+                }
             }
         }
     };
@@ -292,7 +325,7 @@ public class PackagesPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Package pkg = getSelectedPackage();
+            Package pkg = getSelection();
             if (pkg == null) {
                 return;
             }
@@ -332,8 +365,8 @@ public class PackagesPanel extends JPanel {
                         break;
                     }
                 }
-                packagesTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(packagesTable);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);

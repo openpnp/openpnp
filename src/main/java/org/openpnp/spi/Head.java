@@ -22,6 +22,7 @@ package org.openpnp.spi;
 import java.util.List;
 
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 
 
@@ -91,6 +92,8 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public void moveToSafeZ(double speed) throws Exception;
 
+    public void moveToSafeZ() throws Exception;
+
     public List<PasteDispenser> getPasteDispensers();
 
     public PasteDispenser getPasteDispenser(String id);
@@ -100,4 +103,10 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Nozzle getDefaultNozzle() throws Exception;
 
     public PasteDispenser getDefaultPasteDispenser() throws Exception;
+    
+    public void setMachine(Machine machine);
+    
+    public Machine getMachine();
+    
+    public Location getParkLocation();
 }

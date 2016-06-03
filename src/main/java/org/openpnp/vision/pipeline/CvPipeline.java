@@ -54,6 +54,19 @@ public class CvPipeline {
     private Mat workingImage;
 
     private Camera camera;
+    
+    public CvPipeline() {
+        
+    }
+    
+    public CvPipeline(String xmlPipeline) {
+        try {
+            fromXmlString(xmlPipeline);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+    }
 
     /**
      * Add the given CvStage to the end of the pipeline using the given name. If name is null a
@@ -168,6 +181,9 @@ public class CvPipeline {
             long processingTimeNs = System.nanoTime();
             Result result = null;
             try {
+                if (!stage.isEnabled()) {
+                    throw new Exception("Stage not enabled.");
+                }
                 result = stage.process(this);
             }
             catch (Exception e) {
@@ -258,6 +274,16 @@ public class CvPipeline {
             if (getStage(name) == null) {
                 return name;
             }
+        }
+    }
+
+    @Override
+    public CvPipeline clone() throws CloneNotSupportedException {
+        try {
+            return new CvPipeline(toXmlString());
+        }
+        catch (Exception e) {
+            throw new CloneNotSupportedException(e.getMessage());
         }
     }
 }

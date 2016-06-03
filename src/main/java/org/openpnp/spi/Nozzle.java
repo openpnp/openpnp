@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Named;
+import org.openpnp.model.Part;
 
 /**
  * A Nozzle is a tool capable of picking up parts and releasing them. It is attached to a Head and
@@ -29,7 +30,7 @@ public interface Nozzle
      * 
      * @throws Exception
      */
-    public void pick() throws Exception;
+    public void pick(Part part) throws Exception;
 
     /**
      * Commands the Nozzle to perform it's place operation. Generally this just consists of
@@ -72,4 +73,13 @@ public interface Nozzle
      * @throws Exception
      */
     public void unloadNozzleTip() throws Exception;
+    
+    /**
+     * Get the part that is currently picked on the Nozzle, or null if none is picked.
+     * Should typically be non-null after a pick operation and before a place operation and null
+     * after a pick operation. Of note, it should be non-null after a failed pick operation
+     * so that the system can determine which part it may need to discard. It may also be null
+     * if a user initiated, manual, pick is performed with no Part to reference. 
+     */
+    public Part getPart();
 }

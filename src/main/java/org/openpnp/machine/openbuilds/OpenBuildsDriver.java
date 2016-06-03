@@ -19,6 +19,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractSerialPortDriver;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
@@ -71,7 +72,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 n2Exhaust(false);
                 led(false);
                 pump(false);
-
             }
         }
     }
@@ -124,16 +124,17 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         if (hm instanceof ReferenceNozzle) {
             ReferenceNozzle nozzle = (ReferenceNozzle) hm;
             double z = Math.sin(Math.toRadians(this.zA)) * zCamRadius;
-            if (((ReferenceNozzle) hm).getName().equals("N2")) {
+            if (getNozzleIndex(nozzle) == 1) {
                 z = -z;
             }
             z += zCamWheelRadius + zGap;
-            int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
-            return new Location(LengthUnit.Millimeters, x, y, z, tool == 0 ? c : c2)
-                    .add(hm.getHeadOffsets());
+            int nozzleIndex = getNozzleIndex(nozzle);
+            return new Location(LengthUnit.Millimeters, x, y, z,
+                    normalizeAngle(nozzleIndex == 0 ? c : c2)).add(hm.getHeadOffsets());
         }
         else {
-            return new Location(LengthUnit.Millimeters, x, y, zA, c).add(hm.getHeadOffsets());
+            return new Location(LengthUnit.Millimeters, x, y, zA, normalizeAngle(c))
+                    .add(hm.getHeadOffsets());
         }
     }
 
@@ -170,23 +171,39 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             sb.append(String.format(Locale.US, "Y%2.2f ", y));
             this.y = y;
         }
-        int tool = (nozzle == null || nozzle.getName().equals("N1")) ? 0 : 1;
-        if (!Double.isNaN(c) && c != (tool == 0 ? this.c : this.c2)) {
+        int nozzleIndex = getNozzleIndex(nozzle);
+        double oldC = (nozzleIndex == 0 ? this.c : this.c2);
+        if (!Double.isNaN(c) && c != oldC) {
+            // Normalize the new angle.
+            c = normalizeAngle(c);
+
+            // Get the delta between the current position and the new position in normalized
+            // degrees.
+            double delta = c - normalizeAngle(oldC);
+
+            // If the delta is greater than 180 we'll go the opposite direction instead to
+            // minimize travel time.
+            if (Math.abs(delta) > 180) {
+                if (delta < 0) {
+                    delta += 360;
+                }
+                else {
+                    delta -= 360;
+                }
+            }
+
+            c = oldC + delta;
+
             // If there is an E move we need to set the tool before
             // performing any commands otherwise we may move the wrong tool.
-            sendCommand(String.format(Locale.US, "T%d", tool));
-            if (sb.length() == 0) {
-                // If the move won't contain an X or Y component but will
-                // have an E component we need to send the E component as a
-                // solo move because Smoothie won't move only E and Z at
-                // the same time.
-                sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute));
-                dwell();
-            }
-            else {
-                sb.append(String.format(Locale.US, "E%2.2f ", c));
-            }
-            if (tool == 0) {
+            sendCommand(String.format(Locale.US, "T%d", nozzleIndex));
+            // We perform E moves solo because Smoothie doesn't like to make large E moves
+            // with small X/Y moves, so we can't trust it to end up where we want it if we
+            // do both at the same time.
+            sendCommand(
+                    String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
+            dwell();
+            if (nozzleIndex == 0) {
                 this.c = c;
             }
             else {
@@ -197,7 +214,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         if (!Double.isNaN(z)) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
             logger.debug("nozzle {} {} {}", new Object[] {z, zCamRadius, a});
-            if (nozzle.getName().equals("N2")) {
+            if (nozzleIndex == 1) {
                 a = -a;
             }
             if (a != this.zA) {
@@ -207,15 +224,38 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
 
         if (sb.length() > 0) {
-            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute));
+            sb.append(String.format(Locale.US, "F%2.2f", feedRateMmPerMinute * speed));
             sendCommand("G0 " + sb.toString());
             dwell();
         }
     }
 
+    private double normalizeAngle(double angle) {
+        while (angle > 360) {
+            angle -= 360;
+        }
+        while (angle < 0) {
+            angle += 360;
+        }
+        return angle;
+    }
+
+    /**
+     * Returns 0 or 1 for either the first or second Nozzle.
+     * 
+     * @param nozzle
+     * @return
+     */
+    private int getNozzleIndex(Nozzle nozzle) {
+        if (nozzle == null) {
+            return 0;
+        }
+        return nozzle.getHead().getNozzles().indexOf(nozzle);
+    }
+
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
+        if (getNozzleIndex(nozzle) == 0) {
             pump(true);
             n1Exhaust(false);
             n1Vacuum(true);
@@ -231,7 +271,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        if (((ReferenceNozzle) nozzle).getName().equals("N1")) {
+        if (getNozzleIndex(nozzle) == 0) {
             n1Picked = false;
             if (!n1Picked && !n2Picked) {
                 pump(false);
@@ -357,6 +397,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
         }
         sendCommand("T0");
+
         logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] {x, y, zA, c, c2});
     }
 

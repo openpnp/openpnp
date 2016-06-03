@@ -125,7 +125,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                     actuatorName, head.getName()));
         }
 
-        head.moveToSafeZ(1.0);
+        head.moveToSafeZ();
 
         if (vision.isEnabled()) {
             if (visionOffset == null) {
@@ -157,18 +157,18 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         }
 
         // Move the actuator to the feed start location.
-        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN), 1.0);
+        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
         // extend the pin
         actuator.actuate(true);
 
         // insert the pin
-        actuator.moveTo(feedStartLocation, 1.0);
+        actuator.moveTo(feedStartLocation);
 
         // drag the tape
-        actuator.moveTo(feedEndLocation, feedSpeed);
+        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
 
-        head.moveToSafeZ(1.0);
+        head.moveToSafeZ();
 
         // retract the pin
         actuator.actuate(false);
@@ -198,11 +198,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
             throw new Exception("No vision capable camera found on head.");
         }
 
-        head.moveToSafeZ(1.0);
+        head.moveToSafeZ();
 
         // Position the camera over the pick location.
         logger.debug("Move camera to pick location.");
-        camera.moveTo(pickLocation, 1.0);
+        camera.moveTo(pickLocation);
 
         // Move the camera to be in focus over the pick location.
         // head.moveTo(head.getX(), head.getY(), z, head.getC());

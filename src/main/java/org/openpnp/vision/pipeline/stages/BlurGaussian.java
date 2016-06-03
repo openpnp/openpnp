@@ -5,13 +5,14 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
-/**
- * Performs Gaussian blurring on the working image, updating it in place.
- */
+@Stage(category="Image Processing", description="Performs gaussian blurring on the working image.")
 public class BlurGaussian extends CvStage {
     @Attribute
+    @Property(description="Width and height of the blurring kernel")
     private int kernelSize = 3;
 
     public int getKernelSize() {

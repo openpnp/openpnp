@@ -21,6 +21,7 @@ package org.openpnp.machine.reference;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
@@ -39,10 +41,16 @@ import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PasteDispenseJobProcessor;
+import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -55,6 +63,18 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     private ReferenceDriver driver = new NullDriver();
+
+    @Element(required = false)
+    protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
+
+    @Element(required = false)
+    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = null;
+
+    @Element(required = false)
+    protected PartAlignment partAlignment = new ReferenceBottomVision();
+
+    @Element(required = false)
+    protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
 
     private boolean enabled;
 
@@ -124,7 +144,12 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
-                new ArrayList<>(jobProcessors.values())));
+                Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
+
+        List<PropertySheetHolder> vision = new ArrayList<>();
+        vision.add(getPartAlignment());
+        vision.add(getFiducialLocator());
+        children.add(new SimplePropertySheetHolder("Vision", vision));
         return children.toArray(new PropertySheetHolder[] {});
     }
 
@@ -163,6 +188,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(VfwCamera.class);
         l.add(OpenCvCamera.class);
         l.add(ImageCamera.class);
+        l.add(SimulatedUpCamera.class);
         return l;
     }
 
@@ -198,5 +224,25 @@ public class ReferenceMachine extends AbstractMachine {
                 }
             }
         }
+    }
+
+    @Override
+    public PartAlignment getPartAlignment() {
+        return partAlignment;
+    }
+
+    @Override
+    public FiducialLocator getFiducialLocator() {
+        return fiducialLocator;
+    }
+
+    @Override
+    public PnpJobProcessor getPnpJobProcessor() {
+        return pnpJobProcessor;
+    }
+
+    @Override
+    public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
+        return pasteDispenseJobProcessor;
     }
 }

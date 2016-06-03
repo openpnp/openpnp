@@ -20,11 +20,15 @@
 package org.openpnp.gui;
 
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.FlowLayout;
+import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Hashtable;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -32,20 +36,26 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
-import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -65,6 +75,7 @@ public class JogControlsPanel extends JPanel {
     private final Configuration configuration;
     private JPanel panelActuators;
     private JPanel panelDispensers;
+    private JSlider sliderIncrements;
 
     /**
      * Create the panel.
@@ -91,17 +102,54 @@ public class JogControlsPanel extends JPanel {
         zMinusAction.setEnabled(enabled);
         cPlusAction.setEnabled(enabled);
         cMinusAction.setEnabled(enabled);
-        pickAction.setEnabled(enabled);
-        placeAction.setEnabled(enabled);
+        discardAction.setEnabled(enabled);
         safezAction.setEnabled(enabled);
-        xyZeroAction.setEnabled(enabled);
-        zZeroAction.setEnabled(enabled);
-        cZeroAction.setEnabled(enabled);
+        xyParkAction.setEnabled(enabled);
+        zParkAction.setEnabled(enabled);
+        cParkAction.setEnabled(enabled);
         for (Component c : panelActuators.getComponents()) {
             c.setEnabled(enabled);
         }
         for (Component c : panelDispensers.getComponents()) {
             c.setEnabled(enabled);
+        }
+    }
+
+    private void setUnits(LengthUnit units) {
+        if (units == LengthUnit.Millimeters) {
+            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
+            incrementsLabels.put(1, new JLabel("0.01 " + units.getShortName()));
+            incrementsLabels.put(2, new JLabel("0.1 " + units.getShortName()));
+            incrementsLabels.put(3, new JLabel("1.0 " + units.getShortName()));
+            incrementsLabels.put(4, new JLabel("10 " + units.getShortName()));
+            incrementsLabels.put(5, new JLabel("100 " + units.getShortName()));
+            sliderIncrements.setLabelTable(incrementsLabels);
+        }
+        else if (units == LengthUnit.Inches) {
+            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
+            incrementsLabels.put(1, new JLabel("0.001 " + units.getShortName()));
+            incrementsLabels.put(2, new JLabel("0.01 " + units.getShortName()));
+            incrementsLabels.put(3, new JLabel("0.1 " + units.getShortName()));
+            incrementsLabels.put(4, new JLabel("1.0 " + units.getShortName()));
+            incrementsLabels.put(5, new JLabel("10.0 " + units.getShortName()));
+            sliderIncrements.setLabelTable(incrementsLabels);
+        }
+        else {
+            throw new Error("setUnits() not implemented for " + units);
+        }
+        machineControlsPanel.updateDros();
+    }
+
+    public double getJogIncrement() {
+        if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
+            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
+        }
+        else if (configuration.getSystemUnits() == LengthUnit.Inches) {
+            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
+        }
+        else {
+            throw new Error(
+                    "getJogIncrement() not implemented for " + configuration.getSystemUnits());
         }
     }
 
@@ -114,8 +162,8 @@ public class JogControlsPanel extends JPanel {
             double zPos = l.getZ();
             double cPos = l.getRotation();
 
-            double jogIncrement = new Length(machineControlsPanel.getJogIncrement(),
-                    configuration.getSystemUnits()).getValue();
+            double jogIncrement =
+                    new Length(getJogIncrement(), configuration.getSystemUnits()).getValue();
 
             if (x > 0) {
                 xPos += jogIncrement;
@@ -146,16 +194,20 @@ public class JogControlsPanel extends JPanel {
             }
 
             machineControlsPanel.getSelectedNozzle()
-                    .moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos), 1.0);
+                    .moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos));
         });
     }
 
-    private void zero(boolean xy, boolean z, boolean c) {
+    private void park(boolean xy, boolean z, boolean c) {
         UiUtils.submitUiMachineTask(() -> {
-            Location l = machineControlsPanel.getSelectedNozzle().getLocation()
-                    .convertToUnits(Configuration.get().getSystemUnits());
-            l = l.derive(xy ? 0d : null, xy ? 0d : null, z ? 0d : null, c ? 0d : null);
-            machineControlsPanel.getSelectedNozzle().moveTo(l, 1.0);
+            HeadMountable tool = machineControlsPanel.getSelectedTool();
+            Location location = tool.getLocation();
+            Location parkLocation = tool.getHead().getParkLocation();
+            parkLocation = parkLocation.convertToUnits(location.getUnits());
+            location = location.derive(xy ? parkLocation.getX() : null,
+                    xy ? parkLocation.getY() : null, z ? parkLocation.getZ() : null,
+                    c ? parkLocation.getRotation() : null);
+            MovableUtils.moveToLocationAtSafeZ(tool, location);
         });
     }
 
@@ -163,9 +215,8 @@ public class JogControlsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel panel = new JPanel();
-        panel.setBorder(
-                new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         add(panel);
+        panel.setBorder(null);
 
         JPanel panelControls = new JPanel();
         panel.add(panelControls);
@@ -176,7 +227,10 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -185,6 +239,10 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton homeButton = new JButton(machineControlsPanel.homeAction);
+        // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
+        // homeAction referenced above so the icon doesn't render in the viewer. We set it here
+        // so the dialog looks right while editing.
+        homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
         panelControls.add(homeButton, "2, 2");
 
@@ -198,6 +256,24 @@ public class JogControlsPanel extends JPanel {
         lblZ.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
         panelControls.add(lblZ, "14, 2");
 
+        JLabel lblDistance = new JLabel("Distance");
+        lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        panelControls.add(lblDistance, "18, 2, center, center");
+
+        JLabel lblSpeed = new JLabel("Speed %");
+        lblSpeed.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        panelControls.add(lblSpeed, "20, 2, center, center");
+
+        sliderIncrements = new JSlider();
+        panelControls.add(sliderIncrements, "18, 3, 1, 10");
+        sliderIncrements.setOrientation(SwingConstants.VERTICAL);
+        sliderIncrements.setMajorTickSpacing(1);
+        sliderIncrements.setValue(1);
+        sliderIncrements.setSnapToTicks(true);
+        sliderIncrements.setPaintLabels(true);
+        sliderIncrements.setMinimum(1);
+        sliderIncrements.setMaximum(5);
+
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);
         panelControls.add(yPlusButton, "8, 4");
@@ -206,11 +282,32 @@ public class JogControlsPanel extends JPanel {
         zUpButton.setHideActionText(true);
         panelControls.add(zUpButton, "14, 4");
 
+        speedSlider = new JSlider();
+        speedSlider.setValue(100);
+        speedSlider.setPaintTicks(true);
+        speedSlider.setMinorTickSpacing(1);
+        speedSlider.setMajorTickSpacing(25);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setPaintLabels(true);
+        speedSlider.setOrientation(SwingConstants.VERTICAL);
+        panelControls.add(speedSlider, "20, 4, 1, 9");
+        speedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                Configuration.get().getMachine().setSpeed(speedSlider.getValue() * 0.01);
+            }
+        });
+
+        JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
+        buttonStartStop.setIcon(Icons.powerOn);
+        panelControls.add(buttonStartStop, "2, 6");
+        buttonStartStop.setHideActionText(true);
+
         JButton xMinusButton = new JButton(xMinusAction);
         xMinusButton.setHideActionText(true);
         panelControls.add(xMinusButton, "6, 6");
 
-        JButton homeXyButton = new JButton(xyZeroAction);
+        JButton homeXyButton = new JButton(xyParkAction);
         homeXyButton.setHideActionText(true);
         panelControls.add(homeXyButton, "8, 6");
 
@@ -218,7 +315,7 @@ public class JogControlsPanel extends JPanel {
         xPlusButton.setHideActionText(true);
         panelControls.add(xPlusButton, "10, 6");
 
-        JButton homeZButton = new JButton(zZeroAction);
+        JButton homeZButton = new JButton(zParkAction);
         homeZButton.setHideActionText(true);
         panelControls.add(homeZButton, "14, 6");
 
@@ -233,13 +330,13 @@ public class JogControlsPanel extends JPanel {
         JLabel lblC = new JLabel("C");
         lblC.setHorizontalAlignment(SwingConstants.CENTER);
         lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
-        panelControls.add(lblC, "2, 12");
+        panelControls.add(lblC, "4, 12");
 
         JButton counterclockwiseButton = new JButton(cPlusAction);
         counterclockwiseButton.setHideActionText(true);
         panelControls.add(counterclockwiseButton, "6, 12");
 
-        JButton homeCButton = new JButton(cZeroAction);
+        JButton homeCButton = new JButton(cParkAction);
         homeCButton.setHideActionText(true);
         panelControls.add(homeCButton, "8, 12");
 
@@ -260,19 +357,55 @@ public class JogControlsPanel extends JPanel {
         FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
         fl_panelActuators.setAlignment(FlowLayout.LEFT);
 
-        JButton btnPick = new JButton(pickAction);
-        panelSpecial.add(btnPick);
-
-        JButton btnPlace = new JButton(placeAction);
-        panelSpecial.add(btnPlace);
-
         JButton btnSafeZ = new JButton(safezAction);
         panelSpecial.add(btnSafeZ);
+
+        JButton btnDiscard = new JButton(discardAction);
+        panelSpecial.add(btnDiscard);
 
         panelDispensers = new JPanel();
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
         tabbedPane.addTab("Paste Dispensers", null, panelDispensers, null);
+
+        setFocusTraversalPolicy(focusPolicy);
+        setFocusTraversalPolicyProvider(true);
+    }
+
+    private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
+        @Override
+        public Component getComponentAfter(Container aContainer, Component aComponent) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getComponentBefore(Container aContainer, Component aComponent) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getDefaultComponent(Container aContainer) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getFirstComponent(Container aContainer) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getInitialComponent(Window window) {
+            return sliderIncrements;
+        }
+
+        @Override
+        public Component getLastComponent(Container aContainer) {
+            return sliderIncrements;
+        }
+    };
+
+    public double getSpeed() {
+        return speedSlider.getValue() * 0.01D;
     }
 
     @SuppressWarnings("serial")
@@ -340,46 +473,26 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action xyZeroAction = new AbstractAction("Zero XY", Icons.zero) {
+    public Action xyParkAction = new AbstractAction("Park XY", Icons.park) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            zero(true, false, false);
+            park(true, false, false);
         }
     };
 
     @SuppressWarnings("serial")
-    public Action zZeroAction = new AbstractAction("Zero Z", Icons.zero) {
+    public Action zParkAction = new AbstractAction("Park Z", Icons.park) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            zero(false, true, false);
+            park(false, true, false);
         }
     };
 
     @SuppressWarnings("serial")
-    public Action cZeroAction = new AbstractAction("Zero C", Icons.zero) {
+    public Action cParkAction = new AbstractAction("Park C", Icons.park) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            zero(false, false, true);
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action pickAction = new AbstractAction("Pick") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                machineControlsPanel.getSelectedNozzle().pick();
-            });
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action placeAction = new AbstractAction("Place") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                machineControlsPanel.getSelectedNozzle().place();
-            });
+            park(false, false, true);
         }
     };
 
@@ -388,22 +501,58 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Configuration.get().getMachine().getDefaultHead().moveToSafeZ(1.0);
+                Configuration.get().getMachine().getDefaultHead().moveToSafeZ();
             });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action discardAction = new AbstractAction("Discard") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                // move to the discard location
+                MovableUtils.moveToLocationAtSafeZ(nozzle,
+                        Configuration.get().getMachine().getDiscardLocation());
+                // discard the part
+                nozzle.place();
+                nozzle.moveToSafeZ();
+            });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(
+                    Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(
+                    Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
 
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
+            setUnits(configuration.getSystemUnits());
+            speedSlider.setValue((int) (configuration.getMachine().getSpeed() * 100));
+
             panelActuators.removeAll();
 
             Machine machine = Configuration.get().getMachine();
 
             for (Actuator actuator : machine.getActuators()) {
                 final Actuator actuator_f = actuator;
-                final JToggleButton actuatorButton =
-                        new JToggleButton(actuator_f.getName());
+                final JToggleButton actuatorButton = new JToggleButton(actuator_f.getName());
                 actuatorButton.setFocusable(false);
                 actuatorButton.addActionListener(new ActionListener() {
                     @Override
@@ -452,4 +601,5 @@ public class JogControlsPanel extends JPanel {
             setEnabled(machineControlsPanel.isEnabled());
         }
     };
+    private JSlider speedSlider;
 }

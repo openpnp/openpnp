@@ -306,7 +306,7 @@ public class JobPlacementsPanel extends JPanel {
 
                 Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
                         .getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
     };
@@ -325,7 +325,7 @@ public class JobPlacementsPanel extends JPanel {
 
             Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             });
         }
     };

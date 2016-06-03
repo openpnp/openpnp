@@ -38,6 +38,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
+import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -88,7 +89,7 @@ public class ClassSelectionDialog<T> extends JDialog {
         });
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        panel.add(list, BorderLayout.CENTER);
+        panel.add(new JScrollPane(list), BorderLayout.CENTER);
         // setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setSize(400, 400);
         setLocationRelativeTo(parent);

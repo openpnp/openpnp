@@ -178,7 +178,17 @@ public abstract class AbstractCamera implements Camera {
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureCamera;
     }
+    
+    @Override
+    public void moveTo(Location location) throws Exception {
+        moveTo(location, getHead().getMachine().getSpeed());
+    }
 
+    @Override
+    public void moveToSafeZ() throws Exception {
+        moveToSafeZ(getHead().getMachine().getSpeed());
+    }
+    
     protected class ListenerEntry {
         public CameraListener listener;
         public int maximumFps;

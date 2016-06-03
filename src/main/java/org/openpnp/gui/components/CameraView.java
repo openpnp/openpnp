@@ -22,6 +22,7 @@ package org.openpnp.gui.components;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -179,6 +180,8 @@ public class CameraView extends JComponent implements CameraListener {
 
     private long flashStartTimeMs;
     private long flashLengthMs = 250;
+    
+    private boolean showName = false;
 
     public CameraView() {
         setBackground(Color.black);
@@ -264,6 +267,14 @@ public class CameraView extends JComponent implements CameraListener {
     public Camera getCamera() {
         return camera;
     }
+    
+    public void setShowName(boolean showName) {
+        this.showName = showName;
+    }
+    
+    public boolean isShowName() {
+        return this.showName;
+    }
 
     public void setDefaultReticle(Reticle reticle) {
         setReticle(DEFAULT_RETICLE_KEY, reticle);
@@ -336,6 +347,10 @@ public class CameraView extends JComponent implements CameraListener {
         this.cameraViewFilter = cameraViewFilter;
     }
 
+    public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
+        showFilteredImage(filteredImage, null, milliseconds);
+    }
+
     /**
      * Show image instead of the camera image for milliseconds. After milliseconds elapses the view
      * goes back to showing the camera image. The image should be the same width and height as the
@@ -343,10 +358,17 @@ public class CameraView extends JComponent implements CameraListener {
      * briefly show the result of image processing. This is a shortcut to
      * setCameraViewFilter(CameraViewFilter) which simply removes itself after the specified time.
      * 
+     * In addition to showing the given image, if the text parameters is not null the text
+     * will be shown during the timeout using setText().
+     * 
      * @param image
+     * @param text
      * @param millseconds
      */
-    public void showFilteredImage(final BufferedImage filteredImage, final long milliseconds) {
+    public void showFilteredImage(BufferedImage filteredImage, String text, long milliseconds) {
+        if (text != null) {
+            setText(text);
+        }
         setCameraViewFilter(new CameraViewFilter() {
             long t = System.currentTimeMillis();
 
@@ -356,6 +378,9 @@ public class CameraView extends JComponent implements CameraListener {
                     return filteredImage;
                 }
                 else {
+                    if (text != null) {
+                        setText(null);
+                    }
                     setCameraViewFilter(null);
                     return image;
                 }
@@ -495,6 +520,11 @@ public class CameraView extends JComponent implements CameraListener {
 
             if (text != null) {
                 drawTextOverlay(g2d, 10, 10, text);
+            }
+            
+            if (showName) {
+                Dimension dim = measureTextOverlay(g2d, camera.getName());
+                drawTextOverlay(g2d, 10, height - dim.height - 10, camera.getName());
             }
 
             if (showImageInfo && text == null) {
@@ -719,6 +749,25 @@ public class CameraView extends JComponent implements CameraListener {
             textLayout.draw(g2d, topLeftX + insets.left, yPen);
             yPen += interLineSpacing;
         }
+    }
+    
+    private static Dimension measureTextOverlay(Graphics2D g2d, String text) {
+        Insets insets = new Insets(10, 10, 10, 10);
+        int interLineSpacing = 4;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setStroke(new BasicStroke(1.0f));
+        g2d.setFont(g2d.getFont().deriveFont(12.0f));
+        String[] lines = text.split("\n");
+        List<TextLayout> textLayouts = new ArrayList<>();
+        int textWidth = 0, textHeight = 0;
+        for (String line : lines) {
+            TextLayout textLayout = new TextLayout(line, g2d.getFont(), g2d.getFontRenderContext());
+            textWidth = (int) Math.max(textWidth, textLayout.getBounds().getWidth());
+            textHeight += (int) textLayout.getBounds().getHeight() + interLineSpacing;
+            textLayouts.add(textLayout);
+        }
+        textHeight -= interLineSpacing;
+        return new Dimension(textWidth + insets.left + insets.right, textHeight + insets.top + insets.bottom);
     }
 
     private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
@@ -1077,11 +1126,11 @@ public class CameraView extends JComponent implements CameraListener {
             if (camera.getHead() == null) {
                 // move the nozzle to the camera
                 Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             }
             else {
                 // move the camera to the location
-                MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
         });
     }

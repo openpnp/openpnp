@@ -8,7 +8,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
-import java.beans.Introspector;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -89,12 +88,17 @@ public class PipelinePanel extends JPanel {
         stagesTable.setDragEnabled(true);
         stagesTable.setDropMode(DropMode.INSERT_ROWS);
         stagesTable.setTransferHandler(new TableRowTransferHandler(stagesTable));
+        stagesTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        stagesTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        stagesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(stagesTable);
 
         splitPane.setRightComponent(propertySheetPanel);
         splitPane.setLeftComponent(scrollPane);
 
+        // Listen for changes to the selection of the table and update the properties for the
+        // selected stage.
         stagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -108,8 +112,7 @@ public class PipelinePanel extends JPanel {
                 }
                 else {
                     try {
-                        propertySheetPanel.setBeanInfo(
-                                Introspector.getBeanInfo(stage.getClass(), CvStage.class));
+                        propertySheetPanel.setBeanInfo(stage.getBeanInfo());
                         propertySheetPanel.readFromObject(stage);
                     }
                     catch (Exception ex) {
@@ -119,6 +122,8 @@ public class PipelinePanel extends JPanel {
             }
         });
 
+        // Listen for changes to the structure of the table (adding or removing rows) and process
+        // the pipeline to update the results.
         stagesTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -126,6 +131,21 @@ public class PipelinePanel extends JPanel {
             }
         });
 
+        // Listen for editing events in the stages table and process the pipeline to update the
+        // results.
+        stagesTable.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent e) {
+                if ("tableCellEditor".equals(e.getPropertyName())) {
+                    if (!propertySheetPanel.getTable().isEditing()) {
+                        // editing has ended for a cell, save the values
+                        editor.process();
+                    }
+                }
+            }
+        });
+
+        // Set the divider location after it's added to the view
         addHierarchyListener(new HierarchyListener() {
             @Override
             public void hierarchyChanged(HierarchyEvent e) {
@@ -133,6 +153,8 @@ public class PipelinePanel extends JPanel {
             }
         });
 
+        // Listen for editing events in the properties and process the pipeline to update the
+        // results.
         propertySheetPanel.getTable().addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent e) {

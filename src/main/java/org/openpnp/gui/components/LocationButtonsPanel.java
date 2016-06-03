@@ -226,7 +226,7 @@ public class LocationButtonsPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         Camera camera = getCamera();
                         Location location = getParsedLocation();
-                        MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
                     });
                 }
             };
@@ -242,7 +242,7 @@ public class LocationButtonsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getTool();
                 Location location = getParsedLocation();
-                MovableUtils.moveToLocationAtSafeZ(tool, location, 1.0);
+                MovableUtils.moveToLocationAtSafeZ(tool, location);
             });
         }
     };
@@ -259,7 +259,7 @@ public class LocationButtonsPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         HeadMountable tool = getTool();
                         Location location = getParsedLocation();
-                        tool.moveTo(location, 1.0);
+                        tool.moveTo(location);
                     });
                 }
             };
@@ -276,7 +276,7 @@ public class LocationButtonsPanel extends JPanel {
                     UiUtils.submitUiMachineTask(() -> {
                         Actuator actuator = getActuator();
                         Location location = getParsedLocation();
-                        MovableUtils.moveToLocationAtSafeZ(actuator, location, 1.0);
+                        MovableUtils.moveToLocationAtSafeZ(actuator, location);
                     });
                 }
             };

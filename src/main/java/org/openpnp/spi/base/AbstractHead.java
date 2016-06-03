@@ -6,6 +6,8 @@ import java.util.List;
 import javax.swing.Icon;
 
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -14,12 +16,11 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractHead implements Head {
-    protected Machine machine;
-
     @Attribute
     protected String id;
 
@@ -37,6 +38,11 @@ public abstract class AbstractHead implements Head {
 
     @ElementList(required = false)
     protected IdentifiableList<PasteDispenser> pasteDispensers = new IdentifiableList<>();
+    
+    @Element(required = false)
+    protected Location parkLocation = new Location(LengthUnit.Millimeters);
+
+    protected Machine machine;
 
     public AbstractHead() {
         this.id = Configuration.createId();
@@ -182,5 +188,28 @@ public abstract class AbstractHead implements Head {
             throw new Exception("No default paste dispenser available on head " + getName());
         }
         return dispensers.get(0);
+    }
+
+    @Override
+    public Machine getMachine() {
+        return machine;
+    }
+
+    @Override
+    public void setMachine(Machine machine) {
+        this.machine = machine;
+    }
+
+    @Override
+    public void moveToSafeZ() throws Exception {
+        moveToSafeZ(getMachine().getSpeed());
+    }
+
+    public Location getParkLocation() {
+        return parkLocation;
+    }
+
+    public void setParkLocation(Location parkLocation) {
+        this.parkLocation = parkLocation;
     }
 }

@@ -16,7 +16,6 @@ import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +32,80 @@ import jssc.SerialPortTimeoutException;
 public abstract class AbstractSerialPortDriver implements ReferenceDriver, Closeable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractSerialPortDriver.class);
 
+    public enum DataBits {
+        Five(SerialPort.DATABITS_5),
+        Six(SerialPort.DATABITS_6),
+        Seven(SerialPort.DATABITS_7),
+        Eight(SerialPort.DATABITS_8);
+
+        public final int mask;
+
+        private DataBits(int mask) {
+            this.mask = mask;
+        }
+    }
+
+    public enum StopBits {
+        One(SerialPort.STOPBITS_1),
+        OnePointFive(SerialPort.STOPBITS_1_5),
+        Two(SerialPort.STOPBITS_2);
+
+        public final int mask;
+
+        private StopBits(int mask) {
+            this.mask = mask;
+        }
+    }
+
+    public enum FlowControl {
+        Off(SerialPort.FLOWCONTROL_NONE),
+        RtsCts(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT),
+        XonXoff(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
+
+        public final int mask;
+
+        private FlowControl(int mask) {
+            this.mask = mask;
+        }
+    }
+
+    public enum Parity {
+        None(SerialPort.PARITY_NONE),
+        Mark(SerialPort.PARITY_MARK),
+        Space(SerialPort.PARITY_SPACE),
+        Even(SerialPort.PARITY_EVEN),
+        Odd(SerialPort.PARITY_ODD);
+
+        public final int mask;
+
+        private Parity(int mask) {
+            this.mask = mask;
+        }
+    }
+
     @Attribute(required = false)
     protected String portName;
+
     @Attribute(required = false)
     protected int baud = 115200;
+
+    @Attribute(required = false)
+    protected FlowControl flowControl = FlowControl.Off;
+
+    @Attribute(required = false)
+    protected DataBits dataBits = DataBits.Eight;
+
+    @Attribute(required = false)
+    protected StopBits stopBits = StopBits.One;
+
+    @Attribute(required = false)
+    protected Parity parity = Parity.None;
+    
+    @Attribute(required = false)
+    protected boolean setDtr = false;
+    
+    @Attribute(required = false)
+    protected boolean setRts = false;
 
     protected SerialPort serialPort;
     protected SerialInputStream input;
@@ -46,8 +115,8 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
         disconnect();
         serialPort = new SerialPort(portName);
         serialPort.openPort();
-        serialPort.setParams(baud, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
-                SerialPort.PARITY_NONE, false, false);
+        serialPort.setParams(baud, dataBits.mask, stopBits.mask, parity.mask, setRts, setDtr);
+        serialPort.setFlowControlMode(flowControl.mask);
         input = new SerialInputStream(serialPort);
         input.setTimeout(500);
         output = new SerialOutputStream(serialPort);
@@ -132,12 +201,60 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     public void setBaud(int baud) {
         this.baud = baud;
     }
+    
+    public FlowControl getFlowControl() {
+        return flowControl;
+    }
+
+    public void setFlowControl(FlowControl flowControl) {
+        this.flowControl = flowControl;
+    }
+
+    public DataBits getDataBits() {
+        return dataBits;
+    }
+
+    public void setDataBits(DataBits dataBits) {
+        this.dataBits = dataBits;
+    }
+
+    public StopBits getStopBits() {
+        return stopBits;
+    }
+
+    public void setStopBits(StopBits stopBits) {
+        this.stopBits = stopBits;
+    }
+
+    public Parity getParity() {
+        return parity;
+    }
+
+    public void setParity(Parity parity) {
+        this.parity = parity;
+    }
+    
+    public boolean isSetDtr() {
+        return setDtr;
+    }
+
+    public void setSetDtr(boolean setDtr) {
+        this.setDtr = setDtr;
+    }
+
+    public boolean isSetRts() {
+        return setRts;
+    }
+
+    public void setSetRts(boolean setRts) {
+        this.setRts = setRts;
+    }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
         return null;
     }
-    
+
     @Override
     public String getPropertySheetHolderTitle() {
         return getClass().getSimpleName();
@@ -162,7 +279,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     public Wizard getConfigurationWizard() {
         return new AbstractSerialPortDriverConfigurationWizard(this);
     }
-    
+
     /**
      * SerialInputStream and SerialOutputStream are from the pull request referenced in:
      * https://github.com/scream3r/java-simple-serial-connector/issues/17

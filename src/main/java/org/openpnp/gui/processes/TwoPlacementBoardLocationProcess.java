@@ -160,7 +160,7 @@ public class TwoPlacementBoardLocationProcess {
     private boolean step5() {
         UiUtils.submitUiMachineTask(() -> {
             Location location = jobPanel.getSelectedBoardLocation().getLocation();
-            MovableUtils.moveToLocationAtSafeZ(camera, location, 1.0);
+            MovableUtils.moveToLocationAtSafeZ(camera, location);
         });
 
         return true;

@@ -19,21 +19,15 @@
 
 package org.openpnp.gui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
-import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Hashtable;
 import java.util.Locale;
 
 import javax.swing.AbstractAction;
@@ -43,11 +37,9 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
@@ -57,12 +49,10 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
@@ -86,8 +76,6 @@ public class MachineControlsPanel extends JPanel {
     private JTextField textFieldY;
     private JTextField textFieldC;
     private JTextField textFieldZ;
-    private JButton btnStartStop;
-    private JSlider sliderIncrements;
     private JComboBox comboBoxNozzles;
 
 
@@ -99,7 +87,6 @@ public class MachineControlsPanel extends JPanel {
     private Color droSavedColor = new Color(0x90cce0);
 
     private JogControlsPanel jogControlsPanel;
-    private JDialog jogControlsWindow;
 
     private volatile double savedX = Double.NaN, savedY = Double.NaN, savedZ = Double.NaN,
             savedC = Double.NaN;
@@ -118,11 +105,6 @@ public class MachineControlsPanel extends JPanel {
         createUi();
 
         configuration.addListener(configurationListener);
-
-        jogControlsWindow = new JDialog(frame, "Jog Controls");
-        jogControlsWindow.setResizable(false);
-        jogControlsWindow.getContentPane().setLayout(new BorderLayout());
-        jogControlsWindow.getContentPane().add(jogControlsPanel);
     }
 
     public void setSelectedNozzle(Nozzle nozzle) {
@@ -147,63 +129,16 @@ public class MachineControlsPanel extends JPanel {
     }
 
     /**
-     * Returns the selected Nozzle or PasteDispenser depending on which type of Job is selected.
-     * 
+     * Currently returns the selected Nozzle. Intended to eventually return either the selected
+     * Nozzle or PasteDispenser.
      * @return
      */
     public HeadMountable getSelectedTool() {
-        JobProcessor.Type jobProcessorType = MainFrame.jobPanel.getSelectedJobProcessorType();
-        if (jobProcessorType == JobProcessor.Type.PickAndPlace) {
-            return getSelectedNozzle();
-        }
-        else if (jobProcessorType == JobProcessor.Type.SolderPaste) {
-            return getSelectedPasteDispenser();
-        }
-        else {
-            throw new Error("Unknown tool type: " + jobProcessorType);
-        }
+        return getSelectedNozzle();
     }
 
     public JogControlsPanel getJogControlsPanel() {
         return jogControlsPanel;
-    }
-
-    private void setUnits(LengthUnit units) {
-        if (units == LengthUnit.Millimeters) {
-            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.01"));
-            incrementsLabels.put(2, new JLabel("0.1"));
-            incrementsLabels.put(3, new JLabel("1.0"));
-            incrementsLabels.put(4, new JLabel("10"));
-            incrementsLabels.put(5, new JLabel("100"));
-            sliderIncrements.setLabelTable(incrementsLabels);
-        }
-        else if (units == LengthUnit.Inches) {
-            Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
-            incrementsLabels.put(1, new JLabel("0.001"));
-            incrementsLabels.put(2, new JLabel("0.01"));
-            incrementsLabels.put(3, new JLabel("0.1"));
-            incrementsLabels.put(4, new JLabel("1.0"));
-            incrementsLabels.put(5, new JLabel("10.0"));
-            sliderIncrements.setLabelTable(incrementsLabels);
-        }
-        else {
-            throw new Error("setUnits() not implemented for " + units);
-        }
-        updateDros();
-    }
-
-    public double getJogIncrement() {
-        if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
-            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
-        }
-        else if (configuration.getSystemUnits() == LengthUnit.Inches) {
-            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
-        }
-        else {
-            throw new Error(
-                    "getJogIncrement() not implemented for " + configuration.getSystemUnits());
-        }
     }
 
     @Override
@@ -412,96 +347,22 @@ public class MachineControlsPanel extends JPanel {
         panelDrosSecondLine.add(btnTargetCamera);
         btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
 
-        JPanel panelIncrements = new JPanel();
-        add(panelIncrements);
-
-        sliderIncrements = new JSlider();
-        panelIncrements.add(sliderIncrements);
-        sliderIncrements.setMajorTickSpacing(1);
-        sliderIncrements.setValue(1);
-        sliderIncrements.setSnapToTicks(true);
-        sliderIncrements.setPaintLabels(true);
-        sliderIncrements.setPaintTicks(true);
-        sliderIncrements.setMinimum(1);
-        sliderIncrements.setMaximum(5);
-
-        JPanel panelStartStop = new JPanel();
-        add(panelStartStop);
-        panelStartStop.setLayout(new BorderLayout(0, 0));
-
-        btnStartStop = new JButton(startMachineAction);
-        btnStartStop.setFocusable(true);
-        btnStartStop.setForeground(startColor);
-        panelStartStop.add(btnStartStop);
-        btnStartStop.setFont(new Font("Lucida Grande", Font.BOLD, 48));
-        btnStartStop.setPreferredSize(new Dimension(160, 70));
-
-        setFocusTraversalPolicy(focusPolicy);
-        setFocusTraversalPolicyProvider(true);
+        add(jogControlsPanel);
     }
 
-    private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
-        @Override
-        public Component getComponentAfter(Container aContainer, Component aComponent) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getComponentBefore(Container aContainer, Component aComponent) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getDefaultComponent(Container aContainer) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getFirstComponent(Container aContainer) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getInitialComponent(Window window) {
-            return sliderIncrements;
-        }
-
-        @Override
-        public Component getLastComponent(Container aContainer) {
-            return sliderIncrements;
-        }
-    };
-
-    @SuppressWarnings("serial")
-    private Action stopMachineAction = new AbstractAction("STOP") {
+    public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
             new Thread(() -> {
+                Machine machine = Configuration.get().getMachine();
+                boolean enable = !machine.isEnabled();
                 try {
-                    Configuration.get().getMachine().setEnabled(false);
+                    Configuration.get().getMachine().setEnabled(enable);
                     setEnabled(true);
                 }
                 catch (Exception t) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Stop Failed", t.getMessage());
-                    setEnabled(true);
-                }
-            }).start();
-        }
-    };
-
-    @SuppressWarnings("serial")
-    private Action startMachineAction = new AbstractAction("START") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            setEnabled(false);
-            new Thread(() -> {
-                try {
-                    Configuration.get().getMachine().setEnabled(true);
-                    setEnabled(true);
-                }
-                catch (Exception t) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Start Failed",
+                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure",
                             t.getMessage());
                     setEnabled(true);
                 }
@@ -519,46 +380,6 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
-    public Action showHideJogControlsWindowAction = new AbstractAction("Show Jog Controls") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            if (jogControlsWindow.isVisible()) {
-                // Hide
-                jogControlsWindow.setVisible(false);
-                putValue(AbstractAction.NAME, "Show Jog Controls");
-            }
-            else {
-                // Show
-                jogControlsWindow.setVisible(true);
-                jogControlsWindow.pack();
-                int x = (int) getLocationOnScreen().getX();
-                int y = (int) getLocationOnScreen().getY();
-                x += (getSize().getWidth() / 2) - (jogControlsWindow.getSize().getWidth() / 2);
-                y += getSize().getHeight();
-                jogControlsWindow.setLocation(x, y);
-                putValue(AbstractAction.NAME, "Hide Jog Controls");
-            }
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action raiseIncrementAction = new AbstractAction("Raise Jog Increment") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            sliderIncrements.setValue(
-                    Math.min(sliderIncrements.getMaximum(), sliderIncrements.getValue() + 1));
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action lowerIncrementAction = new AbstractAction("Lower Jog Increment") {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            sliderIncrements.setValue(
-                    Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
-        }
-    };
-
     @SuppressWarnings("serial")
     public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {
         @Override
@@ -566,7 +387,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation(), 1.0);
+                MovableUtils.moveToLocationAtSafeZ(tool, camera.getLocation());
             });
         }
     };
@@ -578,7 +399,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable tool = getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation(), 1.0);
+                MovableUtils.moveToLocationAtSafeZ(camera, tool.getLocation());
             });
         }
     };
@@ -663,45 +484,39 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
+    private void updateStartStopButton(boolean enabled) {
+        startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
+        startStopMachineAction.putValue(Action.SMALL_ICON,
+                enabled ? Icons.powerOff : Icons.powerOn);
+    }
+
     private MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
+            EventQueue.invokeLater(() -> updateDros());
         }
 
         @Override
         public void machineEnabled(Machine machine) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
             setEnabled(true);
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
+            EventQueue.invokeLater(() -> updateDros());
         }
 
         @Override
         public void machineEnableFailed(Machine machine, String reason) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
         }
 
         @Override
         public void machineDisabled(Machine machine, String reason) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
             setEnabled(false);
         }
 
         @Override
         public void machineDisableFailed(Machine machine, String reason) {
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
         }
     };
 
@@ -720,11 +535,9 @@ public class MachineControlsPanel extends JPanel {
             }
             setSelectedNozzle(((NozzleItem) comboBoxNozzles.getItemAt(0)).getNozzle());
 
-            setUnits(configuration.getSystemUnits());
             machine.addListener(machineListener);
 
-            btnStartStop.setAction(machine.isEnabled() ? stopMachineAction : startMachineAction);
-            btnStartStop.setForeground(machine.isEnabled() ? stopColor : startColor);
+            updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
         }

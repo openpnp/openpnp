@@ -1,9 +1,13 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -26,9 +30,17 @@ public class ResultsPanel extends JPanel {
     private final CvPipelineEditor editor;
 
     private CvStage selectedStage;
+    private Robot robot;
 
     public ResultsPanel(CvPipelineEditor editor) {
         this.editor = editor;
+        
+        try {
+            robot = new Robot();
+        }
+        catch (Exception e) {
+            
+        }
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setContinuousLayout(true);
@@ -65,8 +77,6 @@ public class ResultsPanel extends JPanel {
         lastResultButton.setHideActionText(true);
         toolBar.add(lastResultButton);
 
-        matView = new MatView();
-
         JPanel modelPanel = new JPanel();
         modelPanel.setLayout(new BorderLayout(0, 0));
 
@@ -74,10 +84,33 @@ public class ResultsPanel extends JPanel {
         modelPanel.add(new JScrollPane(modelTextPane));
 
         add(splitPane, BorderLayout.CENTER);
-
-        splitPane.setLeftComponent(matView);
         splitPane.setRightComponent(modelPanel);
         splitPane.setDividerLocation(200);
+
+        JPanel panel_1 = new JPanel();
+        panel_1.setLayout(new BorderLayout(0, 0));
+
+        matView = new MatView();
+        panel_1.add(matView, BorderLayout.CENTER);
+        splitPane.setLeftComponent(panel_1);
+
+        JLabel matStatusLabel = new JLabel("New label");
+        panel_1.add(matStatusLabel, BorderLayout.SOUTH);
+        
+        matView.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Color color = robot.getPixelColor(e.getXOnScreen(), e.getYOnScreen());
+                float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
+                matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d",
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue(),
+                        (int) (255.0 * hsb[0]),
+                        (int) (255.0 * hsb[1]),
+                        (int) (255.0 * hsb[2])));
+            }
+        });
 
         addHierarchyListener(new HierarchyListener() {
             @Override

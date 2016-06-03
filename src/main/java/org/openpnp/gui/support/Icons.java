@@ -34,6 +34,8 @@ public class Icons {
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
 
+    public static Icon partAlign = getIcon("/icons/part-align.svg");
+
     public static Icon arrowUp = getIcon("/icons/ic_arrow_upward_black_18px.svg");
     public static Icon arrowDown = getIcon("/icons/ic_arrow_downward_black_18px.svg");
     public static Icon arrowLeft = getIcon("/icons/ic_arrow_back_black_18px.svg");
@@ -50,6 +52,11 @@ public class Icons {
     public static Icon navigatePrevious = getIcon("/icons/ic_chevron_left_black_18px.svg");
     public static Icon navigateNext = getIcon("/icons/ic_chevron_right_black_18px.svg");
 
+    public static Icon powerOn = getIcon("/icons/power_button_on.svg");
+    public static Icon powerOff = getIcon("/icons/power_button_off.svg");
+    
+    public static Icon park = getIcon("/icons/park.svg");
+    
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new SvgIcon(Icons.class.getResource(resourceName), width, height);

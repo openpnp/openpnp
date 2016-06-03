@@ -57,13 +57,12 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.ConfigurationListener;
-import org.openpnp.JobProcessorListener;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -78,7 +77,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.JobProcessor;
 
 /**
  * The main window of the application.
@@ -248,7 +246,8 @@ public class MainFrame extends JFrame {
         menuBar.add(mnCommands);
 
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
-        mnCommands.add(new JMenuItem(machineControlsPanel.showHideJogControlsWindowAction));
+        mnCommands.addSeparator();
+        mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
 
         // Help
         /////////////////////////////////////////////////////////////////////
@@ -311,11 +310,9 @@ public class MainFrame extends JFrame {
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask),
                 machineControlsPanel.getJogControlsPanel().cMinusAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, mask),
-                machineControlsPanel.lowerIncrementAction);
+                machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
-                machineControlsPanel.raiseIncrementAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, mask),
-                machineControlsPanel.showHideJogControlsWindowAction);
+                machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
             @Override
@@ -393,7 +390,7 @@ public class MainFrame extends JFrame {
             navigationPanel = new FxNavigationView();
             camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
-            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);            
+            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
             panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
         }
         else {
@@ -444,16 +441,6 @@ public class MainFrame extends JFrame {
                             + "OpenPnP will now exit.");
             System.exit(1);
         }
-
-        configuration.addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration) throws Exception {
-                for (JobProcessor jobProcessor : configuration.getMachine().getJobProcessors()
-                        .values()) {
-                    jobProcessor.addListener(jobProcessorListener);
-                }
-            }
-        });
     }
 
     private void registerBoardImporters() {
@@ -590,18 +577,17 @@ public class MainFrame extends JFrame {
         System.exit(0);
         return true;
     }
+    
+    public void setStatus(String status) {
+        SwingUtilities.invokeLater(() -> {
+            lblStatus.setText(status);            
+        });
+    }
 
     public void showTab(String title) {
         int index = panelBottom.indexOfTab(title);
         panelBottom.setSelectedIndex(index);
     }
-
-    private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
-        @Override
-        public void detailedStatusUpdated(String status) {
-            lblStatus.setText(status);
-        }
-    };
 
     private ComponentListener componentListener = new ComponentAdapter() {
         @Override

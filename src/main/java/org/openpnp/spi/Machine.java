@@ -21,9 +21,10 @@ package org.openpnp.spi;
 
 import java.io.Closeable;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+
+import org.openpnp.model.Location;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -131,7 +132,9 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public void removeCamera(Camera camera);
 
-    public Map<JobProcessor.Type, JobProcessor> getJobProcessors();
+    public PnpJobProcessor getPnpJobProcessor();
+    
+    public PasteDispenseJobProcessor getPasteDispenseJobProcessor();
 
     public Future<Object> submit(Runnable runnable);
 
@@ -170,4 +173,14 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
             boolean ignoreEnabled);
 
     public Head getDefaultHead() throws Exception;
+
+    public PartAlignment getPartAlignment();
+
+    public FiducialLocator getFiducialLocator();
+
+    public Location getDiscardLocation();
+
+    public void setSpeed(double speed);
+
+    public double getSpeed();
 }

@@ -22,7 +22,13 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -33,6 +39,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -45,48 +53,68 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PackagesComboBoxModel;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
-public class PartsPanel extends JPanel {
+public class PartsPanel extends JPanel implements WizardContainer {
     private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
+
+    private static final String PREF_DIVIDER_POSITION = "PartsPanel.dividerPosition";
+    private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    private Preferences prefs = Preferences.userNodeForPackage(PartsPanel.class);
 
     final private Configuration configuration;
     final private Frame frame;
 
-    private PartsTableModel partsTableModel;
-    private TableRowSorter<PartsTableModel> partsTableSorter;
+    private PartsTableModel tableModel;
+    private TableRowSorter<PartsTableModel> tableSorter;
     private JTextField searchTextField;
-    private JTable partsTable;
+    private JTable table;
+    private ActionGroup singleSelectionActionGroup;
+    private ActionGroup multiSelectionActionGroup;
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
         this.frame = frame;
 
-        setLayout(new BorderLayout(0, 0));
-        partsTableModel = new PartsTableModel();
-        partsTableSorter = new TableRowSorter<>(partsTableModel);
+        singleSelectionActionGroup = new ActionGroup(deletePartAction, pickPartAction);
+        singleSelectionActionGroup.setEnabled(false);
+        multiSelectionActionGroup = new ActionGroup(deletePartAction);
+        multiSelectionActionGroup.setEnabled(false);
 
-        JPanel panel_5 = new JPanel();
-        add(panel_5, BorderLayout.NORTH);
-        panel_5.setLayout(new BorderLayout(0, 0));
+        setLayout(new BorderLayout(0, 0));
+        tableModel = new PartsTableModel();
+        tableSorter = new TableRowSorter<>(tableModel);
+
+        JPanel toolbarAndSearch = new JPanel();
+        add(toolbarAndSearch, BorderLayout.NORTH);
+        toolbarAndSearch.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        panel_5.add(toolBar);
+        toolbarAndSearch.add(toolBar);
 
         JPanel panel_1 = new JPanel();
-        panel_5.add(panel_1, BorderLayout.EAST);
+        toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
         JLabel lblSearch = new JLabel("Search");
         panel_1.add(lblSearch);
@@ -114,44 +142,95 @@ public class PartsPanel extends JPanel {
         JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
-        partsTable = new AutoSelectTextTable(partsTableModel);
-        partsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        partsTable.setDefaultEditor(org.openpnp.model.Package.class,
-                new DefaultCellEditor(packagesCombo));
-        partsTable.setDefaultRenderer(org.openpnp.model.Package.class,
-                new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
-
-        add(new JScrollPane(partsTable), BorderLayout.CENTER);
-
-        partsTable.setRowSorter(partsTableSorter);
-
-        partsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-                Part part = getSelectedPart();
-
-                deletePartAction.setEnabled(part != null);
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
             }
         });
+        add(splitPane, BorderLayout.CENTER);
 
-        deletePartAction.setEnabled(false);
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        JPanel alignmentPanel = new JPanel();
+        alignmentPanel.setLayout(new BorderLayout());
+        tabbedPane.add("Alignment", new JScrollPane(alignmentPanel));
+
+        table = new AutoSelectTextTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        table.setDefaultEditor(org.openpnp.model.Package.class,
+                new DefaultCellEditor(packagesCombo));
+        table.setDefaultRenderer(org.openpnp.model.Package.class,
+                new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
+
+        table.setRowSorter(tableSorter);
+
+        splitPane.setLeftComponent(new JScrollPane(table));
+        splitPane.setRightComponent(tabbedPane);
 
         JButton btnNewPart = toolBar.add(newPartAction);
         btnNewPart.setToolTipText("");
         JButton btnDeletePart = toolBar.add(deletePartAction);
         btnDeletePart.setToolTipText("");
+        toolBar.addSeparator();
+        toolBar.add(pickPartAction);
+
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+
+                List<Part> selections = getSelections();
+
+                if (selections.size() > 1) {
+                    singleSelectionActionGroup.setEnabled(false);
+                    multiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    multiSelectionActionGroup.setEnabled(false);
+                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+                }
+
+                alignmentPanel.removeAll();
+
+                Part part = getSelection();
+                
+                if (part != null) {
+                    PartAlignment partAlignment =
+                            Configuration.get().getMachine().getPartAlignment();
+                    Wizard wizard = partAlignment.getPartConfigurationWizard(part);
+                    if (wizard != null) {
+                        wizard.setWizardContainer(PartsPanel.this);
+                        alignmentPanel.add(wizard.getWizardPanel());
+                    }
+                }
+
+                revalidate();
+                repaint();
+            }
+        });
     }
 
-    private Part getSelectedPart() {
-        int index = partsTable.getSelectedRow();
-        if (index == -1) {
+    private Part getSelection() {
+        List<Part> selections = getSelections();
+        if (selections.size() != 1) {
             return null;
         }
-        index = partsTable.convertRowIndexToModel(index);
-        return partsTableModel.getPart(index);
+        return selections.get(0);
+    }
+
+    private List<Part> getSelections() {
+        List<Part> selections = new ArrayList<>();
+        for (int selectedRow : table.getSelectedRows()) {
+            selectedRow = table.convertRowIndexToModel(selectedRow);
+            selections.add(tableModel.getPart(selectedRow));
+        }
+        return selections;
     }
 
     private void search() {
@@ -164,7 +243,7 @@ public class PartsPanel extends JPanel {
             logger.warn("Search failed", e);
             return;
         }
-        partsTableSorter.setRowFilter(rf);
+        tableSorter.setRowFilter(rf);
     }
 
     public final Action newPartAction = new AbstractAction() {
@@ -194,8 +273,8 @@ public class PartsPanel extends JPanel {
                 part.setPackage(Configuration.get().getPackages().get(0));
 
                 configuration.addPart(part);
-                partsTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(partsTable);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
                 break;
             }
         }
@@ -210,12 +289,63 @@ public class PartsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            List<Part> selections = getSelections();
+            List<String> ids = selections.stream().map(Part::getId).collect(Collectors.toList());
+            String formattedIds;
+            if (ids.size() <= 3) {
+                formattedIds = String.join(", ", ids);
+            }
+            else {
+                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+            }
+            
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + getSelectedPart().getId() + "?",
-                    "Delete " + getSelectedPart().getId() + "?", JOptionPane.YES_NO_OPTION);
+                    "Are you sure you want to delete " + formattedIds + "?",
+                    "Delete " + selections.size() + " parts?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                Configuration.get().removePart(getSelectedPart());
+                for (Part part : selections) {
+                    Configuration.get().removePart(part);
+                }
             }
         }
     };
+
+    public final Action pickPartAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.load);
+            putValue(NAME, "Pick Part");
+            putValue(SHORT_DESCRIPTION, "Pick the selected part from the first available feeder.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                Part part = getSelection();
+                Feeder feeder = null;
+                // find a feeder to feed
+                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+                    if (f.isEnabled() && f.getPart().equals(part)) {
+                        feeder = f;
+                    }
+                }
+                if (feeder == null) {
+                    throw new Exception("No valid feeder found for " + part.getId());
+                }
+                // feed the chosen feeder
+                feeder.feed(nozzle);
+                // pick the part
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+                nozzle.pick(part);
+                nozzle.moveToSafeZ();
+            });
+        }
+    };
+
+    @Override
+    public void wizardCompleted(Wizard wizard) {}
+
+    @Override
+    public void wizardCancelled(Wizard wizard) {}
 }

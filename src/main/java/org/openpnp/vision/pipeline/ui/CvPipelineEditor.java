@@ -1,34 +1,46 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Point;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.UIManager;
 
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.BlurGaussian;
+import org.openpnp.vision.pipeline.stages.BlurMedian;
+import org.openpnp.vision.pipeline.stages.BottomVisionCriS;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
+import org.openpnp.vision.pipeline.stages.ConvertModelToPoints;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
+import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
+import org.openpnp.vision.pipeline.stages.DrawContours;
 import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
+import org.openpnp.vision.pipeline.stages.DrawRotatedRects;
 import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
+import org.openpnp.vision.pipeline.stages.FilterContours;
+import org.openpnp.vision.pipeline.stages.FindContours;
+import org.openpnp.vision.pipeline.stages.HistogramEqualize;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
 import org.openpnp.vision.pipeline.stages.ImageWrite;
+import org.openpnp.vision.pipeline.stages.ImageWriteDebug;
+import org.openpnp.vision.pipeline.stages.MaskCircle;
+import org.openpnp.vision.pipeline.stages.MaskHsv;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
+import org.openpnp.vision.pipeline.stages.MinAreaRect;
+import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
-import org.openpnp.vision.pipeline.stages.SetModel;
+import org.openpnp.vision.pipeline.stages.SetColor;
+import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 
 /**
@@ -46,19 +58,35 @@ import org.openpnp.vision.pipeline.stages.Threshold;
 public class CvPipelineEditor extends JPanel {
     static {
         stageClasses = new HashSet<>();
+        registerStageClass(BlurMedian.class);
         registerStageClass(BlurGaussian.class);
+        registerStageClass(BottomVisionCriS.class);
         registerStageClass(ConvertColor.class);
+        registerStageClass(ConvertModelToPoints.class);
         registerStageClass(DetectCirclesHough.class);
         registerStageClass(DetectEdgesCanny.class);
+        registerStageClass(DetectEdgesRobertsCross.class);
         registerStageClass(DrawCircles.class);
+        registerStageClass(DrawContours.class);
         registerStageClass(DrawKeyPoints.class);
+        registerStageClass(DrawRotatedRects.class);
         registerStageClass(DrawTemplateMatches.class);
+        registerStageClass(FilterContours.class);
+        registerStageClass(FindContours.class);
+        registerStageClass(HistogramEqualize.class);
         registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
         registerStageClass(ImageWrite.class);
+        registerStageClass(ImageWriteDebug.class);
+        registerStageClass(MaskCircle.class);
+        registerStageClass(MaskHsv.class);
         registerStageClass(MatchTemplate.class);
+        registerStageClass(MinAreaRect.class);
+        registerStageClass(Normalize.class);
         registerStageClass(ReadModelProperty.class);
+        registerStageClass(SetColor.class);
+        registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
     }
 
@@ -111,26 +139,5 @@ public class CvPipelineEditor extends JPanel {
 
     public static void registerStageClass(Class<? extends CvStage> cls) {
         stageClasses.add(cls);
-    }
-
-    public static void main(String[] args) throws Exception {
-        // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }
-
-        CvPipeline pipeline = new CvPipeline();
-        pipeline.add(new SetModel(new Point(10, 20)));
-
-        JFrame frame = new JFrame("CvPipelineEditor");
-        frame.setSize(1024, 768);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(new CvPipelineEditor(pipeline));
-        frame.setVisible(true);
     }
 }

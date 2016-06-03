@@ -37,9 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Not yet finished feeder that will be used for automated feeding. Just getting the idea down
  * on paper, as it were. It will have an actuator attached and you will be able to choose
- * to either toggle the feeder with a delay or send a double. The line below is there so this
- * doesn't get pushed before it's worked on. Right now it's just a skeleton and idea.
- * STOPSHIP
+ * to either toggle the feeder with a delay or send a double.
  */
 
 public class ReferenceAutoFeeder extends ReferenceFeeder {
