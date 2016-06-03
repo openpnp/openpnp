@@ -13,7 +13,7 @@ import org.openpnp.model.Part;
  * NozzleTip.
  */
 public interface Nozzle
-        extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
+        extends HeadMountable, WizardConfigurable, PropertySheetHolder {
     /**
      * Get the NozzleTip currently attached to the Nozzle.
      * 

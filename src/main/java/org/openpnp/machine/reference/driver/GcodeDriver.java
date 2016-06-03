@@ -88,7 +88,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @ElementList(required = false)
     protected List<ReferenceDriver> subDrivers = new ArrayList<>();
 
-    protected double x, y, z, c;
+    @ElementList(required = false)
+    protected List<Axis> axes = new ArrayList<>();
+
+    @ElementList(required = false)
+    protected List<AxisMapping> axisMappings = new ArrayList<>();
+
     private Thread readerThread;
     private boolean disconnectRequested;
     private boolean connected;
@@ -140,6 +145,24 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
     }
 
+    private AxisMapping getAxisMapping(HeadMountable hm) {
+        for (AxisMapping mapping : axisMappings) {
+            if (mapping.headMountableId.equals(hm.getId())) {
+                return mapping;
+            }
+        }
+        return null;
+    }
+    
+    private Axis getAxis(String name) {
+        for (Axis axis : axes) {
+            if (axis.name.equals(name)) {
+                return axis;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void home(ReferenceHead head) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
@@ -149,10 +172,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
 
-        x = homeLocation.getX();
-        y = homeLocation.getY();
-        z = homeLocation.getZ();
-        c = homeLocation.getRotation();
+        // TODO STOPSHIP
+//        x = homeLocation.getX();
+//        y = homeLocation.getY();
+//        z = homeLocation.getZ();
+//        c = homeLocation.getRotation();
 
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
@@ -161,7 +185,19 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
-        Location location = new Location(units, x, y, z, c).add(hm.getHeadOffsets());
+        AxisMapping mapping = getAxisMapping(hm);
+        
+        Axis xAxis = getAxis(mapping.xAxisName);
+        Axis yAxis = getAxis(mapping.yAxisName);
+        Axis zAxis = getAxis(mapping.zAxisName);
+        Axis rotationAxis = getAxis(mapping.rotationAxisName);
+        
+        double x = xAxis.getCoordinate(hm);
+        double y = yAxis.getCoordinate(hm);
+        double z = zAxis.getCoordinate(hm);
+        double rotation = rotationAxis.getCoordinate(hm);
+        
+        Location location = new Location(units, x, y, z, rotation).add(hm.getHeadOffsets());
         if (!(hm instanceof Nozzle)) {
             location = location.derive(null, null, 0d, null);
         }
@@ -448,26 +484,73 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     }
 
     public static class Axis {
-        public enum LocationField {
-            X,
-            Y,
-            Z,
-            Rotation
-        };
-
         @Attribute
         public String name;
 
-        @Attribute
-        public LocationField locationField;
-
         @Element
-        public AxisTransform transform;
+        private AxisTransform transform;
 
-        public double coordinate;
+        /**
+         * Stores the current value for this axis.
+         */
+        private double coordinate = 0;
+
+        public Axis() {
+
+        }
+
+        public Axis(String name) {
+            this.name = name;
+        }
+        
+        public void setCoordinate(HeadMountable hm, double coordinate) {
+            if (transform != null) {
+                coordinate = transform.fromTransformed(hm, coordinate);
+            }
+            this.coordinate = coordinate;
+        }
+        
+        public double getCoordinate(HeadMountable hm) {
+            double coordinate = this.coordinate;
+            if (transform != null) {
+                coordinate = transform.toTransformed(hm, coordinate);
+            }
+            return coordinate;
+        }
+    }
+
+    public static class AxisMapping {
+        @Attribute
+        public String headMountableId;
+
+        @Attribute
+        public String xAxisName;
+
+        @Attribute
+        public String yAxisName;
+
+        @Attribute
+        public String zAxisName;
+
+        @Attribute
+        public String rotationAxisName;
+
+        public AxisMapping() {
+
+        }
+
+        public AxisMapping(String headMountableId, String xAxisName, String yAxisName,
+                String zAxisName, String rotationAxisName) {
+            this.headMountableId = headMountableId;
+            this.xAxisName = xAxisName;
+            this.yAxisName = yAxisName;
+            this.zAxisName = zAxisName;
+            this.rotationAxisName = rotationAxisName;
+        }
     }
 
     public interface AxisTransform {
-        public double transform(HeadMountable hm, double coordinate);
+        public double toTransformed(HeadMountable hm, double value);
+        public double fromTransformed(HeadMountable hm, double value);
     }
 }
