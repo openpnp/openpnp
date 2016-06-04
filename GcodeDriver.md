@@ -159,6 +159,12 @@ Sent whenever an Actuator's actuate(double) method is called. This is currently 
 
 The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
 
+### move-to-complete-regex
+
+If specified, the driver will check for this regex in the responses after a move-to-command is sent and will not return until the regex is matched. This can be used to support motion controllers that return the command confirmation before movement is complete.
+
+Example: `<move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>`
+
 ## Miscellaneous
 
 ### units
