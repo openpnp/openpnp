@@ -1,6 +1,16 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-06-03
+
+* GcodeDriver Move To Complete Regex
+
+	You can now include <move-to-complete-regex> in your GcodeDriver configuration to specify
+	a regex that the move-to command will wait for before completing. This is used for motion
+	controllers that return the command confirmation before movement is complete - TinyG
+	in particular. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#move-to-complete-regex
+	for more information.
+
 # 2016-05-25
 
 * OpenBuilds Driver Rotation Improvements
