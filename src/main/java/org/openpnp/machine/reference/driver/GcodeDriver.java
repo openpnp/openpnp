@@ -72,6 +72,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
      */
     @Element(required = false)
     protected String moveToCommand = null;
+    
+    @Element(required = false)
+    protected String moveToCompleteRegex = null;
 
     @Element(required = false)
     protected String pickCommand = null;
@@ -248,7 +251,28 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "Z", z == this.z ? null : z);
             command = substituteVariable(command, "Rotation", c == this.c ? null : c);
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
-            sendGcode(command);
+            
+            List<String> responses = sendGcode(command);
+            
+            /*
+             * If moveToCompleteRegex is specified we need to wait until we match the regex
+             * in a response before continuing. We first search the initial responses from the
+             * command for the regex. If it's not found we then collect responses for up to
+             * timeoutMillis while searching the responses for the regex. As soon as it is
+             * matched we continue. If it's not matched within the timeout we throw an Exception.
+             */
+            if (moveToCompleteRegex != null) {
+                if (!containsMatch(responses, moveToCompleteRegex)) {
+                    long t = System.currentTimeMillis();
+                    boolean done = false;
+                    while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
+                        done = containsMatch(sendCommand(null, 250), moveToCompleteRegex); 
+                    }
+                    if (!done) {
+                        throw new Exception("Timed out waiting for move to complete.");
+                    }
+                }
+            }
         }
 
         this.x = x;
@@ -259,6 +283,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         for (ReferenceDriver driver : subDrivers) {
             driver.moveTo(hm, location, speed);
         }
+    }
+    
+    private boolean containsMatch(List<String> responses, String regex) {
+        for (String response : responses) {
+            if (response.matches(regex)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
