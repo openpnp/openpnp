@@ -46,7 +46,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int connectWaitTimeMilliseconds = 0;
 
     @Element(required = false)
-    protected Location homeLocation = new Location(units, 0, 0, 0, 0);
+    protected Location homeLocation = null;
 
     @Element(required = false)
     protected String commandConfirmRegex = null;
@@ -103,10 +103,18 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Commit
     public void commit() {
         if (axes.isEmpty()) {
-            axes.add(new Axis("x", Axis.Type.X, "*"));
-            axes.add(new Axis("y", Axis.Type.Y, "*"));
-            axes.add(new Axis("z", Axis.Type.Z, "*"));
-            axes.add(new Axis("rotation", Axis.Type.Rotation, "*"));
+            double x = 0, y = 0, z = 0, rotation = 0;
+            if (this.homeLocation != null) {
+                x = homeLocation.getX();
+                y = homeLocation.getY();
+                z = homeLocation.getZ();
+                rotation = homeLocation.getRotation();
+                this.homeLocation = null;
+            }
+            axes.add(new Axis("x", Axis.Type.X, x, "*"));
+            axes.add(new Axis("y", Axis.Type.Y, y, "*"));
+            axes.add(new Axis("z", Axis.Type.Z, z, "*"));
+            axes.add(new Axis("rotation", Axis.Type.Rotation, rotation, "*"));
         }
     }
 
@@ -165,13 +173,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
 
-        // TODO STOPSHIP
-        // x = homeLocation.getX();
-        // y = homeLocation.getY();
-        // z = homeLocation.getZ();
-        // c = homeLocation.getRotation();
         for (Axis axis : axes) {
-            axis.setCoordinate(0);
+            axis.setCoordinate(axis.getHomeCoordinate());
         }
 
         for (ReferenceDriver driver : subDrivers) {
@@ -587,6 +590,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute
         private Type type;
 
+        @Attribute(required = false)
+        private double homeCoordinate = 0;
+
         @ElementList(required = false)
         private Set<String> headMountableIds = new HashSet<String>();
 
@@ -602,9 +608,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         }
 
-        public Axis(String name, Type type, String... headMountableIds) {
+        public Axis(String name, Type type, double homeCoordinate, String... headMountableIds) {
             this.name = name;
             this.type = type;
+            this.homeCoordinate = homeCoordinate;
             this.headMountableIds.addAll(Arrays.asList(headMountableIds));
         }
 
@@ -630,6 +637,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         public void setCoordinate(double coordinate) {
             this.coordinate = coordinate;
+        }
+        
+        public double getHomeCoordinate() {
+            return homeCoordinate;
+        }
+
+        public void setHomeCoordinate(double homeCoordinate) {
+            this.homeCoordinate = homeCoordinate;
         }
 
         public double getTransformedCoordinate(HeadMountable hm) {
