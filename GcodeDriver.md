@@ -196,14 +196,72 @@ Using this system you can build up a series of controllers of any complexity tha
 Here is an example sub-drivers section of the main driver configuration:
 
 ```
-         <sub-drivers class="java.util.ArrayList">
-            <reference-driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="/dev/tty.usbmodem1A12421" baud="9600" units="Millimeters" max-feed-rate="50000" connect-wait-time-milliseconds="750">
-               <home-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               <command-confirm-regex>^ok.*</command-confirm-regex>
-               <actuate-double-command>{Index}</actuate-double-command>
-               <sub-drivers class="java.util.ArrayList"/>
-            </reference-driver>
-         </sub-drivers>
+<sub-drivers class="java.util.ArrayList">
+   <reference-driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="/dev/tty.usbmodem1A12421" baud="9600" units="Millimeters" max-feed-rate="50000" connect-wait-time-milliseconds="750">
+      <home-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+      <command-confirm-regex>^ok.*</command-confirm-regex>
+      <actuate-double-command>{Index}</actuate-double-command>
+      <sub-drivers class="java.util.ArrayList"/>
+   </reference-driver>
+</sub-drivers>
+```
+
+## Axis Mapping
+
+If your system has more than one nozzle you will need to tell OpenPnP which axes on your controller map to which nozzles, and other devices. Axis Mapping allows you to do this, along with specifying axes that should be ignored or included for a given head mounted device. This is an advanced option and will not be used by everyone. By default OpenPnP will create a basic axis mapping configuration that will work for a basic system.
+
+### Defining Axes
+
+The first step in axis mapping is to define each axis that your motion controller can control. In general these will correspond to motors on your machine, but not always. Another way to think of it is to consider each individual part of the machine that can move.
+
+For instance, a common machine might have an X axis, a Y axis, a Z motor that controls two Z axes for two nozzles and a C or Rotation motor for each Nozzle. This machine has 5 axes: X, Y, Z, C1, C2.
+
+A basic axis definition looks like:
+```
+   <axis name="x" type="X" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>*</string>
+      </head-mountable-ids>
+   </axis>
+```
+
+### Mapping Axes to HeadMountables
+
+In OpenPnP anything that can be attached to the head is called a HeadMountable. These are your Nozzles, PasteDispensers, Cameras and Actuators. Each of these has an ID.
+
+In the example we defined above, the machine has two nozzles that we'll call N1 and N2. The two nozzles share a Z axis and each has it's own C axis.
+
+**TODO: Finish this doc.**
+
+### Complete Sample Axis Mapping
+
+```         
+ <axes class="java.util.ArrayList">
+   <axis name="x" type="X" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>*</string>
+      </head-mountable-ids>
+   </axis>
+   <axis name="y" type="Y" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>*</string>
+      </head-mountable-ids>
+   </axis>
+   <axis name="z" type="Z" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>69edd567-2341234-495a-9b30-2fcbf5c9742f</string>
+         <string>69edd567-df6c-495a-9b30-2fcbf5c9742f</string>
+      </head-mountable-ids>
+      <transform class="org.openpnp.machine.reference.driver.GcodeDriver$NegatingTransform">
+         <negated-head-mountable-id>69edd567-2341234-495a-9b30-2fcbf5c9742f</negated-head-mountable-id>
+      </transform>
+   </axis>
+   <axis name="rotation" type="Rotation" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>*</string>
+      </head-mountable-ids>
+   </axis>
+</axes>
 ```
 
 # Sample Configuration
