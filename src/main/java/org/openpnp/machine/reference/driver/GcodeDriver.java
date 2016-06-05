@@ -196,10 +196,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         Axis zAxis = getAxis(hm, Axis.Type.Z);
         Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
 
-        Location location = new Location(units, xAxis == null ? 0 : xAxis.getCoordinate(),
-                yAxis == null ? 0 : yAxis.getCoordinate(),
-                zAxis == null ? 0 : zAxis.getCoordinate(),
-                rotationAxis == null ? 0 : rotationAxis.getCoordinate()).add(hm.getHeadOffsets());
+        Location location =
+                new Location(units, xAxis == null ? 0 : xAxis.getTransformedCoordinate(hm),
+                        yAxis == null ? 0 : yAxis.getTransformedCoordinate(hm),
+                        zAxis == null ? 0 : zAxis.getTransformedCoordinate(hm),
+                        rotationAxis == null ? 0 : rotationAxis.getTransformedCoordinate(hm))
+                                .add(hm.getHeadOffsets());
         return location;
     }
 
@@ -238,6 +240,21 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // If no axes are included in the move, there's nothing to do, so just return.
         if (xAxis == null && yAxis == null && zAxis == null && rotationAxis == null) {
             return;
+        }
+
+        // For each included axis, if the axis has a transform, transform the target coordinate to
+        // it's raw value.
+        if (xAxis != null && xAxis.getTransform() != null) {
+            x = xAxis.getTransform().toRaw(xAxis, hm, x);
+        }
+        if (yAxis != null && yAxis.getTransform() != null) {
+            y = yAxis.getTransform().toRaw(yAxis, hm, y);
+        }
+        if (zAxis != null && zAxis.getTransform() != null) {
+            z = zAxis.getTransform().toRaw(zAxis, hm, z);
+        }
+        if (rotationAxis != null && rotationAxis.getTransform() != null) {
+            rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
         }
 
         boolean emptyMove = true;
@@ -306,6 +323,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
         }
 
+        // And save the final values on the axes.
         if (xAxis != null) {
             xAxis.setCoordinate(x);
         }
@@ -569,11 +587,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute
         private Type type;
 
-        // @Element(required = false)
-        // private AxisTransform transform;
-
         @ElementList(required = false)
         private Set<String> headMountableIds = new HashSet<String>();
+
+        @Element(required = false)
+        private AxisTransform transform;
 
         /**
          * Stores the current value for this axis.
@@ -589,21 +607,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.type = type;
             this.headMountableIds.addAll(Arrays.asList(headMountableIds));
         }
-
-        // public void setCoordinate(HeadMountable hm, double coordinate) {
-        // if (transform != null) {
-        // coordinate = transform.toRaw(hm, coordinate);
-        // }
-        // this.rawCoordinate = coordinate;
-        // }
-        //
-        // public double getCoordinate(HeadMountable hm) {
-        // double coordinate = this.rawCoordinate;
-        // if (transform != null) {
-        // coordinate = transform.toTransformed(hm, coordinate);
-        // }
-        // return coordinate;
-        // }
 
         public String getName() {
             return name;
@@ -629,6 +632,13 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.coordinate = coordinate;
         }
 
+        public double getTransformedCoordinate(HeadMountable hm) {
+            if (this.transform != null) {
+                return transform.toTransformed(this, hm, this.coordinate);
+            }
+            return this.coordinate;
+        }
+
         public Set<String> getHeadMountableIds() {
             return headMountableIds;
         }
@@ -637,13 +647,13 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.headMountableIds = headMountableIds;
         }
 
-        // public AxisTransform getTransform() {
-        // return transform;
-        // }
-        //
-        // public void setTransform(AxisTransform transform) {
-        // this.transform = transform;
-        // }
+        public AxisTransform getTransform() {
+            return transform;
+        }
+
+        public void setTransform(AxisTransform transform) {
+            this.transform = transform;
+        }
     }
 
     public interface AxisTransform {
@@ -656,7 +666,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
          * @param rawCoordinate
          * @return
          */
-        public double toTransformed(HeadMountable hm, double rawCoordinate);
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate);
 
         /**
          * Transform the specified transformed coordinate into it's corresponding raw coordinate.
@@ -667,6 +677,31 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
          * @param transformedCoordinate
          * @return
          */
-        public double toRaw(HeadMountable hm, double transformedCoordinate);
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate);
+    }
+
+    /**
+     * An AxisTransform for heads with dual linear Z axes powered by one motor. The two Z axes are
+     * defined as normal and negated. Normal gets the raw coordinate value and negated gets the same
+     * value negated. So, as normal moves up, negated moves down.
+     */
+    public static class NegatingTransform implements AxisTransform {
+        @Element
+        private String negatedHeadMountableId;
+
+        @Override
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate) {
+            if (hm.getId().equals(negatedHeadMountableId)) {
+                return -rawCoordinate;
+            }
+            return rawCoordinate;
+        }
+
+        @Override
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
+            // Since we're just negating the value of the coordinate we can just
+            // use the same function.
+            return toTransformed(axis, hm, transformedCoordinate);
+        }
     }
 }
