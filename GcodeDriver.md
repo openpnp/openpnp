@@ -181,7 +181,30 @@ Number of milliseconds to wait after connecting to the serial port before sendin
 
 ## Sub-Drivers
 
-TODO
+Sub-Drivers allow you to interface multiple controllers by passing commands through. This can be used to control additional boards attached to your machine for functions such as feeders, actuators, conveyers, lighting, etc.
+
+When a command is sent to the driver it is first processed by the main driver and then it is passed on to each defined sub-driver. If the main driver or any sub-driver does not define a handler for the command it is simply ignored.
+
+For example, let's say you have your machine setup to use a Smoothieboard and you are using GcodeDriver to control it. You will have configured various commands such as the `move-to-command`, `pick-command`, `place-command`, etc.
+
+Now perhaps you'd like to add an automatic feeder but don't have any I/O left on your Smoothieboard. You could add an Arduino connected by USB serial and control it with a sub-driver. On the sub-driver you would **only** define `actuate-boolean-command`.
+
+Now when OpenPnP sends a movement command it will be processed by the main driver, which will move the machine. It will then be passed to the sub-driver, but since the sub-driver doesn't have a `move-to-command` it will be ignored. Then when OpenPnP wants to actuate your feeder it will send an actuate command. The main driver does not have `actuate-boolean-command` defined so it ignores it and passes it on to the sub-driver which processes it.
+
+Using this system you can build up a series of controllers of any complexity that you like and control as many devices as you need.
+
+Here is an example sub-drivers section of the main driver configuration:
+
+```
+         <sub-drivers class="java.util.ArrayList">
+            <reference-driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="/dev/tty.usbmodem1A12421" baud="9600" units="Millimeters" max-feed-rate="50000" connect-wait-time-milliseconds="750">
+               <home-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               <command-confirm-regex>^ok.*</command-confirm-regex>
+               <actuate-double-command>{Index}</actuate-double-command>
+               <sub-drivers class="java.util.ArrayList"/>
+            </reference-driver>
+         </sub-drivers>
+```
 
 # Sample Configuration
 ```
