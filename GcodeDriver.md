@@ -206,7 +206,7 @@ Here is an example sub-drivers section of the main driver configuration:
 </sub-drivers>
 ```
 
-## Axis Mapping
+## Axis Mapping (Preliminary, Not Yet Released)
 
 If your system has more than one nozzle you will need to tell OpenPnP which axes on your controller map to which nozzles, and other devices. Axis Mapping allows you to do this, along with specifying axes that should be ignored or included for a given head mounted device. This is an advanced option and will not be used by everyone. By default OpenPnP will create a basic axis mapping configuration that will work for a basic system.
 
