@@ -72,7 +72,6 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 n2Exhaust(false);
                 led(false);
                 pump(false);
-
             }
         }
     }
@@ -130,11 +129,12 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
             z += zCamWheelRadius + zGap;
             int nozzleIndex = getNozzleIndex(nozzle);
-            return new Location(LengthUnit.Millimeters, x, y, z, nozzleIndex == 0 ? c : c2)
-                    .add(hm.getHeadOffsets());
+            return new Location(LengthUnit.Millimeters, x, y, z,
+                    normalizeAngle(nozzleIndex == 0 ? c : c2)).add(hm.getHeadOffsets());
         }
         else {
-            return new Location(LengthUnit.Millimeters, x, y, zA, c).add(hm.getHeadOffsets());
+            return new Location(LengthUnit.Millimeters, x, y, zA, normalizeAngle(c))
+                    .add(hm.getHeadOffsets());
         }
     }
 
@@ -172,14 +172,36 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             this.y = y;
         }
         int nozzleIndex = getNozzleIndex(nozzle);
-        if (!Double.isNaN(c) && c != (nozzleIndex == 0 ? this.c : this.c2)) {
+        double oldC = (nozzleIndex == 0 ? this.c : this.c2);
+        if (!Double.isNaN(c) && c != oldC) {
+            // Normalize the new angle.
+            c = normalizeAngle(c);
+
+            // Get the delta between the current position and the new position in normalized
+            // degrees.
+            double delta = c - normalizeAngle(oldC);
+
+            // If the delta is greater than 180 we'll go the opposite direction instead to
+            // minimize travel time.
+            if (Math.abs(delta) > 180) {
+                if (delta < 0) {
+                    delta += 360;
+                }
+                else {
+                    delta -= 360;
+                }
+            }
+
+            c = oldC + delta;
+
             // If there is an E move we need to set the tool before
             // performing any commands otherwise we may move the wrong tool.
             sendCommand(String.format(Locale.US, "T%d", nozzleIndex));
             // We perform E moves solo because Smoothie doesn't like to make large E moves
             // with small X/Y moves, so we can't trust it to end up where we want it if we
             // do both at the same time.
-            sendCommand(String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
+            sendCommand(
+                    String.format(Locale.US, "G0 E%2.2f F%2.2f", c, feedRateMmPerMinute * speed));
             dwell();
             if (nozzleIndex == 0) {
                 this.c = c;
@@ -207,9 +229,20 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             dwell();
         }
     }
-    
+
+    private double normalizeAngle(double angle) {
+        while (angle > 360) {
+            angle -= 360;
+        }
+        while (angle < 0) {
+            angle += 360;
+        }
+        return angle;
+    }
+
     /**
      * Returns 0 or 1 for either the first or second Nozzle.
+     * 
      * @param nozzle
      * @return
      */
@@ -364,6 +397,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
         }
         sendCommand("T0");
+
         logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] {x, y, zA, c, c2});
     }
 

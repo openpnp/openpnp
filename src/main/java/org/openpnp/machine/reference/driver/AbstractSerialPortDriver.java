@@ -100,6 +100,12 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
 
     @Attribute(required = false)
     protected Parity parity = Parity.None;
+    
+    @Attribute(required = false)
+    protected boolean setDtr = false;
+    
+    @Attribute(required = false)
+    protected boolean setRts = false;
 
     protected SerialPort serialPort;
     protected SerialInputStream input;
@@ -109,7 +115,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
         disconnect();
         serialPort = new SerialPort(portName);
         serialPort.openPort();
-        serialPort.setParams(baud, dataBits.mask, stopBits.mask, parity.mask, false, false);
+        serialPort.setParams(baud, dataBits.mask, stopBits.mask, parity.mask, setRts, setDtr);
         serialPort.setFlowControlMode(flowControl.mask);
         input = new SerialInputStream(serialPort);
         input.setTimeout(500);
@@ -226,6 +232,22 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
 
     public void setParity(Parity parity) {
         this.parity = parity;
+    }
+    
+    public boolean isSetDtr() {
+        return setDtr;
+    }
+
+    public void setSetDtr(boolean setDtr) {
+        this.setDtr = setDtr;
+    }
+
+    public boolean isSetRts() {
+        return setRts;
+    }
+
+    public void setSetRts(boolean setRts) {
+        this.setRts = setRts;
     }
 
     @Override
