@@ -273,6 +273,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         else {
             command = substituteVariable(command, "X", x);
             emptyMove = false;
+            if (xAxis.getPreMoveCommand() != null) {
+                sendGcode(xAxis.getPreMoveCommand());
+            }
         }
 
         if (yAxis == null || yAxis.getCoordinate() == y) {
@@ -281,6 +284,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         else {
             command = substituteVariable(command, "Y", y);
             emptyMove = false;
+            if (yAxis.getPreMoveCommand() != null) {
+                sendGcode(yAxis.getPreMoveCommand());
+            }
         }
 
         if (zAxis == null || zAxis.getCoordinate() == z) {
@@ -289,6 +295,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         else {
             command = substituteVariable(command, "Z", z);
             emptyMove = false;
+            if (zAxis.getPreMoveCommand() != null) {
+                sendGcode(zAxis.getPreMoveCommand());
+            }
         }
 
         if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
@@ -297,6 +306,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         else {
             command = substituteVariable(command, "Rotation", rotation);
             emptyMove = false;
+            if (rotationAxis.getPreMoveCommand() != null) {
+                sendGcode(rotationAxis.getPreMoveCommand());
+            }
         }
 
         // No axes were included in the move, so there is nothing to do.
@@ -599,6 +611,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Element(required = false)
         private AxisTransform transform;
 
+        @Element(required = false)
+        private String preMoveCommand;
+
         /**
          * Stores the current value for this axis.
          */
@@ -638,7 +653,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         public void setCoordinate(double coordinate) {
             this.coordinate = coordinate;
         }
-        
+
         public double getHomeCoordinate() {
             return homeCoordinate;
         }
@@ -668,6 +683,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         public void setTransform(AxisTransform transform) {
             this.transform = transform;
+        }
+
+        public String getPreMoveCommand() {
+            return preMoveCommand;
+        }
+
+        public void setPreMoveCommand(String preMoveCommand) {
+            this.preMoveCommand = preMoveCommand;
         }
     }
 
