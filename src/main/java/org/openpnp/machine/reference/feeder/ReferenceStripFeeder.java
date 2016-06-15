@@ -149,8 +149,19 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public Location getPickLocation() throws Exception {
         // Find the location of the part linearly along the tape
         Location[] lineLocations = getIdealLineLocations();
+        // 20160608 - ldpgh/lutz_dd
+        // partPichtAdjusted:double ... match prev. partPitch.getValue()
+        // partPitchAdjusted is the euclidian distance of ReferenceHole and NextHole and divided by
+        // the amount of part locations in between. This Part count is derived from the distance
+        // and the given partPitch in GUI and afterwards rounded to the next integer value.
+        // partPitch/partPitchAdjusted limitation
+        // It's the P1 value according to EIA-481-C, October 2003, pg. 9, 11, 13
+        // Accuracy variations as specified in the document are not taken into account!
+        double partPitchAdjusted = lineLocations[0].getXyzDistanceTo(lineLocations[1]);
+        partPitchAdjusted =
+                partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
         Location l = getPointAlongLine(lineLocations[0], lineLocations[1],
-                new Length((feedCount - 1) * partPitch.getValue(), partPitch.getUnits()));
+                new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
         // Create the offsets that are required to go from a reference hole
         // to the part in the tape
         Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
