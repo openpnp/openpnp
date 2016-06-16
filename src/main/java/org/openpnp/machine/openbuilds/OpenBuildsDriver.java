@@ -213,7 +213,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
         if (!Double.isNaN(z)) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
-            logger.debug("nozzle {} {} {}", new Object[] {z, zCamRadius, a});
+            logger.debug("nozzle {} {} {}", z, zCamRadius, a);
             if (nozzleIndex == 1) {
                 a = -a;
             }
@@ -398,7 +398,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
         sendCommand("T0");
 
-        logger.debug("Current Position is {}, {}, {}, {}, {}", new Object[] {x, y, zA, c, c2});
+        logger.debug("Current Position is {}, {}, {}, {}, {}", x, y, zA, c, c2);
     }
 
     public synchronized void disconnect() {

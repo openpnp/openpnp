@@ -81,7 +81,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(boolean on) throws Exception {
-        logger.debug("{}.actuate({})", new Object[] {getName(), on});
+        logger.debug("{}.actuate({})", getName(), on);
         driver.actuate(this, on);
         machine.fireMachineHeadActivity(head);
     }
@@ -93,21 +93,21 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(double value) throws Exception {
-        logger.debug("{}.actuate({})", new Object[] {getName(), value});
+        logger.debug("{}.actuate({})", getName(), value);
         driver.actuate(this, value);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("{}.moveTo({}, {})", new Object[] {getName(), location, speed});
+        logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", new Object[] {getName(), speed});
+        logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);

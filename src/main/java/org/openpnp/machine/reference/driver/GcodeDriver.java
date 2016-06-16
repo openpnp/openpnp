@@ -416,7 +416,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
 
-        logger.debug("sendCommand({}, {}) => {}", new Object[] {command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
+        logger.debug("sendCommand({}, {}) => {}", command, timeout == Long.MAX_VALUE ? -1 : timeout, responses);
         return responses;
     }
 
