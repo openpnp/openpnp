@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# Pending
+
+* GcodeDriver Axis Mapping
+
+	The GcodeDriver now has a system for mapping axes to object on the head, along with a
+	system for transforming coordinates on each axis. This allows more complex head setups than
+	the basic single nozzle, four axis setup. In particular, this system allows for the case
+	where a single Z motor powers two Z axes either in a cam, belt or rack and pinion
+	configuration by specifying a single Z axis with two nozzles mapped to it, along with an
+	appropriate transform. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#axis-mapping
+	for more information.
+
 # 2016-06-16
 
 * Log Tab
