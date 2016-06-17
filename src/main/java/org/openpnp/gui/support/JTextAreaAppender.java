@@ -6,12 +6,12 @@ import javax.swing.SwingUtilities;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 
-public class UiAppender extends AppenderSkeleton {
+public class JTextAreaAppender extends AppenderSkeleton {
     private JTextArea textArea;
     
     private int lineLimit = 1000;
     
-    public UiAppender(JTextArea textArea) {
+    public JTextAreaAppender(JTextArea textArea) {
         this.textArea = textArea;
     }
     
@@ -25,22 +25,34 @@ public class UiAppender extends AppenderSkeleton {
     }
     
     public void setLineLimit(int lineLimit) {
+        System.out.println(lineLimit);
         this.lineLimit = lineLimit;
+        trim();
+    }
+    
+    public int getLineLimit() {
+        return lineLimit;
     }
 
     @Override
     protected void append(LoggingEvent event) {
         SwingUtilities.invokeLater(() -> {
             textArea.append(getLayout().format(event));
-            try {
+            trim();
+        });
+    }
+    
+    private void trim() {
+        try {
+            if (lineLimit > 0) {
                 while (textArea.getLineCount() > lineLimit + 1) {
                     int end = textArea.getLineEndOffset(0);
                     textArea.replaceRange("", 0, end);
                 }
             }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
