@@ -1,6 +1,16 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-06-16
+
+* Log Tab
+
+	There is a new main window tab called Log that shows logging output. This makes it easier for
+	you to see the output of various commands in OpenPnP. It has options to limit the length of
+	the log shown, and the log level. This is the first version of the feature and does not
+	include all of the features that are planned. More information is available at:
+	https://github.com/openpnp/openpnp/issues/288
+
 # 2016-06-03
 
 * GcodeDriver Move To Complete Regex

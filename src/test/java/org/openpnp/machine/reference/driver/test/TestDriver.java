@@ -67,7 +67,7 @@ public class TestDriver implements ReferenceDriver {
         if (!this.location.equals(hl)) {
             this.location = hl;
 
-            logger.debug("moveTo({}, {}, {})", new Object[] {hm, this.location, speed});
+            logger.debug("moveTo({}, {}, {})", hm, this.location, speed);
 
             delegate.moveTo(hm, this.location, speed);
         }

@@ -539,7 +539,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Retract
             nozzle.moveToSafeZ();
 
-            logger.debug("Pick {} from {} with {}", new Object[] {part, feeder, nozzle});
+            logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
 
             plannedPlacement.stepComplete = true;
         }

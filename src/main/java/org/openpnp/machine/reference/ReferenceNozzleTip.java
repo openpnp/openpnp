@@ -83,7 +83,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public boolean canHandle(Part part) {
         boolean result =
                 allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
-        logger.debug("{}.canHandle({}) => {}", new Object[] {getName(), part.getId(), result});
+        logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
         return result;
     }
 

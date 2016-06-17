@@ -422,6 +422,9 @@ public class MainFrame extends JFrame {
         panelBottom.addTab("Cameras", null, camerasPanel, null);
         panelBottom.addTab("Machine Setup", null, machineSetupPanel, null);
 
+        LogPanel logPanel = new LogPanel();
+        panelBottom.addTab("Log", null, logPanel, null);
+
         registerBoardImporters();
 
         addComponentListener(componentListener);
@@ -577,10 +580,10 @@ public class MainFrame extends JFrame {
         System.exit(0);
         return true;
     }
-    
+
     public void setStatus(String status) {
         SwingUtilities.invokeLater(() -> {
-            lblStatus.setText(status);            
+            lblStatus.setText(status);
         });
     }
 
@@ -644,4 +647,5 @@ public class MainFrame extends JFrame {
     private JPanel panel_2;
     private JTabbedPane camerasAndNavTabbedPane;
     private JPanel panel_3;
+    private JPanel logPanel;
 }
