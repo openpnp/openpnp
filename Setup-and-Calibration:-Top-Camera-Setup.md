@@ -18,7 +18,7 @@ Camera Head Offsets tell OpenPnP where the camera is in relation to the other ob
 
 1. With the same camera still selected in the Camera tab, look to the right for the configuration tabs.
 2. Select the tab called "Camera Specific" and you should see a section called Offsets at the top.
-3. Enter all zeros for the X, Y and Z fields.
+3. Enter `0.0` for each of the X, Y and Z fields.
 4. Press Apply.
 
 ## Camera Jogging
