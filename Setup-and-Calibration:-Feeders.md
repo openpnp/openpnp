@@ -15,7 +15,7 @@ It's important to set the right Z height for the feeder so that the nozzle just 
 Let's add a Strip Feeder to the machine so that we can test the feeder system.
 
 1. Use your [Double Sided Tape](http://amzn.to/1Xw7XMA) to tape a small [Part Tape Strip](http://www.digikey.com/product-search/en/resistors/chip-resistor-surface-mount/65769?k=0805%20resistor%2010k) to the bed of the machine. You can cut off a small section of 10 or so parts. These parts will be wasted, so don't use anything important. Resistors are good for this.
-2. Once securely taped down, remove the cover film from the cut strip using [tweezers](http://amzn.to/1UUx9ZN).
+2. Once securely taped down, remove the cover film from the cut strip using [Tweezers](http://amzn.to/1UUx9ZN).
 3. Open the Feeders tab and click the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-add.svg) to open the add feeder dialog.
 4. Select ReferenceStripFeeder from the dialog and press Accept.
 5. The new feeder is added to the table below and selected automatically. Double click the Name field to give it a descriptive name. Let's call this one "Test Feeder".
