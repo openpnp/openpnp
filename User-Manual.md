@@ -61,11 +61,19 @@ OpenPnP is primarily a single window interface, broken up into multiple sections
 
 The Main Window
 ---------------
-![Main Window](http://globedrop.com/wiki/_media/openpnp:mainwindow.png)
+![screen shot 2016-06-18 at 10 34 20 am](https://cloud.githubusercontent.com/assets/1182323/16172608/8dad6e20-3541-11e6-84ab-5a87c3bfdc91.png)
 
 Machine Controls
 ----------------
-![Machine Controls](https://globedrop.com/wiki/_media/openpnp:machinecontrols.png)
+![screen shot 2016-06-18 at 12 59 52 pm](https://cloud.githubusercontent.com/assets/1182323/16173384/98b58fc4-3554-11e6-9382-819aa1d82c11.png)
+
+Digital Read Outs (DROs)
+------------------------
+![screen shot 2016-06-18 at 1 01 43 pm](https://cloud.githubusercontent.com/assets/1182323/16173392/d36f81ce-3554-11e6-9eab-b6e6794f913b.png)
+
+Jog Controls
+------------
+![screen shot 2016-06-18 at 10 33 18 am](https://cloud.githubusercontent.com/assets/1182323/16172512/1cf472b0-3540-11e6-987a-fff822524944.png)
 
 The Camera Panel
 ----------------
@@ -77,114 +85,13 @@ The Tabs
 
 Shortcuts
 ---------
+There are a few important keyboard shortcuts that are critical to know to use OpenPnP. They are:
 
-There are a few important keyboard shortcuts that are critical to know to use OpenPnP. All of the shortcuts use Ctrl + another key. They are:
-
-* Ctrl+Tab: Open the jog controls window which gives you visible buttons for most of the other shortcuts.
-
-![Jog Controls](https://globedrop.com/wiki/_media/openpnp:jogcontrols.png)
 * Ctrl+Arrow Key: Jog the currently selected Nozzle in X and Y. Up and Down arrows jog in Y and Left and Right arrows jog in X.
 * Ctrl+/, Ctrl+': Jog the currently selected Nozzle down and up in Z.
 * Ctrl+<, Ctrl+>: Rotate the currently selected Nozzle counter-clockwise and clockwise.
-* Ctrl+Plus, Ctrl+Minus: Change the jog increment slider. This changes how far each jog key will move the Nozzle.
+* Ctrl+Plus, Ctrl+Minus: Change the jog distance slider. This changes how far each jog key will move the Nozzle.
 * Shift+Left Mouse Click: Hold Shift and left click the mouse anywhere in the camera view to move the camera to that position.
-
-Setup
-=====
-
-The Driver
-----------
-
-In OpenPnP, the Driver is the part of the software that interfaces between OpenPnP and a particular type of machine. Typically this is just a small piece of code that translates OpenPnP commands into commands for a particular motion controller such as Smoothie, TinyG, Marlin, etc.
-
-Before you can move your machine you have to select and set up your Driver. To do that:
-
-1. Go to the Machine Setup tab and select the root node of the tree. On most setups it's called "ReferenceMachine". A setup panel will appear on the right.
-2. In the setup panel, select the driver that most closely matches you motion controller or machine. Click apply.
-*Note: For more information about specific drivers see the Driver Details section below.*.
-3. OpenPnP will prompt you to restart the program, so do that.
-4. After restarting OpenPnP go back to the Machine Setup tab and find the Driver you selected in the tree. It should be near the bottom, under the Driver branch. Select it and a setup panel will appear.
-5. At this point you can configure the driver with parameters that are specific to your machine. For instance, most drivers that talk to the machine over the serial port will have a combo box to select the port and baud rate. Hit Apply once you've configured your settings.
-6. Click the big START button to start the machine and try it out!
-
-### Driver Details
-
-* Gcode (Recommended): https://github.com/openpnp/openpnp/wiki/GcodeDriver
-* TinyG: https://github.com/openpnp/openpnp/wiki/TinyG
-* Grbl: https://github.com/openpnp/openpnp/wiki/Grbl
-
-Heads
------
-
-### Head Offsets
-
-Head offsets are a complex and important concept in OpenPnP. Head offsets allow you to tell
-OpenPnP about the layout of your machine's head and the distances between the various movable
-objects on it. You need to set your offsets before you can use OpenPnP.
-
-A typical head will have, at least a nozzle and a camera. Some may have multiple nozzles and may add actuators for tape drag feeders. Each of these objects have an associated head offsets configuration property.
-
-The easiest way to think of head offsets is to imagine the distance that any object on the head must travel to be exactly where another object is. For instance, if the nozzle is touching the bed of the machine and you want to have the camera focused on that exact same spot the head offsets are the distance in X, Y, and Z that the head must move to center the camera, in focus, where the nozzle was touching.
-
-#### Setup
-
-To set up your offsets, follow these steps:
-
-1. Go to the Machine Setup tab, select your primary down-looking Camera from the tree on the left, select the second tab on the right and set the Offsets to 0, 0, 0 in the fields on the right. Press Apply.
-2. Place something on the bed of the machine that can be marked by the nozzle. A piece of a small, flattened blob of putty or clay will work. Silly Putty works perfectly. This is our target.
-3. Jog the machine so that the primary Nozzle is over the target and then lower the nozzle until it makes a clear mark on the target.
-4. Click the X, Y and Z, DRO one time each. They will turn blue and show 0.000. They are now in relative coordinate mode and will show the distance you have moved since clicking them until you click them again.
-5. Jog the machine so that the down-looking camera is over the mark on the target, perfectly centered and in focus.
-6. Find the Nozzle in the Machine Setup tab and find the Offsets fields in the panel on the right. It's currently on the second tab.
-7. Set the offsets to the X, Y and Z shown in the DROs. Press Apply. Note: For many machines it's not necessary to set the Z offset. It's only used in more complex setups.
-8. For each additional Nozzle, Camera or Actuator you need to setup, follow this same process.
-
-#### Testing
-
-To test that your offsets are correct you can use the red positioning buttons next to the DROs:
-
-1. One again, make a mark on the target and leave the nozzle there.
-2. Press the position camera button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg). OpenPnP will move the head so that the mark is now centered in the camera and in perfect focus.
-3. Now press the position nozzle button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg) and the nozzle should move back to it's place touching the mark.
-
-* If machine does not behave as it should, consider deleting the image camera created at program install. Newly defined down looking camera should be first in list of cameras from Machine Setup tab, ReferenceMachine > Heads > ReferenceHead H1 > Cameras.
-
-Actuators
----------
-
-Cameras
--------
-* Add a camera on the "Cameras" tab of "The Tabs" by pressing the green "+" icon.  
-* Select a camera driver from the provided list, try the "OpenCVCamera" and press the "Accept" button. The newly added camera will show up in the camera list.
-* Double click on the name of the new camera to rename it.  
-* Click on the "Camera Specific" tab (while your newly created camera is still selected in the camera list).
-* In the "General" section you can pick the "Device Index".  Each camera connected to your computer will have a unique device index starting at index 0. 
-* Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
-
-### Camera Types
-* LtiCivilCamera
-* VfwCamera
-* TableScannerCamera
-* OpenCVCamera
-* ImageCamera
-
-### Calibration
-* [[Camera Lens Calibration]]
-
-Feeders
--------
-
-There are currently four types of feeders supported:
-
-1. ReferenceStripFeeder: A feeder that allows the user to place a cut piece of SMT tape on the machine. The feeder will advance along the tape and pick parts from it. Cover film must be removed manually. Supports vision for setup and part centering by referencing the holes in the tape.
-
-    See [[ReferenceStripFeeder]]'s page for more information and help.
-
-2. ReferenceDragFeeder: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported.
-
-3. ReferenceTrayFeeder: Supports 2D arrays of parts in trays. Currently limited to trays that are aligned at 90 degrees in X and Y. Simple incremental pick, no vision.
-
-4. ReferenceTubeFeeder: The simplest feeder which picks from the same location every time. Intended to be used with a vibratory tube feeder that presents a part at the same location repeatedly.
 
 Configuration and Operation
 ===========================
@@ -241,12 +148,6 @@ This is a brief explanation of how to setup and run your first job. For details 
 6. You'll need to set the Z position of the board, too. Touch the nozzle tip to the board and use capture nozzle ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg) to set it.
 7. Run the job by clicking Start ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/control-start.svg).
 
-Troubleshooting
-===============
-
-FAQ
-===
-
 Advanced Topics
 ===============
 
@@ -290,9 +191,6 @@ Development
 
 For more information about developing OpenPnP, especially regarding contributing, please see
 https://github.com/openpnp/openpnp/wiki/Developers-Guide.
-
-Debugging
----------
 
 Getting Help
 ============
