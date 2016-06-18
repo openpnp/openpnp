@@ -1,4 +1,4 @@
-# Discard
+# Discard Location
 
 ## Set Discard Location
 ## Discard a Part
