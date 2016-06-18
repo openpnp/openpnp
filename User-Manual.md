@@ -9,8 +9,11 @@ The purpose of this manual is to help you get the software up and running, and t
 
 Quick Start
 ===========
-
 If you are brand new to OpenPnP have a look at the [[Quick Start]] guide to quickly get up and running and comfortable with the software. Once you are done there it will guide you back here to get into the details.
+
+Setup and Calibration
+=====================
+To setup OpenPnP with your own machine, see the [[Setup and Calibration]] guide. If you don't have a machine yet you can still work through this manual using the software in simulator mode. The software starts this way be default.
 
 Installation
 ============
