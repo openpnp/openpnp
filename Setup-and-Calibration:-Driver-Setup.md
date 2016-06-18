@@ -15,6 +15,8 @@ In OpenPnP, the Driver is the part of the software that interfaces between OpenP
 
 Most of the drivers in OpenPnP communicate using the serial port. Before you can connect, you need to set the serial port and baud rate for your controller.
 
+![screen shot 2016-06-18 at 12 28 31 pm](https://cloud.githubusercontent.com/assets/1182323/16173252/30d0f546-3550-11e6-90e0-facf96c4240f.png)
+
 1. After restarting OpenPnP go back to the Machine Setup tab and find the Driver you selected in the tree. It should be near the bottom, under the Driver branch. Select it and a setup panel will appear.
 2. Select the serial port and baud rate for your controller and press the Apply button.
 
