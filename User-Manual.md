@@ -67,17 +67,25 @@ Machine Controls
 ----------------
 ![screen shot 2016-06-18 at 12 59 52 pm](https://cloud.githubusercontent.com/assets/1182323/16173384/98b58fc4-3554-11e6-9382-819aa1d82c11.png)
 
+The Machine Controls are your interface to interacting with the machine. You can see the current position in the DROs, move the machine using the Jog Controls and perform special operations with the Special Commands section.
+
 Digital Read Outs (DROs)
 ------------------------
 ![screen shot 2016-06-18 at 1 01 43 pm](https://cloud.githubusercontent.com/assets/1182323/16173392/d36f81ce-3554-11e6-9eab-b6e6794f913b.png)
+
+The DROs show the current position of the selected nozzle in your preferred units. You can click the DROs to set them to relative mode which will zero them out and turn them blue. You can use this to measure distances; the DROs will show the distance from where you first clicked them. Click again to go back to normal mode.
 
 Jog Controls
 ------------
 ![screen shot 2016-06-18 at 10 33 18 am](https://cloud.githubusercontent.com/assets/1182323/16172512/1cf472b0-3540-11e6-987a-fff822524944.png)
 
+The Jog Controls are where you can move the selected nozzle. The Distance slider sets the distance each click of the buttons will move the machine.
+
 The Camera Panel
 ----------------
 ![Camera Window](https://globedrop.com/wiki/_media/openpnp:camerawindow.png)
+
+
 
 The Tabs
 --------
