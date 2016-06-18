@@ -1,10 +1,8 @@
 # Top Camera Setup
 
-## General Camera Setup (link to doc)
-1. Add a New Camera
-2. Set Rotation and Other Transforms
-3. Set Units Per Pixel
-4. Lens Calibration
+## General Camera Setup
+
+Whenever you are adding or configuring a camera, many of the steps are the same. See [[General Camera Setup|Setup and Calibration: General Camera Setup]] to get the basics and then return to this page for the steps specific to the Top Camera.
 
 ## Set Camera Head
 
