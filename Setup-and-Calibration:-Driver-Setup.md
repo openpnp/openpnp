@@ -26,7 +26,7 @@ See the pages below for additional information on setting up specific drivers wi
 
 ## Connect
 
-Now that the driver is configured, press the green power button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_on.svg) to connect to your controller. If all goes well the button will turn red and the rest of the controls will become enabled. If there is an issue OpenPnP will give you an error message.
+Now that the driver is configured, press the green power button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_on.svg" height="18"> to connect to your controller. If all goes well the button will turn red and the rest of the controls will become enabled. If there is an issue OpenPnP will give you an error message.
 
 ## Homing
 
