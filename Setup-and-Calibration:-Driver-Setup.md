@@ -17,3 +17,9 @@ See the pages below for details on setting up specific drivers within OpenPnP.
 ## Homing
 
 ## Jogging the Machine
+
+***
+
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| [[Setup and Calibration: Before You Start]] | [[Top of Page|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Before You Start|Setup and Calibration: Top Camera Setup]] |
