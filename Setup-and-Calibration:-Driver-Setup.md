@@ -5,8 +5,9 @@ In OpenPnP, the Driver is the part of the software that interfaces between OpenP
 ## Choosing a Driver
 
 1. Go to the Machine Setup tab and select the root node of the tree. On most setups it's called "ReferenceMachine". A setup panel will appear on the right.
-2. In the setup panel, select the driver that most closely matches you motion controller or machine. Click apply.
-*Note: For more information about specific drivers see the Driver Specific Setup section below.*.
+2. In the setup panel, select the driver that most closely matches you motion controller or machine. Most machines will probably use the [[GcodeDriver]]. Click apply.
+  
+  **Note: For more information about specific drivers see the Driver Specific Setup section below.**.
 3. OpenPnP will prompt you to restart the program, so do that.
 
 ## Set Serial Port and Baud rate
