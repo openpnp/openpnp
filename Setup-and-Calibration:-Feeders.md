@@ -22,7 +22,7 @@ Let's add a Strip Feeder to the machine so that we can test the feeder system.
 6. On the right side of the screen, in the feeder settings, find the Part dropdown and select the "R0805-1K" part. It's okay if this doesn't match the part you are using for now.
 7. In the Tape Settings section below, fill in the Tape Width and Part Pitch fields. If you are using chip resistors larger than 0402 you can use the default settings of 8mm tape width and 4mm part pitch.
 8. Click the Auto Setup button and follow the on screen instructions to finish setting up the feeder. There is more information on the [[ReferenceStripFeeder]] page about this process, and it's worth taking a look at it to help you.
-9. When the Auto Setup process finishes 
+9. When the Auto Setup process finishes the camera should be centered perfectly over the first part in the tape. If it's not, try the Auto Setup process again. Sometimes lighting conditions can cause it to make mistakes.
 
 ## Choosing a Feeder
 Here is a short description of the other feeder types supported by OpenPnP:
@@ -39,7 +39,7 @@ Here is a short description of the other feeder types supported by OpenPnP:
 
 ## Common Settings
 ### Part Selection
-## Feeder Specifics
+Every feeder has a Part field that you must fill in. By telling OpenPnP which part a feeder is holding OpenPnP can make intelligent decisions about which feeders to use for a job. You can even have multiple feeders for the same part, in case it's a part you use many of.
 
 ## Pick a Part
 
