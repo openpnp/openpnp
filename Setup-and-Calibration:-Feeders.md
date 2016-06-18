@@ -11,6 +11,19 @@ Every feeder has a pick location, which is where the nozzle will go when it need
 ### Setting Z
 It's important to set the right Z height for the feeder so that the nozzle just barely touches the part before it picks. Each feeder has a Z setting in it's configuration panel, although some of them look different than others. In all cases, just look for the Z field in the settings and make sure it's set to where the nozzle needs to go to pick the part.
 
+## Choosing a Feeder
+Here is a short description of the feeder types supported by OpenPnP:
+ 
+* ReferenceStripFeeder: A feeder that allows the user to place a cut piece of SMT tape on the machine. The feeder will advance along the tape and pick parts from it. Cover film must be removed manually. Supports vision for setup and part centering by referencing the holes in the tape.
+
+  See [[ReferenceStripFeeder]]'s page for more information and help.
+
+* ReferenceDragFeeder: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported.
+
+* ReferenceTrayFeeder: Supports 2D arrays of parts in trays. Currently limited to trays that are aligned at 90 degrees in X and Y. Simple incremental pick, no vision.
+
+* ReferenceTubeFeeder: The simplest feeder which picks from the same location every time. Intended to be used with a vibratory tube feeder that presents a part at the same location repeatedly.
+
 ## Adding a Feeder
 Let's add a Strip Feeder to the machine so that we can test the feeder system.
 
@@ -24,26 +37,13 @@ Let's add a Strip Feeder to the machine so that we can test the feeder system.
 8. Click the Auto Setup button and follow the on screen instructions to finish setting up the feeder. There is more information on the [[ReferenceStripFeeder]] page about this process, and it's worth taking a look at it to help you.
 9. When the Auto Setup process finishes the camera should be centered perfectly over the first part in the tape. If it's not, try the Auto Setup process again. Sometimes lighting conditions can cause it to make mistakes.
 
-## Choosing a Feeder
-Here is a short description of the other feeder types supported by OpenPnP:
- 
-* ReferenceStripFeeder: A feeder that allows the user to place a cut piece of SMT tape on the machine. The feeder will advance along the tape and pick parts from it. Cover film must be removed manually. Supports vision for setup and part centering by referencing the holes in the tape.
-
-  See [[ReferenceStripFeeder]]'s page for more information and help.
-
-* ReferenceDragFeeder: A "drag" feeder which allows the use of an Actuator, typically a solenoid with a pin, to advance the tape by dragging it. Basic vision for part center detection is also supported.
-
-* ReferenceTrayFeeder: Supports 2D arrays of parts in trays. Currently limited to trays that are aligned at 90 degrees in X and Y. Simple incremental pick, no vision.
-
-* ReferenceTubeFeeder: The simplest feeder which picks from the same location every time. Intended to be used with a vibratory tube feeder that presents a part at the same location repeatedly.
-
 ## Common Settings
 ### Part Selection
 Every feeder has a Part field that you must fill in. By telling OpenPnP which part a feeder is holding OpenPnP can make intelligent decisions about which feeders to use for a job. You can even have multiple feeders for the same part, in case it's a part you use many of.
 
 ## Pick a Part
 
-Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle.
+Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle. You can use the Discard button we set up previous to drop the part.
 
 ***
 
