@@ -46,12 +46,13 @@ The Y axis moves forward and back. Forward is positive.
 The Z axis moves up and down. Up is positive.
 The C, or rotation, axis rotates clockwise and counter-clockwise. Counter-clockwise is positive.
 
+![screen shot 2016-06-18 at 12 56 07 pm](https://cloud.githubusercontent.com/assets/1182323/16173361/0e54935c-3554-11e6-9cf6-caf13e6d4a65.png)
+
 More information can be found at:
 http://www.evl.uic.edu/ralph/508S98/coordinates.html
 http://en.wikipedia.org/wiki/Right-hand_rule
 
-The units for the X, Y and Z axises are set in the gui, the default is mm.  The units for the C axises is degrees, OpenPnP measures rotation in degrees and treats them like mm from the perspective of the controller.
-
+The units for the X, Y and Z axises are set in the GUI, the default is mm.  The units for the C axises is degrees, OpenPnP measures rotation in degrees and treats them like mm from the perspective of the controller.
 
 The User Interface
 ==================
