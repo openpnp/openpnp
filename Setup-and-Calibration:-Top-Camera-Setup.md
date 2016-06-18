@@ -4,7 +4,7 @@ The Top Camera is the camera that is attached to your machine's head. It's also 
 The Top Camera is used primarily when setting up feeders and jobs, and can be used to target any location on your machine. It's the thing you will look at most often when using OpenPnP.
 
 ## Add a Camera
-First, add a camera by following the instructions on [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
+First, add a camera by following the instructions in [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
 
 ## Set Camera Head
 Setting the camera head tells OpenPnP that the camera is attached to the head, making it mobile, versus a machine mounted camera which is stationary.
