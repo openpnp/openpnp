@@ -17,4 +17,4 @@ Now that the camera is configured, hold Shift and then Left Click within the cam
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Driver Setup|Setup and Calibration: Driver Setup]] | [[Top of Page|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Nozzle Setup|Setup and Calibration: Nozzle Setup]] |
+| [[Driver Setup|Setup and Calibration: Driver Setup]] | [[Table of Contents|Setup and Calibration]] | [[Nozzle Setup|Setup and Calibration: Nozzle Setup]] |
