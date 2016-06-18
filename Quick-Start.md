@@ -25,8 +25,8 @@ OpenPnP is set up out of the box so that you can use it right away; you don't ev
 
 When you start OpenPnP for the first time you will see a simulated pick and place table in the camera view. Try following along with the items below to get a feel for how OpenPnP works:
 
-1. Press the big green START button to start the virtual "machine".
-2. Press Ctrl-Tab to open the jog controls window. You can use the buttons in the window to move the camera around. You can change the distance each click moves by changing the value of the slider above it.
+1. Press the green power button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_on.svg) to start the virtual "machine".
+2. Use the buttons in the jog controls to move the camera around. You can change the distance each click moves by changing the value of the Distance slider.
 3. Visit each of the tabs along the bottom of the window to see how Jobs, Parts, Packages, Feeders and the Machine is configured. Right now it's best not to change anything.
 
 Your First Job
@@ -39,7 +39,7 @@ Now that you've seen the user interface a bit, it's time to try running a pick a
 3. Using your computer's file dialog, find the `samples` directory that came with OpenPnP. It should be in the same directory you installed OpenPnP into.
 4. In the `samples` directory, find the `pnp-test` directory and open the `pnp-test.job.xml` file inside it.
 5. You'll see the job has loaded and there are now boards and placements listed. You can browse the boards and placements to see what the job will be doing.
-6. If you haven't already, press the big green START button to start the machine.
+6. If you haven't already, press the green power button to start the machine.
 6. Press the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/control-start.svg) button to start the job and the camera will start moving.
 
 OpenPnP will now simulate a full pick and place job. It will use computer vision to align the boards using fiducials, find parts in virtual feeders, and then place the parts on virtual boards. You can follow along by watching the camera view.
