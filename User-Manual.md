@@ -108,6 +108,26 @@ The tabs at the bottom of the window are where all configuration and job setup t
 * Machine Setup: A tree view showing all configurable components of the machine.
 * Log: Shows log output from the system and lets you choose what to show.
 
+Location Buttons
+----------------
+![screen shot 2016-06-18 at 4 46 29 pm](https://cloud.githubusercontent.com/assets/1182323/16174378/69ab388a-3574-11e6-96b4-8419db5f3584.png)
+
+The Location Buttons are used in many places throughout OpenPnP. It's good to get familiar with these buttons and their functions as you will see them everywhere.
+
+From the left, the buttons are:
+* Capture Camera Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg): Used to capture the location the camera is currently looking at. Will typically be used to fill in the X, Y, Z and Rotation fields of an associated value.
+* Capture Nozzle Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg): Same the above, but captures the nozzle location.
+* Move Camera to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camea.svg): Move the camera to a given location. Usually to the location identified by associated fields.
+* Move Nozzle to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg): Save as above, but moves the nozzle.
+
+You'll often see these buttons grouped together with a set of fields, like this:
+
+![screen shot 2016-06-18 at 4 52 04 pm](https://cloud.githubusercontent.com/assets/1182323/16174397/0395145c-3575-11e6-8566-dcecb5754606.png)
+
+The buttons control the fields and respond to the values in them. You'll also see the buttons used individually where applicable, like in the Job tab. Here the buttons are used in context with the selected board to capture the board location or move to it.
+
+Finally, note the color and the icon of the buttons. These colors and icons are used throughout the system to mean the same thing. Red icons are a warning - clicking it may make something bad happen. In this case it will make the machine move, so make sure you are clear of it. Blue icons mean capture - blue is used to indicate that clicking this button will capture a value into a field.
+
 Keyboard Shortcuts
 ------------------
 There are a few important keyboard shortcuts that are critical to know to use OpenPnP. They are:
