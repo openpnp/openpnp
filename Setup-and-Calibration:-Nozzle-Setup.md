@@ -52,7 +52,7 @@ If you have multiple nozzles on your machine, you can select the one you want to
 ![screen shot 2016-06-18 at 11 26 13 am](https://cloud.githubusercontent.com/assets/1182323/16172925/a0c8edf8-3547-11e6-95cf-13d5cfba0c11.png)
 
 ## Advanced
-On more advanced setups, especially those with multiple nozzles and nozzle tips, you may need to setup package compatbility and the nozzle tip changer.
+On more advanced setups, especially those with multiple nozzles and nozzle tips, you may need to setup package compatibility and the nozzle tip changer.
 
 ### Package Compatibility
 Package Compatibility lets OpenPnP know which Nozzle Tips you want to use for each package that you'll place. If you want to use a Nozzle Tip for every type of package you can just select "Allow Incompatible Packages?" and OpenPnP will consider that nozzle tip to be available for all parts. If you want to limit the parts that a particular nozzle tip works with, just uncheck the "Allow Incompatible Packages?" checkbox and check the packages you want to enable in the table below. Don't forget to hit Apply.
@@ -73,8 +73,8 @@ Now that your nozzle is configured, let's move it around and make sure it's work
 
 1. Make sure you've selected the nozzle as discussed in Selecting a Nozzle above.
 2. Move the camera to an identifiable spot on the machine bed.
-3. Click the `Position Tool` button in the Machine Controls panel.
-4. The nozzle should move to where the camera was previously looking. You can click the `Position Camera` button below to move the Camera back.
+3. Click the position tool button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg) in the Machine Controls panel.
+4. The nozzle should move to where the camera was previously looking. You can click the position camera button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg)  below to move the Camera back.
 
 The Position Tool and Position Camera buttons can be used to switch back and forth between what the camera is pointing at and what the nozzle is pointing at.
 
