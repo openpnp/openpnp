@@ -10,7 +10,7 @@
 **Note:** Some of the links above are Amazon Affiliate links. If you buy something from one of the links it will help fund development of OpenPnP.
 
 ## Machine Working Outside OpenPnP
-Before you start trying to make your machine work with OpenPnP you should first make sure all of it's major functionality is working outside of OpenPnP.
+Before you start trying to make your machine work with OpenPnP you should first make sure all of its major functionality is working outside of OpenPnP.
 
 You should be able to jog the machine in X and Y, rotate your nozzle, and move the head up and down in Z. Ideally you will also be able to test that any pumps or solenoids can be controlled.
 
