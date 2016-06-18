@@ -24,7 +24,7 @@ There are currently four types of feeders supported Strip Feeder, Drag Feeder, T
 
 ## Pick a Part
 
-Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle.
+Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle.
 
 ***
 
