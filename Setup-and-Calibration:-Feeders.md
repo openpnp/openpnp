@@ -49,4 +49,4 @@ Now that you've configured a feeder, click the Feed and Pick button ![](https://
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Bottom Camera Setup|Setup and Calibration: Bottom Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Discard Location|Setup and Calibration: Discard Location]] |
+| [[Discard Location|Setup and Calibration: Discard Location]] | [[Table of Contents|Setup and Calibration]] | [[Bottom Vision|Setup and Calibration: Bottom Vision]] |
