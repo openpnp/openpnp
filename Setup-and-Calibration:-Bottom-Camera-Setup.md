@@ -30,4 +30,4 @@ Now that OpenPnP knows where the camera is, let's move the nozzle around and mak
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] | [[Table of Contents|Setup and Calibration]] | [[Discard Location|Setup and Calibration: Discard Location]] |
+| [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] | [[Table of Contents|Setup and Calibration]] | [[Park Location|Setup and Calibration: Park Location]] |
