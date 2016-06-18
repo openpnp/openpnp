@@ -11,9 +11,38 @@
 
 ## Set Rotation and Transforms
 
+When you look at the camera image in OpenPnP it should be right side up. Depending on how your camera is mounted, this might not be the case. By setting transformations in the camera configuration you can adjust the image so it appears correct.
+
+A Top Camera image should appear as if you are looking down at the machine. The top of the image should be away from you, the bottom of the image should be towards you.
+
+A Bottom Camera image should appear as if you are looking up from the camera towards the nozzle. The same rules as above apply. 
+
+1. Open the Cameras tab and select the camera from the table.
+2. Select the Camera Specific tab from the configuration tabs on the right.
+3. Scroll to the Transformation section.
+4. Adjust the Rotation, Flip Vertical and Flip Horizontal fields to make the image appear as described above. Press Apply to have your settings show up in the camera view.
+5. Press Apply before moving on.
 
 ## Set Units Per Pixel
 
+Units Per Pixel is how OpenPnP maps pixels to real world units, typically millimeters or inches. OpenPnP needs to know how large a pixel is in real world terms so that it can measure things correctly when performing computer vision. This is the most important configuration for a camera, so it's worth taking the time to get it right.
+
+1. With the camera selected in the Cameras tab, select the General Configuration tab from the right.
+2. Look for the Units Per Pixel section and read the instructions contained within.
+3. Make sure to enter the real world width and height of the object you are measuring into the Width and Height fields before clicking Measure.
+4. After you click Confirm, the X and Y fields should be updated with the measured values.
+5. Click Apply to save your data.
+
+Once the Units Per Pixel is set you can test the results.
+
+1. Place a ruler on the bed of the machine and position the camera over it.
+2. Right click the camera view to bring up the camera menu.
+3. Select Reticle -> Ruler.
+4. In the same menu, select Reticle -> Options -> Units and Reticle -> Options -> Units Per Tick to configure the on screen ruler with the same units and size as your actual ruler.
+
+There should now be a crosshair with evenly spaced lines in the camera view. Line up the center of the crosshair with one of the lines on your ruler and the rest of the lines should line up closely. It's okay if they don't line up perfectly as they get to the edges of the image but the lines in the center half of the image should be quite close to the lines on the ruler.
+
+If the lines don't line up, check that you've performed this step correctly. If they do line up in the center but rapidly get worse the further you look from center, read the Lens Calibration section below to perform correction.
 
 ## Lens Calibration
 
