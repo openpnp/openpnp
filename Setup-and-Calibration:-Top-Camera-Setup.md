@@ -2,7 +2,7 @@
 
 ## Add a Camera
 
-Whenever you are adding or configuring a camera, many of the steps are the same. See [[General Camera Setup|Setup and Calibration: General Camera Setup]] to get the basics and then return to this page for the steps specific to the Top Camera.
+First, add a camera by following the instructions on [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
 
 ## Set Camera Head
 
