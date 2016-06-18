@@ -19,4 +19,4 @@ We recommend that you follow the steps in the order they are listed in this guid
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| | [[Top|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Driver Setup|Setup and Calibration: Driver Setup]] |
+| | [[Top|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Driver Setup|Setup and Calibration: Before You Start]] |
