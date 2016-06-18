@@ -14,3 +14,9 @@ We recommend that you follow the steps in the order they are listed in this guid
 7. [[Discard|Setup and Calibration: Discard]]
 8. [[Bottom Vision|Setup and Calibration: Bottom Vision]]
 9. [[Next Steps|Setup and Calibration: Next Steps]]
+
+***
+
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| | [[Top|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Setup and Calibration: Driver Setup]] |
