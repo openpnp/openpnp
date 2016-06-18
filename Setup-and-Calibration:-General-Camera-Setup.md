@@ -8,6 +8,7 @@
 4. Click on the "Camera Specific" tab (while your newly created camera is still selected in the camera list).
 5. In the "General" section you can pick the "Device Index".  Each camera connected to your computer will have a unique device index starting at index 0. 
 6. Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
+7. Double click the Name field in the camera table to give your camera a descriptive name. We suggest "Top Camera" and "Bottom Camera", respectively.
 
 ## Set Rotation and Transforms
 
