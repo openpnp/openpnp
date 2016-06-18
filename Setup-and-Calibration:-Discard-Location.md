@@ -20,4 +20,4 @@ With the discard location set, we can test that it works properly. We haven't se
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Bottom Camera Setup|Setup and Calibration: Bottom Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Feeders|Setup and Calibration: Feeders]] |
+| [[Park Location|Setup and Calibration: Park Location]] | [[Table of Contents|Setup and Calibration]] | [[Feeders|Setup and Calibration: Feeders]] |
