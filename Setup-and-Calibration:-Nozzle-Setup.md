@@ -27,4 +27,4 @@
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] | [[Top of Page|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] |
+| [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] |
