@@ -2,6 +2,7 @@
 
 ## Required Tools
 * [Ruler](http://amzn.to/1UfBTXC): A precision steel ruler is recommended, in the units you intend to work in.
+* [Small Electronics Tweezers](http://amzn.to/1UUx9ZN): Any small tweezers will do. It's worth having a few sets because you will use these a lot.
 * [Double Sided Tape](http://amzn.to/1Xw7XMA): You'll use this to hold down your first tape strips and to provide a sticky surface on your PCB to place parts on.
 * [Test PCB](https://github.com/openpnp/openpnp/tree/develop/samples/Demo%20Board): This directory contains a test PCB you can have made, or any PCB you already have will work.
 * [Part Tape Strips](http://www.digikey.com/product-search/en/resistors/chip-resistor-surface-mount/65769?k=0805%20resistor%2010k): Some parts in tape strips to test with. Use something cheap, like an 0805 resistor.
