@@ -16,4 +16,4 @@ See the pages below for details on setting up specific drivers within OpenPnP.
 
 ## Homing
 
-## Jogging
+## Jogging the Machine
