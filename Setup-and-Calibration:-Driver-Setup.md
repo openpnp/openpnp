@@ -22,4 +22,4 @@ See the pages below for details on setting up specific drivers within OpenPnP.
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Before You Start|Setup and Calibration: Before You Start]] | [[Top of Page|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] |
+| [[Before You Start|Setup and Calibration: Before You Start]] | [[Table of Contents|Setup and Calibration]] | [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] |
