@@ -33,15 +33,39 @@ The default configuration file in OpenPnP defines one nozzle and one nozzle tip.
 ## Adding Nozzle Tips
 Adding Nozzle Tips is the same process as above, but instead of copying the entire `<nozzle>` section you just copy the `<nozzle-tip>` section contained within. Don't forget to change the id.
 
-## Head Offsets (link to general page on setting head offsets?)
+## Head Offsets
+Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzle is from the camera in real world units.
+
+![screen shot 2016-06-18 at 11 24 59 am](https://cloud.githubusercontent.com/assets/1182323/16172909/5247ebd4-3547-11e6-9dfa-8d63af3d66cd.png)
+
+1. Place something on the bed of the machine that can be marked by the nozzle. A piece of a small, flattened blob of putty or clay will work. [Silly Putty](http://amzn.to/263ZnKm) works perfectly. This is our target.
+2. Jog the machine so that the primary Nozzle is over the target and then lower the nozzle until it makes a clear mark on the target.
+3. Click the X, Y and Z, DRO one time each. They will turn blue and show 0.000. They are now in relative coordinate mode and will show the distance you have moved since clicking them until you click them again.
+4. Jog the machine so that the top camera is over the mark on the target, perfectly centered and in focus.
+5. Find the Nozzle in the Machine Setup tab and find the Offsets fields in the panel on the right. It's on the second tab titled "Untitled".
+6. Set the offsets to the X, Y and Z shown in the DROs. Press Apply. Note: For many machines it's not necessary to set the Z offset. It's only used in more complex setups.
+7. For each additional Nozzle you need to setup, follow this same process.
 
 ## Selecting a Nozzle
 
+If you have multiple nozzles on your machine, you can select the one you want to work with in OpenPnP by selecting it from the tools dropdown in the Machine Controls panel. The nozzle that is selected here is the one that will be used whenever you tell the machine to move a nozzle.
+
+![screen shot 2016-06-18 at 11 26 13 am](https://cloud.githubusercontent.com/assets/1182323/16172925/a0c8edf8-3547-11e6-95cf-13d5cfba0c11.png)
+
 ## Advanced
+On more advanced setups, especially those with multiple nozzles and nozzle tips, you may need to setup package compatbility and the nozzle tip changer.
 
 ### Package Compatibility
+Package Compatibility lets OpenPnP know which Nozzle Tips you want to use for each package that you'll place. If you want to use a Nozzle Tip for every type of package you can just select "Allow Incompatible Packages?" and OpenPnP will consider that nozzle tip to be available for all parts. If you want to limit the parts that a particular nozzle tip works with, just uncheck the "Allow Incompatible Packages?" checkbox and check the packages you want to enable in the table below. Don't forget to hit Apply.
+
+![screen shot 2016-06-18 at 11 29 46 am](https://cloud.githubusercontent.com/assets/1182323/16172939/fed3b05e-3547-11e6-8db8-c4cac423a34f.png)
 
 ### Nozzle Tip Changer
+The Nozzle Tip Changer allows OpenPnP to automatically choose the best nozzle tip for a given part. Currently the only supported style of Nozzle Tip Changer is the so called "Three Position" changer. You can configure three motions that insert or remove a nozzle tip. 
+
+TODO: This is an advanced topic and further documentation is needed.
+
+![screen shot 2016-06-18 at 11 31 15 am](https://cloud.githubusercontent.com/assets/1182323/16172950/319d6534-3548-11e6-8a3a-ad975e4a6ec4.png)
 
 ## Nozzle Jogging
 
