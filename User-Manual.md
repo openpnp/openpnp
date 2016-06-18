@@ -79,7 +79,7 @@ Jog Controls
 ------------
 ![screen shot 2016-06-18 at 10 33 18 am](https://cloud.githubusercontent.com/assets/1182323/16172512/1cf472b0-3540-11e6-987a-fff822524944.png)
 
-The Jog Controls are where you can move the selected nozzle. The Distance slider sets the distance each click of the buttons will move the machine.
+The Jog Controls are where you can move the selected nozzle. The Distance slider sets the distance each click of the buttons will move the machine. The Park buttons <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg" height="18"> allow you to move either the X/Y axes, the Z axis or the C axis to the Park location defined on your head.
 
 The Camera Panel
 ----------------
