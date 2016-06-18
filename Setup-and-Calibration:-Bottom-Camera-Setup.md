@@ -14,4 +14,4 @@
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] | [[Top of Page|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[Feeders|Setup and Calibration: Feeders]] |
+| [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] | [[Table of Contents|Setup and Calibration]] | [[Feeders|Setup and Calibration: Feeders]] |
