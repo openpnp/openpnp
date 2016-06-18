@@ -117,7 +117,7 @@ The Location Buttons are used in many places throughout OpenPnP. It's good to ge
 From the left, the buttons are:
 * Capture Camera Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg): Used to capture the location the camera is currently looking at. Will typically be used to fill in the X, Y, Z and Rotation fields of an associated value.
 * Capture Nozzle Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg): Same the above, but captures the nozzle location.
-* Move Camera to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camea.svg): Move the camera to a given location. Usually to the location identified by associated fields.
+* Move Camera to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg): Move the camera to a given location. Usually to the location identified by associated fields.
 * Move Nozzle to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg): Save as above, but moves the nozzle.
 
 You'll often see these buttons grouped together with a set of fields, like this:
