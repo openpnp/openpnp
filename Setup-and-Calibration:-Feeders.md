@@ -6,10 +6,8 @@ There are currently four types of feeders supported Strip Feeder, Drag Feeder, T
 
 ## Concepts
 ### Pick Location
-### Z Setting
-## Common Settings
-### Part Selection
-## Feeder Specifics
+### Setting Z
+## Choosing a Feeder Type
 * ReferenceStripFeeder: A feeder that allows the user to place a cut piece of SMT tape on the machine. The feeder will advance along the tape and pick parts from it. Cover film must be removed manually. Supports vision for setup and part centering by referencing the holes in the tape.
 
   See [[ReferenceStripFeeder]]'s page for more information and help.
@@ -20,7 +18,13 @@ There are currently four types of feeders supported Strip Feeder, Drag Feeder, T
 
 * ReferenceTubeFeeder: The simplest feeder which picks from the same location every time. Intended to be used with a vibratory tube feeder that presents a part at the same location repeatedly.
 
+## Common Settings
+### Part Selection
+## Feeder Specifics
+
 ## Pick a Part
+
+Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle.
 
 ***
 
