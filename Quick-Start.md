@@ -26,7 +26,7 @@ OpenPnP is set up out of the box so that you can use it right away; you don't ev
 When you start OpenPnP for the first time you will see a simulated pick and place table in the camera view. Try following along with the items below to get a feel for how OpenPnP works:
 
 1. Press the green power button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_on.svg" height="18"> to start the virtual "machine".
-2. Use the buttons in the jog controls to move the camera around. You can change the distance each click moves by changing the value of the Distance slider.
+2. Use the jog buttons ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_back_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_downward_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_forward_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_upward_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_rotate_clockwise_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_rotate_counterclockwise_black_18px.svg) in the jog controls to move the camera around. You can change the distance each click moves by changing the value of the Distance slider.
 3. Visit each of the tabs along the bottom of the window to see how Jobs, Parts, Packages, Feeders and the Machine is configured. Right now it's best not to change anything.
 
 Your First Job
