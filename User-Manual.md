@@ -83,16 +83,30 @@ The Jog Controls are where you can move the selected nozzle. The Distance slider
 
 The Camera Panel
 ----------------
-![Camera Window](https://globedrop.com/wiki/_media/openpnp:camerawindow.png)
+![screen shot 2016-06-18 at 1 23 19 pm](https://cloud.githubusercontent.com/assets/1182323/16173504/dec01e3c-3557-11e6-9132-fa04ffcd0e4f.png)
 
+The Camera Panel is where images from your cameras will show. You can select the currently visible camera from the dropdown, or select to show All Cameras or None. When multiple cameras are shown they are broken up into multiple Cameara Views.
 
+You can right click in each Camera View to set options specific to that camera. Most importantly, you can choose your Reticle here. The Reticle is an overlay on the camera view to help with targeting. You should start with the Crosshair Reticle and try out some of the other options to see what you prefer.
+
+You can also hold down Shift and click the Left Mouse Button in a Camera View to move the nozzle to that location. This is called Camera Jogging.
 
 The Tabs
 --------
 ![The Tabs](https://globedrop.com/wiki/_media/openpnp:tabswindow.png)
 
-Shortcuts
----------
+The tabs at the bottom of the window are where all configuration and job setup takes place. These tabs are covered in more detail elsewhere, but here is a brief overview:
+
+* Job: Job setup and control.
+* Parts: Create new parts, setup bottom vision, pick parts for testing.
+* Packages: Create packages, setup footprints. Important for [[Fiducials]].
+* Feeders: Setup feeders, specify parts to feed.
+* Cameras: Configure camera details.
+* Machine Setup: A tree view showing all configurable components of the machine.
+* Log: Shows log output from the system and lets you choose what to show.
+
+Keyboard Shortcuts
+------------------
 There are a few important keyboard shortcuts that are critical to know to use OpenPnP. They are:
 
 * Ctrl+Arrow Key: Jog the currently selected Nozzle in X and Y. Up and Down arrows jog in Y and Left and Right arrows jog in X.
@@ -121,7 +135,6 @@ Parts
 Part height is simply the height of the part as measured, typically with calipers or from a data sheet. Part height should only need to be measured and set once per part. A Part should represent an actual physical SKU. If you have a 47uF cap that is 6mm high and one that is 4mm high, those are different parts.
 
 Parts refer to a feeder from which they are picked and a package.  The package is currently only used for fiducials.
-
 
 Boards
 ------
