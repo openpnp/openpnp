@@ -36,6 +36,8 @@ Let's add a Strip Feeder to the machine so that we can test the feeder system.
 7. In the Tape Settings section below, fill in the Tape Width and Part Pitch fields. If you are using chip resistors larger than 0402 you can use the default settings of 8mm tape width and 4mm part pitch.
 8. Click the Auto Setup button and follow the on screen instructions to finish setting up the feeder. There is more information on the [[ReferenceStripFeeder]] page about this process, and it's worth taking a look at it to help you.
 9. When the Auto Setup process finishes the camera should be centered perfectly over the first part in the tape. If it's not, try the Auto Setup process again. Sometimes lighting conditions can cause it to make mistakes.
+10. Jog the nozzle so that it is just touching the first part in the tape.
+11. Fill in the value shown in the Z DRO in the Z fields in the strip feeder setup. This will set the height of the feeder so that OpenPnP knows where to pick parts.
 
 ## Common Settings
 ### Part Selection
@@ -43,7 +45,7 @@ Every feeder has a Part field that you must fill in. By telling OpenPnP which pa
 
 ## Pick a Part
 
-Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle. You can use the Discard button we set up previous to drop the part.
+Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle. You can use the Discard button we set up previously to drop the part.
 
 ***
 
