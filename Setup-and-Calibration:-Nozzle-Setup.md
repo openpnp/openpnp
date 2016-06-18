@@ -47,7 +47,6 @@ Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other
 7. For each additional Nozzle you need to setup, follow this same process.
 
 ## Selecting a Nozzle
-
 If you have multiple nozzles on your machine, you can select the one you want to work with in OpenPnP by selecting it from the tools dropdown in the Machine Controls panel. The nozzle that is selected here is the one that will be used whenever you tell the machine to move a nozzle.
 
 ![screen shot 2016-06-18 at 11 26 13 am](https://cloud.githubusercontent.com/assets/1182323/16172925/a0c8edf8-3547-11e6-95cf-13d5cfba0c11.png)
@@ -68,7 +67,16 @@ TODO: This is an advanced topic and further documentation is needed.
 ![screen shot 2016-06-18 at 11 31 15 am](https://cloud.githubusercontent.com/assets/1182323/16172950/319d6534-3548-11e6-8a3a-ad975e4a6ec4.png)
 
 ## Nozzle Jogging
+Now that your nozzle is configured, let's move it around and make sure it's working.
 
+![screen shot 2016-06-18 at 11 33 19 am](https://cloud.githubusercontent.com/assets/1182323/16172974/8bf8e774-3548-11e6-8f5f-9608bc603bb0.png)
+
+1. Make sure you've selected the nozzle as discussed in Selecting a Nozzle above.
+2. Move the camera to an identifiable spot on the machine bed.
+3. Click the `Position Tool` button in the Machine Controls panel.
+4. The nozzle should move to where the camera was previously looking. You can click the `Position Camera` button below to move the Camera back.
+
+The Position Tool and Position Camera buttons can be used to switch back and forth between what the camera is pointing at and what the nozzle is pointing at.
 
 ***
 
