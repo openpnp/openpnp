@@ -7,4 +7,4 @@
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Bottom Vision|Setup and Calibration: Bottom Vision]] | [[Top of Page|Setup and Calibration]] or [[Table of Contents|Setup and Calibration]] | [[User Manual]] |
+| [[Bottom Vision|Setup and Calibration: Bottom Vision]] | [[Table of Contents|Setup and Calibration]] | [[User Manual]] |
