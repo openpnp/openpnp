@@ -42,6 +42,8 @@ Coordinate System
 
 OpenPnP uses the right handed coordinate system which is also used in physics, math, 3D graphics and many CAD packages.
 
+For a more formal definition of this coordinate system see the [Wikipedia Page](http://en.wikipedia.org/wiki/Right-hand_rule).
+
 In this coordinate system we are standing above the machine, looking down at it.
 
 The X axis moves right and left. Right is positive.
@@ -50,10 +52,6 @@ The Z axis moves up and down. Up is positive.
 The C, or rotation, axis rotates clockwise and counter-clockwise. Counter-clockwise is positive.
 
 ![screen shot 2016-06-18 at 12 56 07 pm](https://cloud.githubusercontent.com/assets/1182323/16173361/0e54935c-3554-11e6-9cf6-caf13e6d4a65.png)
-
-More information can be found at:
-http://www.evl.uic.edu/ralph/508S98/coordinates.html
-http://en.wikipedia.org/wiki/Right-hand_rule
 
 The units for the X, Y and Z axises are set in the GUI, the default is mm.  The units for the C axises is degrees, OpenPnP measures rotation in degrees and treats them like mm from the perspective of the controller.
 
