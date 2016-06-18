@@ -25,6 +25,6 @@ See [Where are configuration and log files located?](https://github.com/openpnp/
 
 ***
 
-| Previous Step                 | Return To                 | Next Step                                   |
-| ------------------------- | ------------------------- | --------------------------------------- |
-| [[Setup and Calibration]] | [[Setup and Calibration]] | [[Setup and Calibration: Driver Setup]] |
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| [[Setup and Calibration]] | [[Top|Setup and Calibration: Before You Start]] or [[Table of Contents|Setup and Calibration]] | [[Setup and Calibration: Driver Setup]] |
