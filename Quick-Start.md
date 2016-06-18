@@ -40,7 +40,7 @@ Now that you've seen the user interface a bit, it's time to try running a pick a
 4. In the `samples` directory, find the `pnp-test` directory and open the `pnp-test.job.xml` file inside it.
 5. You'll see the job has loaded and there are now boards and placements listed. You can browse the boards and placements to see what the job will be doing.
 6. If you haven't already, press the green power button to start the machine.
-6. Press the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/control-start.svg) button to start the job and the camera will start moving.
+6. Press the green play button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/control-start.svg) to start the job and the camera will start moving.
 
 OpenPnP will now simulate a full pick and place job. It will use computer vision to align the boards using fiducials, find parts in virtual feeders, and then place the parts on virtual boards. You can follow along by watching the camera view.
 
