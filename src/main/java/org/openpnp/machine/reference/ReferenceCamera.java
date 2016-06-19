@@ -222,11 +222,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     private Mat crop(Mat mat) {
         if (cropWidth != 0 || cropHeight != 0) {
+        	int cw = (cropWidth != 0) ? cropWidth : (int)mat.size().width;
+        	int ch = (cropHeight != 0) ? cropHeight : (int)mat.size().height;
             Rect roi = new Rect(
-                    (int) ((mat.size().width / 2) - (cropWidth / 2)),
-                    (int) ((mat.size().height / 2) - (cropHeight / 2)),
-                    cropWidth,
-                    cropHeight);
+                    (int) ((mat.size().width / 2) - (cw / 2)),
+                    (int) ((mat.size().height / 2) - (ch / 2)),
+                    cw,
+                    ch);
             Mat tmp = new Mat(mat, roi);
             tmp.copyTo(mat);
             tmp.release();
