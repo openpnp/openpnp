@@ -20,13 +20,16 @@
 package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.Color;
+import java.util.List;
 
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.onvif.ver10.schema.VideoResolution;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
@@ -110,42 +113,34 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         panelGeneral.add(fpsTextField, "4, 8");
         fpsTextField.setColumns(10);
 
-        lblPreferredWidth = new JLabel("Preferred Width");
-        panelGeneral.add(lblPreferredWidth, "2, 10, right, default");
+        lblSupportedResolutions = new JLabel("Resolution");
+        panelGeneral.add(lblSupportedResolutions, "2, 10, right, default");
 
-        textFieldPreferredWidth = new JTextField();
-        panelGeneral.add(textFieldPreferredWidth, "4, 10, fill, default");
-        textFieldPreferredWidth.setColumns(10);
+        cboSupportedResolutions = new JComboBox<String>();
+        List<VideoResolution> supportedResolutions = camera.getSupportedResolutions();
+        for (int i=0; i<supportedResolutions.size(); i++) {
+        	VideoResolution res = supportedResolutions.get(i);
+			String strRes = res.getWidth() + "x" + res.getHeight();
 
-        lbluseFor_w = new JLabel("(Use 0 for highest resolution)");
-        panelGeneral.add(lbluseFor_w, "6, 10");
+        	cboSupportedResolutions.addItem(strRes);
+        }
+        panelGeneral.add(cboSupportedResolutions, "4, 10, fill, default");
 
-        lblPreferredHeight = new JLabel("Preferred Height");
-        panelGeneral.add(lblPreferredHeight, "2, 12, right, default");
-
-        textFieldPreferredHeight = new JTextField();
-        panelGeneral.add(textFieldPreferredHeight, "4, 12, fill, default");
-        textFieldPreferredHeight.setColumns(10);
-
-        lbluseFor_h = new JLabel("(Use 0 for highest resolution)");
-        panelGeneral.add(lbluseFor_h, "6, 12");
+        lbluseFor_res = new JLabel("(only supported resolutions shown)");
+        panelGeneral.add(lbluseFor_res, "6, 10");
     }
 
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
         super.createBindings();
-        addWrappedBinding(camera, "preferredWidth", textFieldPreferredWidth, "text", intConverter);
-        addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
-                intConverter);
+        addWrappedBinding(camera, "preferredResolution", cboSupportedResolutions, "selectedItem");
         addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         addWrappedBinding(camera, "username", usernameTextField, "text");
         addWrappedBinding(camera, "password", passwordTextField, "text");
         // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "hostIP", ipTextField, "text");
 
-        ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);
-        ComponentDecorators.decorateWithAutoSelect(textFieldPreferredHeight);
         ComponentDecorators.decorateWithAutoSelect(fpsTextField);
         ComponentDecorators.decorateWithAutoSelect(ipTextField);
         ComponentDecorators.decorateWithAutoSelect(usernameTextField);
@@ -160,15 +155,12 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         }
     }
 
-    private JLabel lblPreferredWidth;
-    private JLabel lblPreferredHeight;
-    private JTextField textFieldPreferredWidth;
-    private JTextField textFieldPreferredHeight;
+    private JLabel lblSupportedResolutions;
+    private JComboBox<String> cboSupportedResolutions;
     private JLabel lbluseFor_ip;
     private JLabel lbluseFor_un;
     private JLabel lbluseFor_pw;
-    private JLabel lbluseFor_w;
-    private JLabel lbluseFor_h;
+    private JLabel lbluseFor_res;
     private JLabel lblIP;
     private JTextField ipTextField;
     private JLabel lblUsername;

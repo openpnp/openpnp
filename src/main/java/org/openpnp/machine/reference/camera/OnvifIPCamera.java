@@ -41,11 +41,13 @@ import java.util.List;
 
 import javax.xml.soap.SOAPException;
 
+import org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
 import org.onvif.ver10.schema.JpegOptions;
 import org.onvif.ver10.schema.Profile;
 import org.onvif.ver10.schema.VideoEncoderConfiguration;
 import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
 import org.onvif.ver10.schema.VideoEncoding;
+import org.onvif.ver10.schema.VideoRateControl;
 import org.onvif.ver10.schema.VideoResolution;
 
 import de.onvif.soap.OnvifDevice;
@@ -58,9 +60,7 @@ import de.onvif.soap.devices.MediaDevices;
 public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
     @Attribute(required = false)
-    private int preferredWidth;
-    @Attribute(required = false)
-    private int preferredHeight;
+    private String preferredResolution;
     @Attribute(required = false)
     private int fps = 24;
 
@@ -74,6 +74,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     @Attribute(required = false)
     private String password;
     
+    private OnvifDevice nvt;
     private URL snapshotURI;
 
 	public OnvifIPCamera() {}
@@ -124,6 +125,20 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         }
     }
     
+    private Profile findJPEGProfile(InitialDevices devices) throws Exception {
+		List<Profile> profiles = devices.getProfiles();
+		
+		for (Profile profile : profiles) {
+			VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
+			VideoEncoding videoEncoding = videoEncoderConfiguration.getEncoding();
+			if (videoEncoding == VideoEncoding.JPEG) {
+				return profile;
+			}
+		}
+		
+		throw new Exception("No JPEG profiles available for camera at " + hostIP);
+    }
+    
     private void initCamera() {
         if (thread != null) {
             thread.interrupt();
@@ -139,11 +154,11 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             setDirty(false);
             width = null;
             height = null;
+			nvt = null;
             snapshotURI = null;
             
             if ((hostIP != null) && (!hostIP.isEmpty())) {
 				try {
-					OnvifDevice nvt;
 					if ((username != null) && (!username.isEmpty())) {
 					   nvt = new OnvifDevice(hostIP, username, password);
 					} else {
@@ -151,10 +166,17 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 					}
 					
 					InitialDevices devices = nvt.getDevices();
-					List<Profile> profiles = devices.getProfiles();
-					Profile profile = profiles.get(0);
-					String profileToken = profile.getToken();
+					GetDeviceInformationResponse deviceInformation = devices.getDeviceInformation();
+					System.out.println("Camera " + hostIP);
+					System.out.println("    Manufacturer    : " + deviceInformation.getManufacturer());
+					System.out.println("    Model           : " + deviceInformation.getModel());
+					System.out.println("    Serial Number   : " + deviceInformation.getSerialNumber());
+					System.out.println("    Hardware ID     : " + deviceInformation.getHardwareId());
+					System.out.println("    Firmware Version: " + deviceInformation.getFirmwareVersion());
+					
 					MediaDevices media = nvt.getMedia();
+					Profile profile = findJPEGProfile(devices);
+					String profileToken = profile.getToken();
 
 					VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media.getVideoEncoderConfigurationOptions(profileToken);
 					JpegOptions jpegOptions = videoEncoderConfigurationOptions.getJPEG();
@@ -162,7 +184,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 					int maxRes = -1;
 					int selectedResolutionIndex = -1;
 					// Step 1: Select the highest resolution available
-					System.out.println("Supported JPEG resolutions:");
 					for (int i=0; i<jpegResolutions.size(); i++) {
 						VideoResolution jpegResolution = jpegResolutions.get(i);
 						
@@ -171,52 +192,51 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 							maxRes = res;
 							selectedResolutionIndex = i;
 						}
-						
-						System.out.println("    " + jpegResolution.getWidth() + "x" + jpegResolution.getHeight());
 					}
-					// Step 2: If there's a preferredWidth or preferredHeight specified, select that (if it exists) instead
-					if ((preferredWidth != 0) || (preferredHeight != 0)) {
+					// Step 2: If there's a preferredResolution specified, select that (if it exists) instead
+					if ((preferredResolution != null) && (!preferredResolution.isEmpty())) {
 						for (int i=0; i<jpegResolutions.size(); i++) {
 							VideoResolution jpegResolution = jpegResolutions.get(i);
+							String strRes = jpegResolution.getWidth() + "x" + jpegResolution.getHeight();
 							
-							if (preferredWidth != 0) {
-								if (preferredHeight != 0) {
-									if ((jpegResolution.getWidth() == preferredWidth) && (jpegResolution.getHeight() == preferredHeight)) {
-										selectedResolutionIndex = i;
-										break;
-									}
-								} else if (jpegResolution.getWidth() == preferredWidth) {
-									selectedResolutionIndex = i;
-									break;
-								}
-							} else {
-								if (jpegResolution.getHeight() == preferredHeight) {
-									selectedResolutionIndex = i;
-									break;
-								}
+							if (strRes.equalsIgnoreCase(preferredResolution)) {
+								selectedResolutionIndex = i;
+								break;
 							}
 						}
 					}
 					
 					if (selectedResolutionIndex >= 0) {
-						VideoEncoderConfiguration videoEncoderConfiguration = MediaDevices.getVideoEncoderConfiguration(profile);
+						VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
 						
-						videoEncoderConfiguration.setEncoding(VideoEncoding.JPEG);
-	
 						VideoResolution jpegResolution = jpegResolutions.get(selectedResolutionIndex);
 						videoEncoderConfiguration.setResolution(jpegResolution);
 						System.out.println(" -> Selected " + jpegResolution.getWidth() + "x" + jpegResolution.getHeight());
 						
+						videoEncoderConfiguration.setQuality(videoEncoderConfigurationOptions.getQualityRange().getMax());
+						VideoRateControl videoRateControl = videoEncoderConfiguration.getRateControl();
+						videoRateControl.setFrameRateLimit(jpegOptions.getFrameRateRange().getMax());
+						videoRateControl.setEncodingInterval(jpegOptions.getEncodingIntervalRange().getMin());
+						videoRateControl.setBitrateLimit(videoEncoderConfigurationOptions.getExtension().getJPEG().getBitrateRange().getMax());
+						videoEncoderConfiguration.setRateControl(videoRateControl);
+						
+						profile.setVideoEncoderConfiguration(videoEncoderConfiguration);
 						media.setVideoEncoderConfiguration(videoEncoderConfiguration);
 					}
 	
 					snapshotURI = new URL(media.getSnapshotUri(profileToken));
 					System.out.println("Snapshot URI: " + snapshotURI.toString());
 				} catch (ConnectException e) {
-					System.err.println("Could not connect to IP camera at " + hostIP + ".");
+					System.err.println("Could not connect to IP camera at " + hostIP + ": " + e.toString());
+					e.printStackTrace();
 				} catch (SOAPException e) {
+					System.err.println("Error communicating with IP camera at " + hostIP + ": " + e.toString());
 					e.printStackTrace();
 				} catch (MalformedURLException e) {
+					System.err.println("Malformed URL for IP camera at " + hostIP + ": " + e.toString());
+					e.printStackTrace();
+				} catch (Exception e) {
+					System.err.println("Unknown error initializing IP camera at " + hostIP + ": " + e.toString());
 					e.printStackTrace();
 				}
             }
@@ -241,6 +261,40 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
             }
         }
+    }
+    
+    public List<VideoResolution> getSupportedResolutions() {
+        if (thread == null) {
+            initCamera();
+        }
+        if (nvt == null) {
+        	return null;
+        }
+
+        try {
+			InitialDevices devices = nvt.getDevices();
+			MediaDevices media = nvt.getMedia();
+			Profile profile = findJPEGProfile(devices);
+			String profileToken = profile.getToken();
+	
+			VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media.getVideoEncoderConfigurationOptions(profileToken);
+			JpegOptions jpegOptions = videoEncoderConfigurationOptions.getJPEG();
+			List<VideoResolution> jpegResolutions = jpegOptions.getResolutionsAvailable();
+			
+			return jpegResolutions;
+		} catch (ConnectException e) {
+			System.err.println("Could not connect to IP camera at " + hostIP + ": " + e.toString());
+			e.printStackTrace();
+			return null;
+		} catch (SOAPException e) {
+			System.err.println("Error communicating with IP camera at " + hostIP + ": " + e.toString());
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
+			System.err.println("Unknown error communicating with IP camera at " + hostIP + ": " + e.toString());
+			e.printStackTrace();
+			return null;
+		}
     }
 
     public String getHostIP() {
@@ -272,21 +326,12 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         setDirty(true);
     }
 
-    public int getPreferredWidth() {
-        return preferredWidth;
+    public String getPreferredResolution() {
+        return preferredResolution;
     }
 
-    public void setPreferredWidth(int preferredWidth) {
-        this.preferredWidth = preferredWidth;
-        setDirty(true);
-    }
-
-    public int getPreferredHeight() {
-        return preferredHeight;
-    }
-
-    public void setPreferredHeight(int preferredHeight) {
-        this.preferredHeight = preferredHeight;
+    public void setPreferredResolution(String preferredResolution) {
+        this.preferredResolution = preferredResolution;
         setDirty(true);
     }
     
