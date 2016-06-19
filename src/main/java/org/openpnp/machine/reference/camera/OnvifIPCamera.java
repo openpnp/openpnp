@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.camera;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -62,17 +64,22 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     @Attribute(required = false)
     private String preferredResolution;
     @Attribute(required = false)
-    private int fps = 24;
+    private int resizeWidth;
+    @Attribute(required = false)
+    private int resizeHeight;
 
-    private Thread thread;
-    private boolean dirty = false;
-    
+    @Attribute(required = false)
+    private int fps = 10;
+
     @Attribute(required = false)
     private String hostIP;
     @Attribute(required = false)
     private String username;
     @Attribute(required = false)
     private String password;
+    
+    private Thread thread;
+    private boolean dirty = false;
     
     private OnvifDevice nvt;
     private URL snapshotURI;
@@ -89,12 +96,36 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     			return null;
     		}
             BufferedImage img = ImageIO.read(snapshotURI);
-            return transformImage(img);
+            return transformImage(resizeImage(img));
         }
         catch (Exception e) {
         	e.printStackTrace();
             return null;
         }
+	}
+	
+	private BufferedImage resizeImage(BufferedImage src) {
+		int imgW = src.getWidth();
+		int imgH = src.getHeight();
+		if (resizeWidth != 0) {
+			imgW = resizeWidth;
+		}
+		if (resizeHeight != 0) {
+			imgH = resizeHeight;
+		}
+		
+		if ((imgW != src.getWidth()) || (imgH != src.getHeight())) {
+			Image tmp = src.getScaledInstance(imgW, imgH, Image.SCALE_SMOOTH);
+			BufferedImage dst = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_RGB);
+
+		    Graphics2D g2d = dst.createGraphics();
+		    g2d.drawImage(tmp, 0, 0, null);
+		    g2d.dispose();
+
+		    return dst;
+	    }
+		
+		return src;
 	}
 
     @Override
@@ -333,6 +364,22 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public void setPreferredResolution(String preferredResolution) {
         this.preferredResolution = preferredResolution;
         setDirty(true);
+    }
+    
+    public int getResizeWidth() {
+        return resizeWidth;
+    }
+
+    public void setResizeWidth(int resizeWidth) {
+        this.resizeWidth = resizeWidth;
+    }
+    
+    public int getResizeHeight() {
+        return resizeHeight;
+    }
+
+    public void setResizeHeight(int resizeHeight) {
+        this.resizeHeight = resizeHeight;
     }
     
     public int getFps() {

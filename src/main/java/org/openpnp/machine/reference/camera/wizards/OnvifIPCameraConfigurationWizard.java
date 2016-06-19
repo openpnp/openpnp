@@ -74,6 +74,8 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblIP = new JLabel("Network IP");
@@ -113,6 +115,9 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         panelGeneral.add(fpsTextField, "4, 8");
         fpsTextField.setColumns(10);
 
+        lbluseFor_fps = new JLabel("(refresh rate)");
+        panelGeneral.add(lbluseFor_fps, "6, 8");
+
         lblSupportedResolutions = new JLabel("Resolution");
         panelGeneral.add(lblSupportedResolutions, "2, 10, right, default");
 
@@ -128,6 +133,26 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
         lbluseFor_res = new JLabel("(only supported resolutions shown)");
         panelGeneral.add(lbluseFor_res, "6, 10");
+
+        lblResizeWidth = new JLabel("Target Width");
+        panelGeneral.add(lblResizeWidth, "2, 12, right, default");
+        
+        resizeWidthTextField = new JTextField();
+        panelGeneral.add(resizeWidthTextField, "4, 12");
+        resizeWidthTextField.setColumns(10);
+
+        lbluseFor_rw = new JLabel("(Use 0 for selected resolution, or specify)");
+        panelGeneral.add(lbluseFor_rw, "6, 12");
+
+        lblResizeHeight= new JLabel("Target Height");
+        panelGeneral.add(lblResizeHeight, "2, 14, right, default");
+        
+        resizeHeightTextField = new JTextField();
+        panelGeneral.add(resizeHeightTextField, "4, 14");
+        resizeHeightTextField.setColumns(10);
+
+        lbluseFor_rh = new JLabel("(Use 0 for selected resolution, or specify)");
+        panelGeneral.add(lbluseFor_rh, "6, 14");
     }
 
     @Override
@@ -135,6 +160,8 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         IntegerConverter intConverter = new IntegerConverter();
         super.createBindings();
         addWrappedBinding(camera, "preferredResolution", cboSupportedResolutions, "selectedItem");
+        addWrappedBinding(camera, "resizeWidth", resizeWidthTextField, "text", intConverter);
+        addWrappedBinding(camera, "resizeHeight", resizeHeightTextField, "text", intConverter);
         addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         addWrappedBinding(camera, "username", usernameTextField, "text");
         addWrappedBinding(camera, "password", passwordTextField, "text");
@@ -155,12 +182,6 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         }
     }
 
-    private JLabel lblSupportedResolutions;
-    private JComboBox<String> cboSupportedResolutions;
-    private JLabel lbluseFor_ip;
-    private JLabel lbluseFor_un;
-    private JLabel lbluseFor_pw;
-    private JLabel lbluseFor_res;
     private JLabel lblIP;
     private JTextField ipTextField;
     private JLabel lblUsername;
@@ -169,4 +190,17 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
     private JTextField passwordTextField;
     private JLabel lblFps;
     private JTextField fpsTextField;
+    private JLabel lblSupportedResolutions;
+    private JComboBox<String> cboSupportedResolutions;
+    private JLabel lblResizeWidth;
+    private JTextField resizeWidthTextField;
+    private JLabel lblResizeHeight;
+    private JTextField resizeHeightTextField;
+    private JLabel lbluseFor_ip;
+    private JLabel lbluseFor_un;
+    private JLabel lbluseFor_pw;
+    private JLabel lbluseFor_fps;
+    private JLabel lbluseFor_res;
+    private JLabel lbluseFor_rw;
+    private JLabel lbluseFor_rh;
 }
