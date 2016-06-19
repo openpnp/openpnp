@@ -122,13 +122,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         panelGeneral.add(lblSupportedResolutions, "2, 10, right, default");
 
         cboSupportedResolutions = new JComboBox<String>();
-        List<VideoResolution> supportedResolutions = camera.getSupportedResolutions();
-        for (int i = 0; i < supportedResolutions.size(); i++) {
-            VideoResolution res = supportedResolutions.get(i);
-            String strRes = res.getWidth() + "x" + res.getHeight();
-
-            cboSupportedResolutions.addItem(strRes);
-        }
+        refreshResolutionList();
         panelGeneral.add(cboSupportedResolutions, "4, 10, fill, default");
 
         lbluseFor_res = new JLabel("(only supported resolutions shown)");
@@ -154,6 +148,27 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         lbluseFor_rh = new JLabel("(Use 0 for no resizing)");
         panelGeneral.add(lbluseFor_rh, "6, 14");
     }
+    
+    private void refreshResolutionList() {
+        cboSupportedResolutions.removeAllItems();
+
+        // Empty string will cause the camera to use the default/highest
+        // resolution available
+        cboSupportedResolutions.addItem("");
+
+        List<VideoResolution> supportedResolutions = camera.getSupportedResolutions();
+        if (supportedResolutions != null) {
+            for (VideoResolution res : supportedResolutions) {
+                String strRes = res.getWidth() + "x" + res.getHeight();
+    
+                cboSupportedResolutions.addItem(strRes);
+            }
+        }
+
+        if (camera.getPreferredResolution() != null) {
+            cboSupportedResolutions.setSelectedItem(camera.getPreferredResolution());
+        }
+    }
 
     @Override
     public void createBindings() {
@@ -175,11 +190,19 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
     }
 
     @Override
+    protected void loadFromModel() {
+        refreshResolutionList();
+        super.loadFromModel();
+    }
+
+    @Override
     protected void saveToModel() {
         super.saveToModel();
         if (camera.isDirty()) {
             camera.setHostIP(camera.getHostIP());
         }
+        
+        refreshResolutionList();
     }
 
     private JLabel lblIP;
