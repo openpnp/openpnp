@@ -59,7 +59,7 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -78,13 +78,13 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
             comboBoxDeviceIndex.addItem(new Integer(i));
         }
         panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
-        
+
         lbluseFor_di = new JLabel("(physical camera to use)");
         panelGeneral.add(lbluseFor_di, "6, 2");
-        
+
         lblFps = new JLabel("FPS");
         panelGeneral.add(lblFps, "2, 4, right, default");
-        
+
         fpsTextField = new JTextField();
         panelGeneral.add(fpsTextField, "4, 4");
         fpsTextField.setColumns(10);

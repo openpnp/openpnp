@@ -110,7 +110,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             }
         }
     }
-    
+
     private void initCamera() {
         if (thread != null) {
             thread.interrupt();
@@ -126,7 +126,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             setDirty(false);
             width = null;
             height = null;
-            
+
             fg.open(deviceIndex);
             if (preferredWidth != 0) {
                 fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
@@ -163,13 +163,13 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public int getDeviceIndex() {
         return deviceIndex;
     }
-    
+
     public synchronized void setDeviceIndex(int deviceIndex) {
         this.deviceIndex = deviceIndex;
-        
+
         initCamera();
     }
-    
+
     public int getPreferredWidth() {
         return preferredWidth;
     }
@@ -187,7 +187,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         this.preferredHeight = preferredHeight;
         setDirty(true);
     }
-    
+
     public int getFps() {
         return fps;
     }

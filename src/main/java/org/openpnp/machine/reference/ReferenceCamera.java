@@ -173,7 +173,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setOffsetY(int offsetY) {
         this.offsetY = offsetY;
     }
-    
+
     public int getCropWidth() {
         return cropWidth;
     }
@@ -192,7 +192,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     protected BufferedImage transformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
-        
+
         mat = crop(mat);
 
         mat = calibrate(mat);
@@ -214,16 +214,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             }
             Core.flip(mat, mat, flipCode);
         }
-        
+
         image = OpenCvUtils.toBufferedImage(mat);
         mat.release();
         return image;
     }
-    
+
     private Mat crop(Mat mat) {
         if (cropWidth != 0 || cropHeight != 0) {
-        	int cw = (cropWidth != 0) ? cropWidth : (int)mat.size().width;
-        	int ch = (cropHeight != 0) ? cropHeight : (int)mat.size().height;
+            int cw = (cropWidth != 0) ? cropWidth : (int) mat.size().width;
+            int ch = (cropHeight != 0) ? cropHeight : (int) mat.size().height;
             Rect roi = new Rect(
                     (int) ((mat.size().width / 2) - (cw / 2)),
                     (int) ((mat.size().height / 2) - (ch / 2)),

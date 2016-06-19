@@ -46,8 +46,8 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
     private JPanel panelGeneral;
 
-	public OnvifIPCameraConfigurationWizard(OnvifIPCamera camera) {
-		super(camera);
+    public OnvifIPCameraConfigurationWizard(OnvifIPCamera camera) {
+        super(camera);
 
         this.camera = camera;
 
@@ -61,7 +61,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -78,9 +78,9 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblIP = new JLabel("Network IP");
+        lblIP = new JLabel("Camera IP");
         panelGeneral.add(lblIP, "2, 2, right, default");
-        
+
         ipTextField = new JTextField();
         panelGeneral.add(ipTextField, "4, 2");
         ipTextField.setColumns(16);
@@ -90,7 +90,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
         lblUsername = new JLabel("Username");
         panelGeneral.add(lblUsername, "2, 4, right, default");
-        
+
         usernameTextField = new JTextField();
         panelGeneral.add(usernameTextField, "4, 4");
         usernameTextField.setColumns(16);
@@ -100,7 +100,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
         lblPassword = new JLabel("Password");
         panelGeneral.add(lblPassword, "2, 6, right, default");
-        
+
         passwordTextField = new JTextField();
         panelGeneral.add(passwordTextField, "4, 6");
         passwordTextField.setColumns(16);
@@ -110,7 +110,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
         lblFps = new JLabel("FPS");
         panelGeneral.add(lblFps, "2, 8, right, default");
-        
+
         fpsTextField = new JTextField();
         panelGeneral.add(fpsTextField, "4, 8");
         fpsTextField.setColumns(10);
@@ -123,11 +123,11 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
         cboSupportedResolutions = new JComboBox<String>();
         List<VideoResolution> supportedResolutions = camera.getSupportedResolutions();
-        for (int i=0; i<supportedResolutions.size(); i++) {
-        	VideoResolution res = supportedResolutions.get(i);
-			String strRes = res.getWidth() + "x" + res.getHeight();
+        for (int i = 0; i < supportedResolutions.size(); i++) {
+            VideoResolution res = supportedResolutions.get(i);
+            String strRes = res.getWidth() + "x" + res.getHeight();
 
-        	cboSupportedResolutions.addItem(strRes);
+            cboSupportedResolutions.addItem(strRes);
         }
         panelGeneral.add(cboSupportedResolutions, "4, 10, fill, default");
 
@@ -136,7 +136,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
 
         lblResizeWidth = new JLabel("Target Width");
         panelGeneral.add(lblResizeWidth, "2, 12, right, default");
-        
+
         resizeWidthTextField = new JTextField();
         panelGeneral.add(resizeWidthTextField, "4, 12");
         resizeWidthTextField.setColumns(10);
@@ -144,9 +144,9 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         lbluseFor_rw = new JLabel("(Use 0 for selected resolution, or specify)");
         panelGeneral.add(lbluseFor_rw, "6, 12");
 
-        lblResizeHeight= new JLabel("Target Height");
+        lblResizeHeight = new JLabel("Target Height");
         panelGeneral.add(lblResizeHeight, "2, 14, right, default");
-        
+
         resizeHeightTextField = new JTextField();
         panelGeneral.add(resizeHeightTextField, "4, 14");
         resizeHeightTextField.setColumns(10);
