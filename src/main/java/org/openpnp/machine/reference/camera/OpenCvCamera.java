@@ -65,7 +65,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     @Override
     public synchronized BufferedImage capture() {
         if (thread == null) {
-            setDeviceIndex(deviceIndex);
+            initCamera();
         }
         Mat mat = new Mat();
         try {
@@ -86,7 +86,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     @Override
     public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
         if (thread == null) {
-            setDeviceIndex(deviceIndex);
+            initCamera();
         }
         super.startContinuousCapture(listener, maximumFps);
     }
@@ -111,12 +111,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         }
     }
 
-    public int getDeviceIndex() {
-        return deviceIndex;
-    }
-
-    public synchronized void setDeviceIndex(int deviceIndex) {
-        this.deviceIndex = deviceIndex;
+    private void initCamera() {
         if (thread != null) {
             thread.interrupt();
             try {
@@ -131,6 +126,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             setDirty(false);
             width = null;
             height = null;
+
             fg.open(deviceIndex);
             if (preferredWidth != 0) {
                 fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
@@ -145,6 +141,33 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         }
         thread = new Thread(this);
         thread.start();
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if (thread != null) {
+            thread.interrupt();
+            try {
+                thread.join();
+            }
+            catch (Exception e) {
+
+            }
+        }
+        if (fg.isOpened()) {
+            fg.release();
+        }
+    }
+
+    public int getDeviceIndex() {
+        return deviceIndex;
+    }
+
+    public synchronized void setDeviceIndex(int deviceIndex) {
+        this.deviceIndex = deviceIndex;
+
+        initCamera();
     }
 
     public int getPreferredWidth() {
@@ -164,7 +187,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         this.preferredHeight = preferredHeight;
         setDirty(true);
     }
-    
+
     public int getFps() {
         return fps;
     }
@@ -208,22 +231,5 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public void close() throws IOException {
-        super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join();
-            }
-            catch (Exception e) {
-
-            }
-        }
-        if (fg.isOpened()) {
-            fg.release();
-        }
     }
 }
