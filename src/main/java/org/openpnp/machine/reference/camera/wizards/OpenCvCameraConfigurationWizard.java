@@ -89,6 +89,9 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         panelGeneral.add(fpsTextField, "4, 4");
         fpsTextField.setColumns(10);
 
+        lbluseFor_fps = new JLabel("(refresh rate)");
+        panelGeneral.add(lbluseFor_fps, "6, 4");
+
         lblPreferredWidth = new JLabel("Preferred Width");
         panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
 
@@ -144,4 +147,5 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     private JLabel lbluseFor_h;
     private JLabel lblFps;
     private JTextField fpsTextField;
+    private JLabel lbluseFor_fps;
 }

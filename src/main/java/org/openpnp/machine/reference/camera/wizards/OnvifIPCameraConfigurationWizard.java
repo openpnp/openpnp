@@ -141,7 +141,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         panelGeneral.add(resizeWidthTextField, "4, 12");
         resizeWidthTextField.setColumns(10);
 
-        lbluseFor_rw = new JLabel("(Use 0 for selected resolution, or specify)");
+        lbluseFor_rw = new JLabel("(Use 0 for no resizing)");
         panelGeneral.add(lbluseFor_rw, "6, 12");
 
         lblResizeHeight = new JLabel("Target Height");
@@ -151,7 +151,7 @@ public class OnvifIPCameraConfigurationWizard extends ReferenceCameraConfigurati
         panelGeneral.add(resizeHeightTextField, "4, 14");
         resizeHeightTextField.setColumns(10);
 
-        lbluseFor_rh = new JLabel("(Use 0 for selected resolution, or specify)");
+        lbluseFor_rh = new JLabel("(Use 0 for no resizing)");
         panelGeneral.add(lbluseFor_rh, "6, 14");
     }
 
