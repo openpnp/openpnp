@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-06-19
+
+* ONVIF Camera Support
+
+	Thanks to @richard-sim we now have support for IP cameras using the ONVIF standard. This
+	standard is used by many IP cameras, especially in the realm of security cameras. This brings
+	cheap IP camera support to OpenPnP and opens up the options for cameras much wider than before.
+
 # 2016-06-16
 
 * Log Tab
