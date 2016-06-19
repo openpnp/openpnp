@@ -13,7 +13,7 @@ If you are brand new to OpenPnP have a look at the [[Quick Start]] guide to quic
 
 Setup and Calibration
 =====================
-To setup OpenPnP with your own machine, see the [[Setup and Calibration]] guide. If you don't have a machine yet you can still work through this manual using the software in simulator mode. The software starts this way be default.
+To setup OpenPnP with your own machine, see the [[Setup and Calibration]] guide. If you don't have a machine yet you can still work through this manual using the software in simulator mode. The software starts this way by default.
 
 Installation
 ============
