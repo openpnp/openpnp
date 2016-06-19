@@ -53,7 +53,7 @@ The C, or rotation, axis rotates clockwise and counter-clockwise. Counter-clockw
 
 ![screen shot 2016-06-18 at 12 56 07 pm](https://cloud.githubusercontent.com/assets/1182323/16173361/0e54935c-3554-11e6-9cf6-caf13e6d4a65.png)
 
-The units for the X, Y and Z axises are set in the GUI, the default is mm.  The units for the C axises is degrees, OpenPnP measures rotation in degrees and treats them like mm from the perspective of the controller.
+The units for the X, Y and Z axes are set in the GUI, the default is Millimeters.  The units for the C axis is degrees, OpenPnP measures rotation in degrees and treats them like Millimeters from the perspective of the controller.
 
 The User Interface
 ==================
