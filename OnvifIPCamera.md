@@ -1,5 +1,12 @@
 # OnvifIPCamera
 
+Supports IP (network) cameras that support ONVIF.
+
+- Pro: IP cameras can have fixed IP addresses or host names, which makes them very easy to uniquely identify.
+- Con: Generally higher latency and lower framerates than USB cameras.
+
+## Configuration
+
 Under the "Camera Specific" tab, "General" section:
 - "Camera IP" - Set as &lt;IP address&gt;:&lt;port&gt;. e.g. 192.168.1.193:8899
 - "Username" and "Password" - Set to the username and password for your camera. The password is optional.
