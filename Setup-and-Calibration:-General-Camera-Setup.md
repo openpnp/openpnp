@@ -13,6 +13,11 @@
 6. Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
 7. Double click the Name field in the camera table to give your camera a descriptive name. We suggest "Top Camera" and "Bottom Camera", respectively.
 
+## Camera Type Specific Setup
+
+[[OpenCVCamera]] - USB cameras  
+[[OnvifIPCamera]] - IP (network) cameras
+
 ## Set Rotation and Transforms
 
 When you look at the camera image in OpenPnP it should be right side up. Depending on how your camera is mounted, this might not be the case. By setting transformations in the camera configuration you can adjust the image so it appears correct.
@@ -51,9 +56,4 @@ If the lines don't line up, check that you've performed this step correctly. If 
 ## Lens Calibration
 
 Lens calibration can be used to remove lens distortion from your camera. It can also remove the fisheye effect from short lenses. An easy way to tell if you need lens calibration is to hold a piece of graph paper in front of it and see if the lines look curved in the image. If they do, check out [[Camera Lens Calibration]] to learn how to correct it.
-
-## Camera Type Specific Setup
-
-[[OpenCVCamera]] - USB cameras  
-[[OnvifIPCamera]] - IP (network) cameras
 
