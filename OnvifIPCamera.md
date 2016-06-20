@@ -19,7 +19,7 @@ Under the "Camera Specific" tab, "General" section:
 ### HI3516 / HI3518 (and variations)
 
 Used in the majority of budget IP cameras from AliExpress/eBay/etc, or resellers of them.
-- "Resolution" - Does not support configuring the resolution of captured frames.
+- "Resolution" - Does not support configuring the resolution of captured frames; images will always be PAL/NTSC resolution.
 
 ### TI Davinci
 
