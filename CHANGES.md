@@ -3,6 +3,14 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-06-19
 
+* Scripting Support
+
+	http://winterbe.com/posts/2014/04/05/java8-nashorn-tutorial/
+	https://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/toc.html
+	http://www.oracle.com/technetwork/articles/java/jf14-nashorn-2126515.html
+
+# 2016-06-19
+
 * ONVIF Camera Support
 
 	Thanks to @richard-sim we now have support for IP cameras using the ONVIF standard. This
