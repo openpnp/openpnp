@@ -3,10 +3,13 @@
 ## Add a New Camera
 
 1. Add a camera on the "Cameras" tab by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-add.svg).  
-2. Select a camera driver from the provided list, try the "OpenCVCamera" and press the "Accept" button. The newly added camera will show up in the camera list.
+2. Select a camera driver from the provided list, try "OpenCVCamera" (USB) or "OnvifIPCamera" (IP) and press the "Accept" button. The newly added camera will show up in the camera list.
 3. Double click on the name of the new camera to rename it.  
 4. Click on the "Camera Specific" tab (while your newly created camera is still selected in the camera list).
-5. In the "General" section you can pick the "USB Device Index".  Each camera connected to your computer will have a unique device index starting at index 0. 
+5. In the "General" section you can configure settings specific to the type of camera (USB or IP).
+ - OpenCVCamera: Set the "USB Device Index".  Each camera connected to your computer will have a unique device index starting at index 0.
+ - OnvifIPCamera: Set the "Camera IP" as &lt;IP address&gt;:&lt;port&gt;, "Username", and "Password" (optional).
+ - Press the "Apply" button to have your changes applied.
 6. Verify your camera is working, in the "Camera" window select your newly added camera from the drop down list.  If configured correctly you should see a live image from your selected camera.
 7. Double click the Name field in the camera table to give your camera a descriptive name. We suggest "Top Camera" and "Bottom Camera", respectively.
 
