@@ -64,9 +64,10 @@ public class Scripting {
             File examplesDir = new File(getScriptsDirectory(), "Examples");
             examplesDir.mkdirs();
             for (String name : new String[] {"Call_Java.js", "Hello_World.js",
-                    "Print_Scripting_Info.js", "Reset_Strip_Feeders.js"}) {
+                    "Print_Scripting_Info.js", "Reset_Strip_Feeders.js", "Move_Machine.js"}) {
                 try {
-                    FileUtils.copyURLToFile(ClassLoader.getSystemResource("scripts/Examples/" + name),
+                    FileUtils.copyURLToFile(
+                            ClassLoader.getSystemResource("scripts/Examples/" + name),
                             new File(examplesDir, name));
                 }
                 catch (Exception e) {
@@ -118,7 +119,7 @@ public class Scripting {
             e.printStackTrace();
         }
 
-        // And synchronize the menu
+        // Synchronize the menu
         synchronizeMenu(menu, getScriptsDirectory());
     }
 
