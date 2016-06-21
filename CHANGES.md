@@ -31,7 +31,6 @@ a complete change list, only those that may directly interest or affect users.
 	Thanks to @richard-sim we now have support for IP cameras using the ONVIF standard. This
 	standard is used by many IP cameras, especially in the realm of security cameras. This brings
 	cheap IP camera support to OpenPnP and opens up the options for cameras much wider than before.
->>>>>>> develop
 
 # 2016-06-16
 
