@@ -63,6 +63,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Scripting;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -126,6 +127,8 @@ public class MainFrame extends JFrame {
     private ActionListener instructionsProceedActionListener;
 
     private JMenu mnImport;
+
+    private Scripting scripting;
 
     public MainFrame(Configuration configuration) {
         mainFrame = this;
@@ -248,6 +251,12 @@ public class MainFrame extends JFrame {
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.addSeparator();
         mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
+
+        // Scripts
+        /////////////////////////////////////////////////////////////////////
+        JMenu mnScripts = new JMenu("Scripts");
+        menuBar.add(mnScripts);
+        scripting = new Scripting(mnScripts);
 
         // Help
         /////////////////////////////////////////////////////////////////////
