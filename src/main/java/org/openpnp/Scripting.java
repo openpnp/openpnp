@@ -61,10 +61,16 @@ public class Scripting {
         // over.
         if (!getScriptsDirectory().exists()) {
             getScriptsDirectory().mkdirs();
+            // TODO: It would be better if we just copied all the files from the Examples
+            // directory in the jar, but this is relatively difficult to do.
+            // There is some information on how to do it in:
+            // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
             File examplesDir = new File(getScriptsDirectory(), "Examples");
             examplesDir.mkdirs();
-            for (String name : new String[] {"Call_Java.js", "Hello_World.js",
-                    "Print_Scripting_Info.js", "Reset_Strip_Feeders.js", "Move_Machine.js"}) {
+            String[] exampleScripts =
+                    new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
+                            "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js"};
+            for (String name : exampleScripts) {
                 try {
                     FileUtils.copyURLToFile(
                             ClassLoader.getSystemResource("scripts/Examples/" + name),
@@ -217,9 +223,12 @@ public class Scripting {
         engine.put("config", Configuration.get());
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.mainFrame);
+        engine.put("scripting", this);
 
         try (FileReader reader = new FileReader(script)) {
             engine.eval(new FileReader(script));
         }
     }
+    
+    
 }

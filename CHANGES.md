@@ -1,13 +1,16 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2016-06-19
+# 2016-06-20
 
-* Scripting Support
+* Scripting Engine
 
-	http://winterbe.com/posts/2014/04/05/java8-nashorn-tutorial/
-	https://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/toc.html
-	http://www.oracle.com/technetwork/articles/java/jf14-nashorn-2126515.html
+	OpenPnP now has the ability to run user provided scripts that have full access to the
+	OpenPnP API and GUI. This makes it easy to add new utilities and functionality to
+	your installtion of OpenPnP without having to modify the code.
+	
+	For more information, see:
+	https://github.com/openpnp/openpnp/wiki/Scripting
 
 # 2016-06-19
 
