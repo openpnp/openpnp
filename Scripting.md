@@ -11,7 +11,7 @@ Scripts placed in the `.openpnp/scripts` directory will be automatically added t
 
 To run a script simply click it's name from the menu.
 
-The Scripts menu also includes an Refresh Scripts item that will manually update the menu and a Open Scripts Directory item that will open the scripts directory using your computer's file manager.
+The Scripts menu also includes a Refresh Scripts item that will manually update the menu and a Open Scripts Directory item that will open the scripts directory using your computer's file manager.
 
 ## Language Support
 OpenPnP supports scripts written in JavaScript out of the box and it's easy to add support for other languages. In most cases to add a language it's just a matter of finding a JAR file that implements that language and adding it to your Java classpath. See below for specifics on languages.
