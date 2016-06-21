@@ -12,6 +12,26 @@ a complete change list, only those that may directly interest or affect users.
 	configuration by specifying a single Z axis with two nozzles mapped to it, along with an
 	appropriate transform. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#axis-mapping
 	for more information.
+	
+# 2016-06-20
+
+* Scripting Engine
+
+	OpenPnP now has the ability to run user provided scripts that have full access to the
+	OpenPnP API and GUI. This makes it easy to add new utilities and functionality to
+	your installtion of OpenPnP without having to modify the code.
+	
+	For more information, see:
+	https://github.com/openpnp/openpnp/wiki/Scripting
+
+# 2016-06-19
+
+* ONVIF Camera Support
+
+	Thanks to @richard-sim we now have support for IP cameras using the ONVIF standard. This
+	standard is used by many IP cameras, especially in the realm of security cameras. This brings
+	cheap IP camera support to OpenPnP and opens up the options for cameras much wider than before.
+>>>>>>> develop
 
 # 2016-06-16
 

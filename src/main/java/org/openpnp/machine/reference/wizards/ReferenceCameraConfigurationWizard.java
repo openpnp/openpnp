@@ -188,7 +188,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         panelGeneral.add(cropWidthTextField, "4, 12");
         cropWidthTextField.setColumns(10);
         
-        lblNewLabel = new JLabel("(Use 0 for no crop)");
+        lblNewLabel = new JLabel("(Use 0 for no cropping)");
         panelGeneral.add(lblNewLabel, "5, 12");
         
         lblCropHeight = new JLabel("Crop Height");
@@ -198,7 +198,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         panelGeneral.add(cropHeightTextField, "4, 14");
         cropHeightTextField.setColumns(10);
         
-        lblNewLabel_1 = new JLabel("(Use 0 for no crop)");
+        lblNewLabel_1 = new JLabel("(Use 0 for no cropping)");
         panelGeneral.add(lblNewLabel_1, "5, 14");
 
         panelLocation = new JPanel();

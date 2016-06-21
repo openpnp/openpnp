@@ -59,7 +59,7 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -70,7 +70,7 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblDeviceId = new JLabel("Device Index");
+        JLabel lblDeviceId = new JLabel("USB Device Index");
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
 
         comboBoxDeviceIndex = new JComboBox();
@@ -78,13 +78,19 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
             comboBoxDeviceIndex.addItem(new Integer(i));
         }
         panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
-        
+
+        lbluseFor_di = new JLabel("(physical camera to use)");
+        panelGeneral.add(lbluseFor_di, "6, 2");
+
         lblFps = new JLabel("FPS");
         panelGeneral.add(lblFps, "2, 4, right, default");
-        
+
         fpsTextField = new JTextField();
         panelGeneral.add(fpsTextField, "4, 4");
         fpsTextField.setColumns(10);
+
+        lbluseFor_fps = new JLabel("(refresh rate)");
+        panelGeneral.add(lbluseFor_fps, "6, 4");
 
         lblPreferredWidth = new JLabel("Preferred Width");
         panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
@@ -93,8 +99,8 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         panelGeneral.add(textFieldPreferredWidth, "4, 6, fill, default");
         textFieldPreferredWidth.setColumns(10);
 
-        lbluseFor = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor, "6, 6");
+        lbluseFor_w = new JLabel("(Use 0 for native resolution)");
+        panelGeneral.add(lbluseFor_w, "6, 6");
 
         lblPreferredHeight = new JLabel("Preferred Height");
         panelGeneral.add(lblPreferredHeight, "2, 8, right, default");
@@ -103,8 +109,8 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         panelGeneral.add(textFieldPreferredHeight, "4, 8, fill, default");
         textFieldPreferredHeight.setColumns(10);
 
-        lbluseFor_1 = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor_1, "6, 8");
+        lbluseFor_h = new JLabel("(Use 0 for native resolution)");
+        panelGeneral.add(lbluseFor_h, "6, 8");
     }
 
     @Override
@@ -136,8 +142,10 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     private JLabel lblPreferredHeight;
     private JTextField textFieldPreferredWidth;
     private JTextField textFieldPreferredHeight;
-    private JLabel lbluseFor;
-    private JLabel lbluseFor_1;
+    private JLabel lbluseFor_di;
+    private JLabel lbluseFor_w;
+    private JLabel lbluseFor_h;
     private JLabel lblFps;
     private JTextField fpsTextField;
+    private JLabel lbluseFor_fps;
 }
