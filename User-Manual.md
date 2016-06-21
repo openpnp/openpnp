@@ -193,6 +193,10 @@ This is a brief explanation of how to setup and run your first job. For details 
 Advanced Topics
 ===============
 
+Scripting
+---------
+See [[Scripting]] for information about OpenPnP's built in scripting engine, which can be used to add new functionality to OpenPnP without changing the source code.
+
 Configuration Files
 -------------------
 
