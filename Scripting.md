@@ -17,7 +17,7 @@ The Scripts menu also includes a Refresh Scripts item that will manually update 
 OpenPnP supports scripts written in JavaScript out of the box and it's easy to add support for other languages. In most cases to add a language it's just a matter of finding a JAR file that implements that language and adding it to your Java classpath. See below for specifics on languages.
 
 ### JavaScript
-JavaScript is supported out of the box, there is nothing you need to add. The engine is called Nashorn. To see more information about the integration between Java and JavaScript in scripts, see the following links:
+JavaScript support is included with OpenPnP, there is nothing you need to add. The engine is called Nashorn. To see more information about the integration between Java and JavaScript in scripts, see the following links:
 
 http://winterbe.com/posts/2014/04/05/java8-nashorn-tutorial/
 https://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/toc.html
