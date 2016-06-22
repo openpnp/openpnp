@@ -324,6 +324,10 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
    </axis>
 ```
 
+### Axis Transforms
+* NegatingTransform: For machines with dual nozzles controlled by a single Z motor in a seesaw configuration. This works for rank and pinion drives and belt drives. It does not work for cam based drives. See the examples above for usage.
+* CamTransform: Not yet finished, but will allow use of dual nozzles controlled by a single Z motor in a cam configuration.
+
 # Sample Configuration
 ```
 <openpnp-machine>
