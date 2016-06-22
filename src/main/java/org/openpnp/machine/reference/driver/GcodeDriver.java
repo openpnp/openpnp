@@ -2,8 +2,11 @@ package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -15,16 +18,15 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.Identifiable;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Named;
-import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +44,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 0;
-    
+
     @Element(required = false)
-    protected Location homeLocation = new Location(units, 0, 0, 0, 0);
+    protected Location homeLocation = null;
 
     @Element(required = false)
     protected String commandConfirmRegex = null;
@@ -71,7 +73,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
      */
     @Element(required = false)
     protected String moveToCommand = null;
-    
+
     @Element(required = false)
     protected String moveToCompleteRegex = null;
 
@@ -90,11 +92,31 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @ElementList(required = false)
     protected List<ReferenceDriver> subDrivers = new ArrayList<>();
 
-    protected double x, y, z, c;
+    @ElementList(required = false)
+    protected List<Axis> axes = new ArrayList<>();
+
     private Thread readerThread;
     private boolean disconnectRequested;
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+
+    @Commit
+    public void commit() {
+        if (axes.isEmpty()) {
+            double x = 0, y = 0, z = 0, rotation = 0;
+            if (this.homeLocation != null) {
+                x = homeLocation.getX();
+                y = homeLocation.getY();
+                z = homeLocation.getZ();
+                rotation = homeLocation.getRotation();
+                this.homeLocation = null;
+            }
+            axes.add(new Axis("x", Axis.Type.X, x, "*"));
+            axes.add(new Axis("y", Axis.Type.Y, y, "*"));
+            axes.add(new Axis("z", Axis.Type.Z, z, "*"));
+            axes.add(new Axis("rotation", Axis.Type.Rotation, rotation, "*"));
+        }
+    }
 
     public synchronized void connect() throws Exception {
         super.connect();
@@ -151,22 +173,38 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
 
-        x = homeLocation.getX();
-        y = homeLocation.getY();
-        z = homeLocation.getZ();
-        c = homeLocation.getRotation();
-        
+        for (Axis axis : axes) {
+            axis.setCoordinate(axis.getHomeCoordinate());
+        }
+
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
         }
     }
 
+    public Axis getAxis(HeadMountable hm, Axis.Type type) {
+        for (Axis axis : axes) {
+            if (axis.getType() == type && (axis.getHeadMountableIds().contains("*")
+                    || axis.getHeadMountableIds().contains(hm.getId()))) {
+                return axis;
+            }
+        }
+        return null;
+    }
+
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
-        Location location = new Location(units, x, y, z, c).add(hm.getHeadOffsets());
-        if (!(hm instanceof Nozzle)) {
-            location = location.derive(null, null, 0d, null);
-        }
+        Axis xAxis = getAxis(hm, Axis.Type.X);
+        Axis yAxis = getAxis(hm, Axis.Type.Y);
+        Axis zAxis = getAxis(hm, Axis.Type.Z);
+        Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
+
+        Location location =
+                new Location(units, xAxis == null ? 0 : xAxis.getTransformedCoordinate(hm),
+                        yAxis == null ? 0 : yAxis.getTransformedCoordinate(hm),
+                        zAxis == null ? 0 : zAxis.getTransformedCoordinate(hm),
+                        rotationAxis == null ? 0 : rotationAxis.getTransformedCoordinate(hm))
+                                .add(hm.getHeadOffsets());
         return location;
     }
 
@@ -180,74 +218,145 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         double x = location.getX();
         double y = location.getY();
         double z = location.getZ();
-        double c = location.getRotation();
+        double rotation = location.getRotation();
 
-        // Only move Z if it's the Nozzle.
-        if (!(hm instanceof Nozzle)) {
-            z = Double.NaN;
-        }
+        Axis xAxis = getAxis(hm, Axis.Type.X);
+        Axis yAxis = getAxis(hm, Axis.Type.Y);
+        Axis zAxis = getAxis(hm, Axis.Type.Z);
+        Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
 
-        // Handle NaNs, which means don't move this axis for this move.
+        // Handle NaNs, which means don't move this axis for this move. We set the appropriate
+        // axis reference to null, which we'll check for later.
         if (Double.isNaN(x)) {
-            x = this.x;
+            xAxis = null;
         }
         if (Double.isNaN(y)) {
-            y = this.y;
+            yAxis = null;
         }
         if (Double.isNaN(z)) {
-            z = this.z;
+            zAxis = null;
         }
-        if (Double.isNaN(c)) {
-            c = this.c;
+        if (Double.isNaN(rotation)) {
+            rotationAxis = null;
         }
 
-        if (this.x != x || this.y != y || this.z != z || this.c != c) {
-            String command = moveToCommand;
-            if (hm instanceof Identifiable) {
-                command = substituteVariable(command, "Id", ((Identifiable) hm).getId());
+        // If no axes are included in the move, there's nothing to do, so just return.
+        if (xAxis == null && yAxis == null && zAxis == null && rotationAxis == null) {
+            return;
+        }
+
+        // For each included axis, if the axis has a transform, transform the target coordinate to
+        // it's raw value.
+        if (xAxis != null && xAxis.getTransform() != null) {
+            x = xAxis.getTransform().toRaw(xAxis, hm, x);
+        }
+        if (yAxis != null && yAxis.getTransform() != null) {
+            y = yAxis.getTransform().toRaw(yAxis, hm, y);
+        }
+        if (zAxis != null && zAxis.getTransform() != null) {
+            z = zAxis.getTransform().toRaw(zAxis, hm, z);
+        }
+        if (rotationAxis != null && rotationAxis.getTransform() != null) {
+            rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
+        }
+
+        boolean emptyMove = true;
+
+        String command = moveToCommand;
+        command = substituteVariable(command, "Id", hm.getId());
+        command = substituteVariable(command, "Name", hm.getName());
+        command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+
+        if (xAxis == null || xAxis.getCoordinate() == x) {
+            command = substituteVariable(command, "X", null);
+        }
+        else {
+            command = substituteVariable(command, "X", x);
+            emptyMove = false;
+            if (xAxis.getPreMoveCommand() != null) {
+                sendGcode(xAxis.getPreMoveCommand());
             }
-            if (hm instanceof Named) {
-                command = substituteVariable(command, "Name", ((Named) hm).getName());
+        }
+
+        if (yAxis == null || yAxis.getCoordinate() == y) {
+            command = substituteVariable(command, "Y", null);
+        }
+        else {
+            command = substituteVariable(command, "Y", y);
+            emptyMove = false;
+            if (yAxis.getPreMoveCommand() != null) {
+                sendGcode(yAxis.getPreMoveCommand());
             }
-            command = substituteVariable(command, "X", x == this.x ? null : x);
-            command = substituteVariable(command, "Y", y == this.y ? null : y);
-            command = substituteVariable(command, "Z", z == this.z ? null : z);
-            command = substituteVariable(command, "Rotation", c == this.c ? null : c);
-            command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
-            
-            List<String> responses = sendGcode(command);
-            
-            /*
-             * If moveToCompleteRegex is specified we need to wait until we match the regex
-             * in a response before continuing. We first search the initial responses from the
-             * command for the regex. If it's not found we then collect responses for up to
-             * timeoutMillis while searching the responses for the regex. As soon as it is
-             * matched we continue. If it's not matched within the timeout we throw an Exception.
-             */
-            if (moveToCompleteRegex != null) {
-                if (!containsMatch(responses, moveToCompleteRegex)) {
-                    long t = System.currentTimeMillis();
-                    boolean done = false;
-                    while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
-                        done = containsMatch(sendCommand(null, 250), moveToCompleteRegex); 
-                    }
-                    if (!done) {
-                        throw new Exception("Timed out waiting for move to complete.");
-                    }
+        }
+
+        if (zAxis == null || zAxis.getCoordinate() == z) {
+            command = substituteVariable(command, "Z", null);
+        }
+        else {
+            command = substituteVariable(command, "Z", z);
+            emptyMove = false;
+            if (zAxis.getPreMoveCommand() != null) {
+                sendGcode(zAxis.getPreMoveCommand());
+            }
+        }
+
+        if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
+            command = substituteVariable(command, "Rotation", null);
+        }
+        else {
+            command = substituteVariable(command, "Rotation", rotation);
+            emptyMove = false;
+            if (rotationAxis.getPreMoveCommand() != null) {
+                sendGcode(rotationAxis.getPreMoveCommand());
+            }
+        }
+
+        // No axes were included in the move, so there is nothing to do.
+        if (emptyMove) {
+            return;
+        }
+
+        List<String> responses = sendGcode(command);
+
+        /*
+         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+         * response before continuing. We first search the initial responses from the command for
+         * the regex. If it's not found we then collect responses for up to timeoutMillis while
+         * searching the responses for the regex. As soon as it is matched we continue. If it's not
+         * matched within the timeout we throw an Exception.
+         */
+        if (moveToCompleteRegex != null) {
+            if (!containsMatch(responses, moveToCompleteRegex)) {
+                long t = System.currentTimeMillis();
+                boolean done = false;
+                while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
+                    done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
+                }
+                if (!done) {
+                    throw new Exception("Timed out waiting for move to complete.");
                 }
             }
         }
 
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.c = c;
+        // And save the final values on the axes.
+        if (xAxis != null) {
+            xAxis.setCoordinate(x);
+        }
+        if (yAxis != null) {
+            yAxis.setCoordinate(y);
+        }
+        if (zAxis != null) {
+            zAxis.setCoordinate(z);
+        }
+        if (rotationAxis != null) {
+            rotationAxis.setCoordinate(rotation);
+        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.moveTo(hm, location, speed);
         }
     }
-    
+
     private boolean containsMatch(List<String> responses, String regex) {
         for (String response : responses) {
             if (response.matches(regex)) {
@@ -259,7 +368,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-    	String command = pickCommand;
+        String command = pickCommand;
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
@@ -271,9 +380,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-    	String command = placeCommand;
+        String command = placeCommand;
         command = substituteVariable(command, "Id", nozzle.getId());
-    	command = substituteVariable(command, "Name", nozzle.getName());
+        command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
 
         for (ReferenceDriver driver : subDrivers) {
@@ -394,8 +503,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         while (System.currentTimeMillis() - t < timeout) {
             // Wait to see if a response came in. We wait up until the number of millis remaining
             // in the timeout.
-            String response =
-                    responseQueue.poll(timeout - (System.currentTimeMillis() - t), TimeUnit.MILLISECONDS);
+            String response = responseQueue.poll(timeout - (System.currentTimeMillis() - t),
+                    TimeUnit.MILLISECONDS);
             // If no response yet, try again.
             if (response == null) {
                 continue;
@@ -416,7 +525,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
 
-        logger.debug("sendCommand({}, {}) => {}", command, timeout == Long.MAX_VALUE ? -1 : timeout, responses);
+        logger.debug("sendCommand({}, {}) => {}",
+                new Object[] {command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
         return responses;
     }
 
@@ -476,5 +586,160 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
+    }
+
+    public static class Axis {
+        public enum Type {
+            X,
+            Y,
+            Z,
+            Rotation
+        };
+
+        @Attribute
+        private String name;
+
+        @Attribute
+        private Type type;
+
+        @Attribute(required = false)
+        private double homeCoordinate = 0;
+
+        @ElementList(required = false)
+        private Set<String> headMountableIds = new HashSet<String>();
+
+        @Element(required = false)
+        private AxisTransform transform;
+
+        @Element(required = false)
+        private String preMoveCommand;
+
+        /**
+         * Stores the current value for this axis.
+         */
+        private double coordinate = 0;
+
+        public Axis() {
+
+        }
+
+        public Axis(String name, Type type, double homeCoordinate, String... headMountableIds) {
+            this.name = name;
+            this.type = type;
+            this.homeCoordinate = homeCoordinate;
+            this.headMountableIds.addAll(Arrays.asList(headMountableIds));
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public void setType(Type type) {
+            this.type = type;
+        }
+
+        public double getCoordinate() {
+            return coordinate;
+        }
+
+        public void setCoordinate(double coordinate) {
+            this.coordinate = coordinate;
+        }
+
+        public double getHomeCoordinate() {
+            return homeCoordinate;
+        }
+
+        public void setHomeCoordinate(double homeCoordinate) {
+            this.homeCoordinate = homeCoordinate;
+        }
+
+        public double getTransformedCoordinate(HeadMountable hm) {
+            if (this.transform != null) {
+                return transform.toTransformed(this, hm, this.coordinate);
+            }
+            return this.coordinate;
+        }
+
+        public Set<String> getHeadMountableIds() {
+            return headMountableIds;
+        }
+
+        public void setHeadMountableIds(Set<String> headMountableIds) {
+            this.headMountableIds = headMountableIds;
+        }
+
+        public AxisTransform getTransform() {
+            return transform;
+        }
+
+        public void setTransform(AxisTransform transform) {
+            this.transform = transform;
+        }
+
+        public String getPreMoveCommand() {
+            return preMoveCommand;
+        }
+
+        public void setPreMoveCommand(String preMoveCommand) {
+            this.preMoveCommand = preMoveCommand;
+        }
+    }
+
+    public interface AxisTransform {
+        /**
+         * Transform the specified raw coordinate into it's corresponding transformed coordinate.
+         * The transformed coordinate is what the user sees, while the raw coordinate is what the
+         * motion controller sees.
+         * 
+         * @param hm
+         * @param rawCoordinate
+         * @return
+         */
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate);
+
+        /**
+         * Transform the specified transformed coordinate into it's corresponding raw coordinate.
+         * The transformed coordinate is what the user sees, while the raw coordinate is what the
+         * motion controller sees.
+         * 
+         * @param hm
+         * @param transformedCoordinate
+         * @return
+         */
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate);
+    }
+
+    /**
+     * An AxisTransform for heads with dual linear Z axes powered by one motor. The two Z axes are
+     * defined as normal and negated. Normal gets the raw coordinate value and negated gets the same
+     * value negated. So, as normal moves up, negated moves down.
+     */
+    public static class NegatingTransform implements AxisTransform {
+        @Element
+        private String negatedHeadMountableId;
+
+        @Override
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate) {
+            if (hm.getId().equals(negatedHeadMountableId)) {
+                return -rawCoordinate;
+            }
+            return rawCoordinate;
+        }
+
+        @Override
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
+            // Since we're just negating the value of the coordinate we can just
+            // use the same function.
+            return toTransformed(axis, hm, transformedCoordinate);
+        }
     }
 }
