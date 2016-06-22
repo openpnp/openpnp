@@ -206,7 +206,7 @@ Here is an example sub-drivers section of the main driver configuration:
 </sub-drivers>
 ```
 
-## Axis Mapping (Preliminary, Not Yet Released)
+## Axis Mapping
 
 If your system has more than one nozzle you will need to tell OpenPnP which axes on your controller map to which nozzles, and other devices. Axis Mapping allows you to do this, along with specifying axes that should be ignored or included for a given head mounted device. This is an advanced option and will not be used by everyone. By default OpenPnP will create a basic axis mapping configuration that will work for a basic system.
 
@@ -231,9 +231,7 @@ In OpenPnP anything that can be attached to the head is called a HeadMountable. 
 
 In the example we defined above, the machine has two nozzles that we'll call N1 and N2. The two nozzles share a Z axis and each has it's own C axis.
 
-**TODO: Finish this doc.**
-
-### Complete Sample Axis Mapping
+Here is an example axis mapping for this machine setup. We'll break it down by section further below:
 
 ```         
  <axes class="java.util.ArrayList">
@@ -256,12 +254,74 @@ In the example we defined above, the machine has two nozzles that we'll call N1 
          <negated-head-mountable-id>69edd567-2341234-495a-9b30-2fcbf5c9742f</negated-head-mountable-id>
       </transform>
    </axis>
-   <axis name="rotation" type="Rotation" home-coordinate="0.0">
+   <axis name="c1" type="Rotation" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>69edd567-2341234-495a-9b30-2fcbf5c9742f</string>
+      </head-mountable-ids>
+      <pre-move-command>T0</pre-move-command>
+   </axis>
+   <axis name="c2" type="Rotation" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>69edd567-df6c-495a-9b30-2fcbf5c9742f</string>
+      </head-mountable-ids>
+      <pre-move-command>T1</pre-move-command>
+   </axis>
+</axes>
+```
+
+Now, section by section:
+
+Define the X axis. Since it's head-mountable-ids list contains * it will map the X axis to all head mountables.
+```         
+   <axis name="x" type="X" home-coordinate="0.0">
       <head-mountable-ids class="java.util.HashSet">
          <string>*</string>
       </head-mountable-ids>
    </axis>
-</axes>
+```
+
+Define the Y axis. Like the X axis, it is mapped to all head mountables.
+```
+   <axis name="y" type="Y" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>*</string>
+      </head-mountable-ids>
+   </axis>
+```
+
+Define the Z axis. This is where it starts to get interesting. The Z axis lists two head mountables which are the IDs for nozzle 1 and nozzle 2. By not including * or the IDs of the cameras we declare that the camera does not move in Z.
+
+In addition, since this machine uses a shared Z motor for two Z head mountables, we define a transform that inverts the coordinate for the second nozzle. All this means is that when one nozzle is up, the other is down.
+```
+   <axis name="z" type="Z" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>69edd567-2341234-495a-9b30-2fcbf5c9742f</string>
+         <string>69edd567-df6c-495a-9b30-2fcbf5c9742f</string>
+      </head-mountable-ids>
+      <transform class="org.openpnp.machine.reference.driver.GcodeDriver$NegatingTransform">
+         <negated-head-mountable-id>69edd567-2341234-495a-9b30-2fcbf5c9742f</negated-head-mountable-id>
+      </transform>
+   </axis>
+```
+
+Now we define the c1 axis, which is the rotational axis for the first nozzle. We include only the head mountable ID of the first nozzle, so this axis will only affect that nozzle. In addition, we have included a pre-move-command. This command is sent before this axis is moved. In this case we are sending a `T0` command which will signal the controller to control the first tool, or extruder.
+```
+   <axis name="c1" type="Rotation" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>69edd567-2341234-495a-9b30-2fcbf5c9742f</string>
+      </head-mountable-ids>
+      <pre-move-command>T0</pre-move-command>
+   </axis>
+```
+
+Finally, we define the second rotational axis and include a `T1` pre-move-command. Note that we also use the head mountable ID for the second nozzle.
+```
+   <axis name="c2" type="Rotation" home-coordinate="0.0">
+      <head-mountable-ids class="java.util.HashSet">
+         <string>69edd567-df6c-495a-9b30-2fcbf5c9742f</string>
+      </head-mountable-ids>
+      <pre-move-command>T1</pre-move-command>
+   </axis>
 ```
 
 # Sample Configuration
