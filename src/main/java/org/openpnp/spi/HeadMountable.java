@@ -1,6 +1,9 @@
 package org.openpnp.spi;
 
-public interface HeadMountable extends Movable {
+import org.openpnp.model.Identifiable;
+import org.openpnp.model.Named;
+
+public interface HeadMountable extends Movable, Identifiable, Named {
     /**
      * Gets the Head that this HeadMountable is attached to. If it is not attached to a Head this
      * method returns null.

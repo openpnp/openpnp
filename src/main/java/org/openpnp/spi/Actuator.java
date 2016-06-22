@@ -28,7 +28,7 @@ import org.openpnp.model.Named;
  * other capabilities exposed in their specific implementations.
  */
 public interface Actuator
-        extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
+        extends HeadMountable, WizardConfigurable, PropertySheetHolder {
     /**
      * Turns the Actuator on or off.
      * 

@@ -30,7 +30,7 @@ import org.openpnp.model.Named;
 /**
  * Represents a Camera attached to the system and allows a caller to retrieve images from it.
  */
-public interface Camera extends Identifiable, Named, HeadMountable, WizardConfigurable,
+public interface Camera extends HeadMountable, WizardConfigurable,
         PropertySheetHolder, Closeable {
     public enum Looking {
         Down, Up
