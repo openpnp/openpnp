@@ -11,17 +11,18 @@ public class SimplePropertySheetHolder implements PropertySheetHolder {
     protected String title;
     protected PropertySheetHolder[] children;
     protected Icon icon;
-    
+
     public SimplePropertySheetHolder(String title, List<? extends PropertySheetHolder> children) {
         this(title, children, null);
     }
-    
-    public SimplePropertySheetHolder(String title, List<? extends PropertySheetHolder> children, Icon icon) {
+
+    public SimplePropertySheetHolder(String title, List<? extends PropertySheetHolder> children,
+            Icon icon) {
         this.title = title;
-        this.children = children.toArray(new PropertySheetHolder[]{});
+        this.children = children.toArray(new PropertySheetHolder[] {});
         this.icon = icon;
     }
-    
+
     @Override
     public String getPropertySheetHolderTitle() {
         return title;
@@ -41,7 +42,7 @@ public class SimplePropertySheetHolder implements PropertySheetHolder {
     public Action[] getPropertySheetHolderActions() {
         return null;
     }
-    
+
     @Override
     public Icon getPropertySheetHolderIcon() {
         return icon;

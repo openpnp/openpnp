@@ -32,6 +32,8 @@ public class VisionUtilsTest {
     }
 
     static class TestCamera implements Camera {
+        protected Head head;
+
         @Override
         public String getId() {
             // TODO Auto-generated method stub
@@ -40,26 +42,24 @@ public class VisionUtilsTest {
 
         @Override
         public Head getHead() {
-            // TODO Auto-generated method stub
-            return null;
+            return head;
         }
 
         @Override
         public void setHead(Head head) {
-            // TODO Auto-generated method stub
-            
+            this.head = head;
         }
 
         @Override
         public void moveTo(Location location, double speed) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
         public void moveToSafeZ(double speed) throws Exception {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -106,7 +106,7 @@ public class VisionUtilsTest {
         @Override
         public void setName(String name) {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -118,7 +118,7 @@ public class VisionUtilsTest {
         @Override
         public void setLooking(Looking looking) {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -129,7 +129,7 @@ public class VisionUtilsTest {
         @Override
         public void setUnitsPerPixel(Location unitsPerPixel) {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -139,22 +139,21 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void startContinuousCapture(CameraListener listener,
-                int maximumFps) {
+        public void startContinuousCapture(CameraListener listener, int maximumFps) {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
         public void stopContinuousCapture(CameraListener listener) {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
         public void setVisionProvider(VisionProvider visionProvider) {
             // TODO Auto-generated method stub
-            
+
         }
 
         @Override
@@ -182,25 +181,35 @@ public class VisionUtilsTest {
         @Override
         public void close() throws IOException {
             // TODO Auto-generated method stub
-            
+
         }
 
-		@Override
-		public BufferedImage settleAndCapture() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+        @Override
+        public BufferedImage settleAndCapture() {
+            // TODO Auto-generated method stub
+            return null;
+        }
 
-		@Override
-		public long getSettleTimeMs() {
-			// TODO Auto-generated method stub
-			return 0;
-		}
+        @Override
+        public long getSettleTimeMs() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
 
-		@Override
-		public void setSettleTimeMs(long settleTimeMs) {
-			// TODO Auto-generated method stub
-			
-		}
+        @Override
+        public void setSettleTimeMs(long settleTimeMs) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void moveTo(Location location) throws Exception {
+            moveTo(location, getHead().getMachine().getSpeed());
+        }
+
+        @Override
+        public void moveToSafeZ() throws Exception {
+            moveToSafeZ(getHead().getMachine().getSpeed());
+        }
     }
 }

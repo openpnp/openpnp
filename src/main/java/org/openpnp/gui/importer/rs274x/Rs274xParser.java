@@ -20,25 +20,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A simple RS-274X parser. Not intended to be a general parser, but implements
- * only OpenPnP specific functionality.
+ * A simple RS-274X parser. Not intended to be a general parser, but implements only OpenPnP
+ * specific functionality.
  */
 public class Rs274xParser {
     private final static Logger logger = LoggerFactory.getLogger(Rs274xParser.class);
-    
+
     enum LevelPolarity {
-        Dark,
-        Clear
+        Dark, Clear
     }
-    
+
     enum InterpolationMode {
-        Linear,
-        Clockwise,
-        CounterClockwise
+        Linear, Clockwise, CounterClockwise
     }
-    
+
     private BufferedReader reader;
-    
+
     // Context
     private LengthUnit unit;
     private Aperture currentAperture;
@@ -56,21 +53,22 @@ public class Rs274xParser {
      * Maps Aperture indexes to a count to aid in generation of pad names.
      */
     private Map<Integer, Integer> apertureUseCounts = new HashMap<>();
-    
+
     private boolean stopped;
     private int lineNumber;
     private ParseStatistics parseStatistics;
     private boolean regionStarted;
-    
+
     private List<BoardPad> pads;
 
     public Rs274xParser() {
         reset();
     }
-    
+
     /**
      * Parse the given File for solder paste pads.
-     * @see #parseSolderPastePads(Reader) 
+     * 
+     * @see #parseSolderPastePads(Reader)
      * @param file
      * @return
      * @throws Exception
@@ -79,19 +77,17 @@ public class Rs274xParser {
         logger.info("Parsing " + file);
         return parseSolderPastePads(new FileReader(file));
     }
-    
+
     /**
-     * Parse the input from the Reader extracting individual pads to be used
-     * for solder paste application. It is expected that the input is is
-     * an RS-274X Gerber solder paste layer.
+     * Parse the input from the Reader extracting individual pads to be used for solder paste
+     * application. It is expected that the input is is an RS-274X Gerber solder paste layer.
      * 
-     * Currently this code only parses out single flashes of rectangular,
-     * circular and oblong apertures. Ideas for future versions include
-     * rendering the entire file and uses blob detection and contour
-     * finding to create polygon pads.
+     * Currently this code only parses out single flashes of rectangular, circular and oblong
+     * apertures. Ideas for future versions include rendering the entire file and uses blob
+     * detection and contour finding to create polygon pads.
      * 
-     * Another option is to consider each operation it's own element/shape. 
-     * This is how gerbv seems to do it.
+     * Another option is to consider each operation it's own element/shape. This is how gerbv seems
+     * to do it.
      * 
      * @param reader
      * @return
@@ -99,9 +95,9 @@ public class Rs274xParser {
      */
     public List<BoardPad> parseSolderPastePads(Reader reader) throws Exception {
         reset();
-        
+
         this.reader = new BufferedReader(reader);
-        
+
         try {
             while (!stopped) {
                 readCommand();
@@ -111,10 +107,10 @@ public class Rs274xParser {
             parseStatistics.errored = true;
             error("Uncaught error: " + e.getMessage());
         }
-        
+
         return pads;
     }
-    
+
     private void readCommand() throws Exception {
         if (peek() == '%') {
             readExtendedCodeCommand();
@@ -123,7 +119,7 @@ public class Rs274xParser {
             readFunctionCodeCommand();
         }
     }
-    
+
     private void readFunctionCodeCommand() throws Exception {
         // a command is either a D, G, M or coordinate data
         // followed by a D.
@@ -152,7 +148,7 @@ public class Rs274xParser {
                     readMcode();
                     return;
                 }
-                // TODO: See 7.2 Coordinate Data without Operation Code
+                    // TODO: See 7.2 Coordinate Data without Operation Code
                 case 'X': {
                     coordinate.x = readCoordinateValue();
                     break;
@@ -169,13 +165,13 @@ public class Rs274xParser {
                     arcCoordinate.y = readCoordinateValue();
                     break;
                 }
-                default : {
+                default: {
                     error("Unknown function code " + ((char) ch));
                 }
             }
         }
     }
-    
+
     // G54D06
     private void readGcode() throws Exception {
         int code = readInteger();
@@ -246,8 +242,9 @@ public class Rs274xParser {
             }
         }
     }
-    
-    private void readDcode(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
+
+    private void readDcode(Point2D.Double coordinate, Point2D.Double arcCoordinate)
+            throws Exception {
         int code = readInteger();
         switch (code) {
             case 1: {
@@ -275,7 +272,7 @@ public class Rs274xParser {
             }
         }
     }
-    
+
     private void readMcode() throws Exception {
         int code = readInteger();
         switch (code) {
@@ -297,19 +294,21 @@ public class Rs274xParser {
             }
         }
     }
-    
+
     /**
-     * Linear or circular interpolation. If in region mode, add a line or arc
-     * to the current contour. Otherwise draw a line or arc.
+     * Linear or circular interpolation. If in region mode, add a line or arc to the current
+     * contour. Otherwise draw a line or arc.
+     * 
      * @param coordinate
      * @param arcCoordinate
      * @throws Exception
      */
-    private void performD01(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
+    private void performD01(Point2D.Double coordinate, Point2D.Double arcCoordinate)
+            throws Exception {
         if (interpolationMode == null) {
             error("Interpolation most must be set before using D02");
         }
-        
+
         if (regionMode) {
             if (interpolationMode == InterpolationMode.Linear) {
                 addRegionLine(coordinate);
@@ -330,10 +329,10 @@ public class Rs274xParser {
         }
         currentPoint = coordinate;
     }
-    
+
     /**
-     * Move / set the current coordinate. Additionally, in region mode end
-     * the current contour.
+     * Move / set the current coordinate. Additionally, in region mode end the current contour.
+     * 
      * @param coordinate
      * @throws Exception
      */
@@ -341,16 +340,17 @@ public class Rs274xParser {
         if (interpolationMode == null) {
             error("Interpolation mode must be set before using D02");
         }
-        
+
         if (regionMode) {
             closeRegion();
         }
-        
+
         currentPoint = coordinate;
     }
-    
+
     /**
      * Flash the current aperture at the given coordinate.
+     * 
      * @param coordinate
      * @throws Exception
      */
@@ -361,9 +361,9 @@ public class Rs274xParser {
         if (regionMode) {
             error("Can't flash in region mode");
         }
-        
+
         parseStatistics.flashCount++;
-        
+
         Integer counter = apertureUseCounts.get(currentAperture.getIndex());
         if (counter == null) {
             counter = 0;
@@ -372,17 +372,17 @@ public class Rs274xParser {
             counter++;
         }
         apertureUseCounts.put(currentAperture.getIndex(), counter);
-        
+
         BoardPad pad = currentAperture.createPad(unit, coordinate);
-        pad.setName(String.format("D%02d-%03d",  currentAperture.getIndex(), counter++));
+        pad.setName(String.format("D%02d-%03d", currentAperture.getIndex(), counter++));
         pads.add(pad);
         parseStatistics.padCount++;
 
         currentPoint = coordinate;
-        
+
         parseStatistics.flashPerformedCount++;
     }
-    
+
     private void enableRegionMode() throws Exception {
         if (regionMode) {
             error("Can't start region mode when already in region mode");
@@ -390,7 +390,7 @@ public class Rs274xParser {
         regionMode = true;
         regionStarted = false;
     }
-    
+
     private void addRegionLine(Point2D.Double coordinate) throws Exception {
         if (!regionMode) {
             error("Can't add region line outside of region mode");
@@ -401,8 +401,9 @@ public class Rs274xParser {
         parseStatistics.regionLineCount++;
         warn("Linear interpolation in region mode not yet supported");
     }
-    
-    private void addRegionArc(Point2D.Double coordinate, Point2D.Double arcCoordinate) throws Exception {
+
+    private void addRegionArc(Point2D.Double coordinate, Point2D.Double arcCoordinate)
+            throws Exception {
         if (!regionMode) {
             error("Can't add region arc outside of region mode");
         }
@@ -412,7 +413,7 @@ public class Rs274xParser {
         parseStatistics.regionArcCount++;
         warn("Circular interpolation in region mode not yet supported");
     }
-    
+
     private void closeRegion() throws Exception {
         if (!regionMode) {
             error("Can't end region when not in region mode");
@@ -422,7 +423,7 @@ public class Rs274xParser {
             parseStatistics.regionCount++;
         }
     }
-    
+
     private void disableRegionMode() throws Exception {
         if (!regionMode) {
             error("Can't exit region mode, not in region mode");
@@ -430,7 +431,7 @@ public class Rs274xParser {
         closeRegion();
         regionMode = false;
     }
-    
+
     private void readExtendedCodeCommand() throws Exception {
         if (read() != '%') {
             error("Expected start of extended code command");
@@ -451,7 +452,8 @@ public class Rs274xParser {
             }
             case "AD": {
                 // Assigns a D code number to an aperture definition. See 4.11.
-                // These commands can be used multiple times. It is recommended to put them in header of a file.
+                // These commands can be used multiple times. It is recommended to put them in
+                // header of a file.
                 readApertureDefinition();
                 break;
             }
@@ -472,7 +474,8 @@ public class Rs274xParser {
                 break;
             }
             case "LP": {
-                // Starts a new level and sets the ‘Level polarity’ graphics state parameter. See 4.14.
+                // Starts a new level and sets the ‘Level polarity’ graphics state parameter. See
+                // 4.14.
                 readUntil('*');
                 read();
                 break;
@@ -536,13 +539,13 @@ public class Rs274xParser {
             error("Expected end of extended code command");
         }
     }
-    
+
     private void readApertureDefinition() throws Exception {
         int ch;
         if (read() != 'D') {
             error("Expected aperture D code");
         }
-        
+
         int code = readInteger();
         int type = read();
         Aperture aperture = null;
@@ -564,12 +567,13 @@ public class Rs274xParser {
                 break;
             }
             default: {
-                error(String.format("Unhandled aperture definition type %c, code %d", ((char) type), code));
+                error(String.format("Unhandled aperture definition type %c, code %d", ((char) type),
+                        code));
             }
         }
         apertures.put(code, aperture);
     }
-    
+
     private Aperture readRectangleApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in rectangle aperture definition");
@@ -589,7 +593,7 @@ public class Rs274xParser {
         }
         return new RectangleAperture(index, width, height, holeDiameter);
     }
-    
+
     private Aperture readCircleApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in circle aperture definition");
@@ -605,7 +609,7 @@ public class Rs274xParser {
         }
         return new CircleAperture(index, diameter, holeDiameter);
     }
-    
+
     private Aperture readObroundApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in obround aperture definition");
@@ -625,25 +629,25 @@ public class Rs274xParser {
         }
         return new ObroundAperture(index, width, height, holeDiameter);
     }
-    
+
     private Aperture readPolygonApertureDefinition(int index) throws Exception {
         if (read() != ',') {
             error("Expected , in circle aperture definition");
         }
 
         double diameter = readDecimal();
-        
+
         if (read() != 'X') {
             error("Expected X in polygon aperture definition");
         }
         int numberOfVertices = readInteger();
-        
+
         Double rotation = null;
         if (peek() == 'X') {
             read();
             rotation = readDecimal();
         }
-        
+
         Double holeDiameter = null;
         if (peek() == 'X') {
             read();
@@ -654,7 +658,7 @@ public class Rs274xParser {
         }
         return new PolygonAperture(index, diameter, numberOfVertices, rotation, holeDiameter);
     }
-    
+
     private void readUnit() throws Exception {
         String unitCode = readString(2);
         if (unitCode.equals("MM")) {
@@ -666,15 +670,15 @@ public class Rs274xParser {
         else {
             error("Unknown unit code " + unitCode);
         }
-        
+
         if (read() != '*') {
             error("Expected end of data block");
         }
     }
-    
+
     private void readCoordinateFormat() throws Exception {
         int ch;
-        
+
         while ("LTAI".indexOf((char) peek()) != -1) {
             ch = read();
             switch (ch) {
@@ -696,7 +700,7 @@ public class Rs274xParser {
                 }
             }
         }
-        
+
         int xI, xD, yI, yD;
 
         ch = read();
@@ -711,7 +715,7 @@ public class Rs274xParser {
         if (xD < 4 || xD > 6) {
             warn("Invalid coordinate format, X decimal part {}, should be >= 4 && <= 6", xD);
         }
-        
+
         ch = read();
         if (ch != 'Y') {
             error("Expected Y coordinate format");
@@ -724,19 +728,20 @@ public class Rs274xParser {
         if (yD < 4 || yD > 6) {
             warn("Invalid coordinate format, Y decimal part {}, should be >= 4 && <= 6", yD);
         }
-        
+
         if (xI != yI || xD != yD) {
-            error(String.format("Coordinate format X does not match Y: %d.%d != %d.%d", xI, xD, yI, yD));
+            error(String.format("Coordinate format X does not match Y: %d.%d != %d.%d", xI, xD, yI,
+                    yD));
         }
-        
+
         coordinateFormatIntegerLength = xI;
         coordinateFormatDecimalLength = xD;
-        
+
         if (read() != '*') {
             error("Expected end of data block");
         }
     }
-    
+
     private String readUntil(int ch) throws Exception {
         StringBuffer sb = new StringBuffer();
         while (peek() != ch) {
@@ -744,7 +749,7 @@ public class Rs274xParser {
         }
         return sb.toString();
     }
-    
+
     private String readString(int length) throws Exception {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < length; i++) {
@@ -752,7 +757,7 @@ public class Rs274xParser {
         }
         return sb.toString();
     }
-    
+
     private double readDecimal() throws Exception {
         boolean negative = false;
         int ch = peek();
@@ -770,7 +775,7 @@ public class Rs274xParser {
         }
         return (negative ? -1 : 1) * Double.parseDouble(sb.toString());
     }
-    
+
     private int readInteger() throws Exception {
         boolean negative = false;
         int ch = peek();
@@ -788,7 +793,7 @@ public class Rs274xParser {
         }
         return (negative ? -1 : 1) * Integer.parseInt(sb.toString());
     }
-    
+
     private double readCoordinateValue() throws Exception {
         if (coordinateFormatIncremental) {
             error("Incremental coordinate format not supported");
@@ -808,13 +813,14 @@ public class Rs274xParser {
             sValue = "0" + sValue;
         }
         String integerPart = sValue.substring(0, coordinateFormatIntegerLength);
-        String decimalPart = sValue.substring(coordinateFormatIntegerLength, coordinateFormatIntegerLength + coordinateFormatDecimalLength - 1);
+        String decimalPart = sValue.substring(coordinateFormatIntegerLength,
+                coordinateFormatIntegerLength + coordinateFormatDecimalLength - 1);
         return (value < 0 ? -1 : 1) * Double.parseDouble(integerPart + "." + decimalPart);
     }
-    
+
     /**
-     * Read the next character in the stream, skipping any \r or \n that
-     * precede it.
+     * Read the next character in the stream, skipping any \r or \n that precede it.
+     * 
      * @return
      * @throws Exception
      */
@@ -826,10 +832,10 @@ public class Rs274xParser {
         }
         return ch;
     }
-    
+
     /**
-     * Peek at the next character in the stream, skipping any \r or \n that
-     * precede it.
+     * Peek at the next character in the stream, skipping any \r or \n that precede it.
+     * 
      * @return
      * @throws Exception
      */
@@ -837,9 +843,10 @@ public class Rs274xParser {
         skipCrLf();
         return _peek();
     }
-    
+
     /**
-     * Consume any number of \r or \n, stopping when another character is found. 
+     * Consume any number of \r or \n, stopping when another character is found.
+     * 
      * @throws Exception
      */
     private void skipCrLf() throws Exception {
@@ -857,9 +864,10 @@ public class Rs274xParser {
             }
         }
     }
-    
+
     /**
      * Return the next character in the reader without consuming it.
+     * 
      * @return
      * @throws Exception
      */
@@ -872,17 +880,16 @@ public class Rs274xParser {
         reader.reset();
         return ch;
     }
-    
+
     private void reset() {
         unit = null;
         currentAperture = null;
         currentPoint = new Point2D.Double(0, 0);
         levelPolarity = LevelPolarity.Dark;
         /*
-         * This is non-standard, but expected by Eagle, at least. The standard
-         * says that interpolation mode is undefined at the start of the file
-         * but Eagle does not appear to send a G01 at any point before it
-         * starts sending D01s. 
+         * This is non-standard, but expected by Eagle, at least. The standard says that
+         * interpolation mode is undefined at the start of the file but Eagle does not appear to
+         * send a G01 at any point before it starts sending D01s.
          */
         interpolationMode = InterpolationMode.Linear;
         stopped = false;
@@ -891,35 +898,35 @@ public class Rs274xParser {
         coordinateFormatDecimalLength = -1;
         coordinateFormatTrailingZeroOmission = false;
         coordinateFormatIncremental = false;
-        apertures = new HashMap<>();        
+        apertures = new HashMap<>();
         lineNumber = 1;
         pads = new ArrayList<>();
         regionStarted = false;
         apertureUseCounts = new HashMap<>();
-        
+
         parseStatistics = new ParseStatistics();
     }
-    
+
     private void warn(String s) {
         logger.warn("WARNING: " + lineNumber + ": " + s);
     }
-    
+
     private void warn(String fmt, Object o1) {
         logger.warn("WARNING: " + lineNumber + ": " + fmt, o1);
     }
-    
+
     private void warn(String fmt, Object o1, Object o2) {
         logger.warn("WARNING: " + lineNumber + ": " + fmt, o1, o2);
     }
-    
+
     private void warn(String fmt, Object[] o) {
         logger.warn("WARNING: " + lineNumber + ": " + fmt, o);
     }
-    
+
     private void error(String s) throws Exception {
         throw new Exception("ERROR: " + lineNumber + ": " + s);
     }
-    
+
     public static void main(String[] args) throws Exception {
         HashMap<File, ParseStatistics> results = new HashMap<>();
         File[] files = new File("/Users/jason/Desktop/paste_tests").listFiles();
@@ -939,7 +946,7 @@ public class Rs274xParser {
             }
             results.put(file, parser.parseStatistics);
         }
-        
+
         ParseStatistics total = new ParseStatistics();
         logger.info("");
         logger.info("");
@@ -955,7 +962,7 @@ public class Rs274xParser {
             total.add(stats);;
             logger.info(String.format("%-32s: %s", file.getName(), stats.toString()));
         }
-        String totalLine = String.format("%-32s: %s", "TOTALS", total.toString()); 
+        String totalLine = String.format("%-32s: %s", "TOTALS", total.toString());
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < totalLine.length(); i++) {
             sb.append("-");
@@ -963,85 +970,82 @@ public class Rs274xParser {
         logger.info(sb.toString());
         logger.info(totalLine);
     }
-    
+
     static abstract class Aperture {
         final protected int index;
-        
+
         public Aperture(int index) {
             this.index = index;
         }
-        
+
         public int getIndex() {
             return index;
         }
-        
+
         public abstract BoardPad createPad(LengthUnit unit, Point2D.Double coordinate);
     }
-    
+
     static abstract class StandardAperture extends Aperture {
         public StandardAperture(int index) {
             super(index);
         }
     }
-    
+
     static class RectangleAperture extends StandardAperture {
         public double width;
         public double height;
         public Double holeDiameter;
-        
+
         public RectangleAperture(int index, double width, double height, Double holeDiameter) {
             super(index);
             this.width = width;
             this.height = height;
             this.holeDiameter = holeDiameter;
         }
-        
+
         public BoardPad createPad(LengthUnit unit, Point2D.Double coordinate) {
             Pad.RoundRectangle pad = new Pad.RoundRectangle();
             pad.setUnits(unit);
             pad.setWidth(width);
             pad.setHeight(height);
             pad.setRoundness(0);
-            BoardPad boardPad = new BoardPad(
-                    pad,
-                    new Location(unit, coordinate.x, coordinate.y, 0, 0));
+            BoardPad boardPad =
+                    new BoardPad(pad, new Location(unit, coordinate.x, coordinate.y, 0, 0));
             return boardPad;
         }
 
         @Override
         public String toString() {
-            return "RectangleAperture [width=" + width + ", height=" + height
-                    + ", holeDiameter=" + holeDiameter + "]";
+            return "RectangleAperture [width=" + width + ", height=" + height + ", holeDiameter="
+                    + holeDiameter + "]";
         }
     }
-    
+
     static class CircleAperture extends StandardAperture {
         public double diameter;
         public Double holeDiameter;
-        
+
         public CircleAperture(int index, double diameter, Double holeDiameter) {
             super(index);
             this.diameter = diameter;
             this.holeDiameter = holeDiameter;
         }
-        
+
         public BoardPad createPad(LengthUnit unit, Point2D.Double coordinate) {
             Pad.Circle pad = new Pad.Circle();
             pad.setRadius(diameter / 2);
             pad.setUnits(unit);
-            BoardPad boardPad = new BoardPad(
-                    pad,
-                    new Location(unit, coordinate.x, coordinate.y, 0, 0));
+            BoardPad boardPad =
+                    new BoardPad(pad, new Location(unit, coordinate.x, coordinate.y, 0, 0));
             return boardPad;
         }
 
         @Override
         public String toString() {
-            return "CircleAperture [diameter=" + diameter + ", holeDiameter="
-                    + holeDiameter + "]";
+            return "CircleAperture [diameter=" + diameter + ", holeDiameter=" + holeDiameter + "]";
         }
     }
-    
+
     static class ObroundAperture extends RectangleAperture {
         public ObroundAperture(int index, double width, double height, Double holeDiameter) {
             super(index, width, height, holeDiameter);
@@ -1049,16 +1053,17 @@ public class Rs274xParser {
 
         @Override
         public String toString() {
-            return "ObroundAperture [width=" + width + ", height=" + height
-                    + ", holeDiameter=" + holeDiameter + "]";
+            return "ObroundAperture [width=" + width + ", height=" + height + ", holeDiameter="
+                    + holeDiameter + "]";
         }
     }
-    
+
     static class PolygonAperture extends CircleAperture {
         public int numberOfVertices;
         public Double rotation;
-        
-        public PolygonAperture(int index, double diameter, int numberOfVertices, Double rotation, Double holeDiameter) {
+
+        public PolygonAperture(int index, double diameter, int numberOfVertices, Double rotation,
+                Double holeDiameter) {
             super(index, diameter, holeDiameter);
             this.numberOfVertices = numberOfVertices;
             this.rotation = rotation;
@@ -1066,104 +1071,89 @@ public class Rs274xParser {
 
         @Override
         public String toString() {
-            return "PolygonAperture [numberOfVertices=" + numberOfVertices
-                    + ", rotation=" + rotation + ", diameter=" + diameter
-                    + ", holeDiameter=" + holeDiameter + "]";
+            return "PolygonAperture [numberOfVertices=" + numberOfVertices + ", rotation="
+                    + rotation + ", diameter=" + diameter + ", holeDiameter=" + holeDiameter + "]";
         }
     }
-    
+
     static class MacroAperture extends Aperture {
         public MacroAperture(int index) {
             super(index);
         }
-        
+
         @Override
         public BoardPad createPad(LengthUnit unit, java.awt.geom.Point2D.Double coordinate) {
             return null;
         }
     }
-    
+
     static class ParseStatistics {
         public int lineCount;
         public int linePerformedCount;
-        
+
         public int arcCount;
         public int arcPerformedCount;
-        
+
         public int regionLineCount;
         public int regionLinePerformedCount;
-        
+
         public int regionArcCount;
         public int regionArcPerformedCount;
-        
+
         public int regionCount;
         public int regionPerformedCount;
-        
+
         public int flashCount;
         public int flashPerformedCount;
-        
+
         public int padCount;
-        
+
         public boolean errored;
-        
+
         public double percent(double count, double total) {
             if (total == 0) {
                 return 100;
             }
             return (count / total) * 100;
         }
-        
+
         public void add(ParseStatistics p) {
             lineCount += p.lineCount;
             linePerformedCount += p.linePerformedCount;
-            
+
             arcCount += p.arcCount;
             arcPerformedCount += p.arcPerformedCount;
-            
+
             regionLineCount += p.regionLineCount;
             regionLinePerformedCount += p.regionLinePerformedCount;
-            
+
             regionArcCount += p.regionArcCount;
             regionArcPerformedCount += p.regionArcPerformedCount;
-            
+
             regionCount += p.regionCount;
             regionPerformedCount += p.regionPerformedCount;
-            
+
             flashCount += p.flashCount;
             flashPerformedCount += p.flashPerformedCount;
-            
+
             padCount += p.padCount;
         }
 
         @Override
         public String toString() {
             int total = flashCount + regionCount + lineCount + arcCount;
-            int totalPerformed = flashPerformedCount + regionPerformedCount + linePerformedCount + arcPerformedCount;
-            return String.format("%s Total %3.0f%% (%4d/%4d), Flash %3.0f%% (%4d/%4d), Line %3.0f%% (%4d/%4d), Arc %3.0f%% (%4d/%4d), Region %3.0f%% (%4d/%4d), Region line %3.0f%% (%4d/%4d), Region Arc %3.0f%% (%4d/%4d), Pads %4d",
-                    errored ? "FAIL" : "PASS",
-                    percent(totalPerformed, total),
-                    totalPerformed,
-                    total,
-                    percent(flashPerformedCount, flashCount),
-                    flashPerformedCount,
-                    flashCount,
-                    percent(linePerformedCount, lineCount),
-                    linePerformedCount,
-                    lineCount,
-                    percent(arcPerformedCount, arcCount),
-                    arcPerformedCount,
-                    arcCount,
-                    percent(regionPerformedCount, regionCount),
-                    regionPerformedCount,
-                    regionCount,
-                    percent(regionLinePerformedCount, regionLineCount),
-                    regionLinePerformedCount,
-                    regionLineCount,
-                    percent(regionArcPerformedCount, regionArcCount),
-                    regionArcPerformedCount,
-                    regionArcCount,
-                    padCount
-                    );
+            int totalPerformed = flashPerformedCount + regionPerformedCount + linePerformedCount
+                    + arcPerformedCount;
+            return String.format(
+                    "%s Total %3.0f%% (%4d/%4d), Flash %3.0f%% (%4d/%4d), Line %3.0f%% (%4d/%4d), Arc %3.0f%% (%4d/%4d), Region %3.0f%% (%4d/%4d), Region line %3.0f%% (%4d/%4d), Region Arc %3.0f%% (%4d/%4d), Pads %4d",
+                    errored ? "FAIL" : "PASS", percent(totalPerformed, total), totalPerformed,
+                    total, percent(flashPerformedCount, flashCount), flashPerformedCount,
+                    flashCount, percent(linePerformedCount, lineCount), linePerformedCount,
+                    lineCount, percent(arcPerformedCount, arcCount), arcPerformedCount, arcCount,
+                    percent(regionPerformedCount, regionCount), regionPerformedCount, regionCount,
+                    percent(regionLinePerformedCount, regionLineCount), regionLinePerformedCount,
+                    regionLineCount, percent(regionArcPerformedCount, regionArcCount),
+                    regionArcPerformedCount, regionArcCount, padCount);
         }
     }
 }

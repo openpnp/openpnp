@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="24" height="24" viewBox="0, 0, 24, 24">
+  <defs>
+    <clipPath id="Clip_1">
+      <path d="M649.273,349 L652,344 L640,344 L642.727,349 L649.273,349 z M645,350 L647,350 L647,359 L645,359 L645,350 z M645,350"/>
+    </clipPath>
+  </defs>
+  <g id="Layer_1" transform="translate(-634, -339)">
+    <g>
+      <g clip-path="url(#Clip_1)">
+        <path d="M635,339 L657,339 L657,364 L635,364 z" fill="#E3BC00"/>
+      </g>
+    </g>
+  </g>
+</svg>

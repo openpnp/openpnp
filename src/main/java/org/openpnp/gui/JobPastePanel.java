@@ -33,6 +33,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PadsTableModel;
+import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
@@ -40,10 +41,10 @@ import org.openpnp.model.BoardPad.Type;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
-import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 
 public class JobPastePanel extends JPanel {
@@ -57,10 +58,10 @@ public class JobPastePanel extends JPanel {
 
     private static Color typeColorIgnore = new Color(252, 255, 157);
     private static Color typeColorPaste = new Color(157, 255, 168);
-    
+
     public JobPastePanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
-        
+
         boardLocationSelectionActionGroup = new ActionGroup(newAction);
         boardLocationSelectionActionGroup.setEnabled(false);
 
@@ -70,7 +71,8 @@ public class JobPastePanel extends JPanel {
         multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
         multiSelectionActionGroup.setEnabled(false);
 
-        captureAndPositionActionGroup = new ActionGroup(moveCameraToPadLocation, moveToolToPadLocation);
+        captureAndPositionActionGroup =
+                new ActionGroup(moveCameraToPadLocation, moveToolToPadLocation);
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
@@ -90,13 +92,11 @@ public class JobPastePanel extends JPanel {
         toolBar.addSeparator();
 
 
-        JButton btnPositionCameraPositionLocation = new JButton(
-                moveCameraToPadLocation);
+        JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPadLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
         toolBar.add(btnPositionCameraPositionLocation);
 
-        JButton btnPositionToolPositionLocation = new JButton(
-                moveToolToPadLocation);
+        JButton btnPositionToolPositionLocation = new JButton(moveToolToPadLocation);
         btnPositionToolPositionLocation.setHideActionText(true);
         toolBar.add(btnPositionToolPositionLocation);
 
@@ -107,37 +107,34 @@ public class JobPastePanel extends JPanel {
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        
-        table.setDefaultEditor(Side.class, new DefaultCellEditor(
-                sidesComboBox));
 
-        table.setDefaultRenderer(Type.class,
-                new TypeRenderer());
-        table.setDefaultEditor(Type.class, new DefaultCellEditor(
-                typesComboBox));
-        
-        table.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (e.getValueIsAdjusting()) {
-                            return;
-                        }
-                        
-                        if (getSelections().size() > 1) {
-                            // multi select
-                            singleSelectionActionGroup.setEnabled(false);
-                            captureAndPositionActionGroup.setEnabled(false);
-                            multiSelectionActionGroup.setEnabled(true);
-                        }
-                        else {
-                            // single select, or no select
-                            multiSelectionActionGroup.setEnabled(false);
-                            singleSelectionActionGroup.setEnabled(getSelection() != null);
-                            captureAndPositionActionGroup.setEnabled(getSelection() != null && getSelection().getSide() == boardLocation.getSide());
-                        }
-                    }
-                });
+        table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+
+        table.setDefaultRenderer(Type.class, new TypeRenderer());
+        table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
+
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+
+                if (getSelections().size() > 1) {
+                    // multi select
+                    singleSelectionActionGroup.setEnabled(false);
+                    captureAndPositionActionGroup.setEnabled(false);
+                    multiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    // single select, or no select
+                    multiSelectionActionGroup.setEnabled(false);
+                    singleSelectionActionGroup.setEnabled(getSelection() != null);
+                    captureAndPositionActionGroup.setEnabled(getSelection() != null
+                            && getSelection().getSide() == boardLocation.getSide());
+                }
+            }
+        });
         table.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -151,15 +148,22 @@ public class JobPastePanel extends JPanel {
                 }
             }
         });
-        
+
         JPopupMenu popupMenu = new JPopupMenu();
-        
+
         JMenu setTypeMenu = new JMenu(setTypeAction);
-        setTypeMenu.add(new SetTypeAction(BoardPad.Type.Paste));
-        setTypeMenu.add(new SetTypeAction(BoardPad.Type.Ignore));
+        for (BoardPad.Type type : BoardPad.Type.values()) {
+            setTypeMenu.add(new SetTypeAction(type));
+        }
         popupMenu.add(setTypeMenu);
 
-        table.setComponentPopupMenu(popupMenu);                
+        JMenu setSideMenu = new JMenu(setSideAction);
+        for (Board.Side side : Board.Side.values()) {
+            setSideMenu.add(new SetSideAction(side));
+        }
+        popupMenu.add(setSideMenu);
+
+        table.setComponentPopupMenu(popupMenu);
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
@@ -184,9 +188,9 @@ public class JobPastePanel extends JPanel {
         }
         return selectedPads.get(0);
     }
-    
+
     public List<BoardPad> getSelections() {
-        ArrayList<BoardPad> rows = new ArrayList<BoardPad>();
+        ArrayList<BoardPad> rows = new ArrayList<>();
         if (boardLocation == null) {
             return rows;
         }
@@ -202,8 +206,7 @@ public class JobPastePanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Pad");
-            putValue(SHORT_DESCRIPTION,
-                    "Create a new pad and add it to the board.");
+            putValue(SHORT_DESCRIPTION, "Create a new pad and add it to the board.");
         }
 
         @Override
@@ -213,12 +216,10 @@ public class JobPastePanel extends JPanel {
             padClasses.add(Pad.Circle.class);
             padClasses.add(Pad.Ellipse.class);
             // See note on Pad.Line
-//            padClasses.add(Pad.Line.class);
-            ClassSelectionDialog<Pad> dialog = new ClassSelectionDialog<Pad>(
-                    JOptionPane.getFrameForComponent(JobPastePanel.this),
-                    "Select Pad...",
-                    "Please select a pad type from the list below.",
-                    padClasses);
+            // padClasses.add(Pad.Line.class);
+            ClassSelectionDialog<Pad> dialog = new ClassSelectionDialog<>(
+                    JOptionPane.getFrameForComponent(JobPastePanel.this), "Select Pad...",
+                    "Please select a pad type from the list below.", padClasses);
             dialog.setVisible(true);
             Class<? extends Pad> padClass = dialog.getSelectedClass();
             if (padClass == null) {
@@ -227,8 +228,7 @@ public class JobPastePanel extends JPanel {
             try {
                 Pad pad = padClass.newInstance();
                 BoardPad boardPad = new BoardPad();
-                boardPad.setLocation(new Location(Configuration.get()
-                        .getSystemUnits()));
+                boardPad.setLocation(new Location(Configuration.get().getSystemUnits()));
                 boardPad.setPad(pad);
 
                 boardLocation.getBoard().addSolderPastePad(boardPad);
@@ -236,8 +236,7 @@ public class JobPastePanel extends JPanel {
                 Helpers.selectLastTableRow(table);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(
-                        JOptionPane.getFrameForComponent(JobPastePanel.this),
+                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(JobPastePanel.this),
                         "Pad Error", e);
             }
         }
@@ -247,8 +246,7 @@ public class JobPastePanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Remove Pad");
-            putValue(SHORT_DESCRIPTION,
-                    "Remove the currently selected pad.");
+            putValue(SHORT_DESCRIPTION, "Remove the currently selected pad.");
         }
 
         @Override
@@ -264,36 +262,18 @@ public class JobPastePanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.centerCamera);
             putValue(NAME, "Move Camera To Pad Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Position the camera at the pad's location.");
+            putValue(SHORT_DESCRIPTION, "Position the camera at the pad's location.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // TODO: Probably wrong
-            Location padLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+            UiUtils.submitUiMachineTask(() -> {
+                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                        getSelection().getLocation());
 
-            final Camera camera = MainFrame.cameraPanel.getSelectedCamera();
-            if (camera.getHead() == null) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Move Error",
-                        "Camera is not movable.");
-                return;
-            }
-            final Location location = padLocation;
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
+                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                        .getDefaultCamera();
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
     };
@@ -302,49 +282,34 @@ public class JobPastePanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.centerTool);
             putValue(NAME, "Move Tool To Pad Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Position the tool at the pad's location.");
+            putValue(SHORT_DESCRIPTION, "Position the tool at the pad's location.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Location padLocation = Utils2D
-                    .calculateBoardPlacementLocation(boardLocation
-                            .getLocation(), boardLocation
-                            .getSide(), getSelection().getLocation());
+            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                    getSelection().getLocation());
 
-            final PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
-            final Location location = padLocation;
-            MainFrame.machineControlsPanel.submitMachineTask(new Runnable() {
-                public void run() {
-                    try {
-                        MovableUtils.moveToLocationAtSafeZ(dispenser, location,
-                                1.0);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(),
-                                "Move Error", e);
-                    }
-                }
+            PasteDispenser dispenser = MainFrame.machineControlsPanel.getSelectedPasteDispenser();
+            UiUtils.submitUiMachineTask(() -> {
+                MovableUtils.moveToLocationAtSafeZ(dispenser, location);
             });
         }
     };
-    
+
     public final Action setTypeAction = new AbstractAction() {
         {
             putValue(NAME, "Set Type");
-            putValue(SHORT_DESCRIPTION,
-                    "Set pad type(s) to...");
+            putValue(SHORT_DESCRIPTION, "Set pad type(s) to...");
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {
-        }
+        public void actionPerformed(ActionEvent arg0) {}
     };
-    
+
     class SetTypeAction extends AbstractAction {
         final BoardPad.Type type;
-        
+
         public SetTypeAction(BoardPad.Type type) {
             this.type = type;
             putValue(NAME, type.toString());
@@ -358,7 +323,34 @@ public class JobPastePanel extends JPanel {
             }
         }
     };
-    
+
+    public final Action setSideAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Side");
+            putValue(SHORT_DESCRIPTION, "Set pad side(s) to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetSideAction extends AbstractAction {
+        final Board.Side side;
+
+        public SetSideAction(Board.Side side) {
+            this.side = side;
+            putValue(NAME, side.toString());
+            putValue(SHORT_DESCRIPTION, "Set pad side(s) to " + side.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (BoardPad pad : getSelections()) {
+                pad.setSide(side);
+            }
+        }
+    };
+
     static class TypeRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             Type type = (Type) value;

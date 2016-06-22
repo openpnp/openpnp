@@ -21,7 +21,7 @@
                </actuator>
             </actuators>
             <cameras>
-               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="d66faf53-05e1-4629-baae-b614c5ed8320" name="C1" looking="Down" rotation="0.0" fps="24" width="640" height="480">
+               <camera class="org.openpnp.machine.reference.camera.ImageCamera" id="d66faf53-05e1-4629-baae-b614c5ed8320" name="Zoom" looking="Down" rotation="0.0" fps="24" width="640" height="480">
                   <units-per-pixel units="Millimeters" x="0.04233" y="0.04233" z="0.0" rotation="0.0"/>
                   <vision-provider class="org.openpnp.machine.reference.vision.OpenCvVisionProvider"/>
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
@@ -36,62 +36,64 @@
          </head>
       </heads>
       <feeders>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="d75b6522-dd09-413e-bd5b-d9b50dca3d12" name="F1" enabled="true" part-id="R0805-1K" actuator-name="A1">
-            <location units="Millimeters" x="93.5" y="4.2" z="0.0" rotation="0.0"/>
-            <feed-start-location units="Millimeters" x="90.03" y="6.26" z="0.0" rotation="0.0"/>
-            <feed-end-location units="Millimeters" x="90.03" y="2.26" z="0.0" rotation="0.0"/>
-            <feed-speed>1.0</feed-speed>
-            <vision enabled="false">
-               <area-of-interest x="0" y="0" width="0" height="0"/>
-               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            </vision>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="923eedf1-6a1a-4bbc-b603-421066262adc" name="R0805" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="147.347" y="40.285" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="147.433" y="36.238" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
          </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="6a929703-0df0-46e5-a7e4-bc7f0e4decf8" enabled="true" name="F2" part-id="R0603-1K" actuator-name="A1">
-            <location units="Millimeters" x="103.5" y="4.2" z="0.0" rotation="0.0"/>
-            <feed-start-location units="Millimeters" x="100.03" y="6.26" z="0.0" rotation="0.0"/>
-            <feed-end-location units="Millimeters" x="100.03" y="2.26" z="0.0" rotation="0.0"/>
-            <feed-speed>1.0</feed-speed>
-            <vision enabled="false">
-               <area-of-interest x="0" y="0" width="0" height="0"/>
-               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            </vision>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="f869fbd5-4e6f-4ba7-bfc7-476bd6cce845" name="R0603" enabled="true" part-id="R0603-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="157.385" y="40.199" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="157.328" y="36.267" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
          </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="8a1d03f3-738b-4891-b990-027cbb6f9302" enabled="true" name="F3" part-id="R0402-1K" actuator-name="A1">
-            <location units="Millimeters" x="113.5" y="4.2" z="0.0" rotation="0.0"/>
-            <feed-start-location units="Millimeters" x="110.03" y="6.26" z="0.0" rotation="0.0"/>
-            <feed-end-location units="Millimeters" x="110.03" y="2.26" z="0.0" rotation="0.0"/>
-            <feed-speed>1.0</feed-speed>
-            <vision enabled="false">
-               <area-of-interest x="0" y="0" width="0" height="0"/>
-               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            </vision>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="bcfa145d-0783-4681-a520-082c9ed65799" name="R0402" enabled="true" part-id="R0402-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="167.366" y="40.256" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="167.366" y="36.295" z="0.0" rotation="0.0"/>
+            <part-pitch value="2.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
          </feeder>
-         <feeder class="org.openpnp.machine.reference.feeder.ReferenceTapeFeeder" id="f640ee22-274c-4fa0-b2a3-91c1a612f12d" enabled="true" name="F4" part-id="R0201-1K" actuator-name="A1">
-            <location units="Millimeters" x="123.5" y="4.2" z="0.0" rotation="0.0"/>
-            <feed-start-location units="Millimeters" x="120.03" y="6.26" z="0.0" rotation="0.0"/>
-            <feed-end-location units="Millimeters" x="120.03" y="2.26" z="0.0" rotation="0.0"/>
-            <feed-speed>1.0</feed-speed>
-            <vision enabled="false">
-               <area-of-interest x="0" y="0" width="0" height="0"/>
-               <template-image-top-left units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               <template-image-bottom-right units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-            </vision>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="fdd41763-bb15-4b45-9ffd-cbbc0c52f630" name="R0201" enabled="true" part-id="R0201-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="177.404" y="40.256" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="177.376" y="36.267" z="0.0" rotation="0.0"/>
+            <part-pitch value="2.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="93acbdf4-d715-4bf9-bc70-23016f06b8e4" name="R0805-2" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="138.715" y="88.244" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="139.057" y="84.226" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="d50c9d17-75c5-45ee-b179-a93630f2070b" name="R0805-3" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="155.055" y="87.275" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="154.713" y="83.314" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="0eafdd64-6a46-4230-9fd1-9cdac1dfc055" name="R0805-4" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="172.679" y="56.242" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="172.251" y="60.289" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
+         </feeder>
+         <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="2597a4ca-abe9-4c9d-8261-5591ca9dc6fe" name="R0805-5" enabled="true" part-id="R0805-1K" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
+            <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="184.199" y="55.074" z="0.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="184.456" y="59.035" z="0.0" rotation="0.0"/>
+            <part-pitch value="4.0" units="Millimeters"/>
+            <tape-width value="8.0" units="Millimeters"/>
          </feeder>
       </feeders>
       <cameras/>
-      <job-processors class="java.util.HashMap">
-         <job-processor type="PickAndPlace">
-            <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" demo-mode="false">
-               <job-planner class="org.openpnp.planner.SimpleJobPlanner"/>
-            </job-processor>
-         </job-processor>
-         <job-processor type="SolderPaste">
-            <job-processor class="org.openpnp.machine.reference.ReferenceSolderPasteJobProcessor"/>
-         </job-processor>
-      </job-processors>
       <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="5000.0"/>
    </machine>
 </openpnp-machine>

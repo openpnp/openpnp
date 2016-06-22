@@ -1,0 +1,15 @@
+<pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="9" enabled="true" settle-first="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="1" enabled="true" conversion="Bgr2Gray"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurMedian" name="4" enabled="true" kernel-size="3"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="3" enabled="true" diameter="200"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="2" enabled="true" threshold="190" auto="true" invert="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="5" enabled="true" diameter="100"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleBlobDetector" name="result" enabled="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="0" enabled="true" image-stage-name="9"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawKeyPoints" name="7" enabled="true" key-points-stage-name="result">
+         <color r="255" g="0" b="204" a="255"/>
+      </cv-stage>
+   </stages>
+</pipeline>

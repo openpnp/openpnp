@@ -9,3 +9,4 @@ installers
 *.iml
 .classpath
 src/main/resources/icons/src/Soft_Scraps_by_deleket
+.github_changelog_generator

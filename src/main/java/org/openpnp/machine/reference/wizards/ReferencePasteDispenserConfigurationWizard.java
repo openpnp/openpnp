@@ -1,22 +1,20 @@
 /*
- 	Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- 	
- 	This file is part of OpenPnP.
- 	
-	OpenPnP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    OpenPnP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenPnP.  If not, see <http://www.gnu.org/licenses/>.
- 	
- 	For more information about OpenPnP visit http://openpnp.org
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.wizards;
@@ -42,8 +40,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ReferencePasteDispenserConfigurationWizard extends
-        AbstractConfigurationWizard {
+public class ReferencePasteDispenserConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferencePasteDispenser dispenser;
 
     private JTextField locationX;
@@ -57,23 +54,15 @@ public class ReferencePasteDispenserConfigurationWizard extends
 
         panelOffsets = new JPanel();
         contentPanel.add(panelOffsets);
-        panelOffsets.setBorder(new TitledBorder(new EtchedBorder(
-                EtchedBorder.LOWERED, null, null), "Offsets",
-                TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+        panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelOffsets.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, }, new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panelOffsets.add(lblX, "2, 2");
@@ -97,26 +86,23 @@ public class ReferencePasteDispenserConfigurationWizard extends
         locationZ.setColumns(5);
 
         contentPanel.add(panelOffsets);
-        
+
         JPanel panelSafeZ = new JPanel();
-        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
         contentPanel.add(panelSafeZ);
-        panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,},
-        	new RowSpec[] {
-        		FormSpecs.RELATED_GAP_ROWSPEC,
-        		FormSpecs.DEFAULT_ROWSPEC,}));
-        
+        panelSafeZ.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
         JLabel lblSafeZ = new JLabel("Safe Z");
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
-        
+
         textFieldSafeZ = new JTextField();
         panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
-        
+
     }
 
     @Override
@@ -124,22 +110,15 @@ public class ReferencePasteDispenserConfigurationWizard extends
         LengthConverter lengthConverter = new LengthConverter();
 
         MutableLocationProxy headOffsets = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, dispenser, "headOffsets", headOffsets,
-                "location");
-        addWrappedBinding(headOffsets, "lengthX", locationX, "text",
-                lengthConverter);
-        addWrappedBinding(headOffsets, "lengthY", locationY, "text",
-                lengthConverter);
-        addWrappedBinding(headOffsets, "lengthZ", locationZ, "text",
-                lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, dispenser, "headOffsets", headOffsets, "location");
+        addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
+        addWrappedBinding(headOffsets, "lengthY", locationY, "text", lengthConverter);
+        addWrappedBinding(headOffsets, "lengthZ", locationZ, "text", lengthConverter);
         addWrappedBinding(dispenser, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(locationX);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(locationY);
-        ComponentDecorators
-                .decorateWithAutoSelectAndLengthConversion(locationZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }
