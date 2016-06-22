@@ -16,16 +16,16 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
-                <dependency>
-                                <groupId>com.github.sarxos</groupId>
-                                <artifactId>webcam-capture</artifactId>
-                                <version>0.3.10</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.ostermiller</groupId>
-                        <artifactId>utils</artifactId>
-                        <version>1.07.00</version>
-                </dependency>
+		<dependency>
+			<groupId>com.github.sarxos</groupId>
+			<artifactId>webcam-capture</artifactId>
+			<version>0.3.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ostermiller</groupId>
+			<artifactId>utils</artifactId>
+			<version>1.07.00</version>
+		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
@@ -67,51 +67,51 @@
 			<artifactId>jvfw</artifactId>
 			<version>0.0.2</version>
 		</dependency>
-        <dependency>
-            <groupId>org.scream3r</groupId>
-            <artifactId>jssc</artifactId>
-            <version>2.8.0</version>
-        </dependency>	
-        <dependency>
+		<dependency>
+			<groupId>org.scream3r</groupId>
+			<artifactId>jssc</artifactId>
+			<version>2.8.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.swinglabs.swingx</groupId>
 			<artifactId>swingx-all</artifactId>
 			<version>1.6.4</version>
 		</dependency>
-        <dependency>
-            <groupId>org.openpnp</groupId>
-            <artifactId>opencv</artifactId>
-            <version>2.4.11-2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.3</version>
-        </dependency>        
 		<dependency>
-		    <groupId>org.apache.xmlgraphics</groupId>
-		    <artifactId>batik-transcoder</artifactId>
-		    <version>1.7</version>
+			<groupId>org.openpnp</groupId>
+			<artifactId>opencv</artifactId>
+			<version>2.4.11-2</version>
 		</dependency>
 		<dependency>
-		    <groupId>com.google.zxing</groupId>
-		    <artifactId>javase</artifactId>
-		    <version>2.2</version>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.3</version>
 		</dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>14.0.1</version>
-        </dependency>
-        <dependency>
-        	<groupId>com.jgoodies</groupId>
-        	<artifactId>jgoodies-forms</artifactId>
-        	<version>1.8.0</version>
-        </dependency>
 		<dependency>
-		  <groupId>org.jcodec</groupId>
-		  <artifactId>jcodec-javase</artifactId>
-		  <version>0.1.9</version>
-		  <scope>test</scope>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-transcoder</artifactId>
+			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>14.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.jgoodies</groupId>
+			<artifactId>jgoodies-forms</artifactId>
+			<version>1.8.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jcodec</groupId>
+			<artifactId>jcodec-javase</artifactId>
+			<version>0.1.9</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.tros</groupId>
@@ -127,6 +127,11 @@
 			<groupId>de.onvif</groupId>
 			<artifactId>onvif-java-lib</artifactId>
 			<version>2016-03-16</version>
+		</dependency>
+		<dependency>
+			<groupId>org.python</groupId>
+			<artifactId>jython-standalone</artifactId>
+			<version>2.7.1b3</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -144,7 +149,7 @@
 					<downloadJavadocs>true</downloadJavadocs>
 				</configuration>
 			</plugin>
-			
+
 			<!--
 			    Creates a build number property that is then embedded into the
 			    manifest by the maven-jar-plugin.
@@ -167,7 +172,7 @@
 					<shortRevisionLength>6</shortRevisionLength>
 				</configuration>
 			</plugin>
-			
+
 			<!--
 			    Specifies the source and class versions that should be used when
 			    compiling and sets the main class to the OpenPnP startup class.
@@ -180,14 +185,14 @@
 					<source>1.8</source>
 					<target>1.8</target>
 					<mainClass>org.openpnp.app.Main</mainClass>
-                    <excludes>
+					<excludes>
                     	<!--
                         <exclude>**/zippy/**</exclude>
                         -->
-                    </excludes>
+					</excludes>
 				</configuration>
 			</plugin>
-			
+
 			<!--
 			    * Enables creation of INDEX.LIST to improve classloader
 			    performance.
@@ -217,7 +222,7 @@
 					</archive>
 				</configuration>
 			</plugin>
-			
+
 			<!--
 			    Copies dependencies to target/lib for pickup by jar plugin.
 			-->
@@ -241,18 +246,18 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
             <!--
                 Specifies the file encoding to be used when copying resources.
             -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>	        
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<repositories>
