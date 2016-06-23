@@ -121,6 +121,14 @@ G4P250 ; Wait 250 milliseconds
 M803 ; Turn off nozzle 1 exhaust solenoid
 ```
 
+### pump-on-command
+
+Sent to turn on the vacuum pump before performing a pick.
+
+### pump-off-command
+
+Sent to turn off the vacuum pump after a place if there are no longer any nozzles that are picked.
+
 ### actuate-boolean-command
 
 Sent whenever an Actuator's actuate(boolean) method is called. This is currently used by the ReferenceDragFeeder to fire a drag solenoid. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
