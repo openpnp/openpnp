@@ -26,20 +26,25 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
 
 @SuppressWarnings("serial")
 public class AboutDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
+    private JTextPane textPane;
 
     public AboutDialog(Frame frame) {
         super(frame, true);
@@ -54,7 +59,7 @@ public class AboutDialog extends JDialog {
         lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
         contentPanel.add(lblOpenpnp);
-        JLabel lblCopyright = new JLabel("Copyright © 2011, 2012, 2013 Jason von Nieda");
+        JLabel lblCopyright = new JLabel("Copyright © 2011 - 2016 Jason von Nieda");
         lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblCopyright);
@@ -62,6 +67,10 @@ public class AboutDialog extends JDialog {
         lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);
+
+        textPane = new JTextPane();
+        textPane.setEditable(false);
+        contentPanel.add(new JScrollPane(textPane));
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -74,5 +83,14 @@ public class AboutDialog extends JDialog {
         okButton.setActionCommand("OK");
         buttonPane.add(okButton);
         getRootPane().setDefaultButton(okButton);
+
+        try {
+            String s = FileUtils.readFileToString(new File("CHANGES.md"));
+            textPane.setText(s);
+            textPane.setCaretPosition(0);
+        }
+        catch (Exception e) {
+
+        }
     }
 }

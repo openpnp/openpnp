@@ -209,7 +209,7 @@ public class MainFrame extends JFrame {
         mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
         mnEdit.addSeparator();
         mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
-
+        
         // View
         //////////////////////////////////////////////////////////////////////
         JMenu mnView = new JMenu("View");
@@ -537,11 +537,12 @@ public class MainFrame extends JFrame {
         }
         return false;
     }
-
+    
     public void about() {
         AboutDialog dialog = new AboutDialog(this);
-        dialog.setSize(350, 350);
+        dialog.setSize(750, 550);
         dialog.setLocationRelativeTo(null);
+        dialog.setModal(true);
         dialog.setVisible(true);
     }
 
