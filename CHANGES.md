@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-06-22
+
+* Python Scripting Support
+
+	Python support is now included by default, instead of requiring an external install.
+
+* GcodeDriver Pump On, Pump Off
+
+	GcodeDriver now has pump-on-command and pump-off-command commands which will trigger
+	intelligently depending on whether there are any nozzles currently picking. 
+
 # 2016-06-21
 
 * GcodeDriver Axis Mapping

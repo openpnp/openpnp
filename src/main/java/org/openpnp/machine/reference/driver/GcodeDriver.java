@@ -21,6 +21,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
@@ -43,13 +44,13 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int timeoutMilliseconds = 5000;
 
     @Attribute(required = false)
-    protected int connectWaitTimeMilliseconds = 0;
+    protected int connectWaitTimeMilliseconds = 1000;
 
     @Element(required = false)
     protected Location homeLocation = null;
 
     @Element(required = false)
-    protected String commandConfirmRegex = null;
+    protected String commandConfirmRegex = "^ok.*";;
 
     @Element(required = false)
     protected String connectCommand = null;
@@ -88,6 +89,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Element(required = false)
     protected String actuateDoubleCommand = null;
+    
+    @Element(required = false)
+    protected String pumpOnCommand = null;
+
+    @Element(required = false)
+    protected String pumpOffCommand = null;
 
     @ElementList(required = false)
     protected List<ReferenceDriver> subDrivers = new ArrayList<>();
@@ -99,6 +106,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private boolean disconnectRequested;
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+    private Set<Nozzle> pickedNozzles = new HashSet<>();
 
     @Commit
     public void commit() {
@@ -368,11 +376,16 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
+        pickedNozzles.add(nozzle);
+        if (pickedNozzles.size() > 0) {
+            sendGcode(pumpOnCommand);
+        }
+        
         String command = pickCommand;
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
-
+        
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
         }
@@ -380,6 +393,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
+        pickedNozzles.remove(nozzle);
+        if (pickedNozzles.size() < 1) {
+            sendGcode(pumpOffCommand);
+        }
+
         String command = placeCommand;
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
