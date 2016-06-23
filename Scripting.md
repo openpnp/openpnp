@@ -19,9 +19,10 @@ OpenPnP supports scripts written in JavaScript out of the box and it's easy to a
 ### JavaScript
 JavaScript support is included with OpenPnP, there is nothing you need to add. The engine is called Nashorn. Script files with the extension `.js` will be run by the Nashorn / JavaScript engine.
 
-For more information about the integration between Java and JavaScript in scripts, see the following links:
+For more information about the integration between Java and JavaScript in scripts, see the following links. They are listed in suggested reading order:
 
 http://winterbe.com/posts/2014/04/05/java8-nashorn-tutorial/
+https://wiki.openjdk.java.net/display/Nashorn/Nashorn+extensions
 https://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/toc.html
 http://www.oracle.com/technetwork/articles/java/jf14-nashorn-2126515.html
 
