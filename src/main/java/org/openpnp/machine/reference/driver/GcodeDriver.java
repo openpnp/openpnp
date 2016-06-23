@@ -393,15 +393,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        pickedNozzles.remove(nozzle);
-        if (pickedNozzles.size() < 1) {
-            sendGcode(pumpOffCommand);
-        }
-
         String command = placeCommand;
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
+
+        pickedNozzles.remove(nozzle);
+        if (pickedNozzles.size() < 1) {
+            sendGcode(pumpOffCommand);
+        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.place(nozzle);
