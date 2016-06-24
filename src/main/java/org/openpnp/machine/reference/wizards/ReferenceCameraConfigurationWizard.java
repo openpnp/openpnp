@@ -345,11 +345,11 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
     private Action startCalibration = new AbstractAction("Start Lens Calibration") {
         @Override
         public void actionPerformed(ActionEvent e) {
-            MainFrame.cameraPanel.setSelectedCamera(referenceCamera);
+            MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
 
             startLensCalibrationBtn.setAction(cancelCalibration);
 
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
             String message =
                     "Go to https://github.com/openpnp/openpnp/wiki/Camera-Lens-Calibration for detailed instructions.\n"
                             + "When you have your calibration card ready, hold it in front of the camera so that the entire card is visible.\n"
@@ -379,7 +379,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
 
             referenceCamera.cancelCalibration();
 
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(referenceCamera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
             cameraView.setText(null);
             cameraView.flash();
         }

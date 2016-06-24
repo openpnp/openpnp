@@ -351,7 +351,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             else {
                 throw new Exception("Unrecognized result " + result);
             }
-            MainFrame.mainFrame.cameraPanel.getCameraView(camera).showFilteredImage(
+            MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
                     OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
             return location;
         }

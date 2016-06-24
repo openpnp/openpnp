@@ -222,7 +222,7 @@ public class Scripting {
 
         engine.put("config", Configuration.get());
         engine.put("machine", Configuration.get().getMachine());
-        engine.put("gui", MainFrame.mainFrame);
+        engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
 
         try (FileReader reader = new FileReader(script)) {

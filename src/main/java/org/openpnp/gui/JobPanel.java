@@ -889,7 +889,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 double z = getSelectedBoardLocation().getLocation().getZ();
                 getSelectedBoardLocation()
@@ -909,7 +909,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+            HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
             double z = getSelectedBoardLocation().getLocation().getZ();
             getSelectedBoardLocation().setLocation(tool.getLocation().derive(null, null, z, null));
             boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(),
@@ -928,9 +928,9 @@ public class JobPanel extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
                     UiUtils.submitUiMachineTask(() -> {
-                        HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                         Camera camera = tool.getHead().getDefaultCamera();
-                        MainFrame.cameraPanel.ensureCameraVisible(camera);
+                        MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                         Location location = getSelectedBoardLocation().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                     });
@@ -947,7 +947,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Location location = getSelectedBoardLocation().getLocation();
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
             });
@@ -985,9 +985,9 @@ public class JobPanel extends JPanel {
                         .locateBoard(getSelectedBoardLocation());
                 getSelectedBoardLocation().setLocation(location);
                 refreshSelectedBoardRow();
-                HeadMountable tool = MainFrame.machineControlsPanel.getSelectedTool();
+                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
-                MainFrame.cameraPanel.ensureCameraVisible(camera);
+                MainFrame.get().getCameraViews().ensureCameraVisible(camera);
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
@@ -1050,6 +1050,6 @@ public class JobPanel extends JPanel {
             };
             
     private final TextStatusListener textStatusListener = text -> {
-        MainFrame.mainFrame.setStatus(text);
+        MainFrame.get().setStatus(text);
     };
 }

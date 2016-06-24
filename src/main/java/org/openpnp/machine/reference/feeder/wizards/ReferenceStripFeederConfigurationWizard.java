@@ -350,7 +350,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
             btnAutoSetup.setAction(autoSetupCancel);
 
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
             cameraView.addActionListener(autoSetupPart1Clicked);
             cameraView.setText("Click on the center of the first part in the tape.");
             cameraView.flash();
@@ -370,7 +370,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(ActionEvent e) {
             btnAutoSetup.setAction(autoSetup);
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
             cameraView.setText(null);
             cameraView.setCameraViewFilter(null);
             cameraView.removeActionListener(autoSetupPart1Clicked);
@@ -382,7 +382,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             firstPartLocation = action.getLocation();
-            final CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
+            final CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
             cameraView.removeActionListener(this);
             Configuration.get().getMachine().submit(new Callable<Void>() {
                 public Void call() throws Exception {
@@ -417,7 +417,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             secondPartLocation = action.getLocation();
-            final CameraView cameraView = MainFrame.cameraPanel.getCameraView(autoSetupCamera);
+            final CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
             cameraView.removeActionListener(this);
             Configuration.get().getMachine().submit(new Callable<Void>() {
                 public Void call() throws Exception {

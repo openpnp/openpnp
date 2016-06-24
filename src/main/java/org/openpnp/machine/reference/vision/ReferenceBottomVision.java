@@ -103,7 +103,7 @@ public class ReferenceBottomVision implements PartAlignment {
         offsets = offsets.derive(null, null, null, -angle);
         logger.debug("Final offsets {}", offsets);
 
-        CameraView cameraView = MainFrame.mainFrame.cameraPanel.getCameraView(camera);
+        CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
         String s = rect.size.toString() + " " + rect.angle + "°";
         cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
                 1500);

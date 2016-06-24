@@ -160,7 +160,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure.setAction(confirmMeasureAction);
             cancelMeasureAction.setEnabled(true);
-            CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+            CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
             cameraView.setSelectionEnabled(true);
             cameraView.setSelection(0, 0, 100, 100);
         }
@@ -171,7 +171,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure.setAction(measureAction);
             cancelMeasureAction.setEnabled(false);
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
             cameraView.setSelectionEnabled(false);
             Rectangle selection = cameraView.getSelection();
             double width = Double.parseDouble(textFieldWidth.getText());
@@ -188,7 +188,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure.setAction(measureAction);
             cancelMeasureAction.setEnabled(false);
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
             cameraView.setSelectionEnabled(false);
         }
     };

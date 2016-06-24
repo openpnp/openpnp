@@ -259,7 +259,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             return null;
         }
         try {
-            MainFrame.cameraPanel.getCameraView(camera).showFilteredImage(image, 500);
+            MainFrame.get().getCameraViews().getCameraView(camera).showFilteredImage(image, 500);
         }
         catch (Exception e) {
             // if we aren't running in the UI this will fail, and that's okay

@@ -102,7 +102,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         CvPipeline pipeline = bottomVision.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.mainFrame, "Bottom Vision Pipeline");
+        JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);

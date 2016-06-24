@@ -104,29 +104,80 @@ public class MainFrame extends JFrame {
 
     // TODO: Really should switch to some kind of DI model, but this will do
     // for now.
-    public static MainFrame mainFrame;
-    public static MachineControlsPanel machineControlsPanel;
-    public static PartsPanel partsPanel;
-    public static PackagesPanel packagesPanel;
-    public static FeedersPanel feedersPanel;
-    public static JobPanel jobPanel;
-    public static CamerasPanel camerasPanel;
-    public static CameraPanel cameraPanel;
-    public static MachineSetupPanel machineSetupPanel;
-    public static Component navigationPanel;
+    private static MainFrame mainFrame;
+
+    private MachineControlsPanel machineControlsPanel;
+    private PartsPanel partsPanel;
+    private PackagesPanel packagesPanel;
+    private FeedersPanel feedersPanel;
+    private JobPanel jobPanel;
+    private CamerasPanel camerasPanel;
+    private CameraPanel cameraPanel;
+    private MachineSetupPanel machineSetupPanel;
+    private Component navigationPanel;
+
+    public static MainFrame get() {
+        return mainFrame;
+    }
+
+    public MachineControlsPanel getMachineControls() {
+        return machineControlsPanel;
+    }
+
+    public PartsPanel getPartsTab() {
+        return partsPanel;
+    }
+
+    public PackagesPanel getPackagesTab() {
+        return packagesPanel;
+    }
+
+    public FeedersPanel getFeedersTab() {
+        return feedersPanel;
+    }
+
+    public JobPanel getJobTab() {
+        return jobPanel;
+    }
+
+    public CamerasPanel getCamerasTab() {
+        return camerasPanel;
+    }
+    
+    public CameraPanel getCameraViews() {
+        return cameraPanel;
+    }
+    
+    public MachineSetupPanel getMachineSetupTab() {
+        return machineSetupPanel;
+    }
 
     private JPanel contentPane;
     private JLabel lblStatus;
-    private JTabbedPane panelBottom;
+    private JTabbedPane tabs;
     private JSplitPane splitPaneTopBottom;
     private TitledBorder panelInstructionsBorder;
+    private JPanel panelInstructions;
+    private JPanel panelInstructionActions;
+    private JPanel panel_1;
+    private JButton btnInstructionsNext;
+    private JButton btnInstructionsCancel;
+    private JTextPane lblInstructions;
+    private JPanel panel_2;
+    private JTabbedPane camerasAndNavTabbedPane;
+    private JPanel panel_3;
+    private JPanel logPanel;
+    private JMenuBar menuBar;
+    private JMenu mnImport;
+
+    public JTabbedPane getTabs() {
+        return tabs;
+    }
 
     private Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
 
     private ActionListener instructionsCancelActionListener;
     private ActionListener instructionsProceedActionListener;
-
-    private JMenu mnImport;
 
     private Scripting scripting;
 
@@ -169,7 +220,7 @@ public class MainFrame extends JFrame {
         cameraPanel = new CameraPanel();
         machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
 
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
         setJMenuBar(menuBar);
 
         // File
@@ -209,7 +260,7 @@ public class MainFrame extends JFrame {
         mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
         mnEdit.addSeparator();
         mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
-        
+
         // View
         //////////////////////////////////////////////////////////////////////
         JMenu mnView = new JMenu("View");
@@ -406,8 +457,8 @@ public class MainFrame extends JFrame {
             panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
         }
 
-        panelBottom = new JTabbedPane(JTabbedPane.TOP);
-        splitPaneTopBottom.setRightComponent(panelBottom);
+        tabs = new JTabbedPane(JTabbedPane.TOP);
+        splitPaneTopBottom.setRightComponent(tabs);
 
         lblStatus = new JLabel(" ");
         lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -424,15 +475,15 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        panelBottom.addTab("Job", null, jobPanel, null);
-        panelBottom.addTab("Parts", null, partsPanel, null);
-        panelBottom.addTab("Packages", null, packagesPanel, null);
-        panelBottom.addTab("Feeders", null, feedersPanel, null);
-        panelBottom.addTab("Cameras", null, camerasPanel, null);
-        panelBottom.addTab("Machine Setup", null, machineSetupPanel, null);
+        tabs.addTab("Job", null, jobPanel, null);
+        tabs.addTab("Parts", null, partsPanel, null);
+        tabs.addTab("Packages", null, packagesPanel, null);
+        tabs.addTab("Feeders", null, feedersPanel, null);
+        tabs.addTab("Cameras", null, camerasPanel, null);
+        tabs.addTab("Machine Setup", null, machineSetupPanel, null);
 
         LogPanel logPanel = new LogPanel();
-        panelBottom.addTab("Log", null, logPanel, null);
+        tabs.addTab("Log", null, logPanel, null);
 
         registerBoardImporters();
 
@@ -537,7 +588,7 @@ public class MainFrame extends JFrame {
         }
         return false;
     }
-    
+
     public void about() {
         AboutDialog dialog = new AboutDialog(this);
         dialog.setSize(750, 550);
@@ -598,8 +649,8 @@ public class MainFrame extends JFrame {
     }
 
     public void showTab(String title) {
-        int index = panelBottom.indexOfTab(title);
-        panelBottom.setSelectedIndex(index);
+        int index = tabs.indexOfTab(title);
+        tabs.setSelectedIndex(index);
     }
 
     private ComponentListener componentListener = new ComponentAdapter() {
@@ -647,15 +698,4 @@ public class MainFrame extends JFrame {
             about();
         }
     };
-
-    private JPanel panelInstructions;
-    private JPanel panelInstructionActions;
-    private JPanel panel_1;
-    private JButton btnInstructionsNext;
-    private JButton btnInstructionsCancel;
-    private JTextPane lblInstructions;
-    private JPanel panel_2;
-    private JTabbedPane camerasAndNavTabbedPane;
-    private JPanel panel_3;
-    private JPanel logPanel;
 }

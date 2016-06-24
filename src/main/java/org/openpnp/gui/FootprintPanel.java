@@ -192,7 +192,7 @@ public class FootprintPanel extends JPanel {
     private void showReticle() {
         try {
             Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-            CameraView cameraView = MainFrame.cameraPanel.getCameraView(camera);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
             if (cameraView == null) {
                 return;
             }

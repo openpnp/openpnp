@@ -247,7 +247,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private void editCalibrationPipeline() throws Exception {
         CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.mainFrame, "Calibration Pipeline");
+        JDialog dialog = new JDialog(MainFrame.get(), "Calibration Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);

@@ -114,7 +114,7 @@ public class LocationButtonsPanel extends JPanel {
     }
 
     public HeadMountable getTool() throws Exception {
-        return MainFrame.machineControlsPanel.getSelectedNozzle();
+        return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
     public Camera getCamera() throws Exception {
