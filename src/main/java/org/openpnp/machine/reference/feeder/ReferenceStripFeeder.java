@@ -157,7 +157,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // partPitch/partPitchAdjusted limitation
         // It's the P1 value according to EIA-481-C, October 2003, pg. 9, 11, 13
         // Accuracy variations as specified in the document are not taken into account!
-        double partPitchAdjusted = lineLocations[0].getXyzDistanceTo(lineLocations[1]);
+        double partPitchAdjusted = lineLocations[0].getLinearDistanceTo(lineLocations[1]);
         partPitchAdjusted =
                 partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
         Location l = getPointAlongLine(lineLocations[0], lineLocations[1],
