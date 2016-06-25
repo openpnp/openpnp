@@ -169,7 +169,7 @@ public class Location {
 
     /**
      * Returns a new Location with the given Location's X, Y, and Z components added to this
-     * Location's X, Y, and Z components. Rotation is left unchanged.
+     * Location's X, Y, and Z components. Rotation is included.
      * 
      * @param l
      * @return
