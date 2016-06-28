@@ -19,8 +19,8 @@ Under the "Camera Specific" tab, "General" section:
 ### Hisilicon HI3516 / HI3518 (and variations)
 
 Used in the majority of budget IP cameras from AliExpress/eBay/etc, or resellers of them.
-- "Resolution" - Does not support configuring the resolution of captured frames; images will always be PAL/NTSC resolution.
+- "Resolution" - Does not support configuring the resolution of captured frames; images will always be PAL/NTSC resolution. If the original native resolution of the camera is not 4:3 (e.g. 720P or 1080P), it will be squashed into a 4:3 image and you must use "Target Width" and/or "Target Height" to restore the image to the original aspect ratio.
 
 ### TI Davinci
 
-Please add any limitations or other notes here.
+Please add any limitations or other notes here. These SoC's have not been tested yet, but they are expected to have a more robust ONVIF implementation.
