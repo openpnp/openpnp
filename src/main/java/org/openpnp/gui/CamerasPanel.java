@@ -299,7 +299,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
 
                 configuration.getMachine().addCamera(camera);
 
-                MainFrame.cameraPanel.addCamera(camera);
+                MainFrame.get().getCameraViews().addCamera(camera);
                 tableModel.refresh();
                 Helpers.selectLastTableRow(table);
             }

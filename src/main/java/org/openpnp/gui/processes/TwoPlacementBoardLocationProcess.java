@@ -63,7 +63,7 @@ public class TwoPlacementBoardLocationProcess {
             throws Exception {
         this.mainFrame = mainFrame;
         this.jobPanel = jobPanel;
-        this.camera = MainFrame.machineControlsPanel.getSelectedTool().getHead().getDefaultCamera();
+        this.camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
         advance();
     }
 

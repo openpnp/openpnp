@@ -103,7 +103,7 @@ public class NullDriver implements ReferenceDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
-        logger.debug("moveTo({}, {}, {})", new Object[] {hm, location, speed});
+        logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
 
         // Subtract the offsets from the incoming Location. This converts the

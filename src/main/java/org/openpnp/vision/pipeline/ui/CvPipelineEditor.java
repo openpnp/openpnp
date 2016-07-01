@@ -16,6 +16,7 @@ import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.openpnp.vision.pipeline.stages.BlurMedian;
 import org.openpnp.vision.pipeline.stages.BottomVisionCriS;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
+import org.openpnp.vision.pipeline.stages.ConvertModelToPoints;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
@@ -26,6 +27,7 @@ import org.openpnp.vision.pipeline.stages.DrawRotatedRects;
 import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
 import org.openpnp.vision.pipeline.stages.FilterContours;
 import org.openpnp.vision.pipeline.stages.FindContours;
+import org.openpnp.vision.pipeline.stages.HistogramEqualize;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
@@ -38,6 +40,7 @@ import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.SetColor;
+import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 
 /**
@@ -59,6 +62,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(BlurGaussian.class);
         registerStageClass(BottomVisionCriS.class);
         registerStageClass(ConvertColor.class);
+        registerStageClass(ConvertModelToPoints.class);
         registerStageClass(DetectCirclesHough.class);
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DetectEdgesRobertsCross.class);
@@ -69,6 +73,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DrawTemplateMatches.class);
         registerStageClass(FilterContours.class);
         registerStageClass(FindContours.class);
+        registerStageClass(HistogramEqualize.class);
         registerStageClass(ImageCapture.class);
         registerStageClass(ImageRead.class);
         registerStageClass(ImageRecall.class);
@@ -81,6 +86,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(Normalize.class);
         registerStageClass(ReadModelProperty.class);
         registerStageClass(SetColor.class);
+        registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
     }
 

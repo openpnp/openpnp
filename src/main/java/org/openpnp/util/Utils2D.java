@@ -86,6 +86,10 @@ public class Utils2D {
 
     public static Location calculateBoardPlacementLocation(Location boardLocation, Side side,
             double offset, Location placementLocation) {
+        // The Z value of the placementLocation is always ignored, so zero it out to make sure.
+        placementLocation = placementLocation.derive(null, null, 0D, null);
+        
+        
         // We will work in the units of the placementLocation, so convert
         // anything that isn't in those units to it.
         boardLocation = boardLocation.convertToUnits(placementLocation.getUnits());
@@ -122,6 +126,8 @@ public class Utils2D {
             placementLocation = placementLocation.invert(true, false, false, false)
                     .add(new Location(placementLocation.getUnits(), offset, 0.0, 0.0, 0.0));
         }
+        // The Z value of the placementLocation is always ignored, so zero it out to make sure.
+        placementLocation = placementLocation.derive(null, null, 0D, null);
         return placementLocation;
     }
 

@@ -19,12 +19,17 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -35,6 +40,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
@@ -43,6 +49,9 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.UiUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -77,6 +86,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private PackagesTableModel tableModel;
 
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
+    private JPanel panelCalibration;
+    private JButton btnEditPipeline;
+    private JButton btnCalibrate;
+    private JButton btnReset;
+    private JLabel lblEnabled;
+    private JCheckBox calibrationEnabledCheckbox;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -183,6 +198,66 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 textFieldChangerEndY, textFieldChangerEndZ, (JTextField) null);
         changerEndLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerEndLocationButtonsPanel, "10, 8, fill, default");
+
+        panelCalibration = new JPanel();
+        panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        contentPanel.add(panelCalibration);
+        panelCalibration.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        RowSpec.decode("23px"), FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        lblEnabled = new JLabel("Enabled?");
+        panelCalibration.add(lblEnabled, "2, 2, right, default");
+
+        calibrationEnabledCheckbox = new JCheckBox("");
+        panelCalibration.add(calibrationEnabledCheckbox, "3, 2, left, default");
+
+        btnCalibrate = new JButton("Calibrate");
+        btnCalibrate.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                calibrate();
+            }
+        });
+        panelCalibration.add(btnCalibrate, "3, 3");
+
+        btnReset = new JButton("Reset");
+        btnReset.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                nozzleTip.getCalibration().reset();
+            }
+        });
+        panelCalibration.add(btnReset, "3, 5");
+
+        btnEditPipeline = new JButton("Edit Pipeline");
+        btnEditPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    editCalibrationPipeline();
+                });
+            }
+        });
+        panelCalibration.add(btnEditPipeline, "3, 7, left, top");
+    }
+
+    private void editCalibrationPipeline() throws Exception {
+        CvPipeline pipeline = nozzleTip.getCalibration().getPipeline();
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), "Calibration Pipeline");
+        dialog.getContentPane().setLayout(new BorderLayout());
+        dialog.getContentPane().add(editor);
+        dialog.setSize(1024, 768);
+        dialog.setVisible(true);
+    }
+
+    private void calibrate() {
+        UiUtils.submitUiMachineTask(() -> {
+            nozzleTip.getCalibration().calibrate(nozzleTip);
+        });
     }
 
     @Override
@@ -221,6 +296,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
+        
+        addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);

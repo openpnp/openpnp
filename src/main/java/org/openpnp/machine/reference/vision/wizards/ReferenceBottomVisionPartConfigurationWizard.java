@@ -21,7 +21,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.UiUtils;
-import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
@@ -48,20 +48,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("right:default"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 2");
@@ -75,11 +68,11 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 testAlignment();
             });
         });
-        
+
         JLabel lblTest = new JLabel("Test");
         panel.add(lblTest, "2, 4");
         panel.add(btnTestAlighment, "4, 4");
-        
+
         chckbxCenterAfterTest = new JCheckBox("Center After Test");
         chckbxCenterAfterTest.setSelected(true);
         panel.add(chckbxCenterAfterTest, "6, 4");
@@ -113,24 +106,23 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     }
 
     private void testAlignment() throws Exception {
-        Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
-        
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+
         // perform the alignment
         Location offsets = bottomVision.findOffsets(part, nozzle);
-        
+
         if (!chckbxCenterAfterTest.isSelected()) {
             return;
         }
 
         // position the part over camera center
-        Location cameraLocation = bottomVision.getBottomVisionCamera().getLocation();
+        Location cameraLocation = VisionUtils.getBottomVisionCamera().getLocation();
 
         // Rotate the point 0,0 using the bottom offsets as a center point by the angle
         // that is
         // the difference between the bottom vision angle and the calculated global
         // placement angle.
-        Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(
-                offsets,
+        Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(offsets,
                 cameraLocation.getRotation() - offsets.getRotation());
 
         // Set the angle to the difference mentioned above, aligning the part to the
@@ -147,15 +139,15 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         // instead of
         // the nozzle.
         location = location.subtract(offsets);
-        
+
         nozzle.moveTo(location);
     }
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
-        pipeline.setCamera(bottomVision.getBottomVisionCamera());
+        pipeline.setCamera(VisionUtils.getBottomVisionCamera());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.mainFrame, "Bottom Vision Pipeline");
+        JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);

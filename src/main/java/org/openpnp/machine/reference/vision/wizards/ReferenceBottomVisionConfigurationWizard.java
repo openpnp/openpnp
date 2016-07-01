@@ -18,6 +18,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
@@ -37,20 +38,13 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("right:default"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 2");
@@ -70,13 +64,12 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             }
         });
         panel.add(editPipelineButton, "4, 4");
-        
+
         JButton btnResetToDefault = new JButton("Reset to Default");
         btnResetToDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current pipeline with the built in default pipeline. Are you sure?", null,
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
+                    "This will replace the current pipeline with the built in default pipeline. Are you sure?",
+                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     bottomVision.setPipeline(ReferenceBottomVision.createDefaultPipeline());
@@ -85,19 +78,20 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             }
         });
         panel.add(btnResetToDefault, "6, 4");
-        
+
         JButton btnResetAllTo = new JButton("Reset All Parts");
         btnResetAllTo.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace all custom part pipelines with the current pipeline. Are you sure?", null,
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
+                    "This will replace all custom part pipelines with the current pipeline. Are you sure?",
+                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    for (PartSettings partSettings : bottomVision.getPartSettingsByPartId().values()) {
+                    for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
+                            .values()) {
                         partSettings.setPipeline(bottomVision.getPipeline().clone());
                     }
-                    MessageBoxes.errorBox(getTopLevelAncestor(), "Parts Reset", "All custom part pipelines have been reset.");
+                    MessageBoxes.errorBox(getTopLevelAncestor(), "Parts Reset",
+                            "All custom part pipelines have been reset.");
                 });
             }
         });
@@ -106,9 +100,9 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = bottomVision.getPipeline();
-        pipeline.setCamera(bottomVision.getBottomVisionCamera());
+        pipeline.setCamera(VisionUtils.getBottomVisionCamera());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.mainFrame, "Bottom Vision Pipeline");
+        JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);

@@ -346,7 +346,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             new Thread() {
                 public void run() {
                     Feeder feeder = getSelectedFeeder();
-                    Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                    Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
                     try {
                         nozzle.moveToSafeZ();
@@ -374,7 +374,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             new Thread() {
                 public void run() {
                     Feeder feeder = getSelectedFeeder();
-                    Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                    Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
                     try {
                         nozzle.moveToSafeZ();
@@ -404,7 +404,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelectedFeeder();
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 Location pickLocation = feeder.getPickLocation();
                 MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
@@ -425,7 +425,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             new Thread() {
                 public void run() {
                     Feeder feeder = getSelectedFeeder();
-                    Nozzle nozzle = MainFrame.machineControlsPanel.getSelectedNozzle();
+                    Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
                     try {
                         Location pickLocation = feeder.getPickLocation();

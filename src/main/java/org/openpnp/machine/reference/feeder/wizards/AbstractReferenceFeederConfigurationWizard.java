@@ -34,6 +34,7 @@ import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
@@ -68,7 +69,11 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
     private JComboBox comboBoxPart;
     private LocationButtonsPanel locationButtonsPanel;
+    private JTextField retryCountTf;
 
+    /**
+     * @wbp.parser.constructor
+     */
     public AbstractReferenceFeederConfigurationWizard(ReferenceFeeder feeder) {
         this(feeder, true);
     }
@@ -80,12 +85,20 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         panelPart = new JPanel();
         panelPart.setBorder(
-                new TitledBorder(null, "Part", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
         try {
@@ -95,8 +108,19 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
+        
+        JLabel lblPart = new JLabel("Part");
+        panelPart.add(lblPart, "2, 2, right, default");
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "2, 2, left, default");
+        panelPart.add(comboBoxPart, "4, 2, left, default");
+        
+        JLabel lblRetryCount = new JLabel("Retry Count");
+        panelPart.add(lblRetryCount, "2, 4, right, default");
+        
+        retryCountTf = new JTextField();
+        retryCountTf.setText("3");
+        panelPart.add(retryCountTf, "4, 4");
+        retryCountTf.setColumns(3);
 
         if (includePickLocation) {
             panelLocation = new JPanel();
@@ -156,10 +180,12 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
+        addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
 
         if (includePickLocation) {
             MutableLocationProxy location = new MutableLocationProxy();
@@ -173,5 +199,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
             ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
         }
+
+        ComponentDecorators.decorateWithAutoSelect(retryCountTf);
     }
 }

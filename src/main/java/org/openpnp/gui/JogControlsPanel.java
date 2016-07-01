@@ -51,6 +51,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
@@ -103,9 +104,9 @@ public class JogControlsPanel extends JPanel {
         cMinusAction.setEnabled(enabled);
         discardAction.setEnabled(enabled);
         safezAction.setEnabled(enabled);
-        xyZeroAction.setEnabled(enabled);
-        zZeroAction.setEnabled(enabled);
-        cZeroAction.setEnabled(enabled);
+        xyParkAction.setEnabled(enabled);
+        zParkAction.setEnabled(enabled);
+        cParkAction.setEnabled(enabled);
         for (Component c : panelActuators.getComponents()) {
             c.setEnabled(enabled);
         }
@@ -197,12 +198,16 @@ public class JogControlsPanel extends JPanel {
         });
     }
 
-    private void zero(boolean xy, boolean z, boolean c) {
+    private void park(boolean xy, boolean z, boolean c) {
         UiUtils.submitUiMachineTask(() -> {
-            Location l = machineControlsPanel.getSelectedNozzle().getLocation()
-                    .convertToUnits(Configuration.get().getSystemUnits());
-            l = l.derive(xy ? 0d : null, xy ? 0d : null, z ? 0d : null, c ? 0d : null);
-            machineControlsPanel.getSelectedNozzle().moveTo(l);
+            HeadMountable tool = machineControlsPanel.getSelectedTool();
+            Location location = tool.getLocation();
+            Location parkLocation = tool.getHead().getParkLocation();
+            parkLocation = parkLocation.convertToUnits(location.getUnits());
+            location = location.derive(xy ? parkLocation.getX() : null,
+                    xy ? parkLocation.getY() : null, z ? parkLocation.getZ() : null,
+                    c ? parkLocation.getRotation() : null);
+            MovableUtils.moveToLocationAtSafeZ(tool, location);
         });
     }
 
@@ -302,7 +307,7 @@ public class JogControlsPanel extends JPanel {
         xMinusButton.setHideActionText(true);
         panelControls.add(xMinusButton, "6, 6");
 
-        JButton homeXyButton = new JButton(xyZeroAction);
+        JButton homeXyButton = new JButton(xyParkAction);
         homeXyButton.setHideActionText(true);
         panelControls.add(homeXyButton, "8, 6");
 
@@ -310,7 +315,7 @@ public class JogControlsPanel extends JPanel {
         xPlusButton.setHideActionText(true);
         panelControls.add(xPlusButton, "10, 6");
 
-        JButton homeZButton = new JButton(zZeroAction);
+        JButton homeZButton = new JButton(zParkAction);
         homeZButton.setHideActionText(true);
         panelControls.add(homeZButton, "14, 6");
 
@@ -331,7 +336,7 @@ public class JogControlsPanel extends JPanel {
         counterclockwiseButton.setHideActionText(true);
         panelControls.add(counterclockwiseButton, "6, 12");
 
-        JButton homeCButton = new JButton(cZeroAction);
+        JButton homeCButton = new JButton(cParkAction);
         homeCButton.setHideActionText(true);
         panelControls.add(homeCButton, "8, 12");
 
@@ -468,26 +473,26 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
-    public Action xyZeroAction = new AbstractAction("Zero XY", Icons.zero) {
+    public Action xyParkAction = new AbstractAction("Park XY", Icons.park) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            zero(true, false, false);
+            park(true, false, false);
         }
     };
 
     @SuppressWarnings("serial")
-    public Action zZeroAction = new AbstractAction("Zero Z", Icons.zero) {
+    public Action zParkAction = new AbstractAction("Park Z", Icons.park) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            zero(false, true, false);
+            park(false, true, false);
         }
     };
 
     @SuppressWarnings("serial")
-    public Action cZeroAction = new AbstractAction("Zero C", Icons.zero) {
+    public Action cParkAction = new AbstractAction("Park C", Icons.park) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            zero(false, false, true);
+            park(false, false, true);
         }
     };
 

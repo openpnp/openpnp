@@ -373,9 +373,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 cameraView.setSelectionEnabled(true);
                 // org.openpnp.model.Rectangle r =
@@ -399,9 +399,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 BufferedImage image = cameraView.captureSelectionImage();
                 if (image == null) {
@@ -424,9 +424,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeTemplateImage.setAction(selectTemplateImageAction);
                 cancelSelectTemplateImageAction.setEnabled(false);
@@ -440,9 +440,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeAoi.setAction(confirmSelectAoiAction);
                 cancelSelectAoiAction.setEnabled(true);
@@ -464,9 +464,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);
@@ -490,9 +490,9 @@ public class ReferenceDragFeederConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                Camera camera = MainFrame.machineControlsPanel.getSelectedTool().getHead()
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                CameraView cameraView = MainFrame.cameraPanel.setSelectedCamera(camera);
+                CameraView cameraView = MainFrame.get().getCameraViews().setSelectedCamera(camera);
 
                 btnChangeAoi.setAction(selectAoiAction);
                 cancelSelectAoiAction.setEnabled(false);

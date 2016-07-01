@@ -317,7 +317,7 @@ public class Configuration extends AbstractModelObject {
     }
 
     public void removePackage(Package pkg) {
-        packages.remove(pkg.getId());
+        packages.remove(pkg.getId().toUpperCase());
         firePropertyChange("packages", null, packages);
     }
 
@@ -341,7 +341,7 @@ public class Configuration extends AbstractModelObject {
     }
 
     public void removePart(Part part) {
-        parts.remove(part.getId());
+        parts.remove(part.getId().toUpperCase());
         firePropertyChange("parts", null, parts);
     }
 

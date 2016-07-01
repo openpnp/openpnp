@@ -22,38 +22,38 @@
                     		<compatible-package-ids>
                     			<id>0603</id>
                     		</compatible-package-ids>
-	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-start-location units="Millimeters" x="50.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="50.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="50.0" y="0.0" z="0.0" rotation="0.0"/>
                     	</nozzle-tip>
                     	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="false">
                     		<compatible-package-ids>
                     			<id>0805</id>
                     		</compatible-package-ids>
-	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-start-location units="Millimeters" x="60.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="60.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="60.0" y="0.0" z="0.0" rotation="0.0"/>
                     	</nozzle-tip>
                     </nozzle-tips>
                 </nozzle>
-                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N2" current-nozzle-tip-id="NT1" changer-enabled="true">
+                <nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N2" current-nozzle-tip-id="NT2" changer-enabled="true">
                     <head-offsets x="20" y="0" z="0" rotation="0" units="Millimeters" />
                     <nozzle-tips>
                     	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT1" allow-incompatible-packages="false">
                     		<compatible-package-ids>
                     			<id>0603</id>
                     		</compatible-package-ids>
-	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-start-location units="Millimeters" x="70.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="70.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="70.0" y="0.0" z="0.0" rotation="0.0"/>
                     	</nozzle-tip>
                     	<nozzle-tip class="org.openpnp.machine.reference.ReferenceNozzleTip" id="NT2" allow-incompatible-packages="false">
                     		<compatible-package-ids>
                     			<id>0805</id>
                     		</compatible-package-ids>
-	                        <changer-start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-mid-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-	                        <changer-end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-start-location units="Millimeters" x="80.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-mid-location units="Millimeters" x="80.0" y="0.0" z="0.0" rotation="0.0"/>
+	                        <changer-end-location units="Millimeters" x="80.0" y="0.0" z="0.0" rotation="0.0"/>
                     	</nozzle-tip>
                     </nozzle-tips>
                 </nozzle>
@@ -70,7 +70,5 @@
             <location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          </feeder>
       </feeders>
-      <job-planner class="org.openpnp.planner.SimpleJobPlanner" />
-      <job-processor class="org.openpnp.machine.reference.ReferenceJobProcessor" />
    </machine>
 </openpnp-machine>

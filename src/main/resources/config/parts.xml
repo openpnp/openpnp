@@ -1,7 +1,7 @@
 <openpnp-parts>
    <part id="FIDUCIAL-1X2-FIDUCIAL1X2" height-units="Millimeters" height="0.0" package-id="FIDUCIAL-1X2"/>
-   <part id="R0805-1K" height-units="Millimeters" height="0.0" package-id="R0805"/>
-   <part id="R0201-1K" height-units="Millimeters" height="0.0" package-id="R0201"/>
-   <part id="R0402-1K" height-units="Millimeters" height="0.0" package-id="R0402"/>
-   <part id="R0603-1K" height-units="Millimeters" height="0.0" package-id="R0603"/>
+   <part id="R0805-1K" height-units="Millimeters" height="1.0" package-id="R0805"/>
+   <part id="R0201-1K" height-units="Millimeters" height="0.25" package-id="R0201"/>
+   <part id="R0402-1K" height-units="Millimeters" height="0.5" package-id="R0402"/>
+   <part id="R0603-1K" height-units="Millimeters" height="0.75" package-id="R0603"/>
 </openpnp-parts>

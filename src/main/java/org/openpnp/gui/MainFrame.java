@@ -57,13 +57,13 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.ConfigurationListener;
-import org.openpnp.JobProcessorListener;
+import org.openpnp.Scripting;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -78,7 +78,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.JobProcessor;
 
 /**
  * The main window of the application.
@@ -105,29 +104,82 @@ public class MainFrame extends JFrame {
 
     // TODO: Really should switch to some kind of DI model, but this will do
     // for now.
-    public static MainFrame mainFrame;
-    public static MachineControlsPanel machineControlsPanel;
-    public static PartsPanel partsPanel;
-    public static PackagesPanel packagesPanel;
-    public static FeedersPanel feedersPanel;
-    public static JobPanel jobPanel;
-    public static CamerasPanel camerasPanel;
-    public static CameraPanel cameraPanel;
-    public static MachineSetupPanel machineSetupPanel;
-    public static Component navigationPanel;
+    private static MainFrame mainFrame;
+
+    private MachineControlsPanel machineControlsPanel;
+    private PartsPanel partsPanel;
+    private PackagesPanel packagesPanel;
+    private FeedersPanel feedersPanel;
+    private JobPanel jobPanel;
+    private CamerasPanel camerasPanel;
+    private CameraPanel cameraPanel;
+    private MachineSetupPanel machineSetupPanel;
+    private Component navigationPanel;
+
+    public static MainFrame get() {
+        return mainFrame;
+    }
+
+    public MachineControlsPanel getMachineControls() {
+        return machineControlsPanel;
+    }
+
+    public PartsPanel getPartsTab() {
+        return partsPanel;
+    }
+
+    public PackagesPanel getPackagesTab() {
+        return packagesPanel;
+    }
+
+    public FeedersPanel getFeedersTab() {
+        return feedersPanel;
+    }
+
+    public JobPanel getJobTab() {
+        return jobPanel;
+    }
+
+    public CamerasPanel getCamerasTab() {
+        return camerasPanel;
+    }
+    
+    public CameraPanel getCameraViews() {
+        return cameraPanel;
+    }
+    
+    public MachineSetupPanel getMachineSetupTab() {
+        return machineSetupPanel;
+    }
 
     private JPanel contentPane;
     private JLabel lblStatus;
-    private JTabbedPane panelBottom;
+    private JTabbedPane tabs;
     private JSplitPane splitPaneTopBottom;
     private TitledBorder panelInstructionsBorder;
+    private JPanel panelInstructions;
+    private JPanel panelInstructionActions;
+    private JPanel panel_1;
+    private JButton btnInstructionsNext;
+    private JButton btnInstructionsCancel;
+    private JTextPane lblInstructions;
+    private JPanel panel_2;
+    private JTabbedPane camerasAndNavTabbedPane;
+    private JPanel panel_3;
+    private JPanel logPanel;
+    private JMenuBar menuBar;
+    private JMenu mnImport;
+
+    public JTabbedPane getTabs() {
+        return tabs;
+    }
 
     private Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
 
     private ActionListener instructionsCancelActionListener;
     private ActionListener instructionsProceedActionListener;
 
-    private JMenu mnImport;
+    private Scripting scripting;
 
     public MainFrame(Configuration configuration) {
         mainFrame = this;
@@ -168,7 +220,7 @@ public class MainFrame extends JFrame {
         cameraPanel = new CameraPanel();
         machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
 
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
         setJMenuBar(menuBar);
 
         // File
@@ -250,6 +302,12 @@ public class MainFrame extends JFrame {
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.addSeparator();
         mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
+
+        // Scripts
+        /////////////////////////////////////////////////////////////////////
+        JMenu mnScripts = new JMenu("Scripts");
+        menuBar.add(mnScripts);
+        scripting = new Scripting(mnScripts);
 
         // Help
         /////////////////////////////////////////////////////////////////////
@@ -399,8 +457,8 @@ public class MainFrame extends JFrame {
             panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
         }
 
-        panelBottom = new JTabbedPane(JTabbedPane.TOP);
-        splitPaneTopBottom.setRightComponent(panelBottom);
+        tabs = new JTabbedPane(JTabbedPane.TOP);
+        splitPaneTopBottom.setRightComponent(tabs);
 
         lblStatus = new JLabel(" ");
         lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -417,12 +475,15 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        panelBottom.addTab("Job", null, jobPanel, null);
-        panelBottom.addTab("Parts", null, partsPanel, null);
-        panelBottom.addTab("Packages", null, packagesPanel, null);
-        panelBottom.addTab("Feeders", null, feedersPanel, null);
-        panelBottom.addTab("Cameras", null, camerasPanel, null);
-        panelBottom.addTab("Machine Setup", null, machineSetupPanel, null);
+        tabs.addTab("Job", null, jobPanel, null);
+        tabs.addTab("Parts", null, partsPanel, null);
+        tabs.addTab("Packages", null, packagesPanel, null);
+        tabs.addTab("Feeders", null, feedersPanel, null);
+        tabs.addTab("Cameras", null, camerasPanel, null);
+        tabs.addTab("Machine Setup", null, machineSetupPanel, null);
+
+        LogPanel logPanel = new LogPanel();
+        tabs.addTab("Log", null, logPanel, null);
 
         registerBoardImporters();
 
@@ -443,16 +504,6 @@ public class MainFrame extends JFrame {
                             + "OpenPnP will now exit.");
             System.exit(1);
         }
-
-        configuration.addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration) throws Exception {
-                for (JobProcessor jobProcessor : configuration.getMachine().getJobProcessors()
-                        .values()) {
-                    jobProcessor.addListener(jobProcessorListener);
-                }
-            }
-        });
     }
 
     private void registerBoardImporters() {
@@ -540,8 +591,9 @@ public class MainFrame extends JFrame {
 
     public void about() {
         AboutDialog dialog = new AboutDialog(this);
-        dialog.setSize(350, 350);
+        dialog.setSize(750, 550);
         dialog.setLocationRelativeTo(null);
+        dialog.setModal(true);
         dialog.setVisible(true);
     }
 
@@ -590,17 +642,16 @@ public class MainFrame extends JFrame {
         return true;
     }
 
-    public void showTab(String title) {
-        int index = panelBottom.indexOfTab(title);
-        panelBottom.setSelectedIndex(index);
+    public void setStatus(String status) {
+        SwingUtilities.invokeLater(() -> {
+            lblStatus.setText(status);
+        });
     }
 
-    private JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
-        @Override
-        public void detailedStatusUpdated(String status) {
-            lblStatus.setText(status);
-        }
-    };
+    public void showTab(String title) {
+        int index = tabs.indexOfTab(title);
+        tabs.setSelectedIndex(index);
+    }
 
     private ComponentListener componentListener = new ComponentAdapter() {
         @Override
@@ -647,14 +698,4 @@ public class MainFrame extends JFrame {
             about();
         }
     };
-
-    private JPanel panelInstructions;
-    private JPanel panelInstructionActions;
-    private JPanel panel_1;
-    private JButton btnInstructionsNext;
-    private JButton btnInstructionsCancel;
-    private JTextPane lblInstructions;
-    private JPanel panel_2;
-    private JTabbedPane camerasAndNavTabbedPane;
-    private JPanel panel_3;
 }

@@ -5,7 +5,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 
 public interface PasteDispenser
-        extends Identifiable, Named, HeadMountable, WizardConfigurable, PropertySheetHolder {
+        extends HeadMountable, WizardConfigurable, PropertySheetHolder {
     /**
      * Command the dispenser to dispense from the startLocation to the endLocation taking
      * dispenseTimeMilliseconds milliseconds.

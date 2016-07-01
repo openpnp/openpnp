@@ -16,7 +16,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.convert.Convert;
 
 /**
- * Draws circles from a List<Circle> onto the working image. 
+ * Draws circles from a List<Circle> onto the working image.
  */
 public class DrawCircles extends CvStage {
     @Element(required = false)
@@ -30,6 +30,17 @@ public class DrawCircles extends CvStage {
     @Attribute(required = false)
     private String circlesStageName = null;
 
+    @Attribute(required = false)
+    private int thickness = 1;
+    
+    public int getThickness() {
+        return thickness;
+    }
+
+    public void setThickness(int thickness) {
+        this.thickness = thickness;
+    }
+
     public Color getColor() {
         return color;
     }
@@ -37,7 +48,7 @@ public class DrawCircles extends CvStage {
     public void setColor(Color color) {
         this.color = color;
     }
-    
+
     public Color getCenterColor() {
         return centerColor;
     }
@@ -68,9 +79,10 @@ public class DrawCircles extends CvStage {
         for (int i = 0; i < circles.size(); i++) {
             Result.Circle circle = circles.get(i);
             Color color = this.color == null ? FluentCv.indexedColor(i) : this.color;
-            Color centerColor = this.centerColor == null ? new HslColor(color).getComplementary() : this.centerColor;
+            Color centerColor = this.centerColor == null ? new HslColor(color).getComplementary()
+                    : this.centerColor;
             Core.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2),
-                    FluentCv.colorToScalar(color), 2);
+                    FluentCv.colorToScalar(color), thickness);
             Core.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor),
                     2);
         }

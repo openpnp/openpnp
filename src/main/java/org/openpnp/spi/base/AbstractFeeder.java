@@ -22,6 +22,9 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Attribute
     protected String partId;
+    
+    @Attribute(required=false)
+    protected int retryCount = 3;
 
     protected Part part;
 
@@ -75,5 +78,13 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Override
     public Icon getPropertySheetHolderIcon() {
         return Icons.editFeeder;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
     }
 }

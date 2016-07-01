@@ -41,20 +41,16 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.OpenCvVisionProviderConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Camera.Looking;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
-import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Root
 public class OpenCvVisionProvider implements VisionProvider {
     private final static Logger logger = LoggerFactory.getLogger(OpenCvVisionProvider.class);
 
@@ -62,11 +58,6 @@ public class OpenCvVisionProvider implements VisionProvider {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
-
-    // SimpleXML requires at least one attribute or element on a class before
-    // it will recognize it.
-    @Attribute(required = false)
-    private String dummy;
 
     protected Camera camera;
 
@@ -230,41 +221,9 @@ public class OpenCvVisionProvider implements VisionProvider {
         }
     }
 
-    @Override
-    public Location getPartBottomOffsets(Part part, Nozzle nozzle) throws Exception {
-        if (camera.getLooking() != Looking.Up) {
-            throw new Exception("Bottom vision only implemented for Up looking cameras");
-        }
-
-        // Position the part above the center of the camera.
-        // First move to Safe-Z.
-        nozzle.moveToSafeZ();
-        // Then move to the camera in X, Y at Safe-Z and rotate the
-        // part to 0.
-        nozzle.moveTo(camera.getLocation().derive(null, null, Double.NaN, 0.0));
-        // Then lower the part to the Camera's focal point in Z. Maintain the
-        // part's rotation at 0.
-        nozzle.moveTo(camera.getLocation().derive(null, null, null, Double.NaN));
-        // Grab an image.
-        BufferedImage image = camera.settleAndCapture();
-        // TODO: Do OpenCV magic
-        // Return the offsets. Make sure to convert them to real units instead
-        // of pixels. Use camera.getUnitsPerPixel().
-
-        Thread.sleep(1000);
-
-        // rotate the nozzle to simulate the part being oriented
-        nozzle.moveTo(nozzle.getLocation().derive(null, null, null, 45.0));
-
-        Thread.sleep(1000);
-
-        // Return to Safe-Z just to be safe.
-        nozzle.moveToSafeZ();
-        return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-    }
-
     enum MinMaxState {
-        BEFORE_INFLECTION, AFTER_INFLECTION
+        BEFORE_INFLECTION,
+        AFTER_INFLECTION
     }
 
     static List<Point> matMaxima(Mat mat, double rangeMin, double rangeMax) {
