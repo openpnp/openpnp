@@ -75,6 +75,6 @@ public class FindContours extends CvStage {
         Mat hierarchy = new Mat();
         Imgproc.findContours(mat, contours, hierarchy, retrievalMode.getCode(), approximationMethod.getCode());
         hierarchy.release();
-        return new Result(mat, contours);
+        return new Result(null, contours);
     }
 }
