@@ -6,8 +6,10 @@
 * [[User Manual]]
 * [[Video Tutorials]]
 * [[Importing Centroid Data]]
+* [[Scripting]]
 * [[FAQ]]
 
 ## Development Resources
 * [[Developers Guide]]
+* [API Documentation](http://openpnp.org/api)
 * [[FAQ]]
