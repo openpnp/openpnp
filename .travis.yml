@@ -14,6 +14,7 @@ before_deploy:
 - git config --global user.name "Jason von Nieda"
 - git clone --quiet --branch=gh-pages https://${GH_PAGES_TOKEN}@github.com/openpnp/openpnp gh-pages
 - cd gh-pages
+- mkdir -p $TRAVIS_BRANCH
 - git rm -rf $TRAVIS_BRANCH
 - javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $TRAVIS_BRANCH
 - git add -f .
