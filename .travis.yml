@@ -9,7 +9,7 @@ env:
     # INSTALL4J_LICENSE_KEY
     secure: Y5WwLvftJ/7KdL/MYBPuPHwzgrKbAn8QNBXCAKiZUvw80sHtrrjrCgD68UVfikl/m1v/EBnBOkMg8b38ZCPo0YON4E2jIRjOl58GH0NQ5fS58Cp6LPNMmjlSJTEtEpJak7P7ADxwWFXm4AVKeYS04mF2TbwasVs4nMYddCv8QYY=
     # GH_PAGES_TOKEN
-	secure: "GoJA6tbgM1hwksntvPz7O/NPSAOa9tHhmSodhQkGoy5SpreLb4vJqnR2pYoRqRCojJoAaeHCgL5rxzOjnJ+1eH7B6MDCOyJQMV24zBhrJYB3raTM1gVR5jPydfcbfQWpRfwA9bJKNrBPcLeME4TBPIMGqF3DcaW/CVgZMMiEo/A="
+	secure: GoJA6tbgM1hwksntvPz7O/NPSAOa9tHhmSodhQkGoy5SpreLb4vJqnR2pYoRqRCojJoAaeHCgL5rxzOjnJ+1eH7B6MDCOyJQMV24zBhrJYB3raTM1gVR5jPydfcbfQWpRfwA9bJKNrBPcLeME4TBPIMGqF3DcaW/CVgZMMiEo/A=
 
 before_deploy:
 - wget https://s3-us-west-2.amazonaws.com/openpnp/install4j_unix_6_0_4.tar.gz
