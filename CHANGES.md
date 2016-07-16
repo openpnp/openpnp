@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-07-16
+
+* GcodeDriver Command Sets
+
+	GcodeDriver now has command sets that can be applied to a specific tool. This means
+	that you can have different commands for each object on the head such as Nozzles,
+	Cameras, Actuators, etc. Most importantly, you can now have separate pick and place
+	commands for each Nozzle.
+	
+	When you first start OpenPnP with this version it will automatically update your
+	configuration and move the existing commands into a default command set.
+
 # 2016-06-22
 
 * Python Scripting Support
