@@ -25,6 +25,7 @@ import java.io.StringWriter;
 
 import javax.swing.JOptionPane;
 
+import org.openpnp.gui.MainFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,16 @@ public class MessageBoxes {
         message = message.replaceAll("\r", "");
         message = "<html><body width=\"400\">" + message + "</body></html>";
         JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
+    public static void infoBox(String title, String message) {
+        if (message == null) {
+            message = "";
+        }
+        message = message.replaceAll("\n", "<br/>");
+        message = message.replaceAll("\r", "");
+        message = "<html><body width=\"400\">" + message + "</body></html>";
+        JOptionPane.showMessageDialog(MainFrame.get(), message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void notYetImplemented(Component parent) {
