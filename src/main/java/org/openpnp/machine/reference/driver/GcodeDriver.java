@@ -3,11 +3,10 @@ package org.openpnp.machine.reference.driver;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -31,8 +30,8 @@ import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Text;
 import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +39,49 @@ import org.slf4j.LoggerFactory;
 @Root
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
+
+    public enum CommandType {
+        COMMAND_CONFIRM_REGEX,
+        CONNECT_COMMAND,
+        ENABLE_COMMAND,
+        DISABLE_COMMAND,
+        HOME_COMMAND,
+        PUMP_ON_COMMAND,
+        PUMP_OFF_COMMAND,
+        MOVE_TO_COMMAND,
+        MOVE_TO_COMPLETE_REGEX,
+        PICK_COMMAND,
+        PLACE_COMMAND,
+        ACTUATE_BOOLEAN_COMMAND,
+        ACTUATE_DOUBLE_COMMAND,
+    }
+
+    public static class Command {
+        @Attribute(required = false)
+        public String headMountableId;
+
+        @Attribute(required = true)
+        public CommandType type;
+
+        @Text(required = true)
+        public String command;
+
+        public Command(String headMountableId, CommandType type, String text) {
+            this.headMountableId = headMountableId;
+            this.type = type;
+            this.command = text;
+        }
+
+        private Command() {
+
+        }
+
+        @Override
+        public String toString() {
+            return "Command [headMountableId=" + headMountableId + ", type=" + type + ", text="
+                    + command + "]";
+        }
+    }
 
     @Attribute(required = false)
     protected LengthUnit units = LengthUnit.Millimeters;
@@ -50,45 +92,47 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Attribute(required = false)
     protected int timeoutMilliseconds = 5000;
 
-    /*
-     * IMPORTANT NOTE: When adding new properties to this class, make sure they are included in the
-     * GcodeDriverConfigurationWizard's import action to copy the properties upon import.
-     */
-
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 1000;
 
     @Element(required = false)
     protected Location homeLocation = null;
 
+    /////////////////////////////////////////////////////////////////////
+    // Note, the commands below are deprecated in favor of the
+    // Commands pattern. They are being left here as to not break
+    // existing configs and will be removed in a couple months.
+    // The existing commands will be automatically moved into the
+    // default Commands on the first run of this code.
+    /////////////////////////////////////////////////////////////////////
     @Element(required = false)
-    protected String commandConfirmRegex = "^ok.*";;
+    @Deprecated
+    protected String commandConfirmRegex = null;
 
     @Element(required = false)
+    @Deprecated
     protected String connectCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String enableCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String disableCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String homeCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String pumpOnCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String pumpOffCommand = null;
 
-    /////////////////////////////////////////////////////////////////////
-    // Note, the commands below are deprecated in favor of the
-    // CommandSet pattern. They are being left here as to not break
-    // existing configs and will be removed in a couple months.
-    // The existing commands will be automatically moved into the
-    // default CommandSet on the first run of this code.
-    /////////////////////////////////////////////////////////////////////
     /**
      * This command has special handling for the X, Y, Z and Rotation variables. If the move does
      * not change one of these variables that variable is replaced with the empty string, removing
@@ -123,38 +167,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     /////////////////////////////////////////////////////////////////////
     // End of deprecated commands
     /////////////////////////////////////////////////////////////////////
-    
 
-    public static class CommandSet {
-        /**
-         * This command has special handling for the X, Y, Z and Rotation variables. If the move does
-         * not change one of these variables that variable is replaced with the empty string, removing
-         * it from the command. This allows Gcode to be sent containing only the components that are
-         * being used which is important for some controllers when moving an "extruder" for the C axis.
-         * The end result is that if a move contains only a change in the C axis only the C axis value
-         * will be sent.
-         */
-        @Element(required = false)
-        protected String moveToCommand = null;
-
-        @Element(required = false)
-        protected String moveToCompleteRegex = null;
-
-        @Element(required = false)
-        protected String pickCommand = null;
-
-        @Element(required = false)
-        protected String placeCommand = null;
-
-        @Element(required = false)
-        protected String actuateBooleanCommand = null;
-
-        @Element(required = false)
-        protected String actuateDoubleCommand = null;
-    }
-    
-    @ElementMap(required=false)
-    protected Map<String, CommandSet> commandSets = new HashMap<>();
+    @ElementList(required = false, inline = true)
+    public ArrayList<Command> commands = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<ReferenceDriver> subDrivers = new ArrayList<>();
@@ -185,22 +200,44 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             axes.add(new Axis("z", Axis.Type.Z, z, "*"));
             axes.add(new Axis("rotation", Axis.Type.Rotation, rotation, "*"));
         }
-        // Migrate old commands to new command sets
-        if (commandSets.isEmpty()) {
-            CommandSet cs = new CommandSet();
-            cs.actuateBooleanCommand = actuateBooleanCommand;
-            cs.actuateDoubleCommand = actuateDoubleCommand;
-            cs.moveToCommand = moveToCommand;
-            cs.moveToCompleteRegex = moveToCompleteRegex;
-            cs.pickCommand = pickCommand;
-            cs.placeCommand = placeCommand;
+        // Migrate old commands to new style
+        if (commands.isEmpty()) {
+            commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, commandConfirmRegex));
+            commands.add(new Command(null, CommandType.CONNECT_COMMAND, connectCommand));
+            commands.add(new Command(null, CommandType.ENABLE_COMMAND, enableCommand));
+            commands.add(new Command(null, CommandType.DISABLE_COMMAND, disableCommand));
+            commands.add(new Command(null, CommandType.HOME_COMMAND, homeCommand));
+            commands.add(new Command(null, CommandType.PUMP_ON_COMMAND, pumpOnCommand));
+            commands.add(new Command(null, CommandType.PUMP_OFF_COMMAND, pumpOffCommand));
+            commands.add(
+                    new Command(null, CommandType.ACTUATE_BOOLEAN_COMMAND, actuateBooleanCommand));
+            commands.add(
+                    new Command(null, CommandType.ACTUATE_DOUBLE_COMMAND, actuateDoubleCommand));
+            commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, moveToCommand));
+            commands.add(
+                    new Command(null, CommandType.MOVE_TO_COMPLETE_REGEX, moveToCompleteRegex));
+            commands.add(new Command(null, CommandType.PICK_COMMAND, pickCommand));
+            commands.add(new Command(null, CommandType.PLACE_COMMAND, placeCommand));
+            // Clean up any null commands. This is done here instead of individual checks
+            // above just to make the code cleaner and prettier.
+            for (Iterator<Command> i = commands.iterator(); i.hasNext();) {
+                if (i.next().command == null) {
+                    i.remove();
+                }
+            }
+            commandConfirmRegex = null;
+            connectCommand = null;
+            enableCommand = null;
+            disableCommand = null;
+            homeCommand = null;
+            pumpOnCommand = null;
+            pumpOffCommand = null;
             actuateBooleanCommand = null;
             actuateDoubleCommand = null;
             moveToCommand = null;
             moveToCompleteRegex = null;
             pickCommand = null;
             placeCommand = null;
-            commandSets.put("*", cs);
         }
     }
 
@@ -226,7 +263,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         setEnabled(false);
 
         // Send startup Gcode
-        sendGcode(connectCommand);
+        sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
     }
@@ -238,10 +275,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         if (connected) {
             if (enabled) {
-                sendGcode(enableCommand);
+                sendGcode(getCommand(null, CommandType.ENABLE_COMMAND));
             }
             else {
-                sendGcode(disableCommand);
+                sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
             }
         }
 
@@ -254,7 +291,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void home(ReferenceHead head) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
-        String command = homeCommand;
+        String command = getCommand(null, CommandType.HOME_COMMAND);
         command = substituteVariable(command, "Id", head.getId());
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
@@ -277,12 +314,26 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         return null;
     }
-    
-    public CommandSet getCommandSet(HeadMountable hm) {
-        if (commandSets.containsKey(hm.getId())) {
-            return commandSets.get(hm.getId());
+
+    public String getCommand(HeadMountable hm, CommandType type) {
+        // If a HeadMountable is specified, see if we can find a match
+        // for both the HeadMountable ID and the command type.
+        if (hm != null) {
+            for (Command c : commands) {
+                if (hm.getId().equals(c.headMountableId) && type == c.type) {
+                    return c.command;
+                }
+            }
         }
-        return commandSets.get("*");
+        // If not, see if we can find a match for the command type with a
+        // null or * HeadMountable ID.
+        for (Command c : commands) {
+            if (c.headMountableId == null || c.headMountableId.equals("*") && type == c.type) {
+                return c.command;
+            }
+        }
+        // No matches were found.
+        return null;
     }
 
     @Override
@@ -355,7 +406,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         boolean emptyMove = true;
 
-        String command = getCommandSet(hm).moveToCommand;
+        String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
         command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
@@ -418,7 +469,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
          * searching the responses for the regex. As soon as it is matched we continue. If it's not
          * matched within the timeout we throw an Exception.
          */
-        String moveToCompleteRegex = getCommandSet(hm).moveToCompleteRegex;
+        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
         if (moveToCompleteRegex != null) {
             if (!containsMatch(responses, moveToCompleteRegex)) {
                 long t = System.currentTimeMillis();
@@ -464,10 +515,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
         if (pickedNozzles.size() > 0) {
-            sendGcode(pumpOnCommand);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
         }
 
-        String command = getCommandSet(nozzle).pickCommand;
+        String command = getCommand(nozzle, CommandType.PICK_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
@@ -479,14 +530,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        String command = getCommandSet(nozzle).placeCommand;
+        String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
-            sendGcode(pumpOffCommand);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
         }
 
         for (ReferenceDriver driver : subDrivers) {
@@ -497,7 +548,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        String command = getCommandSet(actuator).actuateBooleanCommand;
+        String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
@@ -513,7 +564,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        String command = getCommandSet(actuator).actuateDoubleCommand;
+        String command = getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
@@ -616,7 +667,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             // Store the response that was received
             responses.add(response);
             // If the response is an ok or error we're done
-            if (response.matches(commandConfirmRegex)) {
+            if (response.matches(getCommand(null, CommandType.COMMAND_CONFIRM_REGEX))) {
                 found = true;
                 break;
             }
