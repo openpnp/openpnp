@@ -171,165 +171,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
     }
 
-    public static Location getFiducialLocation(Footprint footprint, Camera camera)
-            throws Exception {
-        // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(), footprint);
-
-        // Wait for camera to settle
-        Thread.sleep(camera.getSettleTimeMs());
-        // Perform vision operation
-        return getBestTemplateMatch(camera, template);
-    }
-
-    /**
-     * Given a placement containing a fiducial, attempt to find the fiducial using the vision
-     * system. The function first moves the camera to the ideal location of the fiducial based on
-     * the board location. It then performs a template match against a template generated from the
-     * fiducial's footprint. These steps are performed thrice to "home in" on the fiducial. Finally,
-     * the location is returned. If the fiducial was not able to be located with any degree of
-     * certainty the function returns null.
-     *
-     * @param fid
-     * @return
-     * @throws Exception
-     */
-    private  Location getFiducialLocation(Location location, Part part )
-            throws Exception {
-        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-
-        // logger.debug("Locating {}", fid.getId());
-
-     //   Part part = fid.getPart();
-    //    if (part == null) {
-  //  //        throw new Exception(
-    //                String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
-    //    }
-
-        org.openpnp.model.Package pkg = part.getPackage();
-        if (pkg == null) {
-            throw new Exception(
-                    String.format("Part %s does not have a valid package assigned.", part.getId()));
-        }
-
-        Footprint footprint = pkg.getFootprint();
-        if (footprint == null) {
-            throw new Exception(String.format(
-                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials",
-                    pkg.getId()));
-        }
-
-        if (footprint.getShape() == null) {
-            throw new Exception(String.format(
-                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
-                    pkg.getId()));
-        }
-
-        // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(),
-                part.getPackage().getFootprint());
-
-        // Move to where we expect to find the fid
-//        Location location =
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
-
-        // Location location=this.homeLocation;
-        for (int i = 0; i < 3; i++) {
-            // Wait for camera to settle
-            Thread.sleep(camera.getSettleTimeMs());
-            // Perform vision operation
-            location = getBestTemplateMatch(camera, template);
-            if (location == null) {
-                logger.debug("No matches found!");
-                return null;
-            }
-            logger.debug("{} located at {}", location);
-            // Move to where we actually found the fid
-            camera.moveTo(location);
-        }
-
-        return location;
-    }
-
-    private static Location getBestTemplateMatch(final Camera camera, BufferedImage template)
-            throws Exception {
-        VisionProvider visionProvider = camera.getVisionProvider();
-
-        List<VisionProvider.TemplateMatch> matches = visionProvider.getTemplateMatches(template);
-
-        if (matches.isEmpty()) {
-            return null;
-        }
-
-        // getTemplateMatches returns results in order of score, but we're
-        // more interested in the result closest to the expected location
-        Collections.sort(matches, new Comparator<VisionProvider.TemplateMatch>() {
-            @Override
-            public int compare(VisionProvider.TemplateMatch o1, VisionProvider.TemplateMatch o2) {
-                double d1 = o1.location.getLinearDistanceTo(camera.getLocation());
-                double d2 = o2.location.getLinearDistanceTo(camera.getLocation());
-                return Double.compare(d1, d2);
-            }
-        });
-
-        return matches.get(0).location;
-    }
-
-    /**
-     * Create a template image based on a Placement's footprint. The image will be scaled to match
-     * the dimensions of the current camera.
-     *
-     * @param fid
-     * @return
-     */
-    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
-            throws Exception {
-        Shape shape = footprint.getShape();
-
-        if (shape == null) {
-            throw new Exception(
-                    "Invalid footprint found, unable to create template for fiducial match.");
-        }
-
-        // Determine the scaling factor to go from Outline units to
-        // Camera units.
-        Length l = new Length(1, footprint.getUnits());
-        l = l.convertToUnits(unitsPerPixel.getUnits());
-        double unitScale = l.getValue();
-
-        // Create a transform to scale the Shape by
-        AffineTransform tx = new AffineTransform();
-
-        // First we scale by units to convert the units and then we scale
-        // by the camera X and Y units per pixels to get pixel locations.
-        tx.scale(unitScale, unitScale);
-        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
-
-        // Transform the Shape and draw it out.
-        shape = tx.createTransformedShape(shape);
-
-        Rectangle2D bounds = shape.getBounds2D();
-
-        // Make the image 50% bigger than the shape. This gives better
-        // recognition performance because it allows some border around the edges.
-        double width = bounds.getWidth() * 1.5;
-        double height = bounds.getHeight() * 1.5;
-        BufferedImage template =
-                new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = (Graphics2D) template.getGraphics();
-
-        g2d.setStroke(new BasicStroke(1f));
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2d.setColor(Color.white);
-        // center the drawing
-        g2d.translate(width / 2, height / 2);
-        g2d.fill(shape);
-
-        g2d.dispose();
-
-        return template;
-    }
-
     @Override
     public void home(ReferenceHead head) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
@@ -347,15 +188,31 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.home(head);
         }
 
-        // do the fiducial home...
-        // -1.0000 X  21.010 Y - to align camera with home
-
+        /*
+                The head camera for nozzle-1 should now be (if everythings homed correctly)
+                directly above the homing pin in the machine bed, use the head camera scan
+                for this and make sure this is exactly central - otherwise we move the camera
+                until it is, and then reset all the axis back to 0,0,0,0 as this is calibrated
+                home.
+         */
         Part homePart=Configuration.get().getPart("FIDUCIAL-HOME");
         if (homePart != null) {
-            Location tmp = new Location(LengthUnit.Millimeters,-1,10.010,0,0);
+            Location tmp = new Location(LengthUnit.Millimeters,0.0,0.0,0.0,0.0);
             Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-            camera.moveTo(tmp);
-            Location actualLocationA = getFiducialLocation(tmp,homePart);
+            // camera.moveTo(tmp);
+            Location homeOffset = Configuration.get().getMachine().getFiducialLocator().getHomeFiducialLocation(tmp,homePart);
+
+            // homeOffset contains the offset, but we are not really concerned with that,
+            // we just reset everything back to 0 at this point.
+            for (Axis axis : axes) {
+                axis.setCoordinate(axis.getHomeCoordinate());
+            }
+        }
+        else
+        {
+            throw new Exception(String.format(
+                    "Unable to find the homing fiducial in config"));
+
         }
     }
 
