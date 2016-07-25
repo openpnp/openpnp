@@ -671,7 +671,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-            MessageBoxes.errorBox(MainFrame.this, "Notice",
+            MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
         }
     };
@@ -680,7 +680,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
-            MessageBoxes.errorBox(MainFrame.this, "Notice",
+            MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
         }
     };
