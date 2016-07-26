@@ -21,9 +21,11 @@ Stages may also produce non-image data as output. This data can be used by later
 CvPipeline includes a basic UI for editing the pipeline and viewing the results of each stage. At each stage you can view the resulting image and any additional data that was produced.
 
 # Notes about some stages
-  - MaskCircle: Negative parameter mask out xxx
-  - Normalize:  on color image it removes
-          R = R/(R+G+B)
-          G = G/(R+G+B)
-          B = B/(R+G+B)
+  * MaskCircle: Negative parameter negate the mask
+  * Normalize:  on color image it does RGB Max algorithm, removes shadow and looses color information.
+`          R = R/(R+G+B)`
+          `G = G/(R+G+B)`
+          `B = B/(R+G+B)`
+  * SimpleBlobDetector: actually it detect black circles, anything other don't work actually.
+ 
 # FAQ
