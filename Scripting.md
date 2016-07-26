@@ -31,6 +31,11 @@ Python support is included with OpenPnP, there is nothing you need to add. The e
 
 More information about Jython can be found at http://www.jython.org/currentdocs.html.
 
+### Beanshell
+Beanshell support is included with OpenPnP. Script files with the extension '.bsh' are executed using Beanshell.
+
+More information about it can be found at http://www.beanshell.org/manual/syntax.html#Basic_Syntax
+
 ## Global Variables
 OpenPnP exposes several global variables to the scripting environment for use in your scripts. They are:
 
