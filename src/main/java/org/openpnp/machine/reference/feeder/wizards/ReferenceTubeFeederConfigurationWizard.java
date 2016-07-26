@@ -19,13 +19,13 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.ReferenceFeeder;
 
 public class ReferenceTubeFeederConfigurationWizard
         extends AbstractReferenceFeederConfigurationWizard {
-    private final ReferenceTubeFeeder feeder;
+    private final ReferenceFeeder feeder;
 
-    public ReferenceTubeFeederConfigurationWizard(ReferenceTubeFeeder feeder) {
+    public ReferenceTubeFeederConfigurationWizard(ReferenceFeeder feeder) {
         super(feeder);
         this.feeder = feeder;
     }
