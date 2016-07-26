@@ -45,6 +45,11 @@ public class Threshold extends CvStage {
         Mat mat = pipeline.getWorkingImage();
         int type = invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY;
         type |= auto ? Imgproc.THRESH_OTSU : 0;
+	int i,j;
+	i=threshold<-1000?-threshold%100:12;
+	j=threshold<-1000?-threshold/1000:2;
+	if(threshold<0)
+        Imgproc.adaptiveThreshold(mat, mat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, type,i,j); else 
         Imgproc.threshold(mat, mat, threshold, 255, type);
         return null;
     }
