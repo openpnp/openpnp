@@ -158,7 +158,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         ReferenceDriver driver = (ReferenceDriver) Class.forName(driverClassName).newInstance();
         machine.setDriver(driver);
         this.driverClassName = driverClassName;
-        MessageBoxes.errorBox(getTopLevelAncestor(), "Restart Required",
+        MessageBoxes.infoBox("Restart Required",
                 "Please restart OpenPnP for the changes to take effect.");
     }
 }

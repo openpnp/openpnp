@@ -1,9 +1,11 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JComponent;
@@ -26,6 +28,47 @@ public class MatView extends JComponent {
             image = OpenCvUtils.toBufferedImage(mat);
         }
         repaint();
+    }
+
+    public Point scalePoint(Point p) {
+        if (image == null) {
+            return new Point(0, 0);
+        }
+        
+        Insets ins = getInsets();
+        double sourceWidth = image.getWidth();
+        double sourceHeight = image.getHeight();
+        double destWidth = getWidth() - ins.left - ins.right;
+        double destHeight = getHeight() - ins.top - ins.bottom;
+
+        double widthRatio = sourceWidth / destWidth;
+        double heightRatio = sourceHeight / destHeight;
+
+        double scaledHeight, scaledWidth;
+
+        if (heightRatio > widthRatio) {
+            double aspectRatio = sourceWidth / sourceHeight;
+            scaledHeight = destHeight;
+            scaledWidth = (scaledHeight * aspectRatio);
+        }
+        else {
+            double aspectRatio = sourceHeight / sourceWidth;
+            scaledWidth = destWidth;
+            scaledHeight = (scaledWidth * aspectRatio);
+        }
+
+        int imageX = (int) (ins.left + (destWidth / 2) - (scaledWidth / 2));
+        int imageY = (int) (ins.top + (destHeight / 2) - (scaledHeight / 2));
+        
+        int x = (int) ((p.x - imageX) * (sourceWidth / scaledWidth));
+        int y = (int) ((p.y - imageY) * (sourceHeight / scaledHeight));
+        
+        x = Math.max(x, 0);
+        x = Math.min(x, image.getWidth());
+        y = Math.max(y, 0);
+        y = Math.min(y, image.getHeight());
+        
+        return new Point(x, y);
     }
 
     @Override

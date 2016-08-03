@@ -80,6 +80,7 @@ public class FeedersTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 3) {
                 feeder.setEnabled((Boolean) aValue);
+                refresh();
             }
         }
         catch (Exception e) {

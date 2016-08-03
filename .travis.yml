@@ -6,8 +6,8 @@ jdk:
 
 env:
   global:
-    # INSTALL4J_LICENSE_KEY
-    secure: Y5WwLvftJ/7KdL/MYBPuPHwzgrKbAn8QNBXCAKiZUvw80sHtrrjrCgD68UVfikl/m1v/EBnBOkMg8b38ZCPo0YON4E2jIRjOl58GH0NQ5fS58Cp6LPNMmjlSJTEtEpJak7P7ADxwWFXm4AVKeYS04mF2TbwasVs4nMYddCv8QYY=
+  - secure: Y5WwLvftJ/7KdL/MYBPuPHwzgrKbAn8QNBXCAKiZUvw80sHtrrjrCgD68UVfikl/m1v/EBnBOkMg8b38ZCPo0YON4E2jIRjOl58GH0NQ5fS58Cp6LPNMmjlSJTEtEpJak7P7ADxwWFXm4AVKeYS04mF2TbwasVs4nMYddCv8QYY=
+  - secure: lCc5UYBY5j3UYCPWfLGFj8NaMkiPyIGHKL6XfIFIW/pq6f7NN4xITSgR78iDiPawo+7SVMkxUHWM7MUimGTaAieAHSBzY+DdqlmPp5JvBWIw9RWou7Z3parRRQzUsTC65s+clr4VWa97nR5eNtb5FEvKvqCYZa2G0jjR9LabGYQ=
 
 before_deploy:
 - wget https://s3-us-west-2.amazonaws.com/openpnp/install4j_unix_6_0_4.tar.gz
@@ -32,5 +32,16 @@ deploy:
   on:
     jdk: oraclejdk8
     branch:
-      - develop
-      - master
+    - develop
+    - master
+
+after_deploy:
+- git config user.email "jason@vonnieda.org"
+- git config --global user.name "Jason von Nieda"
+- git clone --quiet --branch=gh-pages https://${GH_PAGES_TOKEN}@github.com/openpnp/openpnp gh-pages
+- cd gh-pages
+- git rm --ignore-unmatch -rf $TRAVIS_BRANCH
+- javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $TRAVIS_BRANCH || true
+- git add -f .
+- git commit -m "Lastest javadoc on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
+- git push -fq origin gh-pages

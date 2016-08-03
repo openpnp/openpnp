@@ -1,12 +1,12 @@
 package org.openpnp.machine.reference.driver;
 
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -18,12 +18,11 @@ import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.model.*;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -187,6 +186,33 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
+        }
+
+        /*
+                The head camera for nozzle-1 should now be (if everythings homed correctly)
+                directly above the homing pin in the machine bed, use the head camera scan
+                for this and make sure this is exactly central - otherwise we move the camera
+                until it is, and then reset all the axis back to 0,0,0,0 as this is calibrated
+                home.
+         */
+        Part homePart=Configuration.get().getPart("FIDUCIAL-HOME");
+        if (homePart != null) {
+            Location tmp = new Location(LengthUnit.Millimeters,0.0,0.0,0.0,0.0);
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            // camera.moveTo(tmp);
+            Location homeOffset = Configuration.get().getMachine().getFiducialLocator().getHomeFiducialLocation(tmp,homePart);
+
+            // homeOffset contains the offset, but we are not really concerned with that,
+            // we just reset everything back to 0 at this point.
+            for (Axis axis : axes) {
+                axis.setCoordinate(axis.getHomeCoordinate());
+            }
+        }
+        else
+        {
+            throw new Exception(String.format(
+                    "Unable to find the homing fiducial in config"));
+
         }
     }
 
