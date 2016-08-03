@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
@@ -69,7 +70,10 @@ public class ReferenceMachine extends AbstractMachine {
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
 
     @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = null;
+    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = new ReferencePasteDispenseJobProcessor();
+
+    @Element(required = false)
+    protected PasteDispenseJobProcessor glueDispenseJobProcessor = new ReferenceGlueDispenseJobProcessor();
 
     @Element(required = false)
     protected PartAlignment partAlignment = new ReferenceBottomVision();
@@ -177,6 +181,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
+        l.add(ReferenceLoosePartFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -247,4 +252,10 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
+
+    @Override
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor() {
+        return glueDispenseJobProcessor;
+    }
+
 }

@@ -54,6 +54,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Feeder getFeeder(String id);
 
+    public Feeder getFeederByName(String name);
 
     /**
      * Gets a List of Cameras attached to the Machine that are not attached to Heads.
@@ -135,6 +136,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public PnpJobProcessor getPnpJobProcessor();
     
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor();
+
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor();
 
     public Future<Object> submit(Runnable runnable);
 

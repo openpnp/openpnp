@@ -1,0 +1,18 @@
+<cv-pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="9" enabled="true" settle-first="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="2" enabled="true" conversion="Bgr2Gray"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurMedian" name="5" enabled="true" kernel-size="7"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="1" enabled="true" threshold="100" auto="true" invert="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FindContours" name="3" enabled="true" retrieval-mode="List" approximation-method="Simple"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FilterContours" name="6" enabled="true" contours-stage-name="3" min-area="500.0" max-area="1500.0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MinAreaRectContours" name="results" enabled="true" contours-stage-name="6"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="8" enabled="true" image-stage-name="9"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawContours" name="4" enabled="true" contours-stage-name="6" thickness="1" index="-1">
+         <color r="0" g="204" b="204" a="255"/>
+      </cv-stage>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawRotatedRects" name="10" enabled="true" rotated-rects-stage-name="results" thickness="1">
+         <color r="255" g="0" b="255" a="255"/>
+      </cv-stage>
+   </stages>
+</cv-pipeline>

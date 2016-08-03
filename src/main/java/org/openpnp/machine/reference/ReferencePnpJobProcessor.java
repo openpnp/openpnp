@@ -39,12 +39,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
@@ -112,7 +107,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
         public Feeder feeder;
-        public Location alignmentOffsets;
+        public PartAlignment.PartAlignmentOffset alignmentOffsets;
         public boolean fed;
         public boolean stepComplete;
 
@@ -556,10 +551,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
-
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
-            Location alignmentOffsets = machine.getPartAlignment().findOffsets(part, nozzle);
-            plannedPlacement.alignmentOffsets = alignmentOffsets;
+            PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
+            plannedPlacement.alignmentOffsets = alignmentOffset;
 
             logger.debug("Align {} with {}", part, nozzle);
 
@@ -592,31 +586,47 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {
-                Location alignmentOffsets = plannedPlacement.alignmentOffsets;
-                // Rotate the point 0,0 using the alignment offsets as a center point by the angle
-                // that is
-                // the difference between the alignment angle and the calculated global
-                // placement angle.
-                Location location =
-                        new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
-                                placementLocation.getRotation() - alignmentOffsets.getRotation());
 
-                // Set the angle to the difference mentioned above, aligning the part to the
-                // same angle as
-                // the placement.
-                location = location.derive(null, null, null,
-                        placementLocation.getRotation() - alignmentOffsets.getRotation());
+                /*
+                        preRotated means during alignment we have already rotated the component
+                        - this is useful for say an external rotating stage that the component is
+                        placed on, rotated to correct placement angle, and then picked up again.
+                 */
+                if(plannedPlacement.alignmentOffsets.getPreRotated())
+                {
+                    Location location = placementLocation;
+                    location = location.derive(null, null, null,
+                            plannedPlacement.alignmentOffsets.getLocation().getRotation());
+                    placementLocation = location;
+                }
+                else
+                {
+                    Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();
+                    // Rotate the point 0,0 using the alignment offsets as a center point by the angle
+                    // that is
+                    // the difference between the alignment angle and the calculated global
+                    // placement angle.
+                    Location location =
+                            new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
+                                    placementLocation.getRotation() - alignmentOffsets.getRotation());
 
-                // Add the placement final location to move our local coordinate into global
-                // space
-                location = location.add(placementLocation);
+                    // Set the angle to the difference mentioned above, aligning the part to the
+                    // same angle as
+                    // the placement.
+                    location = location.derive(null, null, null,
+                            placementLocation.getRotation() - alignmentOffsets.getRotation());
 
-                // Subtract the alignment offsets to move the part to the final location,
-                // instead of
-                // the nozzle.
-                location = location.subtract(alignmentOffsets);
+                    // Add the placement final location to move our local coordinate into global
+                    // space
+                    location = location.add(placementLocation);
 
-                placementLocation = location;
+                    // Subtract the alignment offsets to move the part to the final location,
+                    // instead of
+                    // the nozzle.
+                    location = location.subtract(alignmentOffsets);
+
+                    placementLocation = location;
+                }
             }
 
             // Add the part's height to the placement location
