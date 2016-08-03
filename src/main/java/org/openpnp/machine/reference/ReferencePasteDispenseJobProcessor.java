@@ -134,6 +134,9 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     }
 
     public synchronized boolean next() throws Exception {
+        if(fsm.getState() == State.Uninitialized)
+            return false;
+
         fsm.send(Message.Next);
 
         if (fsm.getState() == State.Stopped) {
@@ -286,8 +289,6 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         // Safe Z the machine
         head.moveToSafeZ();
 
-        // Safe Z the machine
-        head.moveToSafeZ();
     }
 
     protected void doReset() throws Exception {
