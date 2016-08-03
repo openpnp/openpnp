@@ -116,6 +116,82 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * fiducial's footprint. These steps are performed thrice to "home in" on the fiducial. Finally,
      * the location is returned. If the fiducial was not able to be located with any degree of
      * certainty the function returns null.
+     *
+     * @param location, part
+     * @return
+     * @throws Exception
+     */
+    public  Location getHomeFiducialLocation(Location location, Part part )
+            throws Exception {
+        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+
+        // logger.debug("Locating {}", fid.getId());
+
+        //   Part part = fid.getPart();
+        //    if (part == null) {
+        //  //        throw new Exception(
+        //                String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
+        //    }
+
+        org.openpnp.model.Package pkg = part.getPackage();
+        if (pkg == null) {
+            throw new Exception(
+                    String.format("Part %s does not have a valid package assigned.", part.getId()));
+        }
+
+        Footprint footprint = pkg.getFootprint();
+        if (footprint == null) {
+            throw new Exception(String.format(
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    pkg.getId()));
+        }
+
+        if (footprint.getShape() == null) {
+            throw new Exception(String.format(
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    pkg.getId()));
+        }
+
+        // Create the template
+        BufferedImage template = createTemplate(camera.getUnitsPerPixel(),
+                part.getPackage().getFootprint());
+
+
+        // the head should already be at the homing position (as we have just homed), so no point moving again
+        // Move to where we expect to find the fid
+//        Location location =
+        //MovableUtils.moveToLocationAtSafeZ(camera, location);
+
+        // Location location=this.homeLocation;
+
+
+        //for (int i = 0; i < 3; i++) {
+        // Wait for camera to settle
+        Thread.sleep(camera.getSettleTimeMs());
+        // Perform vision operation
+        location = getBestTemplateMatch(camera, template);
+        if (location == null) {
+            logger.debug("No matches found!");
+
+            throw new Exception(String.format(
+                    "Unable to match homing fiducial"));
+
+        }
+        logger.debug("{} located at {}", location);
+        // Move to where we actually found the fid - thus calibrating to our home fudicial
+        camera.moveTo(location);
+        //}
+
+        return location;
+    }
+
+    /**
+     * Given a placement containing a fiducial, attempt to find the fiducial using the vision
+     * system. The function first moves the camera to the ideal location of the fiducial based on
+     * the board location. It then performs a template match against a template generated from the
+     * fiducial's footprint. These steps are performed thrice to "home in" on the fiducial. Finally,
+     * the location is returned. If the fiducial was not able to be located with any degree of
+     * certainty the function returns null.
      * 
      * @param fid
      * @return
@@ -208,7 +284,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * Create a template image based on a Placement's footprint. The image will be scaled to match
      * the dimensions of the current camera.
      * 
-     * @param fid
+     * @param unitsPerPixel, footprint
      * @return
      */
     private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
