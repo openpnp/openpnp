@@ -36,7 +36,8 @@ public class MaskCircle extends CvStage {
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
         masked.setTo(color);
-        Core.circle(mask, new Point(mat.cols() / 2, mat.rows() / 2), diameter / 2, new Scalar(255, 255, 255), -1);
+        Core.circle(mask, new Point(mat.cols() / 2, mat.rows() / 2),  Math.abs(diameter) / 2, new Scalar(255, 255, 255), -1);
+        if(diameter<0) Core.bitwise_not(mask,mask);
         mat.copyTo(masked, mask);
         mask.release();
         return new Result(masked);
