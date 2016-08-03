@@ -73,6 +73,9 @@ public class ReferenceMachine extends AbstractMachine {
     protected PasteDispenseJobProcessor pasteDispenseJobProcessor = new ReferencePasteDispenseJobProcessor();
 
     @Element(required = false)
+    protected PasteDispenseJobProcessor glueDispenseJobProcessor = new ReferenceGlueDispenseJobProcessor();
+
+    @Element(required = false)
     protected PartAlignment partAlignment = new ReferenceBottomVision();
 
     @Element(required = false)
@@ -249,4 +252,10 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
+
+    @Override
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor() {
+        return glueDispenseJobProcessor;
+    }
+
 }

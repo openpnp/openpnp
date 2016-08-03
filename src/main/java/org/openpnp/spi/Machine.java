@@ -137,6 +137,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor();
 
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor();
+
     public Future<Object> submit(Runnable runnable);
 
     public <T> Future<T> submit(Callable<T> callable);
