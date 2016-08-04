@@ -130,6 +130,16 @@ public abstract class AbstractMachine implements Machine {
     }
 
     @Override
+    public Feeder getFeederByName(String name) {
+        for (Feeder feeder : feeders) {
+            if (feeder.getName().equals(name)) {
+                return feeder;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void home() throws Exception {
         for (Head head : heads) {
             head.home();
