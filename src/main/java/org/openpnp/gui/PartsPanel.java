@@ -167,7 +167,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
 
         table.setRowSorter(tableSorter);
-
+        table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
 
