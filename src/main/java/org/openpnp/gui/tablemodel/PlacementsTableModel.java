@@ -22,8 +22,9 @@ package org.openpnp.gui.tablemodel;
 import java.util.Locale;
 
 import javax.swing.table.AbstractTableModel;
-
+import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
@@ -40,8 +41,8 @@ public class PlacementsTableModel extends AbstractTableModel {
     private String[] columnNames =
             new String[] {"Id", "Part", "Side", "X", "Y", "ø", "Type", "Status"};
 
-    private Class[] columnTypes = new Class[] {String.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, String.class, Type.class, Status.class};
+    private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
+            LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class, Status.class};
 
     public enum Status {
         Ready, MissingPart, MissingFeeder, ZeroPartHeight
@@ -111,8 +112,9 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setLocation(location);
             }
             else if (columnIndex == 5) {
-                placement.setLocation(placement.getLocation().derive(null, null, null,
-                        Double.parseDouble(aValue.toString())));
+                /* placement.setLocation(placement.getLocation().derive(null, null, null,
+                        Double.parseDouble(aValue.toString()))); */
+
             }
             else if (columnIndex == 6) {
                 placement.setType((Type) aValue);
@@ -153,7 +155,7 @@ public class PlacementsTableModel extends AbstractTableModel {
         Location loc = placement.getLocation();
         switch (col) {
             case 0:
-                return placement.getId();
+                return new PartCellValue(placement.getId());
             case 1:
                 return placement.getPart();
             case 2:
@@ -163,8 +165,9 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 4:
                 return new LengthCellValue(loc.getLengthY(), true);
             case 5:
-                return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                        loc.getRotation());
+//                return String.format(Locale.US, configuration.getLengthDisplayFormat(),
+//                        loc.getRotation());
+                return new RotationCellValue(loc.getRotation(), true);
             case 6:
                 return placement.getType();
             case 7:

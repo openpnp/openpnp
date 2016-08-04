@@ -19,15 +19,15 @@
 
 package org.openpnp.gui.support;
 
-import java.util.Locale;
-
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 
-public class LengthCellValue implements Comparable<LengthCellValue> {
+import java.util.Locale;
+
+public class RotationCellValue implements Comparable<RotationCellValue> {
     private static Configuration configuration;
 
-    private Length length;
+    private double Rotation;
 
     /**
      * When set, the toString() method will show the units contained within the Length instead of
@@ -36,33 +36,30 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
     private boolean displayNativeUnits;
 
     public static void setConfiguration(Configuration configuration) {
-
-        LengthCellValue.configuration = configuration;
+        RotationCellValue.configuration = configuration;
     }
 
-    public LengthCellValue(Length length, boolean displayNativeUnits) {
-        setLength(length);
+    public RotationCellValue(double Rotation, boolean displayNativeUnits) {
+        setRotation(Rotation);
         setDisplayNativeUnits(displayNativeUnits);
     }
 
-    public LengthCellValue(Length length) {
-        this(length, false);
+    public RotationCellValue(double Rotation) {
+        this(Rotation, false);
     }
 
-    public LengthCellValue(String value) {
-        Length length = Length.parse(value, false);
-        if (length == null) {
-            throw new NullPointerException();
-        }
-        setLength(length);
+    public RotationCellValue(String value) {
+        double rotation = Double.parseDouble(value);
+
+        setRotation(rotation);
     }
 
-    public Length getLength() {
-        return length;
+    public double getRotation() {
+        return Rotation;
     }
 
-    public void setLength(Length length) {
-        this.length = length;
+    public void setRotation(double Rotation) {
+        this.Rotation = Rotation;
     }
 
     public boolean isDisplayNativeUnits() {
@@ -75,8 +72,8 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
 
     @Override
     public String toString() {
-        Length l = length;
-        if (l.getUnits() == null) {
+        double r = Rotation;
+        /*if (l.getUnits() == null) {
             return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
                     l.getValue(), "?");
         }
@@ -87,15 +84,18 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
         else {
             l = l.convertToUnits(configuration.getSystemUnits());
             return String.format(Locale.US, configuration.getLengthDisplayFormat(), l.getValue());
-        }
+        }*/
+
+        return String.format(Locale.US, configuration.getLengthDisplayFormat(), r);
+
     }
 
     @Override
-    public int compareTo(LengthCellValue other)
+    public int compareTo(RotationCellValue other)
     {
-        if(getLength().getValue()==other.getLength().getValue())
+        if(getRotation()==other.getRotation())
             return 0;
-        if(getLength().getValue() < other.getLength().getValue())
+        if(getRotation() < other.getRotation())
             return -1;
         return 1;
     }
