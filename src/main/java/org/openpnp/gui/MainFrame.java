@@ -518,7 +518,7 @@ public class MainFrame extends JFrame {
      * Register a BoardImporter with the system, causing it to gain a menu location in the
      * File->Import menu.
      * 
-     * @param importer
+     * @param boardImporterClass
      */
     public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
         final BoardImporter boardImporter;

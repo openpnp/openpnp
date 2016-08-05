@@ -33,11 +33,12 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.ListIterator;
+
+
+import java.util.*;
 
 @Root
 public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {
@@ -74,6 +75,13 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
         public JobDispense(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
             this.placement = placement;
+        }
+
+        public double getDistance()
+        {
+            Location zeroLocation=this.boardLocation.getLocation().derive((double) 0,(double) 0,(double) 0,(double) 0);
+
+           return zeroLocation.getLinearDistanceTo((Utils2D.calculateBoardPlacementLocation(this.boardLocation,this.placement.getLocation())));
         }
     }
 
@@ -216,6 +224,14 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
                 jobDispenses.add(jobDispense);
             }
         }
+
+        // Do a very basic sort by distance to stop the machine going randomly round the PCB
+        Collections.sort(jobDispenses, new Comparator<JobDispense>() {
+            @Override
+            public int compare(JobDispense c1, JobDispense c2) {
+                return new Double(c1.getDistance()).compareTo(new Double(c2.getDistance()));
+            }
+        });
 
         // Everything looks good, so prepare the machine.
         fireTextStatus("Preparing machine.");

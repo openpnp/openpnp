@@ -87,6 +87,13 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             this.boardLocation = boardLocation;
             this.boardPad = boardPad;
         }
+
+        public double getDistance()
+        {
+            Location zeroLocation=this.boardLocation.getLocation().derive((double) 0,(double) 0,(double) 0,(double) 0);
+
+            return zeroLocation.getLinearDistanceTo((Utils2D.calculateBoardPlacementLocation(this.boardLocation,this.boardPad.getLocation())));
+        }
     }
 
     private static final Logger logger = LoggerFactory.getLogger(ReferencePasteDispenseJobProcessor.class);
@@ -225,7 +232,17 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             }
         }
 
+        // Do a very basic sort by distance to stop the machine going randomly round the PCB
+        Collections.sort(jobDispenses, new Comparator<JobDispense>() {
+            @Override
+            public int compare(JobDispense c1, JobDispense c2) {
+                return new Double(c1.getDistance()).compareTo(new Double(c2.getDistance()));
+            }
+        });
+
+
         // Everything looks good, so prepare the machine.
+
         fireTextStatus("Preparing machine.");
 
         // Safe Z the machine
