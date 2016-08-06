@@ -2,50 +2,49 @@
 
 OpenPnP now includes a generic Gcode driver that is far more flexible than the original TinyG specific driver. We recommend switching to the GcodeDriver. You can learn more about configuring the GcodeDriver at [[GcodeDriver]]. See below for an example configuration that will help.
 
-
 ## machine.xml Driver Section
 ```
-      <driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="COM3" baud="115200" flow-control="Off" data-bits="Eight" stop-bits="One" parity="None" set-dtr="false" set-rts="false" units="Millimeters" max-feed-rate="1000" timeout-milliseconds="5000" connect-wait-time-milliseconds="1000">
-         <command-confirm-regex>.*ok&gt;.*</command-confirm-regex>
-         <connect-command>G21
+<driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="COM3" baud="115200" flow-control="Off" data-bits="Eight" stop-bits="One" parity="None" set-dtr="false" set-rts="false" units="Millimeters" max-feed-rate="1000" timeout-milliseconds="5000" connect-wait-time-milliseconds="1000">
+   <command-confirm-regex>.*ok&gt;.*</command-confirm-regex>
+   <connect-command>G21
 G90
 G92 X0 Y0 Z0 A0
 M8
 M5</connect-command>
-         <enable-command>G21
+   <enable-command>G21
 M8</enable-command>
-         <disable-command>M9
+   <disable-command>M9
 M5</disable-command>
-         <home-command>G28.2 X0 Y0 Z0 A0
+   <home-command>G28.2 X0 Y0 Z0 A0
 G92 X0 Y0 Z0</home-command>
-         <move-to-command>G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f}</move-to-command>
-         <move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>
-         <pick-command>M4</pick-command>
-         <place-command>M5</place-command>
-         <sub-drivers class="java.util.ArrayList"/>
-         <axes class="java.util.ArrayList">
-            <axis name="x" type="X" home-coordinate="0.0">
-               <head-mountable-ids class="java.util.HashSet">
-                  <string>*</string>
-               </head-mountable-ids>
-            </axis>
-            <axis name="y" type="Y" home-coordinate="0.0">
-               <head-mountable-ids class="java.util.HashSet">
-                  <string>*</string>
-               </head-mountable-ids>
-            </axis>
-            <axis name="z" type="Z" home-coordinate="0.0">
-               <head-mountable-ids class="java.util.HashSet">
-                  <string>*</string>
-               </head-mountable-ids>
-            </axis>
-            <axis name="rotation" type="Rotation" home-coordinate="0.0">
-               <head-mountable-ids class="java.util.HashSet">
-                  <string>*</string>
-               </head-mountable-ids>
-            </axis>
-         </axes>
-      </driver>
+   <move-to-command>G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f}</move-to-command>
+   <move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>
+   <pick-command>M4</pick-command>
+   <place-command>M5</place-command>
+   <sub-drivers class="java.util.ArrayList"/>
+   <axes class="java.util.ArrayList">
+      <axis name="x" type="X" home-coordinate="0.0">
+         <head-mountable-ids class="java.util.HashSet">
+            <string>*</string>
+         </head-mountable-ids>
+      </axis>
+      <axis name="y" type="Y" home-coordinate="0.0">
+         <head-mountable-ids class="java.util.HashSet">
+            <string>*</string>
+         </head-mountable-ids>
+      </axis>
+      <axis name="z" type="Z" home-coordinate="0.0">
+         <head-mountable-ids class="java.util.HashSet">
+            <string>*</string>
+         </head-mountable-ids>
+      </axis>
+      <axis name="rotation" type="Rotation" home-coordinate="0.0">
+         <head-mountable-ids class="java.util.HashSet">
+            <string>*</string>
+         </head-mountable-ids>
+      </axis>
+   </axes>
+</driver>
 ```
 
 ## TinyG Configuration
@@ -240,6 +239,10 @@ G92 X0 Y0 Z0</home-command>
 [g30c] g30 c position             0.000 deg
 ```
 
+## Troubleshooting
+
+* If you are using TinyG G2 you may need to set DTR and RTS. You can do this from the driver configuration UI in Machine Setup.
+* If your pick and place commands fire before moves are complete, make sure you are using `move-to-complete-regex` as shown in the configuration above.
 
 # TinygDriver (Outdated, Not Recommended)
 
