@@ -5,6 +5,8 @@ a complete change list, only those that may directly interest or affect users.
 
 * GcodeDriver Command Sets
 
+	TODO FIX THIS
+
 	GcodeDriver now has command sets that can be applied to a specific tool. This means
 	that you can have different commands for each object on the head such as Nozzles,
 	Cameras, Actuators, etc. Most importantly, you can now have separate pick and place

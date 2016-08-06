@@ -36,6 +36,9 @@ import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
+
 @Root
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
@@ -45,15 +48,35 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
-        HOME_COMMAND,
+        HOME_COMMAND("Id", "Name"),
         PUMP_ON_COMMAND,
         PUMP_OFF_COMMAND,
-        MOVE_TO_COMMAND,
-        MOVE_TO_COMPLETE_REGEX,
-        PICK_COMMAND,
-        PLACE_COMMAND,
-        ACTUATE_BOOLEAN_COMMAND,
-        ACTUATE_DOUBLE_COMMAND,
+        MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
+        MOVE_TO_COMPLETE_REGEX(true),
+        PICK_COMMAND(true, "Id", "Name"),
+        PLACE_COMMAND(true, "Id", "Name"),
+        ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
+        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue");
+        
+        final boolean headMountable;
+        final String[] variableNames;
+        
+        private CommandType() {
+            this(false);
+        }
+        
+        private CommandType(boolean headMountable) {
+            this(headMountable, new String[]{});
+        }
+        
+        private CommandType(String... variableNames) {
+            this(false, variableNames);
+        }
+        
+        private CommandType(boolean headMountable, String... variableNames) {
+            this.headMountable = headMountable;
+            this.variableNames = variableNames;
+        }
     }
 
     public static class Command {
@@ -63,23 +86,24 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute(required = true)
         public CommandType type;
 
-        @Text(required = true)
-        public String command;
+        @ElementList(required=false, inline=true, entry="text")
+        public ArrayList<String> commands = new ArrayList<>();
 
         public Command(String headMountableId, CommandType type, String text) {
             this.headMountableId = headMountableId;
             this.type = type;
-            this.command = text;
+            if (text != null) {
+                String[] commands = text.split("\n");
+                this.commands.addAll(Arrays.asList(commands));
+            }
+        }
+        
+        public String getCommand() {
+            return Joiner.on('\n').join(commands);
         }
 
         private Command() {
 
-        }
-
-        @Override
-        public String toString() {
-            return "Command [headMountableId=" + headMountableId + ", type=" + type + ", text="
-                    + command + "]";
         }
     }
 
@@ -221,7 +245,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             // Clean up any null commands. This is done here instead of individual checks
             // above just to make the code cleaner and prettier.
             for (Iterator<Command> i = commands.iterator(); i.hasNext();) {
-                if (i.next().command == null) {
+                if (i.next().commands.isEmpty()) {
                     i.remove();
                 }
             }
@@ -318,10 +342,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public String getCommand(HeadMountable hm, CommandType type) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
-        if (hm != null) {
+        if (type.headMountable && hm != null) {
             for (Command c : commands) {
                 if (hm.getId().equals(c.headMountableId) && type == c.type) {
-                    return c.command;
+                    return c.getCommand();
                 }
             }
         }
@@ -329,7 +353,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // null or * HeadMountable ID.
         for (Command c : commands) {
             if (c.headMountableId == null || c.headMountableId.equals("*") && type == c.type) {
-                return c.command;
+                return c.getCommand();
             }
         }
         // No matches were found.
