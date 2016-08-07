@@ -38,10 +38,10 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Id", "Part", "Side", "X", "Y", "ø", "Type", "Status"};
+            new String[] {"Id", "Part", "Side", "X", "Y", "ø", "Type", "Status", "Glue"};
 
     private Class[] columnTypes = new Class[] {String.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, String.class, Type.class, Status.class};
+            LengthCellValue.class, LengthCellValue.class, String.class, Type.class, Status.class, String.class};
 
     public enum Status {
         Ready, MissingPart, MissingFeeder, ZeroPartHeight
@@ -74,7 +74,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6;
+                || columnIndex == 5 || columnIndex == 6 || columnIndex == 8;
     }
 
     @Override
@@ -116,6 +116,16 @@ public class PlacementsTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 6) {
                 placement.setType((Type) aValue);
+            }
+            else if (columnIndex == 8) {
+                if (aValue.toString().compareTo("Yes")==0)
+                {
+                    placement.setGlue(true);
+                }
+                else
+                {
+                    placement.setGlue(false);
+                }
             }
         }
         catch (Exception e) {
@@ -169,6 +179,15 @@ public class PlacementsTableModel extends AbstractTableModel {
                 return placement.getType();
             case 7:
                 return getPlacementStatus(placement);
+            case 8:
+                if(placement.getGlue())
+                {
+                    return "Yes";
+                }
+                else
+                {
+                    return "No";
+                }
             default:
                 return null;
         }

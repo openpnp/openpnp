@@ -209,8 +209,8 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
                 continue;
             }
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
-                // Ignore placements that aren't set to be placed
-                if (placement.getType() != Placement.Type.Place) {
+                // Ignore placements that aren't set to be glued
+                if (!placement.getGlue()) {
                     continue;
                 }
 
