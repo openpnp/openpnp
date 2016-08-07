@@ -73,19 +73,6 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
     @Override
     public String toString() {
         double r = Rotation;
-        /*if (l.getUnits() == null) {
-            return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
-                    l.getValue(), "?");
-        }
-        if (displayNativeUnits && l.getUnits() != configuration.getSystemUnits()) {
-            return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
-                    l.getValue(), l.getUnits().getShortName());
-        }
-        else {
-            l = l.convertToUnits(configuration.getSystemUnits());
-            return String.format(Locale.US, configuration.getLengthDisplayFormat(), l.getValue());
-        }*/
-
         return String.format(Locale.US, configuration.getLengthDisplayFormat(), r);
 
     }
