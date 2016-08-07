@@ -63,6 +63,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Element(required = false)
     protected String homeCommand = null;
 
+    @Element(required = false)
+    protected Location homingFiducialLocation=null;
+
     /**
      * This command has special handling for the X, Y, Z and Rotation variables. If the move does
      * not change one of these variables that variable is replaced with the empty string, removing
@@ -189,7 +192,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
 
         /*
-                The head camera for nozzle-1 should now be (if everythings homed correctly)
+                The head camera for nozzle-1 should now be (if everything has homed correctly)
                 directly above the homing pin in the machine bed, use the head camera scan
                 for this and make sure this is exactly central - otherwise we move the camera
                 until it is, and then reset all the axis back to 0,0,0,0 as this is calibrated

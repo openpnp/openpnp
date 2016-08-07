@@ -125,14 +125,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
-        // logger.debug("Locating {}", fid.getId());
-
-        //   Part part = fid.getPart();
-        //    if (part == null) {
-        //  //        throw new Exception(
-        //                String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
-        //    }
-
         org.openpnp.model.Package pkg = part.getPackage();
         if (pkg == null) {
             throw new Exception(
@@ -157,15 +149,12 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 part.getPackage().getFootprint());
 
 
-        // the head should already be at the homing position (as we have just homed), so no point moving again
-        // Move to where we expect to find the fid
-//        Location location =
-        //MovableUtils.moveToLocationAtSafeZ(camera, location);
+        // Move to where we expect to find the fid, if user has not specified then we treat 0,0,0,0 as the place for this to be
+        if(location != null)
+        {
+            MovableUtils.moveToLocationAtSafeZ(camera, location);
+        }
 
-        // Location location=this.homeLocation;
-
-
-        //for (int i = 0; i < 3; i++) {
         // Wait for camera to settle
         Thread.sleep(camera.getSettleTimeMs());
         // Perform vision operation
@@ -178,9 +167,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         }
         logger.debug("{} located at {}", location);
-        // Move to where we actually found the fid - thus calibrating to our home fudicial
+
+        // Move to where we actually found the fid - thus calibrating to our home fiducial
         camera.moveTo(location);
-        //}
 
         return location;
     }
