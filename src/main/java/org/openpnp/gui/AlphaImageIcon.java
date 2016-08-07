@@ -1,5 +1,8 @@
 /**
- * @(#)AlphaImageIcon.java	1.0 08/16/10
+ * AlphaImageIcon class written by Darryl from
+ * https://tips4java.wordpress.com/2010/08/22/alpha-icons/
+ *
+ * Open licence code.
  */
 package org.openpnp.gui;
 

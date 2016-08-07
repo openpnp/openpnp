@@ -1,5 +1,8 @@
 /**
- * @(#)DefaultTableHeaderCellRenderer.java	1.0 02/24/09
+ * DefaultTableHeaderCell class written by Darryl from
+ * https://tips4java.wordpress.com/2010/08/22/alpha-icons/
+ *
+ * Open licence code.
  */
 package org.openpnp.gui;
 
