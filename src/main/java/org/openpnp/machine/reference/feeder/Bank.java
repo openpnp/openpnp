@@ -143,9 +143,9 @@ public class Bank extends ReferenceFeeder
       //mapLoc(this.enabled=enabled);         // this stage
     for (Feeder fdr:feeders) {	// deeper stages
 	if (fdr.getClass () == this.getClass ()) {	// this class
-	  if (this.enabled)
+	  if (this.enabled) {
 	    ((Bank) fdr).commit ();
-	  else {
+	  } else {
 	    enabled = ((Bank) fdr).enabled;
 	    fdr.setEnabled (false);
 	    ((Bank) fdr).enabled = enabled;
@@ -166,12 +166,12 @@ public class Bank extends ReferenceFeeder
 
     if (enabled) {
     for (Feeder fdr:feeders) {
-	if (machine.getFeeder (fdr.getId ()) != fdr)
+	if (machine.getFeeder (fdr.getId ()) != fdr) {
 	  try {
 	  machine.addFeeder (fdr);
 	  }
 	catch (Exception e) {;
-	}
+	}}
       }
     }
   }
