@@ -31,13 +31,11 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Text;
 import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Collections2;
 
 @Root
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
@@ -57,22 +55,22 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue");
-        
+
         final boolean headMountable;
         final String[] variableNames;
-        
+
         private CommandType() {
             this(false);
         }
-        
+
         private CommandType(boolean headMountable) {
-            this(headMountable, new String[]{});
+            this(headMountable, new String[] {});
         }
-        
+
         private CommandType(String... variableNames) {
             this(false, variableNames);
         }
-        
+
         private CommandType(boolean headMountable, String... variableNames) {
             this.headMountable = headMountable;
             this.variableNames = variableNames;
@@ -86,18 +84,19 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute(required = true)
         public CommandType type;
 
-        @ElementList(required=false, inline=true, entry="text")
+        @ElementList(required = false, inline = true, entry = "text")
         public ArrayList<String> commands = new ArrayList<>();
 
         public Command(String headMountableId, CommandType type, String text) {
             this.headMountableId = headMountableId;
             this.type = type;
             if (text != null) {
+                text.replaceAll("\r", "");
                 String[] commands = text.split("\n");
                 this.commands.addAll(Arrays.asList(commands));
             }
         }
-        
+
         public String getCommand() {
             return Joiner.on('\n').join(commands);
         }
@@ -226,6 +225,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         // Migrate old commands to new style
         if (commands.isEmpty()) {
+            // Make sure that the command confirm regex always gets a default.
+            if (commandConfirmRegex == null) {
+                commandConfirmRegex = "^ok.*";
+            }
             commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, commandConfirmRegex));
             commands.add(new Command(null, CommandType.CONNECT_COMMAND, connectCommand));
             commands.add(new Command(null, CommandType.ENABLE_COMMAND, enableCommand));
@@ -352,7 +355,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // If not, see if we can find a match for the command type with a
         // null or * HeadMountable ID.
         for (Command c : commands) {
-            if (c.headMountableId == null || c.headMountableId.equals("*") && type == c.type) {
+            if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
                 return c.getCommand();
             }
         }
