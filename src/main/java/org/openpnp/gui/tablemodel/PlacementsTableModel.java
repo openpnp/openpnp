@@ -41,7 +41,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             new String[] {"Id", "Part", "Side", "X", "Y", "ø", "Type", "Status", "Glue"};
 
     private Class[] columnTypes = new Class[] {String.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, String.class, Type.class, Status.class, String.class};
+            LengthCellValue.class, LengthCellValue.class, String.class, Type.class, Status.class, Boolean.class};
 
     public enum Status {
         Ready, MissingPart, MissingFeeder, ZeroPartHeight
@@ -118,14 +118,7 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setType((Type) aValue);
             }
             else if (columnIndex == 8) {
-                if (aValue.toString().compareTo("Yes")==0)
-                {
-                    placement.setGlue(true);
-                }
-                else
-                {
-                    placement.setGlue(false);
-                }
+                placement.setGlue((Boolean) aValue);
             }
         }
         catch (Exception e) {
@@ -180,14 +173,7 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 7:
                 return getPlacementStatus(placement);
             case 8:
-                if(placement.getGlue())
-                {
-                    return "Yes";
-                }
-                else
-                {
-                    return "No";
-                }
+                return placement.getGlue();
             default:
                 return null;
         }
