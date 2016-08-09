@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
@@ -19,13 +20,13 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.ReferenceFeeder;
 
-public class ReferenceTubeFeederConfigurationWizard
+public class ReferenceFeederConfigurationWizard
         extends AbstractReferenceFeederConfigurationWizard {
-    private final ReferenceTubeFeeder feeder;
+    private final ReferenceFeeder feeder;
 
-    public ReferenceTubeFeederConfigurationWizard(ReferenceTubeFeeder feeder) {
+    public ReferenceFeederConfigurationWizard(ReferenceFeeder feeder) {
         super(feeder);
         this.feeder = feeder;
     }

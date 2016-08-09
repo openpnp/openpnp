@@ -18,6 +18,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -49,11 +50,11 @@ public class ReferenceBottomVision implements PartAlignment {
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
     @Override
-    public Location findOffsets(Part part, Nozzle nozzle) throws Exception {
+    public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
         PartSettings partSettings = getPartSettings(part);
 
         if (!isEnabled() || !partSettings.isEnabled()) {
-            return new Location(LengthUnit.Millimeters);
+            return new PartAlignmentOffset(new Location(LengthUnit.Millimeters),false);
         }
 
         Camera camera = VisionUtils.getBottomVisionCamera();
@@ -109,7 +110,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return offsets;
+        return new PartAlignmentOffset(offsets,false);
     }
 
     public static CvPipeline createDefaultPipeline() {
