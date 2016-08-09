@@ -214,7 +214,7 @@ public class Bank extends ReferenceFeeder
     int w = (int) Math.floor (mmx * cam_x + 0.5);
     int h = (int) Math.floor (mmy * cam_y + 0.5);
     BufferedImage image = camera.settleAndCapture ();
-    image = camera.settleAndCapture ().getSubimage ((image.getWith () -
+    image = camera.settleAndCapture ().getSubimage ((image.getWidth () -
 						     w) / 2,
 						    (image.getHeight () -
 						     h) / 2, w, h);
@@ -261,7 +261,6 @@ public class Bank extends ReferenceFeeder
 	  else
 	    i.eval (id);
 	  feeder = (Feeder) i.get ("feeder");
-	  System.setProperty ("user.dir", dir);
 	}
 	if (feeder != null) {
 	  double x = offset.getZ () * n;
