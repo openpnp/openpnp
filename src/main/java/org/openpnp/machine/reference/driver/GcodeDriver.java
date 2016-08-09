@@ -21,8 +21,11 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -119,7 +122,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int connectWaitTimeMilliseconds = 1000;
 
     @Element(required = false)
+    @Deprecated
     protected Location homeLocation = null;
+
+    @Element(required = false)
+    protected Location homingFiducialLocation = null;
 
     /////////////////////////////////////////////////////////////////////
     // Note, the commands below are deprecated in favor of the
@@ -329,6 +336,31 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
+        }
+
+        /*
+         * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
+         * above the homing pin in the machine bed, use the head camera scan for this and make sure
+         * this is exactly central - otherwise we move the camera until it is, and then reset all
+         * the axis back to 0,0,0,0 as this is calibrated home.
+         */
+        Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+        if (homePart != null) {
+            Location tmp = new Location(LengthUnit.Millimeters, 0.0, 0.0, 0.0, 0.0);
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            // camera.moveTo(tmp);
+            Location homeOffset = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(tmp, homePart);
+
+            // homeOffset contains the offset, but we are not really concerned with that,
+            // we just reset everything back to 0 at this point.
+            for (Axis axis : axes) {
+                axis.setCoordinate(axis.getHomeCoordinate());
+            }
+        }
+        else {
+            throw new Exception(String.format("Unable to find the homing fiducial in config"));
+
         }
     }
 
