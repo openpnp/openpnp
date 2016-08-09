@@ -78,8 +78,8 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.spi.*;
-import org.openpnp.machine.reference.feeder.wizards.
-  ReferenceFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.
+  wizards.ReferenceFeederConfigurationWizard;
 
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 
@@ -127,7 +127,8 @@ public class Bank extends ReferenceFeeder
 							   configuration)
 				      throws Exception
 				      {
-				      commit ();}
+				      commit ();
+				      }
 				      });
   }
 
@@ -209,23 +210,21 @@ public class Bank extends ReferenceFeeder
     // updte feeders
     setEnabled (false);
     // changed from RTAG to barcode and to bufferedImage
-    CameraView cameraView =
-      MainFrame.get ().getCameraViews ().setSelectedCamera (camera);
-    camera.settleAndCapture ();
-    cameraView.setSelectionEnabled (true);
-    cameraView.setSelection (0, 0, (int) Math.floor (mmx * cam_x + 0.5),
-			     (int) Math.floor (mmy * cam_y + 0.5));
+    // removed visual feedback because of api problems (requested)
+    int w = (int) Math.floor (mmx * cam_x + 0.5);
+    int h = (int) Math.floor (mmy * cam_y + 0.5);
+    BufferedImage image = camera.settleAndCapture ();
+    image = camera.settleAndCapture ().getSubimage ((image.getWith () -
+						     w) / 2,
+						    (image.getHeight () -
+						     h) / 2, w, h);
     String ids =
-      new MultiFormatReader ().decode (new
-				       BinaryBitmap (new
-						     HybridBinarizer (new
-								      BufferedImageLuminanceSource
-								      (cameraView.
-								       captureSelectionImage
-								       ()
-								      )))).getText
-      ();
-    cameraView.setSelectionEnabled (false);
+      new MultiFormatReader ().
+      decode (new
+	      BinaryBitmap (new
+			    HybridBinarizer (new
+					     BufferedImageLuminanceSource
+					     (image)))).getText ();
     // id now contains value
     Feeder feeder = null;
     int n = 0;
@@ -267,19 +266,13 @@ public class Bank extends ReferenceFeeder
 	if (feeder != null) {
 	  double x = offset.getZ () * n;
 	  double y = offset.getRotation () * n;
-	  ((ReferenceFeeder) feeder).setLocation (location.
-						  add (offset.
-						       derive (null, null,
-							       0.0, 0.0))
-						  .add (offset.
-							derive (x, y, 0.0,
-								0.0))
-						  .
-						  addWithRotation (((ReferenceFeeder) feeder).getLocation ())
-						  .
-						  subtract (((ReferenceFeeder)
-							     feeder).
-							    getLocation ())
+	  ((ReferenceFeeder) feeder).
+	    setLocation (location.add (offset.derive (null, null, 0.0, 0.0))
+			 .add (offset.derive (x, y, 0.0, 0.0))
+			 .addWithRotation (((ReferenceFeeder) feeder).
+					   getLocation ())
+			 .subtract (((ReferenceFeeder)
+				     feeder).getLocation ())
 	    );
 	  feeders.add (feeder);
 	  feeder.setEnabled (enabled);
