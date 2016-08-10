@@ -701,7 +701,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         // Send the command, if one was specified
         if (command != null) {
-            logger.trace(">> " + command);
+            logger.trace("[{}] >> {}", portName, command);
             output.write(command.getBytes());
             output.write("\n".getBytes());
         }
@@ -758,7 +758,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 return;
             }
             line = line.trim();
-            logger.trace("<< " + line);
+            logger.trace("[{}] << {}", portName, line);
             responseQueue.offer(line);
         }
     }
