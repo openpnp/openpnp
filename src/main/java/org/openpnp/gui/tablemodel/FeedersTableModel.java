@@ -32,7 +32,7 @@ import org.openpnp.spi.Feeder;
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled"};
+    private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled", "Child"};
     private List<Feeder> feeders;
 
     public FeedersTableModel(Configuration configuration) {
@@ -111,6 +111,15 @@ public class FeedersTableModel extends AbstractTableModel {
             }
             case 3:
                 return feeders.get(row).isEnabled();
+            case 4: {
+                if (!feeders.get(row).supportsChildren()) {
+                    return null;
+                }
+                if (feeders.get(row).getChild() == null) {
+                    return null;
+                }
+                return feeders.get(row).getChild().getName();
+            }
             default:
                 return null;
         }

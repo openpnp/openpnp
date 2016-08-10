@@ -28,9 +28,11 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     protected Part part;
 
-    public AbstractFeeder() {
+    public AbstractFeeder()
+    {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
+        this.child = null;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
@@ -87,4 +89,11 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
     }
+
+
+    @Attribute
+    protected Feeder child;
+    public Boolean supportsChildren() { return false; }
+    public Feeder getChild() { return null; }
+    public void setChild(Feeder child) { return; }
 }
