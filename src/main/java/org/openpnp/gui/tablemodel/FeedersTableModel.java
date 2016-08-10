@@ -149,8 +149,16 @@ public class FeedersTableModel extends AbstractTableModel {
         }
 
         List<Feeder> feeders = configuration.getMachine().getFeeders();
-        String[] feederNameList = new String[feeders.size()+1];
 
+
+        int iChildFeedCount=0;
+        for(int i=0;i<feeders.size();i++)
+        {
+            if(feeders.get(i).isChildFeeder()) {
+                iChildFeedCount++;
+            }
+        }
+        String[] feederNameList = new String[iChildFeedCount+1];
         feederNameList[0]="None";
         for(int i=0;i<feeders.size();i++)
         {
