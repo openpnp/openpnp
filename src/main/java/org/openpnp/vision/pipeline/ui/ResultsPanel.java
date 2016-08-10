@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
@@ -102,13 +103,16 @@ public class ResultsPanel extends JPanel {
             public void mouseMoved(MouseEvent e) {
                 Color color = robot.getPixelColor(e.getXOnScreen(), e.getYOnScreen());
                 float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
-                matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d",
+                Point p = matView.scalePoint(e.getPoint());
+                matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d",
                         color.getRed(),
                         color.getGreen(),
                         color.getBlue(),
                         (int) (255.0 * hsb[0]),
                         (int) (255.0 * hsb[1]),
-                        (int) (255.0 * hsb[2])));
+                        (int) (255.0 * hsb[2]),
+                        p.x,
+                        p.y));
             }
         });
 

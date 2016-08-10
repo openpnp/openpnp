@@ -72,10 +72,7 @@ import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.importer.SolderPasteGerberImporter;
-import org.openpnp.gui.support.HeadCellValue;
-import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.support.*;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 
@@ -185,6 +182,7 @@ public class MainFrame extends JFrame {
         mainFrame = this;
         this.configuration = configuration;
         LengthCellValue.setConfiguration(configuration);
+        RotationCellValue.setConfiguration(configuration);
         HeadCellValue.setConfiguration(configuration);
 
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -518,7 +516,7 @@ public class MainFrame extends JFrame {
      * Register a BoardImporter with the system, causing it to gain a menu location in the
      * File->Import menu.
      * 
-     * @param importer
+     * @param boardImporterClass
      */
     public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
         final BoardImporter boardImporter;
@@ -671,7 +669,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-            MessageBoxes.errorBox(MainFrame.this, "Notice",
+            MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
         }
     };
@@ -680,7 +678,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
-            MessageBoxes.errorBox(MainFrame.this, "Notice",
+            MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
         }
     };

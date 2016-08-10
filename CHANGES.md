@@ -1,6 +1,44 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-08-08
+
+* GcodeDriver Tool Specific Commands
+
+	GcodeDriver now has the ability to send different commands based on the the tool that
+	that the command is being sent for. This means that you can have different commands for each 
+	object on the head such as Nozzles, Cameras, Actuators, etc. Most importantly, you can now
+	have separate pick and place commands for each Nozzle.
+	
+	When you first start OpenPnP with this version it will automatically update your
+	configuration and move the existing commands into a default command set. After closing
+	OpenPnP, please inspect your machine.xml to see the changes.
+	
+	To specify a specific tool for a command, the following syntax is used:
+	```
+     <command head-mountable-id="269edd567-df6c-495a-9b30-2fcbf5c9742f" type="PICK_COMMAND">
+        <text>M808</text>
+        <text>M800</text>
+     </command>
+     <command head-mountable-id="69edd567-df6c-495a-9b30-2fcbf5c9742f" type="PICK_COMMAND">
+        <text>M808</text>
+        <text>M802--</text>
+     </command>
+	```
+	
+	Note that the PICK_COMMAND is specified twice. One for each nozzle. The head-mountable-id
+	specifies which nozzle the command is for.
+	
+	OpenPnP will first search for a command that matches the specified tool, and if it cannot
+	find one for the tool then it will default to the command defined without a head-mountable-id.
+	
+	The commands that support tool specific codes are:
+    * MOVE_TO_COMMAND
+    * PICK_COMMAND
+    * PLACE_COMMAND
+    * ACTUATE_BOOLEAN_COMMAND
+    * ACTUATE_DOUBLE_COMMAND
+
 # 2016-06-22
 
 * Python Scripting Support

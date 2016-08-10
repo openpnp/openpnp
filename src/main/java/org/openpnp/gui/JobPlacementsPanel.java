@@ -131,6 +131,7 @@ public class JobPlacementsPanel extends JPanel {
 
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
+        table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
         table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));

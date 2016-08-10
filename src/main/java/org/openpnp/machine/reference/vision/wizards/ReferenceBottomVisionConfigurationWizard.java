@@ -90,7 +90,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                             .values()) {
                         partSettings.setPipeline(bottomVision.getPipeline().clone());
                     }
-                    MessageBoxes.errorBox(getTopLevelAncestor(), "Parts Reset",
+                    MessageBoxes.infoBox("Parts Reset",
                             "All custom part pipelines have been reset.");
                 });
             }

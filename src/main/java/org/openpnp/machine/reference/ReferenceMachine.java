@@ -70,7 +70,10 @@ public class ReferenceMachine extends AbstractMachine {
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
 
     @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = null;
+    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = new ReferencePasteDispenseJobProcessor();
+
+    @Element(required = false)
+    protected PasteDispenseJobProcessor glueDispenseJobProcessor = new ReferenceGlueDispenseJobProcessor();
 
     @Element(required = false)
     protected PartAlignment partAlignment = new ReferenceBottomVision();
@@ -249,4 +252,10 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
+
+    @Override
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor() {
+        return glueDispenseJobProcessor;
+    }
+
 }

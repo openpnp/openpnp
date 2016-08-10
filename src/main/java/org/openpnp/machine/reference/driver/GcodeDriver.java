@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -13,13 +14,18 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -27,12 +33,81 @@ import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
+
+@Root
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
+
+    public enum CommandType {
+        COMMAND_CONFIRM_REGEX,
+        CONNECT_COMMAND,
+        ENABLE_COMMAND,
+        DISABLE_COMMAND,
+        HOME_COMMAND("Id", "Name"),
+        PUMP_ON_COMMAND,
+        PUMP_OFF_COMMAND,
+        MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
+        MOVE_TO_COMPLETE_REGEX(true),
+        PICK_COMMAND(true, "Id", "Name"),
+        PLACE_COMMAND(true, "Id", "Name"),
+        ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
+        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue");
+
+        final boolean headMountable;
+        final String[] variableNames;
+
+        private CommandType() {
+            this(false);
+        }
+
+        private CommandType(boolean headMountable) {
+            this(headMountable, new String[] {});
+        }
+
+        private CommandType(String... variableNames) {
+            this(false, variableNames);
+        }
+
+        private CommandType(boolean headMountable, String... variableNames) {
+            this.headMountable = headMountable;
+            this.variableNames = variableNames;
+        }
+    }
+
+    public static class Command {
+        @Attribute(required = false)
+        public String headMountableId;
+
+        @Attribute(required = true)
+        public CommandType type;
+
+        @ElementList(required = false, inline = true, entry = "text")
+        public ArrayList<String> commands = new ArrayList<>();
+
+        public Command(String headMountableId, CommandType type, String text) {
+            this.headMountableId = headMountableId;
+            this.type = type;
+            if (text != null) {
+                text.replaceAll("\r", "");
+                String[] commands = text.split("\n");
+                this.commands.addAll(Arrays.asList(commands));
+            }
+        }
+
+        public String getCommand() {
+            return Joiner.on('\n').join(commands);
+        }
+
+        private Command() {
+
+        }
+    }
 
     @Attribute(required = false)
     protected LengthUnit units = LengthUnit.Millimeters;
@@ -47,22 +122,46 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int connectWaitTimeMilliseconds = 1000;
 
     @Element(required = false)
+    @Deprecated
     protected Location homeLocation = null;
 
     @Element(required = false)
-    protected String commandConfirmRegex = "^ok.*";;
+    protected Location homingFiducialLocation = null;
+
+    /////////////////////////////////////////////////////////////////////
+    // Note, the commands below are deprecated in favor of the
+    // Commands pattern. They are being left here as to not break
+    // existing configs and will be removed in a couple months.
+    // The existing commands will be automatically moved into the
+    // default Commands on the first run of this code.
+    /////////////////////////////////////////////////////////////////////
+    @Element(required = false)
+    @Deprecated
+    protected String commandConfirmRegex = null;
 
     @Element(required = false)
+    @Deprecated
     protected String connectCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String enableCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String disableCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String homeCommand = null;
+
+    @Element(required = false)
+    @Deprecated
+    protected String pumpOnCommand = null;
+
+    @Element(required = false)
+    @Deprecated
+    protected String pumpOffCommand = null;
 
     /**
      * This command has special handling for the X, Y, Z and Rotation variables. If the move does
@@ -73,28 +172,34 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
      * will be sent.
      */
     @Element(required = false)
+    @Deprecated
     protected String moveToCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String moveToCompleteRegex = null;
 
     @Element(required = false)
+    @Deprecated
     protected String pickCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String placeCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String actuateBooleanCommand = null;
 
     @Element(required = false)
+    @Deprecated
     protected String actuateDoubleCommand = null;
-    
-    @Element(required = false)
-    protected String pumpOnCommand = null;
+    /////////////////////////////////////////////////////////////////////
+    // End of deprecated commands
+    /////////////////////////////////////////////////////////////////////
 
-    @Element(required = false)
-    protected String pumpOffCommand = null;
+    @ElementList(required = false, inline = true)
+    public ArrayList<Command> commands = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<ReferenceDriver> subDrivers = new ArrayList<>();
@@ -110,6 +215,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Commit
     public void commit() {
+        // Create the default axis set
         if (axes.isEmpty()) {
             double x = 0, y = 0, z = 0, rotation = 0;
             if (this.homeLocation != null) {
@@ -123,6 +229,49 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             axes.add(new Axis("y", Axis.Type.Y, y, "*"));
             axes.add(new Axis("z", Axis.Type.Z, z, "*"));
             axes.add(new Axis("rotation", Axis.Type.Rotation, rotation, "*"));
+        }
+        // Migrate old commands to new style
+        if (commands.isEmpty()) {
+            // Make sure that the command confirm regex always gets a default.
+            if (commandConfirmRegex == null) {
+                commandConfirmRegex = "^ok.*";
+            }
+            commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, commandConfirmRegex));
+            commands.add(new Command(null, CommandType.CONNECT_COMMAND, connectCommand));
+            commands.add(new Command(null, CommandType.ENABLE_COMMAND, enableCommand));
+            commands.add(new Command(null, CommandType.DISABLE_COMMAND, disableCommand));
+            commands.add(new Command(null, CommandType.HOME_COMMAND, homeCommand));
+            commands.add(new Command(null, CommandType.PUMP_ON_COMMAND, pumpOnCommand));
+            commands.add(new Command(null, CommandType.PUMP_OFF_COMMAND, pumpOffCommand));
+            commands.add(
+                    new Command(null, CommandType.ACTUATE_BOOLEAN_COMMAND, actuateBooleanCommand));
+            commands.add(
+                    new Command(null, CommandType.ACTUATE_DOUBLE_COMMAND, actuateDoubleCommand));
+            commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, moveToCommand));
+            commands.add(
+                    new Command(null, CommandType.MOVE_TO_COMPLETE_REGEX, moveToCompleteRegex));
+            commands.add(new Command(null, CommandType.PICK_COMMAND, pickCommand));
+            commands.add(new Command(null, CommandType.PLACE_COMMAND, placeCommand));
+            // Clean up any null commands. This is done here instead of individual checks
+            // above just to make the code cleaner and prettier.
+            for (Iterator<Command> i = commands.iterator(); i.hasNext();) {
+                if (i.next().commands.isEmpty()) {
+                    i.remove();
+                }
+            }
+            commandConfirmRegex = null;
+            connectCommand = null;
+            enableCommand = null;
+            disableCommand = null;
+            homeCommand = null;
+            pumpOnCommand = null;
+            pumpOffCommand = null;
+            actuateBooleanCommand = null;
+            actuateDoubleCommand = null;
+            moveToCommand = null;
+            moveToCompleteRegex = null;
+            pickCommand = null;
+            placeCommand = null;
         }
     }
 
@@ -148,7 +297,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         setEnabled(false);
 
         // Send startup Gcode
-        sendGcode(connectCommand);
+        sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
     }
@@ -160,10 +309,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         if (connected) {
             if (enabled) {
-                sendGcode(enableCommand);
+                sendGcode(getCommand(null, CommandType.ENABLE_COMMAND));
             }
             else {
-                sendGcode(disableCommand);
+                sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
             }
         }
 
@@ -176,7 +325,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void home(ReferenceHead head) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
-        String command = homeCommand;
+        String command = getCommand(null, CommandType.HOME_COMMAND);
         command = substituteVariable(command, "Id", head.getId());
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
@@ -188,6 +337,31 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
         }
+
+        /*
+         * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
+         * above the homing pin in the machine bed, use the head camera scan for this and make sure
+         * this is exactly central - otherwise we move the camera until it is, and then reset all
+         * the axis back to 0,0,0,0 as this is calibrated home.
+         */
+        Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+        if (homePart != null) {
+            Location tmp = new Location(LengthUnit.Millimeters, 0.0, 0.0, 0.0, 0.0);
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            // camera.moveTo(tmp);
+            Location homeOffset = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(tmp, homePart);
+
+            // homeOffset contains the offset, but we are not really concerned with that,
+            // we just reset everything back to 0 at this point.
+            for (Axis axis : axes) {
+                axis.setCoordinate(axis.getHomeCoordinate());
+            }
+        }
+        else {
+            throw new Exception(String.format("Unable to find the homing fiducial in config"));
+
+        }
     }
 
     public Axis getAxis(HeadMountable hm, Axis.Type type) {
@@ -197,6 +371,27 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 return axis;
             }
         }
+        return null;
+    }
+
+    public String getCommand(HeadMountable hm, CommandType type) {
+        // If a HeadMountable is specified, see if we can find a match
+        // for both the HeadMountable ID and the command type.
+        if (type.headMountable && hm != null) {
+            for (Command c : commands) {
+                if (hm.getId().equals(c.headMountableId) && type == c.type) {
+                    return c.getCommand();
+                }
+            }
+        }
+        // If not, see if we can find a match for the command type with a
+        // null or * HeadMountable ID.
+        for (Command c : commands) {
+            if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
+                return c.getCommand();
+            }
+        }
+        // No matches were found.
         return null;
     }
 
@@ -270,7 +465,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         boolean emptyMove = true;
 
-        String command = moveToCommand;
+        String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
         command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
@@ -333,6 +528,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
          * searching the responses for the regex. As soon as it is matched we continue. If it's not
          * matched within the timeout we throw an Exception.
          */
+        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
         if (moveToCompleteRegex != null) {
             if (!containsMatch(responses, moveToCompleteRegex)) {
                 long t = System.currentTimeMillis();
@@ -378,14 +574,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
         if (pickedNozzles.size() > 0) {
-            sendGcode(pumpOnCommand);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
         }
-        
-        String command = pickCommand;
+
+        String command = getCommand(nozzle, CommandType.PICK_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
-        
+
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
         }
@@ -393,14 +589,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        String command = placeCommand;
+        String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
         sendGcode(command);
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
-            sendGcode(pumpOffCommand);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
         }
 
         for (ReferenceDriver driver : subDrivers) {
@@ -411,7 +607,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        String command = actuateBooleanCommand;
+        String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
@@ -427,7 +623,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        String command = actuateDoubleCommand;
+        String command = getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
@@ -505,7 +701,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         // Send the command, if one was specified
         if (command != null) {
-            logger.trace(">> " + command);
+            logger.trace("[{}] >> {}", portName, command);
             output.write(command.getBytes());
             output.write("\n".getBytes());
         }
@@ -530,7 +726,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             // Store the response that was received
             responses.add(response);
             // If the response is an ok or error we're done
-            if (response.matches(commandConfirmRegex)) {
+            if (response.matches(getCommand(null, CommandType.COMMAND_CONFIRM_REGEX))) {
                 found = true;
                 break;
             }
@@ -562,7 +758,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 return;
             }
             line = line.trim();
-            logger.trace("<< " + line);
+            logger.trace("[{}] << {}", portName, line);
             responseQueue.offer(line);
         }
     }
@@ -604,6 +800,13 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
+                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
     }
 
     public static class Axis {
