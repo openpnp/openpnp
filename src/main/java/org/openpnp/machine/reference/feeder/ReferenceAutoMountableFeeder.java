@@ -90,4 +90,7 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public Boolean isChildFeeder() { return true; }
 }

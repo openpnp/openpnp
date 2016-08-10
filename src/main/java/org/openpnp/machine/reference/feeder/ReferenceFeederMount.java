@@ -26,6 +26,7 @@ import org.openpnp.machine.reference.feeder.wizards.ReferenceFeederMountConfigur
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
@@ -90,4 +91,13 @@ public class ReferenceFeederMount extends ReferenceFeeder {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public Boolean supportsChildren() { return true; }
+
+    @Override
+    public Feeder getChild() { return child; }
+
+    @Override
+    public void setChild(Feeder child) { this.child=child; }
 }

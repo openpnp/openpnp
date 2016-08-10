@@ -168,6 +168,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation);
 
+        JComboBox comboBox = new JComboBox();
+
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -188,12 +190,20 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         configurationPanel.add(panel);
                     }
                 }
+
+                String[] childFeeders = tableModel.getChildFeeders();
+
+                comboBox.removeAllItems();;
+                for(int i=0;i<childFeeders.length;i++)
+                {
+                    comboBox.addItem(childFeeders[i]);
+                }
+
                 revalidate();
                 repaint();
             }
         });
 
-        JComboBox comboBox = new JComboBox(tableModel.getValidStates());
         comboBox.setEditable(true);
         DefaultCellEditor editor = new DefaultCellEditor(comboBox);
         TableColumnModel tcm = table.getColumnModel();

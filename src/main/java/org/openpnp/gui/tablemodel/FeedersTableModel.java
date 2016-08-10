@@ -28,6 +28,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.python.icu.text.StringPrep;
 
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;
@@ -68,6 +69,10 @@ public class FeedersTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
+        if(columnIndex==4)
+        {
+            return feeders.get(rowIndex).supportsChildren();
+        }
         return columnIndex == 0 || columnIndex == 3;
     }
 
@@ -81,6 +86,14 @@ public class FeedersTableModel extends AbstractTableModel {
             else if (columnIndex == 3) {
                 feeder.setEnabled((Boolean) aValue);
                 refresh();
+            }
+            else if (columnIndex == 4)
+            {
+                if(isValidValue(aValue))
+                {
+                    feeder.setChild(configuration.getMachine().getFeederByName((String) aValue));
+                    fireTableRowsUpdated(rowIndex,rowIndex);
+                }
             }
         }
         catch (Exception e) {
@@ -116,7 +129,7 @@ public class FeedersTableModel extends AbstractTableModel {
                     return null;
                 }
                 if (feeders.get(row).getChild() == null) {
-                    return null;
+                    return "None";
                 }
                 return feeders.get(row).getChild().getName();
             }
@@ -127,8 +140,26 @@ public class FeedersTableModel extends AbstractTableModel {
 
 
     // Extra public methods
-    public static String[] getValidStates() {
-        return validStates;
+    public String[] getChildFeeders() {
+       // return validStates;
+        if(configuration.getMachine()== null) {
+            String[] feederNameList = new String[1];
+            feederNameList[0] = "None";
+            return feederNameList;
+        }
+
+        List<Feeder> feeders = configuration.getMachine().getFeeders();
+        String[] feederNameList = new String[feeders.size()+1];
+
+        feederNameList[0]="None";
+        for(int i=0;i<feeders.size();i++)
+        {
+            if(feeders.get(i).isChildFeeder()) {
+                feederNameList[i + 1] = feeders.get(i).getName();
+            }
+        }
+
+        return feederNameList;
     }
 
     // Protected methods
@@ -136,8 +167,10 @@ public class FeedersTableModel extends AbstractTableModel {
         if (value instanceof String) {
             String sValue = (String)value;
 
-            for (int i = 0; i < validStates.length; i++) {
-                if (sValue.equals(validStates[i])) {
+            String[] childFeeders = getChildFeeders();
+
+            for (int i = 0; i < childFeeders.length; i++) {
+                if (sValue.equals(childFeeders[i])) {
                     return true;
                 }
             }
@@ -152,13 +185,6 @@ public class FeedersTableModel extends AbstractTableModel {
             "On order", "In stock", "Out of print"
     };
 
-    protected Object[][] data = new Object[][] {
-            { "Core Java Volume 1", validStates[0] },
-            { "Core Java Volume 2", validStates[0] },
-            { "Core Web Programming", validStates[0] },
-            { "Core Visual Basic 5", validStates[0] },
-            { "Core Java Foundation Classes", validStates[0] }
-    };
 
 
 }

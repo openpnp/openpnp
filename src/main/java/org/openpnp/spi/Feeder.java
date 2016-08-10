@@ -80,4 +80,5 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Boolean supportsChildren();
     public Feeder getChild();
     public void setChild(Feeder child);
+    public Boolean isChildFeeder();
 }
