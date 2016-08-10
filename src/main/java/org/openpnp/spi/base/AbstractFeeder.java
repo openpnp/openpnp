@@ -91,7 +91,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
 
 
-    @Attribute
+    @Attribute(required=false)
     protected Feeder child;
     public Boolean supportsChildren() { return false; }
     public Feeder getChild() { return null; }

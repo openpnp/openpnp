@@ -29,6 +29,7 @@ import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -45,7 +46,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
-
+import javax.swing.table.TableColumnModel;
+import javax.swing.DefaultCellEditor;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
@@ -191,6 +193,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
         });
 
+        JComboBox comboBox = new JComboBox(tableModel.getValidStates());
+        comboBox.setEditable(true);
+        DefaultCellEditor editor = new DefaultCellEditor(comboBox);
+        TableColumnModel tcm = table.getColumnModel();
+        tcm.getColumn(4).setCellEditor(editor);
+
+
         feederSelectedActionGroup.setEnabled(false);
 
         splitPane.setLeftComponent(new JScrollPane(table));
@@ -202,7 +211,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * Activate the Feeders tab and show the Feeder for the specified Part. If none exists, prompt
      * the user to create a new one.
      * 
-     * @param feeder
+     * @param part
      */
     public void showFeederForPart(Part part) {
         mainFrame.showTab("Feeders");

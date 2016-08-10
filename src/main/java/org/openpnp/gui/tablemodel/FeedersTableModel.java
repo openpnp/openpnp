@@ -124,4 +124,41 @@ public class FeedersTableModel extends AbstractTableModel {
                 return null;
         }
     }
+
+
+    // Extra public methods
+    public static String[] getValidStates() {
+        return validStates;
+    }
+
+    // Protected methods
+    protected boolean isValidValue(Object value) {
+        if (value instanceof String) {
+            String sValue = (String)value;
+
+            for (int i = 0; i < validStates.length; i++) {
+                if (sValue.equals(validStates[i])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    protected static final int COLUMN_COUNT = 2;
+
+    protected static final String[] validStates = {
+            "On order", "In stock", "Out of print"
+    };
+
+    protected Object[][] data = new Object[][] {
+            { "Core Java Volume 1", validStates[0] },
+            { "Core Java Volume 2", validStates[0] },
+            { "Core Web Programming", validStates[0] },
+            { "Core Visual Basic 5", validStates[0] },
+            { "Core Java Foundation Classes", validStates[0] }
+    };
+
+
 }
