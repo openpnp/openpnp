@@ -37,6 +37,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 part = configuration.getPart(partId);
+                child = configuration.getMachine().getFeeder(childID);
             }
         });
     }
@@ -92,7 +93,10 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
 
     @Attribute(required=false)
+    protected String childID;
+
     protected Feeder child;
+
     public Boolean supportsChildren() { return false; }
     public Feeder getChild() { return null; }
     public void setChild(Feeder child) { return; }

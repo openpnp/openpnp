@@ -116,6 +116,10 @@ public class FeedersTableModel extends AbstractTableModel {
             case 1:
                 return feeders.get(row).getClass().getSimpleName();
             case 2: {
+                if (feeders.get(row).supportsChildren()) {
+                    return null;
+                }
+
                 Part part = feeders.get(row).getPart();
                 if (part == null) {
                     return null;
@@ -160,10 +164,13 @@ public class FeedersTableModel extends AbstractTableModel {
         }
         String[] feederNameList = new String[iChildFeedCount+1];
         feederNameList[0]="None";
+
+        int iIndex = 1;
         for(int i=0;i<feeders.size();i++)
         {
             if(feeders.get(i).isChildFeeder()) {
-                feederNameList[i + 1] = feeders.get(i).getName();
+                feederNameList[iIndex] = feeders.get(i).getName();
+                iIndex++;
             }
         }
 
@@ -187,11 +194,7 @@ public class FeedersTableModel extends AbstractTableModel {
         return false;
     }
 
-    protected static final int COLUMN_COUNT = 2;
 
-    protected static final String[] validStates = {
-            "On order", "In stock", "Out of print"
-    };
 
 
 

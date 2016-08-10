@@ -99,5 +99,5 @@ public class ReferenceFeederMount extends ReferenceFeeder {
     public Feeder getChild() { return child; }
 
     @Override
-    public void setChild(Feeder child) { this.child=child; }
+    public void setChild(Feeder child) { this.childID=child.getId(); this.child=child; }
 }
