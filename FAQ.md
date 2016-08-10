@@ -39,6 +39,6 @@ Next, find your log configuration file. See [Where are configuration and log fil
 
 Edit the file in any basic text editor and follow the instructions within.
 
-For instance, if you wanted to turn on driver debug logging, you would find the line that says `### change to debug to log low-level driver activity` and change the `info` string to `debug`.
+For instance, if you wanted to turn on driver trace logging, you would find the line that says `### change to debug to log low-level driver activity` and change the `info` string to `trace`. You can also use `debug` here. Trace shows more information than debug.
 
 Save the file and start OpenPnP.
