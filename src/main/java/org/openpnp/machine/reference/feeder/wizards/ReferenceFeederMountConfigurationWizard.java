@@ -22,7 +22,7 @@ package org.openpnp.machine.reference.feeder.wizards;
 import org.openpnp.machine.reference.feeder.ReferenceFeederMount;
 
 public class ReferenceFeederMountConfigurationWizard
-        extends AbstractReferenceFeederConfigurationWizard {
+        extends AbstractReferenceFeederMountConfigurationWizard {
     private final ReferenceFeederMount feeder;
 
     public ReferenceFeederMountConfigurationWizard(ReferenceFeederMount feeder) {
