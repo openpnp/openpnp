@@ -141,6 +141,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
 
+    public List<PlannedPlacement> GetPlannedPlacements() { return  Collections.unmodifiableList(plannedPlacements); }
+
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 

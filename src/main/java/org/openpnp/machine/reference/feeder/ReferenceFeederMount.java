@@ -43,12 +43,6 @@ import javax.swing.*;
 
 public class ReferenceFeederMount extends ReferenceFeeder {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceFeederMount.class);
-
-    @Attribute(required=false)
-    protected String actuatorName;
-    
-    @Attribute(required=false)
-    protected double actuatorValue;
     
     @Override
     public Location getPickLocation() throws Exception {
@@ -57,12 +51,7 @@ public class ReferenceFeederMount extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        if (actuatorName == null) {
-            logger.warn("No actuatorName specified for feeder.");
-            return;
-        }
-        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
-        actuator.actuate(actuatorValue);
+        throw new Exception("Can not call feed on a referenceFeederMount, only its children." );
     }
 
     @Override

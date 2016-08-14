@@ -38,6 +38,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
             public void configurationLoaded(Configuration configuration) throws Exception {
                 part = configuration.getPart(partId);
                 child = configuration.getMachine().getFeeder(childID);
+                parent = configuration.getMachine().getFeeder(parentID);
             }
         });
     }
@@ -94,11 +95,14 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Attribute(required=false)
     protected String childID;
+    @Attribute(required=false)
+    protected String parentID;
 
     protected Feeder child;
-
+    protected Feeder parent;
     public Boolean supportsChildren() { return false; }
     public Feeder getChild() { return null; }
     public void setChild(Feeder child) { return; }
     public Boolean isChildFeeder() { return false; }
+    public void setParent(Feeder parent) { return; }
 }

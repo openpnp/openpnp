@@ -654,7 +654,7 @@ public class JobPanel extends JPanel {
         else if (title.equals("Pick and Place"))
         {
             // Run the glue dispense processor first, this will deposit glue ready for any component placements
-            jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
+            jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
         }
         else {
             throw new Error("Programmer error: Unknown tab title.");
@@ -680,6 +680,7 @@ public class JobPanel extends JPanel {
             if(jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
                 jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
                 jobProcessor.initialize(job);
+             //   fsm.send(Message.StartOrPause);
                 jobRun();
             }
             return null;
