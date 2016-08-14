@@ -98,17 +98,17 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
             {
                 // all our slots are in use... loop round the job and see if any won't get used anymore
                 ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) Configuration.get().getMachine().getPnpJobProcessor();
-                List<ReferencePnpJobProcessor.PlannedPlacement> jobPlacements = jobProcessor.GetPlannedPlacements();
+                List<ReferencePnpJobProcessor.JobPlacement> jobPlacements = jobProcessor.GetJobPlacements();
 
                 for (Feeder feeder: feeders) {
                     if(feeder.supportsChildren()) {
 
                         Boolean feederUsed = false;
-                        for (ReferencePnpJobProcessor.PlannedPlacement jobPlacement : jobPlacements) {
-                            if (jobPlacement.stepComplete) {
+                        for (ReferencePnpJobProcessor.JobPlacement jobPlacement : jobPlacements) {
+                            if (jobPlacement.status == ReferencePnpJobProcessor.JobPlacement.Status.Complete) {
                                 continue;
                             }
-                            if (jobPlacement.feeder == feeder.getChild())
+                            if (jobPlacement.placement.getPart() == feeder.getChild().getPart())
                             {
                                 feederUsed = true;
                                 break;
