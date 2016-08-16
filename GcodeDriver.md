@@ -486,3 +486,20 @@ void processCommand() {
   Serial.println("ok");
 }
 ```
+
+
+# Troubleshooting
+
+## Submitting a Help Request
+
+If you are asking for help, especially on the mailing list, please follow the instructions below to make sure that you provide enough information for people to help figure out what the problem is.
+
+1. Shut down OpenPnP.
+2. Turn on driver trace logging. See https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging for more information. Make sure that you set `log4j.logger.org.openpnp.machine.reference.driver` to equal `trace`. The line should look like `log4j.logger.org.openpnp.machine.reference.driver=trace`.
+3. Start OpenPnP.
+4. Perform whatever actions are causing a problem.
+5. Shut down OpenPnP.
+6. Find the OpenPnP.log file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
+7. Find your machine.xml configuration file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
+8. Send both the machine.xml and the OpenPnP.log to whoever you are asking for help.
+
