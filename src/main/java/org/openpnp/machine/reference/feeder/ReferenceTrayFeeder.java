@@ -92,7 +92,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
                 feedCount, partX, partY, pickLocation.getX(), pickLocation.getY(),
                 pickLocation.getRotation()));
 
-        feedCount++;
+        setFeedCount(getFeedCount() + 1);
     }
 
     public int getTrayCountX() {
@@ -124,7 +124,9 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     }
 
     public void setFeedCount(int feedCount) {
+        int oldValue = this.feedCount;
         this.feedCount = feedCount;
+        firePropertyChange("feedCount", oldValue, feedCount);
     }
 
     @Override
