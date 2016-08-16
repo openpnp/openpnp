@@ -490,7 +490,7 @@ void processCommand() {
 
 # Troubleshooting
 
-## Submitting a Help Request
+## Asking for Help
 
 If you are asking for help, especially on the mailing list, please follow the instructions below to make sure that you provide enough information for people to help figure out what the problem is.
 
@@ -501,5 +501,5 @@ If you are asking for help, especially on the mailing list, please follow the in
 5. Shut down OpenPnP.
 6. Find the OpenPnP.log file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
 7. Find your machine.xml configuration file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
-8. Send both the machine.xml and the OpenPnP.log to whoever you are asking for help.
+8. Send both the machine.xml file and the OpenPnP.log file to whoever you are asking for help.
 
