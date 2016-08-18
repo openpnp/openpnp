@@ -147,7 +147,8 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
             // For now we presume the user has done as they are told.
 
             Feeder feederSlotCopy = suggestedSlot;
-            if(feederSlotCopy!=null) {
+            if(feederSlotCopy!=null)
+            {
                 if(suggestedSlot.getChild() != null)
                 {
                     ReferenceAutoMountableFeeder existingChildFeeder = (ReferenceAutoMountableFeeder) suggestedSlot.getChild();
@@ -170,9 +171,10 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
 
 
         }
-        else {
-//        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
-            //       actuator.actuate(actuatorValue);
+
+        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        if(actuator!=null) {
+            actuator.actuate(actuatorValue);
         }
     }
 
