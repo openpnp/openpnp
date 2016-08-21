@@ -344,6 +344,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             logger.debug("Fiducial check for {}", boardLocation);
         }
     }
+    
+    protected void doIndividualFiducialCheck(BoardLocation boardLocation) throws Exception {
+        fireTextStatus("Performing individual fiducial check.");
+
+        FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
+        
+        Location location = locator.locateBoard(boardLocation);
+        boardLocationFiducialOverrides.put(boardLocation, location);
+        logger.debug("Fiducial check for {}", boardLocation);
+    }
 
     /**
      * Description of the planner:
@@ -573,6 +583,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
             BoardLocation boardLocation = plannedPlacement.jobPlacement.boardLocation;
+            //Check if the individual piece has a fiducial check and check to see if the board is enabled
+            if(jobPlacement.placement.getCheckFids()&&jobPlacement.boardLocation.isEnabled())
+                doIndividualFiducialCheck(jobPlacement.boardLocation);
 
             // Check if there is a fiducial override for the board location and if so, use it.
             if (boardLocationFiducialOverrides.containsKey(boardLocation)) {

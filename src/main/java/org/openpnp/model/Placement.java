@@ -65,6 +65,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     @Attribute
     private boolean glue;
+    
+    @Attribute
+    private boolean checkFids;
 
     @SuppressWarnings("unused")
     private Placement() {
@@ -150,6 +153,15 @@ public class Placement extends AbstractModelObject implements Identifiable {
         Object oldValue = this.glue;
         this.glue = glue;
         firePropertyChange("glue", oldValue, glue);
+    }
+    
+    public boolean getCheckFids() { return checkFids; }
+
+    public void setCheckFids(boolean checkFids)
+    {
+        Object oldValue = this.checkFids;
+        this.checkFids = checkFids;
+        firePropertyChange("check fids", oldValue, checkFids);
     }
 
 
