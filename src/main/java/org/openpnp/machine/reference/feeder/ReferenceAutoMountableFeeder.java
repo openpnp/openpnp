@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference.feeder;
 
 import org.onvif.ver10.schema.Config;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -53,7 +54,18 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
     
     @Attribute(required=false)
     protected double actuatorValue;
-    
+
+    public ReferenceAutoMountableFeeder() {
+        this.parent = null;
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                part = configuration.getPart(partId);
+                parent = configuration.getMachine().getFeeder(parentID);
+            }
+        });
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
         if (parent == null) {
@@ -209,10 +221,10 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
         return null;
     }
 
-    @Override
-    public Boolean isChildFeeder() { return true; }
+    @Attribute(required=false)
+    protected String parentID;
+    protected Feeder parent;
 
-    @Override
     public void setParent(Feeder parent) { if(parent==null) { this.parentID=null; this.parent=null; } else { this.parentID=parent.getId(); this.parent=parent; } }
 
 }

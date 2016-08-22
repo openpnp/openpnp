@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference.feeder;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -43,7 +44,18 @@ import javax.swing.*;
 
 public class ReferenceFeederSlot extends ReferenceFeeder {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceFeederSlot.class);
-    
+
+    public ReferenceFeederSlot() {
+        this.child = null;
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                part = configuration.getPart(partId);
+                child = configuration.getMachine().getFeeder(childID);
+            }
+        });
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
         return location;
@@ -51,7 +63,7 @@ public class ReferenceFeederSlot extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        throw new Exception("Can not call feed on a referenceFeederMount, only its children." );
+        throw new Exception("Can not call feed on a referenceFeederMount, only its children.");
     }
 
     @Override
@@ -72,7 +84,7 @@ public class ReferenceFeederSlot extends ReferenceFeeder {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return new PropertySheet[]{new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
@@ -81,12 +93,17 @@ public class ReferenceFeederSlot extends ReferenceFeeder {
         return null;
     }
 
-    @Override
-    public Boolean supportsChildren() { return true; }
 
-    @Override
-    public Feeder getChild() { return child; }
+    public Feeder getChild() {
+        return child;
+    }
 
-    @Override
-    public void setChild(Feeder child) { this.childID=child.getId(); this.child=child; }
+    public void setChild(Feeder child) {
+        this.childID = child.getId();
+        this.child = child;
+    }
+
+    @Attribute(required = false)
+    protected String childID;
+    protected Feeder child;
 }
