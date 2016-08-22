@@ -25,9 +25,12 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.feeder.ReferenceAutoMountableFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.machine.reference.feeder.ReferenceFeederSlot;
+import org.python.icu.impl.coll.SharedObject;
 import org.python.icu.text.StringPrep;
 
 public class FeedersTableModel extends AbstractTableModel {
@@ -71,7 +74,8 @@ public class FeedersTableModel extends AbstractTableModel {
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         if(columnIndex==4)
         {
-            return feeders.get(rowIndex).supportsChildren();
+            if(feeders.get(rowIndex).getClass().getSimpleName().compareTo("ReferenceFeederSlot")==0)
+                return true;
         }
         return columnIndex == 0 || columnIndex == 3;
     }
@@ -91,7 +95,8 @@ public class FeedersTableModel extends AbstractTableModel {
             {
                 if(isValidValue(aValue))
                 {
-                    feeder.setChild(configuration.getMachine().getFeederByName((String) aValue));
+                    ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeder;
+                    feederSlot.setChild(configuration.getMachine().getFeederByName((String) aValue));
                     fireTableRowsUpdated(rowIndex,rowIndex);
                 }
             }
@@ -116,9 +121,8 @@ public class FeedersTableModel extends AbstractTableModel {
             case 1:
                 return feeders.get(row).getClass().getSimpleName();
             case 2: {
-                if (feeders.get(row).supportsChildren()) {
+                if(feeders.get(row).getClass().getSimpleName().compareTo("ReferenceFeederSlot")==0)
                     return null;
-                }
 
                 Part part = feeders.get(row).getPart();
                 if (part == null) {
@@ -129,13 +133,14 @@ public class FeedersTableModel extends AbstractTableModel {
             case 3:
                 return feeders.get(row).isEnabled();
             case 4: {
-                if (!feeders.get(row).supportsChildren()) {
+                if(feeders.get(row).getClass().getSimpleName().compareTo("ReferenceFeederSlot")!=0)
                     return null;
-                }
-                if (feeders.get(row).getChild() == null) {
+                ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeders.get(row);
+
+                if (feederSlot.getChild() == null) {
                     return "None";
                 }
-                return feeders.get(row).getChild().getName();
+                return feederSlot.getChild().getName();
             }
             default:
                 return null;
@@ -158,7 +163,12 @@ public class FeedersTableModel extends AbstractTableModel {
         int iChildFeedCount=0;
         for(int i=0;i<feeders.size();i++)
         {
-            if(feeders.get(i).isChildFeeder()) {
+            String className = feeders.get(i).getClass().getSimpleName();
+
+            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoMountableFeeder")==0)
+            {
+                ReferenceAutoMountableFeeder mountableFeeder = (ReferenceAutoMountableFeeder) feeders.get(i);
+
                 iChildFeedCount++;
             }
         }
@@ -168,8 +178,10 @@ public class FeedersTableModel extends AbstractTableModel {
         int iIndex = 1;
         for(int i=0;i<feeders.size();i++)
         {
-            if(feeders.get(i).isChildFeeder()) {
-                feederNameList[iIndex] = feeders.get(i).getName();
+            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoMountableFeeder")==0)
+            {
+                ReferenceAutoMountableFeeder mountableFeeder = (ReferenceAutoMountableFeeder) feeders.get(i);
+                feederNameList[iIndex] = mountableFeeder.getName();
                 iIndex++;
             }
         }

@@ -22,7 +22,7 @@ package org.openpnp.machine.reference.feeder;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceFeederMountConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceFeederSlotConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -41,8 +41,8 @@ import javax.swing.*;
  * to either toggle the feeder with a delay or send a double.
  */
 
-public class ReferenceFeederMount extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceFeederMount.class);
+public class ReferenceFeederSlot extends ReferenceFeeder {
+    private final static Logger logger = LoggerFactory.getLogger(ReferenceFeederSlot.class);
     
     @Override
     public Location getPickLocation() throws Exception {
@@ -56,7 +56,7 @@ public class ReferenceFeederMount extends ReferenceFeeder {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceFeederMountConfigurationWizard(this);
+        return new ReferenceFeederSlotConfigurationWizard(this);
     }
 
     @Override

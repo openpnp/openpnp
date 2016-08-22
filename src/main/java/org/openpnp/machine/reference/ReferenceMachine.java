@@ -177,7 +177,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
         l.add(ReferenceAutoMountableFeeder.class);
-        l.add(ReferenceFeederMount.class);
+        l.add(ReferenceFeederSlot.class);
         l.addAll(registeredFeederClasses);
         return l;
     }

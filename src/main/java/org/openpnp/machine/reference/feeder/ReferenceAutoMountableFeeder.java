@@ -82,9 +82,11 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
             Boolean foundEmptySlot = false;
             for(int i=0;i<feeders.size();i++)
             {
-                if(feeders.get(i).supportsChildren())
+
+                if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceFeederSlot")==0)
                 {
-                    if(feeders.get(i).getChild() == null)
+                    ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeders.get(i);
+                    if(feederSlot.getChild() == null)
                     {
                          foundEmptySlot = true;
                          suggestedSlot = feeders.get(i);
@@ -98,17 +100,19 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
             {
                 // all our slots are in use... loop round the job and see if any won't get used anymore
                 ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) Configuration.get().getMachine().getPnpJobProcessor();
-                List<ReferencePnpJobProcessor.JobPlacement> jobPlacements = jobProcessor.GetJobPlacements();
+                List<ReferencePnpJobProcessor.JobPlacement> jobPlacements = jobProcessor.getJobPlacements();
 
                 for (Feeder feeder: feeders) {
-                    if(feeder.supportsChildren()) {
+                    if(feeder.getClass().getSimpleName ().compareTo("ReferenceFeederSlot")==0) {
 
                         Boolean feederUsed = false;
                         for (ReferencePnpJobProcessor.JobPlacement jobPlacement : jobPlacements) {
                             if (jobPlacement.status == ReferencePnpJobProcessor.JobPlacement.Status.Complete) {
                                 continue;
                             }
-                            if (jobPlacement.placement.getPart() == feeder.getChild().getPart())
+                            ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeder;
+
+                            if (jobPlacement.placement.getPart() == feederSlot.getPart())
                             {
                                 feederUsed = true;
                                 break;
@@ -132,7 +136,7 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
 
                     for (Feeder feeder: feeders)
                     {
-                        if (feeder.supportsChildren())
+                        if(feeder.getClass().getSimpleName ().compareTo("ReferenceFeederSlot")==0)
                         {
                             suggestedSlot = feeder;
                             break;
@@ -146,15 +150,15 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
 
             // For now we presume the user has done as they are told.
 
-            Feeder feederSlotCopy = suggestedSlot;
+            ReferenceFeederSlot feederSlotCopy = (ReferenceFeederSlot) suggestedSlot;
             if(feederSlotCopy!=null)
             {
-                if(suggestedSlot.getChild() != null)
+                if(feederSlotCopy.getChild() != null)
                 {
-                    ReferenceAutoMountableFeeder existingChildFeeder = (ReferenceAutoMountableFeeder) suggestedSlot.getChild();
+                    ReferenceAutoMountableFeeder existingChildFeeder = (ReferenceAutoMountableFeeder) feederSlotCopy.getChild();
                     existingChildFeeder.setParent(null);
                     Configuration.get().getMachine().addFeeder(existingChildFeeder);
-                    Configuration.get().getMachine().removeFeeder(suggestedSlot.getChild());
+                    Configuration.get().getMachine().removeFeeder(feederSlotCopy.getChild());
                 }
 
                 feederSlotCopy.setChild(this);

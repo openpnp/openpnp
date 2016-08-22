@@ -19,13 +19,13 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import org.openpnp.machine.reference.feeder.ReferenceFeederMount;
+import org.openpnp.machine.reference.feeder.ReferenceFeederSlot;
 
-public class ReferenceFeederMountConfigurationWizard
+public class ReferenceFeederSlotConfigurationWizard
         extends AbstractReferenceFeederMountConfigurationWizard {
-    private final ReferenceFeederMount feeder;
+    private final ReferenceFeederSlot feeder;
 
-    public ReferenceFeederMountConfigurationWizard(ReferenceFeederMount feeder) {
+    public ReferenceFeederSlotConfigurationWizard(ReferenceFeederSlot feeder) {
         super(feeder);
         this.feeder = feeder;
     }
