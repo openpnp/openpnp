@@ -46,3 +46,24 @@ Save the file and start OpenPnP.
 ## How do I troubleshoot GcodeDriver?
 
 See https://github.com/openpnp/openpnp/wiki/GcodeDriver#troubleshooting
+
+## "It would be faster to do it by hand."
+
+This comes up so often on the mailing list I thought it would be worth addressing as a FAQ. Often, when someone is talking about building a machine or discussing requirements, someone will comment with things along the lines of:
+
+* "Running a pick and place is more work than you think."
+* "For small runs it's faster just to do it by hand."
+* "You will spend more time setting it up than using it."
+* "It will cost you more in the end than just sending the work out, hiring someone, etc."
+
+While some of these reasons might fit your situation, it is important to keep in mind that everyone has their own reasons for wanting to build a pick and place, and very often those reasons have nothing to do with time or money. Here are some other good reasons to build a pick and place machine, even if it's comparatively slow or costs a lot of money:
+
+* Inability to place by hand due to age, illness, disability or disease.
+* Live in a place where it's cost prohibitive or just impossible to send work out.
+* Want to learn more about CNC, computer vision, pick and place, electronics assembly, etc.
+* Just doing it for fun!
+* Strange or complex jobs that contract assembly houses don't want to deal with.
+* Want to try a new or novel idea for placing components.
+* Any other reason you like!
+
+It's okay to let people know about the complexities of running a machine, but I've found that this topic tends to come up over and over again and people seem to feel the need to really pound the point home that it might cost money or time to run the machine. Make your point, but remember that there are lots of reasons to run a machine other than just building boards for a business.
