@@ -191,23 +191,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     }
                 }
 
-                String[] childFeeders = tableModel.getChildFeeders();
-
-                comboBox.removeAllItems();;
-                for(int i=0;i<childFeeders.length;i++)
-                {
-                    comboBox.addItem(childFeeders[i]);
-                }
-
                 revalidate();
                 repaint();
             }
         });
-
-        comboBox.setEditable(true);
-        DefaultCellEditor editor = new DefaultCellEditor(comboBox);
-        TableColumnModel tcm = table.getColumnModel();
-        tcm.getColumn(4).setCellEditor(editor);
 
 
         feederSelectedActionGroup.setEnabled(false);

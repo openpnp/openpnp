@@ -36,7 +36,7 @@ import org.python.icu.text.StringPrep;
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled", "Child"};
+    private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled"};
     private List<Feeder> feeders;
 
     public FeedersTableModel(Configuration configuration) {
@@ -72,11 +72,6 @@ public class FeedersTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        if(columnIndex==4)
-        {
-            if(feeders.get(rowIndex).getClass().getSimpleName().compareTo("ReferenceFeederSlot")==0)
-                return true;
-        }
         return columnIndex == 0 || columnIndex == 3;
     }
 
@@ -91,7 +86,7 @@ public class FeedersTableModel extends AbstractTableModel {
                 feeder.setEnabled((Boolean) aValue);
                 refresh();
             }
-            else if (columnIndex == 4)
+         /*   else if (columnIndex == 4)
             {
                 if(isValidValue(aValue))
                 {
@@ -99,7 +94,7 @@ public class FeedersTableModel extends AbstractTableModel {
                     feederSlot.setChild(configuration.getMachine().getFeederByName((String) aValue));
                     fireTableRowsUpdated(rowIndex,rowIndex);
                 }
-            }
+            } */
         }
         catch (Exception e) {
             // TODO: dialog, bad input
@@ -148,63 +143,8 @@ public class FeedersTableModel extends AbstractTableModel {
     }
 
 
-    // Extra public methods
-    public String[] getChildFeeders() {
-       // return validStates;
-        if(configuration.getMachine()== null) {
-            String[] feederNameList = new String[1];
-            feederNameList[0] = "None";
-            return feederNameList;
-        }
-
-        List<Feeder> feeders = configuration.getMachine().getFeeders();
 
 
-        int iChildFeedCount=0;
-        for(int i=0;i<feeders.size();i++)
-        {
-            String className = feeders.get(i).getClass().getSimpleName();
-
-            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoMountableFeeder")==0)
-            {
-                ReferenceAutoMountableFeeder mountableFeeder = (ReferenceAutoMountableFeeder) feeders.get(i);
-
-                iChildFeedCount++;
-            }
-        }
-        String[] feederNameList = new String[iChildFeedCount+1];
-        feederNameList[0]="None";
-
-        int iIndex = 1;
-        for(int i=0;i<feeders.size();i++)
-        {
-            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoMountableFeeder")==0)
-            {
-                ReferenceAutoMountableFeeder mountableFeeder = (ReferenceAutoMountableFeeder) feeders.get(i);
-                feederNameList[iIndex] = mountableFeeder.getName();
-                iIndex++;
-            }
-        }
-
-        return feederNameList;
-    }
-
-    // Protected methods
-    protected boolean isValidValue(Object value) {
-        if (value instanceof String) {
-            String sValue = (String)value;
-
-            String[] childFeeders = getChildFeeders();
-
-            for (int i = 0; i < childFeeders.length; i++) {
-                if (sValue.equals(childFeeders[i])) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
 
 
