@@ -150,7 +150,7 @@ public class TwoPlacementBoardLocationProcess {
                 location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
                 actualLocationA, actualLocationB);
 
-        boardLocation().setLocation(location.add(boardLocation.getLocation()));
+        boardLocation.setLocation(location.add(boardLocation.getLocation()));
         jobPanel.refreshSelectedBoardRow();
 
         return true;
