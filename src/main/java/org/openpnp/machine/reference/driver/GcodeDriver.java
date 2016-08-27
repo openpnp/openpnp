@@ -358,10 +358,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 axis.setCoordinate(axis.getHomeCoordinate());
             }
         }
-        else {
-            throw new Exception(String.format("Unable to find the homing fiducial in config"));
-
-        }
     }
 
     public Axis getAxis(HeadMountable hm, Axis.Type type) {
