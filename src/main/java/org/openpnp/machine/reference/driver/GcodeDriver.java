@@ -19,6 +19,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -26,6 +27,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -46,6 +48,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
+        POSITION_REPORT_REGEX,
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
@@ -87,7 +90,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute(required = true)
         public CommandType type;
 
-        @ElementList(required = false, inline = true, entry = "text")
+        @ElementList(required = false, inline = true, entry = "text", data=true)
         public ArrayList<String> commands = new ArrayList<>();
 
         public Command(String headMountableId, CommandType type, String text) {
@@ -755,8 +758,41 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
             line = line.trim();
             logger.trace("[{}] << {}", portName, line);
-            responseQueue.offer(line);
+            if (!processPositionReport(line)) {
+                responseQueue.offer(line);
+            }
         }
+    }
+
+    private boolean processPositionReport(String line) {
+        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+            return false;
+        }
+
+        if (!line.matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
+            return false;
+        }
+
+        logger.trace("Position report: {}", line);
+        Matcher matcher =
+                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
+        matcher.matches();
+        for (Axis axis : axes) {
+            try {
+                String s = matcher.group(axis.getName());
+                Double d = Double.valueOf(s);
+                axis.setCoordinate(d);
+            }
+            catch (Exception e) {
+                logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
+            }
+        }
+
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            machine.fireMachineHeadActivity(head);
+        }
+        return true;
     }
 
     /**
