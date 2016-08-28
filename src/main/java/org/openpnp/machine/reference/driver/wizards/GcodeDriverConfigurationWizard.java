@@ -6,6 +6,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -16,16 +18,30 @@ import java.io.StringWriter;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.driver.GcodeDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver.Command;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PasteDispenser;
 import org.simpleframework.xml.Serializer;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -38,6 +54,66 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
 
     public GcodeDriverConfigurationWizard(GcodeDriver driver) {
         this.driver = driver;
+
+        JPanel panel_1 = new JPanel();
+        panel_1.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
+        contentPanel.add(panel_1);
+        panel_1.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),}));
+
+        JLabel lblHeadMountable = new JLabel("Head Mountable");
+        panel_1.add(lblHeadMountable, "2, 2");
+
+        JLabel lblSetting = new JLabel("Setting");
+        panel_1.add(lblSetting, "4, 2");
+
+        comboBoxHm = new JComboBox<>();
+        panel_1.add(comboBoxHm, "2, 4, fill, default");
+
+        comboBoxHm.addItem(new HeadMountableItem(null));
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            for (Nozzle hm : head.getNozzles()) {
+                comboBoxHm.addItem(new HeadMountableItem(hm));
+            }
+            for (PasteDispenser hm : head.getPasteDispensers()) {
+                comboBoxHm.addItem(new HeadMountableItem(hm));
+            }
+            for (Camera hm : head.getCameras()) {
+                comboBoxHm.addItem(new HeadMountableItem(hm));
+            }
+            for (Actuator hm : head.getActuators()) {
+                comboBoxHm.addItem(new HeadMountableItem(hm));
+            }
+        }
+
+        comboBoxCommandType = new JComboBox<>();
+        panel_1.add(comboBoxCommandType, "4, 4, fill, default");
+
+        comboBoxHm.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                headMountableChanged();
+            }
+        });
+
+        comboBoxCommandType.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                commandTypeChanged();
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane();
+        panel_1.add(scrollPane, "2, 6, 3, 1, fill, fill");
+
+        textAreaCommand = new JTextArea();
+        scrollPane.setViewportView(textAreaCommand);
+        textAreaCommand.setRows(5);
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
@@ -52,43 +128,73 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         JButton btnExportGcodeProfile = new JButton(exportProfileAction);
         panel.add(btnExportGcodeProfile, "2, 2");
 
-//        JButton btnImportGcodeProfile = new JButton(importProfileAction);
-//        panel.add(btnImportGcodeProfile, "4, 2");
-
         JButton btnCopyGcodeProfile = new JButton(copyProfileToClipboardAction);
         panel.add(btnCopyGcodeProfile, "2, 4");
 
-//        JButton btnPasteGcodeProfile = new JButton(pasteProfileFromClipboardAction);
-//        panel.add(btnPasteGcodeProfile, "4, 4");
+        headMountableChanged();
+        commandTypeChanged();
+
+        textAreaCommand.getDocument().addDocumentListener(new DocumentListener() {
+            private void changed() {
+                String text = textAreaCommand.getText();
+                driver.setCommand(getSelectedHeadMountable(), getSelectedCommandType(), text);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                changed();
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                changed();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                changed();
+            }
+        });
+    }
+
+    private HeadMountable getSelectedHeadMountable() {
+        HeadMountableItem item = (HeadMountableItem) comboBoxHm.getSelectedItem();
+        return item.getHeadMountable();
+    }
+
+    private CommandType getSelectedCommandType() {
+        CommandType commandType = (CommandType) comboBoxCommandType.getSelectedItem();
+        return commandType;
+    }
+
+    private void headMountableChanged() {
+        comboBoxCommandType.removeAllItems();
+        HeadMountable hm = getSelectedHeadMountable();
+        for (CommandType type : CommandType.values()) {
+            if (hm == null || type.isHeadMountable()) {
+                comboBoxCommandType.addItem(type);
+            }
+        }
+    }
+
+    private void commandTypeChanged() {
+        HeadMountableItem item = (HeadMountableItem) comboBoxHm.getSelectedItem();
+        CommandType commandType = getSelectedCommandType();
+        if (item == null || commandType == null) {
+            return;
+        }
+        Command c = driver.getCommand(item.getHeadMountable(), commandType, false);
+        if (c == null) {
+            textAreaCommand.setText("");
+        }
+        else {
+            String text = c.getCommand();
+            textAreaCommand.setText(text);
+        }
     }
 
     @Override
     public void createBindings() {}
-
-    private void copySettings(GcodeDriver source, GcodeDriver destination) {
-//        destination.setActuateBooleanCommand(source.getActuateBooleanCommand());
-//        destination.setActuateDoubleCommand(source.getActuateDoubleCommand());
-//        destination.setCommandConfirmRegex(source.getCommandConfirmRegex());
-//        destination.setConnectWaitTimeMilliseconds(source.getConnectWaitTimeMilliseconds());
-//        destination.setDataBits(source.getDataBits());
-//        destination.setDisableCommand(source.getDisableCommand());
-//        destination.setEnableCommand(source.getEnableCommand());
-//        destination.setFlowControl(source.getFlowControl());
-//        destination.setHomeCommand(source.getHomeCommand());
-//        destination.setMoveToCommand(source.getMoveToCommand());
-//        destination.setMoveToCompleteRegex(source.getMoveToCompleteRegex());
-//        destination.setParity(source.getParity());
-//        destination.setPickCommand(source.getPickCommand());
-//        destination.setPlaceCommand(source.getPlaceCommand());
-//        destination.setPumpOffCommand(source.getPumpOffCommand());
-//        destination.setPumpOnCommand(source.getPumpOnCommand());
-//        destination.setSetDtr(source.isSetDtr());
-//        destination.setSetRts(source.isSetRts());
-//        destination.setStopBits(source.getStopBits());
-//        destination.setTimeoutMilliseconds(source.getTimeoutMilliseconds());
-//        destination.setUnits(source.getUnits());
-//        destination.setAxes(source.getAxes());
-    }
 
     public final Action exportProfileAction = new AbstractAction() {
         {
@@ -161,7 +267,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 Serializer ser = Configuration.createSerializer();
                 FileReader r = new FileReader(file);
                 GcodeDriver d = ser.read(GcodeDriver.class, r);
-                copySettings(d, driver);
+                // copySettings(d, driver);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Import Failed", e);
@@ -208,7 +314,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
                 StringReader r = new StringReader(s);
                 GcodeDriver d = ser.read(GcodeDriver.class, s);
-                copySettings(d, driver);
+                // copySettings(d, driver);
                 MessageBoxes.infoBox("Pasted Gcode", "Pasted Gcode from Clipboard");
             }
             catch (Exception e) {
@@ -216,4 +322,40 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
             }
         }
     };
+    private JComboBox<CommandType> comboBoxCommandType;
+    private JComboBox<HeadMountableItem> comboBoxHm;
+    private JTextArea textAreaCommand;
+
+    static class HeadMountableItem {
+        private HeadMountable hm;
+
+        public HeadMountableItem(HeadMountable hm) {
+            this.hm = hm;
+        }
+
+        public HeadMountable getHeadMountable() {
+            return hm;
+        }
+
+        @Override
+        public String toString() {
+            if (hm == null) {
+                return "Default";
+            }
+            String type = null;
+            if (hm instanceof Nozzle) {
+                type = "Nozzle";
+            }
+            else if (hm instanceof PasteDispenser) {
+                type = "Paste Dispenser";
+            }
+            else if (hm instanceof Camera) {
+                type = "Camera";
+            }
+            else if (hm instanceof Actuator) {
+                type = "Actuator";
+            }
+            return String.format("%s: %s %s", type, hm.getHead().getName(), hm.getName());
+        }
+    }
 }

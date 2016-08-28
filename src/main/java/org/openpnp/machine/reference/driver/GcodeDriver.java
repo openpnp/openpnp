@@ -81,6 +81,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.headMountable = headMountable;
             this.variableNames = variableNames;
         }
+        
+        public boolean isHeadMountable() {
+            return headMountable;
+        }
     }
 
     public static class Command {
@@ -96,8 +100,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         public Command(String headMountableId, CommandType type, String text) {
             this.headMountableId = headMountableId;
             this.type = type;
+            setCommand(text);
+        }
+        
+        public void setCommand(String text) {
+            this.commands.clear();
             if (text != null) {
-                text.replaceAll("\r", "");
+                text = text.trim();
+                text = text.replaceAll("\r", "");
                 String[] commands = text.split("\n");
                 this.commands.addAll(Arrays.asList(commands));
             }
@@ -372,26 +382,55 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         return null;
     }
-
-    public String getCommand(HeadMountable hm, CommandType type) {
+    
+    public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
         if (type.headMountable && hm != null) {
             for (Command c : commands) {
                 if (hm.getId().equals(c.headMountableId) && type == c.type) {
-                    return c.getCommand();
+                    return c;
                 }
+            }
+            if (!checkDefaults) {
+                return null;
             }
         }
         // If not, see if we can find a match for the command type with a
         // null or * HeadMountable ID.
         for (Command c : commands) {
             if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
-                return c.getCommand();
+                return c;
             }
         }
         // No matches were found.
         return null;
+    }
+
+    public String getCommand(HeadMountable hm, CommandType type) {
+        Command c = getCommand(hm, type, true);
+        if (c == null) {
+            return null;
+        }
+        return c.getCommand();
+    }
+    
+    public void setCommand(HeadMountable hm, CommandType type, String text) {
+        Command c = getCommand(hm, type, false);
+        if (text == null || text.trim().length() == 0) {
+            if (c != null) {
+                commands.remove(c);
+            }
+        }
+        else {
+            if (c == null) {
+                c = new Command(hm == null ? null : hm.getId(), type, text);
+                commands.add(c);
+            }
+            else {
+                c.setCommand(text);
+            }
+        }
     }
 
     @Override
