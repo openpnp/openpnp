@@ -27,6 +27,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
@@ -140,18 +141,16 @@ public class TwoPlacementBoardLocationProcess {
 
         // Calculate the angle and offset from the results
         BoardLocation boardLocation = jobPanel.getSelectedBoardLocation();
+    Location location = boardLocation.getLocation(); boardLocation.setLocation(new Location (LengthUnit.Millimeters));
         Location idealLocationA =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
         Location idealLocationB =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
-        Location location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
+                boardLocation.setLocation(location);
+                location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
                 actualLocationA, actualLocationB);
 
-        location = boardLocation.getLocation().addWithRotation(location);
-        location = location.derive(null, null,
-                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
-
-        jobPanel.getSelectedBoardLocation().setLocation(location);
+        boardLocation.setLocation(location.add(boardLocation.getLocation().derive(0.0,0.0,null,0.0)));
         jobPanel.refreshSelectedBoardRow();
 
         return true;
