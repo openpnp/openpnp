@@ -210,7 +210,7 @@ public class Utils2D {
 
         double angle = actualAngle - idealAngle;
 
-        Location offset = actualA.subtract(idealA);
+        Location offset = actualA.add(actualB).multiply(0.5,0.5,0.0,0.0).subtract(idealA.add(idealB).multiply(0.5,0.5,0.0,0.0));
 
         return new Location(idealA.getUnits(), offset.getX(), offset.getY(), 0, angle);
     }
