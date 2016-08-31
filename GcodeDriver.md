@@ -6,6 +6,8 @@ In the video below there are two GcodeDrivers running. One is controlling the Sm
 
 Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/watch?v=0ntYOy0s_8Y
 
+Work on this feature is being done in #106: https://github.com/openpnp/openpnp/issues/106
+
 # Configuration
 ## Variable Substitution
 
