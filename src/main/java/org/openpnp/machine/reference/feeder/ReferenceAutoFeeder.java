@@ -60,8 +60,30 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
             logger.warn("No actuatorName specified for feeder.");
             return;
         }
-        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
+        if (actuator == null) {
+            actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        }
+        if (actuator == null) {
+            throw new Exception(getName() + " feed failed. Unable to find an actuator named " + actuatorName);
+        }
         actuator.actuate(actuatorValue);
+    }
+    
+    public String getActuatorName() {
+        return actuatorName;
+    }
+
+    public void setActuatorName(String actuatorName) {
+        this.actuatorName = actuatorName;
+    }
+
+    public double getActuatorValue() {
+        return actuatorValue;
+    }
+
+    public void setActuatorValue(double actuatorValue) {
+        this.actuatorValue = actuatorValue;
     }
 
     @Override

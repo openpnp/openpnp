@@ -19,6 +19,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -26,6 +27,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -46,6 +48,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
+        POSITION_REPORT_REGEX,
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
@@ -78,6 +81,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.headMountable = headMountable;
             this.variableNames = variableNames;
         }
+        
+        public boolean isHeadMountable() {
+            return headMountable;
+        }
     }
 
     public static class Command {
@@ -87,14 +94,20 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute(required = true)
         public CommandType type;
 
-        @ElementList(required = false, inline = true, entry = "text")
+        @ElementList(required = false, inline = true, entry = "text", data=true)
         public ArrayList<String> commands = new ArrayList<>();
 
         public Command(String headMountableId, CommandType type, String text) {
             this.headMountableId = headMountableId;
             this.type = type;
+            setCommand(text);
+        }
+        
+        public void setCommand(String text) {
+            this.commands.clear();
             if (text != null) {
-                text.replaceAll("\r", "");
+                text = text.trim();
+                text = text.replaceAll("\r", "");
                 String[] commands = text.split("\n");
                 this.commands.addAll(Arrays.asList(commands));
             }
@@ -358,10 +371,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 axis.setCoordinate(axis.getHomeCoordinate());
             }
         }
-        else {
-            throw new Exception(String.format("Unable to find the homing fiducial in config"));
-
-        }
     }
 
     public Axis getAxis(HeadMountable hm, Axis.Type type) {
@@ -373,26 +382,55 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         return null;
     }
-
-    public String getCommand(HeadMountable hm, CommandType type) {
+    
+    public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
         if (type.headMountable && hm != null) {
             for (Command c : commands) {
                 if (hm.getId().equals(c.headMountableId) && type == c.type) {
-                    return c.getCommand();
+                    return c;
                 }
+            }
+            if (!checkDefaults) {
+                return null;
             }
         }
         // If not, see if we can find a match for the command type with a
         // null or * HeadMountable ID.
         for (Command c : commands) {
             if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
-                return c.getCommand();
+                return c;
             }
         }
         // No matches were found.
         return null;
+    }
+
+    public String getCommand(HeadMountable hm, CommandType type) {
+        Command c = getCommand(hm, type, true);
+        if (c == null) {
+            return null;
+        }
+        return c.getCommand();
+    }
+    
+    public void setCommand(HeadMountable hm, CommandType type, String text) {
+        Command c = getCommand(hm, type, false);
+        if (text == null || text.trim().length() == 0) {
+            if (c != null) {
+                commands.remove(c);
+            }
+        }
+        else {
+            if (c == null) {
+                c = new Command(hm == null ? null : hm.getId(), type, text);
+                commands.add(c);
+            }
+            else {
+                c.setCommand(text);
+            }
+        }
     }
 
     @Override
@@ -759,8 +797,41 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
             line = line.trim();
             logger.trace("[{}] << {}", portName, line);
-            responseQueue.offer(line);
+            if (!processPositionReport(line)) {
+                responseQueue.offer(line);
+            }
         }
+    }
+
+    private boolean processPositionReport(String line) {
+        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+            return false;
+        }
+
+        if (!line.matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
+            return false;
+        }
+
+        logger.trace("Position report: {}", line);
+        Matcher matcher =
+                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
+        matcher.matches();
+        for (Axis axis : axes) {
+            try {
+                String s = matcher.group(axis.getName());
+                Double d = Double.valueOf(s);
+                axis.setCoordinate(d);
+            }
+            catch (Exception e) {
+                logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
+            }
+        }
+
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            machine.fireMachineHeadActivity(head);
+        }
+        return true;
     }
 
     /**

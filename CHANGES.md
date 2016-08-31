@@ -1,6 +1,54 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-08-27
+
+* GcodeDriver Gcode Configuration UI
+
+	You can now configure all Gcode commands and RegExs via the driver configuration
+	wizard found in Machine Setup -> Driver -> GcodeDriver. The wizard has two tabs:
+	Serial and Gcode. In the Gcode tab you can choose the tool you want to configure
+	and the command for that tool. By choosing the Default tool you configure the
+	default set of commands which are used for fallbacks when tool specific commands
+	are not found.
+
+* GcodeDriver Commands Now In CDATA
+
+	GcodeDriver commands are switched to use CDATA now, instead of escaped XML. This makes
+	it easier to include complex regexs that may include XML characters. In general, you
+	don't have to change anything. OpenPnP will update your config the first time you run
+	it. The resulting commands look like:
+	
+	```
+	<command type="CONNECT_COMMAND">
+		<text><![CDATA[G21]]></text>
+	    <text><![CDATA[G90]]></text>
+	    <text><![CDATA[M82]]></text>
+	</command>
+	```
+	
+	Only the data between the [] is considered part of the command.
+	
+* GcodeDriver Position Reporting
+
+	GcodeDriver will now read position reports from the controller. This can be used to
+	provide feedback during moves or for controllers that may move externally to
+	OpenPnP. This is a very new feature and is expected to require some iteration before
+	it's perfect. If you run into issues with it, please report them.
+	
+	To add position reporting, define a new regex in the format of:
+	
+	```
+	<command type="POSITION_REPORT_REGEX">
+		<text><![CDATA[<Idle,MPos:(?<x>-?\d+\.\d+),(?<y>-?\d+\.\d+),(?<z>-?\d+\.\d+),(?<rotation>-?\d+\.\d+)>]]></text>
+	</command>
+	```
+	
+	Note that the regex contains named groups. The named groups are used to identify the
+	coordinates of each axis you have defined. You should name the groups with the same
+	names in your axes section. In the command above the groups / axes are named
+	x, y, z and rotation.
+
 # 2016-08-08
 
 * GcodeDriver Tool Specific Commands
