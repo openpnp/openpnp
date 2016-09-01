@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -37,6 +38,8 @@ import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
@@ -58,7 +61,7 @@ public class NullDriver implements ReferenceDriver {
 
     private boolean enabled;
 
-    /**
+ /**
      * Gets the Location object being tracked for a specific Head. This is the absolute coordinates
      * of a virtual Head on the machine.
      * 
@@ -75,6 +78,7 @@ public class NullDriver implements ReferenceDriver {
     }
 
     protected void setHeadLocation(Head head, Location l) {
+
         headLocations.put(head, l);
     }
 
@@ -83,6 +87,28 @@ public class NullDriver implements ReferenceDriver {
         logger.debug("home()");
         checkEnabled();
         setHeadLocation(head, getHeadLocation(head).derive(0.0, 0.0, 0.0, 0.0));
+
+             /*
+         * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
+         * above the homing pin in the machine bed, use the head camera scan for this and make sure
+         * this is exactly central - otherwise we move the camera until it is, and then reset all
+         * the axis back to 0,0,0,0 as this is calibrated home.
+         */
+        Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+        if (homePart != null) {
+            Location tmp = new Location(LengthUnit.Millimeters, 0.0, 0.0, 0.0, 0.0);
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            // camera.moveTo(tmp);
+            Location homeOffset = Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(tmp, homePart);
+
+            // homeOffset contains the offset, but we are not really concerned with that,
+            // we just reset X,Y back to the home-coordinate at this point.
+
+            logger.debug(String.format(Locale.US, "%f,%f", homeOffset.getX(), homeOffset.getY()));
+
+
+        }
     }
 
     /**
@@ -105,6 +131,7 @@ public class NullDriver implements ReferenceDriver {
             throws Exception {
         logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
+
 
         // Subtract the offsets from the incoming Location. This converts the
         // offset coordinates to driver / absolute coordinates.
