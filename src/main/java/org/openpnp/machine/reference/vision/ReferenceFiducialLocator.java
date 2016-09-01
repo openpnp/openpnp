@@ -155,23 +155,23 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             MovableUtils.moveToLocationAtSafeZ(camera, location);
         }
 
-        // Wait for camera to settle
-        Thread.sleep(camera.getSettleTimeMs());
-        // Perform vision operation
-        location = getBestTemplateMatch(camera, template);
-        if (location == null) {
-            logger.debug("No matches found!");
 
-            throw new Exception(String.format(
-                    "Unable to match homing fiducial"));
-
+        for (int i = 0; i < 3; i++) {
+            // Wait for camera to settle
+            Thread.sleep(camera.getSettleTimeMs());
+            // Perform vision operation
+            location = getBestTemplateMatch(camera, template);
+            if (location == null) {
+                logger.debug("No matches found!");
+                return null;
+            }
+            logger.debug("home fid. located at {}", location);
+            // Move to where we actually found the fid
+            camera.moveTo(location);
         }
-        logger.debug("{} located at {}", location);
-
-        // Move to where we actually found the fid - thus calibrating to our home fiducial
-        camera.moveTo(location);
 
         return location;
+
     }
 
     /**
