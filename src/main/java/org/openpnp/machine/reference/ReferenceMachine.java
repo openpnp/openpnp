@@ -141,6 +141,7 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
+        children.add(new SimplePropertySheetHolder("Signalers", getSignalers()));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
