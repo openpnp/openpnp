@@ -5,9 +5,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
