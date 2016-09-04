@@ -70,6 +70,8 @@ public class ReferenceAutoFeederConfigurationWizard
 
     @Override
     public void createBindings() {
+        super.createBindings();
+        
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
