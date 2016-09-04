@@ -44,6 +44,7 @@ public class SampleJobTest {
         driver.setFeedRateMmPerMinute(0);
 
         Camera camera = machine.getDefaultHead().getDefaultCamera();
+        camera.setSettleTimeMs(0);
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);
