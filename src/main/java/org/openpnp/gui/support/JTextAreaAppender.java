@@ -25,7 +25,6 @@ public class JTextAreaAppender extends AppenderSkeleton {
     }
     
     public void setLineLimit(int lineLimit) {
-        System.out.println(lineLimit);
         this.lineLimit = lineLimit;
         trim();
     }
