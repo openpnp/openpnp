@@ -10,8 +10,10 @@ import org.simpleframework.xml.Attribute;
  * Created by matt on 05/09/2016.
  */
 public abstract class AbstractFeederSlot extends AbstractModelObject implements FeederSlot  {
+    private SlottedFeeder feeder;
+
     @Attribute(required=false)
-    SlottedFeeder feeder;
+    public String feederID;
 
     @Attribute(required=false)
     Location pickLocation;
