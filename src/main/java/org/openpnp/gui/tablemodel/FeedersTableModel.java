@@ -103,9 +103,6 @@ public class FeedersTableModel extends AbstractTableModel {
             case 1:
                 return feeders.get(row).getClass().getSimpleName();
             case 2: {
-                if(feeders.get(row).getClass().getSimpleName().compareTo("ReferenceFeederSlot")==0)
-                    return null;
-
                 Part part = feeders.get(row).getPart();
                 if (part == null) {
                     return null;
