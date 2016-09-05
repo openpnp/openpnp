@@ -207,11 +207,21 @@ public class Utils2D {
                 Math.atan2(idealB.getY() - idealA.getY(), idealB.getX() - idealA.getX()));
         double actualAngle = Math.toDegrees(
                 Math.atan2(actualB.getY() - actualA.getY(), actualB.getX() - actualA.getX()));
-
+        
         double angle = actualAngle - idealAngle;
-
+        
         Location offset = actualA.subtract(idealA);
 
         return new Location(idealA.getUnits(), offset.getX(), offset.getY(), 0, angle);
+    }
+    
+    public static double normalizeAngle(double angle) {
+        while (angle > 360) {
+            angle -= 360;
+        }
+        while (angle < 0) {
+            angle += 360;
+        }
+        return angle;
     }
 }
