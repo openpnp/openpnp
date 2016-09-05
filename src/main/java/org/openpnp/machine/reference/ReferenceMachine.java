@@ -37,16 +37,14 @@ import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
-import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.feeder.*;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.machine.reference.feeder.ReferenceFeederSlot;
+import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PartAlignment;
@@ -83,6 +81,8 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean enabled;
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
+
+    private List<Class<? extends FeederSlot>> registeredFeederSlotClasses = new ArrayList<>();
 
     public ReferenceDriver getDriver() {
         return driver;
@@ -180,10 +180,18 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
+        l.add(ReferenceAutoSlottableFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
 
+    @Override
+    public List<Class<? extends FeederSlot>> getCompatibleFeederSlotClasses() {
+        List<Class<? extends FeederSlot>> l = new ArrayList<>();
+        l.add(ReferenceFeederSlot.class);
+        l.addAll(registeredFeederSlotClasses);
+        return l;
+    }
     @Override
     public List<Class<? extends Camera>> getCompatibleCameraClasses() {
         List<Class<? extends Camera>> l = new ArrayList<>();

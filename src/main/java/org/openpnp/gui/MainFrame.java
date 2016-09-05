@@ -107,6 +107,7 @@ public class MainFrame extends JFrame {
     private PartsPanel partsPanel;
     private PackagesPanel packagesPanel;
     private FeedersPanel feedersPanel;
+    private FeederSlotsPanel feederSlotsPanel;
     private JobPanel jobPanel;
     private CamerasPanel camerasPanel;
     private CameraPanel cameraPanel;
@@ -132,6 +133,8 @@ public class MainFrame extends JFrame {
     public FeedersPanel getFeedersTab() {
         return feedersPanel;
     }
+
+    public FeederSlotsPanel getFeederSlotsTab() { return feederSlotsPanel;}
 
     public JobPanel getJobTab() {
         return jobPanel;
@@ -213,6 +216,7 @@ public class MainFrame extends JFrame {
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
+        feederSlotsPanel = new FeederSlotsPanel(configuration, this);
         camerasPanel = new CamerasPanel(this, configuration);
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
@@ -477,6 +481,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("Parts", null, partsPanel, null);
         tabs.addTab("Packages", null, packagesPanel, null);
         tabs.addTab("Feeders", null, feedersPanel, null);
+        tabs.addTab("Feeder slots", null, feederSlotsPanel, null);
         tabs.addTab("Cameras", null, camerasPanel, null);
         tabs.addTab("Machine Setup", null, machineSetupPanel, null);
 

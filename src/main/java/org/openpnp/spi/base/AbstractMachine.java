@@ -21,6 +21,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -52,6 +53,9 @@ public abstract class AbstractMachine implements Machine {
 
     @ElementList(required = false)
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<FeederSlot> feederSlots = new IdentifiableList<>();
 
     @ElementList(required = false)
     protected IdentifiableList<Camera> cameras = new IdentifiableList<>();
@@ -87,6 +91,16 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public Head getHead(String id) {
         return heads.get(id);
+    }
+
+    @Override
+    public List<FeederSlot> getFeederSlots() {
+        return Collections.unmodifiableList(feederSlots);
+    }
+
+    @Override
+    public FeederSlot getFeederSlot(String id) {
+        return feederSlots.get(id);
     }
 
     @Override
@@ -140,6 +154,26 @@ public abstract class AbstractMachine implements Machine {
     }
 
     @Override
+    public FeederSlot getFeederSlotByName(String name) {
+        for (FeederSlot feederSlot : feederSlots) {
+            if (feederSlot.getName().equals(name)) {
+                return feederSlot;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public FeederSlot getFeederSlotByFeeder(Feeder feeder) {
+        for (FeederSlot feederSlot : feederSlots) {
+           if (feederSlot.getFeeder()!=null && feederSlot.getFeeder() == feeder) {
+                return feederSlot;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void home() throws Exception {
         for (Head head : heads) {
             head.home();
@@ -154,6 +188,16 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public void removeListener(MachineListener listener) {
         listeners.remove(listener);
+    }
+
+    @Override
+    public void addFeederSlot(FeederSlot feederSlot) throws Exception {
+        feederSlots.add(feederSlot);
+    }
+
+    @Override
+    public void removeFeederSlot(FeederSlot feederSlot) {
+        feederSlots.remove(feederSlot);
     }
 
     @Override

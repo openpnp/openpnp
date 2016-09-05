@@ -19,23 +19,22 @@
 
 package org.openpnp.gui.tablemodel;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FeederSlot;
 
-public class FeedersTableModel extends AbstractTableModel {
+import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
+import java.util.List;
+
+public class FeederSlotsTableModel extends AbstractTableModel {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled"};
-    private List<Feeder> feeders;
+    private String[] columnNames = new String[] {"Name", "Enabled"};
+    private List<FeederSlot> feederSlots;
 
-    public FeedersTableModel(Configuration configuration) {
+    public FeederSlotsTableModel(Configuration configuration) {
         this.configuration = configuration;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
@@ -45,7 +44,7 @@ public class FeedersTableModel extends AbstractTableModel {
     }
 
     public void refresh() {
-        feeders = new ArrayList<>(configuration.getMachine().getFeeders());
+        feederSlots = new ArrayList<>(configuration.getMachine().getFeederSlots());
         fireTableDataChanged();
     }
 
@@ -59,27 +58,27 @@ public class FeedersTableModel extends AbstractTableModel {
     }
 
     public int getRowCount() {
-        return (feeders == null) ? 0 : feeders.size();
+        return (feederSlots == null) ? 0 : feederSlots.size();
     }
 
-    public Feeder getFeeder(int index) {
-        return feeders.get(index);
+    public FeederSlot getFeederSlot(int index) {
+        return feederSlots.get(index);
     }
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 0 || columnIndex == 3;
+        return columnIndex == 0 || columnIndex == 1;
     }
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Feeder feeder = feeders.get(rowIndex);
+            FeederSlot feederSlot = feederSlots.get(rowIndex);
             if (columnIndex == 0) {
-                feeder.setName((String) aValue);
+                feederSlot.setName((String) aValue);
             }
-            else if (columnIndex == 3) {
-                feeder.setEnabled((Boolean) aValue);
+            else if (columnIndex == 1) {
+                feederSlot.setEnabled((Boolean) aValue);
                 refresh();
             }
         }
@@ -90,7 +89,7 @@ public class FeedersTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        if (columnIndex == 3) {
+        if (columnIndex == 1) {
             return Boolean.class;
         }
         return super.getColumnClass(columnIndex);
@@ -99,18 +98,17 @@ public class FeedersTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int col) {
         switch (col) {
             case 0:
-                return feeders.get(row).getName();
+                return feederSlots.get(row).getName();
             case 1:
-                return feeders.get(row).getClass().getSimpleName();
+                return feederSlots.get(row).getEnabled();
             case 2: {
-                Part part = feeders.get(row).getPart();
+              /*  Part part = feeders.get(row).getPart();
                 if (part == null) {
                     return null;
                 }
                 return part.getId();
+             */
             }
-            case 3:
-                return feeders.get(row).isEnabled();
             default:
                 return null;
         }

@@ -8,9 +8,10 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.SlottedFeeder;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
+public abstract class AbstractFeeder extends AbstractModelObject implements SlottedFeeder {
     @Attribute
     protected String id;
 
@@ -28,15 +29,10 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     protected Part part;
 
-    public AbstractFeeder() {
+    public AbstractFeeder()
+    {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                part = configuration.getPart(partId);
-            }
-        });
     }
 
     @Override
@@ -87,4 +83,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
     }
+
+
+
 }
