@@ -133,6 +133,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<Class<? extends Camera>> getCompatibleCameraClasses();
 
+    public List<Class<? extends FeederSlot>> getCompatibleFeederSlotClasses();
+
     public void addFeederSlot(FeederSlot feeder) throws Exception;
 
     public void removeFeederSlot(FeederSlot feeder);

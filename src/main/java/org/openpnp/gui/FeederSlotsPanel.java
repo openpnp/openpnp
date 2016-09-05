@@ -254,7 +254,7 @@ public class FeederSlotsPanel extends JPanel implements WizardContainer {
     private void newFeeder(Part part) {
         if (Configuration.get().getParts().size() == 0) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                    "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
+                    "There are currently no parts defined in the system. Please create at least one part before creating a feeder slot.");
             return;
         }
 
@@ -265,21 +265,21 @@ public class FeederSlotsPanel extends JPanel implements WizardContainer {
         else {
             title = "Select Feeder for " + part.getId() + "...";
         }
-        ClassSelectionDialog<Feeder> dialog =
+        ClassSelectionDialog<FeederSlot> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeederSlotsPanel.this),
-                        title, "Please select a Feeder implemention from the list below.",
-                        configuration.getMachine().getCompatibleFeederClasses());
+                        title, "Please select a Feeder Slot implemention from the list below.",
+                        configuration.getMachine().getCompatibleFeederSlotClasses());
         dialog.setVisible(true);
-        Class<? extends Feeder> feederClass = dialog.getSelectedClass();
+        Class<? extends FeederSlot> feederClass = dialog.getSelectedClass();
         if (feederClass == null) {
             return;
         }
         try {
-            Feeder feeder = feederClass.newInstance();
+            FeederSlot feederSlot = feederClass.newInstance();
 
-            feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
+           // feeder.setPart(part == null ? Configuration.get().getParts().get(0) : part);
 
-            configuration.getMachine().addFeeder(feeder);
+            configuration.getMachine().addFeederSlot(feederSlot);
             tableModel.refresh();
             Helpers.selectLastTableRow(table);
         }

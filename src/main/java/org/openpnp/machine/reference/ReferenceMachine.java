@@ -43,6 +43,7 @@ import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PartAlignment;
@@ -79,6 +80,8 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean enabled;
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
+
+    private List<Class<? extends FeederSlot>> registeredFeederSlotClasses = new ArrayList<>();
 
     public ReferenceDriver getDriver() {
         return driver;
@@ -181,6 +184,13 @@ public class ReferenceMachine extends AbstractMachine {
         return l;
     }
 
+    @Override
+    public List<Class<? extends FeederSlot>> getCompatibleFeederSlotClasses() {
+        List<Class<? extends FeederSlot>> l = new ArrayList<>();
+      //  l.add(ReferenceStripFeeder.class);
+        l.addAll(registeredFeederSlotClasses);
+        return l;
+    }
     @Override
     public List<Class<? extends Camera>> getCompatibleCameraClasses() {
         List<Class<? extends Camera>> l = new ArrayList<>();
