@@ -28,7 +28,6 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
-import org.openpnp.machine.reference.feeder.ReferenceFeederSlot;
 
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;
@@ -83,15 +82,6 @@ public class FeedersTableModel extends AbstractTableModel {
                 feeder.setEnabled((Boolean) aValue);
                 refresh();
             }
-         /*   else if (columnIndex == 4)
-            {
-                if(isValidValue(aValue))
-                {
-                    ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeder;
-                    feederSlot.setChild(configuration.getMachine().getFeederByName((String) aValue));
-                    fireTableRowsUpdated(rowIndex,rowIndex);
-                }
-            } */
         }
         catch (Exception e) {
             // TODO: dialog, bad input
@@ -124,16 +114,6 @@ public class FeedersTableModel extends AbstractTableModel {
             }
             case 3:
                 return feeders.get(row).isEnabled();
-            case 4: {
-                if(feeders.get(row).getClass().getSimpleName().compareTo("ReferenceFeederSlot")!=0)
-                    return null;
-                ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeders.get(row);
-
-                if (feederSlot.getChild() == null) {
-                    return "None";
-                }
-                return feederSlot.getChild().getName();
-            }
             default:
                 return null;
         }

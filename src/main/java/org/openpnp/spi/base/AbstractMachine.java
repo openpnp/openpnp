@@ -153,15 +153,25 @@ public abstract class AbstractMachine implements Machine {
         return null;
     }
 
-  /*  @Override
+    @Override
     public FeederSlot getFeederSlotByName(String name) {
-        for (FeederSlot feeder : feederSlots) {
-            if (feeder.getName().equals(name)) {
-                return feeder;
+        for (FeederSlot feederSlot : feederSlots) {
+            if (feederSlot.getName().equals(name)) {
+                return feederSlot;
             }
         }
         return null;
-    } */
+    }
+
+    @Override
+    public FeederSlot getFeederSlotByFeeder(Feeder feeder) {
+        for (FeederSlot feederSlot : feederSlots) {
+           if (feederSlot.getFeeder()!=null && feederSlot.getFeeder() == feeder) {
+                return feederSlot;
+            }
+        }
+        return null;
+    }
 
     @Override
     public void home() throws Exception {

@@ -58,6 +58,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public FeederSlot getFeederSlotByName(String name);
 
+    public FeederSlot getFeederSlotByFeeder(Feeder feeder);
+
     public Feeder getFeeder(String id);
 
     public Feeder getFeederByName(String name);

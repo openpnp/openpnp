@@ -51,54 +51,41 @@ public class ReferenceAutoSlottableFeeder extends ReferenceFeeder {
     protected double actuatorValue;
 
     public ReferenceAutoSlottableFeeder() {
-        //this.slot = null;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 part = configuration.getPart(partId);
-       //         parent = configuration.getMachine().getFeeder(parentID);
             }
         });
     }
 
-    @Override
-    public Location getPickLocation() throws Exception {
-        /* if (parent == null) {
-            logger.warn("No parent specified for feeder.");
-            return null;
-        }
-
-        return parent.getPickLocation(); */
-    }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
+
+        FeederSlot slot = Configuration.get().getMachine().getFeederSlotByFeeder(this);
+
         if (slot == null) {
             /*
-                   If our parent is null then we aren't mounted, yet the jobprocessor wants us to feed,
+                   If our slot is null then we aren't mounted, yet the jobprocessor wants us to feed,
                    so prompt the user and get them to mount the feeder...
 
                    Really this needs some logic to suggest which is the best bank, but for now, we just use
                    the first one in our configuration?
              */
-            List<Feeder> feeders = Configuration.get().getMachine().getFeeders();
+            List<FeederSlot> feederSlots = Configuration.get().getMachine().getFeederSlots();
 
-            Feeder suggestedSlot = null;
+            FeederSlot suggestedSlot = null;
 
             // look for any empty slots we could use?
             Boolean foundEmptySlot = false;
-            for(int i=0;i<feeders.size();i++)
+            for(int i=0;i<feederSlots.size();i++)
             {
-
-                if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceFeederSlot")==0)
+                if(feederSlots.get(i).getFeeder() == null)
                 {
-                    ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeders.get(i);
-                    if(feederSlot.getChild() == null)
-                    {
-                         foundEmptySlot = true;
-                         suggestedSlot = feeders.get(i);
-                         break;
-                    }
+                    foundEmptySlot = true;
+                    suggestedSlot = feederSlots.get(i);
+                    break;
                 }
             }
 
@@ -109,46 +96,42 @@ public class ReferenceAutoSlottableFeeder extends ReferenceFeeder {
                 ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) Configuration.get().getMachine().getPnpJobProcessor();
                 List<ReferencePnpJobProcessor.JobPlacement> jobPlacements = jobProcessor.getJobPlacements();
 
-                for (Feeder feeder: feeders) {
-                    if(feeder.getClass().getSimpleName ().compareTo("ReferenceFeederSlot")==0) {
+                for (FeederSlot feederSlot: feederSlots)
+                {
+                    Feeder feeder = feederSlot.getFeeder();
 
-                        Boolean feederUsed = false;
-                        for (ReferencePnpJobProcessor.JobPlacement jobPlacement : jobPlacements) {
-                            if (jobPlacement.status == ReferencePnpJobProcessor.JobPlacement.Status.Complete) {
-                                continue;
-                            }
-                            ReferenceFeederSlot feederSlot = (ReferenceFeederSlot) feeder;
-
-                            if (jobPlacement.placement.getPart() == feederSlot.getPart())
-                            {
-                                feederUsed = true;
-                                break;
-                            }
+                    Boolean feederUsed = false;
+                    for (ReferencePnpJobProcessor.JobPlacement jobPlacement : jobPlacements) {
+                        if (jobPlacement.status == ReferencePnpJobProcessor.JobPlacement.Status.Complete) {
+                            continue;
                         }
 
-                        if(feederUsed == false)
+                        if (jobPlacement.placement.getPart() == feeder.getPart())
                         {
-                            suggestedSlot = feeder;
-                            foundUnusedSlot = true;
+                            feederUsed = true;
                             break;
                         }
+                    }
+
+                    if(feederUsed == false)
+                    {
+                        suggestedSlot = feederSlot;
+                        foundUnusedSlot = true;
+                        break;
                     }
                 }
             }
 
             if(!foundEmptySlot && !foundUnusedSlot)
             {
-                    // no free slots, and we have all the feeders currently mounted in the banks still needed by the rest of the program
-                    // for now... we just tell the user to put the feeder in the first bank slot.
+                // no free slots, and we have all the feeders currently mounted in the banks still needed by the rest of the program
+                // for now... we just tell the user to put the feeder in the first bank slot.
 
-                    for (Feeder feeder: feeders)
-                    {
-                        if(feeder.getClass().getSimpleName ().compareTo("ReferenceFeederSlot")==0)
-                        {
-                            suggestedSlot = feeder;
-                            break;
-                        }
-                    }
+                for (FeederSlot feederSlot: feederSlots)
+                {
+                    suggestedSlot = feederSlot;
+                    break;
+                }
             }
 
             String msg = "Feeder '"+this.getName() + "' is required but not mounted into a feeder slot, please mount it into feeder slot '"+suggestedSlot.getName()+"' and press OK.";
@@ -156,30 +139,10 @@ public class ReferenceAutoSlottableFeeder extends ReferenceFeeder {
             MessageBoxes.infoBox("Feeder change required", msg);
 
             // For now we presume the user has done as they are told.
-
-            FeederSlot feederSlotCopy = (FeederSlot) suggestedSlot;
-            if(feederSlotCopy!=null)
+            if(suggestedSlot != null)
             {
-                if(feederSlotCopy.getChild() != null)
-                {
-                    ReferenceAutoSlottableFeeder existingChildFeeder = (ReferenceAutoSlottableFeeder) feederSlotCopy.getChild();
-                    existingChildFeeder.setSlot(null);
-                    Configuration.get().getMachine().addFeeder(existingChildFeeder);
-                    Configuration.get().getMachine().removeFeeder(feederSlotCopy.getChild());
-                }
-
-                feederSlotCopy.setChild(this);
-                Configuration.get().getMachine().addFeeder(feederSlotCopy);
-                Configuration.get().getMachine().removeFeeder(suggestedSlot);
+                suggestedSlot.setFeeder(this);
             }
-
-            ReferenceAutoSlottableFeeder feederCopy = this;
-            if(feederCopy!=null) {
-                feederCopy.setSlot(suggestedSlot);
-                Configuration.get().getMachine().addFeeder(feederCopy);
-                Configuration.get().getMachine().removeFeeder(this);
-            }
-
 
         }
 
