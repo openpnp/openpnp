@@ -83,15 +83,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }
 
-        // Calculate the angle and offset from the results
-        Location idealLocationA =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
-        Location idealLocationB =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
-        Location location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
-                actualLocationA, actualLocationB);
+        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA,
+                placementB, actualLocationA, actualLocationB);
 
-        location = boardLocation.getLocation().addWithRotation(location);
         location = location.derive(null, null,
                 boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
 
@@ -121,8 +115,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @return
      * @throws Exception
      */
-    public  Location getHomeFiducialLocation(Location location, Part part )
-            throws Exception {
+    public Location getHomeFiducialLocation(Location location, Part part) throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
         org.openpnp.model.Package pkg = part.getPackage();
@@ -145,13 +138,13 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
 
         // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(),
-                part.getPackage().getFootprint());
+        BufferedImage template =
+                createTemplate(camera.getUnitsPerPixel(), part.getPackage().getFootprint());
 
 
-        // Move to where we expect to find the fid, if user has not specified then we treat 0,0,0,0 as the place for this to be
-        if(location != null)
-        {
+        // Move to where we expect to find the fid, if user has not specified then we treat 0,0,0,0
+        // as the place for this to be
+        if (location != null) {
             MovableUtils.moveToLocationAtSafeZ(camera, location);
         }
 
@@ -162,8 +155,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         if (location == null) {
             logger.debug("No matches found!");
 
-            throw new Exception(String.format(
-                    "Unable to match homing fiducial"));
+            throw new Exception(String.format("Unable to match homing fiducial"));
 
         }
         logger.debug("{} located at {}", location);
