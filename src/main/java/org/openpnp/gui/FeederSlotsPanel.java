@@ -260,10 +260,10 @@ public class FeederSlotsPanel extends JPanel implements WizardContainer {
 
         String title;
         if (part == null) {
-            title = "Select Feeder...";
+            title = "Select Feeder Slot...";
         }
         else {
-            title = "Select Feeder for " + part.getId() + "...";
+            title = "Select Feeder Slot for " + part.getId() + "...";
         }
         ClassSelectionDialog<FeederSlot> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeederSlotsPanel.this),
@@ -311,13 +311,13 @@ public class FeederSlotsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+         /*   int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + getSelectedFeederSlot().getName() + "?",
                     "Delete " + getSelectedFeederSlot().getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 configuration.getMachine().removeFeederSlot(getSelectedFeederSlot());
                 tableModel.refresh();
-            }
+            } */
         }
     };
 

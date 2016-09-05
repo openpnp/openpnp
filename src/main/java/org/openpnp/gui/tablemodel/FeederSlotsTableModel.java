@@ -78,7 +78,7 @@ public class FeederSlotsTableModel extends AbstractTableModel {
                 feederSlot.setName((String) aValue);
             }
             else if (columnIndex == 1) {
-     //           feederSlot.setEnabled((Boolean) aValue);
+                feederSlot.setEnabled((Boolean) aValue);
                 refresh();
             }
         }
@@ -89,7 +89,7 @@ public class FeederSlotsTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        if (columnIndex == 3) {
+        if (columnIndex == 1) {
             return Boolean.class;
         }
         return super.getColumnClass(columnIndex);
@@ -99,18 +99,16 @@ public class FeederSlotsTableModel extends AbstractTableModel {
         switch (col) {
             case 0:
                 return feederSlots.get(row).getName();
-        /*    case 1:
-                return feederSlots.get(row).getClass().getSimpleName();
+            case 1:
+                return feederSlots.get(row).getEnabled();
             case 2: {
-                Part part = feeders.get(row).getPart();
+              /*  Part part = feeders.get(row).getPart();
                 if (part == null) {
                     return null;
                 }
                 return part.getId();
-            } */
-            case 1:
-                return true;
-           //     return feederSlots.get(row).isEnabled();
+             */
+            }
             default:
                 return null;
         }
