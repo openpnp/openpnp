@@ -3,9 +3,10 @@ package org.openpnp.machine.reference;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.base.AbstractFeeder;
+import org.openpnp.spi.base.AbstractSlottedFeeder;
 import org.simpleframework.xml.Element;
 
-public abstract class ReferenceFeeder extends AbstractFeeder {
+public abstract class ReferenceFeeder extends AbstractSlottedFeeder {
     @Element
     protected Location location = new Location(LengthUnit.Millimeters);
 

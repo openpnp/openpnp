@@ -19,13 +19,13 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import org.openpnp.machine.reference.feeder.ReferenceAutoMountableFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceAutoSlottableFeeder;
 
 public class ReferenceAutoMountableFeederConfigurationWizard
         extends AbstractReferenceAutoFeederConfigurationWizard {
-    private final ReferenceAutoMountableFeeder feeder;
+    private final ReferenceAutoSlottableFeeder feeder;
 
-    public ReferenceAutoMountableFeederConfigurationWizard(ReferenceAutoMountableFeeder feeder) {
+    public ReferenceAutoMountableFeederConfigurationWizard(ReferenceAutoSlottableFeeder feeder) {
         super(feeder);
         this.feeder = feeder;
     }

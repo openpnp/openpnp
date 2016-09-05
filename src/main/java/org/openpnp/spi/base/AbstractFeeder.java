@@ -8,9 +8,10 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.SlottedFeeder;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
+public abstract class AbstractFeeder extends AbstractModelObject implements SlottedFeeder {
     @Attribute
     protected String id;
 

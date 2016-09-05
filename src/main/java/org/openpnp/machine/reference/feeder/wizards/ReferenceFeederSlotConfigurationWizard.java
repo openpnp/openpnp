@@ -2,8 +2,6 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,19 +14,14 @@ import javax.swing.table.AbstractTableModel;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
-import org.openpnp.machine.reference.feeder.ReferenceAutoMountableFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceAutoSlottableFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceFeederSlot;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
-import org.openpnp.util.UiUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -102,9 +95,9 @@ public class ReferenceFeederSlotConfigurationWizard extends AbstractConfiguratio
         {
             String className = feeders.get(i).getClass().getSimpleName();
 
-            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoMountableFeeder")==0)
+            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoSlottableFeeder")==0)
             {
-                ReferenceAutoMountableFeeder mountableFeeder = (ReferenceAutoMountableFeeder) feeders.get(i);
+                ReferenceAutoSlottableFeeder mountableFeeder = (ReferenceAutoSlottableFeeder) feeders.get(i);
 
                 iChildFeedCount++;
             }
@@ -115,9 +108,9 @@ public class ReferenceFeederSlotConfigurationWizard extends AbstractConfiguratio
         int iIndex = 1;
         for(int i=0;i<feeders.size();i++)
         {
-            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoMountableFeeder")==0)
+            if(feeders.get(i).getClass().getSimpleName().compareTo("ReferenceAutoSlottableFeeder")==0)
             {
-                ReferenceAutoMountableFeeder mountableFeeder = (ReferenceAutoMountableFeeder) feeders.get(i);
+                ReferenceAutoSlottableFeeder mountableFeeder = (ReferenceAutoSlottableFeeder) feeders.get(i);
                 feederNameList[iIndex] = mountableFeeder.getName();
                 iIndex++;
             }

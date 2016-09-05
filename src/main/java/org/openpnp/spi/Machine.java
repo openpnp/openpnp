@@ -52,6 +52,12 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      */
     public List<Feeder> getFeeders();
 
+    public List<FeederSlot> getFeederSlots();
+
+    public FeederSlot getFeederSlot(String id);
+
+    public FeederSlot getFeederSlotByName(String name);
+
     public Feeder getFeeder(String id);
 
     public Feeder getFeederByName(String name);
@@ -124,6 +130,10 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public List<Class<? extends Feeder>> getCompatibleFeederClasses();
 
     public List<Class<? extends Camera>> getCompatibleCameraClasses();
+
+    public void addFeederSlot(FeederSlot feeder) throws Exception;
+
+    public void removeFeederSlot(FeederSlot feeder);
 
     public void addFeeder(Feeder feeder) throws Exception;
 

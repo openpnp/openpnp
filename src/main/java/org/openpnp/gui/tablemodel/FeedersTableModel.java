@@ -25,13 +25,10 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.feeder.ReferenceAutoMountableFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.machine.reference.feeder.ReferenceFeederSlot;
-import org.python.icu.impl.coll.SharedObject;
-import org.python.icu.text.StringPrep;
 
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;

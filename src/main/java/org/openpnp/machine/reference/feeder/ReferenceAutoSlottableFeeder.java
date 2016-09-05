@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.feeder;
 
-import org.onvif.ver10.schema.Config;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -29,6 +28,7 @@ import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoMountableFeeder
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
@@ -40,14 +40,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.util.List;
 
-/**
- * Not yet finished feeder that will be used for automated feeding. Just getting the idea down
- * on paper, as it were. It will have an actuator attached and you will be able to choose
- * to either toggle the feeder with a delay or send a double.
- */
 
-public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoMountableFeeder.class);
+public class ReferenceAutoSlottableFeeder extends ReferenceFeeder {
+    private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoSlottableFeeder.class);
 
     @Attribute(required=false)
     protected String actuatorName;
@@ -55,30 +50,30 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
     @Attribute(required=false)
     protected double actuatorValue;
 
-    public ReferenceAutoMountableFeeder() {
-        this.parent = null;
+    public ReferenceAutoSlottableFeeder() {
+        //this.slot = null;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 part = configuration.getPart(partId);
-                parent = configuration.getMachine().getFeeder(parentID);
+       //         parent = configuration.getMachine().getFeeder(parentID);
             }
         });
     }
 
     @Override
     public Location getPickLocation() throws Exception {
-        if (parent == null) {
+        /* if (parent == null) {
             logger.warn("No parent specified for feeder.");
             return null;
         }
 
-        return parent.getPickLocation();
+        return parent.getPickLocation(); */
     }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        if (parent == null) {
+        if (slot == null) {
             /*
                    If our parent is null then we aren't mounted, yet the jobprocessor wants us to feed,
                    so prompt the user and get them to mount the feeder...
@@ -162,13 +157,13 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
 
             // For now we presume the user has done as they are told.
 
-            ReferenceFeederSlot feederSlotCopy = (ReferenceFeederSlot) suggestedSlot;
+            FeederSlot feederSlotCopy = (FeederSlot) suggestedSlot;
             if(feederSlotCopy!=null)
             {
                 if(feederSlotCopy.getChild() != null)
                 {
-                    ReferenceAutoMountableFeeder existingChildFeeder = (ReferenceAutoMountableFeeder) feederSlotCopy.getChild();
-                    existingChildFeeder.setParent(null);
+                    ReferenceAutoSlottableFeeder existingChildFeeder = (ReferenceAutoSlottableFeeder) feederSlotCopy.getChild();
+                    existingChildFeeder.setSlot(null);
                     Configuration.get().getMachine().addFeeder(existingChildFeeder);
                     Configuration.get().getMachine().removeFeeder(feederSlotCopy.getChild());
                 }
@@ -178,9 +173,9 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
                 Configuration.get().getMachine().removeFeeder(suggestedSlot);
             }
 
-            ReferenceAutoMountableFeeder feederCopy = this;
+            ReferenceAutoSlottableFeeder feederCopy = this;
             if(feederCopy!=null) {
-                feederCopy.setParent(suggestedSlot);
+                feederCopy.setSlot(suggestedSlot);
                 Configuration.get().getMachine().addFeeder(feederCopy);
                 Configuration.get().getMachine().removeFeeder(this);
             }
@@ -220,11 +215,4 @@ public class ReferenceAutoMountableFeeder extends ReferenceFeeder {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Attribute(required=false)
-    protected String parentID;
-    protected Feeder parent;
-
-    public void setParent(Feeder parent) { if(parent==null) { this.parentID=null; this.parent=null; } else { this.parentID=parent.getId(); this.parent=parent; } }
-
 }
