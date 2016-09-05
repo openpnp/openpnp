@@ -4,7 +4,7 @@ The upward-facing camera is used to improve the accuracy of the placement by mea
 
 ## Why not the default?
 
-The default pipeline did not work very well for me.  This modification to the default does:
+The default pipeline is reliant upon the disk above the part being colored green as it uses 'green-screen / chroma-key' techniques to reduce noise.  My nozzle and disk are black so my pipeline relies upon just the brightness of the object in the frame.
 
 ## Code
 
@@ -24,5 +24,7 @@ The default pipeline did not work very well for me.  This modification to the de
     <cv-stage class="org.openpnp.vision.pipeline.stages.DrawRotatedRects" name="8" enabled="true" rotated-rects-stage-name="result" thickness="2"/>
     <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="15" enabled="true" prefix="bv_result_" suffix=".png"/>
 
-## Debug images:
-(currently looking for how to upload them)
+## Example Images from Pipeline
+![1206 LED](https://raw.githubusercontent.com/redvers/opencvimages/master/bv_result_5027480662176760365.png)
+![1206 Cap](https://raw.githubusercontent.com/redvers/opencvimages/master/bv_result_876226607992064061.png)
+![1206 YC164](https://raw.githubusercontent.com/redvers/opencvimages/master/bv_result_5347306999264825735.png)
