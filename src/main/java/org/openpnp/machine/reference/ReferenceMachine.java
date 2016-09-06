@@ -180,7 +180,6 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
-        //l.add(ReferenceAutoSlottableFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
