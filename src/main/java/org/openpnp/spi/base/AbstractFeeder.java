@@ -11,7 +11,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.SlottedFeeder;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractFeeder extends AbstractModelObject implements SlottedFeeder {
+public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
     @Attribute
     protected String id;
 

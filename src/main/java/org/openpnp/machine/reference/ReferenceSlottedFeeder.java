@@ -1,64 +1,31 @@
-/*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
- * This file is part of OpenPnP.
- * 
- * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
- * General Public License as published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
- * Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
- * <http://www.gnu.org/licenses/>.
- * 
- * For more information about OpenPnP visit http://openpnp.org
- */
+package org.openpnp.machine.reference;
 
-package org.openpnp.machine.reference.feeder;
-
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoMountableFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.machine.reference.ReferencePnpJobProcessor;
-import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.SlottedFeeder;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
-import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.spi.base.AbstractFeeder;
+import org.openpnp.spi.base.AbstractSlottedFeeder;
+import org.simpleframework.xml.Element;
 
-import javax.swing.*;
 import java.util.List;
 
+public abstract class ReferenceSlottedFeeder extends ReferenceFeeder implements SlottedFeeder {
+    @Element
+    protected Location location = new Location(LengthUnit.Millimeters);
 
-public class ReferenceAutoSlottableFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoSlottableFeeder.class);
-
-    @Attribute(required=false)
-    protected String actuatorName;
-    
-    @Attribute(required=false)
-    protected double actuatorValue;
-
-    public ReferenceAutoSlottableFeeder() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                part = configuration.getPart(partId);
-            }
-        });
+    public Location getLocation() {
+        return location;
     }
 
+    public void setLocation(Location location) {
+        this.location = location;
+    }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
@@ -146,36 +113,9 @@ public class ReferenceAutoSlottableFeeder extends ReferenceFeeder {
 
         }
 
-        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+       /* Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
         if(actuator!=null) {
             actuator.actuate(actuatorValue);
-        }
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        return new ReferenceAutoMountableFeederConfigurationWizard(this);
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
+        } */
     }
 }

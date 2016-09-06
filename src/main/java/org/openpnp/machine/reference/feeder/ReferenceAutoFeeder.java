@@ -24,6 +24,7 @@ import javax.swing.Action;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.ReferenceSlottedFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * to either toggle the feeder with a delay or send a double.
  */
 
-public class ReferenceAutoFeeder extends ReferenceFeeder {
+public class ReferenceAutoFeeder extends ReferenceSlottedFeeder {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoFeeder.class);
 
     @Attribute(required=false)

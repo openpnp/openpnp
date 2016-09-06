@@ -6,7 +6,7 @@ import org.openpnp.spi.base.AbstractFeeder;
 import org.openpnp.spi.base.AbstractSlottedFeeder;
 import org.simpleframework.xml.Element;
 
-public abstract class ReferenceFeeder extends AbstractSlottedFeeder {
+public abstract class ReferenceFeeder extends AbstractFeeder {
     @Element
     protected Location location = new Location(LengthUnit.Millimeters);
 

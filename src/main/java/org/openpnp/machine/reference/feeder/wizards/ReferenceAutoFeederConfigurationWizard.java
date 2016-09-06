@@ -18,7 +18,6 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
-
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 
 public class ReferenceAutoFeederConfigurationWizard
