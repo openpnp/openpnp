@@ -1,5 +1,6 @@
 package org.openpnp.spi.base;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.*;
 import org.openpnp.spi.FeederSlot;
 import org.openpnp.spi.Feeder;
@@ -61,4 +62,6 @@ public abstract class AbstractFeederSlot extends AbstractModelObject implements 
     public void setName(String name) {
         this.name = name;
     }
+
+
 }

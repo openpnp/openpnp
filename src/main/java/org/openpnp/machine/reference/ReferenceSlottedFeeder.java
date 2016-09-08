@@ -16,8 +16,6 @@ import org.simpleframework.xml.Element;
 import java.util.List;
 
 public abstract class ReferenceSlottedFeeder extends ReferenceFeeder implements SlottedFeeder {
-    @Element
-    protected Location location = new Location(LengthUnit.Millimeters);
 
     public Location getLocation() {
         return location;
@@ -102,20 +100,7 @@ public abstract class ReferenceSlottedFeeder extends ReferenceFeeder implements 
             }
 
             String msg = "Feeder '"+this.getName() + "' is required but not mounted into a feeder slot, please mount it into feeder slot '"+suggestedSlot.getName()+"' and press OK.";
-
-            MessageBoxes.infoBox("Feeder change required", msg);
-
-            // For now we presume the user has done as they are told.
-            if(suggestedSlot != null)
-            {
-                suggestedSlot.setFeeder(this);
-            }
-
+            throw new Exception(msg);
         }
-
-       /* Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
-        if(actuator!=null) {
-            actuator.actuate(actuatorValue);
-        } */
     }
 }

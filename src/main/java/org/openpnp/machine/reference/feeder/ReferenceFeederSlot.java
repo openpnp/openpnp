@@ -1,6 +1,8 @@
 package org.openpnp.machine.reference.feeder;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceFeederSlotConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.base.AbstractFeederSlot;
 import org.openpnp.spi.SlottedFeeder;
@@ -18,4 +20,10 @@ public class ReferenceFeederSlot extends AbstractFeederSlot {
             }
         });
     }
+
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceFeederSlotConfigurationWizard(this);
+    }
+
 }

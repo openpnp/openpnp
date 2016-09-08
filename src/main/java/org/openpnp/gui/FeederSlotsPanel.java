@@ -163,14 +163,14 @@ public class FeederSlotsPanel extends JPanel implements WizardContainer {
                 feederSelectedActionGroup.setEnabled(feederSlot != null);
 
                 configurationPanel.removeAll();
-               /* if (feeder != null) {
+                if (feederSlot != null) {
                     Wizard wizard = feederSlot.getConfigurationWizard();
                     if (wizard != null) {
                         wizard.setWizardContainer(FeederSlotsPanel.this);
                         JPanel panel = wizard.getWizardPanel();
                         configurationPanel.add(panel);
                     }
-                } */
+                }
 
                 revalidate();
                 repaint();

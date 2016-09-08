@@ -29,10 +29,15 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     protected Part part;
 
-    public AbstractFeeder()
-    {
+    public AbstractFeeder() {
         this.id = Configuration.createId();
         this.name = getClass().getSimpleName();
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                part = configuration.getPart(partId);
+            }
+        });
     }
 
     @Override

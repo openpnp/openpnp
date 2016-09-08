@@ -1,5 +1,6 @@
 package org.openpnp.spi;
 
+import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Location;
 import org.openpnp.model.Identifiable;
@@ -18,5 +19,8 @@ public interface FeederSlot extends Named,Identifiable
     public void setFeeder(SlottedFeeder feeder);
     public void setEnabled(Boolean bFlag);
     public Boolean getEnabled();
+    public Wizard getConfigurationWizard();
+
+
 
 }
