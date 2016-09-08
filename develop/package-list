@@ -17,6 +17,7 @@ org.openpnp.machine.reference.driver
 org.openpnp.machine.reference.driver.wizards
 org.openpnp.machine.reference.feeder
 org.openpnp.machine.reference.feeder.wizards
+org.openpnp.machine.reference.signaler
 org.openpnp.machine.reference.vision
 org.openpnp.machine.reference.vision.wizards
 org.openpnp.machine.reference.wizards
