@@ -10,8 +10,17 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Signaler;
 
 public abstract class AbstractJobProcessor implements JobProcessor {
+
+    public enum State {
+        STOPPED,
+        RUNNING,
+        ERROR,
+        FINISHED
+    }
+
     public static interface Retryable {
         void retry() throws Exception;
     }
@@ -68,6 +77,10 @@ public abstract class AbstractJobProcessor implements JobProcessor {
 
             }
         }
+    }
+
+    protected void fireJobState(List<Signaler> signalers, State state) {
+        signalers.forEach(signaler -> signaler.signalJobProcessorState(state));
     }
 
     /**
