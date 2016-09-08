@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-09-07
+
+* Success and Error Sounds, Signaler Interface
+
+	OpenPnP can now play sounds when a job finishes or fails due to error. This feature
+	also introduces a Signaler interface which will be used in the future to allow
+	for external hardware to be triggered for the same events.
+	
+	For more information on this new feature, see:
+	https://github.com/openpnp/openpnp/wiki/Signalers
+	
+	Thank you to @pfried for contributing this feature!
+
 # 2016-08-27
 
 * GcodeDriver Gcode Configuration UI
