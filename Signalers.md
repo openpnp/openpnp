@@ -9,7 +9,7 @@ The SoundSignaler can be configured in the machine.xml
       </signalers>
 
 ### Disabling Sounds
-If you want to disable the sounds you can set the tho attributes on the the SoundSignaler to false:
+If you want to disable the sounds you can set the attributes on the the SoundSignaler to false:
 `enable-error-sound="false"`
 `enable-success-sound="false"`
 
