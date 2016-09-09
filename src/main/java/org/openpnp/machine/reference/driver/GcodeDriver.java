@@ -52,6 +52,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
+        POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
         PUMP_ON_COMMAND,
         PUMP_OFF_COMMAND,
@@ -366,10 +367,28 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                     .getHomeFiducialLocation(tmp, homePart);
 
             // homeOffset contains the offset, but we are not really concerned with that,
-            // we just reset everything back to 0 at this point.
-            for (Axis axis : axes) {
-                axis.setCoordinate(axis.getHomeCoordinate());
+            // we just reset X,Y back to the home-coordinate at this point.
+            double xHomeCoordinate=0;
+            double yHomeCoordinate=0;
+            for (Axis axis : axes)
+            {
+                if(axis.getType() == Axis.Type.X)
+                {
+                    axis.setCoordinate(axis.getHomeCoordinate());
+                    xHomeCoordinate = axis.getHomeCoordinate();
+                }
+                if(axis.getType() == Axis.Type.Y)
+                {
+                    axis.setCoordinate(axis.getHomeCoordinate());
+                    yHomeCoordinate = axis.getHomeCoordinate();
+                }
             }
+
+            String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
+            g92command = substituteVariable(g92command, "X", xHomeCoordinate);
+            g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
+            sendGcode(g92command, -1);
+
         }
     }
 

@@ -83,8 +83,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }
 
-        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA,
-                placementB, actualLocationA, actualLocationB);
+        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
+                actualLocationA, actualLocationB);
 
         location = location.derive(null, null,
                 boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
@@ -148,22 +148,22 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             MovableUtils.moveToLocationAtSafeZ(camera, location);
         }
 
-        // Wait for camera to settle
-        Thread.sleep(camera.getSettleTimeMs());
-        // Perform vision operation
-        location = getBestTemplateMatch(camera, template);
-        if (location == null) {
-            logger.debug("No matches found!");
-
-            throw new Exception(String.format("Unable to match homing fiducial"));
-
+        for (int i = 0; i < 3; i++) {
+            // Wait for camera to settle
+            Thread.sleep(camera.getSettleTimeMs());
+            // Perform vision operation
+            location = getBestTemplateMatch(camera, template);
+            if (location == null) {
+                logger.debug("No matches found!");
+                return null;
+            }
+            logger.debug("home fid. located at {}", location);
+            // Move to where we actually found the fid
+            camera.moveTo(location);
         }
-        logger.debug("{} located at {}", location);
-
-        // Move to where we actually found the fid - thus calibrating to our home fiducial
-        camera.moveTo(location);
 
         return location;
+
     }
 
     /**
