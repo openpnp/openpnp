@@ -40,6 +40,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.*;
+import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
@@ -194,7 +195,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     public synchronized boolean next() throws Exception {
-        fsm.send(Message.Next);
+
+        try{
+            fsm.send(Message.Next);
+        } catch (Exception e) {
+            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
+            throw(e);
+        }
+
 
         if (fsm.getState() == State.Stopped) {
             /*
@@ -210,6 +218,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * is complete. We send the Complete Message to start the cleanup process.
              */
             fsm.send(Message.Complete);
+            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.FINISHED);
             return false;
         }
 

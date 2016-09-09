@@ -93,6 +93,9 @@
             <tape-width value="8.0" units="Millimeters"/>
          </feeder>
       </feeders>
+      <signalers>
+         <signaler class="org.openpnp.machine.reference.signaler.SoundSignaler" id="b7980099-1992-42b4-b38a-2f8ee6b52eb8" name="Sound Signaler" enable-error-sound="true" enable-finished-sound="true"/>
+      </signalers>
       <cameras/>
       <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="5000.0"/>
    </machine>

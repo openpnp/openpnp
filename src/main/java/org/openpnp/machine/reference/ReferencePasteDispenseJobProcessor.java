@@ -41,6 +41,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.*;
+import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPasteDispenseJobProcessor;
 import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
@@ -144,7 +145,12 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         if(fsm.getState() == State.Uninitialized)
             return false;
 
-        fsm.send(Message.Next);
+        try {
+            fsm.send(Message.Next);
+        } catch (Exception e) {
+            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
+            throw (e);
+        }
 
         if (fsm.getState() == State.Stopped) {
             /*
@@ -160,6 +166,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
              * is complete. We send the Complete Message to start the cleanup process.
              */
             fsm.send(Message.Complete);
+            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.FINISHED);
             return false;
         }
 

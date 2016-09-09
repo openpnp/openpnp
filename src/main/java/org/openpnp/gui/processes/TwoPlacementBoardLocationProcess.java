@@ -63,7 +63,8 @@ public class TwoPlacementBoardLocationProcess {
             throws Exception {
         this.mainFrame = mainFrame;
         this.jobPanel = jobPanel;
-        this.camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
+        this.camera =
+                MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
         advance();
     }
 
@@ -140,16 +141,8 @@ public class TwoPlacementBoardLocationProcess {
 
         // Calculate the angle and offset from the results
         BoardLocation boardLocation = jobPanel.getSelectedBoardLocation();
-        Location idealLocationA =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
-        Location idealLocationB =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
-        Location location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
+        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
                 actualLocationA, actualLocationB);
-
-        location = boardLocation.getLocation().addWithRotation(location);
-        location = location.derive(null, null,
-                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
 
         jobPanel.getSelectedBoardLocation().setLocation(location);
         jobPanel.refreshSelectedBoardRow();
