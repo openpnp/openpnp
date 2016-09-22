@@ -88,6 +88,10 @@ G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standa
 M400 ; Wait for moves to complete before returning
 ```
 
+If you need to move in mils or microns see this post on the form:
+
+https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/XV44ij3ZKZ0/eUfbsqRdFQAJ
+
 ### pick-command
 
 Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
