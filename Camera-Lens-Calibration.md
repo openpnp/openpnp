@@ -1,5 +1,3 @@
-## WARNING: This is a new very feature. If you run into problems, please file a bug report.
-
 Camera lens calibration allows OpenPnP to learn about the parameters of the camera lens you are using and then apply a undistort algorithm to remove any distortion of the image caused by the lens. This is especially useful in fisheye lenses as it can make straight lines look straight when they would typically be curved by the lens.
 
 The calibration process consists of showing a known pattern to the camera in a variety of positions and orientations. A set number of images are captured of the pattern and then OpenCV is used to calculate the lens parameters.
