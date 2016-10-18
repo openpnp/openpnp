@@ -82,7 +82,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.headMountable = headMountable;
             this.variableNames = variableNames;
         }
-        
+
         public boolean isHeadMountable() {
             return headMountable;
         }
@@ -95,7 +95,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Attribute(required = true)
         public CommandType type;
 
-        @ElementList(required = false, inline = true, entry = "text", data=true)
+        @ElementList(required = false, inline = true, entry = "text", data = true)
         public ArrayList<String> commands = new ArrayList<>();
 
         public Command(String headMountableId, CommandType type, String text) {
@@ -103,7 +103,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             this.type = type;
             setCommand(text);
         }
-        
+
         public void setCommand(String text) {
             this.commands.clear();
             if (text != null) {
@@ -368,17 +368,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             // homeOffset contains the offset, but we are not really concerned with that,
             // we just reset X,Y back to the home-coordinate at this point.
-            double xHomeCoordinate=0;
-            double yHomeCoordinate=0;
-            for (Axis axis : axes)
-            {
-                if(axis.getType() == Axis.Type.X)
-                {
+            double xHomeCoordinate = 0;
+            double yHomeCoordinate = 0;
+            for (Axis axis : axes) {
+                if (axis.getType() == Axis.Type.X) {
                     axis.setCoordinate(axis.getHomeCoordinate());
                     xHomeCoordinate = axis.getHomeCoordinate();
                 }
-                if(axis.getType() == Axis.Type.Y)
-                {
+                if (axis.getType() == Axis.Type.Y) {
                     axis.setCoordinate(axis.getHomeCoordinate());
                     yHomeCoordinate = axis.getHomeCoordinate();
                 }
@@ -401,7 +398,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         return null;
     }
-    
+
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
@@ -433,7 +430,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         return c.getCommand();
     }
-    
+
     public void setCommand(HeadMountable hm, CommandType type, String text) {
         Command c = getCommand(hm, type, false);
         if (text == null || text.trim().length() == 0) {
@@ -1051,6 +1048,40 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             // Since we're just negating the value of the coordinate we can just
             // use the same function.
             return toTransformed(axis, hm, transformedCoordinate);
+        }
+    }
+
+    public static class CamTransform implements AxisTransform {
+        @Element
+        private String negatedHeadMountableId;
+
+        @Attribute(required = false)
+        private double camRadius = 24;
+
+        @Attribute(required = false)
+        private double camWheelRadius = 9.5;
+
+        @Attribute(required = false)
+        private double camWheelGap = 2;
+
+        @Override
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate) {
+            double transformed = Math.sin(Math.toRadians(rawCoordinate)) * camRadius;
+            if (hm.getId().equals(negatedHeadMountableId)) {
+                transformed = -transformed;
+            }
+            transformed += camWheelRadius + camWheelGap;
+            return transformed;
+        }
+
+        @Override
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
+            double raw = Math.toDegrees(
+                    Math.asin((transformedCoordinate - camWheelRadius - camWheelGap) / camRadius));
+            if (hm.getId().equals(negatedHeadMountableId)) {
+                raw = -raw;
+            }
+            return raw;
         }
     }
 }

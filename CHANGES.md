@@ -1,6 +1,37 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-10-17
+
+* GcodeDriver CamTransform
+
+	GcodeDriver now supports cam based Z axes like those used on the OpenBuilds reference
+	design, the RobotDigg head and several other common head designs.
+	
+	To use the new transform, see the example configuration below.
+	
+	```
+    <axis name="z" type="Z" home-coordinate="0.0">
+       <head-mountable-ids class="java.util.HashSet">
+          <string>69edd567-df6c-495a-9b30-2fcbf5c9742f</string>
+          <string>169edd567-df6c-495a-9b30-2fcbf5c9742f</string>
+       </head-mountable-ids>
+       <transform class="org.openpnp.machine.reference.driver.GcodeDriver$CamTransform" cam-radius="24.0" cam-wheel-radius="9.5" cam-wheel-gap="2.0">
+          <negated-head-mountable-id>169edd567-df6c-495a-9b30-2fcbf5c9742f</negated-head-mountable-id>
+       </transform>
+    </axis>
+	```
+	
+	In particular, you must define your Z axis head-mountable-ids to your two nozzles, and
+	you must set the negated-head-mountable-id to the secondary nozzle. The parameters for
+	defining the cam are:
+	
+	* cam-radius: The radius of the cam itself.
+	* cam-wheel-radius: The radius of the bearings or wheels at the end of the cams that actually
+	push the axis down.
+	* cam-wheel-gap: The gap, if any, between the cam wheels and the top of the axis which they
+	push down.	
+
 # 2016-09-07
 
 * Success and Error Sounds, Signaler Interface
