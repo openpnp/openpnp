@@ -95,6 +95,7 @@
       </feeders>
       <signalers>
          <signaler class="org.openpnp.machine.reference.signaler.SoundSignaler" id="b7980099-1992-42b4-b38a-2f8ee6b52eb8" name="Sound Signaler" enable-error-sound="true" enable-finished-sound="true"/>
+         <signaler class="org.openpnp.machine.reference.signaler.ActuatorSignaler" id="446118b2-991d-11e6-9f33-a24fc0d9649c" name="Actuator Signaler" actuator-id="5b8a8cbd-d6c1-4324-af8b-eba5f0444622" job-state="ERROR" machine-state="ERROR"/>
       </signalers>
       <cameras/>
       <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="5000.0"/>
