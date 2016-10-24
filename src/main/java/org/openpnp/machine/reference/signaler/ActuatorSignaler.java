@@ -24,10 +24,10 @@ public class ActuatorSignaler extends AbstractSignaler {
     protected String actuatorId;
 
     @Attribute(required = false)
-    protected AbstractJobProcessor.State jobState = AbstractJobProcessor.State.ERROR;
+    protected AbstractJobProcessor.State jobState;
 
     @Attribute(required = false)
-    protected AbstractMachine.State machineState = AbstractMachine.State.ERROR;
+    protected AbstractMachine.State machineState;
 
     public ActuatorSignaler() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
