@@ -18,7 +18,7 @@ If you want to disable the sounds you can set the attributes on the the SoundSig
 Replacing the sounds with own sound files will be possible later on.
 
 # Actuator Signaler
-An actuator signaler will cause an actuator to be turned on when a configured job or machine state is reached.
+An actuator signaler will cause an actuator to be turned on when a configured job or machine state is reached. They will stay on as long as the state is active.
 
 ## Configuration
 The actuator signaler can be configured in the machine.xml:
@@ -28,3 +28,14 @@ The actuator signaler can be configured in the machine.xml:
     <signaler class="org.openpnp.machine.reference.signaler.ActuatorSignaler" id="446118b2-991d-11e6-9f33-a24fc0d9649c" name="Actuator Signaler" actuator-id="5b8a8cbd-d6c1-4324-af8b-eba5f0444622" job-state="ERROR" machine-state="ERROR"/>
 </signalers>
 ```
+
+The valid options for job-state are:
+* STOPPED
+* RUNNING
+* ERROR
+* FINISHED
+
+The valid options for machine-state are:
+* ERROR
+
+
