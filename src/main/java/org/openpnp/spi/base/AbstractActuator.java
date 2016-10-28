@@ -18,7 +18,7 @@ public abstract class AbstractActuator implements Actuator {
     protected Head head;
 
     public AbstractActuator() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("ACT");
         this.name = getClass().getSimpleName();
     }
 

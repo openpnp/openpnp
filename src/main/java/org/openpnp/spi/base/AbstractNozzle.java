@@ -30,7 +30,7 @@ public abstract class AbstractNozzle implements Nozzle {
     protected Part part;
 
     public AbstractNozzle() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("NOZ");
         this.name = getClass().getSimpleName();
     }
 

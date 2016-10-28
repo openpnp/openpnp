@@ -497,8 +497,8 @@ public class Configuration extends AbstractModelObject {
         return serializer;
     }
 
-    public static String createId() {
-        return UUID.randomUUID().toString();
+    public static String createId(String prefix) {
+        return prefix + System.currentTimeMillis();
     }
 
     /**

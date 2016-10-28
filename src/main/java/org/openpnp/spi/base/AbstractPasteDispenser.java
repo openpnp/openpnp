@@ -17,7 +17,7 @@ public abstract class AbstractPasteDispenser implements PasteDispenser {
     protected Head head;
 
     public AbstractPasteDispenser() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("PAS");
         this.name = getClass().getSimpleName();
     }
 
