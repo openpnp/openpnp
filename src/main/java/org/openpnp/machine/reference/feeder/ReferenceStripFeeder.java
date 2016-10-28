@@ -147,6 +147,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
+        int feedCount = this.feedCount;
+
+        /*
+         * As a special case, before the feeder has been fed we return the pick location
+         * as if the feeder had been fed. This keeps us from returning a pick location
+         * that is off the edge of the strip.
+         */
+        if (feedCount == 0) {
+            feedCount = 1;
+        }
         // Find the location of the part linearly along the tape
         Location[] lineLocations = getIdealLineLocations();
         // 20160608 - ldpgh/lutz_dd
