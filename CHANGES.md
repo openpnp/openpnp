@@ -1,6 +1,37 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-10-28
+
+* Logging Changes
+
+	OpenPnP now uses [TinyLog](http://www.tinylog.org/) for logging instead of SLF and Log4J.
+	TinyLog is much simpler to configure and far less complex to work with. It has quite a few
+	less features, but based on feedback in https://github.com/openpnp/openpnp/issues/333 this
+	was preferred.
+	
+	* Logging now defaults to the INFO level.
+	* The level can be changed from the Log tab and it will be saved.
+	* Log level can be changed on the fly without restarting OpenPnP.
+	* Rotating log files are still created. The naming has changed slightly. The files now rotate
+	after each startup instead of daily.
+	
+* Camera View Reticle Now Track Tool Rotation
+
+	Prior to this change, the camera view reticle / crosshair always tracked the rotation of the
+	camera. Since most cameras don't rotate, this didn't make much sense. The view now tracks the
+	rotation of the currently selected tool, which is almost always the nozzle.
+	
+	https://github.com/openpnp/openpnp/issues/347
+	
+* Strip Feeder Improvements
+
+	* Strip feeder now moves to the correct pick location before the first feed, i.e. when the
+	feed count is 0. This is just a bit of user friendliness that does not really change any
+	functionality. https://github.com/openpnp/openpnp/issues/352
+	* Strip feeder auto setup no longer captures or overwrites the Z value.
+	https://github.com/openpnp/openpnp/issues/353
+	
 # 2016-10-17
 
 * GcodeDriver CamTransform
