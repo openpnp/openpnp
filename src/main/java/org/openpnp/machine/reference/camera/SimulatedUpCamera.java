@@ -21,26 +21,22 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(SimulatedUpCamera.class);
+
 
     protected int width = 640;
 
@@ -246,7 +242,6 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                     Random r = new Random();
                     offsets = new Location(LengthUnit.Millimeters, Math.random() * 2 - 1,
                             Math.random() * 2 - 1, 0, Math.random() * 30 - 15);
-                    System.out.println("Set offsets to " + offsets);
                 }
             }
         }

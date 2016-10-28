@@ -26,13 +26,11 @@ import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class Scripting {
-    private static final Logger logger = LoggerFactory.getLogger(Scripting.class);
+
 
     final JMenu menu;
     final ScriptEngineManager manager = new ScriptEngineManager();

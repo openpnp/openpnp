@@ -32,8 +32,6 @@ import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Guides the user through the two point board location operation using step by step instructions.
@@ -41,9 +39,6 @@ import org.slf4j.LoggerFactory;
  * TODO: Disable the BoardLocation table while active.
  */
 public class TwoPlacementBoardLocationProcess {
-    private static final Logger logger =
-            LoggerFactory.getLogger(TwoPlacementBoardLocationProcess.class);
-
     private final MainFrame mainFrame;
     private final JobPanel jobPanel;
     private final Camera camera;

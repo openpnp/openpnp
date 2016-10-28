@@ -1,5 +1,8 @@
 package org.openpnp.machine.reference.signaler;
 
+import javax.swing.Action;
+import javax.swing.Icon;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
@@ -9,8 +12,6 @@ import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
-
-import javax.swing.*;
 
 /**
  * An ActuatorSignaler can signal certain device or job states by using a machine actuator e.g. signaling lights

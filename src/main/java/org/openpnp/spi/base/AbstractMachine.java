@@ -13,12 +13,15 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
-import org.openpnp.machine.reference.ReferencePnpJobProcessor;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.*;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

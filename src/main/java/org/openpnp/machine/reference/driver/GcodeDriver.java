@@ -32,20 +32,17 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 
 @Root
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
-
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
@@ -700,14 +697,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
 
         try {
             super.disconnect();
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
     }
@@ -751,11 +748,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // for a response to a command we actually wait for the one we expect.
         responseQueue.drainTo(responses);
 
-        logger.debug("sendCommand({}, {})...", command, timeout);
+        Logger.debug("sendCommand({}, {})...", command, timeout);
 
         // Send the command, if one was specified
         if (command != null) {
-            logger.trace("[{}] >> {}", portName, command);
+            Logger.trace("[{}] >> {}", portName, command);
             output.write(command.getBytes());
             output.write("\n".getBytes());
         }
@@ -793,7 +790,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
 
-        logger.debug("sendCommand({}, {}) => {}",
+        Logger.debug("sendCommand({}, {}) => {}",
                 new Object[] {command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
         return responses;
     }
@@ -808,11 +805,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 continue;
             }
             catch (IOException e) {
-                logger.error("Read error", e);
+                Logger.error("Read error", e);
                 return;
             }
             line = line.trim();
-            logger.trace("[{}] << {}", portName, line);
+            Logger.trace("[{}] << {}", portName, line);
             if (!processPositionReport(line)) {
                 responseQueue.offer(line);
             }
@@ -828,7 +825,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             return false;
         }
 
-        logger.trace("Position report: {}", line);
+        Logger.trace("Position report: {}", line);
         Matcher matcher =
                 Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
         matcher.matches();
@@ -839,7 +836,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 axis.setCoordinate(d);
             }
             catch (Exception e) {
-                logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
+                Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
             }
         }
 

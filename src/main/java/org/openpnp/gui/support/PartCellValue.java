@@ -21,8 +21,6 @@ package org.openpnp.gui.support;
 
 import org.openpnp.model.Configuration;
 
-import java.util.Locale;
-
 public class PartCellValue implements Comparable<PartCellValue> {
     private static Configuration configuration;
 

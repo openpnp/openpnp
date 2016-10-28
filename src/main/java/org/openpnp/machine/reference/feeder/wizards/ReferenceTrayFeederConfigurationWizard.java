@@ -19,13 +19,14 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
-import javax.swing.AbstractAction;
-import javax.swing.JButton;
-import java.awt.event.ActionEvent;
 import javax.swing.SwingConstants;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;

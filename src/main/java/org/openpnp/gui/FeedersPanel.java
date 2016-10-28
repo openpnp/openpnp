@@ -63,13 +63,10 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
-    private final static Logger logger = LoggerFactory.getLogger(FeedersPanel.class);
-
     private final Configuration configuration;
     private final MainFrame mainFrame;
 
@@ -249,7 +246,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
         }
         catch (PatternSyntaxException e) {
-            logger.warn("Search failed", e);
+            Logger.warn("Search failed", e);
             return;
         }
         tableSorter.setRowFilter(rf);

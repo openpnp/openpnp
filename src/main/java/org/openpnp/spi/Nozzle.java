@@ -2,8 +2,6 @@ package org.openpnp.spi;
 
 import java.util.List;
 
-import org.openpnp.model.Identifiable;
-import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 
 /**

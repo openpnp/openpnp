@@ -10,7 +10,6 @@ import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 
 /**
  * Mask everything in the working image outside of a circle centered at the center of the image

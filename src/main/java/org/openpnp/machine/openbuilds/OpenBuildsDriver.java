@@ -22,12 +22,11 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(OpenBuildsDriver.class);
+
 
     @Attribute(required = false)
     protected double feedRateMmPerMinute = 5000;
@@ -214,7 +213,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
         if (!Double.isNaN(z)) {
             double a = Math.toDegrees(Math.asin((z - zCamWheelRadius - zGap) / zCamRadius));
-            logger.debug("nozzle {} {} {}", z, zCamRadius, a);
+            Logger.debug("nozzle {} {} {}", z, zCamRadius, a);
             if (nozzleIndex == 1) {
                 a = -a;
             }
@@ -389,7 +388,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         }
         sendCommand("T0");
 
-        logger.debug("Current Position is {}, {}, {}, {}, {}", x, y, zA, c, c2);
+        Logger.debug("Current Position is {}, {}, {}, {}, {}", x, y, zA, c, c2);
     }
 
     public synchronized void disconnect() {
@@ -402,14 +401,14 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
             }
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
 
         try {
             super.disconnect();
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
     }
@@ -427,8 +426,8 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
         // Send the command, if one was specified
         if (command != null) {
-            logger.debug("sendCommand({}, {})", command, timeout);
-            logger.debug(">> " + command);
+            Logger.debug("sendCommand({}, {})", command, timeout);
+            Logger.debug(">> " + command);
             output.write(command.getBytes());
             output.write("\n".getBytes());
         }
@@ -452,7 +451,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
 
-        logger.debug("{} => {}", command, responses);
+        Logger.debug("{} => {}", command, responses);
         return responses;
     }
 
@@ -466,11 +465,11 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
                 continue;
             }
             catch (IOException e) {
-                logger.error("Read error", e);
+                Logger.error("Read error", e);
                 return;
             }
             line = line.trim();
-            logger.debug("<< " + line);
+            Logger.debug("<< " + line);
             responseQueue.offer(line);
             if (line.startsWith("ok") || line.startsWith("error: ")) {
                 // This is the end of processing for a command

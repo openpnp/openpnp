@@ -1,10 +1,7 @@
 package org.openpnp.spi.base;
 
-import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.Signaler;
 import org.simpleframework.xml.Attribute;
-
-import javax.swing.*;
 
 public abstract class AbstractSignaler implements Signaler {
 

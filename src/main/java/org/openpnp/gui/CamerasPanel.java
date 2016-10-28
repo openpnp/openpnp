@@ -67,13 +67,10 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class CamerasPanel extends JPanel implements WizardContainer {
-    private final static Logger logger = LoggerFactory.getLogger(CamerasPanel.class);
-
     private static final String PREF_DIVIDER_POSITION = "CamerasPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
@@ -253,7 +250,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
         }
         catch (PatternSyntaxException e) {
-            logger.warn("Search failed", e);
+            Logger.warn("Search failed", e);
             return;
         }
         tableSorter.setRowFilter(rf);
@@ -293,7 +290,7 @@ public class CamerasPanel extends JPanel implements WizardContainer {
                     }
                 }
                 catch (Exception e) {
-                    logger.debug("Couldn't set default vision provider. Meh.");
+                    Logger.debug("Couldn't set default vision provider. Meh.");
                 }
 
 

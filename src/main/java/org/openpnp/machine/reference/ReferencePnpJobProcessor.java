@@ -39,17 +39,22 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.spi.*;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Root
 public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
@@ -123,7 +128,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ReferencePnpJobProcessor.class);
+
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
@@ -350,7 +355,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             Location location = locator.locateBoard(boardLocation);
             boardLocationFiducialOverrides.put(boardLocation, location);
-            logger.debug("Fiducial check for {}", boardLocation);
+            Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
     
@@ -361,7 +366,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         Location location = locator.locateBoard(boardLocation);
         boardLocationFiducialOverrides.put(boardLocation, location);
-        logger.debug("Fiducial check for {}", boardLocation);
+        Logger.debug("Fiducial check for {}", boardLocation);
     }
 
     /**
@@ -435,7 +440,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             plannedPlacements.add(new PlannedPlacement(nozzle, jobPlacement));
         }
 
-        logger.debug("Planned placements {}", plannedPlacements);
+        Logger.debug("Planned placements {}", plannedPlacements);
     }
 
     protected void doChangeNozzleTip() throws Exception {
@@ -451,7 +456,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // If the currently loaded NozzleTip can handle the Part we're good.
             if (nozzle.getNozzleTip() != null && nozzle.getNozzleTip().canHandle(part)) {
-                logger.debug("No nozzle change needed for nozzle {}", nozzle);
+                Logger.debug("No nozzle change needed for nozzle {}", nozzle);
                 plannedPlacement.stepComplete = true;
                 continue;
             }
@@ -460,7 +465,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Otherwise find a compatible tip and load it
             NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-            logger.debug("Change nozzle tip on {} from {} to {}",
+            Logger.debug("Change nozzle tip on {} from {} to {}",
                     new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
@@ -515,19 +520,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         retry(1 + feeder.getRetryCount(), () -> {
                             fireTextStatus("Feeding %s from %s for %s.", part.getId(),
                                     feeder.getName(), placement.getId());
-                            logger.debug("Attempt Feed {} from {} with {}.",
+                            Logger.debug("Attempt Feed {} from {} with {}.",
                                     new Object[] {part, feeder, nozzle});
 
                             feeder.feed(nozzle);
 
-                            logger.debug("Fed {} from {} with {}.",
+                            Logger.debug("Fed {} from {} with {}.",
                                     new Object[] {part, feeder, nozzle});
                         });
 
                         break;
                     }
                     catch (Exception e) {
-                        logger.debug("Feed {} from {} with {} failed!",
+                        Logger.debug("Feed {} from {} with {} failed!",
                                 new Object[] {part, feeder, nozzle});
                         // If the feed fails, disable the feeder and continue. If there are no
                         // more valid feeders the findFeeder() call above will throw and exit the
@@ -553,7 +558,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Retract
             nozzle.moveToSafeZ();
 
-            logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
+            Logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
 
             plannedPlacement.stepComplete = true;
         }
@@ -574,7 +579,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
             plannedPlacement.alignmentOffsets = alignmentOffset;
 
-            logger.debug("Align {} with {}", part, nozzle);
+            Logger.debug("Align {} with {}", part, nozzle);
 
             plannedPlacement.stepComplete = true;
         }
@@ -671,7 +676,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             plannedPlacement.stepComplete = true;
 
-            logger.debug("Place {} with {}", part, nozzle.getName());
+            Logger.debug("Place {} with {}", part, nozzle.getName());
         }
 
         clearStepComplete();
@@ -712,7 +717,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Nozzle nozzle = plannedPlacement.nozzle;
             discard(nozzle);
             jobPlacement.status = Status.Skipped;
-            logger.debug("Skipped {}", jobPlacement.placement);
+            Logger.debug("Skipped {}", jobPlacement.placement);
         }
     }
 

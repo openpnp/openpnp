@@ -23,34 +23,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferencePasteDispenseJobProcessor.JobDispense.Status;
-import org.openpnp.machine.reference.wizards.ReferencePasteDispenserConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
-import org.openpnp.spi.*;
+import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.PasteDispenser;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPasteDispenseJobProcessor;
-import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Root
 public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {
@@ -97,7 +90,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ReferencePasteDispenseJobProcessor.class);
+
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
@@ -269,7 +262,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             }
             Location location = locator.locateBoard(boardLocation);
             boardLocationFiducialOverrides.put(boardLocation, location);
-            logger.debug("Fiducial check for {}", boardLocation);
+            Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
 
@@ -302,7 +295,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             // Mark the dispense as finished
             jobDispense.status = Status.Complete;
 
-            logger.debug("Dispensed {} ", dispenseLocation);
+            Logger.debug("Dispensed {} ", dispenseLocation);
         }
     }
 

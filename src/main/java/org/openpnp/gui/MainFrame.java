@@ -72,7 +72,11 @@ import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.importer.SolderPasteGerberImporter;
-import org.openpnp.gui.support.*;
+import org.openpnp.gui.support.HeadCellValue;
+import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 

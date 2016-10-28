@@ -26,11 +26,10 @@ import java.io.StringWriter;
 import javax.swing.JOptionPane;
 
 import org.openpnp.gui.MainFrame;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 public class MessageBoxes {
-    private static final Logger logger = LoggerFactory.getLogger(MessageBoxes.class);
+
 
     public static void errorBox(Component parent, String title, Throwable cause) {
         String message = null;
@@ -47,7 +46,7 @@ public class MessageBoxes {
         if (message == null) {
             message = "No message supplied.";
         }
-        logger.debug("{}: {}", title, cause);
+        Logger.debug("{}: {}", title, cause);
         message = message.replaceAll("\n", "<br/>");
         message = message.replaceAll("\r", "");
         message = "<html><body width=\"400\">" + message + "</body></html>";
@@ -58,7 +57,7 @@ public class MessageBoxes {
         if (message == null) {
             message = "";
         }
-        logger.debug("{}: {}", title, message);
+        Logger.debug("{}: {}", title, message);
         message = message.replaceAll("\n", "<br/>");
         message = message.replaceAll("\r", "");
         message = "<html><body width=\"400\">" + message + "</body></html>";

@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 
 /**
  * Provides an interface for implementors of vision systems to implement. A VisionProvider is

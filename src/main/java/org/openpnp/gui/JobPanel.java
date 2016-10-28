@@ -29,7 +29,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -78,8 +77,6 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -97,7 +94,7 @@ public class JobPanel extends JPanel {
     }
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(JobPanel.class);
+
     
     final private Configuration configuration;
     final private MainFrame frame;

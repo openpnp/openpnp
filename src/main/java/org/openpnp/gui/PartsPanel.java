@@ -71,12 +71,11 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class PartsPanel extends JPanel implements WizardContainer {
-    private final static Logger logger = LoggerFactory.getLogger(PartsPanel.class);
+
 
     private static final String PREF_DIVIDER_POSITION = "PartsPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -240,7 +239,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
         }
         catch (PatternSyntaxException e) {
-            logger.warn("Search failed", e);
+            Logger.warn("Search failed", e);
             return;
         }
         tableSorter.setRowFilter(rf);

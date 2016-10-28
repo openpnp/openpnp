@@ -12,13 +12,12 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractPasteDispenser;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReferencePasteDispenser extends AbstractPasteDispenser
         implements ReferenceHeadMountable {
-    private final static Logger logger = LoggerFactory.getLogger(ReferencePasteDispenser.class);
+
 
     @Element
     private Location headOffsets;
@@ -52,7 +51,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
     @Override
     public void dispense(Location startLocation, Location endLocation,
             long dispenseTimeMilliseconds) throws Exception {
-        logger.debug("{}.dispense()", getName());
+        Logger.debug("{}.dispense()", getName());
         Thread.sleep(dispenseTimeMilliseconds);
         driver.dispense(this, startLocation, endLocation, dispenseTimeMilliseconds);
         machine.fireMachineHeadActivity(head);
@@ -60,14 +59,14 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("{}.moveTo({}, {})", getName(), location, speed);
+        Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", getName(), speed);
+        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);

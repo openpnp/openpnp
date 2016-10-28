@@ -5,12 +5,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.openpnp.model.AbstractModelObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 public class FiniteStateMachine<State, Message> extends AbstractModelObject {
-    private static final Logger logger = LoggerFactory.getLogger(FiniteStateMachine.class);
-
     private final State initialState;
     private State state;
 
@@ -36,7 +33,7 @@ public class FiniteStateMachine<State, Message> extends AbstractModelObject {
                 transition.task.task();
             }
             setState(transition.toState);
-            logger.trace(message + " => " + state + " -> " + transition.toState);
+            Logger.trace(message + " => " + state + " -> " + transition.toState);
             message = transition.nextMessage;
         }
     }
