@@ -3,6 +3,15 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-10-28
 
+* Nozzle Tip Changer Fourth Move Added
+
+	A fourth move option has been added to the nozzle tip changer to support LitePlacer like
+	hardware configurations. By default the fourth move is cloned from the previous second move
+	upon configuration load, so the change should not result in any new moves for existing
+	configurations.
+	
+	https://github.com/openpnp/openpnp/issues/354 
+
 * Logging Changes
 
 	OpenPnP now uses [TinyLog](http://www.tinylog.org/) for logging instead of SLF and Log4J.
