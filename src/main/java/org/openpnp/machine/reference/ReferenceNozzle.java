@@ -220,6 +220,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 new Object[] {getName(), nozzleTip.getName()});
         moveTo(nt.getChangerMidLocation(), getHead().getMachine().getSpeed() * 0.25);
         
+        Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2",
+                new Object[] {getName(), nozzleTip.getName()});
+        moveTo(nt.getChangerMidLocation2(), getHead().getMachine().getSpeed());
+        
         Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
                 new Object[] {getName(), nozzleTip.getName()});
         moveTo(nt.getChangerEndLocation(), getHead().getMachine().getSpeed());
@@ -245,6 +249,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         
         Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
         MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation());
+        
+        Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
+        moveTo(nt.getChangerMidLocation2(), getHead().getMachine().getSpeed());
         
         Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
         moveTo(nt.getChangerMidLocation(), getHead().getMachine().getSpeed());

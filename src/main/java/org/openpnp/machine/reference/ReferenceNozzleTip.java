@@ -56,6 +56,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
+    private Location changerMidLocation2;
+    @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
     private Calibration calibration = new Calibration();
@@ -72,6 +74,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         continue;
                     }
                     compatiblePackages.add(pkg);
+                }
+                /*
+                 * Backwards compatibility. Since this field is being added after the fact, if
+                 * the field is not specified in the config then we just make a copy of the
+                 * other mid location. The result is that if a user already has a changer
+                 * configured they will not suddenly have a move to 0,0,0,0 which would break
+                 * everything.
+                 */
+                if (changerMidLocation2 == null) {
+                    changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
                 }
             }
         });
@@ -153,6 +165,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerMidLocation = changerMidLocation;
     }
 
+    public Location getChangerMidLocation2() {
+        return changerMidLocation2;
+    }
+
+    public void setChangerMidLocation2(Location changerMidLocation2) {
+        this.changerMidLocation2 = changerMidLocation2;
+    }
+
     public Location getChangerEndLocation() {
         return changerEndLocation;
     }
@@ -193,11 +213,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
     };
 
-    public Action unloadAction = new AbstractAction("Unoad") {
+    public Action unloadAction = new AbstractAction("Unload") {
         {
             putValue(SMALL_ICON, Icons.unload);
             putValue(NAME, "Unload");
-            putValue(SHORT_DESCRIPTION, "Unoad the currently loaded nozzle tip.");
+            putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
         }
 
         @Override
