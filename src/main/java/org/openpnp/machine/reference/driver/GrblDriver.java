@@ -41,15 +41,13 @@ import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConf
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.
  */
 public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(GrblDriver.class);
     private static final long minimumRequiredBuildNumber = 20140822;
 
     @Attribute(required = false)
@@ -226,7 +224,7 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
                 String buildNumber = matcher.group(3);
                 connectedBuildNumber = Long.parseLong(buildNumber);
                 connected = true;
-                logger.debug(String.format("Connected to Grbl Version %s.%s, build: %d",
+                Logger.debug(String.format("Connected to Grbl Version %s.%s, build: %d",
                         majorVersion, minorVersion, connectedBuildNumber));
             }
         }
@@ -242,14 +240,14 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
             }
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
 
         try {
             super.disconnect();
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
     }
@@ -261,8 +259,8 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
     private List<String> sendCommand(String command, long timeout) throws Exception {
         synchronized (commandLock) {
             if (command != null) {
-                logger.debug("sendCommand({}, {})", command, timeout);
-                logger.debug(">> " + command);
+                Logger.debug("sendCommand({}, {})", command, timeout);
+                Logger.debug(">> " + command);
                 output.write(command.getBytes());
                 output.write("\n".getBytes());
             }
@@ -287,11 +285,11 @@ public class GrblDriver extends AbstractSerialPortDriver implements Runnable {
                 continue;
             }
             catch (IOException e) {
-                logger.error("Read error", e);
+                Logger.error("Read error", e);
                 return;
             }
             line = line.trim();
-            logger.debug("<< " + line);
+            Logger.debug("<< " + line);
             responseQueue.offer(line);
             if (line.equals("ok") || line.startsWith("error: ")) {
                 // This is the end of processing for a command

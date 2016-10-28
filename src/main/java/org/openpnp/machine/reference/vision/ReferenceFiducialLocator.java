@@ -33,9 +33,8 @@ import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Root;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 /**
  * Implements an algorithm for finding a set of fiducials on a board and returning the correct
@@ -43,7 +42,7 @@ import org.openpnp.logging.LoggerFactory;
  */
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
-    private static final Logger logger = LoggerFactory.getLogger(ReferenceFiducialLocator.class);
+
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         // Find the fids in the board
@@ -61,7 +60,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Placement placementA = mostDistant.get(0);
         Placement placementB = mostDistant.get(1);
 
-        logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
+        Logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
 
         // Run the fiducial check on each and get their actual locations
         Location actualLocationA = getFiducialLocation(boardLocation, placementA);
@@ -154,10 +153,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Perform vision operation
             location = getBestTemplateMatch(camera, template);
             if (location == null) {
-                logger.debug("No matches found!");
+                Logger.debug("No matches found!");
                 return null;
             }
-            logger.debug("home fid. located at {}", location);
+            Logger.debug("home fid. located at {}", location);
             // Move to where we actually found the fid
             camera.moveTo(location);
         }
@@ -182,7 +181,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
-        logger.debug("Locating {}", fid.getId());
+        Logger.debug("Locating {}", fid.getId());
 
         Part part = fid.getPart();
         if (part == null) {
@@ -216,7 +215,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // Move to where we expect to find the fid
         Location location =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
-        logger.debug("Looking for {} at {}", fid.getId(), location);
+        Logger.debug("Looking for {} at {}", fid.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
 
@@ -226,10 +225,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Perform vision operation
             location = getBestTemplateMatch(camera, template);
             if (location == null) {
-                logger.debug("No matches found!");
+                Logger.debug("No matches found!");
                 return null;
             }
-            logger.debug("{} located at {}", fid.getId(), location);
+            Logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
             camera.moveTo(location);
         }

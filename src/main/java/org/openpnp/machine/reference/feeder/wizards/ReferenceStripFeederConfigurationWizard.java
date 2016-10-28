@@ -61,7 +61,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Configuration.PartsConfigurationHolder;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;

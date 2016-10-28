@@ -39,9 +39,8 @@ import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConf
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 /**
  * TODO: Consider adding some type of heartbeat to the firmware.
@@ -133,7 +132,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
      * @Attribute(required=false) private boolean invertVacpump;
      * 
      */
-    private static final Logger logger = LoggerFactory.getLogger(SprinterDriver.class);
+
     // private static final double minimumRequiredVersion = 0.75;
 
     @Attribute(required = false)
@@ -341,9 +340,9 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
                 // String[] versionComponents = response.split(" ");
                 // connectedVersion = Double.parseDouble(versionComponents[2]);
                 connected = true;
-                // logger.debug(String.format("Connected to Sprinter Version: %.2f",
+                // Logger.debug(String.format("Connected to Sprinter Version: %.2f",
                 // connectedVersion));
-                logger.debug(String.format("Connected to Sprinter."));
+                Logger.debug(String.format("Connected to Sprinter."));
             }
         }
     }
@@ -358,14 +357,14 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
             }
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
 
         try {
             super.disconnect();
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
     }
@@ -377,7 +376,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
     private List<String> sendCommand(String command, long timeout) throws Exception {
         synchronized (commandLock) {
             if (command != null) {
-                logger.debug("> " + command);
+                Logger.debug("> " + command);
                 output.write(command.getBytes());
                 output.write("\n".getBytes());
             }
@@ -388,7 +387,7 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
             else {
                 commandLock.wait(timeout);
             }
-            logger.debug("Waited {} ms for command to return.", (System.currentTimeMillis() - t));
+            Logger.debug("Waited {} ms for command to return.", (System.currentTimeMillis() - t));
         }
         List<String> responses = drainResponseQueue();
         return responses;
@@ -404,11 +403,11 @@ public class SprinterDriver extends AbstractSerialPortDriver implements Runnable
                 continue;
             }
             catch (IOException e) {
-                logger.error("Read error", e);
+                Logger.error("Read error", e);
                 return;
             }
             line = line.trim();
-            logger.debug("< " + line);
+            Logger.debug("< " + line);
             responseQueue.offer(line);
             // We have a special case of accepting "start" when we are not
             // connected because Sprinter does not send an "ok" when it starts

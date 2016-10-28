@@ -1,8 +1,6 @@
 package org.openpnp.spi;
 
-import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
-import org.openpnp.model.Named;
 
 public interface PasteDispenser
         extends HeadMountable, WizardConfigurable, PropertySheetHolder {

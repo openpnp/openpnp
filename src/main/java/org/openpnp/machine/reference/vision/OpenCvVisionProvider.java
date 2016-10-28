@@ -44,15 +44,15 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.ImageUtils;
+import org.openpnp.util.LogUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Root;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 @Root
 public class OpenCvVisionProvider implements VisionProvider {
-    private final static Logger logger = LoggerFactory.getLogger(OpenCvVisionProvider.class);
+
 
     static {
         nu.pattern.OpenCV.loadShared();
@@ -101,7 +101,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         Imgproc.matchTemplate(imageMat, templateMat, resultMat, Imgproc.TM_CCOEFF_NORMED);
 
         Mat debugMat = null;
-        if (logger.isDebugEnabled()) {
+        if (LogUtils.isDebugEnabled()) {
             debugMat = imageMat.clone();
         }
 
@@ -122,7 +122,7 @@ public class OpenCvVisionProvider implements VisionProvider {
             int y = point.y;
             match.score = resultMat.get(y, x)[0] / maxVal;
 
-            if (logger.isDebugEnabled()) {
+            if (LogUtils.isDebugEnabled()) {
                 Core.rectangle(debugMat, new org.opencv.core.Point(x, y),
                         new org.opencv.core.Point(x + templateMat.cols(), y + templateMat.rows()),
                         new Scalar(255));
@@ -179,7 +179,7 @@ public class OpenCvVisionProvider implements VisionProvider {
 
         // TODO: Figure out certainty and how to filter on it.
 
-        logger.debug(String.format("locateTemplateMatches certainty %f at %f, %f", matchValue,
+        Logger.debug(String.format("locateTemplateMatches certainty %f at %f, %f", matchValue,
                 matchLoc.x, matchLoc.y));
         locateTemplateMatchesDebug(roiImage, templateImage, matchLoc);
 
@@ -187,7 +187,7 @@ public class OpenCvVisionProvider implements VisionProvider {
     }
 
     protected void saveDebugImage(String name, Mat mat) {
-        if (logger.isDebugEnabled()) {
+        if (LogUtils.isDebugEnabled()) {
             try {
                 BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
                 File file = Configuration.get().createResourceFile(OpenCvVisionProvider.class,
@@ -202,7 +202,7 @@ public class OpenCvVisionProvider implements VisionProvider {
 
     private void locateTemplateMatchesDebug(Mat roiImage, Mat templateImage,
             org.opencv.core.Point matchLoc) {
-        if (logger.isDebugEnabled()) {
+        if (LogUtils.isDebugEnabled()) {
             try {
                 Core.rectangle(roiImage, matchLoc,
                         new org.opencv.core.Point(matchLoc.x + templateImage.cols(),
@@ -213,7 +213,7 @@ public class OpenCvVisionProvider implements VisionProvider {
                 File file = Configuration.get().createResourceFile(OpenCvVisionProvider.class,
                         "debug_", ".png");
                 ImageIO.write(debugImage, "PNG", file);
-                logger.debug("Debug image filename {}", file);
+                Logger.debug("Debug image filename {}", file);
             }
             catch (Exception e) {
                 e.printStackTrace();

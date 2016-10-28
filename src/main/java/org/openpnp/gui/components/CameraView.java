@@ -67,13 +67,9 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
-    private final static Logger logger = LoggerFactory.getLogger(CameraView.class);
-
     private static final String PREF_RETICLE = "CamerView.reticle";
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
@@ -81,11 +77,20 @@ public class CameraView extends JComponent implements CameraListener {
     private final static int HANDLE_DIAMETER = 8;
 
     private enum HandlePosition {
-        NW, N, NE, E, SE, S, SW, W
+        NW,
+        N,
+        NE,
+        E,
+        SE,
+        S,
+        SW,
+        W
     }
 
     private enum SelectionMode {
-        Resizing, Moving, Creating
+        Resizing,
+        Moving,
+        Creating
     }
 
     /**
@@ -180,7 +185,7 @@ public class CameraView extends JComponent implements CameraListener {
 
     private long flashStartTimeMs;
     private long flashLengthMs = 250;
-    
+
     private boolean showName = false;
 
     public CameraView() {
@@ -193,7 +198,7 @@ public class CameraView extends JComponent implements CameraListener {
             setDefaultReticle(reticle);
         }
         catch (Exception e) {
-            // logger.warn("Warning: Unable to load Reticle preference");
+            // Logger.warn("Warning: Unable to load Reticle preference");
         }
 
         popupMenu = new CameraViewPopupMenu(this);
@@ -267,11 +272,11 @@ public class CameraView extends JComponent implements CameraListener {
     public Camera getCamera() {
         return camera;
     }
-    
+
     public void setShowName(boolean showName) {
         this.showName = showName;
     }
-    
+
     public boolean isShowName() {
         return this.showName;
     }
@@ -358,8 +363,8 @@ public class CameraView extends JComponent implements CameraListener {
      * briefly show the result of image processing. This is a shortcut to
      * setCameraViewFilter(CameraViewFilter) which simply removes itself after the specified time.
      * 
-     * In addition to showing the given image, if the text parameters is not null the text
-     * will be shown during the timeout using setText().
+     * In addition to showing the given image, if the text parameters is not null the text will be
+     * shown during the timeout using setText().
      * 
      * @param image
      * @param text
@@ -510,7 +515,8 @@ public class CameraView extends JComponent implements CameraListener {
             // Only render if there is a valid image.
             g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
 
-            double c = MainFrame.get().getMachineControls().getSelectedTool().getLocation().getRotation();
+            double c = MainFrame.get().getMachineControls().getSelectedTool().getLocation()
+                    .getRotation();
 
             for (Reticle reticle : reticles.values()) {
                 reticle.draw(g2d, camera.getUnitsPerPixel().getUnits(), scaledUnitsPerPixelX,
@@ -521,7 +527,7 @@ public class CameraView extends JComponent implements CameraListener {
             if (text != null) {
                 drawTextOverlay(g2d, 10, 10, text);
             }
-            
+
             if (showName) {
                 Dimension dim = measureTextOverlay(g2d, camera.getName());
                 drawTextOverlay(g2d, 10, height - dim.height - 10, camera.getName());
@@ -750,7 +756,7 @@ public class CameraView extends JComponent implements CameraListener {
             yPen += interLineSpacing;
         }
     }
-    
+
     private static Dimension measureTextOverlay(Graphics2D g2d, String text) {
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
@@ -767,7 +773,8 @@ public class CameraView extends JComponent implements CameraListener {
             textLayouts.add(textLayout);
         }
         textHeight -= interLineSpacing;
-        return new Dimension(textWidth + insets.left + insets.right, textHeight + insets.top + insets.bottom);
+        return new Dimension(textWidth + insets.left + insets.right,
+                textHeight + insets.top + insets.bottom);
     }
 
     private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,

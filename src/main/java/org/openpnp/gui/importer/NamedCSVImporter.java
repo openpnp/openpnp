@@ -57,8 +57,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 import com.Ostermiller.util.CSVParser;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -71,7 +70,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class NamedCSVImporter implements BoardImporter {
     private final static String NAME = "Named CSV";
     private final static String DESCRIPTION = "Import Named Comma Separated Values Files.";
-    private static final Logger logger = LoggerFactory.getLogger(NamedCSVImporter.class);
+
 
 
     private Board board;
@@ -129,7 +128,7 @@ public class NamedCSVImporter implements BoardImporter {
         for (int i = 0; i < str.length; i++)
             for (int j = 0; j < val.length; j++)
                 if (str[i].equals(val[j])) {
-                    logger.trace("checkCSV: " + val[j] + " = " + j);
+                    Logger.trace("checkCSV: " + val[j] + " = " + j);
                     return j;
                 }
         return -1;
@@ -137,7 +136,7 @@ public class NamedCSVImporter implements BoardImporter {
 
     private static boolean checkCSV(String str[]) {
         for (int i = 0; i < str.length; i++)
-            logger.trace("checkCSV: " + i + " -> " + str[i]);
+            Logger.trace("checkCSV: " + i + " -> " + str[i]);
         if ((Ref = checkCSV(Refs, str)) != -1 && (Val = checkCSV(Vals, str)) != -1
                 && (Pack = checkCSV(Packs, str)) != -1 && (X = checkCSV(Xs, str)) != -1
                 && (Y = checkCSV(Ys, str)) != -1 && (Rot = checkCSV(Rots, str)) != -1
@@ -149,16 +148,16 @@ public class NamedCSVImporter implements BoardImporter {
             Len = Y <= Len ? Len : Y;
             Len = Rot <= Len ? Len : Rot;
             Len = TB <= Len ? Len : TB;
-            logger.trace("checkCSV: Len = " + Len);
+            Logger.trace("checkCSV: Len = " + Len);
             return true;
         }
-        logger.trace("checkCSV: Ref = " + Ref);
-        logger.trace("checkCSV: Val = " + Val);
-        logger.trace("checkCSV: Pack = " + Pack);
-        logger.trace("checkCSV: X = " + X);
-        logger.trace("checkCSV: Y = " + Y);
-        logger.trace("checkCSV: Rot = " + Rot);
-        logger.trace("checkCSV: TB = " + TB);
+        Logger.trace("checkCSV: Ref = " + Ref);
+        Logger.trace("checkCSV: Val = " + Val);
+        Logger.trace("checkCSV: Pack = " + Pack);
+        Logger.trace("checkCSV: X = " + X);
+        Logger.trace("checkCSV: Y = " + Y);
+        Logger.trace("checkCSV: Rot = " + Rot);
+        Logger.trace("checkCSV: TB = " + TB);
         Ref = -1;
         Val = -1;
         Pack = -1;
@@ -171,53 +170,53 @@ public class NamedCSVImporter implements BoardImporter {
     }
 
     private static boolean checkLine(String str) throws Exception {
-        logger.trace("checkLine: " + str);
+        Logger.trace("checkLine: " + str);
         int e = 0;
         if (str.charAt(0) == '#')
             str = str.substring(1);
         if (str == null)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("X") == -1 && str.indexOf("x") == -1)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("Y") == -1 && str.indexOf("y") == -1)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("Rot") == -1 && str.indexOf("rot") == -1)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("val") == -1 && str.indexOf("Val") == -1 && str.indexOf("Comment") == -1
                 && str.indexOf("comment") == -1)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("ootprint") == -1 && str.indexOf("ackage") == -1
                 && str.indexOf("attern") == -1)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("Designator") == -1 && str.indexOf("designator") == -1
                 && str.indexOf("Part") == -1 && str.indexOf("part") == -1
                 && str.indexOf("Component") == -1 && str.indexOf("component") == -1
                 && str.indexOf("RefDes") == -1 && str.indexOf("Ref") == -1)
             return false;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         // seems to have data
         String as[], at[][];
         CSVParser csvParser = new CSVParser(new StringReader(str));
         as = csvParser.getLine();
         comma = ',';
-        logger.trace("checkLine: comma " + as.length);
+        Logger.trace("checkLine: comma " + as.length);
         if (as.length >= 6 && checkCSV(as))
             return true;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         at = csvParser.parse(str, comma = '\t');
-        logger.trace("checkLine: tab " + as.length);
+        Logger.trace("checkLine: tab " + as.length);
         if (at.length > 0 && at[0].length >= 6 && checkCSV(at[0]))
             return true;
-        logger.trace("checkLine: " + e++ + " ok");
+        Logger.trace("checkLine: " + e++ + " ok");
         /*
-         * at=csvParser.parse(str,comma=' '); logger.trace("checkLine: space "+as.length);
-         * if(at.length>0&&at[0].length>=6&&checkCSV(at[0])) return true; logger.trace(
+         * at=csvParser.parse(str,comma=' '); Logger.trace("checkLine: space "+as.length);
+         * if(at.length>0&&at[0].length>=6&&checkCSV(at[0])) return true; Logger.trace(
          * "checkLine: done "+ e++ +" ok");
          */
         return false;
@@ -258,10 +257,10 @@ public class NamedCSVImporter implements BoardImporter {
                 continue;
             else {
 
-                logger.trace("CSV: " + as.length);
+                Logger.trace("CSV: " + as.length);
                 for (int i = 0; i < as.length; i++)
-                    logger.trace("CSV(" + i + ") |" + as[i] + "|");
-                logger.trace("");
+                    Logger.trace("CSV(" + i + ") |" + as[i] + "|");
+                Logger.trace("");
                 double placementX = Double
                         .parseDouble(as[X].replace(",", ".").replace(" ", "").replace("mm", ""));
                 double placementY = Double
@@ -273,7 +272,7 @@ public class NamedCSVImporter implements BoardImporter {
                 while (placementRotation < -180.0)
                     placementRotation += 360.0;
 
-                logger.trace("ok");
+                Logger.trace("ok");
 
                 Placement placement = new Placement(as[Ref]);
                 placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
@@ -304,9 +303,9 @@ public class NamedCSVImporter implements BoardImporter {
                 c = 0;
                 placements.add(placement);
             }
-        logger.trace("ok");
+        Logger.trace("ok");
         reader.close();
-        logger.trace("ok");
+        Logger.trace("ok");
         return placements;
     }
 
@@ -415,7 +414,7 @@ public class NamedCSVImporter implements BoardImporter {
             }
 
             public void actionPerformed(ActionEvent e) {
-                logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle");
+                Logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle");
                 topFile = new File(textFieldTopFile.getText());
                 board = new Board();
                 List<Placement> placements = new ArrayList<>();

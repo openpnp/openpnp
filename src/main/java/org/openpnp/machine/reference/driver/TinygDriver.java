@@ -35,10 +35,9 @@ import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConf
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -51,7 +50,7 @@ import com.google.gson.JsonSyntaxException;
  * Probably short moves also won't.
  */
 public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(TinygDriver.class);
+
     private static final double minimumRequiredVersion = 0.95;
 
     @Attribute(required = false)
@@ -88,7 +87,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                 break;
             }
             catch (Exception e) {
-                logger.debug("Firmware version check failed", e);
+                Logger.debug("Firmware version check failed", e);
             }
         }
 
@@ -104,7 +103,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                     minimumRequiredVersion, connectedVersion));
         }
 
-        logger.debug(String.format("Connected to TinyG Version: %.2f", connectedVersion));
+        Logger.debug(String.format("Connected to TinyG Version: %.2f", connectedVersion));
 
         // We are connected to at least the minimum required version now
         // So perform some setup
@@ -243,14 +242,14 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
             }
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
 
         try {
             super.disconnect();
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
     }
@@ -264,7 +263,7 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
         synchronized (commandLock) {
             lastResponse = null;
             if (command != null) {
-                logger.debug("sendCommand({}, {})", command, timeout);
+                Logger.debug("sendCommand({}, {})", command, timeout);
                 output.write(command.getBytes());
                 output.write("\n".getBytes());
             }
@@ -299,11 +298,11 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                 continue;
             }
             catch (IOException e) {
-                logger.error("Read error", e);
+                Logger.error("Read error", e);
                 return;
             }
             line = line.trim();
-            logger.trace(line);
+            Logger.trace(line);
             try {
                 JsonObject o = (JsonObject) parser.parse(line);
                 if (o.has("sr")) {
@@ -319,14 +318,14 @@ public class TinygDriver extends AbstractSerialPortDriver implements Runnable {
                 }
                 else if (o.has("er")) {
                     // this is an error / shutdown, handle it somehow
-                    logger.error(o.toString());
+                    Logger.error(o.toString());
                 }
                 else {
-                    logger.error("Unknown JSON response: " + o);
+                    Logger.error("Unknown JSON response: " + o);
                 }
             }
             catch (JsonSyntaxException e) {
-                logger.debug("Received invalid JSON syntax", e);
+                Logger.debug("Received invalid JSON syntax", e);
                 // TODO: notify somehow
             }
         }

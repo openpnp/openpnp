@@ -8,18 +8,15 @@ import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.NullDriver;
-import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.JobProcessor;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class SampleJobTest {
-    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
+
 
     /**
      * Loads the pnp-test job that is included in the samples and attempts to run it within a test

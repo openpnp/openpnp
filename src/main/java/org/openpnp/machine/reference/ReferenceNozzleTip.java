@@ -19,7 +19,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -37,15 +36,14 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceNozzleTip.class);
+
 
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
@@ -83,7 +81,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public boolean canHandle(Part part) {
         boolean result =
                 allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
-        logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
+        Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
         return result;
     }
 

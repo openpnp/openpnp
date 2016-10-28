@@ -19,8 +19,19 @@
 
 package org.openpnp.machine.reference;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.openpnp.machine.reference.ReferenceGlueDispenseJobProcessor.JobDispense.Status;
-import org.openpnp.model.*;
+import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
+import org.openpnp.model.Location;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -29,16 +40,9 @@ import org.openpnp.spi.base.AbstractPasteDispenseJobProcessor;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
-import java.util.Collections;
-import java.util.List;
-import java.util.ListIterator;
-
-
-import java.util.*;
 
 @Root
 public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {
@@ -85,7 +89,7 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ReferenceGlueDispenseJobProcessor.class);
+
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
@@ -253,7 +257,7 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
             }
             Location location = locator.locateBoard(boardLocation);
             boardLocationFiducialOverrides.put(boardLocation, location);
-            logger.debug("Fiducial check for {}", boardLocation);
+            Logger.debug("Fiducial check for {}", boardLocation);
         }
     }
 
@@ -286,7 +290,7 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
             // Mark the dispense as finished
             jobDispense.status = Status.Complete;
 
-            logger.debug("Dispensed {} ", dispenseLocation);
+            Logger.debug("Dispensed {} ", dispenseLocation);
         }
     }
 

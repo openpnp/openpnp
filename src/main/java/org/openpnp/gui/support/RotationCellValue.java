@@ -19,10 +19,9 @@
 
 package org.openpnp.gui.support;
 
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-
 import java.util.Locale;
+
+import org.openpnp.model.Configuration;
 
 public class RotationCellValue implements Comparable<RotationCellValue> {
     private static Configuration configuration;

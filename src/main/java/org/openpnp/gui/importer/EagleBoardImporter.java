@@ -64,8 +64,7 @@ import org.openpnp.model.eagle.xml.Library;
 import org.openpnp.model.eagle.xml.Param;
 import org.openpnp.model.eagle.xml.Vertex;
 import org.openpnp.util.Utils2D;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -74,8 +73,6 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class EagleBoardImporter implements BoardImporter {
-    private final static Logger logger = LoggerFactory.getLogger(EagleBoardImporter.class);
-
     private final static String NAME = "CadSoft EAGLE Board";
     private final static String DESCRIPTION =
             "Import files directly from EAGLE's <filename>.brd file.";
@@ -526,7 +523,7 @@ public class EagleBoardImporter implements BoardImporter {
                                                                                             // top
                                                         }
                                                         else
-                                                            logger.info("Warning: " + file
+                                                            Logger.info("Warning: " + file
                                                                     + "contains a SMD pad that is not on a topLayer or bottomLayer");
 
                                                         // TODO figure out if it is possible for an
@@ -560,9 +557,9 @@ public class EagleBoardImporter implements BoardImporter {
                                                             || ((org.openpnp.model.eagle.xml.Polygon) e)
                                                                     .getLayer().equalsIgnoreCase(
                                                                             bCreamLayer)) {
-                                                        logger.info("Warning: " + file
+                                                        Logger.info("Warning: " + file
                                                                 + " contains a Polygon pad - this functionality has been implmented as the smallest bounded rectangle and may over paste the area");
-                                                        logger.info(
+                                                        Logger.info(
                                                                 "Layer" + ((org.openpnp.model.eagle.xml.Polygon) e)
                                                                         .getLayer().toString());
                                                         Double vertex_x_min = 0.0;
@@ -587,7 +584,7 @@ public class EagleBoardImporter implements BoardImporter {
                                                             vertex_y_max = Math.max(vertex_y_max,
                                                                     Double.parseDouble(
                                                                             vertex.getY()));
-                                                            logger.info("Vertex: X=" + vertex.getX()
+                                                            Logger.info("Vertex: X=" + vertex.getX()
                                                                     + " y=" + vertex.getY());
                                                         }
                                                         // TODO implement polygon pad in Pad.java
@@ -606,7 +603,7 @@ public class EagleBoardImporter implements BoardImporter {
                                                                         y + (vertex_y_max
                                                                                 + vertex_y_min) / 2,
                                                                         0, 0));
-                                                        logger.info("Pad generated width is "
+                                                        Logger.info("Pad generated width is "
                                                                 + pad.getWidth() + " height "
                                                                 + pad.getHeight()
                                                                 + " centered at x = "

@@ -15,8 +15,6 @@ import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
@@ -43,8 +41,6 @@ public class CvPipeline {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
-
-    private final static Logger logger = LoggerFactory.getLogger(CvPipeline.class);
 
     @ElementList
     private ArrayList<CvStage> stages = new ArrayList<>();

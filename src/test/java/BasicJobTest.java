@@ -2,8 +2,6 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import javax.print.attribute.standard.JobState;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -19,22 +17,16 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class BasicJobTest {
-    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
-
     /**
      * Creates a basic job in memory and attempts to run it. The Driver is monitored to make sure it
      * performs a pre-defined set of expected moves. This test is intended to test the primary
@@ -75,9 +67,11 @@ public class BasicJobTest {
         Head h1 = machine.getHead("H1");
         Nozzle n1 = h1.getNozzle("N1");
         Nozzle n2 = h1.getNozzle("N2");
-        
-        delegate.expectMove("Move N1 Nozzle Change Unload", n1, new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
-        delegate.expectMove("Move N1 Nozzle Change Load", n1, new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
+
+        delegate.expectMove("Move N1 Nozzle Change Unload", n1,
+                new Location(LengthUnit.Millimeters, 40, 0, 0, 0), 1.0);
+        delegate.expectMove("Move N1 Nozzle Change Load", n1,
+                new Location(LengthUnit.Millimeters, 50, 0, 0, 0), 1.0);
 
         delegate.expectMove("Move N1 to F1", n1, new Location(LengthUnit.Millimeters, -10, 0, 0, 0),
                 1.0);

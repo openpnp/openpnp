@@ -15,12 +15,11 @@ import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 public class TestDriver implements ReferenceDriver {
-    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
+
 
     @Attribute(required = false)
     private String dummy;
@@ -40,7 +39,7 @@ public class TestDriver implements ReferenceDriver {
 
     @Override
     public void home(ReferenceHead head) throws Exception {
-        logger.debug("home()");
+        Logger.debug("home()");
         location = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
         delegate.home(head);
     }
@@ -67,7 +66,7 @@ public class TestDriver implements ReferenceDriver {
         if (!this.location.equals(hl)) {
             this.location = hl;
 
-            logger.debug("moveTo({}, {}, {})", hm, this.location, speed);
+            Logger.debug("moveTo({}, {}, {})", hm, this.location, speed);
 
             delegate.moveTo(hm, this.location, speed);
         }
@@ -80,25 +79,25 @@ public class TestDriver implements ReferenceDriver {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("pick({} {})", nozzle, nozzle.getNozzleTip());
+        Logger.debug("pick({} {})", nozzle, nozzle.getNozzleTip());
         delegate.pick(nozzle);
     }
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("place({} {})", nozzle, nozzle.getNozzleTip());
+        Logger.debug("place({} {})", nozzle, nozzle.getNozzleTip());
         delegate.place(nozzle);
     }
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        logger.debug("actuate({}, {})", actuator, on);
+        Logger.debug("actuate({}, {})", actuator, on);
         delegate.actuate(actuator, on);
     }
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        logger.debug("actuate({}, {})", actuator, value);
+        Logger.debug("actuate({}, {})", actuator, value);
         delegate.actuate(actuator, value);
     }
 
@@ -108,7 +107,7 @@ public class TestDriver implements ReferenceDriver {
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        logger.debug("setEnabled({})", enabled);
+        Logger.debug("setEnabled({})", enabled);
         delegate.setEnabled(enabled);
     }
 

@@ -1,16 +1,18 @@
 package org.openpnp.machine.reference.signaler;
 
+import java.io.IOException;
+
+import javax.swing.Action;
+import javax.swing.Icon;
+
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
-import java.io.*;
-
 import org.simpleframework.xml.Attribute;
+
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
-
-import javax.swing.*;
 
 /**
  * The SoundSignaler can acoustically indicate certain states of the machine or a job processor like errors or

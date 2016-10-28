@@ -39,12 +39,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 public class ImageCamera extends ReferenceCamera implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(ImageCamera.class);
-
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     @Attribute(required = false)

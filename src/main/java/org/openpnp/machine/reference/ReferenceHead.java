@@ -31,11 +31,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 public class ReferenceHead extends AbstractHead {
-    protected final static Logger logger = LoggerFactory.getLogger(ReferenceHead.class);
+
 
     protected ReferenceMachine machine;
     protected ReferenceDriver driver;
@@ -52,7 +51,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public void home() throws Exception {
-        logger.debug("{}.home()", getName());
+        Logger.debug("{}.home()", getName());
         driver.home(this);
         machine.fireMachineHeadActivity(this);
     }
@@ -90,7 +89,7 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", getName(), speed);
+        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         super.moveToSafeZ(speed);
     }
 

@@ -25,10 +25,9 @@ import java.io.File;
 import javax.swing.UIManager;
 
 import org.openpnp.gui.MainFrame;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.RollingFileWriter;
 
 /**
@@ -38,8 +37,6 @@ import org.pmw.tinylog.writers.RollingFileWriter;
  *
  */
 public class Main {
-    private static Logger logger;
-
     public static String getVersion() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null) {
@@ -47,7 +44,7 @@ public class Main {
         }
         return version;
     }
-    
+
     private static void configureLogging(File configurationDirectory) {
         File logDirectory = new File(configurationDirectory, "log");
         File logFile = new File(logDirectory, "OpenPnP.log");
@@ -55,8 +52,7 @@ public class Main {
             .currentConfig()
             .addWriter(new RollingFileWriter(logFile.getAbsolutePath(), 100))
             .activate();
-        Configurator
-            .currentConfig()
+        Configurator.currentConfig()
             .formatPattern("{date:yyyy-MM-dd HH:mm:ss} [{thread}] {class} {level}: {message}")
             .activate();
     }
@@ -77,12 +73,10 @@ public class Main {
         if (System.getProperty("configDir") != null) {
             configurationDirectory = new File(System.getProperty("configDir"));
         }
-        
-        configurationDirectory.mkdirs();
-        
-        configureLogging(configurationDirectory);
 
-        logger = LoggerFactory.getLogger(Main.class);
+        configurationDirectory.mkdirs();
+
+        configureLogging(configurationDirectory);
 
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
@@ -91,7 +85,7 @@ public class Main {
                 try {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
-                    logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
+                    Logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
                 }
                 catch (Exception e) {
                     e.printStackTrace();

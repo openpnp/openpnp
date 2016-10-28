@@ -44,8 +44,6 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.openpnp.logging.Logger;
-import org.openpnp.logging.LoggerFactory;
 
 
 /**
@@ -69,7 +67,7 @@ import org.openpnp.logging.LoggerFactory;
  * hole to part lateral is tape width / 2 - 0.5mm
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceStripFeeder.class);
+
 
     public enum TapeType {
         WhitePaper("White Paper"),
