@@ -18,4 +18,4 @@ To test that your steps per mm settings are correct:
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Driver Setup|Setup and Calibration: Top Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Nozzle Setup|Setup and Calibration: Nozzle Setup]] |
+| [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Nozzle Setup|Setup and Calibration: Nozzle Setup]] |
