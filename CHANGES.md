@@ -16,7 +16,7 @@ a complete change list, only those that may directly interest or affect users.
 	* Rotating log files are still created. The naming has changed slightly. The files now rotate
 	after each startup instead of daily.
 	
-* Camera View Reticle Now Track Tool Rotation
+* Camera View Reticle Now Tracks Tool Rotation
 
 	Prior to this change, the camera view reticle / crosshair always tracked the rotation of the
 	camera. Since most cameras don't rotate, this didn't make much sense. The view now tracks the
