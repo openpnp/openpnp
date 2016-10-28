@@ -82,4 +82,4 @@ The Position Tool and Position Camera buttons can be used to switch back and for
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Top Camera Setup|Setup and Calibration: Top Camera Setup]] | [[Table of Contents|Setup and Calibration]] | [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] |
+| [[Steps Per Mm|Setup and Calibration: Steps Per Mm]] | [[Table of Contents|Setup and Calibration]] | [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]] |
