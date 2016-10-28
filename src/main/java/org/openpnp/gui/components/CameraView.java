@@ -510,7 +510,7 @@ public class CameraView extends JComponent implements CameraListener {
             // Only render if there is a valid image.
             g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
 
-            double c = camera.getLocation().getRotation();
+            double c = MainFrame.get().getMachineControls().getSelectedTool().getLocation().getRotation();
 
             for (Reticle reticle : reticles.values()) {
                 reticle.draw(g2d, camera.getUnitsPerPixel().getUnits(), scaledUnitsPerPixelX,
