@@ -14,8 +14,6 @@ Mac OS X: /Users/your_username/.openpnp
 
 Configuration files are `machine.xml`, `parts.xml` and `packages.xml` along with other plugin specific files.
 
-Log configuration is in `log4j.properties`.
-
 Log files are under the `log` subdirectory and the current file is always called `OpenPnP.log`.
 
 ## How do I reset my configuration?
@@ -23,7 +21,7 @@ Log files are under the `log` subdirectory and the current file is always called
 Sometimes it's easiest just to completely reset your configuration and start over. To do that, just delete the whole OpenPnP configuration directory. See [Where are configuration and log files located?](#where-are-configuration-and-log-files-located) for it's location.
 
 
-## How do I use other config directory
+## How do I use a different config directory
 
 It's possible to use command line argument for selecting the config directory, example below:
 
@@ -33,15 +31,11 @@ java -DconfigDir=src/main/resources/config -jar target/openpnp-gui-0.0.1-alpha-S
 
 ## How do I turn on debug logging?
 
-First, make sure OpenPnP is not running.
+1. Select the Log tab from the main window.
+2. Locate the Log Level dropdown.
+3. Click the dropdown and select Debug or Trace, depending on how much output you want.
 
-Next, find your log configuration file. See [Where are configuration and log files located?](#where-are-configuration-and-log-files-located) to do that.
-
-Edit the file in any basic text editor and follow the instructions within.
-
-For instance, if you wanted to turn on driver trace logging, you would find the line that says `### change to debug to log low-level driver activity` and change the `info` string to `trace`. You can also use `debug` here. Trace shows more information than debug.
-
-Save the file and start OpenPnP.
+Note: Debug is good for general debugging. Trace is good for when you want very low level information such as Gcode commands being sent to the controller.
 
 ## How do I troubleshoot GcodeDriver?
 
