@@ -56,8 +56,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class ReferenceMachine extends AbstractMachine {
     private static Logger logger = LoggerFactory.getLogger(ReferenceMachine.class);

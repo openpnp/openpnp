@@ -16,8 +16,8 @@ import org.openpnp.model.BoardPad;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 /**
  * A simple RS-274X parser. Not intended to be a general parser, but implements only OpenPnP

@@ -32,8 +32,8 @@ import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 /**
  * Guides the user through the two point board location operation using step by step instructions.

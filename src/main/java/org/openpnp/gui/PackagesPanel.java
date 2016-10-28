@@ -69,8 +69,8 @@ import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.simpleframework.xml.Serializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class PackagesPanel extends JPanel {

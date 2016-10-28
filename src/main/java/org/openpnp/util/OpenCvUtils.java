@@ -19,8 +19,8 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class OpenCvUtils {
     private final static Logger logger = LoggerFactory.getLogger(OpenCvUtils.class);

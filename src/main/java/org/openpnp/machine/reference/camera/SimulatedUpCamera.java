@@ -35,8 +35,8 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
@@ -246,7 +246,6 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                     Random r = new Random();
                     offsets = new Location(LengthUnit.Millimeters, Math.random() * 2 - 1,
                             Math.random() * 2 - 1, 0, Math.random() * 30 - 15);
-                    System.out.println("Set offsets to " + offsets);
                 }
             }
         }

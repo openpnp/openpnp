@@ -31,8 +31,8 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class ReferenceHead extends AbstractHead {
     protected final static Logger logger = LoggerFactory.getLogger(ReferenceHead.class);

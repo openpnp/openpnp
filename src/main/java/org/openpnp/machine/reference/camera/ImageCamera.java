@@ -39,8 +39,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class ImageCamera extends ReferenceCamera implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(ImageCamera.class);

@@ -67,8 +67,8 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class CamerasPanel extends JPanel implements WizardContainer {

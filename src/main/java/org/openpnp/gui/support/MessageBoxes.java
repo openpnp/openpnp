@@ -26,8 +26,8 @@ import java.io.StringWriter;
 import javax.swing.JOptionPane;
 
 import org.openpnp.gui.MainFrame;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class MessageBoxes {
     private static final Logger logger = LoggerFactory.getLogger(MessageBoxes.class);

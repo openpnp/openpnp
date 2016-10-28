@@ -40,8 +40,8 @@ import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.model.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public abstract class AbstractConfigurationWizard extends JPanel implements Wizard {
     protected final Logger logger = LoggerFactory.getLogger(getClass());

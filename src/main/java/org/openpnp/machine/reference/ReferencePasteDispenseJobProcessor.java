@@ -49,8 +49,8 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 @Root
 public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {

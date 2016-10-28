@@ -32,8 +32,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class ReferenceBottomVision implements PartAlignment {
     private static final Logger logger = LoggerFactory.getLogger(ReferenceBottomVision.class);

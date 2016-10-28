@@ -17,8 +17,8 @@ import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConf
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;

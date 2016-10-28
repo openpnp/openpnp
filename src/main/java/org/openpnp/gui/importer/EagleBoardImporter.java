@@ -64,8 +64,8 @@ import org.openpnp.model.eagle.xml.Library;
 import org.openpnp.model.eagle.xml.Param;
 import org.openpnp.model.eagle.xml.Vertex;
 import org.openpnp.util.Utils2D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;

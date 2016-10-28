@@ -24,11 +24,12 @@ import java.io.File;
 
 import javax.swing.UIManager;
 
-import org.apache.commons.io.FileUtils;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 import org.openpnp.model.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.writers.RollingFileWriter;
 
 /**
  * Start with -Xdock:name=OpenPnP on Mac to make it prettier.
@@ -45,6 +46,19 @@ public class Main {
             version = "INTERNAL BUILD";
         }
         return version;
+    }
+    
+    private static void configureLogging(File configurationDirectory) {
+        File logDirectory = new File(configurationDirectory, "log");
+        File logFile = new File(logDirectory, "OpenPnP.log");
+        Configurator
+            .currentConfig()
+            .addWriter(new RollingFileWriter(logFile.getAbsolutePath(), 100))
+            .activate();
+        Configurator
+            .currentConfig()
+            .formatPattern("{date:yyyy-MM-dd HH:mm:ss} [{thread}] {class} {level}: {message}")
+            .activate();
     }
 
     public static void main(String[] args) {
@@ -63,30 +77,12 @@ public class Main {
         if (System.getProperty("configDir") != null) {
             configurationDirectory = new File(System.getProperty("configDir"));
         }
+        
+        configurationDirectory.mkdirs();
+        
+        configureLogging(configurationDirectory);
 
-        // If the log4j.properties is not in the configuration directory, copy
-        // the default over.
-        File log4jConfigurationFile = new File(configurationDirectory, "log4j.properties");
-        if (!log4jConfigurationFile.exists()) {
-            try {
-                FileUtils.copyURLToFile(ClassLoader.getSystemResource("log4j.properties"),
-                        log4jConfigurationFile);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Use the local configuration if it exists.
-        if (log4jConfigurationFile.exists()) {
-            System.setProperty("log4j.configuration", log4jConfigurationFile.toURI().toString());
-        }
-
-        // We don't create a logger until log4j has been configured or it tries
-        // to configure itself.
         logger = LoggerFactory.getLogger(Main.class);
-
-        logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
 
         Configuration.initialize(configurationDirectory);
         final Configuration configuration = Configuration.get();
@@ -95,6 +91,7 @@ public class Main {
                 try {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
+                    logger.debug(String.format("OpenPnP %s Started.", Main.getVersion()));
                 }
                 catch (Exception e) {
                     e.printStackTrace();

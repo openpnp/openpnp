@@ -20,8 +20,8 @@ import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     private final static Logger logger = LoggerFactory.getLogger(ReferenceNozzle.class);

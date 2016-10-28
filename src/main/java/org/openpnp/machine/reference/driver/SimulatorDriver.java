@@ -42,8 +42,8 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class SimulatorDriver implements ReferenceDriver {
     private final static Logger logger = LoggerFactory.getLogger(SimulatorDriver.class);

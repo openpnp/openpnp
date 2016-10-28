@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.openpnp.model.AbstractModelObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 public class FiniteStateMachine<State, Message> extends AbstractModelObject {
     private static final Logger logger = LoggerFactory.getLogger(FiniteStateMachine.class);

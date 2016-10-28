@@ -44,8 +44,8 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.logging.Logger;
+import org.openpnp.logging.LoggerFactory;
 
 
 /**
