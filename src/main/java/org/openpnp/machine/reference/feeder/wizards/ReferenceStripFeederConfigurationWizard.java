@@ -427,8 +427,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
                     List<Location> referenceHoles =
                             deriveReferenceHoles(part1HoleLocations, part2HoleLocations);
-                    final Location referenceHole1 = referenceHoles.get(0);
-                    final Location referenceHole2 = referenceHoles.get(1);
+                    final Location referenceHole1 = referenceHoles.get(0).derive(null, null, null, 0d);
+                    final Location referenceHole2 = referenceHoles.get(1).derive(null, null, null, 0d);
 
                     feeder.setReferenceHoleLocation(referenceHole1);
                     feeder.setLastHoleLocation(referenceHole2);
@@ -440,9 +440,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             Helpers.copyLocationIntoTextFields(referenceHole1, textFieldFeedStartX,
-                                    textFieldFeedStartY, textFieldFeedStartZ);
+                                    textFieldFeedStartY, null);
                             Helpers.copyLocationIntoTextFields(referenceHole2, textFieldFeedEndX,
-                                    textFieldFeedEndY, textFieldFeedEndZ);
+                                    textFieldFeedEndY, null);
                             textFieldPartPitch.setText(partPitch_.getValue() + "");
                         }
                     });
