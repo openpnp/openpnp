@@ -77,11 +77,4 @@ The default pipeline is described below:
 
 ## How do I see debug images?
 
-See [this FAQ](https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging) for how to enable debug logging in general. For bottom vision, add:
-
-```
-log4j.logger.org.openpnp.vision=debug
-log4j.logger.org.openpnp.machine.reference.vision=debug
-```
-
-Once these lines are added and OpenPnP is restarted, each attempt at bottom vision will produce a pair of images in your `.openpnp/org.openpnp.vision.pipeline.stages.ImageWriteDebug` directory.
+Enable DEBUG or TRACE level logging. See [this FAQ](https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging) for more information. Bottom vision will now produce a pair of debug images in your `.openpnp/org.openpnp.vision.pipeline.stages.ImageWriteDebug` directory.
