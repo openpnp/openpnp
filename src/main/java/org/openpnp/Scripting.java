@@ -224,7 +224,7 @@ public class Scripting {
         engine.put("scripting", this);
 
         try (FileReader reader = new FileReader(script)) {
-            engine.eval(new FileReader(script));
+            engine.eval(reader);
         }
     }
     
