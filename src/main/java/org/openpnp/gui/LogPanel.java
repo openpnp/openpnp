@@ -65,10 +65,23 @@ public class LogPanel extends JPanel {
 
         writer = new JTextLogWriter(text);
         writer.setLineLimit(prefs.getInt(PREF_LOG_LINE_LIMIT, PREF_LOG_LINE_LIMIT_DEF));
+        
+        // This weird check is here because I mistakenly reused the same config key when
+        // switching from slf to tinylog. This meant that some users had an int based
+        // value in the key rather than the string. This caused initialization failures.
+        Level level = null;
+        try {
+            level = Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF));
+        }
+        catch (Exception e) {
+        }
+        if (level == null ) {
+            level = Level.INFO;
+        }
 
         Configurator
             .currentConfig()
-            .level(Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF)))
+            .level(level)
             .activate();
         Configurator
             .currentConfig()
