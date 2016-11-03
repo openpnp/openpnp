@@ -676,8 +676,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             plannedPlacement.stepComplete = true;
 
+            placement.setType(Placement.Type.Placed);
             Logger.debug("Place {} with {}", part, nozzle.getName());
-        }
+            
 
         clearStepComplete();
     }
