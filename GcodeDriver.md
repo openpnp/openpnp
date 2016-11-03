@@ -5,7 +5,7 @@ GcodeDriver introduces a new concept to OpenPnP drivers: Sub-Drivers. Sub-Driver
 Work on this feature is being done in #106: https://github.com/openpnp/openpnp/issues/106
 
 # Examples
-Please see [[GcodeDriver Example Configurations]] for some community contributed example configurations. If you find one that matches your controller you can use it as a starting point for your own system.
+Please see [[GcodeDriver: Example Configurations]] for some community contributed example configurations. If you find one that matches your controller you can use it as a starting point for your own system.
 
 # Configuration
 ## Variable Substitution
