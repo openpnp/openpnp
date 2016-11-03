@@ -1,6 +1,10 @@
 Example configurations for the GcodeDriver with various controllers. If you have a known working config, please post it here so that others can use it as a starting point for their machine.
 
 ### Sub-Driver Example
+In the video below there are two GcodeDrivers running. One is controlling the Smoothieboard running the machine and one is controlling an Arduino running a simple sketch. The video shows several feeders which use actuators to send commands to a second controller. This is intended to demonstrate how you can easily integrate additional hardware such as feeders.
+
+Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/watch?v=0ntYOy0s_8Y
+
 <details>
   <summary>machine.xml</summary>
   <p>
