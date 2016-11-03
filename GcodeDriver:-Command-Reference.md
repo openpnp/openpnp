@@ -1,3 +1,7 @@
+This is a list of Gcode configuration options available for the GcodeDriver. Each of these options can be specified in the `machine.xml` or in the configuration panel. When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
+
+Commands can contain multiple lines to send to the controller. Each line is sent as a command and the driver waits for the COMMAND_CONFIRM_REGEX to match before sending the next one.
+
 ### CONNECT_COMMAND
 
 Sent after the driver finishes connecting to the serial port. Can be used to send any initialization parameters the controller needs.
