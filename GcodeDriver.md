@@ -8,19 +8,22 @@ Work on this feature is being done in #106: https://github.com/openpnp/openpnp/i
 Please see [[GcodeDriver: Example Configurations]] for some community contributed example configurations. If you find one that matches your controller you can use it as a starting point for your own system.
 
 # Configuration
+
+To configure the GcodeDriver it is necessary to at least set a COMMAND_CONFIRM_REGEX and one or more commands. The COMMAND_CONFIRM_REGEX is a regular expression that the driver will use to match responses from the controller. When the response matches it considers a command to be complete. Defining commands tells the driver what to send to your controller when OpenPnP wants to perform a certain action.
+
 ## Variable Substitution
 
-All of the commands below support variable substitution. Variables are in the form of {VariableName:Format}. The variable names available to each command are listed with the command below. The format is a [Java style format string](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html), similar to printf. If no format is specified the format defaults to `%s`, which simply converts the variable's value to a string.
+All of the commands support variable substitution. Variables are in the form of {VariableName:Format}. The variable names available to each command are listed with the command below. The format is a [Java style format string](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html), similar to printf. If no format is specified the format defaults to `%s`, which simply converts the variable's value to a string.
 
 In the commands below, if a command has variables available they are listed in a table after the command.
 
-## Command List
+## Commands
 
-This is a list of Gcode configuration options available for the GcodeDriver. Each of these options can be specified in the `machine.xml` or in the (TODO: configuration panel). When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
+This is a list of Gcode configuration options available for the GcodeDriver. Each of these options can be specified in the `machine.xml` or in the configuration panel. When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
 
-Commands may contain newline characters. Each line is sent to the controller in turn, waiting for a response before sending the next.
+Commands can contain multiple lines to send to the controller. Each line is sent as a command and the driver waits for the COMMAND_CONFIRM_REGEX to match before sending the next one.
 
-### connect-command
+### CONNECT_COMMAND
 
 Sent after the driver finishes connecting to the serial port. Can be used to send any initialization parameters the controller needs.
 
@@ -31,7 +34,7 @@ G90 ; Set absolute positioning mode
 M82 ; Set absolute mode for extruder
 ```
 
-### enable-command
+### ENABLE_COMMAND
 
 Sent when the machine is enabled, primarily when the big START button is pressed. Can be used to turn on motors and lighting, start pumps, reset solenoids, etc.
 
@@ -40,7 +43,7 @@ Example:
 M810 ; Turn on LED lighting
 ```
 
-### disable-command
+### DISABLE_COMMAND
 
 Sent when the machine is disabled, primarily when the big STOP button is pressed or before shutting down. Should turn off everything.
 
@@ -50,7 +53,7 @@ M84 ; Disable steppers
 M811 ; Turn off LED lighting
 ```
 
-### home-command
+### HOME_COMMAND
 
 Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
 
@@ -67,7 +70,7 @@ G28 X0 Y0 ; Home X and Y
 G92 X0 Y0 Z0 E0 ; Reset machine coordinates to zero.
 ```
 
-### move-to-command
+### MOVE_TO_COMMAND
 
 This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis. The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
 
@@ -91,7 +94,7 @@ If you need to move in mils or microns see this post on the form:
 
 https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/XV44ij3ZKZ0/eUfbsqRdFQAJ
 
-### pick-command
+### PICK_COMMAND
 
 Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
 
@@ -106,7 +109,7 @@ M808 ; Turn on pump
 M800 ; Turn on nozzle 1 vacuum solenoid
 ```
 
-### place-command
+### PLACE_COMMAND
 
 Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
 
@@ -124,15 +127,15 @@ G4P250 ; Wait 250 milliseconds
 M803 ; Turn off nozzle 1 exhaust solenoid
 ```
 
-### pump-on-command
+### PUMP_ON_COMMAND
 
 Sent to turn on the vacuum pump before performing a pick.
 
-### pump-off-command
+### PUMP_OFF_COMMAND
 
 Sent to turn off the vacuum pump after a place if there are no longer any nozzles that are picked.
 
-### actuate-boolean-command
+### ACTUATE_BOOLEAN_COMMAND
 
 Sent whenever an Actuator's actuate(boolean) method is called. This is currently used by the ReferenceDragFeeder to fire a drag solenoid. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
 
@@ -152,7 +155,7 @@ Example:
 M800 P{True:1}{False:0} ; Send "M800 P1" if the actuator is turned on, or "M800 P0" if the actuator is turned off.
 ```
 
-### actuate-double-command
+### ACTUATE_DOUBLE_COMMAND
 
 Sent whenever an Actuator's actuate(double) method is called. This is currently used by the ReferenceAutoFeeder to trigger a feed operation. Actuators are generally an area where people customize their machines, so this is here to support customizations such as automated feeders.
 
@@ -166,11 +169,11 @@ Sent whenever an Actuator's actuate(double) method is called. This is currently 
 
 ## Regular Expressions (Receiving Responses)
 
-### command-confirm-regex
+### COMMAND_CONFIRM_REGEX
 
 The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
 
-### move-to-complete-regex
+### MOVE_TO_COMPLETE_REGEX
 
 If specified, the driver will check for this regex in the responses after a move-to-command is sent and will not return until the regex is matched. This can be used to support motion controllers that return the command confirmation before movement is complete.
 
@@ -180,7 +183,7 @@ Example: `<move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>`
 
 ### units
 
-The units of measure that is used by the controller. Millimeters is most common, although Inches is supported as well. This is primarily used internally to convert location data before sending moveTo commands.
+The units of measure that is used by the controller. Millimeters is most common, although Meters, Centimeters, Microns, Feet, Inches, and Mils are supported as well. This is used internally to convert location data before sending moveTo commands.
 
 ### max-feed-rate
 
@@ -208,11 +211,13 @@ Here is an example sub-drivers section of the main driver configuration:
 
 ```
 <sub-drivers class="java.util.ArrayList">
-   <reference-driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="/dev/tty.usbmodem1A12421" baud="9600" units="Millimeters" max-feed-rate="50000" connect-wait-time-milliseconds="750">
-      <home-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-      <command-confirm-regex>^ok.*</command-confirm-regex>
-      <actuate-double-command>{Index}</actuate-double-command>
-      <sub-drivers class="java.util.ArrayList"/>
+   <reference-driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="/dev/tty.usbmodem1A12421" baud="9600" flow-control="Off" data-bits="Eight" stop-bits="One" parity="None" set-dtr="false" set-rts="false" units="Millimeters" max-feed-rate="50000" timeout-milliseconds="5000" connect-wait-time-milliseconds="750">
+      <command type="COMMAND_CONFIRM_REGEX">
+         <text><![CDATA[^ok.*]]></text>
+      </command>
+      <command type="ACTUATE_DOUBLE_COMMAND">
+         <text><![CDATA[{Index}]]></text>
+      </command>
    </reference-driver>
 </sub-drivers>
 ```
@@ -336,7 +341,7 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
 ```
 
 ### Axis Transforms
-* NegatingTransform: For machines with dual nozzles controlled by a single Z motor in a seesaw configuration. This works for rank and pinion drives and belt drives. It does not work for cam based drives. See the examples above for usage.
+* NegatingTransform: For machines with dual nozzles controlled by a single Z motor in a seesaw configuration. This works for rack and pinion drives and belt drives. It does not work for cam based drives. See the examples above for usage.
 * CamTransform: Not yet finished, but will allow use of dual nozzles controlled by a single Z motor in a cam configuration.
 
 # Troubleshooting
