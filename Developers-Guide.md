@@ -120,7 +120,7 @@ OpenPnP is made up of 5 core components: Configuration, Service Provider Interfa
 
 ### Configuration
 
-Configuration of OpenPnP is managed with the [Configuration class](http://openpnp.org/doc/javadoc/org/openpnp/model/Configuration.html). The Configuration class is used to query and store to two configuration stores.
+Configuration of OpenPnP is managed with the [Configuration class](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Configuration.html). The Configuration class is used to query and store to two configuration stores.
 
 The primary one is a set of XML configuration files stored under the user's home directory in a subdirectory called `.openpnp`. These XML files are read and written using the [Simple XML](http://simple.sourceforge.net/) framework and are generally pretty transparent to developers. Reviewing the sample configuration files that come with OpenPnP is a good place to start when thinking about adding functionality.
 
@@ -143,7 +143,7 @@ Basically, in Java, property names are in lower camel case by convention ( http:
 
 ### Service Provider Interface
 
-The [Service Provider Interface (SPI)](http://openpnp.org/doc/javadoc/org/openpnp/spi/package-frame.html) is a set of Java interfaces that specify OpenPnP's interface to the real world. Examples of things in the SPI are things like Machine definitions, Camera drivers, Vision Providers, Nozzles, Actuators, etc.
+The [Service Provider Interface (SPI)](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/package-frame.html) is a set of Java interfaces that specify OpenPnP's interface to the real world. Examples of things in the SPI are things like Machine definitions, Camera drivers, Vision Providers, Nozzles, Actuators, etc.
 
 In general, unless you are adding a new type of hardware to OpenPnP you don't need to implement the SPI but in developing features for OpenPnP you will be interacting deeply with objects that themselves implement the SPI.
 
@@ -151,7 +151,7 @@ The Reference Implementation, discussed later, is the core implementation of the
 
 ### Model
 
-Like most MVC based systems, [The Model](http://openpnp.org/doc/javadoc/org/openpnp/model/package-frame.html) makes up the domain for data storage in OpenPnP.
+Like most MVC based systems, [The Model](http://openpnp.github.io/openpnp/develop/org/openpnp/model/package-frame.html) makes up the domain for data storage in OpenPnP.
 
 The model includes all of the classes that users use to store their data such as Jobs, Boards, Parts, Packages, etc. but the SPI also provides models for storing configuration information.
 
@@ -159,7 +159,7 @@ The root of the model in OpenPnP is the Configuration object and it is responsib
 
 ### User Interface
 
-The user interface is the heart of OpenPnP. It starts with `MainFrame` in [the gui package](http://openpnp.org/doc/javadoc/org/openpnp/gui/package-frame.html) and branches out from there.
+The user interface is the heart of OpenPnP. It starts with `MainFrame` in [the gui package](http://openpnp.github.io/openpnp/develop/org/openpnp/gui/package-frame.html) and branches out from there.
 
 The user interface is primarily a single window application with 3 main content areas. These are Machine Controls, Cameras, and Jobs and Configuration.
 
@@ -171,13 +171,13 @@ The reference implementation is the default implementation of the SPI. It has tw
 
 Whenever possible, the reference implementation is written to be compatible with a wide class of machines and hardware.
 
-The core of the reference implementation is the [ReferenceMachine class](http://openpnp.org/doc/javadoc/org/openpnp/machine/reference/ReferenceMachine.html). Serialization of this class and all it's children becomes the `machine.xml` configuration file. If you want to add hardware to the system you will want to become intimately familiar with this class and the classes it references.
+The core of the reference implementation is the [ReferenceMachine class](http://openpnp.github.io/openpnp/develop/org/openpnp/machine/reference/ReferenceMachine.html). Serialization of this class and all it's children becomes the `machine.xml` configuration file. If you want to add hardware to the system you will want to become intimately familiar with this class and the classes it references.
 
 ## Component Specifics
 
 ### Vision
 
-Vision tasks in OpenPnP are specified by the [VisionProvider SPI class](http://openpnp.org/doc/javadoc/org/openpnp/spi/VisionProvider.html). This area is still in it's infancy and suggestions on it's architecture are welcome.
+Vision tasks in OpenPnP are specified by the [VisionProvider SPI class](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/VisionProvider.html). This area is still in it's infancy and suggestions on it's architecture are welcome.
 
 Currently, the concept is that VisionProviders provide data about images they receive from a camera. A VisionProvider has a reference to a Camera and can use it to capture images as needed. When other parts of the system have a need for a vision task, they query the involved Camera for it's VisionProvider and then ask the VisionProvider to provide vision services.
 
@@ -194,7 +194,7 @@ The Wizard and WizardConfigurable interfaces are provided so that SPI providers 
 
 ### Job Processing
 
-The [Job Processor](http://openpnp.org/doc/javadoc/org/openpnp/JobProcessor.html) is the part of OpenPnP that actually does all the work of picking and placing. When the user starts a Job, the Job Processor takes over and controls the machine until the job is complete.
+The [Job Processor](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/JobProcessor.html) is the part of OpenPnP that actually does all the work of picking and placing. When the user starts a Job, the Job Processor takes over and controls the machine until the job is complete.
 
 Job Processor is a bit of a black box from a programming point of view. To learn more about how it works it's best to examine the source code.
 
