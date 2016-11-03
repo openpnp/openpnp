@@ -678,7 +678,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             placement.setType(Placement.Type.Placed);
             Logger.debug("Place {} with {}", part, nozzle.getName());
-            
+            }
 
         clearStepComplete();
     }
