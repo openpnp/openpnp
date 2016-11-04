@@ -148,7 +148,7 @@ Back at the command line now, we should see that our commit was created!
 
 Now that we've committed our change we need to tell Github about it. When you commit a change it goes into the clone of your repo on your computer. Your repo on Github doesn't know about it yet, so you have to push the change.
 
-![screen shot 2016-11-04 at 12 58 14 am](https://cloud.githubusercontent.com/assets/1182323/19995951/d3de7510-a229-11e6-90d8-12f2e1668151.png)
+![screen shot 2016-11-04 at 12 24 01 pm](https://cloud.githubusercontent.com/assets/1182323/20015475/a0a3a91c-a289-11e6-9278-1346249d12cb.png)
 
 Now that the push is complete, the repo on your computer and the repo on Github should be the same. Let's check, to be sure. Go back to your repo on Github and refresh the page.
 
@@ -176,8 +176,9 @@ Next we see the button to actually create the Pull Request and a summary of what
 
 ![screen shot 2016-11-04 at 1 12 59 am](https://cloud.githubusercontent.com/assets/1182323/19996191/d9ecaa42-a22b-11e6-9892-d0f928377f9f.png)
 
-
 Finally, at the bottom we'll see the exact changes that we made. On the left is how the file looked before we made our change and on the right is how it looked after. 
+
+![screen shot 2016-11-04 at 12 26 02 pm](https://cloud.githubusercontent.com/assets/1182323/20015546/df04dd20-a289-11e6-8350-298314ca5e2f.png)
 
 Take a minute to review your changes line by line. Did you miss anything? Did you include code you didn't mean to? Does anything look different than you expected? If so, go back to your file and make a new commit.
 
@@ -212,7 +213,7 @@ Here's what we accomplished:
 
 # Additional Reading
 
-[Pro Git, written by Scott Chacon and Ben Straub](https://git-scm.com/book/en/v2) is the best way to learn more about Git. It covers everything we've learned here and expand on each thing so that you can really understand what is happening.
+[Pro Git, written by Scott Chacon and Ben Straub](https://git-scm.com/book/en/v2) is the best way to learn more about Git. It covers everything we've learned here and expands on each thing so that you can really understand what is happening.
 
 [Github Bootcamp](https://help.github.com/categories/bootcamp/) is a great way to learn more about Github.
 
