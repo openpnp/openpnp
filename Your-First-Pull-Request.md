@@ -154,7 +154,28 @@ Now that the push is complete, the repo on your computer and the repo on Github 
 
 ![screen shot 2016-11-04 at 1 02 58 am](https://cloud.githubusercontent.com/assets/1182323/19996017/755b5dea-a22a-11e6-84e1-3a220aa9f666.png)
 
-Notice that the blue section that shows the last commit has changed to show the commit we just made. This means our change was pushed from our local repo to our Github repo.
+Notice that the blue section that shows the last commit has changed to show the commit we just made. This means our change was pushed from our local repo to our Github repo. Github even shows a little Pull Request button above it, which means we must be getting close to making a...
+
+# Pull Request
+
+Finally. It's time to submit the pull request. We're going to let the OpenPnP maintainers know that we've made a change we'd like to release, what the changes are and why we made them. Let's jump in...
+
+Go ahead and click that Pull Request button.
+
+![screen shot 2016-11-04 at 1 08 07 am](https://cloud.githubusercontent.com/assets/1182323/19996104/2e1c970e-a22b-11e6-9578-112ef11d6210.png)
+
+Tip: You can also start a Pull Request by going to the Pull Requests tab and clicking the button there.
+
+Github will take you to the Pull Request creation page. There's a lot of info here so we're going to go through it section by section.
+
+First, we'll see the Comparing Changes section. This shows our repo and the repo we're submitting the Pull Request to. It also mentions the branches. Branches are a big topic, so for now let's just make sure both are on the `develop` branch.
+
+![screen shot 2016-11-04 at 1 10 24 am](https://cloud.githubusercontent.com/assets/1182323/19996152/7dd1f604-a22b-11e6-80fa-f07df990358e.png)
+
+Next we see the button to actually create the Pull Request and a summary of what will be included. We see that there is one commit and the message we added to the commit is shown.
+
+![screen shot 2016-11-04 at 1 12 59 am](https://cloud.githubusercontent.com/assets/1182323/19996191/d9ecaa42-a22b-11e6-9892-d0f928377f9f.png)
+
 
 
 
