@@ -6,7 +6,7 @@ Before starting to develop for OpenPnP you should review the [User Manual](User 
 
 # Contributing
 
-OpenPnP uses a Fork and Pull style of development. If you would like to submit changes you should fork the project, make your changes and submit a pull request. More information about that process is available at https://help.github.com/articles/using-pull-requests.
+OpenPnP uses a Fork and Pull style of development. If you would like to submit changes you should fork the project, make your changes and submit a pull request. More information about that process is available at https://help.github.com/articles/using-pull-requests. See also the specific instruction for OpenPnP at https://github.com/openpnp/openpnp/wiki/Your-First-Pull-Request.
 
 ## Licensing and Copyright
 
