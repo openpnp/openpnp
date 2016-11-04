@@ -74,7 +74,7 @@ Before we get down to making changes, let's take a little break and read the [Op
 
 If you are a Java programmer you probably have your own preferred set of tools. The Developers Guide shows you how to use Eclipse and Maven to work with OpenPnP, but you can use whatever suits you. It won't matter for this tutorial.
 
-For this tutorial, I'm going to make my changes in Eclipse but everything you need to know about Git will still be done at the command line.
+For this tutorial, I'm going to make my changes in [Sublime Text](https://www.sublimetext.com/) but everything you need to know about Git will still be done at the command line.
 
 With that out of the way, it's time to...
 
