@@ -177,8 +177,27 @@ Next we see the button to actually create the Pull Request and a summary of what
 ![screen shot 2016-11-04 at 1 12 59 am](https://cloud.githubusercontent.com/assets/1182323/19996191/d9ecaa42-a22b-11e6-9892-d0f928377f9f.png)
 
 
+Finally, at the bottom we'll see the exact changes that we made. On the left is how the file looked before we made our change and on the right is how it looked after. 
 
+Take a minute to review your changes line by line. Did you miss anything? Did you include code you didn't mean to? Does anything look different than you expected? If so, go back to your file and make a new commit.
 
+If everything looks good go a head and click the Create Pull Request button. The screen will change to a full summary of the Pull Request and you'll have a place you can type comments in to the people who will receive the Pull Request.
+
+![screen shot 2016-11-04 at 1 24 11 am](https://cloud.githubusercontent.com/assets/1182323/19996431/6d59cdb8-a22d-11e6-9671-979919847458.png)
+
+The comments field will have your commit message pre-filled in for you. If you've done a good job with your commit message this is usually good enough but you can also use this area to fill anything else you want the maintainers to know about your change.
+
+Once you are happy with your Pull Request, click the Create Pull Request button and it's done! You've submitted your first pull request!
+
+![screen shot 2016-11-04 at 1 27 03 am](https://cloud.githubusercontent.com/assets/1182323/19996484/e023f382-a22d-11e6-9c26-ec355e0b1c16.png)
+
+You will now be on the Pull Request page, but something important has changed. Notice the repo at the top is now `openpnp/openpnp`. You are now looking at the Pull Request that you submitted in the main OpenPnP repo. The maintainers have been notified that a new Pull Request was issued and they will begin the review process.
+
+During the review, the maintainers will be looking for things like errors in the code, code quality, code style, and usefulness of the change. If they find any problems or have any questions they will make comments on the Pull Request for you to review. Github will notify you when you have new comments.
+
+If the maintainers ask you to make changes before accepting the Pull Request, the process is exactly the same as what we've done so far except you don't have to submit a new pull request after pushing your changes. It will update automatically.
+
+Once the maintainers are happy with the Pull Request they will click the Merge button that only they can see and the change will be merged! Github will kick off the process to build new installers and within about 10 minutes the change you made will be available for download to everyone in the world. You will have made your mark on [OpenPnP's history](https://github.com/openpnp/openpnp/commits/develop)!
 
 # Recap
 
