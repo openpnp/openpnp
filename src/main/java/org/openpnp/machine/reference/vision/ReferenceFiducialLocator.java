@@ -126,13 +126,13 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Footprint footprint = pkg.getFootprint();
         if (footprint == null) {
             throw new Exception(String.format(
-                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
 
         if (footprint.getShape() == null) {
             throw new Exception(String.format(
-                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
 
@@ -198,13 +198,13 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Footprint footprint = pkg.getFootprint();
         if (footprint == null) {
             throw new Exception(String.format(
-                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
 
         if (footprint.getShape() == null) {
             throw new Exception(String.format(
-                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
 
@@ -273,7 +273,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         if (shape == null) {
             throw new Exception(
-                    "Invalid footprint found, unable to create template for fiducial match.");
+                    "Invalid footprint found, unable to create template for fiducial match. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
         }
 
         // Determine the scaling factor to go from Outline units to
@@ -294,6 +294,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         shape = tx.createTransformedShape(shape);
 
         Rectangle2D bounds = shape.getBounds2D();
+        
+        if (bounds.getWidth() == 0 || bounds.getHeight() == 0) {
+            throw new Exception("Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+        }
 
         // Make the image 50% bigger than the shape. This gives better
         // recognition performance because it allows some border around the edges.
