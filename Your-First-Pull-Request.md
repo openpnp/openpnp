@@ -82,6 +82,97 @@ With that out of the way, it's time to...
 
 This is the fun part. This is the reason we're here! It's time to make OpenPnP better.
 
+We're going to make a small change in the OpenPnP code and ask the maintainers to accept it. Let's say that you want a more friendly welcome message when OpenPnP starts. This is definitely something we can improve.
+
+## Edit a File
+
+Open up the file `src/main/java/org/openpnp/Main.java` in your repo. You can use whatever editor you prefer. Remember, it's in the `openpnp` directory that Git cloned for us.
+
+![screen shot 2016-11-04 at 12 36 52 am](https://cloud.githubusercontent.com/assets/1182323/19995594/cf093488-a226-11e6-8eca-ce4671574e60.png)
+
+With the file open, scroll down to the line of code that outputs the welcome message.
+
+![screen shot 2016-11-04 at 12 37 21 am](https://cloud.githubusercontent.com/assets/1182323/19995602/e035c88e-a226-11e6-8948-44900a3c8100.png)
+
+And let's change it to make it a little more friendly:
+
+![screen shot 2016-11-04 at 12 38 05 am](https://cloud.githubusercontent.com/assets/1182323/19995607/fae2a936-a226-11e6-849a-a026a0ece25a.png)
+
+Now save the file and head back to the command line. You've made your change and now it's time to tell Git about it.
+
+## Commit the Change
+
+Tip: If you haven't already switched your directory to the openpnp directory, do that now:
+
+![screen shot 2016-11-04 at 12 39 59 am](https://cloud.githubusercontent.com/assets/1182323/19995638/3f65d13c-a227-11e6-9470-feb59faf5ff2.png)
+
+First we will check to see what in the repo has changed:
+
+![screen shot 2016-11-04 at 12 40 44 am](https://cloud.githubusercontent.com/assets/1182323/19995651/59edb0ce-a227-11e6-9380-a28aee1e2dc4.png)
+
+We see that our `src/main/java/org/openpnp/Main.java` is modified, as we'd expect. `git status` gives us some tips on what to do next.
+
+We want to add the file we changed to the commit.
+
+Note: A commit is a set of changes with a description message, a date, and a time. The history of a project is made up of it's commits, going back to the very first file that was added.
+
+![screen shot 2016-11-04 at 12 43 12 am](https://cloud.githubusercontent.com/assets/1182323/19995687/b253c942-a227-11e6-9798-049a43ee9f53.png)
+
+Git doesn't bother to tell us that it did anything, but that's okay. We can check for ourselves:
+
+![screen shot 2016-11-04 at 12 44 02 am](https://cloud.githubusercontent.com/assets/1182323/19995713/dfe91cae-a227-11e6-8aa0-880ec24022d1.png)
+
+We run `git status` again and now we see that our file is listed under "Changes to be committed:" and the filename has changed from red to green.
+
+Finally, we commit the change!
+
+![screen shot 2016-11-04 at 12 51 27 am](https://cloud.githubusercontent.com/assets/1182323/19995823/d838e2d6-a228-11e6-9107-3fb9a8a0fb01.png)
+
+After you run `git commit` you will be presented with an editor with an open file and some comments. It should look something like this:
+
+![screen shot 2016-11-04 at 12 52 17 am](https://cloud.githubusercontent.com/assets/1182323/19995838/f66fc7b0-a228-11e6-98d1-75eca85eb6f1.png)
+
+It's okay if it doesn't look exactly the same. It may be in a different editor, depending on how your operating system is configured.
+
+This editor window is where you type your comments about what your change does. This is called the commit message. The commit message will be recorded into the history of the project so that other developers can learn what a given change did or why. It's important to write short but descriptive commit messages. Try to describe what the change does and why.
+
+Go ahead and type your message, then save the file.
+
+![screen shot 2016-11-04 at 12 57 15 am](https://cloud.githubusercontent.com/assets/1182323/19995930/a88b147c-a229-11e6-9252-e7895f1dc24b.png)
+
+Back at the command line now, we should see that our commit was created!
+
+![screen shot 2016-11-04 at 12 58 14 am](https://cloud.githubusercontent.com/assets/1182323/19995951/d3de7510-a229-11e6-90d8-12f2e1668151.png)
+
+# Push To Github
+
+Now that we've committed our change we need to tell Github about it. When you commit a change it goes into the clone of your repo on your computer. Your repo on Github doesn't know about it yet, so you have to push the change.
+
+![screen shot 2016-11-04 at 12 58 14 am](https://cloud.githubusercontent.com/assets/1182323/19995951/d3de7510-a229-11e6-90d8-12f2e1668151.png)
+
+Now that the push is complete, the repo on your computer and the repo on Github should be the same. Let's check, to be sure. Go back to your repo on Github and refresh the page.
+
+![screen shot 2016-11-04 at 1 02 58 am](https://cloud.githubusercontent.com/assets/1182323/19996017/755b5dea-a22a-11e6-84e1-3a220aa9f666.png)
+
+Note that the blue section that shows the last commit has changed to show the commit we just made. This means our change was pushed from our local repo to our Github repo.
+
+
+
+
+# Recap
+
+Here's what we accomplished:
+
+1. We forked the OpenPnP repo.
+2. Cloned our fork of the repo to our computer.
+3. Made a change to the OpenPnP code.
+4. Committed the change to Git.
+5. Pushed the change from our clone back to our repo on Github.
+6. Created a pull request to ask the OpenPnP maintainers to accept the change.
+
+# Additional Reading
+
+[Pro Git, written by Scott Chacon and Ben Straub](https://git-scm.com/book/en/v2) is the best way to learn more about Git. It covers everything we've learned here and expand on each thing so that you can really understand what is happening.
 
 
 
