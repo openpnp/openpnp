@@ -154,7 +154,7 @@ Now that the push is complete, the repo on your computer and the repo on Github 
 
 ![screen shot 2016-11-04 at 1 02 58 am](https://cloud.githubusercontent.com/assets/1182323/19996017/755b5dea-a22a-11e6-84e1-3a220aa9f666.png)
 
-Note that the blue section that shows the last commit has changed to show the commit we just made. This means our change was pushed from our local repo to our Github repo.
+Notice that the blue section that shows the last commit has changed to show the commit we just made. This means our change was pushed from our local repo to our Github repo.
 
 
 
