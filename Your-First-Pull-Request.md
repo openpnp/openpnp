@@ -46,6 +46,44 @@ And when it's done it will redirect you to your own copy of the OpenPnP repo!
 
 Notice that before we forked the repo we were looking at the `openpnp/openpnp` repo and now we're looking at `vonnieda/openpnp`. The first one is the main OpenPnP repo and it's owned by the openpnp organization. The new one is owned by you (or in the screenshot, me) so it shows up under vonnieda. That's my username. Yours will be your username.
 
+# Clone It!
+
+Now that you have your own copy of the OpenPnP repo you can copy it to your computer so you can start making changes. In Git land this is called Cloning. Cloning is similar to Forking, and behind the scenes that's actually what Github does when you Fork a repo but to keep things straight we'll use the terminology that Github uses.
+
+To clone the repo, look for the Clone or Download button on the repo page and click it. You'll see an icon that will let you copy the URL of your repo, and you should click that.
+
+![screen shot 2016-11-04 at 12 16 09 am](https://cloud.githubusercontent.com/assets/1182323/19995290/ea20b7da-a223-11e6-86aa-5971f7d26b9b.png)
+
+Tip: Ignore the blue button that says Download Zip. You want the little clipboard button next to the URL.
+
+Important Tip: Make sure you are looking at YOUR fork of the repo and not the OpenPnP one. Remember, the name up top should be `your_username/openpnp`, not `openpnp/openpnp`. If you've ended up back on the OpenPnP one, just click your avatar in the upper right corner and then click Your Profile. You'll find your fork of the repo listed there.
+
+Okay, now you have the repo URL in your clipboard so it's time to clone! Open up a command prompt on your computer and type `git clone ` and then paste in the URL. Hit enter to get the ball rolling.
+
+You should see something like this:
+
+![screen shot 2016-11-04 at 12 21 55 am](https://cloud.githubusercontent.com/assets/1182323/19995382/b8fea24c-a224-11e6-8e85-443940ab3515.png)
+
+When it finishes, you'll have a clone of your OpenPnP repo on your computer. It will be in a subdirectory called `openpnp`.
+
+Tip: Don't forget where you placed your repo. I like to keep all my repos in a directory called Projects. So on my computer my repo is under `Projects/openpnp`.
+
+# A Brief Interlude
+
+Before we get down to making changes, let's take a little break and read the [OpenPnP Developer's Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide#building-openpnp). You don't have to read the whole thing right now, but you should definitely read the [Building OpenPnP Section](https://github.com/openpnp/openpnp/wiki/Developers-Guide#building-openpnp).
+
+If you are a Java programmer you probably have your own preferred set of tools. The Developers Guide shows you how to use Eclipse and Maven to work with OpenPnP, but you can use whatever suits you. It won't matter for this tutorial.
+
+For this tutorial, I'm going to make my changes in Eclipse but everything you need to know about Git will still be done at the command line.
+
+With that out of the way, it's time to...
+
+# Make Some Changes!
+
+This is the fun part. This is the reason we're here! It's time to make OpenPnP better.
+
+
+
 
 
 
