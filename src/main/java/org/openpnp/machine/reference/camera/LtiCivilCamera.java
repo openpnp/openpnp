@@ -175,6 +175,7 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
         return null;
     }
 
+    //TODO: remove this in favour of base class method after researching reason for crossed out getConfigurationWizard
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {

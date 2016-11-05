@@ -206,13 +206,6 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         return null;
     }
 
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
-    }
-
 
     public List<String> getDeviceIds() throws Exception {
         ArrayList<String> deviceIds = new ArrayList<>();

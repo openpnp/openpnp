@@ -30,10 +30,13 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
@@ -384,6 +387,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public void close() throws IOException {}
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
+    }
 
     public interface CalibrationCallback {
         public void callback(int progressCurrent, int progressMax, boolean complete);

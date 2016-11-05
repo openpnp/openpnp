@@ -200,11 +200,4 @@ public class VfwCamera extends ReferenceCamera implements Runnable {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
-    }
 }

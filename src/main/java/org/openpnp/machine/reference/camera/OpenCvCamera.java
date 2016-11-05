@@ -221,13 +221,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this),"General Configuration"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
-    }
-
-    @Override
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
