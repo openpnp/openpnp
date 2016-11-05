@@ -427,8 +427,9 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return new PropertySheet[] {
+        		new PropertySheetWizardAdapter(new CameraConfigurationWizard(this),"General Configuration"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
     }
 
     @Override

@@ -222,8 +222,8 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
     }
 
     @Override
