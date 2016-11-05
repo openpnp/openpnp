@@ -4,10 +4,12 @@ import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
@@ -86,5 +88,10 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
     }
 }

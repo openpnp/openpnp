@@ -59,12 +59,6 @@ public class ReferenceTubeFeeder extends ReferenceFeeder {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
-
     @Override
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
