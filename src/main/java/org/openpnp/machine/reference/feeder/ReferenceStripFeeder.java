@@ -411,11 +411,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
-    }
-
-    @Override
     public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
