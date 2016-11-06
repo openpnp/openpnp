@@ -158,7 +158,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                             String title = propertySheet.getPropertySheetTitle();
                             JPanel panel = propertySheet.getPropertySheetPanel();
                             if (title == null) {
-                                title = "Untitled";
+                                title = "Configuration";
                             }
                             if (panel != null) {
                                 tabbedPane.add(title, panel);
