@@ -10,7 +10,7 @@ A Pull Request is the Git way of asking the maintainer of a project to accept so
 
 # A Bit About Github
 
-Github is the most popular Git hosting platform in the world. At it's heart it is a way to manage one or more Git repositories but it also adds very useful things like issue tracking, wiki Pages, collaboration and web based code viewing. Git and Github are separate things. Git is the version control system and Github is a very nice front end for using Git.
+Github is the most popular Git hosting platform in the world. At it's heart it is a way to manage one or more Git repositories but it also adds very useful things like issue tracking, wiki pages, collaboration and web based code viewing. Git and Github are separate things. Git is the version control system and Github is a very nice front end for using Git.
 
 Before we get started, you'll need a Github account. It's free and only takes a second to sign up. Once you have one you can contribute to OpenPnP, create your own repositories, file issues and bug reports, create wiki pages and all kinds of stuff.
 
