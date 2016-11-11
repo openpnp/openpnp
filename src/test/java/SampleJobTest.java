@@ -8,18 +8,15 @@ import org.junit.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.NullDriver;
-import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.JobProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class SampleJobTest {
-    private final static Logger logger = LoggerFactory.getLogger(TestDriver.class);
+
 
     /**
      * Loads the pnp-test job that is included in the samples and attempts to run it within a test
@@ -44,6 +41,7 @@ public class SampleJobTest {
         driver.setFeedRateMmPerMinute(0);
 
         Camera camera = machine.getDefaultHead().getDefaultCamera();
+        camera.setSettleTimeMs(0);
         // File videoFile = new File("target");
         // videoFile = new File(videoFile, "SampleJobTest.mp4");
         // MpegEncodingCameraListener encoder = new MpegEncodingCameraListener(videoFile);

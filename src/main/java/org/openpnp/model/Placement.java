@@ -41,7 +41,7 @@ public class Placement extends AbstractModelObject implements Identifiable {
     /**
      * History: 1.0: Initial revision. 1.1: Replaced Boolean place with Type type. Deprecated place.
      */
-    @Version(revision = 1.1)
+    @Version(revision = 1.2)
     private double version;
 
     @Attribute
@@ -62,6 +62,12 @@ public class Placement extends AbstractModelObject implements Identifiable {
     private Type type;
 
     private Part part;
+
+    @Attribute
+    private boolean glue;
+    
+    @Attribute
+    private boolean checkFids;
 
     @SuppressWarnings("unused")
     private Placement() {
@@ -139,6 +145,25 @@ public class Placement extends AbstractModelObject implements Identifiable {
         this.type = type;
         firePropertyChange("type", oldValue, type);
     }
+
+    public boolean getGlue() { return glue; }
+
+    public void setGlue(boolean glue)
+    {
+        Object oldValue = this.glue;
+        this.glue = glue;
+        firePropertyChange("glue", oldValue, glue);
+    }
+    
+    public boolean getCheckFids() { return checkFids; }
+
+    public void setCheckFids(boolean checkFids)
+    {
+        Object oldValue = this.checkFids;
+        this.checkFids = checkFids;
+        firePropertyChange("check fids", oldValue, checkFids);
+    }
+
 
     @Override
     public String toString() {

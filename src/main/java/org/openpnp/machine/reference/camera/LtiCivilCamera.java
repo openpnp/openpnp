@@ -174,11 +174,4 @@ public class LtiCivilCamera extends ReferenceCamera implements CaptureObserver {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
-    }
 }

@@ -34,6 +34,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -63,13 +64,10 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
-    private final static Logger logger = LoggerFactory.getLogger(FeedersPanel.class);
-
     private final Configuration configuration;
     private final MainFrame mainFrame;
 
@@ -141,6 +139,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         });
         panel_1.add(searchTextField);
         searchTextField.setColumns(15);
+        
+        
         table = new AutoSelectTextTable(tableModel);
         tableSorter = new TableRowSorter<>(tableModel);
 
@@ -154,18 +154,23 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
             }
         });
+        
         add(splitPane, BorderLayout.CENTER);
-
+        splitPane.setLeftComponent(new JScrollPane(table));
         table.setRowSorter(tableSorter);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        splitPane.setRightComponent(tabbedPane);
+
         configurationPanel = new JPanel();
-        configurationPanel.setBorder(new TitledBorder(null, "Configuration", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        tabbedPane.addTab("Configuration", null, configurationPanel, null);
+        configurationPanel.setLayout(new BorderLayout(0, 0));
 
         feederSelectedActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation);
-
+        feederSelectedActionGroup.setEnabled(false);
+        
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -191,11 +196,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
         });
 
-        feederSelectedActionGroup.setEnabled(false);
 
-        splitPane.setLeftComponent(new JScrollPane(table));
-        splitPane.setRightComponent(configurationPanel);
-        configurationPanel.setLayout(new BorderLayout(0, 0));
     }
 
     /**
@@ -249,7 +250,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
         }
         catch (PatternSyntaxException e) {
-            logger.warn("Search failed", e);
+            Logger.warn("Search failed", e);
             return;
         }
         tableSorter.setRowFilter(rf);

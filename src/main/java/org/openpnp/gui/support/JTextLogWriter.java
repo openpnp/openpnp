@@ -1,47 +1,58 @@
 package org.openpnp.gui.support;
 
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.Set;
+
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.spi.LoggingEvent;
+import org.pmw.tinylog.Configuration;
+import org.pmw.tinylog.LogEntry;
+import org.pmw.tinylog.writers.LogEntryValue;
+import org.pmw.tinylog.writers.Writer;
 
-public class JTextAreaAppender extends AppenderSkeleton {
+public class JTextLogWriter implements Writer {
     private JTextArea textArea;
-    
+
     private int lineLimit = 1000;
-    
-    public JTextAreaAppender(JTextArea textArea) {
+
+    public JTextLogWriter(JTextArea textArea) {
         this.textArea = textArea;
     }
-    
-    @Override
-    public void close() {
-    }
 
-    @Override
-    public boolean requiresLayout() {
-        return true;
-    }
-    
     public void setLineLimit(int lineLimit) {
-        System.out.println(lineLimit);
         this.lineLimit = lineLimit;
         trim();
     }
-    
+
     public int getLineLimit() {
         return lineLimit;
     }
 
     @Override
-    protected void append(LoggingEvent event) {
+    public Set<LogEntryValue> getRequiredLogEntryValues() {
+        return EnumSet.of(LogEntryValue.RENDERED_LOG_ENTRY);
+    }
+
+    @Override
+    public void init(final Configuration configuration) throws IOException {}
+
+    @Override
+    public void write(final LogEntry logEntry) throws IOException {
+        String entry = logEntry.getRenderedLogEntry();
         SwingUtilities.invokeLater(() -> {
-            textArea.append(getLayout().format(event));
+            textArea.append(entry);
             trim();
         });
     }
-    
+
+    @Override
+    public void flush() throws IOException {}
+
+    @Override
+    public void close() throws IOException {}
+
     private void trim() {
         try {
             if (lineLimit > 0) {

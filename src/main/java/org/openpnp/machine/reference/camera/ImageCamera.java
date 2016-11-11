@@ -39,12 +39,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ImageCamera extends ReferenceCamera implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(ImageCamera.class);
-
     private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     @Attribute(required = false)
@@ -189,13 +185,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override

@@ -13,21 +13,15 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
-import org.openpnp.machine.reference.ReferencePnpJobProcessor;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PasteDispenseJobProcessor;
-import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -47,8 +41,15 @@ public abstract class AbstractMachine implements Machine {
      * JobPlanner.
      */
 
+    public enum State {
+        ERROR
+    }
+
     @ElementList
     protected IdentifiableList<Head> heads = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<Signaler> signalers = new IdentifiableList<>();
 
     @ElementList(required = false)
     protected IdentifiableList<Feeder> feeders = new IdentifiableList<>();
@@ -87,6 +88,26 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public Head getHead(String id) {
         return heads.get(id);
+    }
+
+    @Override
+    public List<Signaler> getSignalers() {
+        return Collections.unmodifiableList(signalers);
+    }
+
+    @Override
+    public Signaler getSignaler(String id) {
+        return signalers.get(id);
+    }
+
+    @Override
+    public Signaler getSignalerByName(String name) {
+        for (Signaler signaler : signalers) {
+            if (signaler.getName().equals(name)) {
+                return signaler;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -130,6 +151,16 @@ public abstract class AbstractMachine implements Machine {
     }
 
     @Override
+    public Feeder getFeederByName(String name) {
+        for (Feeder feeder : feeders) {
+            if (feeder.getName().equals(name)) {
+                return feeder;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void home() throws Exception {
         for (Head head : heads) {
             head.home();
@@ -165,8 +196,6 @@ public abstract class AbstractMachine implements Machine {
     public void removeCamera(Camera camera) {
         cameras.remove(camera);
     }
-
-
 
     public void fireMachineHeadActivity(Head head) {
         for (MachineListener listener : listeners) {

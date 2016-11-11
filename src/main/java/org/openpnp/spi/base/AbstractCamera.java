@@ -48,7 +48,7 @@ public abstract class AbstractCamera implements Camera {
     protected Integer height;
 
     public AbstractCamera() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("CAM");
         this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override

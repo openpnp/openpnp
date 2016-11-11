@@ -19,7 +19,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -37,15 +36,14 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceNozzleTip.class);
+
 
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
@@ -57,6 +55,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
+    @Element(required = false)
+    private Location changerMidLocation2;
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
     @Element(required = false)
@@ -75,6 +75,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     }
                     compatiblePackages.add(pkg);
                 }
+                /*
+                 * Backwards compatibility. Since this field is being added after the fact, if
+                 * the field is not specified in the config then we just make a copy of the
+                 * other mid location. The result is that if a user already has a changer
+                 * configured they will not suddenly have a move to 0,0,0,0 which would break
+                 * everything.
+                 */
+                if (changerMidLocation2 == null) {
+                    changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
+                }
             }
         });
     }
@@ -83,7 +93,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public boolean canHandle(Part part) {
         boolean result =
                 allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
-        logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
+        Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
         return result;
     }
 
@@ -155,6 +165,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerMidLocation = changerMidLocation;
     }
 
+    public Location getChangerMidLocation2() {
+        return changerMidLocation2;
+    }
+
+    public void setChangerMidLocation2(Location changerMidLocation2) {
+        this.changerMidLocation2 = changerMidLocation2;
+    }
+
     public Location getChangerEndLocation() {
         return changerEndLocation;
     }
@@ -195,11 +213,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
     };
 
-    public Action unloadAction = new AbstractAction("Unoad") {
+    public Action unloadAction = new AbstractAction("Unload") {
         {
             putValue(SMALL_ICON, Icons.unload);
             putValue(NAME, "Unload");
-            putValue(SHORT_DESCRIPTION, "Unoad the currently loaded nozzle tip.");
+            putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
         }
 
         @Override

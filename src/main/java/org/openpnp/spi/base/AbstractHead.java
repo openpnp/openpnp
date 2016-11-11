@@ -45,7 +45,7 @@ public abstract class AbstractHead implements Head {
     protected Machine machine;
 
     public AbstractHead() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("HED");
         this.name = getClass().getSimpleName();
     }
 

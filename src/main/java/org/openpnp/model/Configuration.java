@@ -28,13 +28,13 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -44,12 +44,8 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Configuration extends AbstractModelObject {
-    private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
-
     private static Configuration instance;
 
     private static final String PREF_UNITS = "Configuration.units";
@@ -206,7 +202,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "packages.xml");
             if (overrideUserConfig || !file.exists()) {
-                logger.info("No packages.xml found in configuration directory, loading defaults.");
+                Logger.info("No packages.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("packages", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/packages.xml"), file);
                 forceSave = true;
@@ -225,7 +221,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "parts.xml");
             if (overrideUserConfig || !file.exists()) {
-                logger.info("No parts.xml found in configuration directory, loading defaults.");
+                Logger.info("No parts.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("parts", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/parts.xml"), file);
                 forceSave = true;
@@ -244,7 +240,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "machine.xml");
             if (overrideUserConfig || !file.exists()) {
-                logger.info("No machine.xml found in configuration directory, loading defaults.");
+                Logger.info("No machine.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("machine", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/machine.xml"), file);
                 forceSave = true;
@@ -266,7 +262,7 @@ public class Configuration extends AbstractModelObject {
         }
 
         if (forceSave) {
-            logger.info("Defaults were loaded. Saving to configuration directory.");
+            Logger.info("Defaults were loaded. Saving to configuration directory.");
             configurationDirectory.mkdirs();
             save();
         }
@@ -497,8 +493,8 @@ public class Configuration extends AbstractModelObject {
         return serializer;
     }
 
-    public static String createId() {
-        return UUID.randomUUID().toString();
+    public static String createId(String prefix) {
+        return prefix + System.currentTimeMillis();
     }
 
     /**

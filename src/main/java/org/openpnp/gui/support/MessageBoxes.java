@@ -25,11 +25,11 @@ import java.io.StringWriter;
 
 import javax.swing.JOptionPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openpnp.gui.MainFrame;
+import org.pmw.tinylog.Logger;
 
 public class MessageBoxes {
-    private static final Logger logger = LoggerFactory.getLogger(MessageBoxes.class);
+
 
     public static void errorBox(Component parent, String title, Throwable cause) {
         String message = null;
@@ -46,7 +46,7 @@ public class MessageBoxes {
         if (message == null) {
             message = "No message supplied.";
         }
-        logger.debug("{}: {}", title, cause);
+        Logger.debug("{}: {}", title, cause);
         message = message.replaceAll("\n", "<br/>");
         message = message.replaceAll("\r", "");
         message = "<html><body width=\"400\">" + message + "</body></html>";
@@ -57,11 +57,21 @@ public class MessageBoxes {
         if (message == null) {
             message = "";
         }
-        logger.debug("{}: {}", title, message);
+        Logger.debug("{}: {}", title, message);
         message = message.replaceAll("\n", "<br/>");
         message = message.replaceAll("\r", "");
         message = "<html><body width=\"400\">" + message + "</body></html>";
         JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
+    public static void infoBox(String title, String message) {
+        if (message == null) {
+            message = "";
+        }
+        message = message.replaceAll("\n", "<br/>");
+        message = message.replaceAll("\r", "");
+        message = "<html><body width=\"400\">" + message + "</body></html>";
+        JOptionPane.showMessageDialog(MainFrame.get(), message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void notYetImplemented(Component parent) {

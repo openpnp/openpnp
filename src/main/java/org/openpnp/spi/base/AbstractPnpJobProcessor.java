@@ -19,6 +19,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         }
     }
 
+
     /**
      * Discard the Part, if any, on the given Nozzle. the Nozzle is returned to Safe Z at the end of
      * the operation.

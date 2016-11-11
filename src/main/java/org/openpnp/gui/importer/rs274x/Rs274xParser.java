@@ -16,15 +16,14 @@ import org.openpnp.model.BoardPad;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Pad;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 /**
  * A simple RS-274X parser. Not intended to be a general parser, but implements only OpenPnP
  * specific functionality.
  */
 public class Rs274xParser {
-    private final static Logger logger = LoggerFactory.getLogger(Rs274xParser.class);
+
 
     enum LevelPolarity {
         Dark, Clear
@@ -74,7 +73,7 @@ public class Rs274xParser {
      * @throws Exception
      */
     public List<BoardPad> parseSolderPastePads(File file) throws Exception {
-        logger.info("Parsing " + file);
+        Logger.info("Parsing " + file);
         return parseSolderPastePads(new FileReader(file));
     }
 
@@ -908,19 +907,19 @@ public class Rs274xParser {
     }
 
     private void warn(String s) {
-        logger.warn("WARNING: " + lineNumber + ": " + s);
+        Logger.warn("WARNING: " + lineNumber + ": " + s);
     }
 
     private void warn(String fmt, Object o1) {
-        logger.warn("WARNING: " + lineNumber + ": " + fmt, o1);
+        Logger.warn("WARNING: " + lineNumber + ": " + fmt, o1);
     }
 
     private void warn(String fmt, Object o1, Object o2) {
-        logger.warn("WARNING: " + lineNumber + ": " + fmt, o1, o2);
+        Logger.warn("WARNING: " + lineNumber + ": " + fmt, o1, o2);
     }
 
     private void warn(String fmt, Object[] o) {
-        logger.warn("WARNING: " + lineNumber + ": " + fmt, o);
+        Logger.warn("WARNING: " + lineNumber + ": " + fmt, o);
     }
 
     private void error(String s) throws Exception {
@@ -948,8 +947,8 @@ public class Rs274xParser {
         }
 
         ParseStatistics total = new ParseStatistics();
-        logger.info("");
-        logger.info("");
+        Logger.info("");
+        Logger.info("");
         ArrayList<File> sortedFiles = new ArrayList<>(results.keySet());
         Collections.sort(sortedFiles, new Comparator<File>() {
             @Override
@@ -960,15 +959,15 @@ public class Rs274xParser {
         for (File file : sortedFiles) {
             ParseStatistics stats = results.get(file);
             total.add(stats);;
-            logger.info(String.format("%-32s: %s", file.getName(), stats.toString()));
+            Logger.info(String.format("%-32s: %s", file.getName(), stats.toString()));
         }
         String totalLine = String.format("%-32s: %s", "TOTALS", total.toString());
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < totalLine.length(); i++) {
             sb.append("-");
         }
-        logger.info(sb.toString());
-        logger.info(totalLine);
+        Logger.info(sb.toString());
+        Logger.info(totalLine);
     }
 
     static abstract class Aperture {

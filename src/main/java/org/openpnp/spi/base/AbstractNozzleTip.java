@@ -14,7 +14,7 @@ public abstract class AbstractNozzleTip implements NozzleTip {
     protected String name;
 
     public AbstractNozzleTip() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("TIP");
         this.name = getClass().getSimpleName();
     }
 

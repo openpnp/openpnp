@@ -30,21 +30,23 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class ReferenceCamera extends AbstractCamera implements ReferenceHeadMountable {
     static {
@@ -52,7 +54,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
-    protected final static Logger logger = LoggerFactory.getLogger(ReferenceCamera.class);
+
 
     @Element(required = false)
     private Location headOffsets = new Location(LengthUnit.Millimeters);
@@ -119,14 +121,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("moveTo({}, {})", location, speed);
+        Logger.debug("moveTo({}, {})", location, speed);
         driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", getName(), speed);
+        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
@@ -385,6 +387,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Override
     public void close() throws IOException {}
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
+    }
 
     public interface CalibrationCallback {
         public void callback(int progressCurrent, int progressMax, boolean complete);

@@ -17,8 +17,6 @@ import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConf
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
@@ -30,8 +28,6 @@ import jssc.SerialPortTimeoutException;
  * disconnecting, reading and sending lines.
  */
 public abstract class AbstractSerialPortDriver implements ReferenceDriver, Closeable {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractSerialPortDriver.class);
-
     public enum DataBits {
         Five(SerialPort.DATABITS_5),
         Six(SerialPort.DATABITS_6),
@@ -100,10 +96,10 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
 
     @Attribute(required = false)
     protected Parity parity = Parity.None;
-    
+
     @Attribute(required = false)
     protected boolean setDtr = false;
-    
+
     @Attribute(required = false)
     protected boolean setRts = false;
 
@@ -201,7 +197,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     public void setBaud(int baud) {
         this.baud = baud;
     }
-    
+
     public FlowControl getFlowControl() {
         return flowControl;
     }
@@ -233,7 +229,7 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     public void setParity(Parity parity) {
         this.parity = parity;
     }
-    
+
     public boolean isSetDtr() {
         return setDtr;
     }

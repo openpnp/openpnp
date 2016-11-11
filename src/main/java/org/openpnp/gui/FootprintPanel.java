@@ -21,6 +21,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -58,19 +59,14 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Dimension;
 
 @SuppressWarnings("serial")
 public class FootprintPanel extends JPanel {
-    private final static Logger logger = LoggerFactory.getLogger(FootprintPanel.class);
-
     private FootprintTableModel tableModel;
     private JTable table;
 

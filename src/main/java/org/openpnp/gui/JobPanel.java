@@ -29,7 +29,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -78,8 +77,6 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -97,7 +94,7 @@ public class JobPanel extends JPanel {
     }
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(JobPanel.class);
+
     
     final private Configuration configuration;
     final private MainFrame frame;
@@ -651,8 +648,17 @@ public class JobPanel extends JPanel {
         if (title.equals("Solder Paste")) {
             jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
         }
-        else if (title.equals("Pick and Place")) {
-            jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+        else if (title.equals("Pick and Place"))
+        {
+            if(jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
+            {
+               // Run the glue dispense processor first, this will deposit glue ready for any component placements
+                jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
+            }
+            else
+            {
+                jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+            }
         }
         else {
             throw new Error("Programmer error: Unknown tab title.");
@@ -668,11 +674,17 @@ public class JobPanel extends JPanel {
             // the potential race condition where this task may execute before the
             // calling task (setting the FSM state) finishes.
             while (fsm.getState() != State.Running && fsm.getState() != State.Stepping);
+
             do {
                 if (!jobProcessor.next()) {
                     fsm.send(Message.Finished);
                 }
             } while (fsm.getState() == State.Running);
+
+            // if this was the glue dispense run and we've finished, kick off the pick & place
+            if(jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
+                fsm.send(Message.StartOrPause);
+            }
             return null;
         }, (e) -> {
             

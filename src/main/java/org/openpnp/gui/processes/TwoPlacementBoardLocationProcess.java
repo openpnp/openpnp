@@ -32,8 +32,6 @@ import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Guides the user through the two point board location operation using step by step instructions.
@@ -41,9 +39,6 @@ import org.slf4j.LoggerFactory;
  * TODO: Disable the BoardLocation table while active.
  */
 public class TwoPlacementBoardLocationProcess {
-    private static final Logger logger =
-            LoggerFactory.getLogger(TwoPlacementBoardLocationProcess.class);
-
     private final MainFrame mainFrame;
     private final JobPanel jobPanel;
     private final Camera camera;
@@ -63,7 +58,8 @@ public class TwoPlacementBoardLocationProcess {
             throws Exception {
         this.mainFrame = mainFrame;
         this.jobPanel = jobPanel;
-        this.camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
+        this.camera =
+                MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
         advance();
     }
 
@@ -140,16 +136,8 @@ public class TwoPlacementBoardLocationProcess {
 
         // Calculate the angle and offset from the results
         BoardLocation boardLocation = jobPanel.getSelectedBoardLocation();
-        Location idealLocationA =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
-        Location idealLocationB =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
-        Location location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
+        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
                 actualLocationA, actualLocationB);
-
-        location = boardLocation.getLocation().addWithRotation(location);
-        location = location.derive(null, null,
-                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
 
         jobPanel.getSelectedBoardLocation().setLocation(location);
         jobPanel.refreshSelectedBoardRow();

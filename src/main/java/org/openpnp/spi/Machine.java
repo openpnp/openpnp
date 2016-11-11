@@ -28,8 +28,6 @@ import org.openpnp.model.Location;
 
 import com.google.common.util.concurrent.FutureCallback;
 
-
-
 /**
  * Machine represents the pick and place machine itself. It provides the information and interface
  * needed to cause the machine to do work. A Machine has one or more Heads. Unless otherwise noted,
@@ -46,6 +44,17 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Head getHead(String id);
 
     /**
+     * Gets a List of Signalers attached to the Machine.
+     *
+     * @return
+     */
+    public List<Signaler> getSignalers();
+
+    public Signaler getSignaler(String id);
+
+    public Signaler getSignalerByName(String name);
+
+    /**
      * Gets a List of Feeders attached to the Machine.
      * 
      * @return
@@ -54,6 +63,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Feeder getFeeder(String id);
 
+    public Feeder getFeederByName(String name);
 
     /**
      * Gets a List of Cameras attached to the Machine that are not attached to Heads.
@@ -135,6 +145,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public PnpJobProcessor getPnpJobProcessor();
     
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor();
+
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor();
 
     public Future<Object> submit(Runnable runnable);
 

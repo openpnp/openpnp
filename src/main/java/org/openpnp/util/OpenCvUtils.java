@@ -19,11 +19,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 public class OpenCvUtils {
-    private final static Logger logger = LoggerFactory.getLogger(OpenCvUtils.class);
+
 
     static {
         nu.pattern.OpenCV.loadShared();
@@ -95,7 +94,7 @@ public class OpenCvUtils {
      */
     public static List<Location> houghCircles(Camera camera, Length minDiameter, Length maxDiameter,
             Length minDistance) throws Exception {
-        logger.debug("houghCircles({}, {}, {}, {})",
+        Logger.debug("houghCircles({}, {}, {}, {})",
                 new Object[] {camera.getName(), minDiameter, maxDiameter, minDistance});
 
         // convert inputs to the same units
@@ -135,7 +134,7 @@ public class OpenCvUtils {
 
     public static Mat houghCircles(Mat mat, double minDiameter, double maxDiameter,
             double minDistance) {
-        logger.debug("houghCircles(Mat, {}, {}, {})",
+        Logger.debug("houghCircles(Mat, {}, {}, {})",
                 new Object[] {minDiameter, maxDiameter, minDistance});
 
         saveDebugImage("houghCircles_in", mat);
@@ -154,7 +153,7 @@ public class OpenCvUtils {
         Imgproc.HoughCircles(mat, circles, Imgproc.CV_HOUGH_GRADIENT, 1, minDistance, 80, 10,
                 (int) (minDiameter / 2), (int) (maxDiameter / 2));
 
-        if (logger.isDebugEnabled()) {
+        if (LogUtils.isDebugEnabled()) {
             drawCircles(debug, circles);
             saveDebugImage("houghCircles_debug", debug);
         }
@@ -216,7 +215,7 @@ public class OpenCvUtils {
     }
 
     public static void saveDebugImage(String name, Mat mat) {
-        if (logger.isDebugEnabled()) {
+        if (LogUtils.isDebugEnabled()) {
             try {
                 BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
                 File file = Configuration.get().createResourceFile(OpenCvUtils.class, name + "_",

@@ -41,12 +41,11 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SimulatorDriver implements ReferenceDriver {
-    private final static Logger logger = LoggerFactory.getLogger(SimulatorDriver.class);
+
 
     @Attribute(required = false)
     private double feedRateMmPerMinute;
@@ -85,7 +84,7 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public void home(ReferenceHead head) throws Exception {
-        logger.debug("home()");
+        Logger.debug("home()");
         checkEnabled();
         send("h");
         setHeadLocation(head, getHeadLocation(head).derive(0.0, 0.0, 0.0, 0.0));
@@ -109,7 +108,7 @@ public class SimulatorDriver implements ReferenceDriver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
-        logger.debug("moveTo({}, {}, {})", hm, location, speed);
+        Logger.debug("moveTo({}, {}, {})", hm, location, speed);
         checkEnabled();
 
         // Subtract the offsets from the incoming Location. This converts the
@@ -158,7 +157,7 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("pick({})", nozzle);
+        Logger.debug("pick({})", nozzle);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
@@ -167,7 +166,7 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        logger.debug("place({})", nozzle);
+        Logger.debug("place({})", nozzle);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
@@ -176,7 +175,7 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        logger.debug("actuate({}, {})", actuator, value);
+        Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
@@ -185,7 +184,7 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        logger.debug("actuate({}, {})", actuator, on);
+        Logger.debug("actuate({}, {})", actuator, on);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
@@ -198,7 +197,7 @@ public class SimulatorDriver implements ReferenceDriver {
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        logger.debug("setEnabled({})", enabled);
+        Logger.debug("setEnabled({})", enabled);
         this.enabled = enabled;
     }
 

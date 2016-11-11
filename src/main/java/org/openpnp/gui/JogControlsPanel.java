@@ -62,6 +62,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left, X + / -, Y + / -, Z
@@ -354,8 +356,7 @@ public class JogControlsPanel extends JPanel {
 
         panelActuators = new JPanel();
         tabbedPane.addTab("Actuators", null, panelActuators, null);
-        FlowLayout fl_panelActuators = (FlowLayout) panelActuators.getLayout();
-        fl_panelActuators.setAlignment(FlowLayout.LEFT);
+        panelActuators.setLayout(new GridLayout(0, 4, 0, 0));
 
         JButton btnSafeZ = new JButton(safezAction);
         panelSpecial.add(btnSafeZ);

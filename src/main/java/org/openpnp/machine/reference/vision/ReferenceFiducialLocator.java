@@ -33,9 +33,8 @@ import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implements an algorithm for finding a set of fiducials on a board and returning the correct
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
-    private static final Logger logger = LoggerFactory.getLogger(ReferenceFiducialLocator.class);
+
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         // Find the fids in the board
@@ -61,7 +60,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Placement placementA = mostDistant.get(0);
         Placement placementB = mostDistant.get(1);
 
-        logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
+        Logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
 
         // Run the fiducial check on each and get their actual locations
         Location actualLocationA = getFiducialLocation(boardLocation, placementA);
@@ -83,15 +82,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }
 
-        // Calculate the angle and offset from the results
-        Location idealLocationA =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementA.getLocation());
-        Location idealLocationB =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, placementB.getLocation());
-        Location location = Utils2D.calculateAngleAndOffset2(idealLocationA, idealLocationB,
+        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
                 actualLocationA, actualLocationB);
 
-        location = boardLocation.getLocation().addWithRotation(location);
         location = location.derive(null, null,
                 boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
 
@@ -116,6 +109,69 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * fiducial's footprint. These steps are performed thrice to "home in" on the fiducial. Finally,
      * the location is returned. If the fiducial was not able to be located with any degree of
      * certainty the function returns null.
+     *
+     * @param location, part
+     * @return
+     * @throws Exception
+     */
+    public Location getHomeFiducialLocation(Location location, Part part) throws Exception {
+        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+
+        org.openpnp.model.Package pkg = part.getPackage();
+        if (pkg == null) {
+            throw new Exception(
+                    String.format("Part %s does not have a valid package assigned.", part.getId()));
+        }
+
+        Footprint footprint = pkg.getFootprint();
+        if (footprint == null) {
+            throw new Exception(String.format(
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                    pkg.getId()));
+        }
+
+        if (footprint.getShape() == null) {
+            throw new Exception(String.format(
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                    pkg.getId()));
+        }
+
+        // Create the template
+        BufferedImage template =
+                createTemplate(camera.getUnitsPerPixel(), part.getPackage().getFootprint());
+
+
+        // Move to where we expect to find the fid, if user has not specified then we treat 0,0,0,0
+        // as the place for this to be
+        if (location != null) {
+            MovableUtils.moveToLocationAtSafeZ(camera, location);
+        }
+
+        for (int i = 0; i < 3; i++) {
+            // Wait for camera to settle
+            Thread.sleep(camera.getSettleTimeMs());
+            // Perform vision operation
+            location = getBestTemplateMatch(camera, template);
+            if (location == null) {
+                Logger.debug("No matches found!");
+                return null;
+            }
+            Logger.debug("home fid. located at {}", location);
+            // Move to where we actually found the fid
+            camera.moveTo(location);
+        }
+
+        return location;
+
+    }
+
+    /**
+     * Given a placement containing a fiducial, attempt to find the fiducial using the vision
+     * system. The function first moves the camera to the ideal location of the fiducial based on
+     * the board location. It then performs a template match against a template generated from the
+     * fiducial's footprint. These steps are performed thrice to "home in" on the fiducial. Finally,
+     * the location is returned. If the fiducial was not able to be located with any degree of
+     * certainty the function returns null.
      * 
      * @param fid
      * @return
@@ -125,7 +181,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
-        logger.debug("Locating {}", fid.getId());
+        Logger.debug("Locating {}", fid.getId());
 
         Part part = fid.getPart();
         if (part == null) {
@@ -142,13 +198,13 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Footprint footprint = pkg.getFootprint();
         if (footprint == null) {
             throw new Exception(String.format(
-                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
 
         if (footprint.getShape() == null) {
             throw new Exception(String.format(
-                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials",
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
 
@@ -159,7 +215,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // Move to where we expect to find the fid
         Location location =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
-        logger.debug("Looking for {} at {}", fid.getId(), location);
+        Logger.debug("Looking for {} at {}", fid.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
 
@@ -169,10 +225,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Perform vision operation
             location = getBestTemplateMatch(camera, template);
             if (location == null) {
-                logger.debug("No matches found!");
+                Logger.debug("No matches found!");
                 return null;
             }
-            logger.debug("{} located at {}", fid.getId(), location);
+            Logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
             camera.moveTo(location);
         }
@@ -208,7 +264,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * Create a template image based on a Placement's footprint. The image will be scaled to match
      * the dimensions of the current camera.
      * 
-     * @param fid
+     * @param unitsPerPixel, footprint
      * @return
      */
     private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
@@ -217,7 +273,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         if (shape == null) {
             throw new Exception(
-                    "Invalid footprint found, unable to create template for fiducial match.");
+                    "Invalid footprint found, unable to create template for fiducial match. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
         }
 
         // Determine the scaling factor to go from Outline units to
@@ -238,6 +294,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         shape = tx.createTransformedShape(shape);
 
         Rectangle2D bounds = shape.getBounds2D();
+        
+        if (bounds.getWidth() == 0 || bounds.getHeight() == 0) {
+            throw new Exception("Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+        }
 
         // Make the image 50% bigger than the shape. This gives better
         // recognition performance because it allows some border around the edges.

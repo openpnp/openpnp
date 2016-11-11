@@ -19,9 +19,6 @@
 
 package org.openpnp.spi;
 
-import org.openpnp.model.Identifiable;
-import org.openpnp.model.Named;
-
 /**
  * Defines a simple interface to some type of device that can be actuated on the machine or on a
  * head. This is a minimal interface and it is expected that concrete implementations may have many

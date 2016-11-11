@@ -30,9 +30,8 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Not yet finished feeder that will be used for automated feeding. Just getting the idea down
@@ -41,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class ReferenceAutoFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceAutoFeeder.class);
+
 
     @Attribute(required=false)
     protected String actuatorName;
@@ -57,11 +56,33 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         if (actuatorName == null) {
-            logger.warn("No actuatorName specified for feeder.");
+            Logger.warn("No actuatorName specified for feeder.");
             return;
         }
-        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
+        if (actuator == null) {
+            actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+        }
+        if (actuator == null) {
+            throw new Exception(getName() + " feed failed. Unable to find an actuator named " + actuatorName);
+        }
         actuator.actuate(actuatorValue);
+    }
+    
+    public String getActuatorName() {
+        return actuatorName;
+    }
+
+    public void setActuatorName(String actuatorName) {
+        this.actuatorName = actuatorName;
+    }
+
+    public double getActuatorValue() {
+        return actuatorValue;
+    }
+
+    public void setActuatorValue(double actuatorValue) {
+        this.actuatorValue = actuatorValue;
     }
 
     @Override
@@ -78,11 +99,6 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override

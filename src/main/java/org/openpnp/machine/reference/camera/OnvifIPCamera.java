@@ -23,24 +23,13 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-
-import javax.imageio.ImageIO;
-import javax.swing.Action;
-
-import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
-import org.openpnp.spi.PropertySheetHolder;
-import org.simpleframework.xml.Attribute;
-
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+import javax.swing.Action;
 import javax.xml.soap.SOAPException;
 
 import org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
@@ -51,6 +40,14 @@ import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
 import org.onvif.ver10.schema.VideoEncoding;
 import org.onvif.ver10.schema.VideoRateControl;
 import org.onvif.ver10.schema.VideoResolution;
+import org.openpnp.CameraListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.wizards.CameraConfigurationWizard;
+import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
+import org.openpnp.spi.PropertySheetHolder;
+import org.simpleframework.xml.Attribute;
 
 import de.onvif.soap.OnvifDevice;
 import de.onvif.soap.devices.InitialDevices;
@@ -426,12 +423,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
