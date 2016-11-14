@@ -8,6 +8,7 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
@@ -87,4 +88,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
     }
+
+    @Override
+    public void postFeed(Nozzle nozzle) throws Exception { }
 }

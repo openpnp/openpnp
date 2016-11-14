@@ -555,6 +555,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
 
+            if(feeder!=null)
+            {
+                feeder.postFeed(nozzle);
+            }
+
             plannedPlacement.stepComplete = true;
         }
 
