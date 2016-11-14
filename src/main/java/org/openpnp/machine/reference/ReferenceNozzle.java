@@ -102,7 +102,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public NozzleTip getNozzleTip() {
+    public ReferenceNozzleTip getNozzleTip() {
         return nozzleTip;
     }
 

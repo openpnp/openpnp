@@ -21,6 +21,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -61,7 +62,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PICK_COMMAND(true, "Id", "Name"),
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
-        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue");
+        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        VACUUM_REQUEST_COMMAND(false, "Vacuum"),
+        VACUUM_REPORT_REGEX;
 
         final boolean headMountable;
         final String[] variableNames;
@@ -392,6 +395,36 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
     }
 
+    private int processVacuumReport(String line) {
+        if (getCommand(null, CommandType.VACUUM_REPORT_REGEX) == null) {
+            return -1;
+        }
+
+        if (!line.matches(getCommand(null, CommandType.VACUUM_REPORT_REGEX))) {
+            return -1;
+        }
+
+        logger.trace("Vacuum report: {}", line);
+        Matcher matcher =
+                Pattern.compile(getCommand(null, CommandType.VACUUM_REPORT_REGEX)).matcher(line);
+        matcher.matches();
+
+        try {
+            String s = matcher.group("Vacuum");
+            Double d = Double.valueOf(s);
+            int i = d.intValue();
+
+            return i;
+
+        }
+        catch (Exception e) {
+            logger.warn("Error processing vacuum report", e);
+        }
+
+
+        return -1;
+    }
+
     public Axis getAxis(HeadMountable hm, Axis.Type type) {
         for (Axis axis : axes) {
             if (axis.getType() == type && (axis.getHeadMountableIds().contains("*")
@@ -637,7 +670,39 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         String command = getCommand(nozzle, CommandType.PICK_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
+        ReferenceNozzleTip nt =  nozzle.getNozzleTip();
+        command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
+        command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
+
         sendGcode(command);
+
+        command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
+        if(command != null)
+        {
+            command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
+            command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
+
+            List<String> responses = sendGcode(command);
+
+            String vacuumReportRegex = getCommand(null, CommandType.VACUUM_REPORT_REGEX);
+            if (vacuumReportRegex != null) {
+                if (containsMatch(responses, vacuumReportRegex)) {
+
+                    for(String line: responses)
+                    {
+                        int reportedVacuumLevel = processVacuumReport(line);
+                        if(reportedVacuumLevel!=-1)
+                        {
+                            if(reportedVacuumLevel < nt.getVacuumLevelMin() || reportedVacuumLevel > nt.getVacuumLevelMax())
+                            {
+                                throw new Exception("Vacuum level " + reportedVacuumLevel + " is out of bounds (" + nt.getVacuumLevelMin() + "," + nt.getVacuumLevelMax()+")");
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
@@ -646,9 +711,43 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
+
+        ReferenceNozzleTip nt =  nozzle.getNozzleTip();
+
+        String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
+        if(command != null)
+        {
+            command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
+            command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
+
+            List<String> responses = sendGcode(command);
+
+            String vacuumReportRegex = getCommand(null, CommandType.VACUUM_REPORT_REGEX);
+            if (vacuumReportRegex != null) {
+                if (containsMatch(responses, vacuumReportRegex)) {
+
+                    for(String line: responses)
+                    {
+                        int reportedVacuumLevel = processVacuumReport(line);
+                        if(reportedVacuumLevel!=-1)
+                        {
+                            if(reportedVacuumLevel < nt.getVacuumLevelMin() || reportedVacuumLevel > nt.getVacuumLevelMax())
+                            {
+                                throw new Exception("Vacuum level " + reportedVacuumLevel + " is out of bounds (" + nt.getVacuumLevelMin() + "," + nt.getVacuumLevelMax()+")");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
+        command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
+        command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
         sendGcode(command);
 
         pickedNozzles.remove(nozzle);
