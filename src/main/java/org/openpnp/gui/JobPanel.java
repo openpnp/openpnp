@@ -685,7 +685,7 @@ public class JobPanel extends JPanel {
             } while (fsm.getState() == State.Running);
 
             // if this was the glue dispense run and we've finished, kick off the pick & place
-            if(jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
+            if(Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null && jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
                 fsm.send(Message.StartOrPause);
             }
             return null;
