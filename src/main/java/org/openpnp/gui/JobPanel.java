@@ -653,7 +653,7 @@ public class JobPanel extends JPanel {
         }
         else if (title.equals("Pick and Place"))
         {
-            if(jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
+            if((jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor()) && (Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null))
             {
                // Run the glue dispense processor first, this will deposit glue ready for any component placements
                 jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
