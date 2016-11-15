@@ -650,7 +650,7 @@ public class JobPanel extends JPanel {
         }
         else if (title.equals("Pick and Place"))
         {
-            if(jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
+            if((jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor()) && (Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null))
             {
                // Run the glue dispense processor first, this will deposit glue ready for any component placements
                 jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
@@ -682,7 +682,7 @@ public class JobPanel extends JPanel {
             } while (fsm.getState() == State.Running);
 
             // if this was the glue dispense run and we've finished, kick off the pick & place
-            if(jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
+            if(Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null && jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
                 fsm.send(Message.StartOrPause);
             }
             return null;
