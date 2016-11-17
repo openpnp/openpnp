@@ -145,3 +145,12 @@ Sent whenever an Actuator's actuate(double) method is called. This is currently 
 | Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
 | DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
 | IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
+
+### VACUUM_REQUEST_COMMAND
+
+Sent after a pick or place operation to check the vacuum level of the nozzle. The vacuum level will be compared to see if it is within the bounds defined on the NozzleTip.
+
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| VacuumLevelMin | Integer  | The expected vacuum range minimum. |
+| VacuumLevelMax | Integer  | The expected vacuum range maximum. |
