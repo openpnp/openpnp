@@ -22,6 +22,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -62,7 +63,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         VACUUM_REQUEST_COMMAND(false, "Vacuum"),
-        VACUUM_REPORT_REGEX;
+        VACUUM_REPORT_REGEX,
+        PRE_DISPENSE_COMMAND,
+        DISPENSE_COMMAND,
+        POST_DISPENSE_COMMAND;
 
         final boolean headMountable;
         final String[] variableNames;
@@ -753,6 +757,25 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
     }
 
+    @Override
+    public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
+        Logger.debug("dispense({}, {}, {}, {})", new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
+
+        String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
+        sendGcode(command);
+
+        for (ReferenceDriver driver: subDrivers )
+        {
+            driver.dispense(dispenser,startLocation,endLocation,dispenseTimeMilliseconds);
+        }
+
+        command = getCommand(null, CommandType.DISPENSE_COMMAND);
+        sendGcode(command);
+
+        command = getCommand(null, CommandType.POST_DISPENSE_COMMAND);
+        sendGcode(command);
+
+    }
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
