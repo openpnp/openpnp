@@ -37,6 +37,20 @@ If specified, the driver will check for this regex in the responses after a move
 
 Example: `<move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>`
 
+### VACUUM_REPORT_REGEX
+
+Used to parse a vacuum report after sending a VACUUM_REQUEST_COMMAND. The regex should contain a named group called Vacuum that includes the vacuum level.
+
+Example: `Vacuum:(?<Vacuum>-?\d+\.\d+)`
+
+### POSITION_REPORT_REGEX
+
+Used to parse a position report. Position reports can be sent by the controller to update OpenPnP when a move has been made outside of the program. This is particularly useful for controllers that support external jogging such as manual jog pendants.
+
+The regex should contain a named group for each axis that it wishes to update.
+
+Example: `<Idle,MPos:(?<x>-?\d+\.\d+),(?<y>-?\d+\.\d+),(?<z>-?\d+\.\d+),(?<rotation>-?\d+\.\d+)>`
+
 ## Miscellaneous
 
 ### units
