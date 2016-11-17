@@ -794,11 +794,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
         }
         // If a command was specified and no confirmation was found it's a timeout error.
-        if (command != null && !found) {
-            throw new Exception("Timeout waiting for response to " + command);
-        }
         if (command != null & foundError) {
             throw new Exception("Controller raised an error: " + errorResponse);
+        }
+        if (command != null && !found) {
+            throw new Exception("Timeout waiting for response to " + command);
         }
 
         // Read any additional responses that came in after the initial one.
