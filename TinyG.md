@@ -8,32 +8,43 @@ OpenPnP now includes a generic Gcode driver that is far more flexible than the o
    <command type="MOVE_TO_COMMAND">
       <text><![CDATA[G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:A%.4f} F{FeedRate:%.0f}]]></text>
    </command>
+   <command type="COMMAND_CONFIRM_REGEX">
+      <text><![CDATA[.*ok>.*]]></text>
+   </command>
    <command type="MOVE_TO_COMPLETE_REGEX">
       <text><![CDATA[.*stat:3.*]]></text>
-   </command>
-   <command type="PICK_COMMAND">
-      <text><![CDATA[M4]]></text>
-   </command>
-   <command type="PLACE_COMMAND">
-      <text><![CDATA[M5]]></text>
-   </command>
-   <command type="ENABLE_COMMAND">
-      <text><![CDATA[G21 M8]]></text>
-   </command>
-   <command type="DISABLE_COMMAND">
-      <text><![CDATA[M9 M5]]></text>
    </command>
    <command type="HOME_COMMAND">
       <text><![CDATA[G28.2 X0 Y0 Z0 A0 ]]></text>
       <text><![CDATA[G92 X0 Y0 Z0]]></text>
    </command>
-   <command type="CONNECT_COMMAND">
-      <text><![CDATA[$ME G21 G90 G92 X0 Y0 Z0 A0 M8 M5]]></text>
-      <text><![CDATA[{sr:{line:t,posx:t,posy:t,posz:t,vel:t,unit:t,stat:t}}]]></text>
-      <text><![CDATA[$sv=2]]></text>
+   <command type="DISABLE_COMMAND">
+      <text><![CDATA[M9 M5]]></text>
    </command>
-   <command type="COMMAND_CONFIRM_REGEX">
-      <text><![CDATA[.*ok>.*]]></text>
+   <command type="CONNECT_COMMAND">
+      <text><![CDATA[$SV=2]]></text>
+      <text><![CDATA[$ME ]]></text>
+      <text><![CDATA[$1pm=1]]></text>
+      <text><![CDATA[$2pm=1]]></text>
+      <text><![CDATA[$3pm=1]]></text>
+      <text><![CDATA[$4pm=1]]></text>
+      <text><![CDATA[$mt=1000000000]]></text>
+      <text><![CDATA[G21 G90 G92 X0 Y0 Z0 A0 M8 M5]]></text>
+   </command>
+   <command type="ENABLE_COMMAND">
+      <text><![CDATA[G21 M9]]></text>
+   </command>
+   <command type="PUMP_ON_COMMAND">
+      <text><![CDATA[M4]]></text>
+   </command>
+   <command type="PUMP_OFF_COMMAND">
+      <text><![CDATA[M5]]></text>
+   </command>
+   <command type="PLACE_COMMAND">
+      <text><![CDATA[M9]]></text>
+   </command>
+   <command type="PICK_COMMAND">
+      <text><![CDATA[M8]]></text>
    </command>
    <sub-drivers class="java.util.ArrayList"/>
    <axes class="java.util.ArrayList">
@@ -49,7 +60,7 @@ OpenPnP now includes a generic Gcode driver that is far more flexible than the o
       </axis>
       <axis name="z" type="Z" home-coordinate="0.0">
          <head-mountable-ids class="java.util.HashSet">
-            <string>*</string>
+            <string>N1</string>
          </head-mountable-ids>
       </axis>
       <axis name="rotation" type="Rotation" home-coordinate="0.0">
