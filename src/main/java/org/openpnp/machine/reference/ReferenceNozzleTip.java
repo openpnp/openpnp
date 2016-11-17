@@ -62,6 +62,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
+
+    @Element(required = false)
+    private int vacuumLevelMin = 0;
+
+    @Element(required = false)
+    private int vacuumLevelMax = 1023;
+
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
     public ReferenceNozzleTip() {
@@ -192,6 +199,23 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
         return null;
+    }
+
+    public int getVacuumLevelMin() { return vacuumLevelMin; }
+
+    public void setVacuumLevelMin(int level)
+    {
+        vacuumLevelMin = level;
+    }
+
+    public int getVacuumLevelMax()
+    {
+        return vacuumLevelMax;
+    }
+
+    public void setVacuumLevelMax(int level)
+    {
+        vacuumLevelMax = level;
     }
 
     public Calibration getCalibration() {
