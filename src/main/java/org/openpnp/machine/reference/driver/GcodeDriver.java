@@ -399,7 +399,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             return -1;
         }
 
-        logger.trace("Vacuum report: {}", line);
+        Logger.trace("Vacuum report: {}", line);
         Matcher matcher =
                 Pattern.compile(getCommand(null, CommandType.VACUUM_REPORT_REGEX)).matcher(line);
         matcher.matches();
@@ -413,7 +413,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         }
         catch (Exception e) {
-            logger.warn("Error processing vacuum report", e);
+            Logger.warn("Error processing vacuum report", e);
         }
 
 
@@ -666,15 +666,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
 
-        ReferenceNozzleTip nt =  nozzle.getNozzleTip();
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
         command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
         command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
 
         sendGcode(command);
 
         command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
-        if(command != null)
-        {
+        if (command != null) {
             command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
             command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
 
@@ -684,14 +683,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             if (vacuumReportRegex != null) {
                 if (containsMatch(responses, vacuumReportRegex)) {
 
-                    for(String line: responses)
-                    {
+                    for (String line : responses) {
                         int reportedVacuumLevel = processVacuumReport(line);
-                        if(reportedVacuumLevel!=-1)
-                        {
-                            if(reportedVacuumLevel < nt.getVacuumLevelMin() || reportedVacuumLevel > nt.getVacuumLevelMax())
-                            {
-                                throw new Exception("Vacuum level " + reportedVacuumLevel + " is out of bounds (" + nt.getVacuumLevelMin() + "," + nt.getVacuumLevelMax()+")");
+                        if (reportedVacuumLevel != -1) {
+                            if (reportedVacuumLevel < nt.getVacuumLevelMin()
+                                    || reportedVacuumLevel > nt.getVacuumLevelMax()) {
+                                throw new Exception("Vacuum level " + reportedVacuumLevel
+                                        + " is out of bounds (" + nt.getVacuumLevelMin() + ","
+                                        + nt.getVacuumLevelMax() + ")");
                             }
                         }
                     }
@@ -707,11 +706,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
 
-        ReferenceNozzleTip nt =  nozzle.getNozzleTip();
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
 
         String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
-        if(command != null)
-        {
+        if (command != null) {
             command = substituteVariable(command, "VacuumLevelMin", nt.getVacuumLevelMin());
             command = substituteVariable(command, "VacuumLevelMax", nt.getVacuumLevelMax());
 
@@ -721,14 +719,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             if (vacuumReportRegex != null) {
                 if (containsMatch(responses, vacuumReportRegex)) {
 
-                    for(String line: responses)
-                    {
+                    for (String line : responses) {
                         int reportedVacuumLevel = processVacuumReport(line);
-                        if(reportedVacuumLevel!=-1)
-                        {
-                            if(reportedVacuumLevel < nt.getVacuumLevelMin() || reportedVacuumLevel > nt.getVacuumLevelMax())
-                            {
-                                throw new Exception("Vacuum level " + reportedVacuumLevel + " is out of bounds (" + nt.getVacuumLevelMin() + "," + nt.getVacuumLevelMax()+")");
+                        if (reportedVacuumLevel != -1) {
+                            if (reportedVacuumLevel < nt.getVacuumLevelMin()
+                                    || reportedVacuumLevel > nt.getVacuumLevelMax()) {
+                                throw new Exception("Vacuum level " + reportedVacuumLevel
+                                        + " is out of bounds (" + nt.getVacuumLevelMin() + ","
+                                        + nt.getVacuumLevelMax() + ")");
                             }
                         }
                     }
