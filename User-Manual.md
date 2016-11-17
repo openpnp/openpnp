@@ -175,6 +175,15 @@ Job files tell OpenPnP where to find one or more Boards on the machine. A Job mi
 
 Since a Job can contain many of the same Board you can use it to process a full panel of PCBs. Just add the same Board to the Job for as many as the panel contains and set the position of each in the Job.
 
+Understanding Z
+---------------
+
+A common source of confusion is how OpenPnP uses the various Z values and Part heights throughout the system. In simplest terms:
+
+* Parts are picked from feeders at the Z value specified on the feeder. Every feeder type has a Z value you can set, and this is where the nozzle will be lowered to before picking.
+* Every board in a job has a location which includes a Z value. The Z value is the top of the board.
+* Every part has an associated height value. The height value is added to the board's Z value when placing.
+
 Your First Job
 --------------
 
