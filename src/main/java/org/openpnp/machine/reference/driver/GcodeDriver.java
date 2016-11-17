@@ -64,9 +64,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         VACUUM_REQUEST_COMMAND(false, "Vacuum"),
         VACUUM_REPORT_REGEX,
-        PRE_DISPENSE_COMMAND,
-        DISPENSE_COMMAND,
-        POST_DISPENSE_COMMAND;
+        PRE_DISPENSE_COMMAND(false, "DispenseTime"),
+        DISPENSE_COMMAND(false, "DispenseTime"),
+        POST_DISPENSE_COMMAND(false, "DispenseTime");
 
         final boolean headMountable;
         final String[] variableNames;
@@ -762,6 +762,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         Logger.debug("dispense({}, {}, {}, {})", new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
 
         String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
+        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
+
         sendGcode(command);
 
         for (ReferenceDriver driver: subDrivers )
@@ -770,9 +772,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
 
         command = getCommand(null, CommandType.DISPENSE_COMMAND);
+        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
         sendGcode(command);
 
         command = getCommand(null, CommandType.POST_DISPENSE_COMMAND);
+        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
         sendGcode(command);
 
     }
