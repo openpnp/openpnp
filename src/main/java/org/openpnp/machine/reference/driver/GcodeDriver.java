@@ -785,10 +785,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 break;
             }
 
-            if(getCommand(null, CommandType.COMMAND_ERROR_REGEX)!=null)
-            {
-                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX)))
-                {
+            if (getCommand(null, CommandType.COMMAND_ERROR_REGEX) != null) {
+                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX))) {
                     foundError = true;
                     errorResponse = response;
                     break;
@@ -799,9 +797,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         if (command != null && !found) {
             throw new Exception("Timeout waiting for response to " + command);
         }
-        if (command != null & foundError)
-        {
-            throw new Exception("Controller rasied an error: " + errorResponse);
+        if (command != null & foundError) {
+            throw new Exception("Controller raised an error: " + errorResponse);
         }
 
         // Read any additional responses that came in after the initial one.
