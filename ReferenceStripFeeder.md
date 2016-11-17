@@ -6,7 +6,7 @@ The direction of travel is fixed, and is always north to south with the holes on
 
 ![strip feeder orientation](https://cloud.githubusercontent.com/assets/1182323/12517177/6108c344-c0e6-11e5-9228-874a35a3fa5c.png)
 
-# Z / Pick Height
+# Z and Pick Height
 
 When picking from the strip feeder, OpenPnP will lower the nozzle to the Z value specified on the first reference hole. The Z value for the second reference hole is ignored.
 
