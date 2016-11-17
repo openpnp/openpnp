@@ -46,6 +46,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
+        COMMAND_ERROR_REGEX,
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
@@ -764,6 +765,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         long t = System.currentTimeMillis();
         boolean found = false;
+        boolean foundError = false;
+        String errorResponse = "";
         // Loop until we've timed out
         while (System.currentTimeMillis() - t < timeout) {
             // Wait to see if a response came in. We wait up until the number of millis remaining
@@ -781,8 +784,19 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 found = true;
                 break;
             }
+
+            if (getCommand(null, CommandType.COMMAND_ERROR_REGEX) != null) {
+                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX))) {
+                    foundError = true;
+                    errorResponse = response;
+                    break;
+                }
+            }
         }
         // If a command was specified and no confirmation was found it's a timeout error.
+        if (command != null & foundError) {
+            throw new Exception("Controller raised an error: " + errorResponse);
+        }
         if (command != null && !found) {
             throw new Exception("Timeout waiting for response to " + command);
         }
