@@ -5,22 +5,36 @@ OpenPnP now includes a generic Gcode driver that is far more flexible than the o
 ## machine.xml Driver Section
 ```
 <driver class="org.openpnp.machine.reference.driver.GcodeDriver" port-name="COM3" baud="115200" flow-control="Off" data-bits="Eight" stop-bits="One" parity="None" set-dtr="false" set-rts="false" units="Millimeters" max-feed-rate="1000" timeout-milliseconds="5000" connect-wait-time-milliseconds="1000">
-   <command-confirm-regex>.*ok&gt;.*</command-confirm-regex>
-   <connect-command>G21
-G90
-G92 X0 Y0 Z0 A0
-M8
-M5</connect-command>
-   <enable-command>G21
-M8</enable-command>
-   <disable-command>M9
-M5</disable-command>
-   <home-command>G28.2 X0 Y0 Z0 A0
-G92 X0 Y0 Z0</home-command>
-   <move-to-command>G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f}</move-to-command>
-   <move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>
-   <pick-command>M4</pick-command>
-   <place-command>M5</place-command>
+   <command type="MOVE_TO_COMMAND">
+      <text><![CDATA[G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:A%.4f} F{FeedRate:%.0f}]]></text>
+   </command>
+   <command type="MOVE_TO_COMPLETE_REGEX">
+      <text><![CDATA[.*stat:3.*]]></text>
+   </command>
+   <command type="PICK_COMMAND">
+      <text><![CDATA[M4]]></text>
+   </command>
+   <command type="PLACE_COMMAND">
+      <text><![CDATA[M5]]></text>
+   </command>
+   <command type="ENABLE_COMMAND">
+      <text><![CDATA[G21 M8]]></text>
+   </command>
+   <command type="DISABLE_COMMAND">
+      <text><![CDATA[M9 M5]]></text>
+   </command>
+   <command type="HOME_COMMAND">
+      <text><![CDATA[G28.2 X0 Y0 Z0 A0 ]]></text>
+      <text><![CDATA[G92 X0 Y0 Z0]]></text>
+   </command>
+   <command type="CONNECT_COMMAND">
+      <text><![CDATA[$ME G21 G90 G92 X0 Y0 Z0 A0 M8 M5]]></text>
+      <text><![CDATA[{sr:{line:t,posx:t,posy:t,posz:t,vel:t,unit:t,stat:t}}]]></text>
+      <text><![CDATA[$sv=2]]></text>
+   </command>
+   <command type="COMMAND_CONFIRM_REGEX">
+      <text><![CDATA[.*ok>.*]]></text>
+   </command>
    <sub-drivers class="java.util.ArrayList"/>
    <axes class="java.util.ArrayList">
       <axis name="x" type="X" home-coordinate="0.0">
@@ -53,21 +67,21 @@ G92 X0 Y0 Z0</home-command>
 [fv]  firmware version            0.97
 [hp]  hardware platform           1.00
 [hv]  hardware version            8.00
-[id]  TinyG ID                    XXXXXX-XXX
+[id]  TinyG ID                    3X3566-YSD
 [ja]  junction acceleration 2000000 mm
 [ct]  chordal tolerance           0.0100 mm
 [sl]  soft limit enable           0
 [st]  switch type                 0 [0=NO,1=NC]
-[mt]  motor idle timeout          2.00 Sec
+[mt]  motor idle timeout        300.00 Sec
 [ej]  enable json mode            0 [0=text,1=JSON]
-[jv]  json verbosity              5 [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]
+[jv]  json verbosity              2 [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]
 [js]  json serialize style        1 [0=relaxed,1=strict]
 [tv]  text verbosity              1 [0=silent,1=verbose]
 [qv]  queue report verbosity      2 [0=off,1=single,2=triple]
 [sv]  status report verbosity     2 [0=off,1=filtered,2=verbose]
-[si]  status interval           250 ms
-[ec]  expand LF to CRLF on TX     1 [0=off,1=on]
-[ee]  enable echo                 0 [0=off,1=on]
+[si]  status interval           200 ms
+[ec]  expand LF to CRLF on TX     0 [0=off,1=on]
+[ee]  enable echo                 1 [0=off,1=on]
 [ex]  enable flow control         1 [0=off,1=XON/XOFF, 2=RTS/CTS]
 [baud] USB baud rate              5 [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]
 [net] network mode                0 [0=master]
@@ -77,81 +91,81 @@ G92 X0 Y0 Z0</home-command>
 [gpa] default gcode path control  2 [0=G61,1=G61.1,2=G64]
 [gdi] default gcode distance mode 0 [0=G90,1=G91]
 [1ma] m1 map to axis              0 [0=X,1=Y,2=Z...]
-[1sa] m1 step angle               1.800 deg
-[1tr] m1 travel per revolution   20.0000 mm
+[1sa] m1 step angle               0.900 deg
+[1tr] m1 travel per revolution   40.0000 mm
 [1mi] m1 microsteps               8 [1,2,4,8]
-[1po] m1 polarity                 0 [0=normal,1=reverse]
-[1pm] m1 power management         1 [0=disabled,1=always on,2=in cycle,3=when moving]
+[1po] m1 polarity                 1 [0=normal,1=reverse]
+[1pm] m1 power management         2 [0=disabled,1=always on,2=in cycle,3=when moving]
 [2ma] m2 map to axis              1 [0=X,1=Y,2=Z...]
-[2sa] m2 step angle               1.800 deg
-[2tr] m2 travel per revolution   20.0000 mm
+[2sa] m2 step angle               0.900 deg
+[2tr] m2 travel per revolution   40.0000 mm
 [2mi] m2 microsteps               8 [1,2,4,8]
 [2po] m2 polarity                 0 [0=normal,1=reverse]
-[2pm] m2 power management         1 [0=disabled,1=always on,2=in cycle,3=when moving]
+[2pm] m2 power management         2 [0=disabled,1=always on,2=in cycle,3=when moving]
 [3ma] m3 map to axis              2 [0=X,1=Y,2=Z...]
 [3sa] m3 step angle               1.800 deg
-[3tr] m3 travel per revolution   10.0000 mm
+[3tr] m3 travel per revolution    8.0000 mm
 [3mi] m3 microsteps               8 [1,2,4,8]
-[3po] m3 polarity                 0 [0=normal,1=reverse]
+[3po] m3 polarity                 1 [0=normal,1=reverse]
 [3pm] m3 power management         2 [0=disabled,1=always on,2=in cycle,3=when moving]
 [4ma] m4 map to axis              3 [0=X,1=Y,2=Z...]
-[4sa] m4 step angle               1.800 deg
-[4tr] m4 travel per revolution    2.1166 mm
+[4sa] m4 step angle               0.900 deg
+[4tr] m4 travel per revolution  160.0000 mm
 [4mi] m4 microsteps               8 [1,2,4,8]
-[4po] m4 polarity                 1 [0=normal,1=reverse]
-[4pm] m4 power management         3 [0=disabled,1=always on,2=in cycle,3=when moving]
+[4po] m4 polarity                 0 [0=normal,1=reverse]
+[4pm] m4 power management         2 [0=disabled,1=always on,2=in cycle,3=when moving]
 [xam] x axis mode                 1 [standard]
-[xvm] x velocity maximum       8000 mm/min
-[xfr] x feedrate maximum       8000 mm/min
+[xvm] x velocity maximum      10000 mm/min
+[xfr] x feedrate maximum      10000 mm/min
 [xtn] x travel minimum            0.000 mm
 [xtm] x travel maximum          600.000 mm
-[xjm] x jerk maximum           5000 mm/min^3 * 1 million
-[xjh] x jerk homing           10000 mm/min^3 * 1 million
+[xjm] x jerk maximum           1000 mm/min^3 * 1 million
+[xjh] x jerk homing            2000 mm/min^3 * 1 million
 [xjd] x junction deviation        0.0100 mm (larger is faster)
 [xsn] x switch min                3 [0=off,1=homing,2=limit,3=limit+homing]
 [xsx] x switch max                2 [0=off,1=homing,2=limit,3=limit+homing]
-[xsv] x search velocity        3000 mm/min
+[xsv] x search velocity        2000 mm/min
 [xlv] x latch velocity          100 mm/min
-[xlb] x latch backoff            10.000 mm
+[xlb] x latch backoff             8.000 mm
 [xzb] x zero backoff              2.000 mm
 [yam] y axis mode                 1 [standard]
-[yvm] y velocity maximum       8000 mm/min
-[yfr] y feedrate maximum       8000 mm/min
+[yvm] y velocity maximum      10000 mm/min
+[yfr] y feedrate maximum      10000 mm/min
 [ytn] y travel minimum            0.000 mm
-[ytm] y travel maximum          360.000 mm
-[yjm] y jerk maximum           5000 mm/min^3 * 1 million
-[yjh] y jerk homing           10000 mm/min^3 * 1 million
+[ytm] y travel maximum          400.000 mm
+[yjm] y jerk maximum           1000 mm/min^3 * 1 million
+[yjh] y jerk homing            2000 mm/min^3 * 1 million
 [yjd] y junction deviation        0.0100 mm (larger is faster)
 [ysn] y switch min                3 [0=off,1=homing,2=limit,3=limit+homing]
 [ysx] y switch max                2 [0=off,1=homing,2=limit,3=limit+homing]
-[ysv] y search velocity        3000 mm/min
+[ysv] y search velocity        2000 mm/min
 [ylv] y latch velocity          100 mm/min
-[ylb] y latch backoff            10.000 mm
+[ylb] y latch backoff             8.000 mm
 [yzb] y zero backoff              2.000 mm
 [zam] z axis mode                 1 [standard]
-[zvm] z velocity maximum       1000 mm/min
-[zfr] z feedrate maximum       1000 mm/min
+[zvm] z velocity maximum       5000 mm/min
+[zfr] z feedrate maximum       5000 mm/min
 [ztn] z travel minimum         -120.000 mm
-[ztm] z travel maximum            0.000 mm
-[zjm] z jerk maximum             50 mm/min^3 * 1 million
-[zjh] z jerk homing            1000 mm/min^3 * 1 million
+[ztm] z travel maximum           80.000 mm
+[zjm] z jerk maximum            500 mm/min^3 * 1 million
+[zjh] z jerk homing             500 mm/min^3 * 1 million
 [zjd] z junction deviation        0.0100 mm (larger is faster)
-[zsn] z switch min                3 [0=off,1=homing,2=limit,3=limit+homing]
-[zsx] z switch max                2 [0=off,1=homing,2=limit,3=limit+homing]
+[zsn] z switch min                0 [0=off,1=homing,2=limit,3=limit+homing]
+[zsx] z switch max                3 [0=off,1=homing,2=limit,3=limit+homing]
 [zsv] z search velocity        1000 mm/min
 [zlv] z latch velocity          100 mm/min
-[zlb] z latch backoff            10.000 mm
-[zzb] z zero backoff             14.800 mm
-[aam] a axis mode                 3 [radius]
-[avm] a velocity maximum      25920 deg/min
-[afr] a feedrate maximum      12960 deg/min
+[zlb] z latch backoff             4.000 mm
+[zzb] z zero backoff              2.000 mm
+[aam] a axis mode                 1 [standard]
+[avm] a velocity maximum      50000 deg/min
+[afr] a feedrate maximum     200000 deg/min
 [atn] a travel minimum           -1.000 deg
-[atm] a travel maximum           -1.000 deg
-[ajm] a jerk maximum         324000 deg/min^3 * 1 million
-[ajh] a jerk homing          324000 deg/min^3 * 1 million
-[ajd] a junction deviation        0.1000 deg (larger is faster)
-[ara] a radius value              5.3050 deg
-[asn] a switch min                1 [0=off,1=homing,2=limit,3=limit+homing]
+[atm] a travel maximum          400.000 deg
+[ajm] a jerk maximum           5000 deg/min^3 * 1 million
+[ajh] a jerk homing            5000 deg/min^3 * 1 million
+[ajd] a junction deviation        0.0100 deg (larger is faster)
+[ara] a radius value              5.3052 deg
+[asn] a switch min                0 [0=off,1=homing,2=limit,3=limit+homing]
 [asx] a switch max                0 [0=off,1=homing,2=limit,3=limit+homing]
 [asv] a search velocity        2000 deg/min
 [alv] a latch velocity         2000 deg/min
