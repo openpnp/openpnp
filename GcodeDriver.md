@@ -95,3 +95,6 @@ If you are asking for help, especially on the mailing list, please follow the in
 5. Find your machine.xml configuration file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
 6. Send both the machine.xml file and the OpenPnP.log file to whoever you are asking for help.
 
+## Nozzle is Moving When Camera is Moved
+
+If your nozzle is moving when the camera is commanded to move, especially in Z, you need to set up [[GcodeDriver: Axis Mapping]] so that the camera is not included in the Z axis. This is done by specifying only the Nozzle IDs in the Z axis instead of "*". For more information see [[GcodeDriver: Axis Mapping]].
