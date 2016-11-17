@@ -38,6 +38,7 @@ public class Helpers {
 
     public static void copyLocationIntoTextFields(Location l, JTextField x, JTextField y,
             JTextField z, JTextField rotation) {
+        l = l.convertToUnits(Configuration.get().getSystemUnits());
         if (x != null) {
             x.setText(String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
                     l.getLengthX().getValue()));
