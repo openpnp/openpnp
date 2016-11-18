@@ -31,17 +31,19 @@ The driver uses this regex to look for responses from the controller. After send
 
 The driver uses this regex to check for errors in responses from the controller. If the regex is set, and it matches one of the responses an error will be thrown and the response message included. If your controller is able to send errors for invalid or improper commands, you can use this regex to make sure OpenPnP will stop when an error is received.
 
+Example: `^error:.*`
+
 ### MOVE_TO_COMPLETE_REGEX
 
 If specified, the driver will check for this regex in the responses after a move-to-command is sent and will not return until the regex is matched. This can be used to support motion controllers that return the command confirmation before movement is complete.
 
-Example: `<move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>`
+Example: `.*vel:0.00.*`
 
 ### VACUUM_REPORT_REGEX
 
 Used to parse a vacuum report after sending a VACUUM_REQUEST_COMMAND. The regex should contain a named group called Vacuum that includes the vacuum level.
 
-Example: `Vacuum:(?<Vacuum>-?\d+)`
+Example: `vacuum:(?<Vacuum>-?\d+)`
 
 ### POSITION_REPORT_REGEX
 
