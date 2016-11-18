@@ -45,6 +45,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
@@ -97,6 +98,11 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JTextField textFieldMidY2;
     private JTextField textFieldMidZ2;
     private LocationButtonsPanel changerMidButtons2;
+    private JPanel panelVacuumSensing;
+    private JLabel lblPartOnNozzle;
+    private JLabel lblPartOffNozzle;
+    private JTextField vacuumLevelPartOn;
+    private JTextField vacuumLevelPartOff;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -234,6 +240,34 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 textFieldChangerEndY, textFieldChangerEndZ, (JTextField) null);
         changerEndLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerEndLocationButtonsPanel, "10, 10, fill, default");
+        
+        panelVacuumSensing = new JPanel();
+        panelVacuumSensing.setBorder(new TitledBorder(null, "Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelVacuumSensing);
+        panelVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblPartOnNozzle = new JLabel("Part On Nozzle Vacuum Value");
+        panelVacuumSensing.add(lblPartOnNozzle, "2, 2, right, default");
+        
+        vacuumLevelPartOn = new JTextField();
+        panelVacuumSensing.add(vacuumLevelPartOn, "4, 2");
+        vacuumLevelPartOn.setColumns(10);
+        
+        lblPartOffNozzle = new JLabel("Part Off Nozzle Vacuum Value");
+        panelVacuumSensing.add(lblPartOffNozzle, "2, 4, right, default");
+        
+        vacuumLevelPartOff = new JTextField();
+        panelVacuumSensing.add(vacuumLevelPartOff, "4, 4");
+        vacuumLevelPartOff.setColumns(10);
 
         panelCalibration = new JPanel();
         panelCalibration.setBorder(new TitledBorder(null, "Calibration", TitledBorder.LEADING,
@@ -301,6 +335,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(nozzleTip, "allowIncompatiblePackages", chckbxAllowIncompatiblePackages,
                 "selected");
@@ -346,6 +381,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
+        
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", intConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
@@ -362,6 +400,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
+        
+        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOn);
+        ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOff);
     }
 
     @Override

@@ -36,6 +36,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -187,6 +189,8 @@ public class CameraView extends JComponent implements CameraListener {
     private long flashLengthMs = 250;
 
     private boolean showName = false;
+    
+    private double zoom = 1d;
 
     public CameraView() {
         setBackground(Color.black);
@@ -206,6 +210,7 @@ public class CameraView extends JComponent implements CameraListener {
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
         addComponentListener(componentListener);
+        addMouseWheelListener(mouseWheelListener);
 
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
@@ -485,12 +490,15 @@ public class CameraView extends JComponent implements CameraListener {
             scaledHeight = (int) (scaledWidth * aspectRatio);
         }
 
+        scaledWidth *= zoom;
+        scaledHeight *= zoom;
+
         imageX = ins.left + (width / 2) - (scaledWidth / 2);
         imageY = ins.top + (height / 2) - (scaledHeight / 2);
 
         scaleRatioX = lastSourceWidth / (double) scaledWidth;
         scaleRatioY = lastSourceHeight / (double) scaledHeight;
-
+        
         lastUnitsPerPixel = camera.getUnitsPerPixel();
         scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
         scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
@@ -777,13 +785,13 @@ public class CameraView extends JComponent implements CameraListener {
                 textHeight + insets.top + insets.bottom);
     }
 
-    private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
+    private void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
             BufferedImage image) {
         if (image == null) {
             return;
         }
-        String text = String.format("Resolution: %d x %d\nHistogram:", image.getWidth(),
-                image.getHeight());
+        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nHistogram:", image.getWidth(),
+                image.getHeight(), (int) (zoom * 100));
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
         int cornerRadius = 8;
@@ -1287,6 +1295,16 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void componentResized(ComponentEvent e) {
             calculateScalingData();
+        }
+    };
+    
+    private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            zoom += (e.getPreciseWheelRotation() * 0.01d * -1);
+            zoom = Math.max(zoom, 1.0d);
+            calculateScalingData();
+            repaint();
         }
     };
 
