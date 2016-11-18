@@ -283,18 +283,23 @@ public class CamerasPanel extends JPanel implements WizardContainer {
             try {
                 Camera camera = cameraClass.newInstance();
 
-                camera.setUnitsPerPixel(new Location(Configuration.get().getSystemUnits()));
+                if (camera.getUnitsPerPixel() == null) {
+                    camera.setUnitsPerPixel(new Location(Configuration.get().getSystemUnits()));
+                }
                 try {
                     if (camera.getVisionProvider() == null) {
                         camera.setVisionProvider(new OpenCvVisionProvider());
                     }
                 }
                 catch (Exception e) {
-                    Logger.debug("Couldn't set default vision provider. Meh.");
+                    Logger.debug("Couldn't set default vision provider.");
                 }
-
-
-                configuration.getMachine().addCamera(camera);
+                if (camera.getHead() == null) {
+                    configuration.getMachine().addCamera(camera);
+                }
+                else {
+                    camera.getHead().addCamera(camera);
+                }
 
                 MainFrame.get().getCameraViews().addCamera(camera);
                 tableModel.refresh();
