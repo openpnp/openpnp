@@ -39,6 +39,19 @@ public class ZevatechCenteringStage implements PartAlignment {
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
 
+        // put the part on the centering stage
+        nozzle.moveTo(centeringStageLocation);
+        nozzle.place();
+
+        // actuate the stage centering jaw
+
+        // rotate the stage to our desired angle
+
+        // unactuate the stage centering jaw
+
+        // pick the (hopefully now centered) part back up
+        nozzle.pick(part);
+
         return new PartAlignmentOffset(null,false);
     }
 
