@@ -181,8 +181,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         JPanel centeringStagePanel = new JPanel();
         centeringStagePanel.setLayout(new BorderLayout());
-        tabbedPane.add("Centering stage", new JScrollPane(centeringStagePanel));
-
+        tabbedPane.add("Centering stage [QFP]", new JScrollPane(centeringStagePanel));
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
