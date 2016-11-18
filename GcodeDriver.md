@@ -41,7 +41,7 @@ Example: `<move-to-complete-regex>.*vel:0.00.*</move-to-complete-regex>`
 
 Used to parse a vacuum report after sending a VACUUM_REQUEST_COMMAND. The regex should contain a named group called Vacuum that includes the vacuum level.
 
-Example: `Vacuum:(?<Vacuum>-?\d+\.\d+)`
+Example: `Vacuum:(?<Vacuum>-?\d+)`
 
 ### POSITION_REPORT_REGEX
 
