@@ -63,6 +63,8 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.machine.reference.ZevatechCenteringStage;
+import org.openpnp.machine.reference.ZevatechMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -177,6 +179,11 @@ public class PartsPanel extends JPanel implements WizardContainer {
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
 
+        JPanel centeringStagePanel = new JPanel();
+        centeringStagePanel.setLayout(new BorderLayout());
+        tabbedPane.add("Centering stage", new JScrollPane(centeringStagePanel));
+
+
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -196,6 +203,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 }
 
                 alignmentPanel.removeAll();
+                centeringStagePanel.removeAll();
 
                 Part part = getSelection();
                 
@@ -207,6 +215,16 @@ public class PartsPanel extends JPanel implements WizardContainer {
                         wizard.setWizardContainer(PartsPanel.this);
                         alignmentPanel.add(wizard.getWizardPanel());
                     }
+
+                   ZevatechMachine zMachine = (ZevatechMachine) Configuration.get().getMachine();
+
+                    PartAlignment centeringStage = (PartAlignment) zMachine.getCenteringStage();
+                    wizard=centeringStage.getPartConfigurationWizard(part);
+                    if (wizard != null) {
+                        wizard.setWizardContainer(PartsPanel.this);
+                        centeringStagePanel.add(wizard.getWizardPanel());
+                    }
+
                 }
 
                 revalidate();

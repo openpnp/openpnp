@@ -33,8 +33,8 @@ public class ZevatechCenteringStage implements PartAlignment {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
-    @Attribute(required = false)
-    protected Location centeringStageLocation = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+    @Element(required = false)
+    private Location centeringStageLocation = new Location(LengthUnit.Millimeters);
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
