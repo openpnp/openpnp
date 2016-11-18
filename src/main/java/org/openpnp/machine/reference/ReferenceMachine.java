@@ -83,6 +83,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
+    private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
+
+
     public ReferenceDriver getDriver() {
         return driver;
     }

@@ -7,6 +7,7 @@ import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.model.*;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -20,6 +21,9 @@ import javax.swing.*;
 import java.util.ArrayList;
 
 public class ZevatechNozzle extends ReferenceNozzle {
+    @Attribute(required = false)
+    protected PartAlignment partAlignment = null;
+
     @Element(required = false)
     private Location nozzleTestPad = new Location(LengthUnit.Millimeters);
 

@@ -579,9 +579,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
-            fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
-            PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
-            plannedPlacement.alignmentOffsets = alignmentOffset;
+
+            if(nozzle.getPartAlignment() != null)
+            {
+                // use the nozzle defined alignment class
+                fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
+                PartAlignment.PartAlignmentOffset alignmentOffset = nozzle.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
+                plannedPlacement.alignmentOffsets = alignmentOffset;
+
+            }
+            else
+            {
+                // use the default system-wide alignment class
+                fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
+                PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
+                plannedPlacement.alignmentOffsets = alignmentOffset;
+
+            }
 
             Logger.debug("Align {} with {}", part, nozzle);
 
