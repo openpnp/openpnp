@@ -57,11 +57,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PUMP_OFF_COMMAND,
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
         MOVE_TO_COMPLETE_REGEX(true),
-        PICK_COMMAND(true, "Id", "Name"),
+        PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
-        VACUUM_REQUEST_COMMAND(false, "Vacuum"),
+        VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
         VACUUM_REPORT_REGEX(true);
 
         final boolean headMountable;
@@ -627,7 +627,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     
     private Integer readVacuumLevel(ReferenceNozzle nozzle) throws Exception {
         String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
-        String regex = getCommand(null, CommandType.VACUUM_REPORT_REGEX);
+        String regex = getCommand(nozzle, CommandType.VACUUM_REPORT_REGEX);
         if (command == null || regex == null) {
             return null;
         }
@@ -640,10 +640,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         List<String> responses = sendGcode(command);
 
         for (String line : responses) {
+            Logger.trace("Check {}", line);
             if (line.matches(regex)) {
                 Logger.trace("Vacuum report: {}", line);
-                Matcher matcher =
-                        Pattern.compile(regex).matcher(line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
                 matcher.matches();
 
                 try {
@@ -691,11 +691,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         ReferenceNozzleTip nt = nozzle.getNozzleTip();
         
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel < nt.getVacuumLevelPartOn()) {
-            throw new Exception(String.format("Place failure: Vacuum level %d is lower than expected value of %d for part on. Part may have fallen off before place.", vacuumLevel, nt.getVacuumLevelPartOn()));
-        }
-
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
@@ -704,7 +699,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
         sendGcode(command);
         
-        vacuumLevel = readVacuumLevel(nozzle);
+        Integer vacuumLevel = readVacuumLevel(nozzle);
         if (vacuumLevel != null && vacuumLevel > nt.getVacuumLevelPartOff()) {
             throw new Exception(String.format("Place failure: Vacuum level %d is higher than expected value of %d for part off. Part may be stuck to nozzle.", vacuumLevel, nt.getVacuumLevelPartOff()));
         }
