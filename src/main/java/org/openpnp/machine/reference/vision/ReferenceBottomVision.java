@@ -188,7 +188,6 @@ public class ReferenceBottomVision implements PartAlignment {
             partSettings.getPipeline().setCamera(VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
-            e.printStackTrace();
         }
         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
     }
