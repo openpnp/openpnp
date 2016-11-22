@@ -89,11 +89,10 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
 
     public static PartAlignment findPartAligner(Machine machine, Part part) throws Exception {
         for (PartAlignment partAlignment : machine.getPartAlignments()) {
-           /* if (feeder.getPart() == part && feeder.isEnabled()) {
-                return feeder;
-            } */
-
-           return partAlignment;
+            if(partAlignment.canHandle(part))
+           {
+               return partAlignment;
+           }
         }
         throw new Exception("No compatible, enabled part aligner found for part " + part.getId());
     }

@@ -262,11 +262,6 @@ public class ReferenceMachine extends AbstractMachine {
         }
     }
 
-  //  @Override
-  //  public PartAlignment getPartAlignment() {
-    //    return partAlignment;
-   // }
-
     @Override
     public FiducialLocator getFiducialLocator() {
         return fiducialLocator;

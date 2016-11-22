@@ -206,24 +206,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 
                 if (part != null) {
 
-
-              /*      PartAlignment partAlignment =
-                            Configuration.get().getMachine().getPartAlignment();
-                    Wizard wizard = partAlignment.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        wizard.setWizardContainer(PartsPanel.this);
-                        alignmentPanel.add(wizard.getWizardPanel());
-                    }
-
-                   ZevatechMachine zMachine = (ZevatechMachine) Configuration.get().getMachine();
-
-                    PartAlignment centeringStage = (PartAlignment) zMachine.getCenteringStage();
-                    wizard=centeringStage.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        wizard.setWizardContainer(PartsPanel.this);
-                        centeringStagePanel.add(wizard.getWizardPanel());
-                    } */
-
                     int i = 0;
                     for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
                        Wizard wizard=partAlignment.getPartConfigurationWizard(part);

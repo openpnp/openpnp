@@ -55,7 +55,7 @@ public class ReferenceBottomVision implements PartAlignment {
     @Override
     public boolean canHandle(Part part) {
         boolean result =
-                allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
+                enabled && (allowIncompatiblePackages || compatiblePackages.contains(part.getPackage()));
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }

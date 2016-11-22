@@ -65,8 +65,8 @@ public class ZevatechCenteringStage implements PartAlignment {
 
     @Override
     public boolean canHandle(Part part) {
-        boolean result =
-                allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
+        boolean result = enabled &&
+                (allowIncompatiblePackages || compatiblePackages.contains(part.getPackage()));
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }
