@@ -63,8 +63,6 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
-import org.openpnp.machine.reference.ZevatechCenteringStage;
-import org.openpnp.machine.reference.ZevatechMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -207,7 +205,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Part part = getSelection();
                 
                 if (part != null) {
-                    PartAlignment partAlignment =
+
+
+              /*      PartAlignment partAlignment =
                             Configuration.get().getMachine().getPartAlignment();
                     Wizard wizard = partAlignment.getPartConfigurationWizard(part);
                     if (wizard != null) {
@@ -222,6 +222,21 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     if (wizard != null) {
                         wizard.setWizardContainer(PartsPanel.this);
                         centeringStagePanel.add(wizard.getWizardPanel());
+                    } */
+
+                    int i = 0;
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                       Wizard wizard=partAlignment.getPartConfigurationWizard(part);
+                        if (wizard != null) {
+                            wizard.setWizardContainer(PartsPanel.this);
+
+                            if(i==0)
+                                alignmentPanel.add(wizard.getWizardPanel());
+                            else if (i==1)
+                                 centeringStagePanel.add(wizard.getWizardPanel());
+
+                            i++;
+                        }
                     }
 
                 }

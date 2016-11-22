@@ -2,12 +2,7 @@ package org.openpnp.spi.base;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.*;
 import org.openpnp.util.MovableUtils;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
@@ -92,5 +87,15 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         throw new Exception("No compatible, enabled feeder found for part " + part.getId());
     }
 
+    public static PartAlignment findPartAligner(Machine machine, Part part) throws Exception {
+        for (PartAlignment partAlignment : machine.getPartAlignments()) {
+           /* if (feeder.getPart() == part && feeder.isEnabled()) {
+                return feeder;
+            } */
+
+           return partAlignment;
+        }
+        throw new Exception("No compatible, enabled part aligner found for part " + part.getId());
+    }
 
 }

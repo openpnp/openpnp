@@ -580,7 +580,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
 
-            ZevatechMachine zMachine = (ZevatechMachine) Configuration.get().getMachine();
+/*            ZevatechMachine zMachine = (ZevatechMachine) Configuration.get().getMachine();
             ZevatechCenteringStage centeringStage = (ZevatechCenteringStage) zMachine.getCenteringStage();
             if(centeringStage.getPartSettings(part).isEnabled())
             {
@@ -594,7 +594,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
                 PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
                 plannedPlacement.alignmentOffsets = alignmentOffset;
-            }
+            } */
+
+            PartAlignment partAlignment = findPartAligner(machine, part);
+
             Logger.debug("Align {} with {}", part, nozzle);
 
             plannedPlacement.stepComplete = true;

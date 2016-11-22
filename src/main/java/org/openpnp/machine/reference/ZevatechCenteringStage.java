@@ -2,6 +2,7 @@ package org.openpnp.machine.reference;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -11,20 +12,20 @@ import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartCon
 import org.openpnp.machine.reference.wizards.ZevatechCenteringStageConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ZevatechCenteringStagePartConfigurationWizard;
 import org.openpnp.model.*;
+import org.openpnp.model.Package;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementMap;
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.*;
 
 import javax.swing.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ZevatechCenteringStage implements PartAlignment {
     @Attribute(required = false)
@@ -35,6 +36,56 @@ public class ZevatechCenteringStage implements PartAlignment {
 
     @Element(required = false)
     private Location centeringStageLocation = new Location(LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private boolean allowIncompatiblePackages;
+
+    private Set<Package> compatiblePackages = new HashSet<>();
+
+    @ElementList(required = false, entry = "id")
+    private Set<String> compatiblePackageIds = new HashSet<>();
+
+    @Override
+    public String getId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setName(String name) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public boolean canHandle(Part part) {
+        boolean result =
+                allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
+        Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
+        return result;
+    }
+
+    public ZevatechCenteringStage()
+    {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                for (String id : compatiblePackageIds) {
+                    org.openpnp.model.Package pkg = configuration.getPackage(id);
+                    if (pkg == null) {
+                        continue;
+                    }
+                    compatiblePackages.add(pkg);
+                }
+            }
+        });
+    }
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
