@@ -82,7 +82,11 @@ public class ZevatechCenteringStage implements PartAlignment {
         // pick the (hopefully now centered) part back up
         nozzle.pick(part);
 
-        return new PartAlignmentOffset(null,false);
+        Location alignmentLocation = new Location(LengthUnit.Millimeters);
+        if(placementLocation != null)
+            alignmentLocation.derive(null,null,null,(double) 0);
+
+        return new PartAlignmentOffset(null,true);
     }
 
 
