@@ -580,26 +580,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
 
-/*            ZevatechMachine zMachine = (ZevatechMachine) Configuration.get().getMachine();
-            ZevatechCenteringStage centeringStage = (ZevatechCenteringStage) zMachine.getCenteringStage();
-            if(centeringStage.getPartSettings(part).isEnabled())
-            {
-                fireTextStatus("Centering-stage aligning %s for %s.", part.getId(), placement.getId());
-                PartAlignment.PartAlignmentOffset alignmentOffset = centeringStage.findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
+            PartAlignment partAlignment = findPartAligner(machine, part);
+            if(partAlignment != null) {
+                Logger.debug("Align {} with {}", part, nozzle, partAlignment.getName());
+
+                fireTextStatus("Aligning %s for %s with %s", part.getId(), placement.getId(), partAlignment.getName());
+                PartAlignment.PartAlignmentOffset alignmentOffset = partAlignment.findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
                 plannedPlacement.alignmentOffsets = alignmentOffset;
 
             }
-            else
-            {
-                fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
-                PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
-                plannedPlacement.alignmentOffsets = alignmentOffset;
-            } */
-
-            PartAlignment partAlignment = findPartAligner(machine, part);
-
-            Logger.debug("Align {} with {}", part, nozzle);
-
             plannedPlacement.stepComplete = true;
         }
 

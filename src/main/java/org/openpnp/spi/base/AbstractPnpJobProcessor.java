@@ -94,7 +94,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
                return partAlignment;
            }
         }
-        throw new Exception("No compatible, enabled part aligner found for part " + part.getId());
+        return null;
     }
 
 }

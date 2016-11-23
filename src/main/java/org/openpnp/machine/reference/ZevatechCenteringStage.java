@@ -40,11 +40,6 @@ public class ZevatechCenteringStage implements PartAlignment {
     @Attribute(required = false)
     private boolean allowIncompatiblePackages;
 
-    private Set<Package> compatiblePackages = new HashSet<>();
-
-    @ElementList(required = false, entry = "id")
-    private Set<String> compatiblePackageIds = new HashSet<>();
-
     @Override
     public String getId() {
         // TODO Auto-generated method stub
@@ -65,26 +60,11 @@ public class ZevatechCenteringStage implements PartAlignment {
 
     @Override
     public boolean canHandle(Part part) {
-        boolean result = enabled &&
-                (allowIncompatiblePackages || compatiblePackages.contains(part.getPackage()));
+
+        boolean result = enabled &
+                (allowIncompatiblePackages || getPartSettings(part).isEnabled());
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
-    }
-
-    public ZevatechCenteringStage()
-    {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                for (String id : compatiblePackageIds) {
-                    org.openpnp.model.Package pkg = configuration.getPackage(id);
-                    if (pkg == null) {
-                        continue;
-                    }
-                    compatiblePackages.add(pkg);
-                }
-            }
-        });
     }
 
     @Override
