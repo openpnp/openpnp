@@ -43,6 +43,10 @@ public class ZevatechCenteringStageConfigurationWizard extends AbstractConfigura
 
     }
 
+    @Override
+    public String getWizardName() {
+        return "Centering stage [QFP]";
+    }
 
     @Override
     public void createBindings() {

@@ -28,6 +28,11 @@ public class ZevatechCenteringStagePartConfigurationWizard extends AbstractConfi
 
     private JCheckBox enabledCheckbox;
 
+    @Override
+    public String getWizardName() {
+        return "CenteringStage [QFP]";
+    }
+
     public ZevatechCenteringStagePartConfigurationWizard(ZevatechCenteringStage centeringStage,
                                                          Part part) {
         this.centeringStage = centeringStage;

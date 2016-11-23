@@ -177,10 +177,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
 
-/*        JPanel centeringStagePanel = new JPanel();
-        centeringStagePanel.setLayout(new BorderLayout());
-        tabbedPane.add("Centering stage [QFP]", new JScrollPane(centeringStagePanel)); */
-
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -199,27 +195,24 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     singleSelectionActionGroup.setEnabled(!selections.isEmpty());
                 }
 
-     //           alignmentPanel.removeAll();
-       //         centeringStagePanel.removeAll();
-
                 Part part = getSelection();
                 
                 if (part != null) {
 
-                    int i = 0;
-                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                    tabbedPane.removeAll();
 
-                        JPanel alignPanel = new JPanel();
-                        alignPanel.setLayout(new BorderLayout());
-                        tabbedPane.add("Alignment", new JScrollPane(alignPanel));
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
 
                         Wizard wizard=partAlignment.getPartConfigurationWizard(part);
                         if (wizard != null) {
+                            JPanel alignPanel = new JPanel();
+                            alignPanel.setLayout(new BorderLayout());
+
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(alignPanel));
+
                             wizard.setWizardContainer(PartsPanel.this);
 
                             alignPanel.add(wizard.getWizardPanel());
-
-                            i++;
                         }
                     }
 
