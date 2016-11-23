@@ -45,12 +45,12 @@ public class ReferenceBottomVision implements PartAlignment {
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
     @Attribute(required = false)
-    private boolean allowIncompatiblePackages;
+    private boolean allowIncompatibleParts;
 
     @Override
     public boolean canHandle(Part part) {
         boolean result = enabled &
-                (allowIncompatiblePackages || getPartSettings(part).isEnabled());
+                (allowIncompatibleParts || getPartSettings(part).isEnabled());
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }

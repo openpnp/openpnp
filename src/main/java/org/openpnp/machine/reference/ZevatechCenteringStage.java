@@ -38,7 +38,7 @@ public class ZevatechCenteringStage implements PartAlignment {
     private Location centeringStageLocation = new Location(LengthUnit.Millimeters);
 
     @Attribute(required = false)
-    private boolean allowIncompatiblePackages;
+    private boolean allowIncompatibleParts;
 
     @Override
     public String getId() {
@@ -62,7 +62,7 @@ public class ZevatechCenteringStage implements PartAlignment {
     public boolean canHandle(Part part) {
 
         boolean result = enabled &
-                (allowIncompatiblePackages || getPartSettings(part).isEnabled());
+                (allowIncompatibleParts || getPartSettings(part).isEnabled());
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }
