@@ -64,8 +64,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "BottomVision";
     }
 
     @Override

@@ -48,8 +48,7 @@ public class ZevatechCenteringStage implements PartAlignment {
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "CenteringStage";
     }
 
     @Override
