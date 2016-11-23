@@ -177,9 +177,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
 
-        JPanel centeringStagePanel = new JPanel();
+/*        JPanel centeringStagePanel = new JPanel();
         centeringStagePanel.setLayout(new BorderLayout());
-        tabbedPane.add("Centering stage [QFP]", new JScrollPane(centeringStagePanel));
+        tabbedPane.add("Centering stage [QFP]", new JScrollPane(centeringStagePanel)); */
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -199,8 +199,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     singleSelectionActionGroup.setEnabled(!selections.isEmpty());
                 }
 
-                alignmentPanel.removeAll();
-                centeringStagePanel.removeAll();
+     //           alignmentPanel.removeAll();
+       //         centeringStagePanel.removeAll();
 
                 Part part = getSelection();
                 
@@ -208,14 +208,16 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
                     int i = 0;
                     for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                       Wizard wizard=partAlignment.getPartConfigurationWizard(part);
+
+                        JPanel alignPanel = new JPanel();
+                        alignPanel.setLayout(new BorderLayout());
+                        tabbedPane.add("Alignment", new JScrollPane(alignPanel));
+
+                        Wizard wizard=partAlignment.getPartConfigurationWizard(part);
                         if (wizard != null) {
                             wizard.setWizardContainer(PartsPanel.this);
 
-                            if(i==0)
-                                alignmentPanel.add(wizard.getWizardPanel());
-                            else if (i==1)
-                                 centeringStagePanel.add(wizard.getWizardPanel());
+                            alignPanel.add(wizard.getWizardPanel());
 
                             i++;
                         }
