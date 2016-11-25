@@ -496,7 +496,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         if (Double.isNaN(rotation)) {
             rotationAxis = null;
-        }
+        } 
 
         // If no axes are included in the move, there's nothing to do, so just return.
         if (xAxis == null && yAxis == null && zAxis == null && rotationAxis == null) {
