@@ -21,6 +21,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -46,6 +47,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public enum CommandType {
         COMMAND_CONFIRM_REGEX,
         POSITION_REPORT_REGEX,
+        COMMAND_ERROR_REGEX,
         CONNECT_COMMAND,
         ENABLE_COMMAND,
         DISABLE_COMMAND,
@@ -55,10 +57,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PUMP_OFF_COMMAND,
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
         MOVE_TO_COMPLETE_REGEX(true),
-        PICK_COMMAND(true, "Id", "Name"),
+        PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
-        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue");
+        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
+        VACUUM_REPORT_REGEX(true);
 
         final boolean headMountable;
         final String[] variableNames;
@@ -620,6 +624,40 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         return false;
     }
+    
+    private Integer readVacuumLevel(ReferenceNozzle nozzle) throws Exception {
+        String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
+        String regex = getCommand(nozzle, CommandType.VACUUM_REPORT_REGEX);
+        if (command == null || regex == null) {
+            return null;
+        }
+        
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
+        
+        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
+        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            Logger.trace("Check {}", line);
+            if (line.matches(regex)) {
+                Logger.trace("Vacuum report: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Vacuum");
+                    return Integer.valueOf(s);
+                }
+                catch (Exception e) {
+                    Logger.warn("Error processing vacuum report", e);
+                }
+            }
+        }
+        
+        return null;
+    }
 
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
@@ -631,7 +669,17 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         String command = getCommand(nozzle, CommandType.PICK_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
+        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
+        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
+
         sendGcode(command);
+
+        Integer vacuumLevel = readVacuumLevel(nozzle);
+        if (vacuumLevel != null && vacuumLevel < nt.getVacuumLevelPartOn()) {
+            throw new Exception(String.format("Pick failure: Vacuum level %d is lower than expected value of %d for part on. Part may have failed to pick.", vacuumLevel, nt.getVacuumLevelPartOn()));
+        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
@@ -640,10 +688,21 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
+
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
+        
         String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
+        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
+        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
         sendGcode(command);
+        
+        Integer vacuumLevel = readVacuumLevel(nozzle);
+        if (vacuumLevel != null && vacuumLevel > nt.getVacuumLevelPartOff()) {
+            throw new Exception(String.format("Place failure: Vacuum level %d is higher than expected value of %d for part off. Part may be stuck to nozzle.", vacuumLevel, nt.getVacuumLevelPartOff()));
+        }
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
@@ -764,6 +823,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         long t = System.currentTimeMillis();
         boolean found = false;
+        boolean foundError = false;
+        String errorResponse = "";
         // Loop until we've timed out
         while (System.currentTimeMillis() - t < timeout) {
             // Wait to see if a response came in. We wait up until the number of millis remaining
@@ -781,8 +842,19 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 found = true;
                 break;
             }
+
+            if (getCommand(null, CommandType.COMMAND_ERROR_REGEX) != null) {
+                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX))) {
+                    foundError = true;
+                    errorResponse = response;
+                    break;
+                }
+            }
         }
         // If a command was specified and no confirmation was found it's a timeout error.
+        if (command != null & foundError) {
+            throw new Exception("Controller raised an error: " + errorResponse);
+        }
         if (command != null && !found) {
             throw new Exception("Timeout waiting for response to " + command);
         }

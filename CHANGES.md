@@ -1,6 +1,48 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-11-17
+
+## Note: Breaking Change
+
+The Pick and Place Vacuum Sensing feature was originally released with different configuration
+variable names. If you installed this version which was released yesterday then your configuration
+will fail to load when you install this version. To fix it, edit your machine.xml and remove the
+lines that include `vacuum-level-min` and `vacuum-level-max`.
+
+## Changes
+
+* Pick and Place Vacuum Sensing
+
+	You can now set a "part on" and "part off" vacuum level on your nozzle tips. The values will
+	be checked during the pick and place operations. Currently only supported in GcodeDriver.
+	See https://github.com/openpnp/openpnp/wiki/GcodeDriver#vacuum_report_regex and
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#vacuum_request_command
+	for more information.
+	
+	Thank you to Matt Brocklehurst for this feature.
+	
+* Camera View Zoom
+
+	You can now zoom into the camera view using the mouse wheel. The zoom level does not affect
+	what the software sees when taking a picture, it only affects what you see. This can be used
+	to make it easier to pinpoint locations when doing setup work.
+
+* Feeder Post Pick Event
+
+	Feeders now support a post pick event which allows for actuation after the pick is complete.
+	This feature is primarily for custom feeders and it is not currently used in the default
+	feeders.
+
+	Thank you to Matt Brocklehurst for this feature.
+
+* GcodeDriver Controller Error Detection
+
+	GcodeDriver can now detect error responses from the controller using the `COMMAND_ERROR_REGEX`.
+	See https://github.com/openpnp/openpnp/wiki/GcodeDriver#command_error_regex for more details.
+	
+	Thank you to Matt Brocklehurst for this feature.
+
 # 2016-10-28
 
 * Nozzle Tip Changer Fourth Move Added

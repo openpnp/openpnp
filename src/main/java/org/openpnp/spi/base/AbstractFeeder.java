@@ -9,7 +9,7 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.spi.Nozzle;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
@@ -94,4 +94,6 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
     }
+    
+    public void postPick(Nozzle nozzle) throws Exception { }
 }

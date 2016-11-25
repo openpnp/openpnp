@@ -41,6 +41,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
 
@@ -62,6 +63,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
+
+    @Element(required = false)
+    private int vacuumLevelPartOn;
+
+    @Element(required = false)
+    private int vacuumLevelPartOff;
+    
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
     public ReferenceNozzleTip() {
@@ -192,6 +200,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
         return null;
+    }
+
+    public int getVacuumLevelPartOn() {
+        return vacuumLevelPartOn;
+    }
+
+    public void setVacuumLevelPartOn(int vacuumLevelPartOn) {
+        this.vacuumLevelPartOn = vacuumLevelPartOn;
+    }
+
+    public int getVacuumLevelPartOff() {
+        return vacuumLevelPartOff;
+    }
+
+    public void setVacuumLevelPartOff(int vacuumLevelPartOff) {
+        this.vacuumLevelPartOff = vacuumLevelPartOff;
     }
 
     public Calibration getCalibration() {
