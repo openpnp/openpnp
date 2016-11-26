@@ -146,26 +146,6 @@ public abstract class AbstractCamera implements Camera {
         }
     }
 
-    @Override
-    public int getWidth() {
-        if (width == null) {
-            BufferedImage image = capture();
-            width = image.getWidth();
-            height = image.getHeight();
-        }
-        return width;
-    }
-
-    @Override
-    public int getHeight() {
-        if (width == null) {
-            BufferedImage image = capture();
-            width = image.getWidth();
-            height = image.getHeight();
-        }
-        return height;
-    }
-
     public long getSettleTimeMs() {
         return settleTimeMs;
     }

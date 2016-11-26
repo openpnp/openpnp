@@ -61,7 +61,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public OpenCvCamera() {}
 
     @Override
-    public synchronized BufferedImage capture() {
+    public synchronized BufferedImage internalCapture() {
         if (thread == null) {
             initCamera();
         }
@@ -92,7 +92,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = capture();
+                BufferedImage image = internalCapture();
                 if (image != null) {
                     broadcastCapture(image);
                 }

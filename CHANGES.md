@@ -3,6 +3,32 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-11-26
 
+* Scripting Events
+
+	Scripting Events is a new feature that will be getting a lot of use in the future. This allows
+	scripts to be run when certain things happen in OpenPnP. The scripts are referenced by name
+	and can be of any supported scripting extension. They are found in the scripts/Events
+	directory.
+	
+	The feature is used by calling `Scripting.on(String eventName, Map<String, Object> globals)`.
+	
+	As part of this feature, Scripting was moved into Configuration rather than MainFrame, so
+	that it can be used outside of the UI.
+	
+	For more information, see https://github.com/openpnp/openpnp/wiki/Scripting#scripting-events.
+	
+* Camera.BeforeCapture and Camera.AfterCapture Scripting Events
+
+	The first use of the new feature described above is two events that can be used to control
+	lighting and other complex camera operations. Camera.BeforeCapture is fired before an image
+	is captured and Camera.AfterCapture is fired after the capture is complete.
+	
+	By using the scripting events in combination with named Actuators you can control any
+	device on your machine.
+
+	For more information, see https://github.com/openpnp/openpnp/wiki/Scripting#camerabeforecapture
+	and https://github.com/openpnp/openpnp/wiki/Scripting#cameraaftercapture
+
 * Removed Deprecated LtiCivilCamera and VfwCamera
 
 	LtiCivilCamera and VfwCamera were camera implementations for Mac and Windows. These required

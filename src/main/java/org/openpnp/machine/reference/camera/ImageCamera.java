@@ -126,7 +126,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized BufferedImage capture() {
+    public synchronized BufferedImage internalCapture() {
         /*
          * Create a buffer that we will render the center tile and it's surrounding tiles to.
          */
@@ -171,7 +171,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     public void run() {
         while (!Thread.interrupted()) {
-            BufferedImage frame = capture();
+            BufferedImage frame = internalCapture();
             broadcastCapture(frame);
             try {
                 Thread.sleep(1000 / fps);
