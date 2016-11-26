@@ -61,11 +61,13 @@ Variables: None.
 Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
 
 Variables:
+
 | Name  | Type | Description |
 | ------------- | ------------- | -------------- |
 | camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
 
 Example:
+
 .scripts/events/Camera.BeforeCapture.js
 ```
 /**
@@ -97,6 +99,7 @@ Variables:
 | camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
 
 Example:
+
 .scripts/events/Camera.AfterCapture.js
 ```
 /**
