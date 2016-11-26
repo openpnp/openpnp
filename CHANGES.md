@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-11-26
+
+* Removed Deprecated LtiCivilCamera and VfwCamera
+
+	LtiCivilCamera and VfwCamera were camera implementations for Mac and Windows. These required
+	native libraries that were out of date and, as far as I know, no longer used. These have been
+	removed in an effort to remove dead code from the project.
+	
+	If you were depending on these, please try switching to OpencvCamera or WebcamCamera. See
+	https://groups.google.com/forum/#!msg/openpnp/JnOMjZWi9C8 for more information.
+
 # 2016-11-17
 
 ## Note: Breaking Change

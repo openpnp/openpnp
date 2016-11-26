@@ -54,10 +54,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private String partId;
 
-    @Deprecated
-    @Attribute(required = false)
-    private Boolean place;
-
     @Attribute
     private Type type;
 
@@ -92,13 +88,6 @@ public class Placement extends AbstractModelObject implements Identifiable {
         setLocation(location);
         if (getPart() == null) {
             setPart(Configuration.get().getPart(partId));
-        }
-
-        if (version == 1.0) {
-            if (place != null && !place) {
-                type = Type.Ignore;
-            }
-            place = null;
         }
     }
 
