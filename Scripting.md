@@ -45,3 +45,65 @@ OpenPnP exposes several global variables to the scripting environment for use in
 | machine | [org.openpnp.spi.Machine](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Machine.html) | The machine object declared in the configuration. Provides access to Nozzles, Cameras, Feeders, etc. This can be used to move the machine and perform machine operations. Note that the type of this object is dependent on how your machine is configured but it will typically be ReferenceMachine. |
 | gui | [org.openpnp.gui.MainFrame](http://openpnp.github.io/openpnp/develop/org/openpnp/gui/MainFrame.html) | The top level window in the OpenPnP GUI. From here you can access any part of the GUI |
 | scripting | [org.openpnp.Scripting](http://openpnp.github.io/openpnp/develop/org/openpnp/Scripting.html) | The OpenPnP scripting engine. Can be used to find information about scripts and the scripting environment. |
+
+## Scripting Events
+
+Scripting Events allow you to define scripts that will be run automatically by OpenPnP during certain events. These scripts should be placed in the `.openpnp/scripts/Events` directory. They should be named in accordance with the events described below. Some Scripting Events include additional global variables. These are described below with each event.
+
+### Startup
+
+Called when system startup is complete.
+
+Variables: None.
+
+### Camera.BeforeCapture
+
+Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
+
+Variables:
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+Example:
+.scripts/events/Camera.BeforeCapture.js
+```
+/**
+ * Controls lighting for the two cameras using two named actuators. The lights
+ * for the up camera and down camera are turned on and off based on which camera
+ * needs to capture.
+ */
+ var upCamLights = machine.getActuatorByName("UpCamLights");
+ var downCamLights = machine.getActuatorByName("DownCamLights");
+
+if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Up) {
+	upCamLights.actuate(true);
+	downCamLights.actuate(false);
+}
+else if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Down) {
+	upCamLights.actuate(false);
+	downCamLights.actuate(true);
+}
+```
+
+### Camera.AfterCapture
+
+Called after an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
+
+Variables:
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
+
+Example:
+.scripts/events/Camera.AfterCapture.js
+```
+/**
+ * Controls lighting for the two cameras using two named actuators. All
+ * of the lights are turned off.
+ */
+ var upCamLights = machine.getActuatorByName("UpCamLights");
+ var downCamLights = machine.getActuatorByName("DownCamLights");
+upCamLights.actuate(false);
+downCamLights.actuate(false);
+```
