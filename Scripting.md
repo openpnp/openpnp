@@ -91,6 +91,7 @@ else if (camera.looking == Packages.org.openpnp.spi.Camera.Looking.Down) {
 Called after an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
 
 Variables:
+
 | Name  | Type | Description |
 | ------------- | ------------- | -------------- |
 | camera  | [org.openpnp.spi.Camera](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Camera.html) | The Camera which will be used to capture an image. |
