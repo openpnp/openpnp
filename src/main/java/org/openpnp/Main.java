@@ -86,6 +86,7 @@ public class Main {
                     MainFrame frame = new MainFrame(configuration);
                     frame.setVisible(true);
                     Logger.debug(String.format("Bienvenue, Wilkommen, Hello, Namaskar, Welkom to OpenPnP version %s.", Main.getVersion()));
+                    configuration.getScripting().on("Startup", null);
                 }
                 catch (Exception e) {
                     e.printStackTrace();

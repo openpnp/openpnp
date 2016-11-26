@@ -63,7 +63,6 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.Scripting;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -170,6 +169,7 @@ public class MainFrame extends JFrame {
     private JPanel logPanel;
     private JMenuBar menuBar;
     private JMenu mnImport;
+    private JMenu mnScripts;
 
     public JTabbedPane getTabs() {
         return tabs;
@@ -179,8 +179,6 @@ public class MainFrame extends JFrame {
 
     private ActionListener instructionsCancelActionListener;
     private ActionListener instructionsProceedActionListener;
-
-    private Scripting scripting;
 
     public MainFrame(Configuration configuration) {
         mainFrame = this;
@@ -307,9 +305,8 @@ public class MainFrame extends JFrame {
 
         // Scripts
         /////////////////////////////////////////////////////////////////////
-        JMenu mnScripts = new JMenu("Scripts");
+        mnScripts = new JMenu("Scripts");
         menuBar.add(mnScripts);
-        scripting = new Scripting(mnScripts);
 
         // Help
         /////////////////////////////////////////////////////////////////////
@@ -493,6 +490,7 @@ public class MainFrame extends JFrame {
 
         try {
             configuration.load();
+            configuration.getScripting().setMenu(mnScripts);
         }
         catch (Exception e) {
             e.printStackTrace();

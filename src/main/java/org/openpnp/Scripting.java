@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,24 +24,23 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.io.Files;
 
 public class Scripting {
-
-
-    final JMenu menu;
+    JMenu menu;
     final ScriptEngineManager manager = new ScriptEngineManager();
     final String[] extensions;
     File scriptsDirectory;
+    File eventsDirectory;
     WatchService watcher;
 
-    public Scripting(JMenu menu) {
-        this.menu = menu;
-
+    public Scripting() {
         // Collect all the script filename extensions we know how to handle from the list of
         // available scripting engines.
         List<ScriptEngineFactory> factories = manager.getEngineFactories();
@@ -79,25 +79,11 @@ public class Scripting {
                 }
             }
         }
-
-        // Add a separator and the Refresh Scripts and Open Scripts Directory items
-        menu.addSeparator();
-        menu.add(new AbstractAction("Refresh Scripts") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                synchronizeMenu(menu, getScriptsDirectory());
-            }
-        });
-        menu.add(new AbstractAction("Open Scripts Directory") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    if (Desktop.isDesktopSupported()) {
-                        Desktop.getDesktop().open(getScriptsDirectory());
-                    }
-                });
-            }
-        });
+        
+        this.eventsDirectory = new File(scriptsDirectory, "Events");
+        if (!eventsDirectory.exists()) {
+            eventsDirectory.mkdirs();
+        }
 
         // Add a file watcher so that we can be notified if any scripts change
         try {
@@ -122,6 +108,28 @@ public class Scripting {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public void setMenu(JMenu menu) {
+        this.menu = menu;
+        // Add a separator and the Refresh Scripts and Open Scripts Directory items
+        menu.addSeparator();
+        menu.add(new AbstractAction("Refresh Scripts") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                synchronizeMenu(menu, getScriptsDirectory());
+            }
+        });
+        menu.add(new AbstractAction("Open Scripts Directory") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().open(getScriptsDirectory());
+                    }
+                });
+            }
+        });
 
         // Synchronize the menu
         synchronizeMenu(menu, getScriptsDirectory());
@@ -130,7 +138,7 @@ public class Scripting {
     public File getScriptsDirectory() {
         return scriptsDirectory;
     }
-
+    
     private void watchDirectory(File directory) {
         try {
             directory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
@@ -142,6 +150,9 @@ public class Scripting {
     }
 
     private synchronized void synchronizeMenu(JMenu menu, File directory) {
+        if (menu == null) {
+            return;
+        }
         // Remove any menu items that don't have a matching entry in the directory
         Set<String> filenames = new HashSet<>(Arrays.asList(directory.list()));
         for (JMenuItem item : getScriptMenuItems(menu)) {
@@ -171,6 +182,9 @@ public class Scripting {
         itemNames = getScriptMenuItems(menu).stream().map(JMenuItem::getText)
                 .collect(Collectors.toSet());
         for (File d : directory.listFiles(File::isDirectory)) {
+            if (d.equals(eventsDirectory)) {
+                continue;
+            }
             if (!itemNames.contains(d.getName())) {
                 JMenu m = new JMenu(d.getName());
                 addSorted(menu, m);
@@ -213,8 +227,12 @@ public class Scripting {
         }
         return items;
     }
-
+    
     private void execute(File script) throws Exception {
+        execute(script, null);
+    }
+
+    private void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
         ScriptEngine engine =
                 manager.getEngineByExtension(Files.getFileExtension(script.getName()));
 
@@ -222,11 +240,28 @@ public class Scripting {
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
+        
+        if (additionalGlobals != null) {
+            for (String name : additionalGlobals.keySet()) {
+                engine.put(name, additionalGlobals.get(name));
+            }
+        }
 
         try (FileReader reader = new FileReader(script)) {
             engine.eval(reader);
         }
     }
     
-    
+    public void on(String event, Map<String, Object> globals) throws Exception {
+        Logger.trace("Scripting.on " + event);
+        for (File script : FileUtils.listFiles(eventsDirectory, extensions, false)) {
+            if (!script.isFile()) {
+                continue;
+            }
+            if (FilenameUtils.getBaseName(script.getName()).equals(event)) {
+                Logger.trace("Scripting.on found " + script.getName());
+                execute(script, globals);
+            }
+        }
+    }
 }

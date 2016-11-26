@@ -32,6 +32,7 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
 import org.pmw.tinylog.Logger;
@@ -70,6 +71,7 @@ public class Configuration extends AbstractModelObject {
     private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
     private File configurationDirectory;
     private Preferences prefs;
+    private Scripting scripting;
 
     public static Configuration get() {
         if (instance == null) {
@@ -86,6 +88,10 @@ public class Configuration extends AbstractModelObject {
     private Configuration(File configurationDirectory) {
         this.configurationDirectory = configurationDirectory;
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
+    }
+    
+    public Scripting getScripting() {
+        return scripting;
     }
 
     public File getConfigurationDirectory() {
@@ -270,6 +276,8 @@ public class Configuration extends AbstractModelObject {
         for (ConfigurationListener listener : listeners) {
             listener.configurationComplete(this);
         }
+        
+        scripting = new Scripting();
     }
 
     public synchronized void save() throws Exception {
