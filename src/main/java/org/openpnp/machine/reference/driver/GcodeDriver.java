@@ -458,6 +458,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         Axis zAxis = getAxis(hm, Axis.Type.Z);
         Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
         
+        //additional info might be on subdrivers (note that subdrivers can only be one level deep)
         for (ReferenceDriver driver : subDrivers) {
         	GcodeDriver d = (GcodeDriver) driver;
             if (d.getAxis(hm, Axis.Type.X) != null){
