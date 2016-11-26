@@ -452,10 +452,27 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
+    	//according main driver
         Axis xAxis = getAxis(hm, Axis.Type.X);
         Axis yAxis = getAxis(hm, Axis.Type.Y);
         Axis zAxis = getAxis(hm, Axis.Type.Z);
         Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
+        
+        for (ReferenceDriver driver : subDrivers) {
+        	GcodeDriver d = (GcodeDriver) driver;
+            if (d.getAxis(hm, Axis.Type.X) != null){
+            	xAxis = d.getAxis(hm, Axis.Type.X);
+            }
+            if (d.getAxis(hm, Axis.Type.Y) != null){
+            	yAxis = d.getAxis(hm, Axis.Type.Y);
+            }
+            if (d.getAxis(hm, Axis.Type.Z) != null){
+            	zAxis = d.getAxis(hm, Axis.Type.Z);
+            }
+            if (d.getAxis(hm, Axis.Type.Rotation) != null){
+            	rotationAxis = d.getAxis(hm, Axis.Type.Rotation);
+            }
+        } 
 
         Location location =
                 new Location(units, xAxis == null ? 0 : xAxis.getTransformedCoordinate(hm),
