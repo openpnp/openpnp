@@ -26,7 +26,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
@@ -135,7 +134,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int connectWaitTimeMilliseconds = 1000;
 
     @Element(required = false)
-    protected Location homingFiducialLocation = null;
+    protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
 
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
@@ -237,11 +236,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
          */
         Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
         if (homePart != null) {
-            Location tmp = new Location(LengthUnit.Millimeters, 0.0, 0.0, 0.0, 0.0);
-            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-            // camera.moveTo(tmp);
-            Location homeOffset = Configuration.get().getMachine().getFiducialLocator()
-                    .getHomeFiducialLocation(tmp, homePart);
+            Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(homingFiducialLocation, homePart);
 
             // homeOffset contains the offset, but we are not really concerned with that,
             // we just reset X,Y back to the home-coordinate at this point.
