@@ -112,6 +112,8 @@ To use visual homing:
 2. Set up your machine so that when mechanical homing is complete the fiducial is visible to the camera.
 3. When mechanical homing is complete, GcodeDriver will look for the fiducial, center on it and then reset the X and Y coordinates to 0,0.
 
+If your homing fiducial is in a different location than the camera can see after homing you can change the location that is searched by added `<homing-fiducial-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>` to your driver in `machine.xml`.
+
 # Troubleshooting
 
 ## Asking for Help
