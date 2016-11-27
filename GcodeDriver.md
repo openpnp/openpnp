@@ -102,6 +102,16 @@ If your system has more than one nozzle you will need to tell OpenPnP which axes
 
 See [[GcodeDriver: Axis Mapping]] for the full documentation of this feature.
 
+# Visual Homing
+
+GcodeDriver supports the ability to complete the homing operation using a vision check. If there is a part defined in your Parts list called `FIDUCIAL-HOME` then after GcodeDriver completes the standard homing operation (using `HOME_COMMAND`) it will do a fiducial check for the `FIDUCIAL-HOME` part and reset the home coordinates.
+
+To use visual homing:
+
+1. Create a Part called `FIDUCIAL-HOME`. The Part should follow the same rules are used for setting up [[Fiducials]].
+2. Set up your machine so that when mechanical homing is complete the fiducial is visible to the camera.
+3. When mechanical homing is complete, GcodeDriver will look for the fiducial, center on it and then reset the X and Y coordinates to 0,0.
+
 # Troubleshooting
 
 ## Asking for Help
