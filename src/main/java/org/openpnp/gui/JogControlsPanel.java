@@ -62,8 +62,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Dimension;
-import java.awt.GridLayout;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left, X + / -, Y + / -, Z
@@ -216,12 +214,14 @@ public class JogControlsPanel extends JPanel {
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JPanel panel = new JPanel();
-        add(panel);
-        panel.setBorder(null);
+        setFocusTraversalPolicy(focusPolicy);
+        setFocusTraversalPolicyProvider(true);
+
+        JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.TOP);
+        add(tabbedPane_1);
 
         JPanel panelControls = new JPanel();
-        panel.add(panelControls);
+        tabbedPane_1.addTab("Jog", null, panelControls, null);
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -346,17 +346,10 @@ public class JogControlsPanel extends JPanel {
         clockwiseButton.setHideActionText(true);
         panelControls.add(clockwiseButton, "10, 12");
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        add(tabbedPane);
-
         JPanel panelSpecial = new JPanel();
-        tabbedPane.addTab("Special Commands", null, panelSpecial, null);
+        tabbedPane_1.addTab("Special", null, panelSpecial, null);
         FlowLayout flowLayout_1 = (FlowLayout) panelSpecial.getLayout();
         flowLayout_1.setAlignment(FlowLayout.LEFT);
-
-        panelActuators = new JPanel();
-        tabbedPane.addTab("Actuators", null, panelActuators, null);
-        panelActuators.setLayout(new GridLayout(0, 4, 0, 0));
 
         JButton btnSafeZ = new JButton(safezAction);
         panelSpecial.add(btnSafeZ);
@@ -364,13 +357,14 @@ public class JogControlsPanel extends JPanel {
         JButton btnDiscard = new JButton(discardAction);
         panelSpecial.add(btnDiscard);
 
+        panelActuators = new JPanel();
+        tabbedPane_1.addTab("Actuators", null, panelActuators, null);
+        panelActuators.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+
         panelDispensers = new JPanel();
+        tabbedPane_1.addTab("Dispense", null, panelDispensers, null);
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
-        tabbedPane.addTab("Paste Dispensers", null, panelDispensers, null);
-
-        setFocusTraversalPolicy(focusPolicy);
-        setFocusTraversalPolicyProvider(true);
     }
 
     private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
