@@ -54,12 +54,10 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class MachineSetupPanel extends JPanel implements WizardContainer {
-    private final static Logger logger = LoggerFactory.getLogger(MachineSetupPanel.class);
+
 
     private static final String PREF_DIVIDER_POSITION = "MachineSetupPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
@@ -160,7 +158,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                             String title = propertySheet.getPropertySheetTitle();
                             JPanel panel = propertySheet.getPropertySheetPanel();
                             if (title == null) {
-                                title = "Untitled";
+                                title = "Configuration";
                             }
                             if (panel != null) {
                                 tabbedPane.add(title, panel);

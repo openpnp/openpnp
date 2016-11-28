@@ -20,8 +20,13 @@
 package org.openpnp.model;
 
 public enum LengthUnit {
-    Meters("m", "Meter"), Centimeters("cm", "Centimeter"), Millimeters("mm",
-            "Millimeter"), Feet("'", "Foot"), Inches("\"", "Inch");
+    Meters("m", "Meter"),
+    Centimeters("cm", "Centimeter"),
+    Millimeters("mm", "Millimeter"),
+    Feet("'", "Foot"),
+    Inches("\"", "Inch"),
+    Mils("mil", "Mil"),
+    Microns("μm", "Micron");
 
     private final String shortName;
 

@@ -24,7 +24,7 @@ import java.util.Locale;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 
-public class LengthCellValue {
+public class LengthCellValue implements Comparable<LengthCellValue> {
     private static Configuration configuration;
 
     private Length length;
@@ -36,6 +36,7 @@ public class LengthCellValue {
     private boolean displayNativeUnits;
 
     public static void setConfiguration(Configuration configuration) {
+
         LengthCellValue.configuration = configuration;
     }
 
@@ -87,5 +88,15 @@ public class LengthCellValue {
             l = l.convertToUnits(configuration.getSystemUnits());
             return String.format(Locale.US, configuration.getLengthDisplayFormat(), l.getValue());
         }
+    }
+
+    @Override
+    public int compareTo(LengthCellValue other)
+    {
+        if(getLength().getValue()==other.getLength().getValue())
+            return 0;
+        if(getLength().getValue() < other.getLength().getValue())
+            return -1;
+        return 1;
     }
 }

@@ -30,11 +30,9 @@ import javax.swing.Action;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
-import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
@@ -55,12 +53,11 @@ import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReferenceMachine extends AbstractMachine {
-    private static Logger logger = LoggerFactory.getLogger(ReferenceMachine.class);
+
 
     @Element(required = false)
     private ReferenceDriver driver = new NullDriver();
@@ -69,7 +66,10 @@ public class ReferenceMachine extends AbstractMachine {
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
 
     @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = null;
+    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = new ReferencePasteDispenseJobProcessor();
+
+    @Element(required = false)
+    protected PasteDispenseJobProcessor glueDispenseJobProcessor = new ReferenceGlueDispenseJobProcessor();
 
     @Element(required = false)
     protected PartAlignment partAlignment = new ReferenceBottomVision();
@@ -100,7 +100,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        logger.debug("setEnabled({})", enabled);
+        Logger.debug("setEnabled({})", enabled);
         if (enabled) {
             try {
                 driver.setEnabled(true);
@@ -138,6 +138,7 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
+        children.add(new SimplePropertySheetHolder("Signalers", getSignalers()));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
         children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
@@ -185,8 +186,6 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Camera>> getCompatibleCameraClasses() {
         List<Class<? extends Camera>> l = new ArrayList<>();
         l.add(Webcams.class);
-        l.add(LtiCivilCamera.class);
-        l.add(VfwCamera.class);
         l.add(OpenCvCamera.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
@@ -196,7 +195,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void home() throws Exception {
-        logger.debug("home");
+        Logger.debug("home");
         super.home();
     }
 
@@ -247,4 +246,10 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
+
+    @Override
+    public PasteDispenseJobProcessor getGlueDispenseJobProcessor() {
+        return glueDispenseJobProcessor;
+    }
+
 }

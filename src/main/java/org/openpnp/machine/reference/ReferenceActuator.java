@@ -31,13 +31,12 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
-    protected final static Logger logger = LoggerFactory.getLogger(ReferenceActuator.class);
+
 
     @Element
     private Location headOffsets;
@@ -81,7 +80,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(boolean on) throws Exception {
-        logger.debug("{}.actuate({})", getName(), on);
+        Logger.debug("{}.actuate({})", getName(), on);
         driver.actuate(this, on);
         machine.fireMachineHeadActivity(head);
     }
@@ -93,21 +92,21 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public void actuate(double value) throws Exception {
-        logger.debug("{}.actuate({})", getName(), value);
+        Logger.debug("{}.actuate({})", getName(), value);
         driver.actuate(this, value);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
-        logger.debug("{}.moveTo({}, {})", getName(), location, speed);
+        Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         driver.moveTo(this, location, speed);
         machine.fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveToSafeZ(double speed) throws Exception {
-        logger.debug("{}.moveToSafeZ({})", getName(), speed);
+        Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);

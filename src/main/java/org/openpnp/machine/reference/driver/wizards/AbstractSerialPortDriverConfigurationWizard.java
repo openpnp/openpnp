@@ -1,9 +1,11 @@
 package org.openpnp.machine.reference.driver.wizards;
 
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
@@ -15,8 +17,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.border.TitledBorder;
-import javax.swing.JCheckBox;
 
 public class AbstractSerialPortDriverConfigurationWizard extends AbstractConfigurationWizard {
     private final AbstractSerialPortDriver driver;

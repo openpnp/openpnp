@@ -91,6 +91,7 @@ public class Length {
         if (this.units == units) {
             return this;
         }
+        // First convert the current value to millimeters, which we use as a base unit.
         double mm = 0;
         if (this.units == LengthUnit.Millimeters) {
             mm = value;
@@ -107,10 +108,17 @@ public class Length {
         else if (this.units == LengthUnit.Feet) {
             mm = value * 25.4 * 12;
         }
+        else if (this.units == LengthUnit.Mils) {
+            mm = value / 1000 * 25.4;
+        }
+        else if (this.units == LengthUnit.Microns) {
+            mm = value / 1000.0;
+        }
         else {
             throw new Error("convertLength() unrecognized units " + this.units);
         }
 
+        // Then convert the calculated millimeter value to the requested unit.
         if (units == LengthUnit.Millimeters) {
             return new Length(mm, units);
         }
@@ -125,6 +133,12 @@ public class Length {
         }
         else if (units == LengthUnit.Feet) {
             return new Length(mm * (1 / 25.4) * 12, units);
+        }
+        else if (units == LengthUnit.Mils) {
+            return new Length(mm * (1 / 25.4 * 1000), units);
+        }
+        else if (units == LengthUnit.Microns) {
+            return new Length(mm * 1000, units);
         }
         else {
             throw new Error("convertLength() unrecognized units " + units);

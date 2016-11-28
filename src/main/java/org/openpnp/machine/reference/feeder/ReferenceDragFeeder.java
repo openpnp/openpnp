@@ -44,11 +44,10 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Vision System Description
@@ -67,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * the right position.
  */
 public class ReferenceDragFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceDragFeeder.class);
+
 
     private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -102,7 +101,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        logger.debug("feed({})", nozzle);
+        Logger.debug("feed({})", nozzle);
 
         if (actuatorName == null) {
             throw new Exception("No actuator name set.");
@@ -135,11 +134,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
                 // for the next operation. By front loading this we make sure
                 // that all future calls can go directly to the feed operation
                 // and skip checking the vision first.
-                logger.debug("First feed, running vision pre-flight.");
+                Logger.debug("First feed, running vision pre-flight.");
 
                 visionOffset = getVisionOffsets(head, location);
             }
-            logger.debug("visionOffsets " + visionOffset);
+            Logger.debug("visionOffsets " + visionOffset);
         }
 
         // Now we have visionOffsets (if we're using them) so we
@@ -176,15 +175,15 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
 
-            logger.debug("final visionOffsets " + visionOffset);
+            Logger.debug("final visionOffsets " + visionOffset);
         }
 
-        logger.debug("Modified pickLocation {}", pickLocation);
+        Logger.debug("Modified pickLocation {}", pickLocation);
     }
 
     // TODO: Throw an Exception if vision fails.
     private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
-        logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
+        Logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
         // Find the Camera to be used for vision
         // TODO: Consider caching this
         Camera camera = null;
@@ -201,7 +200,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         head.moveToSafeZ();
 
         // Position the camera over the pick location.
-        logger.debug("Move camera to pick location.");
+        Logger.debug("Move camera to pick location.");
         camera.moveTo(pickLocation);
 
         // Move the camera to be in focus over the pick location.
@@ -215,7 +214,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         Rectangle aoi = getVision().getAreaOfInterest();
 
         // Perform the template match
-        logger.debug("Perform template match.");
+        Logger.debug("Perform template match.");
         Point[] matchingPoints = visionProvider.locateTemplateMatches(aoi.getX(), aoi.getY(),
                 aoi.getWidth(), aoi.getHeight(), 0, 0, vision.getTemplateImage());
 
@@ -225,42 +224,41 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // match now contains the position, in pixels, from the top left corner
         // of the image to the top left corner of the match. We are interested in
         // knowing how far from the center of the image the center of the match is.
-        BufferedImage image = camera.capture();
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
+        double imageWidth = camera.getWidth();
+        double imageHeight = camera.getHeight();
         double templateWidth = vision.getTemplateImage().getWidth();
         double templateHeight = vision.getTemplateImage().getHeight();
         double matchX = match.x;
         double matchY = match.y;
 
-        logger.debug("matchX {}, matchY {}", matchX, matchY);
+        Logger.debug("matchX {}, matchY {}", matchX, matchY);
 
         // Adjust the match x and y to be at the center of the match instead of
         // the top left corner.
         matchX += (templateWidth / 2);
         matchY += (templateHeight / 2);
 
-        logger.debug("centered matchX {}, matchY {}", matchX, matchY);
+        Logger.debug("centered matchX {}, matchY {}", matchX, matchY);
 
         // Calculate the difference between the center of the image to the
         // center of the match.
         double offsetX = (imageWidth / 2) - matchX;
         double offsetY = (imageHeight / 2) - matchY;
 
-        logger.debug("offsetX {}, offsetY {}", offsetX, offsetY);
+        Logger.debug("offsetX {}, offsetY {}", offsetX, offsetY);
 
         // Invert the Y offset because images count top to bottom and the Y
         // axis of the machine counts bottom to top.
         offsetY *= -1;
 
-        logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
+        Logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
 
         // And convert pixels to units
         Location unitsPerPixel = camera.getUnitsPerPixel();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
 
-        logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
+        Logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
 
         return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
     }
@@ -342,11 +340,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override

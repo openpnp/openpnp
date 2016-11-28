@@ -63,7 +63,6 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.Scripting;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -76,6 +75,7 @@ import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 
@@ -169,6 +169,7 @@ public class MainFrame extends JFrame {
     private JPanel logPanel;
     private JMenuBar menuBar;
     private JMenu mnImport;
+    private JMenu mnScripts;
 
     public JTabbedPane getTabs() {
         return tabs;
@@ -179,12 +180,11 @@ public class MainFrame extends JFrame {
     private ActionListener instructionsCancelActionListener;
     private ActionListener instructionsProceedActionListener;
 
-    private Scripting scripting;
-
     public MainFrame(Configuration configuration) {
         mainFrame = this;
         this.configuration = configuration;
         LengthCellValue.setConfiguration(configuration);
+        RotationCellValue.setConfiguration(configuration);
         HeadCellValue.setConfiguration(configuration);
 
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -305,9 +305,8 @@ public class MainFrame extends JFrame {
 
         // Scripts
         /////////////////////////////////////////////////////////////////////
-        JMenu mnScripts = new JMenu("Scripts");
+        mnScripts = new JMenu("Scripts");
         menuBar.add(mnScripts);
-        scripting = new Scripting(mnScripts);
 
         // Help
         /////////////////////////////////////////////////////////////////////
@@ -491,6 +490,7 @@ public class MainFrame extends JFrame {
 
         try {
             configuration.load();
+            configuration.getScripting().setMenu(mnScripts);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -518,7 +518,7 @@ public class MainFrame extends JFrame {
      * Register a BoardImporter with the system, causing it to gain a menu location in the
      * File->Import menu.
      * 
-     * @param importer
+     * @param boardImporterClass
      */
     public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
         final BoardImporter boardImporter;
@@ -671,7 +671,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-            MessageBoxes.errorBox(MainFrame.this, "Notice",
+            MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
         }
     };
@@ -680,7 +680,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
-            MessageBoxes.errorBox(MainFrame.this, "Notice",
+            MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
         }
     };

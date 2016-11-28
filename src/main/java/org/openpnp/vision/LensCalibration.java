@@ -13,8 +13,7 @@ import org.opencv.core.Point3;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pmw.tinylog.Logger;
 
 /**
  * Performs OpenCV based lens calibration based on the techniques described in:
@@ -27,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * OpenCV 3.
  */
 public class LensCalibration {
-    protected final static Logger logger = LoggerFactory.getLogger(LensCalibration.class);
+
 
     static {
         nu.pattern.OpenCV.loadShared();
@@ -155,7 +154,7 @@ public class LensCalibration {
         
         boolean ok = Core.checkRange(cameraMatrix) && Core.checkRange(distortionCoefficients);
 
-        logger.info("calibrate() ok {}, rms {}", ok, rms);
+        Logger.info("calibrate() ok {}, rms {}", ok, rms);
 
         if (ok) {
             this.cameraMatrix = cameraMatrix;

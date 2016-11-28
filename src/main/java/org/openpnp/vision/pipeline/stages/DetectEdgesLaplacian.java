@@ -4,7 +4,6 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.simpleframework.xml.Attribute;
 
 /**
  * Performs Canny edge detection on the working image, updating it with the results.

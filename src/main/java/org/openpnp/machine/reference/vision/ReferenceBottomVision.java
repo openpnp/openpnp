@@ -14,6 +14,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -27,15 +28,14 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReferenceBottomVision implements PartAlignment {
-    private static final Logger logger = LoggerFactory.getLogger(ReferenceBottomVision.class);
+
 
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
@@ -49,11 +49,11 @@ public class ReferenceBottomVision implements PartAlignment {
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
     @Override
-    public Location findOffsets(Part part, Nozzle nozzle) throws Exception {
+    public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
         PartSettings partSettings = getPartSettings(part);
 
         if (!isEnabled() || !partSettings.isEnabled()) {
-            return new Location(LengthUnit.Millimeters);
+            return new PartAlignmentOffset(new Location(LengthUnit.Millimeters),false);
         }
 
         Camera camera = VisionUtils.getBottomVisionCamera();
@@ -79,7 +79,7 @@ public class ReferenceBottomVision implements PartAlignment {
                     + " on nozzle " + nozzle.getName() + ". No result found.");
         }
         RotatedRect rect = (RotatedRect) result.model;
-        logger.debug("Result rect {}", rect);
+        Logger.debug("Result rect {}", rect);
 
         // Create the offsets object. This is the physical distance from
         // the center of the camera to the located part.
@@ -101,7 +101,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         // Set the angle on the offsets.
         offsets = offsets.derive(null, null, null, -angle);
-        logger.debug("Final offsets {}", offsets);
+        Logger.debug("Final offsets {}", offsets);
 
         CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
         String s = rect.size.toString() + " " + rect.angle + "°";
@@ -109,7 +109,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return offsets;
+        return new PartAlignmentOffset(offsets,false);
     }
 
     public static CvPipeline createDefaultPipeline() {
@@ -188,7 +188,6 @@ public class ReferenceBottomVision implements PartAlignment {
             partSettings.getPipeline().setCamera(VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
-            e.printStackTrace();
         }
         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
     }

@@ -58,16 +58,6 @@
 			<version>2.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.lti-civil</groupId>
-			<artifactId>lti-civil</artifactId>
-			<version>20070920-1721</version>
-		</dependency>
-		<dependency>
-			<groupId>org.vonnieda</groupId>
-			<artifactId>jvfw</artifactId>
-			<version>0.0.2</version>
-		</dependency>
-		<dependency>
 			<groupId>org.scream3r</groupId>
 			<artifactId>jssc</artifactId>
 			<version>2.8.0</version>
@@ -132,6 +122,16 @@
 			<groupId>org.python</groupId>
 			<artifactId>jython-standalone</artifactId>
 			<version>2.7.1b3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.beanshell</groupId>
+    			<artifactId>bsh</artifactId>
+    			<version>2.0b5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.tinylog</groupId>
+			<artifactId>tinylog</artifactId>
+			<version>1.1</version>
 		</dependency>
 	</dependencies>
 	<build>

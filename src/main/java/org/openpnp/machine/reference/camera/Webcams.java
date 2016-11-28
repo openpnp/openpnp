@@ -73,7 +73,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     }
 
     @Override
-    public synchronized BufferedImage capture() {
+    public synchronized BufferedImage internalCapture() {
         if (thread == null) {
             setDeviceId(deviceId);
         }
@@ -104,7 +104,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = capture();
+                BufferedImage image = internalCapture();
                 if (image == null) {
                     image = redImage;
                 }
@@ -204,13 +204,6 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
 

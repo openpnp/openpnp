@@ -13,26 +13,113 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.core.Commit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.simpleframework.xml.Root;
 
+import com.google.common.base.Joiner;
+
+@Root
 public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(GcodeDriver.class);
+    public enum CommandType {
+        COMMAND_CONFIRM_REGEX,
+        POSITION_REPORT_REGEX,
+        COMMAND_ERROR_REGEX,
+        CONNECT_COMMAND,
+        ENABLE_COMMAND,
+        DISABLE_COMMAND,
+        POST_VISION_HOME_COMMAND,
+        HOME_COMMAND("Id", "Name"),
+        PUMP_ON_COMMAND,
+        PUMP_OFF_COMMAND,
+        MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
+        MOVE_TO_COMPLETE_REGEX(true),
+        PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
+        PLACE_COMMAND(true, "Id", "Name"),
+        ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
+        ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
+        VACUUM_REPORT_REGEX(true);
+
+        final boolean headMountable;
+        final String[] variableNames;
+
+        private CommandType() {
+            this(false);
+        }
+
+        private CommandType(boolean headMountable) {
+            this(headMountable, new String[] {});
+        }
+
+        private CommandType(String... variableNames) {
+            this(false, variableNames);
+        }
+
+        private CommandType(boolean headMountable, String... variableNames) {
+            this.headMountable = headMountable;
+            this.variableNames = variableNames;
+        }
+
+        public boolean isHeadMountable() {
+            return headMountable;
+        }
+    }
+
+    public static class Command {
+        @Attribute(required = false)
+        public String headMountableId;
+
+        @Attribute(required = true)
+        public CommandType type;
+
+        @ElementList(required = false, inline = true, entry = "text", data = true)
+        public ArrayList<String> commands = new ArrayList<>();
+
+        public Command(String headMountableId, CommandType type, String text) {
+            this.headMountableId = headMountableId;
+            this.type = type;
+            setCommand(text);
+        }
+
+        public void setCommand(String text) {
+            this.commands.clear();
+            if (text != null) {
+                text = text.trim();
+                text = text.replaceAll("\r", "");
+                String[] commands = text.split("\n");
+                this.commands.addAll(Arrays.asList(commands));
+            }
+        }
+
+        public String getCommand() {
+            return Joiner.on('\n').join(commands);
+        }
+
+        private Command() {
+
+        }
+    }
 
     @Attribute(required = false)
     protected LengthUnit units = LengthUnit.Millimeters;
@@ -47,54 +134,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     protected int connectWaitTimeMilliseconds = 1000;
 
     @Element(required = false)
-    protected Location homeLocation = null;
+    protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
 
-    @Element(required = false)
-    protected String commandConfirmRegex = "^ok.*";;
-
-    @Element(required = false)
-    protected String connectCommand = null;
-
-    @Element(required = false)
-    protected String enableCommand = null;
-
-    @Element(required = false)
-    protected String disableCommand = null;
-
-    @Element(required = false)
-    protected String homeCommand = null;
-
-    /**
-     * This command has special handling for the X, Y, Z and Rotation variables. If the move does
-     * not change one of these variables that variable is replaced with the empty string, removing
-     * it from the command. This allows Gcode to be sent containing only the components that are
-     * being used which is important for some controllers when moving an "extruder" for the C axis.
-     * The end result is that if a move contains only a change in the C axis only the C axis value
-     * will be sent.
-     */
-    @Element(required = false)
-    protected String moveToCommand = null;
-
-    @Element(required = false)
-    protected String moveToCompleteRegex = null;
-
-    @Element(required = false)
-    protected String pickCommand = null;
-
-    @Element(required = false)
-    protected String placeCommand = null;
-
-    @Element(required = false)
-    protected String actuateBooleanCommand = null;
-
-    @Element(required = false)
-    protected String actuateDoubleCommand = null;
-    
-    @Element(required = false)
-    protected String pumpOnCommand = null;
-
-    @Element(required = false)
-    protected String pumpOffCommand = null;
+    @ElementList(required = false, inline = true)
+    public ArrayList<Command> commands = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<ReferenceDriver> subDrivers = new ArrayList<>();
@@ -108,22 +151,18 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
 
-    @Commit
-    public void commit() {
-        if (axes.isEmpty()) {
-            double x = 0, y = 0, z = 0, rotation = 0;
-            if (this.homeLocation != null) {
-                x = homeLocation.getX();
-                y = homeLocation.getY();
-                z = homeLocation.getZ();
-                rotation = homeLocation.getRotation();
-                this.homeLocation = null;
-            }
-            axes.add(new Axis("x", Axis.Type.X, x, "*"));
-            axes.add(new Axis("y", Axis.Type.Y, y, "*"));
-            axes.add(new Axis("z", Axis.Type.Z, z, "*"));
-            axes.add(new Axis("rotation", Axis.Type.Rotation, rotation, "*"));
-        }
+    public void createDefaults() {
+        axes = new ArrayList<>();
+        axes.add(new Axis("x", Axis.Type.X, 0, "*"));
+        axes.add(new Axis("y", Axis.Type.Y, 0, "*"));
+        axes.add(new Axis("z", Axis.Type.Z, 0, "*"));
+        axes.add(new Axis("rotation", Axis.Type.Rotation, 0, "*"));
+
+        commands = new ArrayList<>();
+        commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
+        commands.add(new Command(null, CommandType.CONNECT_COMMAND, "G21 ; Set millimeters mode\nG90 ; Set absolute positioning mode\nM82 ; Set absolute mode for extruder"));
+        commands.add(new Command(null, CommandType.HOME_COMMAND, "G28 ; Home all axes"));
+        commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move\nM400 ; Wait for moves to complete before returning"));
     }
 
     public synchronized void connect() throws Exception {
@@ -148,7 +187,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         setEnabled(false);
 
         // Send startup Gcode
-        sendGcode(connectCommand);
+        sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
     }
@@ -160,10 +199,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         if (connected) {
             if (enabled) {
-                sendGcode(enableCommand);
+                sendGcode(getCommand(null, CommandType.ENABLE_COMMAND));
             }
             else {
-                sendGcode(disableCommand);
+                sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
             }
         }
 
@@ -176,7 +215,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void home(ReferenceHead head) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
-        String command = homeCommand;
+        String command = getCommand(null, CommandType.HOME_COMMAND);
         command = substituteVariable(command, "Id", head.getId());
         command = substituteVariable(command, "Name", head.getName());
         sendGcode(command, -1);
@@ -187,6 +226,39 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         for (ReferenceDriver driver : subDrivers) {
             driver.home(head);
+        }
+
+        /*
+         * The head camera for nozzle-1 should now be (if everything has homed correctly) directly
+         * above the homing pin in the machine bed, use the head camera scan for this and make sure
+         * this is exactly central - otherwise we move the camera until it is, and then reset all
+         * the axis back to 0,0,0,0 as this is calibrated home.
+         */
+        Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
+        if (homePart != null) {
+            Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(homingFiducialLocation, homePart);
+
+            // homeOffset contains the offset, but we are not really concerned with that,
+            // we just reset X,Y back to the home-coordinate at this point.
+            double xHomeCoordinate = 0;
+            double yHomeCoordinate = 0;
+            for (Axis axis : axes) {
+                if (axis.getType() == Axis.Type.X) {
+                    axis.setCoordinate(axis.getHomeCoordinate());
+                    xHomeCoordinate = axis.getHomeCoordinate();
+                }
+                if (axis.getType() == Axis.Type.Y) {
+                    axis.setCoordinate(axis.getHomeCoordinate());
+                    yHomeCoordinate = axis.getHomeCoordinate();
+                }
+            }
+
+            String g92command = getCommand(null, CommandType.POST_VISION_HOME_COMMAND);
+            g92command = substituteVariable(g92command, "X", xHomeCoordinate);
+            g92command = substituteVariable(g92command, "Y", yHomeCoordinate);
+            sendGcode(g92command, -1);
+
         }
     }
 
@@ -200,12 +272,80 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return null;
     }
 
+    public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
+        // If a HeadMountable is specified, see if we can find a match
+        // for both the HeadMountable ID and the command type.
+        if (type.headMountable && hm != null) {
+            for (Command c : commands) {
+                if (hm.getId().equals(c.headMountableId) && type == c.type) {
+                    return c;
+                }
+            }
+            if (!checkDefaults) {
+                return null;
+            }
+        }
+        // If not, see if we can find a match for the command type with a
+        // null or * HeadMountable ID.
+        for (Command c : commands) {
+            if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
+                return c;
+            }
+        }
+        // No matches were found.
+        return null;
+    }
+
+    public String getCommand(HeadMountable hm, CommandType type) {
+        Command c = getCommand(hm, type, true);
+        if (c == null) {
+            return null;
+        }
+        return c.getCommand();
+    }
+
+    public void setCommand(HeadMountable hm, CommandType type, String text) {
+        Command c = getCommand(hm, type, false);
+        if (text == null || text.trim().length() == 0) {
+            if (c != null) {
+                commands.remove(c);
+            }
+        }
+        else {
+            if (c == null) {
+                c = new Command(hm == null ? null : hm.getId(), type, text);
+                commands.add(c);
+            }
+            else {
+                c.setCommand(text);
+            }
+        }
+    }
+
     @Override
     public Location getLocation(ReferenceHeadMountable hm) {
+        // according main driver
         Axis xAxis = getAxis(hm, Axis.Type.X);
         Axis yAxis = getAxis(hm, Axis.Type.Y);
         Axis zAxis = getAxis(hm, Axis.Type.Z);
         Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
+
+        // additional info might be on subdrivers (note that subdrivers can only be one level deep)
+        for (ReferenceDriver driver : subDrivers) {
+            GcodeDriver d = (GcodeDriver) driver;
+            if (d.getAxis(hm, Axis.Type.X) != null) {
+                xAxis = d.getAxis(hm, Axis.Type.X);
+            }
+            if (d.getAxis(hm, Axis.Type.Y) != null) {
+                yAxis = d.getAxis(hm, Axis.Type.Y);
+            }
+            if (d.getAxis(hm, Axis.Type.Z) != null) {
+                zAxis = d.getAxis(hm, Axis.Type.Z);
+            }
+            if (d.getAxis(hm, Axis.Type.Rotation) != null) {
+                rotationAxis = d.getAxis(hm, Axis.Type.Rotation);
+            }
+        }
 
         Location location =
                 new Location(units, xAxis == null ? 0 : xAxis.getTransformedCoordinate(hm),
@@ -219,8 +359,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
-        location = location.convertToUnits(units);
+        // keep copy for calling subdrivers as to not add offset on offset
+        Location locationOriginal = location;
 
+        location = location.convertToUnits(units);
         location = location.subtract(hm.getHeadOffsets());
 
         double x = location.getX();
@@ -248,121 +390,127 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             rotationAxis = null;
         }
 
-        // If no axes are included in the move, there's nothing to do, so just return.
-        if (xAxis == null && yAxis == null && zAxis == null && rotationAxis == null) {
-            return;
-        }
+        // Only do something if there at least one axis included in the move
+        if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
-        // For each included axis, if the axis has a transform, transform the target coordinate to
-        // it's raw value.
-        if (xAxis != null && xAxis.getTransform() != null) {
-            x = xAxis.getTransform().toRaw(xAxis, hm, x);
-        }
-        if (yAxis != null && yAxis.getTransform() != null) {
-            y = yAxis.getTransform().toRaw(yAxis, hm, y);
-        }
-        if (zAxis != null && zAxis.getTransform() != null) {
-            z = zAxis.getTransform().toRaw(zAxis, hm, z);
-        }
-        if (rotationAxis != null && rotationAxis.getTransform() != null) {
-            rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
-        }
-
-        boolean emptyMove = true;
-
-        String command = moveToCommand;
-        command = substituteVariable(command, "Id", hm.getId());
-        command = substituteVariable(command, "Name", hm.getName());
-        command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
-
-        if (xAxis == null || xAxis.getCoordinate() == x) {
-            command = substituteVariable(command, "X", null);
-        }
-        else {
-            command = substituteVariable(command, "X", x);
-            emptyMove = false;
-            if (xAxis.getPreMoveCommand() != null) {
-                sendGcode(xAxis.getPreMoveCommand());
+            // For each included axis, if the axis has a transform, transform the target coordinate
+            // to
+            // it's raw value.
+            if (xAxis != null && xAxis.getTransform() != null) {
+                x = xAxis.getTransform().toRaw(xAxis, hm, x);
             }
-        }
-
-        if (yAxis == null || yAxis.getCoordinate() == y) {
-            command = substituteVariable(command, "Y", null);
-        }
-        else {
-            command = substituteVariable(command, "Y", y);
-            emptyMove = false;
-            if (yAxis.getPreMoveCommand() != null) {
-                sendGcode(yAxis.getPreMoveCommand());
+            if (yAxis != null && yAxis.getTransform() != null) {
+                y = yAxis.getTransform().toRaw(yAxis, hm, y);
             }
-        }
-
-        if (zAxis == null || zAxis.getCoordinate() == z) {
-            command = substituteVariable(command, "Z", null);
-        }
-        else {
-            command = substituteVariable(command, "Z", z);
-            emptyMove = false;
-            if (zAxis.getPreMoveCommand() != null) {
-                sendGcode(zAxis.getPreMoveCommand());
+            if (zAxis != null && zAxis.getTransform() != null) {
+                z = zAxis.getTransform().toRaw(zAxis, hm, z);
             }
-        }
-
-        if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
-            command = substituteVariable(command, "Rotation", null);
-        }
-        else {
-            command = substituteVariable(command, "Rotation", rotation);
-            emptyMove = false;
-            if (rotationAxis.getPreMoveCommand() != null) {
-                sendGcode(rotationAxis.getPreMoveCommand());
+            if (rotationAxis != null && rotationAxis.getTransform() != null) {
+                rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
             }
-        }
 
-        // No axes were included in the move, so there is nothing to do.
-        if (emptyMove) {
-            return;
-        }
+            boolean haveToMove = false;
 
-        List<String> responses = sendGcode(command);
+            String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
+            command = substituteVariable(command, "Id", hm.getId());
+            command = substituteVariable(command, "Name", hm.getName());
+            command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
 
-        /*
-         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-         * response before continuing. We first search the initial responses from the command for
-         * the regex. If it's not found we then collect responses for up to timeoutMillis while
-         * searching the responses for the regex. As soon as it is matched we continue. If it's not
-         * matched within the timeout we throw an Exception.
-         */
-        if (moveToCompleteRegex != null) {
-            if (!containsMatch(responses, moveToCompleteRegex)) {
-                long t = System.currentTimeMillis();
-                boolean done = false;
-                while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
-                    done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
+            if (xAxis == null || xAxis.getCoordinate() == x) {
+                command = substituteVariable(command, "X", null);
+            }
+            else {
+                command = substituteVariable(command, "X", x);
+                haveToMove = true;
+                if (xAxis.getPreMoveCommand() != null) {
+                    sendGcode(xAxis.getPreMoveCommand());
                 }
-                if (!done) {
-                    throw new Exception("Timed out waiting for move to complete.");
+                xAxis.setCoordinate(x);
+            }
+
+            if (yAxis == null || yAxis.getCoordinate() == y) {
+                command = substituteVariable(command, "Y", null);
+            }
+            else {
+                command = substituteVariable(command, "Y", y);
+                haveToMove = true;
+                if (yAxis.getPreMoveCommand() != null) {
+                    sendGcode(yAxis.getPreMoveCommand());
                 }
             }
-        }
 
-        // And save the final values on the axes.
-        if (xAxis != null) {
-            xAxis.setCoordinate(x);
-        }
-        if (yAxis != null) {
-            yAxis.setCoordinate(y);
-        }
-        if (zAxis != null) {
-            zAxis.setCoordinate(z);
-        }
-        if (rotationAxis != null) {
-            rotationAxis.setCoordinate(rotation);
-        }
+            if (zAxis == null || zAxis.getCoordinate() == z) {
+                command = substituteVariable(command, "Z", null);
+            }
+            else {
+                command = substituteVariable(command, "Z", z);
+                haveToMove = true;
+                if (zAxis.getPreMoveCommand() != null) {
+                    sendGcode(zAxis.getPreMoveCommand());
+                }
+            }
 
+            if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
+                command = substituteVariable(command, "Rotation", null);
+            }
+            else {
+                command = substituteVariable(command, "Rotation", rotation);
+                haveToMove = true;
+                if (rotationAxis.getPreMoveCommand() != null) {
+                    sendGcode(rotationAxis.getPreMoveCommand());
+                }
+            }
+
+            // Only give a command when move is necessary
+            if (haveToMove) {
+
+                List<String> responses = sendGcode(command);
+
+                /*
+                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+                 * response before continuing. We first search the initial responses from the
+                 * command for the regex. If it's not found we then collect responses for up to
+                 * timeoutMillis while searching the responses for the regex. As soon as it is
+                 * matched we continue. If it's not matched within the timeout we throw an
+                 * Exception.
+                 */
+                String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+                if (moveToCompleteRegex != null) {
+                    if (!containsMatch(responses, moveToCompleteRegex)) {
+                        long t = System.currentTimeMillis();
+                        boolean done = false;
+                        while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
+                            done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
+                        }
+                        if (!done) {
+                            throw new Exception("Timed out waiting for move to complete.");
+                        }
+                    }
+                }
+
+                // And save the final values on the axes.
+                if (xAxis != null) {
+                    xAxis.setCoordinate(x);
+                }
+                if (yAxis != null) {
+                    yAxis.setCoordinate(y);
+                }
+                if (zAxis != null) {
+                    zAxis.setCoordinate(z);
+                }
+                if (rotationAxis != null) {
+                    rotationAxis.setCoordinate(rotation);
+                }
+
+            } // there is a move
+
+        } // there were axes involved
+
+        // regardless of any action above the subdriver needs its actions based on original input
         for (ReferenceDriver driver : subDrivers) {
-            driver.moveTo(hm, location, speed);
+            driver.moveTo(hm, locationOriginal, speed);
         }
+
     }
 
     private boolean containsMatch(List<String> responses, String regex) {
@@ -374,18 +522,64 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return false;
     }
 
+    private Integer readVacuumLevel(ReferenceNozzle nozzle) throws Exception {
+        String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
+        String regex = getCommand(nozzle, CommandType.VACUUM_REPORT_REGEX);
+        if (command == null || regex == null) {
+            return null;
+        }
+
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
+
+        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
+        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            Logger.trace("Check {}", line);
+            if (line.matches(regex)) {
+                Logger.trace("Vacuum report: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Vacuum");
+                    return Integer.valueOf(s);
+                }
+                catch (Exception e) {
+                    Logger.warn("Error processing vacuum report", e);
+                }
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
         if (pickedNozzles.size() > 0) {
-            sendGcode(pumpOnCommand);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_ON_COMMAND));
         }
-        
-        String command = pickCommand;
+
+        String command = getCommand(nozzle, CommandType.PICK_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
+        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
+        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
+
         sendGcode(command);
-        
+
+        Integer vacuumLevel = readVacuumLevel(nozzle);
+        if (vacuumLevel != null && vacuumLevel < nt.getVacuumLevelPartOn()) {
+            throw new Exception(String.format(
+                    "Pick failure: Vacuum level %d is lower than expected value of %d for part on. Part may have failed to pick.",
+                    vacuumLevel, nt.getVacuumLevelPartOn()));
+        }
+
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
         }
@@ -393,14 +587,27 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
-        String command = placeCommand;
+
+        ReferenceNozzleTip nt = nozzle.getNozzleTip();
+
+        String command = getCommand(nozzle, CommandType.PLACE_COMMAND);
         command = substituteVariable(command, "Id", nozzle.getId());
         command = substituteVariable(command, "Name", nozzle.getName());
+
+        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
+        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
         sendGcode(command);
+
+        Integer vacuumLevel = readVacuumLevel(nozzle);
+        if (vacuumLevel != null && vacuumLevel > nt.getVacuumLevelPartOff()) {
+            throw new Exception(String.format(
+                    "Place failure: Vacuum level %d is higher than expected value of %d for part off. Part may be stuck to nozzle.",
+                    vacuumLevel, nt.getVacuumLevelPartOff()));
+        }
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
-            sendGcode(pumpOffCommand);
+            sendGcode(getCommand(nozzle, CommandType.PUMP_OFF_COMMAND));
         }
 
         for (ReferenceDriver driver : subDrivers) {
@@ -411,7 +618,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        String command = actuateBooleanCommand;
+        String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
@@ -427,7 +634,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        String command = actuateDoubleCommand;
+        String command = getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         command = substituteVariable(command, "Index", actuator.getIndex());
@@ -450,14 +657,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
 
         try {
             super.disconnect();
         }
         catch (Exception e) {
-            logger.error("disconnect()", e);
+            Logger.error("disconnect()", e);
         }
         disconnectRequested = false;
     }
@@ -501,11 +708,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // for a response to a command we actually wait for the one we expect.
         responseQueue.drainTo(responses);
 
-        logger.debug("sendCommand({}, {})...", command, timeout);
+        Logger.debug("sendCommand({}, {})...", command, timeout);
 
         // Send the command, if one was specified
         if (command != null) {
-            logger.trace(">> " + command);
+            Logger.trace("[{}] >> {}", portName, command);
             output.write(command.getBytes());
             output.write("\n".getBytes());
         }
@@ -517,6 +724,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         }
         long t = System.currentTimeMillis();
         boolean found = false;
+        boolean foundError = false;
+        String errorResponse = "";
         // Loop until we've timed out
         while (System.currentTimeMillis() - t < timeout) {
             // Wait to see if a response came in. We wait up until the number of millis remaining
@@ -530,12 +739,23 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             // Store the response that was received
             responses.add(response);
             // If the response is an ok or error we're done
-            if (response.matches(commandConfirmRegex)) {
+            if (response.matches(getCommand(null, CommandType.COMMAND_CONFIRM_REGEX))) {
                 found = true;
                 break;
             }
+
+            if (getCommand(null, CommandType.COMMAND_ERROR_REGEX) != null) {
+                if (response.matches(getCommand(null, CommandType.COMMAND_ERROR_REGEX))) {
+                    foundError = true;
+                    errorResponse = response;
+                    break;
+                }
+            }
         }
         // If a command was specified and no confirmation was found it's a timeout error.
+        if (command != null & foundError) {
+            throw new Exception("Controller raised an error: " + errorResponse);
+        }
         if (command != null && !found) {
             throw new Exception("Timeout waiting for response to " + command);
         }
@@ -543,7 +763,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
 
-        logger.debug("sendCommand({}, {}) => {}",
+        Logger.debug("sendCommand({}, {}) => {}",
                 new Object[] {command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
         return responses;
     }
@@ -558,13 +778,46 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 continue;
             }
             catch (IOException e) {
-                logger.error("Read error", e);
+                Logger.error("Read error", e);
                 return;
             }
             line = line.trim();
-            logger.trace("<< " + line);
-            responseQueue.offer(line);
+            Logger.trace("[{}] << {}", portName, line);
+            if (!processPositionReport(line)) {
+                responseQueue.offer(line);
+            }
         }
+    }
+
+    private boolean processPositionReport(String line) {
+        if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
+            return false;
+        }
+
+        if (!line.matches(getCommand(null, CommandType.POSITION_REPORT_REGEX))) {
+            return false;
+        }
+
+        Logger.trace("Position report: {}", line);
+        Matcher matcher =
+                Pattern.compile(getCommand(null, CommandType.POSITION_REPORT_REGEX)).matcher(line);
+        matcher.matches();
+        for (Axis axis : axes) {
+            try {
+                String s = matcher.group(axis.getName());
+                Double d = Double.valueOf(s);
+                axis.setCoordinate(d);
+            }
+            catch (Exception e) {
+                Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
+            }
+        }
+
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        for (Head head : Configuration.get().getMachine().getHeads()) {
+            machine.fireMachineHeadActivity(head);
+        }
+        return true;
     }
 
     /**
@@ -604,6 +857,13 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
+                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
     }
 
     public static class Axis {
@@ -758,6 +1018,40 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             // Since we're just negating the value of the coordinate we can just
             // use the same function.
             return toTransformed(axis, hm, transformedCoordinate);
+        }
+    }
+
+    public static class CamTransform implements AxisTransform {
+        @Element
+        private String negatedHeadMountableId;
+
+        @Attribute(required = false)
+        private double camRadius = 24;
+
+        @Attribute(required = false)
+        private double camWheelRadius = 9.5;
+
+        @Attribute(required = false)
+        private double camWheelGap = 2;
+
+        @Override
+        public double toTransformed(Axis axis, HeadMountable hm, double rawCoordinate) {
+            double transformed = Math.sin(Math.toRadians(rawCoordinate)) * camRadius;
+            if (hm.getId().equals(negatedHeadMountableId)) {
+                transformed = -transformed;
+            }
+            transformed += camWheelRadius + camWheelGap;
+            return transformed;
+        }
+
+        @Override
+        public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
+            double raw = Math.toDegrees(
+                    Math.asin((transformedCoordinate - camWheelRadius - camWheelGap) / camRadius));
+            if (hm.getId().equals(negatedHeadMountableId)) {
+                raw = -raw;
+            }
+            return raw;
         }
     }
 }

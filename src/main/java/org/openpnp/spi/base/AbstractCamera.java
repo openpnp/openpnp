@@ -48,7 +48,7 @@ public abstract class AbstractCamera implements Camera {
     protected Integer height;
 
     public AbstractCamera() {
-        this.id = Configuration.createId();
+        this.id = Configuration.createId("CAM");
         this.name = getClass().getSimpleName();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -144,26 +144,6 @@ public abstract class AbstractCamera implements Camera {
                 listener.lastFrameSent = System.currentTimeMillis();
             }
         }
-    }
-
-    @Override
-    public int getWidth() {
-        if (width == null) {
-            BufferedImage image = capture();
-            width = image.getWidth();
-            height = image.getHeight();
-        }
-        return width;
-    }
-
-    @Override
-    public int getHeight() {
-        if (width == null) {
-            BufferedImage image = capture();
-            width = image.getWidth();
-            height = image.getHeight();
-        }
-        return height;
     }
 
     public long getSettleTimeMs() {

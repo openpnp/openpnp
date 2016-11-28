@@ -45,15 +45,16 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Root
 public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
@@ -112,7 +113,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
         public Feeder feeder;
-        public Location alignmentOffsets;
+        public PartAlignment.PartAlignmentOffset alignmentOffsets;
         public boolean fed;
         public boolean stepComplete;
 
@@ -127,7 +128,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ReferencePnpJobProcessor.class);
+
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
@@ -199,7 +200,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     public synchronized boolean next() throws Exception {
-        fsm.send(Message.Next);
+
+        try{
+            fsm.send(Message.Next);
+        } catch (Exception e) {
+            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
+            throw(e);
+        }
+
 
         if (fsm.getState() == State.Stopped) {
             /*
@@ -215,6 +223,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * is complete. We send the Complete Message to start the cleanup process.
              */
             fsm.send(Message.Complete);
+            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.FINISHED);
             return false;
         }
 
@@ -346,8 +355,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             Location location = locator.locateBoard(boardLocation);
             boardLocationFiducialOverrides.put(boardLocation, location);
-            logger.debug("Fiducial check for {}", boardLocation);
+            Logger.debug("Fiducial check for {}", boardLocation);
         }
+    }
+    
+    protected void doIndividualFiducialCheck(BoardLocation boardLocation) throws Exception {
+        fireTextStatus("Performing individual fiducial check.");
+
+        FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
+        
+        Location location = locator.locateBoard(boardLocation);
+        boardLocationFiducialOverrides.put(boardLocation, location);
+        Logger.debug("Fiducial check for {}", boardLocation);
     }
 
     /**
@@ -421,7 +440,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             plannedPlacements.add(new PlannedPlacement(nozzle, jobPlacement));
         }
 
-        logger.debug("Planned placements {}", plannedPlacements);
+        Logger.debug("Planned placements {}", plannedPlacements);
     }
 
     protected void doChangeNozzleTip() throws Exception {
@@ -437,7 +456,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // If the currently loaded NozzleTip can handle the Part we're good.
             if (nozzle.getNozzleTip() != null && nozzle.getNozzleTip().canHandle(part)) {
-                logger.debug("No nozzle change needed for nozzle {}", nozzle);
+                Logger.debug("No nozzle change needed for nozzle {}", nozzle);
                 plannedPlacement.stepComplete = true;
                 continue;
             }
@@ -446,7 +465,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Otherwise find a compatible tip and load it
             NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-            logger.debug("Change nozzle tip on {} from {} to {}",
+            Logger.debug("Change nozzle tip on {} from {} to {}",
                     new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
             nozzle.unloadNozzleTip();
             nozzle.loadNozzleTip(nozzleTip);
@@ -501,19 +520,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         retry(1 + feeder.getRetryCount(), () -> {
                             fireTextStatus("Feeding %s from %s for %s.", part.getId(),
                                     feeder.getName(), placement.getId());
-                            logger.debug("Attempt Feed {} from {} with {}.",
+                            Logger.debug("Attempt Feed {} from {} with {}.",
                                     new Object[] {part, feeder, nozzle});
 
                             feeder.feed(nozzle);
 
-                            logger.debug("Fed {} from {} with {}.",
+                            Logger.debug("Fed {} from {} with {}.",
                                     new Object[] {part, feeder, nozzle});
                         });
 
                         break;
                     }
                     catch (Exception e) {
-                        logger.debug("Feed {} from {} with {} failed!",
+                        Logger.debug("Feed {} from {} with {} failed!",
                                 new Object[] {part, feeder, nozzle});
                         // If the feed fails, disable the feeder and continue. If there are no
                         // more valid feeders the findFeeder() call above will throw and exit the
@@ -539,7 +558,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Retract
             nozzle.moveToSafeZ();
 
-            logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
+            Logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
+
+            if (feeder != null) {
+                feeder.postPick(nozzle);
+            }
 
             plannedPlacement.stepComplete = true;
         }
@@ -556,12 +579,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
-
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
-            Location alignmentOffsets = machine.getPartAlignment().findOffsets(part, nozzle);
-            plannedPlacement.alignmentOffsets = alignmentOffsets;
+            PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
+            plannedPlacement.alignmentOffsets = alignmentOffset;
 
-            logger.debug("Align {} with {}", part, nozzle);
+            Logger.debug("Align {} with {}", part, nozzle);
 
             plannedPlacement.stepComplete = true;
         }
@@ -579,6 +601,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
             BoardLocation boardLocation = plannedPlacement.jobPlacement.boardLocation;
+            //Check if the individual piece has a fiducial check and check to see if the board is enabled
+            if(jobPlacement.placement.getCheckFids()&&jobPlacement.boardLocation.isEnabled())
+                doIndividualFiducialCheck(jobPlacement.boardLocation);
 
             // Check if there is a fiducial override for the board location and if so, use it.
             if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
@@ -592,31 +617,47 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {
-                Location alignmentOffsets = plannedPlacement.alignmentOffsets;
-                // Rotate the point 0,0 using the alignment offsets as a center point by the angle
-                // that is
-                // the difference between the alignment angle and the calculated global
-                // placement angle.
-                Location location =
-                        new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
-                                placementLocation.getRotation() - alignmentOffsets.getRotation());
 
-                // Set the angle to the difference mentioned above, aligning the part to the
-                // same angle as
-                // the placement.
-                location = location.derive(null, null, null,
-                        placementLocation.getRotation() - alignmentOffsets.getRotation());
+                /*
+                        preRotated means during alignment we have already rotated the component
+                        - this is useful for say an external rotating stage that the component is
+                        placed on, rotated to correct placement angle, and then picked up again.
+                 */
+                if(plannedPlacement.alignmentOffsets.getPreRotated())
+                {
+                    Location location = placementLocation;
+                    location = location.derive(null, null, null,
+                            plannedPlacement.alignmentOffsets.getLocation().getRotation());
+                    placementLocation = location;
+                }
+                else
+                {
+                    Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();
+                    // Rotate the point 0,0 using the alignment offsets as a center point by the angle
+                    // that is
+                    // the difference between the alignment angle and the calculated global
+                    // placement angle.
+                    Location location =
+                            new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
+                                    placementLocation.getRotation() - alignmentOffsets.getRotation());
 
-                // Add the placement final location to move our local coordinate into global
-                // space
-                location = location.add(placementLocation);
+                    // Set the angle to the difference mentioned above, aligning the part to the
+                    // same angle as
+                    // the placement.
+                    location = location.derive(null, null, null,
+                            placementLocation.getRotation() - alignmentOffsets.getRotation());
 
-                // Subtract the alignment offsets to move the part to the final location,
-                // instead of
-                // the nozzle.
-                location = location.subtract(alignmentOffsets);
+                    // Add the placement final location to move our local coordinate into global
+                    // space
+                    location = location.add(placementLocation);
 
-                placementLocation = location;
+                    // Subtract the alignment offsets to move the part to the final location,
+                    // instead of
+                    // the nozzle.
+                    location = location.subtract(alignmentOffsets);
+
+                    placementLocation = location;
+                }
             }
 
             // Add the part's height to the placement location
@@ -639,7 +680,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             plannedPlacement.stepComplete = true;
 
-            logger.debug("Place {} with {}", part, nozzle.getName());
+            Logger.debug("Place {} with {}", part, nozzle.getName());
         }
 
         clearStepComplete();
@@ -680,7 +721,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Nozzle nozzle = plannedPlacement.nozzle;
             discard(nozzle);
             jobPlacement.status = Status.Skipped;
-            logger.debug("Skipped {}", jobPlacement.placement);
+            Logger.debug("Skipped {}", jobPlacement.placement);
         }
     }
 
