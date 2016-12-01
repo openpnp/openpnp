@@ -233,18 +233,30 @@ public class FxNavigationView extends JFXPanel {
             }
             
             Location l = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
-            Node footprint = createFootprint(placement.getPart().getPackage().getFootprint(), fillColor, strokeColor, strokeWidth);
-            Bounds bounds = footprint.getBoundsInLocal();
-            footprint.setTranslateX(l.getX() - (bounds.getWidth() / 2));
-            footprint.setTranslateY(l.getY() - (bounds.getHeight() / 2));
-            footprint.setRotate(l.getRotation());
-            board.getChildren().add(footprint);
+            Node footprint = createFootprint(placement.getPart().getPackage().getFootprint(), fillColor);
+            Group group = new Group();
+            group.getChildren().add(footprint);
+            // add an outline around the footprint
+            if (strokeColor != null) {
+                Rectangle r = new Rectangle(group.getBoundsInLocal().getWidth(), group.getBoundsInLocal().getHeight());
+                r.setFill(null);
+                r.setStroke(strokeColor);
+                r.setStrokeWidth(strokeWidth);
+                r.setTranslateX(-r.getWidth() / 2);
+                r.setTranslateY(-r.getHeight() / 2);
+                group.getChildren().add(r);
+            }
+            
+            group.setTranslateX(l.getX());
+            group.setTranslateY(l.getY());
+            group.setRotate(l.getRotation());
+            board.getChildren().add(group);
 
             Text text = new Text(l.getX(), l.getY(), placement.getId());
             text.setFont(new Font("monospace", 1));
             text.setFill(Color.WHITE);
             text.setScaleY(-1);
-            text.setTranslateX(1.1);
+            text.setTranslateX(footprint.getBoundsInLocal().getWidth() / 2 + 0.1);
             text.setTranslateY(text.getBoundsInLocal().getHeight() / 2);
             board.getChildren().add(text);
         }
@@ -277,16 +289,14 @@ public class FxNavigationView extends JFXPanel {
         return board;
     }
     
-    // TODO: Stroke should be around entire bounds, not the pads.
-    // TODO: Footprints aren't centered right, I think. Check by positioning to placement.
-    private Node createFootprint(Footprint footprint, Color fillColor, Color strokeColor, double strokeWidth) {
+    private Node createFootprint(Footprint footprint, Color fillColor) {
         if (footprint == null || (footprint.getPads().size() == 0 && (footprint.getBodyWidth() == 0 || footprint.getBodyHeight() == 0))) {
+            Group group = new Group();
             Rectangle r = new Rectangle(2, 2, fillColor);
-            if (strokeColor != null) {
-                r.setStroke(strokeColor);
-                r.setStrokeWidth(strokeWidth);
-            }
-            return r;
+            r.setTranslateX(-r.getBoundsInLocal().getWidth() / 2);
+            r.setTranslateY(-r.getBoundsInLocal().getHeight() / 2);
+            group.getChildren().add(r);
+            return group;
         }
         else {
             Group group = new Group();
@@ -308,8 +318,6 @@ public class FxNavigationView extends JFXPanel {
                 Length y = new Length(pad.getY(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters);
                 Rectangle r = new Rectangle(width.getValue(), height.getValue());
                 r.setFill(fillColor);
-                r.setStroke(strokeColor);
-                r.setStrokeWidth(strokeWidth);
                 r.setTranslateX(x.getValue() - r.getWidth() / 2);
                 r.setTranslateY(y.getValue() - r.getHeight() / 2);
                 r.setRotate(pad.getRotation());
@@ -339,9 +347,9 @@ public class FxNavigationView extends JFXPanel {
                             view.setRotate(l.getRotation());
                             FxNavigationView.this.machine.getChildren().add(view);
 
-                            Node footprint = createFootprint(feeder.getPart().getPackage().getFootprint(), Color.BLACK, null, 0);
-                            footprint.setTranslateX(l.getX() - footprint.getBoundsInLocal().getWidth() / 2);
-                            footprint.setTranslateY(l.getY() - footprint.getBoundsInLocal().getHeight() / 2);
+                            Node footprint = createFootprint(feeder.getPart().getPackage().getFootprint(), Color.BLACK);
+                            footprint.setTranslateX(l.getX());
+                            footprint.setTranslateY(l.getY());
                             footprint.setRotate(l.getRotation());
                             FxNavigationView.this.machine.getChildren().add(footprint);
                         }
