@@ -378,6 +378,7 @@ public class FxNavigationView extends JFXPanel {
                             updateNozzleLocation(nozzle);
                         }
                     }
+                    fitToViewPort();
                 }
             });
         }
