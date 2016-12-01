@@ -6,10 +6,17 @@ import java.util.Map;
 
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
+import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
@@ -20,16 +27,22 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 
@@ -37,9 +50,8 @@ import javafx.scene.transform.Translate;
 // TODO: Click drag jog should take into account which head item you drag from so you can
 // choose to use nozzle, camera, etc.
 public class FxNavigationView extends JFXPanel {
-    Location machineExtentsBottomLeft = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-    Location machineExtentsTopRight = new Location(LengthUnit.Millimeters, 300, 300, 0, 0);
-
+    public static FxNavigationView instance;
+    
     // TODO: Don't add anymore specifics here, make a Head Group instead.
     Map<Camera, CameraImageView> cameraImageViews = new HashMap<>();
     Map<Nozzle, Rectangle> nozzleRects = new HashMap<>();
@@ -47,14 +59,14 @@ public class FxNavigationView extends JFXPanel {
     Scene scene;
     Pane root;
     Group machine;
-    Group bed;
     Group boards;
     Line jogTargetLine;
 
     Scale zoomTx = new Scale(1, 1, 0, 0);
-    Translate viewTx = new Translate(100, 100);
+    Translate viewTx = new Translate(0, 0);
 
     public FxNavigationView() {
+        instance = this;
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -63,28 +75,54 @@ public class FxNavigationView extends JFXPanel {
             }
         });
     }
+    
+    private void fitToViewPort() {
+        double zoom = getMinimumZoom();
+        zoomTx.setX(zoom);
+        zoomTx.setY(zoom);
+        viewTx.setX(0);
+        viewTx.setY(0);
+    }
+    
+    private double getMinimumZoom() {
+        double viewWidth = getWidth() - getInsets().left - getInsets().right;
+        double viewHeight = getHeight() - getInsets().top - getInsets().bottom;
+        double width = machine.getBoundsInLocal().getWidth();
+        double height = machine.getBoundsInLocal().getHeight();
 
+        double heightRatio = height / viewHeight;
+        double widthRatio = width / viewWidth;
+
+        double scaledHeight, scaledWidth;
+        
+        if (heightRatio > widthRatio) {
+            double aspectRatio = width / height;
+            scaledHeight = (int) viewHeight;
+            scaledWidth = (int) (scaledHeight * aspectRatio);
+        }
+        else {
+            double aspectRatio = height / width;
+            scaledWidth = (int) viewWidth;
+            scaledHeight = (int) (scaledWidth * aspectRatio);
+        }
+
+        return scaledWidth / width;
+    }
+    
     private Scene createScene() {
         root = new Pane();
         // Flip Y so the coordinate system is that of OpenPnP
         root.setScaleY(-1);
-        scene = new Scene(root, Color.BLACK);
+        scene = new Scene(root, Color.ALICEBLUE);
 
         machine = new Group();
         machine.getTransforms().add(zoomTx);
         machine.getTransforms().add(viewTx);
         root.getChildren().add(machine);
 
-        bed = new Group();
-        Rectangle bedRect =
-                new Rectangle(machineExtentsBottomLeft.getX(), machineExtentsBottomLeft.getY(),
-                        machineExtentsTopRight.getX(), machineExtentsTopRight.getY());
-        bedRect.setFill(Color.rgb(97, 98, 100));
-        bed.getChildren().add(bedRect);
-        machine.getChildren().add(bed);
-
         boards = new Group();
-        bed.getChildren().add(boards);
+        
+        machine.getChildren().add(boards);
 
         scene.setOnScroll(zoomHandler);
         scene.setOnDragDetected(jogDragStartHandler);
@@ -145,42 +183,144 @@ public class FxNavigationView extends JFXPanel {
             e.consume();
             Point2D before = machine.sceneToLocal(e.getX(), e.getY());
             double scale = zoomTx.getX();
-            scale += (e.getDeltaY() * scale * 0.001);
+            scale += (e.getDeltaY() * 0.01);
             scale = Math.max(scale, 0.1);
-            zoomTx.setX(scale);
-            zoomTx.setY(scale);
-            Point2D after = machine.sceneToLocal(e.getX(), e.getY());
-            Point2D delta = after.subtract(before);
-            viewTx.setX(viewTx.getX() + delta.getX());
-            viewTx.setY(viewTx.getY() + delta.getY());
+            if (scale <= getMinimumZoom()) {
+                fitToViewPort();
+            }
+            else {
+                zoomTx.setX(scale);
+                zoomTx.setY(scale);
+                Point2D after = machine.sceneToLocal(e.getX(), e.getY());
+                Point2D delta = after.subtract(before);
+                viewTx.setX(viewTx.getX() + delta.getX());
+                viewTx.setY(viewTx.getY() + delta.getY());
+                
+            }
         }
     };
 
-    // TODO broken in job processor refactor.
-    // JobProcessorListener jobProcessorListener = new JobProcessorListener.Adapter() {
-    // @Override
-    // public void jobLoaded(final Job job) {
-    // Platform.runLater(new Runnable() {
-    // public void run() {
-    // boards.getChildren().clear();
-    // for (BoardLocation boardLocation : job.getBoardLocations()) {
-    // Location location =
-    // boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
-    // Group board = new Group();
-    // Location dims = boardLocation.getBoard().getDimensions()
-    // .convertToUnits(LengthUnit.Millimeters);
-    // double width = Math.max(dims.getX(), 10);
-    // double height = Math.max(dims.getY(), 10);
-    // board.getChildren().add(new Rectangle(width, height, Color.GREEN));
-    // board.setTranslateX(location.getX() - width / 2);
-    // board.setTranslateY(location.getY() - height / 2);
-    // boards.getChildren().add(board);
-    // }
-    // }
-    // });
-    // }
-    // };
+    public void jobLoaded(final Job job) {
+        Platform.runLater(new Runnable() {
+            public void run() {
+                boards.getChildren().clear();
+                for (BoardLocation boardLocation : job.getBoardLocations()) {
+                    Group board = createBoardLocation(boardLocation);
+                    boards.getChildren().add(board);
+                }
+                fitToViewPort();
+            }
+        });
+    }
+    
+    private Group createBoardLocation(BoardLocation boardLocation) {
+        Group board = new Group();
 
+        // First populate all the placements so that we can determine the bounds of the
+        // board if it's not specified.
+        for (Placement placement : boardLocation.getBoard().getPlacements()) {
+            if (placement.getSide() != boardLocation.getSide()) {
+                continue;
+            }
+            Color fillColor = Color.GOLD;
+            Color strokeColor = null;
+            double strokeWidth = 0.2;
+            if (placement.getType() == Type.Place) {
+                strokeColor = Color.RED;
+            }
+            else if (placement.getType() == Type.Fiducial) {
+                strokeColor = Color.AQUA;
+            }
+            
+            Location l = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
+            Node footprint = createFootprint(placement.getPart().getPackage().getFootprint(), fillColor, strokeColor, strokeWidth);
+            Bounds bounds = footprint.getBoundsInLocal();
+            footprint.setTranslateX(l.getX() - (bounds.getWidth() / 2));
+            footprint.setTranslateY(l.getY() - (bounds.getHeight() / 2));
+            footprint.setRotate(l.getRotation());
+            board.getChildren().add(footprint);
+
+            Text text = new Text(l.getX(), l.getY(), placement.getId());
+            text.setFont(new Font("monospace", 1));
+            text.setFill(Color.WHITE);
+            text.setScaleY(-1);
+            text.setTranslateX(1.1);
+            text.setTranslateY(text.getBoundsInLocal().getHeight() / 2);
+            board.getChildren().add(text);
+        }
+
+        // Now create the board itself, using the calculated bounds if needed.
+        Bounds bounds = board.getBoundsInLocal();
+        Location dimensions = boardLocation.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters);
+        double x = 0, y = 0;
+        double width = dimensions.getX();
+        double height = dimensions.getY();
+        if (width == 0) {
+            width = bounds.getWidth();
+            x = bounds.getMinX();
+        }
+        if (height == 0) {
+            height = bounds.getHeight();
+            y = bounds.getMinY();
+        }
+        Rectangle background = new Rectangle(width, height, Color.GREEN);
+        background.setTranslateX(x);
+        background.setTranslateY(y);
+        board.getChildren().add(0, background);
+
+        // TODO: Board bottom is wrong
+        Location location =
+                boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
+        board.getTransforms().add(new Translate(location.getX(), location.getY()));
+        board.getTransforms().add(new Rotate(location.getRotation()));
+        
+        return board;
+    }
+    
+    // TODO: Stroke should be around entire bounds, not the pads.
+    // TODO: Footprints aren't centered right, I think. Check by positioning to placement.
+    private Node createFootprint(Footprint footprint, Color fillColor, Color strokeColor, double strokeWidth) {
+        if (footprint == null || (footprint.getPads().size() == 0 && (footprint.getBodyWidth() == 0 || footprint.getBodyHeight() == 0))) {
+            Rectangle r = new Rectangle(2, 2, fillColor);
+            if (strokeColor != null) {
+                r.setStroke(strokeColor);
+                r.setStrokeWidth(strokeWidth);
+            }
+            return r;
+        }
+        else {
+            Group group = new Group();
+            if (footprint.getBodyWidth() > 0 && footprint.getBodyHeight() > 0) {
+                double bodyWidth = new Length(footprint.getBodyWidth(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters).getValue();
+                double bodyHeight = new Length(footprint.getBodyHeight(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters).getValue();
+                Rectangle r = new Rectangle(bodyWidth, bodyHeight);
+                r.setFill(null);
+                r.setStroke(Color.WHITE);
+                r.setStrokeWidth(0.2);
+                r.setTranslateX(-r.getWidth() / 2);
+                r.setTranslateY(-r.getHeight() / 2);
+                group.getChildren().add(r);
+            }
+            for (Footprint.Pad pad : footprint.getPads()) {
+                Length width = new Length(pad.getWidth(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters);
+                Length height = new Length(pad.getWidth(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters);
+                Length x = new Length(pad.getX(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters);
+                Length y = new Length(pad.getY(), footprint.getUnits()).convertToUnits(LengthUnit.Millimeters);
+                Rectangle r = new Rectangle(width.getValue(), height.getValue());
+                r.setFill(fillColor);
+                r.setStroke(strokeColor);
+                r.setStrokeWidth(strokeWidth);
+                r.setTranslateX(x.getValue() - r.getWidth() / 2);
+                r.setTranslateY(y.getValue() - r.getHeight() / 2);
+                r.setRotate(pad.getRotation());
+                r.setArcWidth(pad.getRoundness() * width.getValue());
+                r.setArcHeight(pad.getRoundness() * height.getValue());
+                group.getChildren().add(r);
+            }
+            return group;
+        }
+    }
+    
     ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
@@ -188,25 +328,43 @@ public class FxNavigationView extends JFXPanel {
             machine.addListener(machineListener);
             Platform.runLater(new Runnable() {
                 public void run() {
+                    for (Feeder feeder : machine.getFeeders()) {
+                        try {
+                            Location l = feeder.getPickLocation().convertToUnits(LengthUnit.Millimeters);
+                            
+                            Rectangle view = new Rectangle(8, 8);
+                            view.setFill(Color.SLATEGRAY);
+                            view.setTranslateX(l.getX() - view.getWidth() / 2);
+                            view.setTranslateY(l.getY() - view.getHeight() / 2);
+                            view.setRotate(l.getRotation());
+                            FxNavigationView.this.machine.getChildren().add(view);
+
+                            Node footprint = createFootprint(feeder.getPart().getPackage().getFootprint(), Color.BLACK, null, 0);
+                            footprint.setTranslateX(l.getX() - footprint.getBoundsInLocal().getWidth() / 2);
+                            footprint.setTranslateY(l.getY() - footprint.getBoundsInLocal().getHeight() / 2);
+                            footprint.setRotate(l.getRotation());
+                            FxNavigationView.this.machine.getChildren().add(footprint);
+                        }
+                        catch (Exception e) {
+                            
+                        }
+                    }
                     for (Camera camera : machine.getCameras()) {
                         CameraImageView view = new CameraImageView(camera);
                         cameraImageViews.put(camera, view);
-                        FxNavigationView.this.machine.getChildren().add(view);
+//                        FxNavigationView.this.machine.getChildren().add(view);
                         updateCameraLocation(camera);
                     }
                     for (Head head : machine.getHeads()) {
                         for (Camera camera : head.getCameras()) {
                             CameraImageView view = new CameraImageView(camera);
                             cameraImageViews.put(camera, view);
-                            FxNavigationView.this.machine.getChildren().add(view);
+//                            FxNavigationView.this.machine.getChildren().add(view);
                             updateCameraLocation(camera);
                         }
                         for (Nozzle nozzle : head.getNozzles()) {
-                            Rectangle view = new Rectangle(6, 6);
-                            view.setStroke(Color.RED);
-                            view.setFill(null);
-                            view.setArcHeight(1);
-                            view.setArcWidth(1);
+                            Rectangle view = new Rectangle(1, 1);
+                            view.setFill(Color.RED);
                             nozzleRects.put(nozzle, view);
                             FxNavigationView.this.machine.getChildren().add(view);
                             updateNozzleLocation(nozzle);
