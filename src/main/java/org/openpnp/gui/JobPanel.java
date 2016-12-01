@@ -53,7 +53,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.FxNavigationView;
+import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
