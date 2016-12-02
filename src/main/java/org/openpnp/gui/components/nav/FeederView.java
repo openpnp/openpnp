@@ -1,8 +1,10 @@
 package org.openpnp.gui.components.nav;
 
 import org.openpnp.spi.Feeder;
+import org.openpnp.util.UiUtils;
 
 import javafx.scene.Group;
+import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -16,5 +18,6 @@ public class FeederView extends Group {
         
         FootprintView footprintNode = new FootprintView(feeder.getPart().getPackage().getFootprint(), Color.BLACK);
         getChildren().add(footprintNode);
+        UiUtils.bindTooltip(this, new Tooltip(feeder.getName()));
     }
 }

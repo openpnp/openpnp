@@ -103,11 +103,6 @@ public class FxNavigationView extends JFXPanel {
 
         double minimumZoom = scaledWidth / width;
 
-        // System.out.println(String.format("viewWidth %f, viewHeight %f, width %f, height %f,
-        // widthRatio %f, heightRatio %f, scaledWidth %f, scaledHeight %f, minimumZoom %f",
-        // viewWidth, viewHeight, width, height, widthRatio, heightRatio, scaledWidth, scaledHeight,
-        // minimumZoom));
-
         return minimumZoom;
     }
 
@@ -190,8 +185,6 @@ public class FxNavigationView extends JFXPanel {
             Point2D before = machineView.sceneToLocal(e.getX(), e.getY());
             double zoom = zoomTx.getX();
             zoom += (e.getDeltaY() * 0.01);
-            zoom = Math.max(zoom, 0.1);
-            System.out.println("zoom " + zoom);
             if (zoom <= getMinimumZoom()) {
                 fitToViewPort();
             }
@@ -232,7 +225,7 @@ public class FxNavigationView extends JFXPanel {
                 machineView.getTransforms().add(viewTx);
                 root.getChildren().add(machineView);
 
-                machineView.getChildren().add(boards);
+                machineView.getChildren().add(0, boards);
 
                 fitToViewPort();
             });

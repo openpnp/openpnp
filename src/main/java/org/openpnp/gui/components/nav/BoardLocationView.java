@@ -5,14 +5,13 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.util.UiUtils;
 
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
-import javafx.scene.effect.DropShadow;
+import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 
 public class BoardLocationView extends Group {
     public BoardLocationView(BoardLocation boardLocation) {
@@ -31,24 +30,17 @@ public class BoardLocationView extends Group {
             }
             
             Location l = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
-            FootprintView footprintNode = new FootprintView(placement.getPart().getPackage().getFootprint(), Color.GOLD);
+            FootprintView footprintView = new FootprintView(placement.getPart().getPackage().getFootprint(), Color.GOLD);
             Group group = new Group();
-            group.getChildren().add(footprintNode);
+            group.getChildren().add(footprintView);
             
             // If the placement is to be processed, outline it.
             if (outlineColor != null) {
-//                DropShadow outline = new DropShadow();
-//                outline.setOffsetY(0f);
-//                outline.setOffsetX(0f);
-//                outline.setColor(outlineColor);
-//                outline.setRadius(0.2);
-//                outline.setSpread(1);
-//                footprintNode.setEffect(outline); 
-                
-                Rectangle outline = new Rectangle(group.getBoundsInLocal().getWidth(), group.getBoundsInLocal().getHeight());
+                double strokeWidth = 0.2d;
+                Rectangle outline = new Rectangle(group.getBoundsInParent().getWidth() + strokeWidth, group.getBoundsInParent().getHeight() + strokeWidth);
                 outline.setFill(null);
                 outline.setStroke(outlineColor);
-                outline.setStrokeWidth(0.2);
+                outline.setStrokeWidth(strokeWidth);
                 outline.setTranslateX(-outline.getWidth() / 2);
                 outline.setTranslateY(-outline.getHeight() / 2);
                 group.getChildren().add(outline);
@@ -58,14 +50,16 @@ public class BoardLocationView extends Group {
             group.setTranslateY(l.getY());
             group.setRotate(l.getRotation());
             getChildren().add(group);
+            
+            UiUtils.bindTooltip(group, new Tooltip(placement.getId()));
 
-            Text text = new Text(l.getX(), l.getY(), placement.getId());
-            text.setFont(new Font("monospace", 1));
-            text.setFill(Color.WHITE);
-            text.setScaleY(-1);
-            text.setTranslateX(footprintNode.getBoundsInLocal().getWidth() / 2 + 0.1);
-            text.setTranslateY(text.getBoundsInLocal().getHeight() / 2);
-            getChildren().add(text);
+//            Text text = new Text(l.getX(), l.getY(), placement.getId());
+//            text.setFont(new Font("monospace", 1));
+//            text.setFill(Color.WHITE);
+//            text.setScaleY(-1);
+//            text.setTranslateX(footprintView.getBoundsInLocal().getWidth() / 2 + 0.1);
+//            text.setTranslateY(text.getBoundsInLocal().getHeight() / 2);
+//            getChildren().add(text);
         }
 
         // Now create the board itself, using the calculated bounds if needed.
