@@ -1,6 +1,40 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-11
+
+* Camera Drag Jogging
+
+	You can now click and drag in the camera view to move the camera. When you click and begin
+	to drag, a white line is shown from the current center of the camera to where the camera
+	will go when you release the button. This is in addition to the existing Shift-Click to
+	jog system already in place. It is intended to eventually replace that system.
+
+* Navigation View Updates
+
+	Navigation View is a feature that has been in development for some time but has been disabled
+	in the code. It presents a 2D rendered view of the machine from the top down and allows
+	you to quickly move around the machine and get information about objects such as boards,
+	placements, feeders, etc. This feature is still under development and not ready for prime
+	time, but it's become interesting enough that some people may want to try it out. To enable
+	it you need to add -DenableNav=true to your command line.
+	
+	Once enabled, there will be a new tab with the Cameras call Navigation. Try loading a job
+	to see what the view shows. You should see boards, placements, feeders, cameras and a red
+	dot for your nozzles. You can zoom in and out with the mouse wheel, mouse over objects to
+	get information, click and drag to jog the machine, and click cameras to turn them
+	transparent. Cameras move and update in real time.
+	
+	This feature is going to grow quite a bit in the coming months. This is just a preview.
+	
+* Event Bus (Developers)
+
+	A simple event bus has been added at Configuration.getBus(). This is currently being tested
+	with the Navigation View above and is intended to further decouple the UI. This new addition
+	is being tested for further use. For more information, see:
+	
+	https://github.com/google/guava/wiki/EventBusExplained
+
 # 2016-11-26
 
 * Scripting Events

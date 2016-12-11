@@ -313,6 +313,7 @@ public class JobPanel extends JPanel {
         job.addPropertyChangeListener("file", titlePropertyChangeListener);
         updateTitle();
         updateJobActions();
+        Configuration.get().getBus().post(new JobLoadedEvent(job));
     }
 
     public JobPlacementsPanel getJobPlacementsPanel() {
@@ -1064,4 +1065,12 @@ public class JobPanel extends JPanel {
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);
     };
+    
+    public static class JobLoadedEvent {
+        final public Job job;
+        
+        public JobLoadedEvent(Job job) {
+            this.job = job;
+        }
+    }
 }
