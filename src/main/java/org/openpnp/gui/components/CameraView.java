@@ -1255,6 +1255,8 @@ public class CameraView extends JComponent implements CameraListener {
     
     private void dragJoggingBegin(MouseEvent e) {
         this.dragJogging = true;
+        this.dragJoggingTarget = e;
+        repaint();
     }
     
     private void dragJoggingContinue(MouseEvent e) {
@@ -1293,6 +1295,9 @@ public class CameraView extends JComponent implements CameraListener {
             if (e.isPopupTrigger()) {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 return;
+            }
+            else if (e.isShiftDown()) {
+                moveToClick(e);
             }
             else if (selectionEnabled) {
                 beginSelection(e);
