@@ -4,13 +4,15 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.JobPanel.JobLoadedEvent;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
+
+import com.google.common.eventbus.Subscribe;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -31,8 +33,6 @@ import javafx.scene.transform.Translate;
 // TODO: All of the *Views need bindings so they can just keep themselves updated. This thing
 // needs to be reactive.
 public class FxNavigationView extends JFXPanel {
-    public static FxNavigationView instance;
-
     Scene scene;
     Pane root;
     MachineView machineView;
@@ -43,7 +43,6 @@ public class FxNavigationView extends JFXPanel {
     Translate viewTx = new Translate(0, 0);
 
     public FxNavigationView() {
-        instance = this;
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -52,6 +51,7 @@ public class FxNavigationView extends JFXPanel {
             }
         });
         addComponentListener(componentListener);
+        Configuration.get().getBus().register(this);
     }
 
     private Scene createScene() {
@@ -106,10 +106,11 @@ public class FxNavigationView extends JFXPanel {
         return minimumZoom;
     }
 
-    public void jobLoaded(final Job job) {
+    @Subscribe
+    public void jobLoaded(JobLoadedEvent e) {
         Platform.runLater(() -> {
             boards.getChildren().clear();
-            for (BoardLocation boardLocation : job.getBoardLocations()) {
+            for (BoardLocation boardLocation : e.job.getBoardLocations()) {
                 BoardLocationView boardLocationNode = new BoardLocationView(boardLocation);
 
                 // TODO: Board bottom is wrong
