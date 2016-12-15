@@ -10,10 +10,12 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.util.UiUtils;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
@@ -41,6 +43,8 @@ class CameraImageView extends ImageView implements CameraListener {
             }
         });
         camera.startContinuousCapture(this, 10);
+
+        UiUtils.bindTooltip(this, new Tooltip(camera.getName()));
         
         updateLocation();
         

@@ -67,11 +67,14 @@ public class FxNavigationView extends JFXPanel {
     }
 
     private void fitToViewPort() {
+        if (machineView == null) {
+            return;
+        }
         double zoom = getMinimumZoom();
         zoomTx.setX(zoom);
         zoomTx.setY(zoom);
-        viewTx.setX(0);
-        viewTx.setY(0);
+        viewTx.setX(-machineView.getBoundsInLocal().getMinX());
+        viewTx.setY(-machineView.getBoundsInLocal().getMinY());
     }
 
     /**
