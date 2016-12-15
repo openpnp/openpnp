@@ -14,10 +14,8 @@ import org.openpnp.util.UiUtils;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.EventHandler;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 
 class CameraImageView extends ImageView implements CameraListener {
     final Camera camera;
@@ -36,12 +34,11 @@ class CameraImageView extends ImageView implements CameraListener {
         setScaleY(-1);
         setTranslateX(-width / 2);
         setTranslateY(-height / 2);
-        setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent e) {
-                setOpacity(getOpacity() == 1 ? 0.20 : 1);
-            }
+        
+        setOnMouseClicked(event -> {
+            setOpacity(getOpacity() == 1 ? 0.20 : 1);
         });
+        
         camera.startContinuousCapture(this, 10);
 
         UiUtils.bindTooltip(this, new Tooltip(camera.getName()));

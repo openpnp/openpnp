@@ -20,6 +20,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -211,7 +212,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 if (tableModel.getFeeder(i) == event.feeder) {
-                    table.getSelectionModel().setSelectionInterval(0, i);
+                    table.getSelectionModel().setSelectionInterval(i, i);
+                    table.scrollRectToVisible(new Rectangle(table.getCellRect(i, 0, true)));
                     break;
                 }
             }

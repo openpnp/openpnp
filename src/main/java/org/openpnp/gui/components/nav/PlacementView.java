@@ -39,6 +39,10 @@ public class PlacementView extends Group {
         
         UiUtils.bindTooltip(this, new Tooltip(placement.getId()));
         
+        setOnMouseClicked(event -> {
+            Configuration.get().getBus().post(new PlacementSelectedEvent(placement, boardLocation));
+        });
+        
         Configuration.get().getBus().register(this);
 
         // TODO: Properties: side, part

@@ -1,7 +1,6 @@
 package org.openpnp.gui.components.nav;
 
 import org.openpnp.events.BoardLocationSelectedEvent;
-import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
