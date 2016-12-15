@@ -46,12 +46,15 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.events.BoardLocationSelectedEvent;
+import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
@@ -77,6 +80,8 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+
+import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -181,6 +186,7 @@ public class JobPanel extends JPanel {
                         boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
                         jobPastePanel.setBoardLocation(boardLocation);
+                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
                     }
                 });
 
@@ -295,6 +301,22 @@ public class JobPanel extends JPanel {
 
         fsm.addPropertyChangeListener((e) -> {
             updateJobActions();
+        });
+        
+        Configuration.get().getBus().register(this);
+    }
+    
+    @Subscribe
+    public void boardLocationSelected(BoardLocationSelectedEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().showTab("Job");
+            
+            for (int i = 0; i < boardLocationsTableModel.getRowCount(); i++) {
+                if (boardLocationsTableModel.getBoardLocation(i) == event.boardLocation) {
+                    boardLocationsTable.getSelectionModel().setSelectionInterval(0, i);
+                    break;
+                }
+            }
         });
     }
 
@@ -1065,12 +1087,4 @@ public class JobPanel extends JPanel {
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);
     };
-    
-    public static class JobLoadedEvent {
-        final public Job job;
-        
-        public JobLoadedEvent(Job job) {
-            this.job = job;
-        }
-    }
 }

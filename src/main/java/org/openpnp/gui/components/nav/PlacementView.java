@@ -1,10 +1,15 @@
 package org.openpnp.gui.components.nav;
 
+import org.openpnp.events.PlacementSelectedEvent;
+import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.util.UiUtils;
+
+import com.google.common.eventbus.Subscribe;
 
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
@@ -12,10 +17,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class PlacementView extends Group {
+    final BoardLocation boardLocation;
     final Placement placement;
     Rectangle outline;
     
-    public PlacementView(Placement placement) {
+    public PlacementView(BoardLocation boardLocation, Placement placement) {
+        this.boardLocation = boardLocation;
         this.placement = placement;
         
         FootprintView footprintView = new FootprintView(placement.getPart().getPackage().getFootprint(), Color.GOLD);
@@ -32,10 +39,12 @@ public class PlacementView extends Group {
         
         UiUtils.bindTooltip(this, new Tooltip(placement.getId()));
         
+        Configuration.get().getBus().register(this);
+
         // TODO: Properties: side, part
         placement.addPropertyChangeListener("location", event -> updateLocation());
         placement.addPropertyChangeListener("type", event -> updateType());
-
+        
         updateLocation();
         updateType();
     }
@@ -61,4 +70,16 @@ public class PlacementView extends Group {
             outline.setStroke(null);
         }
     }
+    
+    
+    @Subscribe
+    public void placementSelected(PlacementSelectedEvent e) {
+        if (e.boardLocation == boardLocation && e.placement == placement) {
+            setEffect(new SelectedEffect());
+        }
+        else {
+            setEffect(null);
+        }
+    }
+
 }

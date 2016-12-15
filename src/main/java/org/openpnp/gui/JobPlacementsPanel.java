@@ -29,6 +29,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -158,6 +159,7 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardLocation.getSide());
+                    Configuration.get().getBus().post(new PlacementSelectedEvent(boardLocation, getSelection()));
                 }
             }
         });

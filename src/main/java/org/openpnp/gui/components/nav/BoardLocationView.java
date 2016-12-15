@@ -1,11 +1,17 @@
 package org.openpnp.gui.components.nav;
 
+import org.openpnp.events.BoardLocationSelectedEvent;
+import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.util.UiUtils;
 
+import com.google.common.eventbus.Subscribe;
+
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
@@ -29,7 +35,7 @@ public class BoardLocationView extends Group {
             if (placement.getSide() != boardLocation.getSide()) {
                 continue;
             }
-            PlacementView placementView = new PlacementView(placement);
+            PlacementView placementView = new PlacementView(boardLocation, placement);
             getChildren().add(placementView);
         }
 
@@ -52,13 +58,19 @@ public class BoardLocationView extends Group {
         board.setTranslateY(y);
         getChildren().add(0, board);
         
-        UiUtils.bindTooltip(board, new Tooltip(boardLocation.getBoard().getName()));
-        
         // We need to control the order that the translate and rotate are done
         // to match how OpenPnP expects it, so instead of setting translate and
         // rotate properties we add distinct transforms.
         getTransforms().add(translate = new Translate());
         getTransforms().add(rotate = new Rotate());
+        
+        UiUtils.bindTooltip(board, new Tooltip(boardLocation.getBoard().getName()));
+        
+        setOnMouseClicked(event -> {
+            Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
+        });
+
+        Configuration.get().getBus().register(this);
         
         // TODO: Properties: width, height, side, enabled
         boardLocation.addPropertyChangeListener("location", event -> updateLocation());
@@ -73,5 +85,17 @@ public class BoardLocationView extends Group {
         translate.setX(location.getX());
         translate.setY(location.getY());
         rotate.setAngle(location.getRotation());
+    }
+    
+    @Subscribe
+    public void boardLocationSelected(BoardLocationSelectedEvent e) {
+        Platform.runLater(() -> {
+            if (e.boardLocation == boardLocation) {
+                setEffect(new SelectedEffect());
+            }
+            else {
+                setEffect(null);
+            }
+        });
     }
 }

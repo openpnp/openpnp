@@ -4,7 +4,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.JobPanel.JobLoadedEvent;
+import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -33,7 +33,7 @@ public class FxNavigationView extends JFXPanel {
     Scene scene;
     Pane root;
     MachineView machineView;
-    // TODO: Probably should move to the MachineView.
+    // TODO: Probably should move to the MachineView or it's own BoardsView.
     Group boards = new Group();
     Line jogTargetLine;
 
