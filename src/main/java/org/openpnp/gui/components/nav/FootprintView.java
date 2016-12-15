@@ -11,6 +11,7 @@ import javafx.scene.shape.Rectangle;
 
 public class FootprintView extends Group {
     public FootprintView(Footprint footprint, Paint fill) {
+        // TODO: Need to monitor for footprint changes.
         if (footprint == null || (footprint.getPads().size() == 0 && (footprint.getBodyWidth() == 0 || footprint.getBodyHeight() == 0))) {
             Rectangle r = new Rectangle(2, 2, fill);
             r.setTranslateX(-r.getBoundsInLocal().getWidth() / 2);

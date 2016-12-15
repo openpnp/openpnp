@@ -25,17 +25,15 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 
 @SuppressWarnings("serial")
-// TODO: All of the *Views need bindings so they can just keep themselves updated. This thing
-// needs to be reactive.
 public class FxNavigationView extends JFXPanel {
     Scene scene;
     Pane root;
     MachineView machineView;
+    // TODO: Probably should move to the MachineView.
     Group boards = new Group();
     Line jogTargetLine;
 
@@ -76,6 +74,11 @@ public class FxNavigationView extends JFXPanel {
         viewTx.setY(0);
     }
 
+    /**
+     * Returns the minimum zoom level that will allow the entire scene to fit within the bounds
+     * of the view.
+     * @return
+     */
     private double getMinimumZoom() {
         if (machineView == null) {
             return 1;
@@ -111,16 +114,8 @@ public class FxNavigationView extends JFXPanel {
         Platform.runLater(() -> {
             boards.getChildren().clear();
             for (BoardLocation boardLocation : e.job.getBoardLocations()) {
-                BoardLocationView boardLocationNode = new BoardLocationView(boardLocation);
-
-                // TODO: Board bottom is wrong
-                Location location =
-                        boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
-                boardLocationNode.getTransforms()
-                        .add(new Translate(location.getX(), location.getY()));
-                boardLocationNode.getTransforms().add(new Rotate(location.getRotation()));
-
-                boards.getChildren().add(boardLocationNode);
+                BoardLocationView boardLocationView = new BoardLocationView(boardLocation);
+                boards.getChildren().add(boardLocationView);
             }
             fitToViewPort();
         });
@@ -196,7 +191,6 @@ public class FxNavigationView extends JFXPanel {
                 Point2D delta = after.subtract(before);
                 viewTx.setX(viewTx.getX() + delta.getX());
                 viewTx.setY(viewTx.getY() + delta.getY());
-
             }
         }
     };
