@@ -217,12 +217,6 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
 
 
     @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void close() throws IOException {
         super.close();
         if (thread != null) {

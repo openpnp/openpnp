@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-18
+
+* Cameras Tab Removed
+
+	The Cameras tab has been removed and all of it's functionality moved to Machine Setup. This
+	is part of a long running change to move all setup tasks into Machine Setup, and this is the
+	final one.
+	
+	More information at: https://github.com/openpnp/openpnp/issues/103
+	
+	As part of this change, it's also possible to add and remove cameras without restarting
+	OpenPnP, and the Machine Setup tree now updates dynamically as items are added and removed.
+	
 # 2016-12-11
 
 * Camera Drag Jogging

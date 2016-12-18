@@ -217,12 +217,6 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         return null;
     }
 
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     private MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {

@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.swing.Icon;
 
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -20,7 +21,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 
-public abstract class AbstractHead implements Head {
+public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Attribute
     protected String id;
 
@@ -113,12 +114,17 @@ public abstract class AbstractHead implements Head {
 
     @Override
     public void addCamera(Camera camera) throws Exception {
+        camera.setHead(this);
         cameras.add(camera);
+        fireIndexedPropertyChange("cameras", cameras.size() - 1, null, camera);
     }
 
     @Override
     public void removeCamera(Camera camera) {
-        cameras.remove(camera);
+        int index = cameras.indexOf(camera);
+        if (cameras.remove(camera)) {
+            fireIndexedPropertyChange("cameras", index, camera, null);
+        }
     }
 
     @Override

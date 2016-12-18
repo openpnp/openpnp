@@ -34,6 +34,8 @@ public class PropertySheetWizardAdapter implements PropertySheet, WizardContaine
     public void wizardCompleted(Wizard wizard) {
         // TODO: Why did I put this here? Need to re-internalize how this was
         // all supposed to work.
+        // 2016-12-17: Probably because there was no analog for PropertySheet
+        // so there was nothing it could call.
         System.out.println("Don't call wizardCompleted");
     }
 
@@ -41,6 +43,8 @@ public class PropertySheetWizardAdapter implements PropertySheet, WizardContaine
     public void wizardCancelled(Wizard wizard) {
         // TODO: Why did I put this here? Need to re-internalize how this was
         // all supposed to work.
+        // 2016-12-17: Probably because there was no analog for PropertySheet
+        // so there was nothing it could call.
         System.out.println("Don't call wizardCancelled");
     }
 }

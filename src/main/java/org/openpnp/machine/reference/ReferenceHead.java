@@ -26,6 +26,7 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
@@ -70,7 +71,7 @@ public class ReferenceHead extends AbstractHead {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
         children.add(new SimplePropertySheetHolder("Nozzles", getNozzles()));
-        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new CamerasPropertySheetHolder(this, "Cameras", getCameras(), null));
         children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
         children.add(new SimplePropertySheetHolder("Paste Dispensers", getPasteDispensers()));
         return children.toArray(new PropertySheetHolder[] {});

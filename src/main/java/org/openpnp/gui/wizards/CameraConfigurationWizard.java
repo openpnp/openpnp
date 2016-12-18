@@ -48,6 +48,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.BorderLayout;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -59,6 +61,33 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     public CameraConfigurationWizard(Camera camera) {
         this.camera = camera;
+        
+        panel = new JPanel();
+        panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panel);
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblName = new JLabel("Name");
+        panel.add(lblName, "2, 2, right, default");
+        
+        nameTf = new JTextField();
+        panel.add(nameTf, "4, 2");
+        nameTf.setColumns(10);
+        
+        lblLooking = new JLabel("Looking");
+        panel.add(lblLooking, "2, 4, right, default");
+        
+        lookingCb = new JComboBox(Camera.Looking.values());
+        panel.add(lookingCb, "4, 4");
 
         panelUpp = new JPanel();
         contentPanel.add(panelUpp);
@@ -140,6 +169,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         LengthConverter lengthConverter = new LengthConverter();
         LongConverter longConverter = new LongConverter();
 
+        addWrappedBinding(camera, "name", nameTf, "text");
+        addWrappedBinding(camera, "looking", lookingCb, "selectedItem");
+        
         MutableLocationProxy unitsPerPixel = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "unitsPerPixel", unitsPerPixel, "location");
         addWrappedBinding(unitsPerPixel, "lengthX", textFieldUppX, "text", lengthConverter);
@@ -150,6 +182,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
 
+        ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldHeight);
         ComponentDecorators.decorateWithAutoSelect(textFieldSettleTime);
@@ -203,4 +236,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JPanel panelVision;
     private JLabel lblSettleTimems;
     private JTextField textFieldSettleTime;
+    private JPanel panel;
+    private JLabel lblName;
+    private JLabel lblLooking;
+    private JComboBox lookingCb;
+    private JTextField nameTf;
 }

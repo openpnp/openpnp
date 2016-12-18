@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Icon;
 
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -30,7 +31,7 @@ import org.simpleframework.xml.core.Commit;
 
 import com.google.common.util.concurrent.FutureCallback;
 
-public abstract class AbstractMachine implements Machine {
+public abstract class AbstractMachine extends AbstractModelObject implements Machine {
     /**
      * History:
      * 
@@ -180,21 +181,30 @@ public abstract class AbstractMachine implements Machine {
     @Override
     public void addFeeder(Feeder feeder) throws Exception {
         feeders.add(feeder);
+        fireIndexedPropertyChange("feeders", feeders.size() - 1, null, feeder);
     }
 
     @Override
     public void removeFeeder(Feeder feeder) {
-        feeders.remove(feeder);
+        int index = feeders.indexOf(feeder);
+        if (feeders.remove(feeder)) {
+            fireIndexedPropertyChange("feeders", index, feeder, null);
+        }
     }
 
     @Override
     public void addCamera(Camera camera) throws Exception {
+        camera.setHead(null);
         cameras.add(camera);
+        fireIndexedPropertyChange("cameras", cameras.size() - 1, null, camera);
     }
 
     @Override
     public void removeCamera(Camera camera) {
-        cameras.remove(camera);
+        int index = cameras.indexOf(camera);
+        if (cameras.remove(camera)) {
+            fireIndexedPropertyChange("cameras", index, camera, null);
+        }
     }
 
     public void fireMachineHeadActivity(Head head) {

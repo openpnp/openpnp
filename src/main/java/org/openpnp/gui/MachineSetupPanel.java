@@ -21,8 +21,10 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -66,6 +68,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
     private Preferences prefs = Preferences.userNodeForPackage(MachineSetupPanel.class);
     private JTree tree;
+    private DefaultTreeModel treeModel;
     private JTabbedPane tabbedPane;
     private JToolBar toolBar;
 
@@ -136,32 +139,34 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                 toolBar.removeAll();
 
                 TreePath path = tree.getSelectionPath();
-                for (Object o : path.getPath()) {
-                    PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
-                    Action[] actions = node.obj.getPropertySheetHolderActions();
-                    if (actions != null) {
-                        if (toolBar.getComponentCount() > 0) {
-                            toolBar.addSeparator();
-                        }
-                        for (Action action : actions) {
-                            toolBar.add(action);
+                if (path != null) {
+                    for (Object o : path.getPath()) {
+                        PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
+                        Action[] actions = node.obj.getPropertySheetHolderActions();
+                        if (actions != null) {
+                            if (toolBar.getComponentCount() > 0) {
+                                toolBar.addSeparator();
+                            }
+                            for (Action action : actions) {
+                                toolBar.add(action);
+                            }
                         }
                     }
-                }
-
-                PropertySheetHolderTreeNode node =
-                        (PropertySheetHolderTreeNode) path.getLastPathComponent();
-                if (node != null) {
-                    PropertySheet[] propertySheets = node.obj.getPropertySheets();
-                    if (propertySheets != null) {
-                        for (PropertySheet propertySheet : propertySheets) {
-                            String title = propertySheet.getPropertySheetTitle();
-                            JPanel panel = propertySheet.getPropertySheetPanel();
-                            if (title == null) {
-                                title = "Configuration";
-                            }
-                            if (panel != null) {
-                                tabbedPane.add(title, panel);
+                    
+                    PropertySheetHolderTreeNode node =
+                            (PropertySheetHolderTreeNode) path.getLastPathComponent();
+                    if (node != null) {
+                        PropertySheet[] propertySheets = node.obj.getPropertySheets();
+                        if (propertySheets != null) {
+                            for (PropertySheet propertySheet : propertySheets) {
+                                String title = propertySheet.getPropertySheetTitle();
+                                JPanel panel = propertySheet.getPropertySheetPanel();
+                                if (title == null) {
+                                    title = "Configuration";
+                                }
+                                if (panel != null) {
+                                    tabbedPane.add(title, panel);
+                                }
                             }
                         }
                     }
@@ -178,7 +183,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
-                tree.setModel(new DefaultTreeModel(
+                tree.setModel(treeModel = new DefaultTreeModel(
                         new PropertySheetHolderTreeNode(Configuration.get().getMachine(), null)));
                 for (int i = 0; i < tree.getRowCount(); i++) {
                     tree.expandRow(i);
@@ -203,6 +208,37 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         public PropertySheetHolderTreeNode(PropertySheetHolder obj, TreeNode parent) {
             this.obj = obj;
             this.parent = parent;
+            loadChildren();
+            try {
+                /**
+                 * If the object we're creating a node for supports property change then we add
+                 * a listener. When we get an indexed changed we refresh our children and
+                 * when we get a non-indexed change we refresh ourself.
+                 * 
+                 * TODO: Note: Since we don't know which child got refreshed, we refresh them
+                 * all and this causes the JTree to collapse all the other children. This sucks
+                 * but there isn't a clean way to know which child changed without including the
+                 * property name somewhere.
+                 */
+                Method method = obj.getClass().getMethod("addPropertyChangeListener", PropertyChangeListener.class);
+                method.invoke(obj, (PropertyChangeListener) (e) -> {
+                    if (e instanceof IndexedPropertyChangeEvent) {
+                        for (PropertySheetHolderTreeNode node : children) {
+                            node.loadChildren();
+                            treeModel.nodeStructureChanged(node);
+                        }
+                    }
+                    else {
+                        treeModel.nodeChanged(this);
+                    }
+                });
+            }
+            catch (Exception e) {
+            }
+        }
+        
+        private void loadChildren() {
+            this.children.clear();
             PropertySheetHolder[] children = obj.getChildPropertySheetHolders();
             if (children != null) {
                 for (PropertySheetHolder child : children) {
@@ -210,7 +246,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                 }
             }
         }
-
+        
         public PropertySheetHolder getPropertySheetHolder() {
             return obj;
         }

@@ -40,6 +40,7 @@ import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
@@ -141,7 +142,7 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Signalers", getSignalers()));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
-        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
+        children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
         children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
         children.add(
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
