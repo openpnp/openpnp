@@ -80,4 +80,8 @@ public interface Nozzle
      * if a user initiated, manual, pick is performed with no Part to reference. 
      */
     public Part getPart();
+    
+    public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
+    
+    public void removeNozzleTip(NozzleTip nozzleTip);
 }

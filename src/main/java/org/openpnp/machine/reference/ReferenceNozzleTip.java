@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
@@ -141,7 +142,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] {unloadAction, loadAction};
+        return new Action[] {unloadAction, loadAction, deleteAction};
     }
 
     @Override
@@ -249,6 +250,24 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             UiUtils.submitUiMachineTask(() -> {
                 getParentNozzle().unloadNozzleTip();
             });
+        }
+    };
+    
+    public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Nozzle Tip");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle tip.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete " + getName() + "?",
+                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                getParentNozzle().removeNozzleTip(ReferenceNozzleTip.this);
+            }
         }
     };
 

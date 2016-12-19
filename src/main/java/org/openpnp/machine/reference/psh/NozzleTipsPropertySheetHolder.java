@@ -8,22 +8,22 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 
-public class NozzlesPropertySheetHolder extends SimplePropertySheetHolder {
-    final Head head;
+public class NozzleTipsPropertySheetHolder extends SimplePropertySheetHolder {
+    final Nozzle nozzle;
     
-    public NozzlesPropertySheetHolder(Head head, String title, List<? extends PropertySheetHolder> children,
+    public NozzleTipsPropertySheetHolder(Nozzle nozzle, String title, List<? extends PropertySheetHolder> children,
             Icon icon) {
         super(title, children, icon);
-        this.head = head;
+        this.nozzle = nozzle;
     }
 
     @Override
@@ -34,25 +34,26 @@ public class NozzlesPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Nozzle...");
-            putValue(SHORT_DESCRIPTION, "Create a new nozzle.");
+            putValue(NAME, "New Nozzle Tip...");
+            putValue(SHORT_DESCRIPTION, "Create a new nozzle tip.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
-            ClassSelectionDialog<Nozzle> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Nozzle...", "Please select a Nozzle implemention from the list below.",
-                    configuration.getMachine().getCompatibleNozzleClasses());
-            dialog.setVisible(true);
-            Class<? extends Nozzle> cls = dialog.getSelectedClass();
+//            ClassSelectionDialog<Nozzle> dialog = new ClassSelectionDialog<>(MainFrame.get(),
+//                    "Select Nozzle...", "Please select a Nozzle implemention from the list below.",
+//                    configuration.getMachine().getCompatibleNozzleClasses());
+//            dialog.setVisible(true);
+//            Class<? extends Nozzle> cls = dialog.getSelectedClass();
+            Class<? extends NozzleTip> cls = ReferenceNozzleTip.class;
             if (cls == null) {
                 return;
             }
             try {
-                Nozzle nozzle = cls.newInstance();
+                NozzleTip nozzleTip = cls.newInstance();
 
-                head.addNozzle(nozzle);
+                nozzle.addNozzleTip(nozzleTip);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Error", e);

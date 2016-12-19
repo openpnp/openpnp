@@ -12,6 +12,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -21,15 +22,12 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
-import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
-
-
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -297,7 +295,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new SimplePropertySheetHolder("Nozzle Tips", getNozzleTips()));
+        children.add(new NozzleTipsPropertySheetHolder(this, "Nozzle Tips", getNozzleTips(), null));
         return children.toArray(new PropertySheetHolder[] {});
     }
 

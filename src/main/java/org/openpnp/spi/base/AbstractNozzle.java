@@ -75,4 +75,18 @@ public abstract class AbstractNozzle extends AbstractModelObject implements Nozz
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureTool;
     }
+
+    @Override
+    public void addNozzleTip(NozzleTip nozzleTip) throws Exception {
+        nozzleTips.add(nozzleTip);
+        fireIndexedPropertyChange("nozzleTips", nozzleTips.size() - 1, null, nozzleTip);
+    }
+
+    @Override
+    public void removeNozzleTip(NozzleTip nozzleTip) {
+        int index = nozzleTips.indexOf(nozzleTip);
+        if (nozzleTips.remove(nozzleTip)) {
+            fireIndexedPropertyChange("nozzleTips", index, nozzleTip, null);
+        }
+    }
 }
