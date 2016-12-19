@@ -16,7 +16,7 @@ If you have more than one nozzle on your machine:
 
 1. Open the Machine Setup Tab.
 2. Find the head you want to add a nozzle to and look for the Nozzles item below it. Select it.
-3. Add the nozzle by pressing the add nozzle button .  
+3. Add the nozzle by pressing the add nozzle button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzle-add.svg).  
 4. Select a nozzle type from the dialog. ReferenceNozzle is good for most setups.
 5. Press Accept and the new nozzle will appear in the list. Select it to open it's properties.
 
