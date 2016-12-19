@@ -78,6 +78,11 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.border.EtchedBorder;
 
 /**
  * The main window of the application.
@@ -148,7 +153,6 @@ public class MainFrame extends JFrame {
     }
 
     private JPanel contentPane;
-    private JLabel lblStatus;
     private JTabbedPane tabs;
     private JSplitPane splitPaneTopBottom;
     private TitledBorder panelInstructionsBorder;
@@ -453,10 +457,6 @@ public class MainFrame extends JFrame {
         tabs = new JTabbedPane(JTabbedPane.TOP);
         splitPaneTopBottom.setRightComponent(tabs);
 
-        lblStatus = new JLabel(" ");
-        lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-        contentPane.add(lblStatus, BorderLayout.SOUTH);
-
         splitPaneTopBottom
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
         splitPaneTopBottom.addPropertyChangeListener("dividerLocation",
@@ -476,6 +476,26 @@ public class MainFrame extends JFrame {
 
         LogPanel logPanel = new LogPanel();
         tabs.addTab("Log", null, logPanel, null);
+        
+        panel_4 = new JPanel();
+        panel_4.setBorder(null);
+        contentPane.add(panel_4, BorderLayout.SOUTH);
+                panel_4.setLayout(new FormLayout(new ColumnSpec[] {
+                        ColumnSpec.decode("default:grow"),
+                        ColumnSpec.decode("8px"),
+                        FormSpecs.RELATED_GAP_COLSPEC,
+                        FormSpecs.DEFAULT_COLSPEC,},
+                    new RowSpec[] {
+                        RowSpec.decode("20px"),}));
+                
+                lblStatus = new JLabel(" ");
+                lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                panel_4.add(lblStatus, "1, 1");
+                
+                droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000");
+                droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                panel_4.add(droLbl, "4, 1");
 
         registerBoardImporters();
 
@@ -497,6 +517,10 @@ public class MainFrame extends JFrame {
                             + "OpenPnP will now exit.");
             System.exit(1);
         }
+    }
+    
+    public JLabel getDroLabel() {
+        return droLbl;
     }
 
     private void registerBoardImporters() {
@@ -691,4 +715,7 @@ public class MainFrame extends JFrame {
             about();
         }
     };
+    private JPanel panel_4;
+    private JLabel droLbl;
+    private JLabel lblStatus;
 }
