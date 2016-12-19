@@ -3,7 +3,7 @@
 ## Add a New Camera
 
 1. Open the Machine Setup tab.
-2.
+2. 
     * If you are adding a head mounted camera, find the head in the tree on the left. Under the head look for Cameras and select it.
     * If you are adding a machine mounted camera, find Cameras under the root of the tree and select it.
 3. Add a camera on the "Cameras" tab by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-add.svg).  
