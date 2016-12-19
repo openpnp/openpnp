@@ -12,12 +12,12 @@ Actuators are generic devices you can attach to your machine to do additional ta
 
 # GcodeDriver
 
-See [actuate-boolean-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuate-boolean-command)
+See [actuate-boolean-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)
 
-See [actuate-double-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuate-double-command)
+See [actuate-double-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_double_command)
 
 ## Head Offsets
-TODO: See [Setting Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) for the general process. It is basically the same for Actuators.
+See [Setting Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) for the general process. It is basically the same for Actuators.
 
 ***
 
