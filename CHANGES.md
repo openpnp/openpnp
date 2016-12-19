@@ -3,7 +3,7 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-12-18
 
-* Add and Remove Cameras, Nozzles, and Actuators in the Machine Setup tab.
+* Add and Remove Cameras, Nozzles, Nozzle Tips, and Actuators in the Machine Setup tab.
 
 	You can now add and remove cameras, nozzles and actuators in the Machine Setup tab. To add,
 	click on the heading for the thing you want to create and click the Add button above. To
