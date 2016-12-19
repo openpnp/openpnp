@@ -37,14 +37,12 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
@@ -57,6 +55,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
+import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -66,8 +65,6 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 public class MachineControlsPanel extends JPanel {
-    private final JFrame frame;
-    private final CameraPanel cameraPanel;
     private final Configuration configuration;
 
     private Nozzle selectedNozzle;
@@ -79,11 +76,8 @@ public class MachineControlsPanel extends JPanel {
     private JComboBox comboBoxNozzles;
 
 
-    private Color startColor = Color.green;
-    private Color stopColor = new Color(178, 34, 34);
     private Color droNormalColor = new Color(0xBDFFBE);
     private Color droEditingColor = new Color(0xF0F0A1);
-    private Color droWarningColor = new Color(0xFF5C5C);
     private Color droSavedColor = new Color(0x90cce0);
 
     private JogControlsPanel jogControlsPanel;
@@ -94,13 +88,10 @@ public class MachineControlsPanel extends JPanel {
     /**
      * Create the panel.
      */
-    public MachineControlsPanel(Configuration configuration, JFrame frame,
-            CameraPanel cameraPanel) {
-        this.frame = frame;
-        this.cameraPanel = cameraPanel;
+    public MachineControlsPanel(Configuration configuration) {
         this.configuration = configuration;
 
-        jogControlsPanel = new JogControlsPanel(configuration, this, frame);
+        jogControlsPanel = new JogControlsPanel(configuration, this);
 
         createUi();
 
@@ -540,6 +531,24 @@ public class MachineControlsPanel extends JPanel {
             updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
+            
+            for (Head head : machine.getHeads()) {
+                BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> {
+                    if (e.getOldValue() == null && e.getNewValue() != null) {
+                        Nozzle nozzle = (Nozzle) e.getNewValue();
+                        comboBoxNozzles.addItem(new NozzleItem(nozzle));
+                    }
+                    else if (e.getOldValue() != null && e.getNewValue() == null) {
+                        for (int i = 0; i < comboBoxNozzles.getItemCount(); i++) {
+                            NozzleItem item = (NozzleItem) comboBoxNozzles.getItemAt(i);
+                            if (item.getNozzle() == e.getOldValue()) {
+                                comboBoxNozzles.removeItemAt(i);
+                            }
+                        }
+                    }
+                });
+            }
+            
         }
     };
 }

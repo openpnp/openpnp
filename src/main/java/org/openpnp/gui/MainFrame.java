@@ -111,7 +111,6 @@ public class MainFrame extends JFrame {
     private PackagesPanel packagesPanel;
     private FeedersPanel feedersPanel;
     private JobPanel jobPanel;
-    private CamerasPanel camerasPanel;
     private CameraPanel cameraPanel;
     private MachineSetupPanel machineSetupPanel;
     private Component navigationPanel;
@@ -140,10 +139,6 @@ public class MainFrame extends JFrame {
         return jobPanel;
     }
 
-    public CamerasPanel getCamerasTab() {
-        return camerasPanel;
-    }
-    
     public CameraPanel getCameraViews() {
         return cameraPanel;
     }
@@ -215,10 +210,9 @@ public class MainFrame extends JFrame {
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
-        camerasPanel = new CamerasPanel(this, configuration);
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
-        machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
+        machineControlsPanel = new MachineControlsPanel(configuration);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -478,7 +472,6 @@ public class MainFrame extends JFrame {
         tabs.addTab("Parts", null, partsPanel, null);
         tabs.addTab("Packages", null, packagesPanel, null);
         tabs.addTab("Feeders", null, feedersPanel, null);
-        tabs.addTab("Cameras", null, camerasPanel, null);
         tabs.addTab("Machine Setup", null, machineSetupPanel, null);
 
         LogPanel logPanel = new LogPanel();

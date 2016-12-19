@@ -56,9 +56,31 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
     private JPanel generalPanel;
     private JLabel lblIndex;
     private JTextField indexTextField;
+    private JPanel panelProperties;
+    private JLabel lblName;
+    private JTextField nameTf;
 
     public ReferenceActuatorConfigurationWizard(ReferenceActuator actuator) {
         this.actuator = actuator;
+        
+        panelProperties = new JPanel();
+        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelProperties);
+        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblName = new JLabel("Name");
+        panelProperties.add(lblName, "2, 2, right, default");
+        
+        nameTf = new JTextField();
+        panelProperties.add(nameTf, "4, 2, fill, default");
+        nameTf.setColumns(20);
 
         headMountablePanel = new JPanel();
         headMountablePanel.setLayout(new BoxLayout(headMountablePanel, BoxLayout.Y_AXIS));
@@ -141,6 +163,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
 
+        addWrappedBinding(actuator, "name", nameTf, "text");
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
@@ -149,6 +172,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractConfigurationW
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
+        ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(indexTextField);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
