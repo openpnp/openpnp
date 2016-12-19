@@ -17,7 +17,7 @@ Camera Head Offsets tell OpenPnP where the camera is in relation to the other ob
 4. Press Apply.
 
 ## Camera Jogging
-Now that the camera is configured, hold Shift and then Left Click within the camera view. The camera should move to the location you clicked on. This is called Camera Jogging and is the easiest way to move the machine around when setting things up.
+Now that the camera is configured, click and drag anywhere in the camera view. You'll see a white line follow the mouse cursor. When you release the mouse button the camera should move to the location you were pointing at. This is called Camera Jogging and is the easiest way to move the machine around when setting things up. You can also hold Shift and then Left Click within the camera view to do the same thing.
 
 ***
 
