@@ -1,10 +1,15 @@
 package org.openpnp.machine.reference;
 
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
@@ -26,7 +31,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
 
     @Element
-    private Location headOffsets;
+    private Location headOffsets = new Location(LengthUnit.Millimeters);
 
     @Attribute(required = false)
     private int pickDwellMilliseconds;
@@ -52,15 +57,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     protected ReferenceNozzleTip nozzleTip;
 
-    protected ReferenceMachine machine;
-    protected ReferenceDriver driver;
-
     public ReferenceNozzle() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
                 nozzleTip = (ReferenceNozzleTip) nozzleTips.get(currentNozzleTipId);
             }
         });
@@ -115,8 +115,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
         this.part = part;
-        driver.pick(this);
-        machine.fireMachineHeadActivity(head);
+        getDriver().pick(this);
+        getMachine().fireMachineHeadActivity(head);
         Thread.sleep(pickDwellMilliseconds);
     }
 
@@ -126,12 +126,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
-        driver.place(this);
+        getDriver().place(this);
         this.part = null;
-        machine.fireMachineHeadActivity(head);
+        getMachine().fireMachineHeadActivity(head);
         Thread.sleep(placeDwellMilliseconds);
     }
-
+    
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
@@ -180,8 +180,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     .subtract(nozzleTip.getCalibration().getCalibratedOffset(location.getRotation()));
             Logger.debug("{}.moveTo({}, {}) (corrected)", getName(), location, speed);
         }
-        driver.moveTo(this, location, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, location, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
@@ -196,8 +196,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        driver.moveTo(this, l, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, l, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
@@ -267,7 +267,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Location getLocation() {
-        Location location = driver.getLocation(this);
+        Location location = getDriver().getLocation(this);
         if (nozzleTip != null && nozzleTip.getCalibration().isCalibrated()) {
             Location offset =
                     nozzleTip.getCalibration().getCalibratedOffset(location.getRotation());
@@ -308,10 +308,27 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
+        return new Action[] { deleteAction };
     }
+    
+    public Action deleteAction = new AbstractAction("Delete Nozzle") {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Nozzle");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle.");
+        }
 
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete " + getName() + "?",
+                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                getHead().removeNozzle(ReferenceNozzle.this);
+            }
+        }
+    };
+    
     @Override
     public String toString() {
         return getName() + " " + getId();
@@ -333,5 +350,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public void moveToSafeZ() throws Exception {
         moveToSafeZ(getHead().getMachine().getSpeed());
+    }
+    
+    ReferenceDriver getDriver() {
+        return getMachine().getDriver();
+    }
+    
+    ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
     }
 }

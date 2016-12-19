@@ -102,20 +102,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private Mat undistortionMap1;
     private Mat undistortionMap2;
 
-    protected ReferenceMachine machine;
-    protected ReferenceDriver driver;
-
-
     private LensCalibration lensCalibration;
     
     public ReferenceCamera() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
-            }
-        });
     }
     
     @Override
@@ -175,8 +164,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         Logger.debug("moveTo({}, {})", location, speed);
-        driver.moveTo(this, location, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, location, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
@@ -185,8 +174,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        driver.moveTo(this, l, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, l, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     public double getRotation() {
@@ -427,7 +416,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         if (getHead() == null) {
             return getHeadOffsets();
         }
-        return driver.getLocation(this);
+        return getDriver().getLocation(this);
     }
 
     public Length getSafeZ() {
@@ -451,10 +440,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] { deleteCameraAction };
+        return new Action[] { deleteAction };
     }
     
-    public Action deleteCameraAction = new AbstractAction("Delete Camera") {
+    public Action deleteAction = new AbstractAction("Delete Camera") {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Camera");
@@ -477,7 +466,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             }
         }
     };
-
+    
+    ReferenceDriver getDriver() {
+        return getMachine().getDriver();
+    }
+    
+    ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
+    }
 
     public interface CalibrationCallback {
         public void callback(int progressCurrent, int progressMax, boolean complete);

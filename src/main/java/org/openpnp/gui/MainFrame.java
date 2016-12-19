@@ -212,7 +212,7 @@ public class MainFrame extends JFrame {
         feedersPanel = new FeedersPanel(configuration, this);
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
-        machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
+        machineControlsPanel = new MachineControlsPanel(configuration);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);

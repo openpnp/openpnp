@@ -3,6 +3,12 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2016-12-18
 
+* Add and Remove Cameras, Nozzles, and Actuators in the Machine Setup tab.
+
+	You can now add and remove cameras, nozzles and actuators in the Machine Setup tab. To add,
+	click on the heading for the thing you want to create and click the Add button above. To
+	remove, click on the one you want to remove and then click on the Remove button above.
+
 * Cameras Tab Removed
 
 	The Cameras tab has been removed and all of it's functionality moved to Machine Setup. This
@@ -10,9 +16,6 @@ a complete change list, only those that may directly interest or affect users.
 	final one.
 	
 	More information at: https://github.com/openpnp/openpnp/issues/103
-	
-	As part of this change, it's also possible to add and remove cameras without restarting
-	OpenPnP, and the Machine Setup tree now updates dynamically as items are added and removed.
 	
 # 2016-12-11
 

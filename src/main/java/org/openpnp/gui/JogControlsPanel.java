@@ -24,11 +24,12 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.beans.PropertyChangeListener;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -55,6 +56,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
+import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -71,7 +73,6 @@ import com.jgoodies.forms.layout.RowSpec;
  */
 public class JogControlsPanel extends JPanel {
     private final MachineControlsPanel machineControlsPanel;
-    private final Frame frame;
     private final Configuration configuration;
     private JPanel panelActuators;
     private JPanel panelDispensers;
@@ -80,10 +81,8 @@ public class JogControlsPanel extends JPanel {
     /**
      * Create the panel.
      */
-    public JogControlsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel,
-            Frame frame) {
+    public JogControlsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
         this.machineControlsPanel = machineControlsPanel;
-        this.frame = frame;
         this.configuration = configuration;
 
         createUi();
@@ -534,6 +533,24 @@ public class JogControlsPanel extends JPanel {
                     Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
+    
+    private void addActuator(Actuator actuator) {
+        String name = actuator.getHead() == null ? actuator.getName() : actuator.getHead().getName() + ":" + actuator.getName(); 
+        JToggleButton actuatorButton = new JToggleButton(name);
+        actuatorButton.setFocusable(false);
+        actuatorButton.addActionListener((e) -> { 
+            final boolean state = actuatorButton.isSelected();
+            UiUtils.submitUiMachineTask(() -> {
+                actuator.actuate(state);
+            });
+        });
+        panelActuators.add(actuatorButton);
+        actuatorButtons.put(actuator, actuatorButton);
+    }
+    
+    private void removeActuator(Actuator actuator) {
+        panelActuators.remove(actuatorButtons.remove(actuator));
+    }
 
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
@@ -546,55 +563,46 @@ public class JogControlsPanel extends JPanel {
             Machine machine = Configuration.get().getMachine();
 
             for (Actuator actuator : machine.getActuators()) {
-                final Actuator actuator_f = actuator;
-                final JToggleButton actuatorButton = new JToggleButton(actuator_f.getName());
-                actuatorButton.setFocusable(false);
-                actuatorButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        final boolean state = actuatorButton.isSelected();
-                        UiUtils.submitUiMachineTask(() -> {
-                            actuator_f.actuate(state);
-                        });
-                    }
-                });
-                panelActuators.add(actuatorButton);
+                addActuator(actuator);
             }
             for (final Head head : machine.getHeads()) {
                 for (Actuator actuator : head.getActuators()) {
-                    final Actuator actuator_f = actuator;
-                    final JToggleButton actuatorButton =
-                            new JToggleButton(head.getName() + ":" + actuator_f.getName());
-                    actuatorButton.setFocusable(false);
-                    actuatorButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            final boolean state = actuatorButton.isSelected();
-                            UiUtils.submitUiMachineTask(() -> {
-                                actuator_f.actuate(state);
-                            });
-                        }
-                    });
-                    panelActuators.add(actuatorButton);
+                    addActuator(actuator);
                 }
                 for (final PasteDispenser dispenser : head.getPasteDispensers()) {
                     final JButton dispenserButton =
                             new JButton(head.getName() + ":" + dispenser.getName());
                     dispenserButton.setFocusable(false);
-                    dispenserButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            UiUtils.submitUiMachineTask(() -> {
-                                dispenser.dispense(null, null, 250);
-                            });
-                        }
+                    dispenserButton.addActionListener((e) -> {
+                        UiUtils.submitUiMachineTask(() -> {
+                            dispenser.dispense(null, null, 250);
+                        });
                     });
                     panelDispensers.add(dispenserButton);
                 }
             }
 
+            
+            PropertyChangeListener listener = (e) -> {
+                if (e.getOldValue() == null && e.getNewValue() != null) {
+                    Actuator actuator = (Actuator) e.getNewValue();
+                    addActuator(actuator);
+                }
+                else if (e.getOldValue() != null && e.getNewValue() == null) {
+                    removeActuator((Actuator) e.getOldValue());
+                }
+            };
+            
+            BeanUtils.addPropertyChangeListener(machine, "actuators", listener);
+            for (Head head : machine.getHeads()) {
+                BeanUtils.addPropertyChangeListener(head, "actuators", listener);
+            }
+
+
             setEnabled(machineControlsPanel.isEnabled());
         }
     };
+    
+    private Map<Actuator, JToggleButton> actuatorButtons = new HashMap<>();
     private JSlider speedSlider;
 }

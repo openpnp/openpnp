@@ -128,6 +128,36 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
+    public void addActuator(Actuator actuator) throws Exception {
+        actuator.setHead(this);
+        actuators.add(actuator);
+        fireIndexedPropertyChange("actuators", actuators.size() - 1, null, actuator);
+    }
+
+    @Override
+    public void removeActuator(Actuator actuator) {
+        int index = actuators.indexOf(actuator);
+        if (actuators.remove(actuator)) {
+            fireIndexedPropertyChange("actuators", index, actuator, null);
+        }
+    }
+
+    @Override
+    public void addNozzle(Nozzle nozzle) throws Exception {
+        nozzle.setHead(this);
+        nozzles.add(nozzle);
+        fireIndexedPropertyChange("nozzles", nozzles.size() - 1, null, nozzle);
+    }
+
+    @Override
+    public void removeNozzle(Nozzle nozzle) {
+        int index = nozzles.indexOf(nozzle);
+        if (nozzles.remove(nozzle)) {
+            fireIndexedPropertyChange("nozzles", index, nozzle, null);
+        }
+    }
+
+    @Override
     public void moveToSafeZ(double speed) throws Exception {
         for (Nozzle nozzle : nozzles) {
             nozzle.moveToSafeZ(speed);

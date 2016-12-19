@@ -81,7 +81,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2");
-        nameTf.setColumns(10);
+        nameTf.setColumns(20);
         
         lblLooking = new JLabel("Looking");
         panel.add(lblLooking, "2, 4, right, default");

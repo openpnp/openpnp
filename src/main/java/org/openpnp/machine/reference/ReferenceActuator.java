@@ -19,9 +19,14 @@
 
 package org.openpnp.machine.reference;
 
-import javax.swing.Action;
+import java.awt.event.ActionEvent;
 
-import org.openpnp.ConfigurationListener;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JOptionPane;
+
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
@@ -39,7 +44,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
 
     @Element
-    private Location headOffsets;
+    private Location headOffsets = new Location(LengthUnit.Millimeters);
 
     @Attribute
     private int index;
@@ -47,17 +52,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
 
-    protected ReferenceMachine machine;
-    protected ReferenceDriver driver;
-
     public ReferenceActuator() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
-            }
-        });
     }
 
     @Override
@@ -81,27 +76,27 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Override
     public void actuate(boolean on) throws Exception {
         Logger.debug("{}.actuate({})", getName(), on);
-        driver.actuate(this, on);
-        machine.fireMachineHeadActivity(head);
+        getDriver().actuate(this, on);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
     public Location getLocation() {
-        return driver.getLocation(this);
+        return getDriver().getLocation(this);
     }
 
     @Override
     public void actuate(double value) throws Exception {
         Logger.debug("{}.actuate({})", getName(), value);
-        driver.actuate(this, value);
-        machine.fireMachineHeadActivity(head);
+        getDriver().actuate(this, value);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        driver.moveTo(this, location, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, location, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
@@ -110,8 +105,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        driver.moveTo(this, l, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, l, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
@@ -137,10 +132,32 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
+        return new Action[] { deleteAction };
     }
+    
+    public Action deleteAction = new AbstractAction("Delete Actuator") {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Actuator");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected actuator.");
+        }
 
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete " + getName() + "?",
+                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                if (getHead() != null) {
+                    getHead().removeActuator(ReferenceActuator.this);
+                }
+                else {
+                    Configuration.get().getMachine().removeActuator(ReferenceActuator.this);
+                }
+            }
+        }
+    };
+    
     @Override
     public String toString() {
         return getName();
@@ -152,5 +169,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     public void setSafeZ(Length safeZ) {
         this.safeZ = safeZ;
+    }
+    
+    ReferenceDriver getDriver() {
+        return getMachine().getDriver();
+    }
+    
+    ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
     }
 }

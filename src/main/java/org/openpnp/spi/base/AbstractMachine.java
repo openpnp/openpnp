@@ -206,6 +206,21 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             fireIndexedPropertyChange("cameras", index, camera, null);
         }
     }
+    
+    @Override
+    public void addActuator(Actuator actuator) throws Exception {
+        actuator.setHead(null);
+        actuators.add(actuator);
+        fireIndexedPropertyChange("actuators", actuators.size() - 1, null, actuator);
+    }
+
+    @Override
+    public void removeActuator(Actuator actuator) {
+        int index = actuators.indexOf(actuator);
+        if (actuators.remove(actuator)) {
+            fireIndexedPropertyChange("actuators", index, actuator, null);
+        }
+    }
 
     public void fireMachineHeadActivity(Head head) {
         for (MachineListener listener : listeners) {

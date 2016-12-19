@@ -24,7 +24,6 @@ import java.awt.Component;
 import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -56,6 +55,7 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.util.BeanUtils;
 
 @SuppressWarnings("serial")
 public class MachineSetupPanel extends JPanel implements WizardContainer {
@@ -152,7 +152,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                             }
                         }
                     }
-                    
+
                     PropertySheetHolderTreeNode node =
                             (PropertySheetHolderTreeNode) path.getLastPathComponent();
                     if (node != null) {
@@ -209,34 +209,29 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             this.obj = obj;
             this.parent = parent;
             loadChildren();
-            try {
-                /**
-                 * If the object we're creating a node for supports property change then we add
-                 * a listener. When we get an indexed changed we refresh our children and
-                 * when we get a non-indexed change we refresh ourself.
-                 * 
-                 * TODO: Note: Since we don't know which child got refreshed, we refresh them
-                 * all and this causes the JTree to collapse all the other children. This sucks
-                 * but there isn't a clean way to know which child changed without including the
-                 * property name somewhere.
-                 */
-                Method method = obj.getClass().getMethod("addPropertyChangeListener", PropertyChangeListener.class);
-                method.invoke(obj, (PropertyChangeListener) (e) -> {
-                    if (e instanceof IndexedPropertyChangeEvent) {
-                        for (PropertySheetHolderTreeNode node : children) {
-                            node.loadChildren();
-                            treeModel.nodeStructureChanged(node);
-                        }
+            /**
+             * If the object we're creating a node for supports property change then we add
+             * a listener. When we get an indexed changed we refresh our children and
+             * when we get a non-indexed change we refresh ourself.
+             * 
+             * TODO: Note: Since we don't know which child got refreshed, we refresh them
+             * all and this causes the JTree to collapse all the other children. This sucks
+             * but there isn't a clean way to know which child changed without including the
+             * property name somewhere.
+             */
+            BeanUtils.addPropertyChangeListener(obj, (PropertyChangeListener) (e) -> {
+                if (e instanceof IndexedPropertyChangeEvent) {
+                    for (PropertySheetHolderTreeNode node : children) {
+                        node.loadChildren();
+                        treeModel.nodeStructureChanged(node);
                     }
-                    else {
-                        treeModel.nodeChanged(this);
-                    }
-                });
-            }
-            catch (Exception e) {
-            }
+                }
+                else {
+                    treeModel.nodeChanged(this);
+                }
+            }); 
         }
-        
+
         private void loadChildren() {
             this.children.clear();
             PropertySheetHolder[] children = obj.getChildPropertySheetHolders();
@@ -246,7 +241,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                 }
             }
         }
-        
+
         public PropertySheetHolder getPropertySheetHolder() {
             return obj;
         }
