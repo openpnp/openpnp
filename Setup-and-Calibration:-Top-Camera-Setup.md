@@ -4,23 +4,14 @@ The Top Camera is the camera that is attached to your machine's head. It's also 
 The Top Camera is used primarily when setting up feeders and jobs, and can be used to target any location on your machine. It's the thing you will look at most often when using OpenPnP.
 
 ## Add a Camera
-First, add a camera by following the instructions in [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
-
-## Set Camera Head
-Setting the camera head tells OpenPnP that the camera is attached to the head, making it mobile, versus a machine mounted camera which is stationary.
-
-![screen shot 2016-06-18 at 10 55 18 am](https://cloud.githubusercontent.com/assets/1182323/16172744/378a016e-3543-11e6-9e1d-f7a0474cd954.png)
-
-1. Open the Cameras tab.
-2. Select your camera from the table on the left.
-3. Click on the Head column for your camera and select the head from the dropdown.
+First, add a head camera by following the instructions in [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
 
 ## Head Offsets
 Camera Head Offsets tell OpenPnP where the camera is in relation to the other objects on the head, such as nozzles. It's best to use the primary camera as the origin for the head, so we set the offset to all zeros.
 
 ![screen shot 2016-06-18 at 10 56 16 am](https://cloud.githubusercontent.com/assets/1182323/16172751/4dfac9e2-3543-11e6-8326-5cc9e18e08a1.png)
 
-1. With the same camera still selected in the Camera tab, look to the right for the configuration tabs.
+1. With the same camera still selected in the Machine Setup tab, look to the right for the configuration tabs.
 2. Select the tab called "Camera Specific" and you should see a section called Offsets at the top.
 3. Enter `0.0` for each of the X, Y and Z fields.
 4. Press Apply.
