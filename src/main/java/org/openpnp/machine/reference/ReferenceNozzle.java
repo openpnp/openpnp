@@ -311,7 +311,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     
     public Action deleteAction = new AbstractAction("Delete Nozzle") {
         {
-            putValue(SMALL_ICON, Icons.delete);
+            putValue(SMALL_ICON, Icons.nozzleRemove);
             putValue(NAME, "Delete Nozzle");
             putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle.");
         }

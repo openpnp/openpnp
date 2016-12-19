@@ -25,8 +25,10 @@ import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.swing.Action;
@@ -140,13 +142,12 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
                 TreePath path = tree.getSelectionPath();
                 if (path != null) {
-                    for (Object o : path.getPath()) {
+                    List<Object> pathsReverse = Arrays.asList(path.getPath());
+                    Collections.reverse(pathsReverse);
+                    for (Object o : pathsReverse) {
                         PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
                         Action[] actions = node.obj.getPropertySheetHolderActions();
                         if (actions != null) {
-                            if (toolBar.getComponentCount() > 0) {
-                                toolBar.addSeparator();
-                            }
                             for (Action action : actions) {
                                 toolBar.add(action);
                             }

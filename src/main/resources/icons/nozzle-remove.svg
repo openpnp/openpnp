@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+    <g id="Triangle-1" transform="matrix(1.09764,0,0,1.09764,-6.3542,2.84839)">
+        <path d="M15.273,9L18,4L6,4L8.727,9L15.273,9ZM11,10L13,10L13,19L11,19L11,10Z" style="fill:rgb(0,91,217);fill-rule:nonzero;"/>
+    </g>
+    <g id="Shape" transform="matrix(0.511759,-0.511063,0.511063,0.511759,6.05014,5.95943)">
+        <path d="M19,13L13,13L13,19L11,19L11,13L5,13L5,11L11,11L11,5L13,5L13,11L19,11L19,13Z" style="fill:rgb(189,4,4);"/>
+    </g>
+</svg>

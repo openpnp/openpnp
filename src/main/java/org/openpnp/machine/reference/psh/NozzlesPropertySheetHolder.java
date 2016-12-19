@@ -33,7 +33,7 @@ public class NozzlesPropertySheetHolder extends SimplePropertySheetHolder {
     
     public Action newAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.add);
+            putValue(SMALL_ICON, Icons.nozzleAdd);
             putValue(NAME, "New Nozzle...");
             putValue(SHORT_DESCRIPTION, "Create a new nozzle.");
         }
