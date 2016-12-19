@@ -40,7 +40,7 @@ A Bottom Camera image should appear as if you are looking up from the camera tow
 
 Units Per Pixel is how OpenPnP maps pixels to real world units, typically millimeters or inches. OpenPnP needs to know how large a pixel is in real world terms so that it can measure things correctly when performing computer vision. This is the most important configuration for a camera, so it's worth taking the time to get it right.
 
-1. With the camera selected in the Cameras tab, select the General Configuration tab from the right.
+1. With the camera selected in the Machine Setup tab, select the General Configuration tab from the right.
 2. Look for the Units Per Pixel section and read the instructions contained within.
 3. Make sure to enter the real world width and height of the object you are measuring into the Width and Height fields before clicking Measure.
 4. After you click Confirm, the X and Y fields should be updated with the measured values.
