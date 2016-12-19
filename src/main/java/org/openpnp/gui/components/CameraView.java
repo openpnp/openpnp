@@ -446,6 +446,9 @@ public class CameraView extends JComponent implements CameraListener {
         if (cameraViewFilter != null) {
             img = cameraViewFilter.filterCameraImage(camera, img);
         }
+        if (img == null) {
+            return;
+        }
         BufferedImage oldFrame = lastFrame;
         lastFrame = img;
         if (oldFrame == null
