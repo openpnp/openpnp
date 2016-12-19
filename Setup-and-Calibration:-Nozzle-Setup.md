@@ -12,19 +12,23 @@ In OpenPnP, the thing that actually touches parts is called a Nozzle Tip. A Nozz
 You may have any number of Nozzles on a Head, and any number of Nozzle Tips assigned to a Nozzle.
 
 ## Adding Nozzles
+If you have more than one nozzle on your machine:
+
 1. Open the Machine Setup Tab.
 2. Find the head you want to add a nozzle to and look for the Nozzles item below it. Select it.
 3. Select a nozzle implementation from the dialog. ReferenceNozzle is good for most setups.
 4. Press Accept and the new nozzle will appear in the list. Select it to open it's properties.
 
 ## Adding Nozzle Tips
+If you have more than one nozzle tip on your machine:
+
 Currently there is no way to add nozzle tips using the GUI. You have to do it by hand by editing the [machine.xml](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) configuration file.
 
 You can edit configuration files in any text editor. We recommend [Sublime Text](https://www.sublimetext.com/) or [Atom](https://atom.io/).
 
 **Important:** Make sure OpenPnP is not running when you edit the configuration files, or you will lose your changes when you exit OpenPnP.
 
-The default configuration file in OpenPnP defines one nozzle and one nozzle tip. If this matches your machine you don't need to do this step. If you have additional nozzles nozzle tips:
+The default configuration file in OpenPnP defines one nozzle and one nozzle tip. If this matches your machine you don't need to do this step.
 
 ![screen shot 2016-06-18 at 11 15 41 am](https://cloud.githubusercontent.com/assets/1182323/16172859/06fbef82-3546-11e6-9666-73288748f2a3.png)
 
