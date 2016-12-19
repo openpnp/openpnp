@@ -9,7 +9,7 @@ First, add a head camera by following the instructions in [[General Camera Setup
 ## Head Offsets
 Camera Head Offsets tell OpenPnP where the camera is in relation to the other objects on the head, such as nozzles. It's best to use the primary camera as the origin for the head, so we set the offset to all zeros.
 
-![screen shot 2016-12-18 at 8 37 41 pm](https://cloud.githubusercontent.com/assets/1182323/21299497/e30e6d82-c561-11e6-8f42-1663c2f994d0.png)
+![screen shot 2016-12-18 at 8 39 04 pm](https://cloud.githubusercontent.com/assets/1182323/21299519/0c806c56-c562-11e6-8a51-5e4df3092a5d.png)
 
 1. With the same camera still selected in the Machine Setup tab, look to the right for the configuration tabs.
 2. Select the tab called "Camera Specific" and you should see a section called Offsets at the top.
