@@ -187,30 +187,6 @@ public class MachineControlsPanel extends JPanel {
         });
         panel.add(comboBoxNozzles, "2, 2, fill, default");
 
-        JPanel panelDrosParent = new JPanel();
-        add(panelDrosParent);
-        panelDrosParent.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        JPanel panelDros = new JPanel();
-        panelDrosParent.add(panelDros);
-        panelDros.setLayout(new BoxLayout(panelDros, BoxLayout.Y_AXIS));
-
-        JPanel panelDrosFirstLine = new JPanel();
-        panelDros.add(panelDrosFirstLine);
-        panelDrosFirstLine.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        JButton btnTargetTool = new JButton(targetToolAction);
-        panelDrosFirstLine.add(btnTargetTool);
-        btnTargetTool.setToolTipText("Position the tool at the camera's current location.");
-
-        JPanel panelDrosSecondLine = new JPanel();
-        panelDros.add(panelDrosSecondLine);
-        panelDrosSecondLine.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        JButton btnTargetCamera = new JButton(targetCameraAction);
-        panelDrosSecondLine.add(btnTargetCamera);
-        btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
-
         add(jogControlsPanel);
     }
 
