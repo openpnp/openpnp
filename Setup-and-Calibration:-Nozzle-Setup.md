@@ -16,28 +16,17 @@ If you have more than one nozzle on your machine:
 
 1. Open the Machine Setup Tab.
 2. Find the head you want to add a nozzle to and look for the Nozzles item below it. Select it.
-3. Select a nozzle implementation from the dialog. ReferenceNozzle is good for most setups.
-4. Press Accept and the new nozzle will appear in the list. Select it to open it's properties.
+3. Add the nozzle by pressing the add nozzle button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzle-add.svg).  
+4. Select a nozzle type from the dialog. ReferenceNozzle is good for most setups.
+5. Press Accept and the new nozzle will appear in the list. Select it to open it's properties.
 
 ## Adding Nozzle Tips
 If you have more than one nozzle tip on your machine:
 
-Currently there is no way to add nozzle tips using the GUI. You have to do it by hand by editing the [machine.xml](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) configuration file.
-
-You can edit configuration files in any text editor. We recommend [Sublime Text](https://www.sublimetext.com/) or [Atom](https://atom.io/).
-
-**Important:** Make sure OpenPnP is not running when you edit the configuration files, or you will lose your changes when you exit OpenPnP.
-
-The default configuration file in OpenPnP defines one nozzle and one nozzle tip. If this matches your machine you don't need to do this step.
-
-![screen shot 2016-06-18 at 11 15 41 am](https://cloud.githubusercontent.com/assets/1182323/16172859/06fbef82-3546-11e6-9666-73288748f2a3.png)
-
-1. Open `machine.xml` in your favorite text editor.
-2. Find the `nozzle-tips` section, and within it the `nozzle-tip` definition.
-3. Copy the text from `<nozzle-tip>` through `</nozzle-tip>` to your clipboard.
-4. After the `</nozzle-tip>` line, paste the text you copied.
-5. In the new `<nozzle-tip>` section you just added, find the `id=` attribute and change the value to something random. It can be anything, you can even just change one character. It just needs to be different from the other one.
-6. Save the file and start OpenPnP to check if your changes were okay.
+1. Open the Machine Setup Tab.
+2. Find the nozzle you want to add a nozzle tip to and look for the Nozzle Tips item below it. Select it.
+3. Add the nozzle tip by pressing the add button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-add.svg).  
+4. Select the new nozzle tip to open it's properties.
 
 ## Head Offsets
 Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzle is from the camera in real world units.
