@@ -42,7 +42,6 @@ import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -101,15 +100,8 @@ public class MainFrame extends JFrame {
     private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
-    /*
-     * TODO define accelerators and mnemonics
-     * openJobMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
-     * Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-     */
     private final Configuration configuration;
 
-    // TODO: Really should switch to some kind of DI model, but this will do
-    // for now.
     private static MainFrame mainFrame;
 
     private MachineControlsPanel machineControlsPanel;
@@ -148,14 +140,14 @@ public class MainFrame extends JFrame {
     public CameraPanel getCameraViews() {
         return cameraPanel;
     }
-    
+
     public MachineSetupPanel getMachineSetupTab() {
         return machineSetupPanel;
     }
 
     private JPanel contentPane;
     private JTabbedPane tabs;
-    private JSplitPane splitPaneTopBottom;
+    private JSplitPane splitPaneMachineAndTabs;
     private TitledBorder panelInstructionsBorder;
     private JPanel panelInstructions;
     private JPanel panelInstructionActions;
@@ -164,7 +156,6 @@ public class MainFrame extends JFrame {
     private JButton btnInstructionsCancel;
     private JTextPane lblInstructions;
     private JPanel panel_2;
-    private JTabbedPane camerasAndNavTabbedPane;
     private JMenuBar menuBar;
     private JMenu mnImport;
     private JMenu mnScripts;
@@ -214,8 +205,6 @@ public class MainFrame extends JFrame {
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
         machineSetupPanel = new MachineSetupPanel();
-        cameraPanel = new CameraPanel();
-        machineControlsPanel = new MachineControlsPanel(configuration);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -295,10 +284,7 @@ public class MainFrame extends JFrame {
         //////////////////////////////////////////////////////////////////////
         JMenu mnCommands = new JMenu("Machine");
         menuBar.add(mnCommands);
-
-        mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.addSeparator();
-        mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
 
         // Scripts
         /////////////////////////////////////////////////////////////////////
@@ -319,56 +305,19 @@ public class MainFrame extends JFrame {
         setContentPane(contentPane);
         contentPane.setLayout(new BorderLayout(0, 0));
 
-        splitPaneTopBottom = new JSplitPane();
-        splitPaneTopBottom.setBorder(null);
-        splitPaneTopBottom.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        splitPaneTopBottom.setContinuousLayout(true);
-        contentPane.add(splitPaneTopBottom, BorderLayout.CENTER);
+        splitPaneMachineAndTabs = new JSplitPane();
+        splitPaneMachineAndTabs.setBorder(null);
+        splitPaneMachineAndTabs.setContinuousLayout(true);
+        contentPane.add(splitPaneMachineAndTabs, BorderLayout.CENTER);
 
-        JPanel panelTop = new JPanel();
-        splitPaneTopBottom.setLeftComponent(panelTop);
-        panelTop.setLayout(new BorderLayout(0, 0));
-
-        JPanel panelLeftColumn = new JPanel();
-        panelTop.add(panelLeftColumn, BorderLayout.WEST);
-        FlowLayout flowLayout = (FlowLayout) panelLeftColumn.getLayout();
-        flowLayout.setVgap(0);
-        flowLayout.setHgap(0);
-
-        JPanel panel = new JPanel();
-        panelLeftColumn.add(panel);
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-        machineControlsPanel.setBorder(new TitledBorder(null, "Machine Controls",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-        panel.add(machineControlsPanel);
+        JPanel panelMachine = new JPanel();
+        splitPaneMachineAndTabs.setLeftComponent(panelMachine);
+        panelMachine.setLayout(new BorderLayout(0, 0));
 
         // Add global hotkeys for the arrow keys
         final Map<KeyStroke, Action> hotkeyActionMap = new HashMap<>();
 
         int mask = KeyEvent.CTRL_DOWN_MASK;
-
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, mask),
-                machineControlsPanel.getJogControlsPanel().yPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, mask),
-                machineControlsPanel.getJogControlsPanel().yMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, mask),
-                machineControlsPanel.getJogControlsPanel().xMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, mask),
-                machineControlsPanel.getJogControlsPanel().xPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_QUOTE, mask),
-                machineControlsPanel.getJogControlsPanel().zPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, mask),
-                machineControlsPanel.getJogControlsPanel().zMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, mask),
-                machineControlsPanel.getJogControlsPanel().cPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask),
-                machineControlsPanel.getJogControlsPanel().cMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, mask),
-                machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
-                machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
             @Override
@@ -385,12 +334,43 @@ public class MainFrame extends JFrame {
             }
         });
 
-        JPanel panelCameraAndInstructions = new JPanel(new BorderLayout());
+        splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        panelMachine.add(splitPane, BorderLayout.CENTER);
 
-        panelTop.add(panelCameraAndInstructions, BorderLayout.CENTER);
+        JPanel panelCameraAndInstructions = new JPanel();
+        splitPane.setLeftComponent(panelCameraAndInstructions);
 
         panelInstructions = new JPanel();
         panelInstructions.setVisible(false);
+        panelCameraAndInstructions.setLayout(new BorderLayout(0, 0));
+        cameraPanel = new CameraPanel();
+
+        boolean javaFxAvailable = false;
+
+        try {
+            Class.forName("javafx.scene.Scene");
+            javaFxAvailable = true;
+        }
+        catch (Throwable e) {
+            Logger.warn(
+                    "JavaFX is not installed. The optional navigation feature will not be available.");
+        }
+
+        if (javaFxAvailable) {
+            navigationPanel = new FxNavigationView();
+            JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
+            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
+            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
+            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
+        }
+        else {
+            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
+        }
+
+        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
         panelInstructions.setBorder(panelInstructionsBorder = new TitledBorder(null, "Instructions",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelCameraAndInstructions.add(panelInstructions, BorderLayout.SOUTH);
@@ -438,42 +418,53 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
+        JPanel panelMachineControls = new JPanel();
+        panelMachineControls.setBorder(new TitledBorder(null, "Machine Controls",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        splitPane.setRightComponent(panelMachineControls);
+        FlowLayout fl_panelMachineControls = (FlowLayout) panelMachineControls.getLayout();
+        fl_panelMachineControls.setVgap(0);
+        fl_panelMachineControls.setHgap(0);
+        machineControlsPanel = new MachineControlsPanel(configuration);
+        panelMachineControls.add(machineControlsPanel);
 
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        
-        boolean javaFxAvailable = false;
-        
-        try {
-            Class.forName("javafx.scene.Scene");
-            javaFxAvailable = true;
-        }
-        catch (Throwable e) {
-            Logger.warn("JavaFX is not installed. The optional navigation feature will not be available.");
-        }
-        
-        if (javaFxAvailable) {
-            navigationPanel = new FxNavigationView();
-            camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
-            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
-            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
-            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
-        }
-        else {
-            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
-        }
+        mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
+        mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
+
+        machineControlsPanel.setBorder(null);
+
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, mask),
+                machineControlsPanel.getJogControlsPanel().yPlusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, mask),
+                machineControlsPanel.getJogControlsPanel().yMinusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, mask),
+                machineControlsPanel.getJogControlsPanel().xMinusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, mask),
+                machineControlsPanel.getJogControlsPanel().xPlusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_QUOTE, mask),
+                machineControlsPanel.getJogControlsPanel().zPlusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, mask),
+                machineControlsPanel.getJogControlsPanel().zMinusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, mask),
+                machineControlsPanel.getJogControlsPanel().cPlusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask),
+                machineControlsPanel.getJogControlsPanel().cMinusAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, mask),
+                machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
+                machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
 
         tabs = new JTabbedPane(JTabbedPane.TOP);
-        splitPaneTopBottom.setRightComponent(tabs);
+        splitPaneMachineAndTabs.setRightComponent(tabs);
 
-        splitPaneTopBottom
+        splitPaneMachineAndTabs
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-        splitPaneTopBottom.addPropertyChangeListener("dividerLocation",
+        splitPaneMachineAndTabs.addPropertyChangeListener("dividerLocation",
                 new PropertyChangeListener() {
                     @Override
                     public void propertyChange(PropertyChangeEvent evt) {
                         prefs.putInt(PREF_DIVIDER_POSITION,
-                                splitPaneTopBottom.getDividerLocation());
+                                splitPaneMachineAndTabs.getDividerLocation());
                     }
                 });
 
@@ -485,27 +476,24 @@ public class MainFrame extends JFrame {
 
         LogPanel logPanel = new LogPanel();
         tabs.addTab("Log", null, logPanel, null);
-        
-        panel_4 = new JPanel();
-        panel_4.setBorder(null);
-        contentPane.add(panel_4, BorderLayout.SOUTH);
-                panel_4.setLayout(new FormLayout(new ColumnSpec[] {
-                        ColumnSpec.decode("default:grow"),
-                        ColumnSpec.decode("8px"),
-                        FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,},
-                    new RowSpec[] {
-                        RowSpec.decode("20px"),}));
-                
-                lblStatus = new JLabel(" ");
-                lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-                panel_4.add(lblStatus, "1, 1");
-                
-                droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000");
-                droLbl.setOpaque(true);
-                droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-                panel_4.add(droLbl, "4, 1");
+
+        panelStatusAndDros = new JPanel();
+        panelStatusAndDros.setBorder(null);
+        contentPane.add(panelStatusAndDros, BorderLayout.SOUTH);
+        panelStatusAndDros.setLayout(new FormLayout(
+                new ColumnSpec[] {ColumnSpec.decode("default:grow"), ColumnSpec.decode("8px"),
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {RowSpec.decode("20px"),}));
+
+        lblStatus = new JLabel(" ");
+        lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+        panelStatusAndDros.add(lblStatus, "1, 1");
+
+        droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000");
+        droLbl.setOpaque(true);
+        droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+        panelStatusAndDros.add(droLbl, "4, 1");
 
         registerBoardImporters();
 
@@ -528,7 +516,7 @@ public class MainFrame extends JFrame {
             System.exit(1);
         }
     }
-    
+
     public JLabel getDroLabel() {
         return droLbl;
     }
@@ -725,7 +713,8 @@ public class MainFrame extends JFrame {
             about();
         }
     };
-    private JPanel panel_4;
+    private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;
+    private JSplitPane splitPane;
 }
