@@ -118,9 +118,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             Logger.warn(e);
         }
         BufferedImage image;
-        while ((image = internalCapture()) == null) {
-            System.out.println("got a null");
-        }
+        while ((image = internalCapture()) == null);
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -137,7 +135,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public int getWidth() {
         if (width == null) {
-            BufferedImage image = capture();
+            BufferedImage image;
+            while ((image = internalCapture()) == null);
             width = image.getWidth();
             height = image.getHeight();
         }
@@ -147,7 +146,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public int getHeight() {
         if (width == null) {
-            BufferedImage image = capture();
+            BufferedImage image;
+            while ((image = internalCapture()) == null);
             width = image.getWidth();
             height = image.getHeight();
         }
