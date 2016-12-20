@@ -102,8 +102,7 @@ The tabs at the bottom of the window are where all configuration and job setup t
 * Parts: Create new parts, setup bottom vision, pick parts for testing.
 * Packages: Create packages, setup footprints. Important for [[Fiducials]].
 * Feeders: Setup feeders, specify parts to feed.
-* Cameras: Configure camera details.
-* Machine Setup: A tree view showing all configurable components of the machine.
+* Machine Setup: Configure every aspect of the machine's hardware and setup.
 * Log: Shows log output from the system and lets you choose what to show.
 
 Location Buttons
