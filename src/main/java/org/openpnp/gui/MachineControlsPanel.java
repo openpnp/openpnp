@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Locale;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -63,6 +64,10 @@ import com.jgoodies.forms.layout.RowSpec;
 public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
 
+    private static final String PREF_JOG_CONTROLS_EXPANDED = "MachineControlsPanel.jogControlsExpanded";
+    private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
+    private Preferences prefs = Preferences.userNodeForPackage(MachineControlsPanel.class);    
+    
     private Nozzle selectedNozzle;
     private JComboBox comboBoxNozzles;
 
@@ -206,6 +211,12 @@ public class MachineControlsPanel extends JPanel {
         panel.add(comboBoxNozzles, "4, 2, fill, default");
         collapsePane.add(jogControlsPanel);
         add(collapsePane);
+
+        collapsePane.setCollapsed(!prefs.getBoolean(PREF_JOG_CONTROLS_EXPANDED, PREF_JOG_CONTROLS_EXPANDED_DEF));
+        
+        collapsePane.addPropertyChangeListener("collapsed", e -> {
+            prefs.putBoolean(PREF_JOG_CONTROLS_EXPANDED, !collapsePane.isCollapsed());
+        });
     }
 
     @SuppressWarnings("serial")
