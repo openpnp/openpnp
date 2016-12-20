@@ -189,11 +189,11 @@ public class CameraPanel extends JPanel {
                 selectedCameraView = null;
             }
             else if (camerasCombo.getSelectedItem().equals(SHOW_ALL_ITEM)) {
-                int columns = (int) Math.ceil(Math.sqrt(cameraViews.size()));
-                if (columns == 0) {
-                    columns = 1;
+                int rows = (int) Math.ceil(Math.sqrt(cameraViews.size()));
+                if (rows == 0) {
+                    rows = 1;
                 }
-                camerasPanel.setLayout(new GridLayout(0, columns, 1, 1));
+                camerasPanel.setLayout(new GridLayout(rows, 0, 1, 1));
                 for (CameraView cameraView : cameraViews.values()) {
                     cameraView.setMaximumFps(maximumFps / Math.max(cameraViews.size(), 1));
                     cameraView.setShowName(true);
@@ -203,7 +203,7 @@ public class CameraPanel extends JPanel {
                     }
                 }
                 if (cameraViews.size() > 2) {
-                    for (int i = 0; i < (columns * columns) - cameraViews.size(); i++) {
+                    for (int i = 0; i < (rows * rows) - cameraViews.size(); i++) {
                         JPanel panel = new JPanel();
                         panel.setBackground(Color.black);
                         camerasPanel.add(panel);
