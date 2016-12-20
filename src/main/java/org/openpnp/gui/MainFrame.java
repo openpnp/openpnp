@@ -78,6 +78,7 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
+import org.pmw.tinylog.Logger;
 
 /**
  * The main window of the application.
@@ -438,8 +439,18 @@ public class MainFrame extends JFrame {
 
         cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-
-        if (System.getProperty("enableNav", null) != null) {
+        
+        boolean javaFxAvailable = false;
+        
+        try {
+            Class.forName("javafx.scene.Scene");
+            javaFxAvailable = true;
+        }
+        catch (Throwable e) {
+            Logger.warn("JavaFX is not installed. The optional navigation feature will not be available.");
+        }
+        
+        if (javaFxAvailable) {
             navigationPanel = new FxNavigationView();
             camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);

@@ -1,10 +1,16 @@
 package org.openpnp.gui.components.nav;
 
+import org.openpnp.events.FeederSelectedEvent;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
 import org.openpnp.util.UiUtils;
 
+import com.google.common.eventbus.Subscribe;
+
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
@@ -22,10 +28,26 @@ public class FeederView extends Group {
         outline.setTranslateY(-outline.getHeight() / 2);
         getChildren().add(outline);
         
-        FootprintView footprintNode = new FootprintView(feeder.getPart().getPackage().getFootprint(), Color.BLACK);
-        getChildren().add(footprintNode);
+        Footprint footprint = null;
+        if (feeder.getPart() != null) {
+            if (feeder.getPart().getPackage() != null) {
+                if (feeder.getPart().getPackage().getFootprint() != null) {
+                    footprint = feeder.getPart().getPackage().getFootprint();
+                }
+            }
+        }
+
+        FootprintView footprintView = new FootprintView(footprint, Color.BLACK);
+        getChildren().add(footprintView);
+        
         UiUtils.bindTooltip(this, new Tooltip(feeder.getName()));
         
+        setOnMouseClicked(event -> {
+            Configuration.get().getBus().post(new FeederSelectedEvent(feeder));
+        });
+        
+        Configuration.get().getBus().register(this);
+
         updateLocation();
     }
     
@@ -39,5 +61,17 @@ public class FeederView extends Group {
         catch (Exception e) {
             
         }
+    }
+    
+    @Subscribe
+    public void feederSelected(FeederSelectedEvent e) {
+        Platform.runLater(() -> {
+            if (e.feeder == feeder) {
+                setEffect(new SelectedEffect());
+            }
+            else {
+                setEffect(null);
+            }
+        });
     }
 }

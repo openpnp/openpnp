@@ -3,6 +3,7 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -24,11 +25,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import org.openpnp.events.BoardLocationSelectedEvent;
+import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -53,6 +57,8 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+
+import com.google.common.eventbus.Subscribe;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -158,6 +164,7 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardLocation.getSide());
+                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(), boardLocation));
                 }
             }
         });
@@ -210,7 +217,17 @@ public class JobPlacementsPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
     }
-
+    
+    public void selectPlacement(Placement placement) {
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            if (tableModel.getPlacement(i) == placement) {
+                table.getSelectionModel().setSelectionInterval(i, i);
+                table.scrollRectToVisible(new Rectangle(table.getCellRect(i, 0, true)));
+                break;
+            }
+        }
+    }
+    
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {

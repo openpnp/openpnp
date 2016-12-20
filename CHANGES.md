@@ -1,6 +1,32 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-19
+
+* Introduction of Navigation Panel
+
+	The Navigation Panel is a new feature that shows a 2D rendered view of your machine and job
+	and allows quick navigation around the various components. You can quickly jog to any location
+	on the machine and you can see a live view of your cameras, nozzles, feeders, boards and
+	placements. Additionally, it makes it very easy to quickly find these objects in the tables
+	below by simply clicking on one of them in the panel.
+	
+	This feature is still under heavy development. There are some known bugs and limitations:
+	* When an item is selected, the selection border rendering sometimes gets artifacts from
+	the drag jog line.
+	* Board bottoms are not rendered correctly.
+	
+	For more information about this feature, see https://github.com/openpnp/openpnp/issues/99.
+	
+	Some things to try are:
+	* Load a job to see a visual representation of the boards and placements.
+	* Use your mouse wheel to zoom in and out.
+	* Mouse over objects to see their names.
+	* Click on various objects to select them and to instantly navigate to them
+	in the tables below.
+	* Click and drag to jog the camera around.
+	* Click on the camera to turn it transparent so you can see what is under it. 
+	
 # 2016-12-18
 
 * Add and Remove Cameras, Nozzles, Nozzle Tips, and Actuators in the Machine Setup tab.

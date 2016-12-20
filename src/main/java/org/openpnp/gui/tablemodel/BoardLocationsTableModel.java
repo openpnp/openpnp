@@ -55,6 +55,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     public Job getJob() {
         return job;
     }
+    
+    public BoardLocation getBoardLocation(int index) {
+        return job.getBoardLocations().get(index);
+    }
 
     @Override
     public String getColumnName(int column) {
@@ -71,7 +75,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         }
         return job.getBoardLocations().size();
     }
-
+    
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         return columnTypes[columnIndex];
