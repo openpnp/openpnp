@@ -3,6 +3,7 @@ package org.openpnp.gui.components.nav;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
@@ -25,7 +26,15 @@ public class PlacementView extends Group {
         this.boardLocation = boardLocation;
         this.placement = placement;
         
-        FootprintView footprintView = new FootprintView(placement.getPart().getPackage().getFootprint(), Color.GOLD);
+        Footprint footprint = null;
+        if (placement.getPart() != null) {
+            if (placement.getPart().getPackage() != null) {
+                if (placement.getPart().getPackage().getFootprint() != null) {
+                    footprint = placement.getPart().getPackage().getFootprint();
+                }
+            }
+        }
+        FootprintView footprintView = new FootprintView(footprint, Color.GOLD);
         getChildren().add(footprintView);
 
         // Create the outline rectangle

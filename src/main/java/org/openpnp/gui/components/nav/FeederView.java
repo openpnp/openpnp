@@ -2,6 +2,7 @@ package org.openpnp.gui.components.nav;
 
 import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
@@ -27,8 +28,17 @@ public class FeederView extends Group {
         outline.setTranslateY(-outline.getHeight() / 2);
         getChildren().add(outline);
         
-        FootprintView footprintNode = new FootprintView(feeder.getPart().getPackage().getFootprint(), Color.BLACK);
-        getChildren().add(footprintNode);
+        Footprint footprint = null;
+        if (feeder.getPart() != null) {
+            if (feeder.getPart().getPackage() != null) {
+                if (feeder.getPart().getPackage().getFootprint() != null) {
+                    footprint = feeder.getPart().getPackage().getFootprint();
+                }
+            }
+        }
+
+        FootprintView footprintView = new FootprintView(footprint, Color.BLACK);
+        getChildren().add(footprintView);
         
         UiUtils.bindTooltip(this, new Tooltip(feeder.getName()));
         
