@@ -1,6 +1,82 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-19
+
+* Introduction of Navigation Panel
+
+	The Navigation Panel is a new feature that shows a 2D rendered view of your machine and job
+	and allows quick navigation around the various components. You can quickly jog to any location
+	on the machine and you can see a live view of your cameras, nozzles, feeders, boards and
+	placements. Additionally, it makes it very easy to quickly find these objects in the tables
+	below by simply clicking on one of them in the panel.
+	
+	This feature is still under heavy development. There are some known bugs and limitations:
+	* When an item is selected, the selection border rendering sometimes gets artifacts from
+	the drag jog line.
+	* Board bottoms are not rendered correctly.
+	
+	For more information about this feature, see https://github.com/openpnp/openpnp/issues/99.
+	
+	Some things to try are:
+	* Load a job to see a visual representation of the boards and placements.
+	* Use your mouse wheel to zoom in and out.
+	* Mouse over objects to see their names.
+	* Click on various objects to select them and to instantly navigate to them
+	in the tables below.
+	* Click and drag to jog the camera around.
+	* Click on the camera to turn it transparent so you can see what is under it. 
+	
+# 2016-12-18
+
+* Add and Remove Cameras, Nozzles, Nozzle Tips, and Actuators in the Machine Setup tab.
+
+	You can now add and remove cameras, nozzles and actuators in the Machine Setup tab. To add,
+	click on the heading for the thing you want to create and click the Add button above. To
+	remove, click on the one you want to remove and then click on the Remove button above.
+
+* Cameras Tab Removed
+
+	The Cameras tab has been removed and all of it's functionality moved to Machine Setup. This
+	is part of a long running change to move all setup tasks into Machine Setup, and this is the
+	final one.
+	
+	More information at: https://github.com/openpnp/openpnp/issues/103
+	
+# 2016-12-11
+
+* Camera Drag Jogging
+
+	You can now click and drag in the camera view to move the camera. When you click and begin
+	to drag, a white line is shown from the current center of the camera to where the camera
+	will go when you release the button. This is in addition to the existing Shift-Click to
+	jog system already in place. It is intended to eventually replace that system.
+
+* Navigation View Updates
+
+	Navigation View is a feature that has been in development for some time but has been disabled
+	in the code. It presents a 2D rendered view of the machine from the top down and allows
+	you to quickly move around the machine and get information about objects such as boards,
+	placements, feeders, etc. This feature is still under development and not ready for prime
+	time, but it's become interesting enough that some people may want to try it out. To enable
+	it you need to add -DenableNav=true to your command line.
+	
+	Once enabled, there will be a new tab with the Cameras call Navigation. Try loading a job
+	to see what the view shows. You should see boards, placements, feeders, cameras and a red
+	dot for your nozzles. You can zoom in and out with the mouse wheel, mouse over objects to
+	get information, click and drag to jog the machine, and click cameras to turn them
+	transparent. Cameras move and update in real time.
+	
+	This feature is going to grow quite a bit in the coming months. This is just a preview.
+	
+* Event Bus (Developers)
+
+	A simple event bus has been added at Configuration.getBus(). This is currently being tested
+	with the Navigation View above and is intended to further decouple the UI. This new addition
+	is being tested for further use. For more information, see:
+	
+	https://github.com/google/guava/wiki/EventBusExplained
+
 # 2016-11-26
 
 * Scripting Events

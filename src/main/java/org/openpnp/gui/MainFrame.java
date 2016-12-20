@@ -64,7 +64,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.FxNavigationView;
+import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
@@ -78,6 +78,7 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
+import org.pmw.tinylog.Logger;
 
 /**
  * The main window of the application.
@@ -111,7 +112,6 @@ public class MainFrame extends JFrame {
     private PackagesPanel packagesPanel;
     private FeedersPanel feedersPanel;
     private JobPanel jobPanel;
-    private CamerasPanel camerasPanel;
     private CameraPanel cameraPanel;
     private MachineSetupPanel machineSetupPanel;
     private Component navigationPanel;
@@ -140,10 +140,6 @@ public class MainFrame extends JFrame {
         return jobPanel;
     }
 
-    public CamerasPanel getCamerasTab() {
-        return camerasPanel;
-    }
-    
     public CameraPanel getCameraViews() {
         return cameraPanel;
     }
@@ -215,10 +211,9 @@ public class MainFrame extends JFrame {
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
-        camerasPanel = new CamerasPanel(this, configuration);
         machineSetupPanel = new MachineSetupPanel();
         cameraPanel = new CameraPanel();
-        machineControlsPanel = new MachineControlsPanel(configuration, this, cameraPanel);
+        machineControlsPanel = new MachineControlsPanel(configuration);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -444,8 +439,18 @@ public class MainFrame extends JFrame {
 
         cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-
-        if (System.getProperty("enableNav", null) != null) {
+        
+        boolean javaFxAvailable = false;
+        
+        try {
+            Class.forName("javafx.scene.Scene");
+            javaFxAvailable = true;
+        }
+        catch (Throwable e) {
+            Logger.warn("JavaFX is not installed. The optional navigation feature will not be available.");
+        }
+        
+        if (javaFxAvailable) {
             navigationPanel = new FxNavigationView();
             camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
@@ -478,7 +483,6 @@ public class MainFrame extends JFrame {
         tabs.addTab("Parts", null, partsPanel, null);
         tabs.addTab("Packages", null, packagesPanel, null);
         tabs.addTab("Feeders", null, feedersPanel, null);
-        tabs.addTab("Cameras", null, camerasPanel, null);
         tabs.addTab("Machine Setup", null, machineSetupPanel, null);
 
         LogPanel logPanel = new LogPanel();

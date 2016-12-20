@@ -109,7 +109,24 @@ public class CameraPanel extends JPanel {
             camerasCombo.insertItemAt(SHOW_ALL_ITEM, 1);
         }
     }
-
+    
+    public void removeCamera(Camera camera) {
+        CameraView cameraView = cameraViews.remove(camera);
+        if (cameraView == null) {
+            return;
+        }
+        for (int i = 0; i < camerasCombo.getItemCount(); i++) {
+            Object o = camerasCombo.getItemAt(i);
+            if (o instanceof CameraItem) {
+                CameraItem cameraItem = (CameraItem) o;
+                if (cameraItem.getCamera() == camera) {
+                    camerasCombo.removeItemAt(i);
+                    break;
+                }
+            }
+        }
+    }
+    
     private void createUi() {
         camerasPanel = new JPanel();
 

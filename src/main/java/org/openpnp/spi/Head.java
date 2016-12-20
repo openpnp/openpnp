@@ -90,6 +90,14 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public void removeCamera(Camera camera);
 
+    public void addNozzle(Nozzle nozzle) throws Exception;
+
+    public void removeNozzle(Nozzle nozzle);
+
+    public void addActuator(Actuator actuator) throws Exception;
+
+    public void removeActuator(Actuator actuator);
+
     public void moveToSafeZ(double speed) throws Exception;
 
     public void moveToSafeZ() throws Exception;

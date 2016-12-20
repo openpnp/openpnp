@@ -61,12 +61,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     public ImageCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
         try {
-            setHead(Configuration.get().getMachine().getDefaultHead());
-        }
-        catch (Exception e) {
-            
-        }
-        try {
             setSourceUri(sourceUri);
         }
         catch (Exception e) {
@@ -194,12 +188,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

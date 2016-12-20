@@ -46,6 +46,8 @@ import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
 
+import com.google.common.eventbus.EventBus;
+
 public class Configuration extends AbstractModelObject {
     private static Configuration instance;
 
@@ -72,6 +74,7 @@ public class Configuration extends AbstractModelObject {
     private File configurationDirectory;
     private Preferences prefs;
     private Scripting scripting;
+    private EventBus bus = new EventBus();
 
     public static Configuration get() {
         if (instance == null) {
@@ -92,6 +95,10 @@ public class Configuration extends AbstractModelObject {
     
     public Scripting getScripting() {
         return scripting;
+    }
+    
+    public EventBus getBus() {
+        return bus;
     }
 
     public File getConfigurationDirectory() {

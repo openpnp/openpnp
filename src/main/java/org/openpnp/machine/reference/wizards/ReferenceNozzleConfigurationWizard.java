@@ -52,9 +52,31 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JCheckBox chckbxChangerEnabled;
     private JCheckBox chckbxLimitRotationTo;
     private JTextField textFieldSafeZ;
+    private JPanel panelProperties;
+    private JLabel lblName;
+    private JTextField nameTf;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
+        
+        panelProperties = new JPanel();
+        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panelProperties);
+        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblName = new JLabel("Name");
+        panelProperties.add(lblName, "2, 2, right, default");
+        
+        nameTf = new JTextField();
+        panelProperties.add(nameTf, "4, 2");
+        nameTf.setColumns(20);
 
         panelOffsets = new JPanel();
         panelOffsets.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
@@ -137,6 +159,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
 
+        addWrappedBinding(nozzle, "name", nameTf, "text");
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzle, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
@@ -147,6 +170,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(nozzle, "limitRotation", chckbxLimitRotationTo, "selected");
         addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
+        ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);

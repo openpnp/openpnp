@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -46,12 +47,16 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.events.BoardLocationSelectedEvent;
+import org.openpnp.events.JobLoadedEvent;
+import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
@@ -77,6 +82,8 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+
+import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -181,6 +188,7 @@ public class JobPanel extends JPanel {
                         boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
                         jobPastePanel.setBoardLocation(boardLocation);
+                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
                     }
                 });
 
@@ -296,6 +304,45 @@ public class JobPanel extends JPanel {
         fsm.addPropertyChangeListener((e) -> {
             updateJobActions();
         });
+        
+        Configuration.get().getBus().register(this);
+    }
+    
+    @Subscribe
+    public void boardLocationSelected(BoardLocationSelectedEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().showTab("Job");
+
+            selectBoardLocation(event.boardLocation);
+        });
+    }
+    
+    @Subscribe
+    public void placementSelected(PlacementSelectedEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().showTab("Job");
+            
+            showTab("Pick and Place");
+
+            selectBoardLocation(event.boardLocation);
+            
+            jobPlacementsPanel.selectPlacement(event.placement);
+        });
+    }
+    
+    private void selectBoardLocation(BoardLocation boardLocation) {
+        for (int i = 0; i < boardLocationsTableModel.getRowCount(); i++) {
+            if (boardLocationsTableModel.getBoardLocation(i) == boardLocation) {
+                boardLocationsTable.getSelectionModel().setSelectionInterval(i, i);
+                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(i, 0, true)));
+                break;
+            }
+        }
+    }
+    
+    private void showTab(String title) {
+        int index = tabbedPane.indexOfTab(title);
+        tabbedPane.setSelectedIndex(index);
     }
 
     public Job getJob() {
@@ -313,6 +360,7 @@ public class JobPanel extends JPanel {
         job.addPropertyChangeListener("file", titlePropertyChangeListener);
         updateTitle();
         updateJobActions();
+        Configuration.get().getBus().post(new JobLoadedEvent(job));
     }
 
     public JobPlacementsPanel getJobPlacementsPanel() {

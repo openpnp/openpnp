@@ -422,10 +422,4 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }
