@@ -30,11 +30,14 @@ import java.util.Locale;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
 
+import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -66,7 +69,7 @@ public class MachineControlsPanel extends JPanel {
     private JogControlsPanel jogControlsPanel;
 
     private Location markLocation = null;
-    
+
     private Color droNormalColor = new Color(0xBDFFBE);
     private Color droSavedColor = new Color(0x90cce0);
 
@@ -74,9 +77,9 @@ public class MachineControlsPanel extends JPanel {
      * Create the panel.
      */
     public MachineControlsPanel(Configuration configuration) {
+        setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
         this.configuration = configuration;
-
-        jogControlsPanel = new JogControlsPanel(configuration, this);
 
         createUi();
 
@@ -107,6 +110,7 @@ public class MachineControlsPanel extends JPanel {
     /**
      * Currently returns the selected Nozzle. Intended to eventually return either the selected
      * Nozzle or PasteDispenser.
+     * 
      * @return
      */
     public HeadMountable getSelectedTool() {
@@ -142,7 +146,7 @@ public class MachineControlsPanel extends JPanel {
         if (l == null) {
             return;
         }
-        
+
         if (markLocation != null) {
             l = l.subtract(markLocation);
         }
@@ -154,21 +158,40 @@ public class MachineControlsPanel extends JPanel {
         z = l.getZ();
         c = l.getRotation();
 
-        MainFrame.get().getDroLabel().setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s",
-                String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
-                String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
-                String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
-                String.format(Locale.US, configuration.getLengthDisplayFormat(), c)));
+        MainFrame.get().getDroLabel()
+                .setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s",
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), c)));
     }
 
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
+        JXCollapsiblePane collapsePane = new JXCollapsiblePane();
+
+        JButton collapseButton =
+                new JButton(collapsePane.getActionMap().get(JXCollapsiblePane.TOGGLE_ACTION));
+        collapseButton.setBorderPainted(false);
+        collapseButton.setHideActionText(true);
+        collapseButton.setText("");
+
+        // get the built-in toggle action
+        Action collapseAction = collapseButton.getAction();
+        // use the collapse/expand icons from the JTree UI
+        collapseAction.putValue(JXCollapsiblePane.COLLAPSE_ICON,
+                UIManager.getIcon("Tree.expandedIcon"));
+        collapseAction.putValue(JXCollapsiblePane.EXPAND_ICON,
+                UIManager.getIcon("Tree.collapsedIcon"));
+
+        jogControlsPanel = new JogControlsPanel(configuration, this);
+
         JPanel panel = new JPanel();
         add(panel);
         panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"),},
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxNozzles = new JComboBox();
@@ -178,9 +201,11 @@ public class MachineControlsPanel extends JPanel {
                 setSelectedNozzle(((NozzleItem) comboBoxNozzles.getSelectedItem()).getNozzle());
             }
         });
-        panel.add(comboBoxNozzles, "2, 2, fill, default");
 
-        add(jogControlsPanel);
+        panel.add(collapseButton, "2, 2");
+        panel.add(comboBoxNozzles, "4, 2, fill, default");
+        collapsePane.add(jogControlsPanel);
+        add(collapsePane);
     }
 
     @SuppressWarnings("serial")
@@ -296,7 +321,7 @@ public class MachineControlsPanel extends JPanel {
                     });
                 }
             });
-            
+
             Machine machine = configuration.getMachine();
             if (machine != null) {
                 machine.removeListener(machineListener);
@@ -314,7 +339,7 @@ public class MachineControlsPanel extends JPanel {
             updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
-            
+
             for (Head head : machine.getHeads()) {
                 BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> {
                     if (e.getOldValue() == null && e.getNewValue() != null) {
@@ -331,7 +356,8 @@ public class MachineControlsPanel extends JPanel {
                     }
                 });
             }
-            
+
         }
     };
+    private JButton btnThing;
 }

@@ -389,35 +389,8 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
-        panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panelMachine.add(panel, BorderLayout.SOUTH);
-        panel.setLayout(new BorderLayout(0, 0));
-
-        panel_3 = new JPanel();
-        FlowLayout flowLayout = (FlowLayout) panel_3.getLayout();
-        flowLayout.setAlignment(FlowLayout.LEFT);
-        panel.add(panel_3, BorderLayout.NORTH);
-
         machineControlsPanel = new MachineControlsPanel(configuration);
-        JXCollapsiblePane machineControlsCollapsePane = new JXCollapsiblePane();
-        panel.add(machineControlsCollapsePane);
-        machineControlsCollapsePane.add(machineControlsPanel, BorderLayout.CENTER);
-        
-        machineControlsCollapseBtn = new JButton(
-                machineControlsCollapsePane.getActionMap().get(JXCollapsiblePane.TOGGLE_ACTION));
-        machineControlsCollapseBtn.setBorderPainted(false);
-        machineControlsCollapseBtn.setHideActionText(true);
-        machineControlsCollapseBtn.setText("");
-        panel_3.add(machineControlsCollapseBtn);
-
-        // get the built-in toggle action
-        Action collapseAction = machineControlsCollapseBtn.getAction();
-        // use the collapse/expand icons from the JTree UI
-        collapseAction.putValue(JXCollapsiblePane.COLLAPSE_ICON,
-                UIManager.getIcon("Tree.expandedIcon"));
-        collapseAction.putValue(JXCollapsiblePane.EXPAND_ICON,
-                UIManager.getIcon("Tree.collapsedIcon"));
+        panelMachine.add(machineControlsPanel, BorderLayout.SOUTH);
 
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
@@ -729,7 +702,4 @@ public class MainFrame extends JFrame {
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;
-    private JButton machineControlsCollapseBtn;
-    private JPanel panel;
-    private JPanel panel_3;
 }
