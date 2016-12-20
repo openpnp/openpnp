@@ -165,8 +165,6 @@ public class MainFrame extends JFrame {
     private JTextPane lblInstructions;
     private JPanel panel_2;
     private JTabbedPane camerasAndNavTabbedPane;
-    private JPanel panel_3;
-    private JPanel logPanel;
     private JMenuBar menuBar;
     private JMenu mnImport;
     private JMenu mnScripts;
@@ -504,6 +502,7 @@ public class MainFrame extends JFrame {
                 panel_4.add(lblStatus, "1, 1");
                 
                 droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000");
+                droLbl.setOpaque(true);
                 droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
                 droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
                 panel_4.add(droLbl, "4, 1");

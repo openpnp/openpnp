@@ -19,8 +19,8 @@
 
 package org.openpnp.gui;
 
+import java.awt.Color;
 import java.awt.EventQueue;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -31,7 +31,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -67,6 +66,9 @@ public class MachineControlsPanel extends JPanel {
     private JogControlsPanel jogControlsPanel;
 
     private Location markLocation = null;
+    
+    private Color droNormalColor = new Color(0xBDFFBE);
+    private Color droSavedColor = new Color(0x90cce0);
 
     /**
      * Create the panel.
@@ -152,14 +154,7 @@ public class MachineControlsPanel extends JPanel {
         z = l.getZ();
         c = l.getRotation();
 
-        String format;
-        if (markLocation != null) {
-            format = "(X:%-9s Y:%-9s Z:%-9s C:%-9s)";
-        }
-        else {
-            format = "X:%-9s Y:%-9s Z:%-9s C:%-9s";
-        }
-        MainFrame.get().getDroLabel().setText(String.format(format,
+        MainFrame.get().getDroLabel().setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s",
                 String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
                 String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
                 String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
@@ -168,8 +163,6 @@ public class MachineControlsPanel extends JPanel {
 
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        ButtonGroup buttonGroup = new ButtonGroup();
 
         JPanel panel = new JPanel();
         add(panel);
@@ -190,6 +183,7 @@ public class MachineControlsPanel extends JPanel {
         add(jogControlsPanel);
     }
 
+    @SuppressWarnings("serial")
     public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -283,15 +277,20 @@ public class MachineControlsPanel extends JPanel {
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) {
+            SwingUtilities.invokeLater(() -> {
+                MainFrame.get().getDroLabel().setBackground(droNormalColor);
+            });
             MainFrame.get().getDroLabel().addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     SwingUtilities.invokeLater(() -> {
                         if (markLocation == null) {
                             markLocation = getCurrentLocation();
+                            MainFrame.get().getDroLabel().setBackground(droSavedColor);
                         }
                         else {
                             markLocation = null;
+                            MainFrame.get().getDroLabel().setBackground(droNormalColor);
                         }
                         updateDros();
                     });
