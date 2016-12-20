@@ -62,6 +62,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -333,44 +334,14 @@ public class MainFrame extends JFrame {
                 super.dispatchEvent(event);
             }
         });
-
-        splitPane = new JSplitPane();
-        splitPane.setContinuousLayout(true);
-        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        panelMachine.add(splitPane, BorderLayout.CENTER);
+        cameraPanel = new CameraPanel();
 
         JPanel panelCameraAndInstructions = new JPanel();
-        splitPane.setLeftComponent(panelCameraAndInstructions);
+        panelMachine.add(panelCameraAndInstructions, BorderLayout.CENTER);
 
         panelInstructions = new JPanel();
         panelInstructions.setVisible(false);
         panelCameraAndInstructions.setLayout(new BorderLayout(0, 0));
-        cameraPanel = new CameraPanel();
-
-        boolean javaFxAvailable = false;
-
-        try {
-            Class.forName("javafx.scene.Scene");
-            javaFxAvailable = true;
-        }
-        catch (Throwable e) {
-            Logger.warn(
-                    "JavaFX is not installed. The optional navigation feature will not be available.");
-        }
-
-        if (javaFxAvailable) {
-            navigationPanel = new FxNavigationView();
-            JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
-            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
-            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
-            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
-        }
-        else {
-            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
-        }
-
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
         panelInstructions.setBorder(panelInstructionsBorder = new TitledBorder(null, "Instructions",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelCameraAndInstructions.add(panelInstructions, BorderLayout.SOUTH);
@@ -418,20 +389,38 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
-        JPanel panelMachineControls = new JPanel();
-        panelMachineControls.setBorder(new TitledBorder(null, "Machine Controls",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        splitPane.setRightComponent(panelMachineControls);
-        FlowLayout fl_panelMachineControls = (FlowLayout) panelMachineControls.getLayout();
-        fl_panelMachineControls.setVgap(0);
-        fl_panelMachineControls.setHgap(0);
+        panel = new JPanel();
+        panel.setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelMachine.add(panel, BorderLayout.SOUTH);
+        panel.setLayout(new BorderLayout(0, 0));
+
+        panel_3 = new JPanel();
+        FlowLayout flowLayout = (FlowLayout) panel_3.getLayout();
+        flowLayout.setAlignment(FlowLayout.LEFT);
+        panel.add(panel_3, BorderLayout.NORTH);
+
         machineControlsPanel = new MachineControlsPanel(configuration);
-        panelMachineControls.add(machineControlsPanel);
+        JXCollapsiblePane machineControlsCollapsePane = new JXCollapsiblePane();
+        panel.add(machineControlsCollapsePane);
+        machineControlsCollapsePane.add(machineControlsPanel, BorderLayout.CENTER);
+        
+        machineControlsCollapseBtn = new JButton(
+                machineControlsCollapsePane.getActionMap().get(JXCollapsiblePane.TOGGLE_ACTION));
+        machineControlsCollapseBtn.setBorderPainted(false);
+        machineControlsCollapseBtn.setHideActionText(true);
+        machineControlsCollapseBtn.setText("");
+        panel_3.add(machineControlsCollapseBtn);
+
+        // get the built-in toggle action
+        Action collapseAction = machineControlsCollapseBtn.getAction();
+        // use the collapse/expand icons from the JTree UI
+        collapseAction.putValue(JXCollapsiblePane.COLLAPSE_ICON,
+                UIManager.getIcon("Tree.expandedIcon"));
+        collapseAction.putValue(JXCollapsiblePane.EXPAND_ICON,
+                UIManager.getIcon("Tree.collapsedIcon"));
 
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
-
-        machineControlsPanel.setBorder(null);
 
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, mask),
                 machineControlsPanel.getJogControlsPanel().yPlusAction);
@@ -494,6 +483,30 @@ public class MainFrame extends JFrame {
         droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13));
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "4, 1");
+
+        boolean javaFxAvailable = false;
+
+        try {
+            Class.forName("javafx.scene.Scene");
+            javaFxAvailable = true;
+        }
+        catch (Throwable e) {
+            Logger.warn(
+                    "JavaFX is not installed. The optional navigation feature will not be available.");
+        }
+
+        if (javaFxAvailable) {
+            navigationPanel = new FxNavigationView();
+            JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
+            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
+            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
+            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
+        }
+        else {
+            cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
+                    TitledBorder.TOP, null, null));
+            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
+        }
 
         registerBoardImporters();
 
@@ -716,5 +729,7 @@ public class MainFrame extends JFrame {
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;
-    private JSplitPane splitPane;
+    private JButton machineControlsCollapseBtn;
+    private JPanel panel;
+    private JPanel panel_3;
 }
