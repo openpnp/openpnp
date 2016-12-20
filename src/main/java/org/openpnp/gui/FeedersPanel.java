@@ -149,6 +149,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         tableSorter = new TableRowSorter<>(tableModel);
 
         final JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));

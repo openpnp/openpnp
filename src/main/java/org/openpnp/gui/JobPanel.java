@@ -195,6 +195,7 @@ public class JobPanel extends JPanel {
         setLayout(new BorderLayout(0, 0));
 
         splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setBorder(null);
         splitPane.setContinuousLayout(true);
         splitPane

@@ -20,28 +20,25 @@
 package org.openpnp.gui;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.EventQueue;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Locale;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
 
+import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -67,31 +64,27 @@ import com.jgoodies.forms.layout.RowSpec;
 public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
 
+    private static final String PREF_JOG_CONTROLS_EXPANDED = "MachineControlsPanel.jogControlsExpanded";
+    private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
+    private Preferences prefs = Preferences.userNodeForPackage(MachineControlsPanel.class);    
+    
     private Nozzle selectedNozzle;
-
-    private JTextField textFieldX;
-    private JTextField textFieldY;
-    private JTextField textFieldC;
-    private JTextField textFieldZ;
     private JComboBox comboBoxNozzles;
-
-
-    private Color droNormalColor = new Color(0xBDFFBE);
-    private Color droEditingColor = new Color(0xF0F0A1);
-    private Color droSavedColor = new Color(0x90cce0);
 
     private JogControlsPanel jogControlsPanel;
 
-    private volatile double savedX = Double.NaN, savedY = Double.NaN, savedZ = Double.NaN,
-            savedC = Double.NaN;
+    private Location markLocation = null;
+
+    private Color droNormalColor = new Color(0xBDFFBE);
+    private Color droSavedColor = new Color(0x90cce0);
 
     /**
      * Create the panel.
      */
     public MachineControlsPanel(Configuration configuration) {
+        setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
         this.configuration = configuration;
-
-        jogControlsPanel = new JogControlsPanel(configuration, this);
 
         createUi();
 
@@ -122,6 +115,7 @@ public class MachineControlsPanel extends JPanel {
     /**
      * Currently returns the selected Nozzle. Intended to eventually return either the selected
      * Nozzle or PasteDispenser.
+     * 
      * @return
      */
     public HeadMountable getSelectedTool() {
@@ -158,6 +152,10 @@ public class MachineControlsPanel extends JPanel {
             return;
         }
 
+        if (markLocation != null) {
+            l = l.subtract(markLocation);
+        }
+
         double x, y, z, c;
 
         x = l.getX();
@@ -165,42 +163,40 @@ public class MachineControlsPanel extends JPanel {
         z = l.getZ();
         c = l.getRotation();
 
-        double savedX = this.savedX;
-        if (!Double.isNaN(savedX)) {
-            x -= savedX;
-        }
-
-        double savedY = this.savedY;
-        if (!Double.isNaN(savedY)) {
-            y -= savedY;
-        }
-
-        double savedZ = this.savedZ;
-        if (!Double.isNaN(savedZ)) {
-            z -= savedZ;
-        }
-
-        double savedC = this.savedC;
-        if (!Double.isNaN(savedC)) {
-            c -= savedC;
-        }
-
-        textFieldX.setText(String.format(Locale.US, configuration.getLengthDisplayFormat(), x));
-        textFieldY.setText(String.format(Locale.US, configuration.getLengthDisplayFormat(), y));
-        textFieldZ.setText(String.format(Locale.US, configuration.getLengthDisplayFormat(), z));
-        textFieldC.setText(String.format(Locale.US, configuration.getLengthDisplayFormat(), c));
+        MainFrame.get().getDroLabel()
+                .setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s",
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
+                        String.format(Locale.US, configuration.getLengthDisplayFormat(), c)));
     }
 
     private void createUi() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        ButtonGroup buttonGroup = new ButtonGroup();
+        JXCollapsiblePane collapsePane = new JXCollapsiblePane();
+
+        JButton collapseButton =
+                new JButton(collapsePane.getActionMap().get(JXCollapsiblePane.TOGGLE_ACTION));
+        collapseButton.setBorderPainted(false);
+        collapseButton.setHideActionText(true);
+        collapseButton.setText("");
+
+        // get the built-in toggle action
+        Action collapseAction = collapseButton.getAction();
+        // use the collapse/expand icons from the JTree UI
+        collapseAction.putValue(JXCollapsiblePane.COLLAPSE_ICON,
+                UIManager.getIcon("Tree.expandedIcon"));
+        collapseAction.putValue(JXCollapsiblePane.EXPAND_ICON,
+                UIManager.getIcon("Tree.collapsedIcon"));
+
+        jogControlsPanel = new JogControlsPanel(configuration, this);
 
         JPanel panel = new JPanel();
         add(panel);
         panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("default:grow"),},
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxNozzles = new JComboBox();
@@ -210,137 +206,20 @@ public class MachineControlsPanel extends JPanel {
                 setSelectedNozzle(((NozzleItem) comboBoxNozzles.getSelectedItem()).getNozzle());
             }
         });
-        panel.add(comboBoxNozzles, "2, 2, fill, default");
 
-        JPanel panelDrosParent = new JPanel();
-        add(panelDrosParent);
-        panelDrosParent.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        panel.add(collapseButton, "2, 2");
+        panel.add(comboBoxNozzles, "4, 2, fill, default");
+        collapsePane.add(jogControlsPanel);
+        add(collapsePane);
 
-        JPanel panelDros = new JPanel();
-        panelDrosParent.add(panelDros);
-        panelDros.setLayout(new BoxLayout(panelDros, BoxLayout.Y_AXIS));
-
-        JPanel panelDrosFirstLine = new JPanel();
-        panelDros.add(panelDrosFirstLine);
-        panelDrosFirstLine.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        JLabel lblX = new JLabel("X");
-        lblX.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        panelDrosFirstLine.add(lblX);
-
-        textFieldX = new JTextField();
-        textFieldX.setEditable(false);
-        textFieldX.setFocusTraversalKeysEnabled(false);
-        textFieldX.setSelectionColor(droEditingColor);
-        textFieldX.setDisabledTextColor(Color.BLACK);
-        textFieldX.setBackground(droNormalColor);
-        textFieldX.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        textFieldX.setText("0000.0000");
-        textFieldX.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    savedX = Double.NaN;
-                }
-                saveXAction.actionPerformed(null);
-            }
+        collapsePane.setCollapsed(!prefs.getBoolean(PREF_JOG_CONTROLS_EXPANDED, PREF_JOG_CONTROLS_EXPANDED_DEF));
+        
+        collapsePane.addPropertyChangeListener("collapsed", e -> {
+            prefs.putBoolean(PREF_JOG_CONTROLS_EXPANDED, !collapsePane.isCollapsed());
         });
-        panelDrosFirstLine.add(textFieldX);
-        textFieldX.setColumns(6);
-
-        Component horizontalStrut = Box.createHorizontalStrut(15);
-        panelDrosFirstLine.add(horizontalStrut);
-
-        JLabel lblY = new JLabel("Y");
-        lblY.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        panelDrosFirstLine.add(lblY);
-
-        textFieldY = new JTextField();
-        textFieldY.setEditable(false);
-        textFieldY.setFocusTraversalKeysEnabled(false);
-        textFieldY.setSelectionColor(droEditingColor);
-        textFieldY.setDisabledTextColor(Color.BLACK);
-        textFieldY.setBackground(droNormalColor);
-        textFieldY.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        textFieldY.setText("0000.0000");
-        textFieldY.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    savedY = Double.NaN;
-                }
-                saveYAction.actionPerformed(null);
-            }
-        });
-        panelDrosFirstLine.add(textFieldY);
-        textFieldY.setColumns(6);
-
-        JButton btnTargetTool = new JButton(targetToolAction);
-        panelDrosFirstLine.add(btnTargetTool);
-        btnTargetTool.setToolTipText("Position the tool at the camera's current location.");
-
-        JPanel panelDrosSecondLine = new JPanel();
-        panelDros.add(panelDrosSecondLine);
-        panelDrosSecondLine.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        JLabel lblC = new JLabel("C");
-        lblC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        panelDrosSecondLine.add(lblC);
-
-        textFieldC = new JTextField();
-        textFieldC.setEditable(false);
-        textFieldC.setFocusTraversalKeysEnabled(false);
-        textFieldC.setSelectionColor(droEditingColor);
-        textFieldC.setDisabledTextColor(Color.BLACK);
-        textFieldC.setBackground(droNormalColor);
-        textFieldC.setText("0000.0000");
-        textFieldC.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        textFieldC.setColumns(6);
-        textFieldC.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    savedC = Double.NaN;
-                }
-                saveCAction.actionPerformed(null);
-            }
-        });
-        panelDrosSecondLine.add(textFieldC);
-
-        Component horizontalStrut_1 = Box.createHorizontalStrut(15);
-        panelDrosSecondLine.add(horizontalStrut_1);
-
-        JLabel lblZ = new JLabel("Z");
-        lblZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        panelDrosSecondLine.add(lblZ);
-
-        textFieldZ = new JTextField();
-        textFieldZ.setEditable(false);
-        textFieldZ.setFocusTraversalKeysEnabled(false);
-        textFieldZ.setSelectionColor(droEditingColor);
-        textFieldZ.setDisabledTextColor(Color.BLACK);
-        textFieldZ.setBackground(droNormalColor);
-        textFieldZ.setText("0000.0000");
-        textFieldZ.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-        textFieldZ.setColumns(6);
-        textFieldZ.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    savedZ = Double.NaN;
-                }
-                saveZAction.actionPerformed(null);
-            }
-        });
-        panelDrosSecondLine.add(textFieldZ);
-
-        JButton btnTargetCamera = new JButton(targetCameraAction);
-        panelDrosSecondLine.add(btnTargetCamera);
-        btnTargetCamera.setToolTipText("Position the camera at the tool's current location.");
-
-        add(jogControlsPanel);
     }
 
+    @SuppressWarnings("serial")
     public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -395,86 +274,6 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
-    @SuppressWarnings("serial")
-    public Action saveXAction = new AbstractAction(null) {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            if (Double.isNaN(savedX)) {
-                textFieldX.setBackground(droSavedColor);
-                savedX = getCurrentLocation().getX();
-            }
-            else {
-                textFieldX.setBackground(droNormalColor);
-                savedX = Double.NaN;
-            }
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action saveYAction = new AbstractAction(null) {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            if (Double.isNaN(savedY)) {
-                textFieldY.setBackground(droSavedColor);
-                savedY = getCurrentLocation().getY();
-            }
-            else {
-                textFieldY.setBackground(droNormalColor);
-                savedY = Double.NaN;
-            }
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action saveZAction = new AbstractAction(null) {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            if (Double.isNaN(savedZ)) {
-                textFieldZ.setBackground(droSavedColor);
-                savedZ = getCurrentLocation().getZ();
-            }
-            else {
-                textFieldZ.setBackground(droNormalColor);
-                savedZ = Double.NaN;
-            }
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
-        }
-    };
-
-    @SuppressWarnings("serial")
-    public Action saveCAction = new AbstractAction(null) {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            if (Double.isNaN(savedC)) {
-                textFieldC.setBackground(droSavedColor);
-                savedC = getCurrentLocation().getRotation();
-            }
-            else {
-                textFieldC.setBackground(droNormalColor);
-                savedC = Double.NaN;
-            }
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    updateDros();
-                }
-            });
-        }
-    };
-
     private void updateStartStopButton(boolean enabled) {
         startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
         startStopMachineAction.putValue(Action.SMALL_ICON,
@@ -514,6 +313,26 @@ public class MachineControlsPanel extends JPanel {
     private ConfigurationListener configurationListener = new ConfigurationListener.Adapter() {
         @Override
         public void configurationComplete(Configuration configuration) {
+            SwingUtilities.invokeLater(() -> {
+                MainFrame.get().getDroLabel().setBackground(droNormalColor);
+            });
+            MainFrame.get().getDroLabel().addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (markLocation == null) {
+                            markLocation = getCurrentLocation();
+                            MainFrame.get().getDroLabel().setBackground(droSavedColor);
+                        }
+                        else {
+                            markLocation = null;
+                            MainFrame.get().getDroLabel().setBackground(droNormalColor);
+                        }
+                        updateDros();
+                    });
+                }
+            });
+
             Machine machine = configuration.getMachine();
             if (machine != null) {
                 machine.removeListener(machineListener);
@@ -531,7 +350,7 @@ public class MachineControlsPanel extends JPanel {
             updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
-            
+
             for (Head head : machine.getHeads()) {
                 BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> {
                     if (e.getOldValue() == null && e.getNewValue() != null) {
@@ -548,7 +367,8 @@ public class MachineControlsPanel extends JPanel {
                     }
                 });
             }
-            
+
         }
     };
+    private JButton btnThing;
 }
