@@ -4,7 +4,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.JobPanel.JobLoadedEvent;
+import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -19,6 +19,7 @@ import javafx.embed.swing.JFXPanel;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -33,7 +34,7 @@ public class FxNavigationView extends JFXPanel {
     Scene scene;
     Pane root;
     MachineView machineView;
-    // TODO: Probably should move to the MachineView.
+    // TODO: Probably should move to the MachineView or it's own BoardsView.
     Group boards = new Group();
     Line jogTargetLine;
 
@@ -62,34 +63,48 @@ public class FxNavigationView extends JFXPanel {
         scene.setOnDragDetected(jogDragStartHandler);
         scene.setOnMouseDragged(jogDragHandler);
         scene.setOnMouseDragReleased(jogDragEndHandler);
+        
+//        root.setOnMouseClicked(e -> {
+//            if (e.getClickCount() == 2) {
+//                zoomToFit((Node) e.getTarget());
+//            }
+//        });
 
         return scene;
     }
+    
+    private void zoomToFit() {
+        zoomToFit(machineView);
+    }
 
-    private void fitToViewPort() {
-        if (machineView == null) {
+    private void zoomToFit(Node node) {
+        if (node == null) {
             return;
         }
-        double zoom = getMinimumZoom();
+        double zoom = getMinimumZoom(node);
         zoomTx.setX(zoom);
         zoomTx.setY(zoom);
-        viewTx.setX(-machineView.getBoundsInLocal().getMinX());
-        viewTx.setY(-machineView.getBoundsInLocal().getMinY());
+        viewTx.setX(-node.getBoundsInLocal().getMinX());
+        viewTx.setY(-node.getBoundsInLocal().getMinY());
+    }
+    
+    private double getMinimumZoom() {
+        return getMinimumZoom(machineView);
     }
 
     /**
-     * Returns the minimum zoom level that will allow the entire scene to fit within the bounds
+     * Returns the minimum zoom level that will allow the Node to fit within the bounds
      * of the view.
      * @return
      */
-    private double getMinimumZoom() {
+    private double getMinimumZoom(Node node) {
         if (machineView == null) {
             return 1;
         }
         double viewWidth = getWidth() - getInsets().left - getInsets().right;
         double viewHeight = getHeight() - getInsets().top - getInsets().bottom;
-        double width = machineView.getBoundsInLocal().getWidth();
-        double height = machineView.getBoundsInLocal().getHeight();
+        double width = node.getBoundsInLocal().getWidth();
+        double height = node.getBoundsInLocal().getHeight();
 
         double widthRatio = width / viewWidth;
         double heightRatio = height / viewHeight;
@@ -120,7 +135,7 @@ public class FxNavigationView extends JFXPanel {
                 BoardLocationView boardLocationView = new BoardLocationView(boardLocation);
                 boards.getChildren().add(boardLocationView);
             }
-            fitToViewPort();
+            zoomToFit();
         });
     }
 
@@ -185,7 +200,7 @@ public class FxNavigationView extends JFXPanel {
             double zoom = zoomTx.getX();
             zoom += (e.getDeltaY() * 0.01);
             if (zoom <= getMinimumZoom()) {
-                fitToViewPort();
+                zoomToFit();
             }
             else {
                 zoomTx.setX(zoom);
@@ -201,7 +216,7 @@ public class FxNavigationView extends JFXPanel {
     ComponentListener componentListener = new ComponentListener() {
         @Override
         public void componentShown(ComponentEvent e) {
-            fitToViewPort();
+            zoomToFit();
         }
 
         @Override
@@ -225,7 +240,7 @@ public class FxNavigationView extends JFXPanel {
 
                 machineView.getChildren().add(0, boards);
 
-                fitToViewPort();
+                zoomToFit();
             });
         }
     };

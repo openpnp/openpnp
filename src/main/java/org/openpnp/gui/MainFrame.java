@@ -78,11 +78,12 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
-import com.jgoodies.forms.layout.FormLayout;
+import org.pmw.tinylog.Logger;
+
 import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.border.EtchedBorder;
 
 /**
  * The main window of the application.
@@ -442,8 +443,18 @@ public class MainFrame extends JFrame {
 
         cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-
-        if (System.getProperty("enableNav", null) != null) {
+        
+        boolean javaFxAvailable = false;
+        
+        try {
+            Class.forName("javafx.scene.Scene");
+            javaFxAvailable = true;
+        }
+        catch (Throwable e) {
+            Logger.warn("JavaFX is not installed. The optional navigation feature will not be available.");
+        }
+        
+        if (javaFxAvailable) {
             navigationPanel = new FxNavigationView();
             camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
