@@ -61,6 +61,10 @@ public class PlacementsTableModel extends AbstractTableModel {
         this.board = board;
         fireTableDataChanged();
     }
+    
+    public Placement getPlacement(int index) {
+        return board.getPlacements().get(index);
+    }
 
     @Override
     public String getColumnName(int column) {

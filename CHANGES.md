@@ -1,6 +1,161 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-20
+
+* User Interface Improvements
+
+	This change introduces a new layout and some changes to the main user interface. The purpose
+	of this change is to improve use of screen real estate for the things that people spend the
+	most time interacting with.
+	
+	The main change is that the screen is now split vertically instead of horizontally. Cameras
+	have been moved to the upper left and jog controls to the lower left. The tabs and tables have
+	been moved to the right side of the screen and are now stacked rather than side by side.
+	
+	The primary benefit of this change is that it takes better advantage of the trend towards wider
+	screens. Previously, users with wide (but short) screens had very limited space to work in
+	due to the fixed sizes of several components. With the screen now split vertically it is
+	now possible to use the full height of the screen to see jobs, placements and configuration
+	information.
+	
+	Other minor changes are:
+	* You can now collapse the jog controls to get them out of the way if you prefer to use the
+	keyboard shortcuts or camera jogging.
+	* DROs have been moved from the Machine Controls section to the bottom right of the status
+	bar. For too long the DROs have taken up a huge amount of screen space for something that
+	is really not that useful. You can still switch between relative and absolute mode by clicking
+	on them.
+	
+	Here are some screenshots to show the major differences. The first shows the interface before
+	the changes, the next shows the new user interface with jog controls expanded and the third
+	shows the new interface with jog controls collapsed.
+	
+	![screen shot 2016-12-20 at 5 53 55 pm](https://cloud.githubusercontent.com/assets/1182323/21372675/562c4ae6-c6de-11e6-8071-86b126f78b95.png)
+
+	![screen shot 2016-12-20 at 5 37 16 pm](https://cloud.githubusercontent.com/assets/1182323/21372503/1c1ac8f6-c6dd-11e6-89ee-64e922fbcdcf.png)
+
+	![screen shot 2016-12-20 at 5 40 57 pm](https://cloud.githubusercontent.com/assets/1182323/21372502/1c11244a-c6dd-11e6-9f4a-fb37ba47c5e0.png)
+	
+	Finally, I would like to send a special Thank You to @FinalPhoenix, who has generously
+	volunteered to help with improving OpenPnP's user interface and overall user experience!
+	
+	Many of these changes were suggested by @FinalPhoenix and with her help I hope to make
+	OpenPnP far more enjoyable and easy to use than it has ever been.
+	 
+# 2016-12-19
+
+* Introduction of Navigation Panel
+
+	The Navigation Panel is a new feature that shows a 2D rendered view of your machine and job
+	and allows quick navigation around the various components. You can quickly jog to any location
+	on the machine and you can see a live view of your cameras, nozzles, feeders, boards and
+	placements. Additionally, it makes it very easy to quickly find these objects in the tables
+	below by simply clicking on one of them in the panel.
+	
+	This feature is still under heavy development. There are some known bugs and limitations:
+	* When an item is selected, the selection border rendering sometimes gets artifacts from
+	the drag jog line.
+	* Board bottoms are not rendered correctly.
+	
+	For more information about this feature, see https://github.com/openpnp/openpnp/issues/99.
+	
+	Some things to try are:
+	* Load a job to see a visual representation of the boards and placements.
+	* Use your mouse wheel to zoom in and out.
+	* Mouse over objects to see their names.
+	* Click on various objects to select them and to instantly navigate to them
+	in the tables below.
+	* Click and drag to jog the camera around.
+	* Click on the camera to turn it transparent so you can see what is under it. 
+	
+# 2016-12-18
+
+* Add and Remove Cameras, Nozzles, Nozzle Tips, and Actuators in the Machine Setup tab.
+
+	You can now add and remove cameras, nozzles and actuators in the Machine Setup tab. To add,
+	click on the heading for the thing you want to create and click the Add button above. To
+	remove, click on the one you want to remove and then click on the Remove button above.
+
+* Cameras Tab Removed
+
+	The Cameras tab has been removed and all of it's functionality moved to Machine Setup. This
+	is part of a long running change to move all setup tasks into Machine Setup, and this is the
+	final one.
+	
+	More information at: https://github.com/openpnp/openpnp/issues/103
+	
+# 2016-12-11
+
+* Camera Drag Jogging
+
+	You can now click and drag in the camera view to move the camera. When you click and begin
+	to drag, a white line is shown from the current center of the camera to where the camera
+	will go when you release the button. This is in addition to the existing Shift-Click to
+	jog system already in place. It is intended to eventually replace that system.
+
+* Navigation View Updates
+
+	Navigation View is a feature that has been in development for some time but has been disabled
+	in the code. It presents a 2D rendered view of the machine from the top down and allows
+	you to quickly move around the machine and get information about objects such as boards,
+	placements, feeders, etc. This feature is still under development and not ready for prime
+	time, but it's become interesting enough that some people may want to try it out. To enable
+	it you need to add -DenableNav=true to your command line.
+	
+	Once enabled, there will be a new tab with the Cameras call Navigation. Try loading a job
+	to see what the view shows. You should see boards, placements, feeders, cameras and a red
+	dot for your nozzles. You can zoom in and out with the mouse wheel, mouse over objects to
+	get information, click and drag to jog the machine, and click cameras to turn them
+	transparent. Cameras move and update in real time.
+	
+	This feature is going to grow quite a bit in the coming months. This is just a preview.
+	
+* Event Bus (Developers)
+
+	A simple event bus has been added at Configuration.getBus(). This is currently being tested
+	with the Navigation View above and is intended to further decouple the UI. This new addition
+	is being tested for further use. For more information, see:
+	
+	https://github.com/google/guava/wiki/EventBusExplained
+
+# 2016-11-26
+
+* Scripting Events
+
+	Scripting Events is a new feature that will be getting a lot of use in the future. This allows
+	scripts to be run when certain things happen in OpenPnP. The scripts are referenced by name
+	and can be of any supported scripting extension. They are found in the scripts/Events
+	directory.
+	
+	The feature is used by calling `Scripting.on(String eventName, Map<String, Object> globals)`.
+	
+	As part of this feature, Scripting was moved into Configuration rather than MainFrame, so
+	that it can be used outside of the UI.
+	
+	For more information, see https://github.com/openpnp/openpnp/wiki/Scripting#scripting-events.
+	
+* Camera.BeforeCapture and Camera.AfterCapture Scripting Events
+
+	The first use of the new feature described above is two events that can be used to control
+	lighting and other complex camera operations. Camera.BeforeCapture is fired before an image
+	is captured and Camera.AfterCapture is fired after the capture is complete.
+	
+	By using the scripting events in combination with named Actuators you can control any
+	device on your machine.
+
+	For more information, see https://github.com/openpnp/openpnp/wiki/Scripting#camerabeforecapture
+	and https://github.com/openpnp/openpnp/wiki/Scripting#cameraaftercapture
+
+* Removed Deprecated LtiCivilCamera and VfwCamera
+
+	LtiCivilCamera and VfwCamera were camera implementations for Mac and Windows. These required
+	native libraries that were out of date and, as far as I know, no longer used. These have been
+	removed in an effort to remove dead code from the project.
+	
+	If you were depending on these, please try switching to OpencvCamera or WebcamCamera. See
+	https://groups.google.com/forum/#!msg/openpnp/JnOMjZWi9C8 for more information.
+
 # 2016-11-17
 
 ## Note: Breaking Change

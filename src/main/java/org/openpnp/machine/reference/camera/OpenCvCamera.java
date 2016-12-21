@@ -28,9 +28,7 @@ import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 import org.opencv.highgui.VideoCapture;
 import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
@@ -63,7 +61,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public OpenCvCamera() {}
 
     @Override
-    public synchronized BufferedImage capture() {
+    public synchronized BufferedImage internalCapture() {
         if (thread == null) {
             initCamera();
         }
@@ -94,7 +92,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = capture();
+                BufferedImage image = internalCapture();
                 if (image != null) {
                     broadcastCapture(image);
                 }
@@ -216,12 +214,6 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

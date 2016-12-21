@@ -9,7 +9,7 @@ import org.openpnp.spi.PropertySheetHolder;
 
 public class SimplePropertySheetHolder implements PropertySheetHolder {
     protected String title;
-    protected PropertySheetHolder[] children;
+    protected List<? extends PropertySheetHolder> children;
     protected Icon icon;
 
     public SimplePropertySheetHolder(String title, List<? extends PropertySheetHolder> children) {
@@ -19,7 +19,7 @@ public class SimplePropertySheetHolder implements PropertySheetHolder {
     public SimplePropertySheetHolder(String title, List<? extends PropertySheetHolder> children,
             Icon icon) {
         this.title = title;
-        this.children = children.toArray(new PropertySheetHolder[] {});
+        this.children = children;
         this.icon = icon;
     }
 
@@ -30,7 +30,10 @@ public class SimplePropertySheetHolder implements PropertySheetHolder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return children;
+        if (children == null) {
+            return null;
+        }
+        return children.toArray(new PropertySheetHolder[] {});
     }
 
     @Override

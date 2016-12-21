@@ -9,6 +9,9 @@ public class Icons {
     public static Icon neww = getIcon("/icons/file-new.svg");
     public static Icon copy = getIcon("/icons/copy.svg");
     public static Icon paste = getIcon("/icons/paste.svg");
+    
+    public static Icon nozzleAdd = getIcon("/icons/nozzle-add.svg");
+    public static Icon nozzleRemove = getIcon("/icons/nozzle-remove.svg");
 
     public static Icon captureCamera = getIcon("/icons/capture-camera.svg");
     public static Icon captureTool = getIcon("/icons/capture-nozzle.svg");

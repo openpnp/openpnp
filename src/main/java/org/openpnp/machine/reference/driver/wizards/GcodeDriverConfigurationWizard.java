@@ -90,6 +90,9 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 comboBoxHm.addItem(new HeadMountableItem(hm));
             }
         }
+        for (Actuator actuator : Configuration.get().getMachine().getActuators()) {
+            comboBoxHm.addItem(new HeadMountableItem(actuator));
+        }
 
         comboBoxCommandType = new JComboBox<>();
         panel_1.add(comboBoxCommandType, "4, 4, fill, default");
@@ -355,7 +358,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
             else if (hm instanceof Actuator) {
                 type = "Actuator";
             }
-            return String.format("%s: %s %s", type, hm.getHead().getName(), hm.getName());
+            return String.format("%s: %s %s", type, hm.getHead() == null ? "[No Head]" : hm.getHead().getName(), hm.getName());
         }
     }
 }

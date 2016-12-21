@@ -156,6 +156,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
             return;
         }
         ReferenceDriver driver = (ReferenceDriver) Class.forName(driverClassName).newInstance();
+        driver.createDefaults();
         machine.setDriver(driver);
         this.driverClassName = driverClassName;
         MessageBoxes.infoBox("Restart Required",

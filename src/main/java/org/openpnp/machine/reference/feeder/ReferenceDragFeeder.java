@@ -224,9 +224,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // match now contains the position, in pixels, from the top left corner
         // of the image to the top left corner of the match. We are interested in
         // knowing how far from the center of the image the center of the match is.
-        BufferedImage image = camera.capture();
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
+        double imageWidth = camera.getWidth();
+        double imageHeight = camera.getHeight();
         double templateWidth = vision.getTemplateImage().getWidth();
         double templateHeight = vision.getTemplateImage().getHeight();
         double matchX = match.x;

@@ -19,8 +19,15 @@
 
 package org.openpnp.machine.reference;
 
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -30,13 +37,15 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
@@ -93,20 +102,56 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private Mat undistortionMap1;
     private Mat undistortionMap2;
 
-    protected ReferenceMachine machine;
-    protected ReferenceDriver driver;
-
-
     private LensCalibration lensCalibration;
-
+    
     public ReferenceCamera() {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine) configuration.getMachine();
-                driver = machine.getDriver();
-            }
-        });
+    }
+    
+    @Override
+    public BufferedImage capture() {
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("camera", this);
+            Configuration.get().getScripting().on("Camera.BeforeCapture", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        BufferedImage image;
+        while ((image = internalCapture()) == null);
+        try {
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("camera", this);
+            Configuration.get().getScripting().on("Camera.AfterCapture", globals);
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+        return image;
+    }
+    
+    protected abstract BufferedImage internalCapture();
+    
+    @Override
+    public int getWidth() {
+        if (width == null) {
+            BufferedImage image;
+            while ((image = internalCapture()) == null);
+            width = image.getWidth();
+            height = image.getHeight();
+        }
+        return width;
+    }
+
+    @Override
+    public int getHeight() {
+        if (width == null) {
+            BufferedImage image;
+            while ((image = internalCapture()) == null);
+            width = image.getWidth();
+            height = image.getHeight();
+        }
+        return height;
     }
 
     @Override
@@ -122,8 +167,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         Logger.debug("moveTo({}, {})", location, speed);
-        driver.moveTo(this, location, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, location, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     @Override
@@ -132,8 +177,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        driver.moveTo(this, l, speed);
-        machine.fireMachineHeadActivity(head);
+        getDriver().moveTo(this, l, speed);
+        getMachine().fireMachineHeadActivity(head);
     }
 
     public double getRotation() {
@@ -374,7 +419,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         if (getHead() == null) {
             return getHeadOffsets();
         }
-        return driver.getLocation(this);
+        return getDriver().getLocation(this);
     }
 
     public Length getSafeZ() {
@@ -392,7 +437,45 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific")};
+                new PropertySheetWizardAdapter(getConfigurationWizard(), "Camera Specific"),
+                new PropertySheetWizardAdapter(visionProvider.getConfigurationWizard(), "Vision Provider")};
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        return new Action[] { deleteAction };
+    }
+    
+    public Action deleteAction = new AbstractAction("Delete Camera") {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Camera");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected camera.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete " + getName() + "?",
+                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                if (getHead() != null) {
+                    getHead().removeCamera(ReferenceCamera.this);
+                }
+                else {
+                    Configuration.get().getMachine().removeCamera(ReferenceCamera.this);
+                }
+                MainFrame.get().getCameraViews().removeCamera(ReferenceCamera.this);
+            }
+        }
+    };
+    
+    ReferenceDriver getDriver() {
+        return getMachine().getDriver();
+    }
+    
+    ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
     }
 
     public interface CalibrationCallback {

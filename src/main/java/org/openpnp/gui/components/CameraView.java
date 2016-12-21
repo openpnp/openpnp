@@ -191,6 +191,10 @@ public class CameraView extends JComponent implements CameraListener {
     private boolean showName = false;
     
     private double zoom = 1d;
+    
+    private boolean dragJogging = false;
+    
+    private MouseEvent dragJoggingTarget = null;
 
     public CameraView() {
         setBackground(Color.black);
@@ -442,6 +446,9 @@ public class CameraView extends JComponent implements CameraListener {
         if (cameraViewFilter != null) {
             img = cameraViewFilter.filterCameraImage(camera, img);
         }
+        if (img == null) {
+            return;
+        }
         BufferedImage oldFrame = lastFrame;
         lastFrame = img;
         if (oldFrame == null
@@ -548,6 +555,8 @@ public class CameraView extends JComponent implements CameraListener {
             if (selectionEnabled && selection != null) {
                 paintSelection(g2d);
             }
+
+            paintDragJogging(g2d);
         }
         else {
             g.setColor(Color.red);
@@ -563,6 +572,17 @@ public class CameraView extends JComponent implements CameraListener {
             g2d.setColor(new Color(1f, 1f, 1f, alpha));
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
+    }
+    
+    private void paintDragJogging(Graphics2D g2d) {
+        if (!isDragJogging() || dragJoggingTarget == null) {
+            return;
+        }
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        g2d.setColor(Color.white);
+        g2d.drawLine(width / 2, height / 2, dragJoggingTarget.getX(), dragJoggingTarget.getY());
     }
 
     private void paintSelection(Graphics2D g2d) {
@@ -1235,6 +1255,28 @@ public class CameraView extends JComponent implements CameraListener {
         selectionMode = null;
         selectionActiveHandle = null;
     }
+    
+    private void dragJoggingBegin(MouseEvent e) {
+        this.dragJogging = true;
+        this.dragJoggingTarget = e;
+        repaint();
+    }
+    
+    private void dragJoggingContinue(MouseEvent e) {
+        this.dragJoggingTarget = e;
+        repaint();
+    }
+    
+    private void dragJoggingEnd(MouseEvent e) {
+        this.dragJogging = false;
+        this.dragJoggingTarget = null;
+        repaint();
+        moveToClick(e);
+    }
+    
+    private boolean isDragJogging() {
+        return this.dragJogging;
+    }
 
     private MouseListener mouseListener = new MouseAdapter() {
         @Override
@@ -1271,6 +1313,9 @@ public class CameraView extends JComponent implements CameraListener {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
+            else if (isDragJogging()) {
+                dragJoggingEnd(e);
+            }
             else {
                 endSelection();
             }
@@ -1288,6 +1333,12 @@ public class CameraView extends JComponent implements CameraListener {
             if (selectionEnabled) {
                 continueSelection(e);
             }
+            else if (!isDragJogging()) {
+                dragJoggingBegin(e);
+            }
+            else if (isDragJogging()) {
+                dragJoggingContinue(e);
+            }
         }
     };
 
@@ -1301,7 +1352,7 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            zoom -= e.getPreciseWheelRotation();
+            zoom -= e.getPreciseWheelRotation() * 0.01d;
             zoom = Math.max(zoom, 1.0d);
             zoom = Math.min(zoom, 100d);
             calculateScalingData();

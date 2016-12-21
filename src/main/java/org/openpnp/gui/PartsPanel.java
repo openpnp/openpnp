@@ -142,6 +142,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
         JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
