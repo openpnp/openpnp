@@ -42,15 +42,12 @@ public class FxNavigationView extends JFXPanel {
     Translate viewTx = new Translate(0, 0);
 
     public FxNavigationView() {
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                setScene(createScene());
-                Configuration.get().addListener(configurationListener);
-            }
+        Platform.runLater(() -> {
+            setScene(createScene());
+            Configuration.get().addListener(configurationListener);
+            addComponentListener(componentListener);
+            Configuration.get().getBus().register(this);
         });
-        addComponentListener(componentListener);
-        Configuration.get().getBus().register(this);
     }
 
     private Scene createScene() {
@@ -81,11 +78,13 @@ public class FxNavigationView extends JFXPanel {
         if (node == null) {
             return;
         }
-        double zoom = getMinimumZoom(node);
-        zoomTx.setX(zoom);
-        zoomTx.setY(zoom);
-        viewTx.setX(-node.getBoundsInLocal().getMinX());
-        viewTx.setY(-node.getBoundsInLocal().getMinY());
+        Platform.runLater(() -> {
+            double zoom = getMinimumZoom(node);
+            zoomTx.setX(zoom);
+            zoomTx.setY(zoom);
+            viewTx.setX(-node.getBoundsInLocal().getMinX());
+            viewTx.setY(-node.getBoundsInLocal().getMinY());
+        });
     }
     
     private double getMinimumZoom() {
@@ -139,84 +138,72 @@ public class FxNavigationView extends JFXPanel {
         });
     }
 
-    EventHandler<MouseEvent> jogDragStartHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            scene.startFullDrag();
-            try {
-                Camera camera =
-                        Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-                Location location = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
-                Point2D start = machineView.localToScene(location.getX(), location.getY());
-                start = root.sceneToLocal(start);
-                Point2D end = root.sceneToLocal(e.getX(), e.getY());
-                jogTargetLine = new Line(start.getX(), start.getY(), end.getX(), end.getY());
-                jogTargetLine.setStroke(Color.WHITE);
-                root.getChildren().add(jogTargetLine);
-            }
-            catch (Exception ex) {
-
-            }
-        }
-    };
-
-    EventHandler<MouseEvent> jogDragHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            if (jogTargetLine == null) {
-                return;
-            }
+    EventHandler<MouseEvent> jogDragStartHandler = e -> {
+        scene.startFullDrag();
+        try {
+            Camera camera =
+                    Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            Location location = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
+            Point2D start = machineView.localToScene(location.getX(), location.getY());
+            start = root.sceneToLocal(start);
             Point2D end = root.sceneToLocal(e.getX(), e.getY());
-            jogTargetLine.setEndX(end.getX());
-            jogTargetLine.setEndY(end.getY());
+            jogTargetLine = new Line(start.getX(), start.getY(), end.getX(), end.getY());
+            jogTargetLine.setStroke(Color.WHITE);
+            root.getChildren().add(jogTargetLine);
+        }
+        catch (Exception ex) {
+
         }
     };
 
-    EventHandler<MouseEvent> jogDragEndHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            try {
-                root.getChildren().remove(jogTargetLine);
-                final Camera camera =
-                        Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-                Point2D point = machineView.sceneToLocal(e.getX(), e.getY());
-                final Location location =
-                        camera.getLocation().derive(point.getX(), point.getY(), null, null);
-                UiUtils.submitUiMachineTask(() -> {
-                    camera.moveTo(location);
-                });
-            }
-            catch (Exception ex) {
+    EventHandler<MouseEvent> jogDragHandler = e -> {
+        if (jogTargetLine == null) {
+            return;
+        }
+        Point2D end = root.sceneToLocal(e.getX(), e.getY());
+        jogTargetLine.setEndX(end.getX());
+        jogTargetLine.setEndY(end.getY());
+    };
 
-            }
+    EventHandler<MouseEvent> jogDragEndHandler = e -> {
+        try {
+            root.getChildren().remove(jogTargetLine);
+            final Camera camera =
+                    Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            Point2D point = machineView.sceneToLocal(e.getX(), e.getY());
+            final Location location =
+                    camera.getLocation().derive(point.getX(), point.getY(), null, null);
+            UiUtils.submitUiMachineTask(() -> {
+                camera.moveTo(location);
+            });
+        }
+        catch (Exception ex) {
+
         }
     };
 
-    EventHandler<ScrollEvent> zoomHandler = new EventHandler<ScrollEvent>() {
-        @Override
-        public void handle(final ScrollEvent e) {
-            e.consume();
-            Point2D before = machineView.sceneToLocal(e.getX(), e.getY());
-            double zoom = zoomTx.getX();
-            zoom += (e.getDeltaY() * 0.01);
-            if (zoom <= getMinimumZoom()) {
-                zoomToFit();
-            }
-            else {
-                zoomTx.setX(zoom);
-                zoomTx.setY(zoom);
-                Point2D after = machineView.sceneToLocal(e.getX(), e.getY());
-                Point2D delta = after.subtract(before);
-                viewTx.setX(viewTx.getX() + delta.getX());
-                viewTx.setY(viewTx.getY() + delta.getY());
-            }
+    EventHandler<ScrollEvent> zoomHandler = e -> {
+        e.consume();
+        Point2D before = machineView.sceneToLocal(e.getX(), e.getY());
+        double zoom = zoomTx.getX();
+        zoom += (e.getDeltaY() * 0.01);
+        if (zoom <= getMinimumZoom()) {
+            zoomToFit();
+        }
+        else {
+            zoomTx.setX(zoom);
+            zoomTx.setY(zoom);
+            Point2D after = machineView.sceneToLocal(e.getX(), e.getY());
+            Point2D delta = after.subtract(before);
+            viewTx.setX(viewTx.getX() + delta.getX());
+            viewTx.setY(viewTx.getY() + delta.getY());
         }
     };
 
     ComponentListener componentListener = new ComponentListener() {
         @Override
         public void componentShown(ComponentEvent e) {
-        	Platform.runLater(() -> zoomToFit());
+            zoomToFit();
         }
 
         @Override

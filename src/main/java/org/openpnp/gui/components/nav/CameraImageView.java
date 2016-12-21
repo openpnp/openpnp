@@ -49,9 +49,11 @@ class CameraImageView extends ImageView implements CameraListener {
     }
     
     private void updateLocation() {
-        Location location = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
-        setX(location.getX());
-        setY(location.getY());
+        Platform.runLater(() -> {
+            Location location = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
+            setX(location.getX());
+            setY(location.getY());
+        });
     }
     
 
@@ -65,12 +67,12 @@ class CameraImageView extends ImageView implements CameraListener {
     MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
-            Platform.runLater(() -> updateLocation());
+            updateLocation();
         }
 
         @Override
         public void machineEnabled(Machine machine) {
-            Platform.runLater(() -> updateLocation());
+            updateLocation();
         }
     };    
 }
