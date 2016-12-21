@@ -20,6 +20,7 @@
 package org.openpnp.spi;
 
 import java.io.Closeable;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -194,7 +195,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Head getDefaultHead() throws Exception;
 
-    public PartAlignment getPartAlignment();
+    public List<PartAlignment> getPartAlignments();
 
     public FiducialLocator getFiducialLocator();
 

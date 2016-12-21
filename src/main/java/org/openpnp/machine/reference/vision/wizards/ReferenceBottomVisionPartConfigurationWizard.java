@@ -39,6 +39,11 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private JCheckBox enabledCheckbox;
     private JCheckBox chckbxCenterAfterTest;
 
+    @Override
+    public String getWizardName() {
+        return "BottomVision";
+    }
+
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
             Part part) {
         this.bottomVision = bottomVision;
