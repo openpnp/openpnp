@@ -59,7 +59,7 @@ class CameraImageView extends ImageView implements CameraListener {
         if (img == null) {
             return;
         }
-        setImage(SwingFXUtils.toFXImage(img, null));
+        Platform.runLater(() -> setImage(SwingFXUtils.toFXImage(img, null)));
     }
     
     MachineListener machineListener = new MachineListener.Adapter() {

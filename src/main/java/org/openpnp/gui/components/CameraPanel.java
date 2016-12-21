@@ -30,6 +30,7 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.CameraItem;
@@ -58,38 +59,42 @@ public class CameraPanel extends JPanel {
     private Preferences prefs = Preferences.userNodeForPackage(CameraPanel.class);
 
     public CameraPanel() {
-        createUi();
+		SwingUtilities.invokeLater(() -> {
+			createUi();
+		});
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
-                for (Head head : Configuration.get().getMachine().getHeads()) {
-                    for (Camera camera : head.getCameras()) {
-                        addCamera(camera);
-                    }
-                }
-                for (Camera camera : configuration.getMachine().getCameras()) {
-                    addCamera(camera);
-                }
-
-                String selectedCameraView = prefs.get(PREF_SELECTED_CAMERA_VIEW, null);
-                if (selectedCameraView != null) {
-                    for (int i = 0; i < camerasCombo.getItemCount(); i++) {
-                        Object o = camerasCombo.getItemAt(i);
-                        if (o.toString().equals(selectedCameraView)) {
-                            camerasCombo.setSelectedItem(o);
+            	SwingUtilities.invokeLater(() -> {
+                    for (Head head : Configuration.get().getMachine().getHeads()) {
+                        for (Camera camera : head.getCameras()) {
+                            addCamera(camera);
                         }
                     }
-                }
-                camerasCombo.addActionListener((event) -> {
-                    try {
-                        prefs.put(PREF_SELECTED_CAMERA_VIEW,
-                                camerasCombo.getSelectedItem().toString());
-                        prefs.flush();
+                    for (Camera camera : configuration.getMachine().getCameras()) {
+                        addCamera(camera);
                     }
-                    catch (Exception e) {
-                        e.printStackTrace();
+
+                    String selectedCameraView = prefs.get(PREF_SELECTED_CAMERA_VIEW, null);
+                    if (selectedCameraView != null) {
+                        for (int i = 0; i < camerasCombo.getItemCount(); i++) {
+                            Object o = camerasCombo.getItemAt(i);
+                            if (o.toString().equals(selectedCameraView)) {
+                                camerasCombo.setSelectedItem(o);
+                            }
+                        }
                     }
-                });
+                    camerasCombo.addActionListener((event) -> {
+                        try {
+                            prefs.put(PREF_SELECTED_CAMERA_VIEW,
+                                    camerasCombo.getSelectedItem().toString());
+                            prefs.flush();
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });           		
+            	});
             }
         });
     }

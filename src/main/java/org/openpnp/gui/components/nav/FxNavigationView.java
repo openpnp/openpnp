@@ -216,7 +216,7 @@ public class FxNavigationView extends JFXPanel {
     ComponentListener componentListener = new ComponentListener() {
         @Override
         public void componentShown(ComponentEvent e) {
-            zoomToFit();
+        	Platform.runLater(() -> zoomToFit());
         }
 
         @Override
