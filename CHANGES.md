@@ -1,6 +1,48 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-20
+
+* User Interface Improvements
+
+	This change introduces a new layout and some changes to the main user interface. The purpose
+	of this change is to improve use of screen real estate for the things that people spend the
+	most time interacting with.
+	
+	The main change is that the screen is now split vertically instead of horizontally. Cameras
+	have been moved to the upper left and jog controls to the lower left. The tabs and tables have
+	been moved to the right side of the screen and are now stacked rather than side by side.
+	
+	The primary benefit of this change is that it takes better advantage of the trend towards wider
+	screens. Previously, users with wide (but short) screens had very limited space to work in
+	due to the fixed sizes of several components. With the screen now split vertically it is
+	now possible to use the full height of the screen to see jobs, placements and configuration
+	information.
+	
+	Other minor changes are:
+	* You can now collapse the jog controls to get them out of the way if you prefer to use the
+	keyboard shortcuts or camera jogging.
+	* DROs have been moved from the Machine Controls section to the bottom right of the status
+	bar. For too long the DROs have taken up a huge amount of screen space for something that
+	is really not that useful. You can still switch between relative and absolute mode by clicking
+	on them.
+	
+	Here are some screenshots to show the major differences. The first shows the interface before
+	the changes, the next shows the new user interface with jog controls expanded and the third
+	shows the new interface with jog controls collapsed.
+	
+	![screen shot 2016-12-20 at 5 53 55 pm](https://cloud.githubusercontent.com/assets/1182323/21372675/562c4ae6-c6de-11e6-8071-86b126f78b95.png)
+
+	![screen shot 2016-12-20 at 5 37 16 pm](https://cloud.githubusercontent.com/assets/1182323/21372503/1c1ac8f6-c6dd-11e6-89ee-64e922fbcdcf.png)
+
+	![screen shot 2016-12-20 at 5 40 57 pm](https://cloud.githubusercontent.com/assets/1182323/21372502/1c11244a-c6dd-11e6-9f4a-fb37ba47c5e0.png)
+	
+	Finally, I would like to send a special Thank You to @FinalPhoenix, who has generously
+	volunteered to help with improving OpenPnP's user interface and overall user experience!
+	
+	Many of these changes were suggested by @FinalPhoenix and with her help I hope to make
+	OpenPnP far more enjoyable and easy to use than it has ever been.
+	 
 # 2016-12-19
 
 * Introduction of Navigation Panel
