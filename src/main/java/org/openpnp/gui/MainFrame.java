@@ -100,6 +100,8 @@ public class MainFrame extends JFrame {
     private static final int PREF_WINDOW_HEIGHT_DEF = 768;
     private static final String PREF_DIVIDER_POSITION = "MainFrame.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    private static final String PREF_WINDOW_STYLE_MULTIPLE = "MainFrame.windowStyleMultiple";
+    private static final boolean PREF_WINDOW_STYLE_MULTIPLE_DEF = false;
 
     private final Configuration configuration;
 
@@ -111,6 +113,8 @@ public class MainFrame extends JFrame {
     private FeedersPanel feedersPanel;
     private JobPanel jobPanel;
     private CameraPanel cameraPanel;
+    private JPanel panelCameraAndInstructions;
+    private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
     private Component navigationPanel;
 
@@ -160,6 +164,7 @@ public class MainFrame extends JFrame {
     private JMenuBar menuBar;
     private JMenu mnImport;
     private JMenu mnScripts;
+    private JMenu mnWindows;
 
     public JTabbedPane getTabs() {
         return tabs;
@@ -292,6 +297,18 @@ public class MainFrame extends JFrame {
         mnScripts = new JMenu("Scripts");
         menuBar.add(mnScripts);
 
+        // Windows
+        /////////////////////////////////////////////////////////////////////
+        mnWindows = new JMenu("Window");
+        menuBar.add(mnWindows);
+
+        JCheckBoxMenuItem windowStyleMultipleMenuItem =
+                new JCheckBoxMenuItem(windowStyleMultipleSelected);
+        mnWindows.add(windowStyleMultipleMenuItem);
+        if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
+            windowStyleMultipleMenuItem.setSelected(true);
+        }
+
         // Help
         /////////////////////////////////////////////////////////////////////
         if (!macOsXMenus) {
@@ -311,7 +328,7 @@ public class MainFrame extends JFrame {
         splitPaneMachineAndTabs.setContinuousLayout(true);
         contentPane.add(splitPaneMachineAndTabs, BorderLayout.CENTER);
 
-        JPanel panelMachine = new JPanel();
+        panelMachine = new JPanel();
         splitPaneMachineAndTabs.setLeftComponent(panelMachine);
         panelMachine.setLayout(new BorderLayout(0, 0));
 
@@ -336,7 +353,7 @@ public class MainFrame extends JFrame {
         });
         cameraPanel = new CameraPanel();
 
-        JPanel panelCameraAndInstructions = new JPanel();
+        panelCameraAndInstructions = new JPanel();
         panelMachine.add(panelCameraAndInstructions, BorderLayout.CENTER);
 
         panelInstructions = new JPanel();
@@ -500,6 +517,48 @@ public class MainFrame extends JFrame {
                             + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>"
                             + "OpenPnP will now exit.");
             System.exit(1);
+        }
+        splitWindows();
+    }
+
+    // 20161222 - ldpgh/lutz_dd
+    /**
+     * Add multiple windows (aka JFrame) to OpenPnp for the camera (frameCamera) and the machine
+     * controls (frameMachineControls).
+     *
+     * ATTENTION ... the current implementation in MainFrame.java requires a refactoring on the
+     * long-term to separate JFrame from JPanels
+     */
+    public void splitWindows() {
+        if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
+            // pin panelCameraAndInstructions to a separate JFrame
+            JFrame frameCamera = new JFrame("OpenPnp - Camera");
+            // as of today no smart way found to get an adjusted size
+            // ... so main window size is used for the camera window
+            frameCamera.setSize(getFrames()[0].getSize());
+            frameCamera.add(panelCameraAndInstructions);
+            frameCamera.setVisible(true);
+
+            // pin machineControlsPanel to a separate JFrame
+            JFrame frameMachineControls = new JFrame("OpenPnp - Machine Controls");
+            System.out.println(machineControlsPanel.getSize());
+            // as of today no smart way found to get an adjusted size
+            // ... so hardcoded values used (usually not a good idea)
+            frameMachineControls.add(machineControlsPanel);
+            frameMachineControls.setVisible(true);
+            frameMachineControls.pack();
+
+            // move the splitPaneDivider to position 0 to fill the gap of the
+            // relocated panels 'panelCameraAndInstructions' & 'machineControlsPanel'
+            splitPaneMachineAndTabs.setDividerLocation(0);
+        }
+        else {
+            panelMachine.add(panelCameraAndInstructions, BorderLayout.CENTER);
+            // A value of 0 indicates 'multiple window style' was used before.
+            if (0 == prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF)) {
+                // Reset the Divider position back to the default value.
+                splitPaneMachineAndTabs.setDividerLocation(PREF_DIVIDER_POSITION_DEF);
+            }
         }
     }
 
@@ -683,6 +742,19 @@ public class MainFrame extends JFrame {
             configuration.setSystemUnits(LengthUnit.Millimeters);
             MessageBoxes.infoBox("Notice",
                     "Please restart OpenPnP for the changes to take effect.");
+        }
+    };
+
+    private Action windowStyleMultipleSelected = new AbstractAction("Multiple Window Style") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (mnWindows.getItem(0).isSelected()) {
+                prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, true);
+            }
+            else {
+                prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
+            }
+            MessageBoxes.infoBox("Windows Style Changed", "Window style has been changed. Please restart OpenPnP to see the changes.");
         }
     };
 
