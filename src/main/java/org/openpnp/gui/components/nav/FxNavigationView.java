@@ -34,6 +34,10 @@ public class FxNavigationView extends JFXPanel {
 
     Scale zoomTx = new Scale(1, 1, 0, 0);
     Translate viewTx = new Translate(0, 0);
+    
+    // Stores the min and max extends of the machine as we learn them through updates to
+    // the size of the machine view.
+    double minX, minY, maxX, maxY;
 
     public FxNavigationView() {
         Platform.runLater(() -> {
@@ -65,44 +69,37 @@ public class FxNavigationView extends JFXPanel {
     }
     
     private void zoomToFit() {
-        zoomToFit(machineView);
-    }
-
-    private void zoomToFit(Node node) {
-        if (node == null) {
+        if (machineView == null) {
             return;
         }
         Platform.runLater(() -> {
-            double zoom = getMinimumZoom(node) * 0.90;
+            double zoom = getMinimumZoom() * 0.90;
             zoomTx.setX(zoom);
             zoomTx.setY(zoom);
-            // Get the view port dimensions in unscaled units (instead of pixels).
+            // Get the view port dimensions in machine units (instead of pixels).
             double viewWidth = (getWidth() - getInsets().left - getInsets().right) / zoom;
             double viewHeight = (getHeight() - getInsets().top - getInsets().bottom) / zoom;
-            // Get the machine view dimensions in unscaled units.
-            Bounds bounds = node.getBoundsInLocal();
-            viewTx.setX(viewWidth / 2 - bounds.getWidth() / 2 - bounds.getMinX());
-            viewTx.setY(viewHeight / 2 - bounds.getHeight() / 2 - bounds.getMinY());
+            // Get the machine view dimensions in machine units.
+            double width = maxX - minX;
+            double height = maxY - minY;
+            viewTx.setX(viewWidth / 2 - width / 2 - minX);
+            viewTx.setY(viewHeight / 2 - height / 2 - minY);
         });
-    }
-    
-    private double getMinimumZoom() {
-        return getMinimumZoom(machineView);
     }
 
     /**
-     * Returns the minimum zoom level that will allow the Node to fit within the bounds
+     * Returns the minimum zoom level that will allow the MachineView to fit within the bounds
      * of the view.
      * @return
      */
-    private double getMinimumZoom(Node node) {
+    private double getMinimumZoom() {
         if (machineView == null) {
             return 1;
         }
         double viewWidth = getWidth() - getInsets().left - getInsets().right;
         double viewHeight = getHeight() - getInsets().top - getInsets().bottom;
-        double width = node.getBoundsInLocal().getWidth();
-        double height = node.getBoundsInLocal().getHeight();
+        double width = maxX - minX;
+        double height = maxY - minY;
 
         double widthRatio = width / viewWidth;
         double heightRatio = height / viewHeight;
@@ -219,6 +216,19 @@ public class FxNavigationView extends JFXPanel {
                 // finished adding components.
                 machineView.getJobView().jobProperty().addListener((observable, oldValue, newValue) -> {
                     zoomToFit();
+                });
+                
+                // Preload the bounding box and then add a listener to keep it updated. The bounding
+                // box is used to determine our zoom extents.
+                minX = machineView.getBoundsInLocal().getMinX();
+                minY = machineView.getBoundsInLocal().getMinY();
+                maxX = machineView.getBoundsInLocal().getMaxX();
+                maxY = machineView.getBoundsInLocal().getMaxY();
+                machineView.boundsInLocalProperty().addListener((observable, oldValue, newValue) -> {
+                    minX = Math.min(minX, newValue.getMinX());
+                    minY = Math.min(minY, newValue.getMinY());
+                    maxX = Math.max(maxX, newValue.getMaxX());
+                    maxY = Math.max(maxY, newValue.getMaxY());
                 });
                 
                 zoomToFit();
