@@ -10,9 +10,13 @@ import org.openpnp.spi.Nozzle;
 import javafx.scene.Group;
 
 public class MachineView extends Group {
+    final Machine machine;
+    
     JobView jobView;
     
     public MachineView(Machine machine) {
+        this.machine = machine;
+        
         getChildren().add(jobView = new JobView());
         
         for (Feeder feeder : machine.getFeeders()) {
