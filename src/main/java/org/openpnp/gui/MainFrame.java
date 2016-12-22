@@ -541,7 +541,6 @@ public class MainFrame extends JFrame {
 
             // pin machineControlsPanel to a separate JFrame
             JFrame frameMachineControls = new JFrame("OpenPnp - Machine Controls");
-            System.out.println(machineControlsPanel.getSize());
             // as of today no smart way found to get an adjusted size
             // ... so hardcoded values used (usually not a good idea)
             frameMachineControls.add(machineControlsPanel);
