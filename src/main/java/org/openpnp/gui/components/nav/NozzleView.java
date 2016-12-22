@@ -30,20 +30,22 @@ public class NozzleView extends Group {
     }
     
     private void updateLocation() {
-        Location location = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters);
-        setTranslateX(location.getX());
-        setTranslateY(location.getY());
+        Platform.runLater(() -> {
+            Location location = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters);
+            setTranslateX(location.getX());
+            setTranslateY(location.getY());
+        });
     }
     
     MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
-            Platform.runLater(() -> updateLocation());
+            updateLocation();
         }
 
         @Override
         public void machineEnabled(Machine machine) {
-            Platform.runLater(() -> updateLocation());
+            updateLocation();
         }
     };
 }

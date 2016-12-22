@@ -4,21 +4,17 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.events.JobLoadedEvent;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 
-import com.google.common.eventbus.Subscribe;
-
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
@@ -34,23 +30,18 @@ public class FxNavigationView extends JFXPanel {
     Scene scene;
     Pane root;
     MachineView machineView;
-    // TODO: Probably should move to the MachineView or it's own BoardsView.
-    Group boards = new Group();
     Line jogTargetLine;
 
     Scale zoomTx = new Scale(1, 1, 0, 0);
     Translate viewTx = new Translate(0, 0);
 
     public FxNavigationView() {
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                setScene(createScene());
-                Configuration.get().addListener(configurationListener);
-            }
+        Platform.runLater(() -> {
+            setScene(createScene());
+            Configuration.get().addListener(configurationListener);
+            addComponentListener(componentListener);
+            Configuration.get().getBus().register(this);
         });
-        addComponentListener(componentListener);
-        Configuration.get().getBus().register(this);
     }
 
     private Scene createScene() {
@@ -69,7 +60,7 @@ public class FxNavigationView extends JFXPanel {
 //                zoomToFit((Node) e.getTarget());
 //            }
 //        });
-
+        
         return scene;
     }
     
@@ -81,11 +72,18 @@ public class FxNavigationView extends JFXPanel {
         if (node == null) {
             return;
         }
-        double zoom = getMinimumZoom(node);
-        zoomTx.setX(zoom);
-        zoomTx.setY(zoom);
-        viewTx.setX(-node.getBoundsInLocal().getMinX());
-        viewTx.setY(-node.getBoundsInLocal().getMinY());
+        Platform.runLater(() -> {
+            double zoom = getMinimumZoom(node) * 0.90;
+            zoomTx.setX(zoom);
+            zoomTx.setY(zoom);
+            // Get the view port dimensions in unscaled units (instead of pixels).
+            double viewWidth = (getWidth() - getInsets().left - getInsets().right) / zoom;
+            double viewHeight = (getHeight() - getInsets().top - getInsets().bottom) / zoom;
+            // Get the machine view dimensions in unscaled units.
+            Bounds bounds = node.getBoundsInLocal();
+            viewTx.setX(viewWidth / 2 - bounds.getWidth() / 2 - bounds.getMinX());
+            viewTx.setY(viewHeight / 2 - bounds.getHeight() / 2 - bounds.getMinY());
+        });
     }
     
     private double getMinimumZoom() {
@@ -127,89 +125,65 @@ public class FxNavigationView extends JFXPanel {
         return minimumZoom;
     }
 
-    @Subscribe
-    public void jobLoaded(JobLoadedEvent e) {
-        Platform.runLater(() -> {
-            boards.getChildren().clear();
-            for (BoardLocation boardLocation : e.job.getBoardLocations()) {
-                BoardLocationView boardLocationView = new BoardLocationView(boardLocation);
-                boards.getChildren().add(boardLocationView);
-            }
-            zoomToFit();
-        });
-    }
-
-    EventHandler<MouseEvent> jogDragStartHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            scene.startFullDrag();
-            try {
-                Camera camera =
-                        Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-                Location location = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
-                Point2D start = machineView.localToScene(location.getX(), location.getY());
-                start = root.sceneToLocal(start);
-                Point2D end = root.sceneToLocal(e.getX(), e.getY());
-                jogTargetLine = new Line(start.getX(), start.getY(), end.getX(), end.getY());
-                jogTargetLine.setStroke(Color.WHITE);
-                root.getChildren().add(jogTargetLine);
-            }
-            catch (Exception ex) {
-
-            }
-        }
-    };
-
-    EventHandler<MouseEvent> jogDragHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            if (jogTargetLine == null) {
-                return;
-            }
+    EventHandler<MouseEvent> jogDragStartHandler = e -> {
+        scene.startFullDrag();
+        try {
+            Camera camera =
+                    Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            Location location = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
+            Point2D start = machineView.localToScene(location.getX(), location.getY());
+            start = root.sceneToLocal(start);
             Point2D end = root.sceneToLocal(e.getX(), e.getY());
-            jogTargetLine.setEndX(end.getX());
-            jogTargetLine.setEndY(end.getY());
+            jogTargetLine = new Line(start.getX(), start.getY(), end.getX(), end.getY());
+            jogTargetLine.setStroke(Color.WHITE);
+            root.getChildren().add(jogTargetLine);
+        }
+        catch (Exception ex) {
+
         }
     };
 
-    EventHandler<MouseEvent> jogDragEndHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            try {
-                root.getChildren().remove(jogTargetLine);
-                final Camera camera =
-                        Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-                Point2D point = machineView.sceneToLocal(e.getX(), e.getY());
-                final Location location =
-                        camera.getLocation().derive(point.getX(), point.getY(), null, null);
-                UiUtils.submitUiMachineTask(() -> {
-                    camera.moveTo(location);
-                });
-            }
-            catch (Exception ex) {
+    EventHandler<MouseEvent> jogDragHandler = e -> {
+        if (jogTargetLine == null) {
+            return;
+        }
+        Point2D end = root.sceneToLocal(e.getX(), e.getY());
+        jogTargetLine.setEndX(end.getX());
+        jogTargetLine.setEndY(end.getY());
+    };
 
-            }
+    EventHandler<MouseEvent> jogDragEndHandler = e -> {
+        try {
+            root.getChildren().remove(jogTargetLine);
+            final Camera camera =
+                    Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            Point2D point = machineView.sceneToLocal(e.getX(), e.getY());
+            final Location location =
+                    camera.getLocation().derive(point.getX(), point.getY(), null, null);
+            UiUtils.submitUiMachineTask(() -> {
+                camera.moveTo(location);
+            });
+        }
+        catch (Exception ex) {
+
         }
     };
 
-    EventHandler<ScrollEvent> zoomHandler = new EventHandler<ScrollEvent>() {
-        @Override
-        public void handle(final ScrollEvent e) {
-            e.consume();
-            Point2D before = machineView.sceneToLocal(e.getX(), e.getY());
-            double zoom = zoomTx.getX();
-            zoom += (e.getDeltaY() * 0.01);
-            if (zoom <= getMinimumZoom()) {
-                zoomToFit();
-            }
-            else {
-                zoomTx.setX(zoom);
-                zoomTx.setY(zoom);
-                Point2D after = machineView.sceneToLocal(e.getX(), e.getY());
-                Point2D delta = after.subtract(before);
-                viewTx.setX(viewTx.getX() + delta.getX());
-                viewTx.setY(viewTx.getY() + delta.getY());
-            }
+    EventHandler<ScrollEvent> zoomHandler = e -> {
+        e.consume();
+        Point2D before = machineView.sceneToLocal(e.getX(), e.getY());
+        double zoom = zoomTx.getX();
+        zoom += (e.getDeltaY() * 0.01);
+        if (zoom <= getMinimumZoom()) {
+            zoomToFit();
+        }
+        else {
+            zoomTx.setX(zoom);
+            zoomTx.setY(zoom);
+            Point2D after = machineView.sceneToLocal(e.getX(), e.getY());
+            Point2D delta = after.subtract(before);
+            viewTx.setX(viewTx.getX() + delta.getX());
+            viewTx.setY(viewTx.getY() + delta.getY());
         }
     };
 
@@ -237,9 +211,16 @@ public class FxNavigationView extends JFXPanel {
                 machineView.getTransforms().add(zoomTx);
                 machineView.getTransforms().add(viewTx);
                 root.getChildren().add(machineView);
-
-                machineView.getChildren().add(0, boards);
-
+ 
+                // When a new job is loaded we zoomToFit() so the user sees the entire job. This
+                // method of doing this is not ideal - I would rather have not exposed the job
+                // property. Ideally we could just have a listener for job loaded, but since
+                // Guava doesn't guarantee listener order we can't be sure the JobView will be
+                // finished adding components.
+                machineView.getJobView().jobProperty().addListener((observable, oldValue, newValue) -> {
+                    zoomToFit();
+                });
+                
                 zoomToFit();
             });
         }

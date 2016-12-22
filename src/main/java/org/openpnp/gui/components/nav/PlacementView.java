@@ -12,6 +12,7 @@ import org.openpnp.util.UiUtils;
 
 import com.google.common.eventbus.Subscribe;
 
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
@@ -61,38 +62,44 @@ public class PlacementView extends Group {
         updateLocation();
         updateType();
     }
-    
+
     void updateLocation() {
-        Location l = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
-        setTranslateX(l.getX());
-        setTranslateY(l.getY());
-        setRotate(l.getRotation());
+        Platform.runLater(() -> {
+            Location l = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
+            setTranslateX(l.getX());
+            setTranslateY(l.getY());
+            setRotate(l.getRotation());
+        });
     }
     
     void updateType() {
-        // TODO: Should probably be a green outline, or at least match the color in the table.
-        if (placement.getType() == Type.Place) {
-            outline.setStroke(Color.RED);
-        }
-        // TODO: Match color in table.
-        else if (placement.getType() == Type.Fiducial) {
-            outline.setStroke(Color.AQUA);
-        }
-        // TODO: match color in table, or will that be confusing?  
-        else {
-            outline.setStroke(null);
-        }
+        Platform.runLater(() -> {
+            // TODO: Should probably be a green outline, or at least match the color in the table.
+            if (placement.getType() == Type.Place) {
+                outline.setStroke(Color.RED);
+            }
+            // TODO: Match color in table.
+            else if (placement.getType() == Type.Fiducial) {
+                outline.setStroke(Color.AQUA);
+            }
+            // TODO: match color in table, or will that be confusing?  
+            else {
+                outline.setStroke(null);
+            }
+        });
     }
     
     
     @Subscribe
     public void placementSelected(PlacementSelectedEvent e) {
-        if (e.boardLocation == boardLocation && e.placement == placement) {
-            setEffect(new SelectedEffect());
-        }
-        else {
-            setEffect(null);
-        }
+        Platform.runLater(() -> {
+            if (e.boardLocation == boardLocation && e.placement == placement) {
+                setEffect(new SelectedEffect());
+            }
+            else {
+                setEffect(null);
+            }
+        });
     }
 
 }

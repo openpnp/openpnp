@@ -52,15 +52,19 @@ public class FeederView extends Group {
     }
     
     private void updateLocation() {
-        try {
-            Location l = feeder.getPickLocation().convertToUnits(LengthUnit.Millimeters);
-            setTranslateX(l.getX());
-            setTranslateY(l.getY());
-            setRotate(l.getRotation());
-        }
-        catch (Exception e) {
-            
-        }
+        Platform.runLater(() -> {
+            try {
+                Location l = feeder.getPickLocation().convertToUnits(LengthUnit.Millimeters);
+                setTranslateX(l.getX());
+                setTranslateY(l.getY());
+                setRotate(l.getRotation());
+            }
+            catch (Exception e) {
+                // Not all feeders will always have a valid pick location, and there's nothing
+                // we can do about it, so we just ignore the error and hope that the feeder
+                // eventually gets a valid pick and location.
+            }
+        });
     }
     
     @Subscribe

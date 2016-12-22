@@ -25,8 +25,17 @@ public class BoardLocationView extends Group {
     Translate translate;
     Rotate rotate;
     
+    Rectangle board;
+    Group placements = new Group();
+    
     public BoardLocationView(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
+        
+        board = new Rectangle();
+        board.setFill(Color.GREEN);
+        getChildren().add(board);
+        
+        getChildren().add(placements);
         
         // First populate all the placements so that we can determine the bounds of the
         // board if it's not specified.
@@ -35,28 +44,12 @@ public class BoardLocationView extends Group {
                 continue;
             }
             PlacementView placementView = new PlacementView(boardLocation, placement);
-            getChildren().add(placementView);
+            placements.getChildren().add(placementView);
+            placementView.translateXProperty().addListener((observable, oldValue, newValue) -> updateBoardBounds());
+            placementView.translateYProperty().addListener((observable, oldValue, newValue) -> updateBoardBounds());
+            placementView.rotateProperty().addListener((observable, oldValue, newValue) -> updateBoardBounds());
         }
 
-        // Now create the board itself, using the calculated bounds if needed.
-        Bounds bounds = getBoundsInLocal();
-        Location dimensions = boardLocation.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters);
-        double x = 0, y = 0;
-        double width = dimensions.getX();
-        double height = dimensions.getY();
-        if (width == 0) {
-            width = bounds.getWidth();
-            x = bounds.getMinX();
-        }
-        if (height == 0) {
-            height = bounds.getHeight();
-            y = bounds.getMinY();
-        }
-        Rectangle board = new Rectangle(width, height, Color.GREEN);
-        board.setTranslateX(x);
-        board.setTranslateY(y);
-        getChildren().add(0, board);
-        
         // We need to control the order that the translate and rotate are done
         // to match how OpenPnP expects it, so instead of setting translate and
         // rotate properties we add distinct transforms.
@@ -71,19 +64,48 @@ public class BoardLocationView extends Group {
 
         Configuration.get().getBus().register(this);
         
-        // TODO: Properties: width, height, side, enabled
+        // TODO: Properties: side, enabled
+        // TODO: Lists: placements
         boardLocation.addPropertyChangeListener("location", event -> updateLocation());
+        boardLocation.getBoard().addPropertyChangeListener("dimensions", event -> updateBoardBounds());
         
+        updateBoardBounds();
         updateLocation();
+    }
+    
+    // TODO BUG: Doesn't handle case where there is a placement at -,- and board size is set. Leaves
+    // the placement hanging in space.
+    private void updateBoardBounds() {
+        Platform.runLater(() -> {
+            Bounds bounds = placements.getLayoutBounds();
+            Location dimensions = boardLocation.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters);
+            double x = 0, y = 0;
+            double width = dimensions.getX();
+            double height = dimensions.getY();
+            if (width < bounds.getWidth()) {
+                width = bounds.getWidth();
+                x = bounds.getMinX();
+            }
+            if (height < bounds.getHeight()) {
+                height = bounds.getHeight();
+                y = bounds.getMinY();
+            }
+            board.setWidth(width);
+            board.setHeight(height);
+            board.setTranslateX(x);
+            board.setTranslateY(y);
+        });
     }
     
     private void updateLocation() {
         // TODO: Board bottom is wrong
-        Location location =
-                boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
-        translate.setX(location.getX());
-        translate.setY(location.getY());
-        rotate.setAngle(location.getRotation());
+        Platform.runLater(() -> {
+            Location location =
+                    boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters);
+            translate.setX(location.getX());
+            translate.setY(location.getY());
+            rotate.setAngle(location.getRotation());
+        });
     }
     
     @Subscribe
