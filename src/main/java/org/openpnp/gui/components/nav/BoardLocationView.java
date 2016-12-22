@@ -45,9 +45,9 @@ public class BoardLocationView extends Group {
             }
             PlacementView placementView = new PlacementView(boardLocation, placement);
             placements.getChildren().add(placementView);
-            placementView.translateXProperty().addListener(e -> updateBoardBounds());
-            placementView.translateYProperty().addListener(e -> updateBoardBounds());
-            placementView.rotateProperty().addListener(e -> updateBoardBounds());
+            placementView.translateXProperty().addListener((observable, oldValue, newValue) -> updateBoardBounds());
+            placementView.translateYProperty().addListener((observable, oldValue, newValue) -> updateBoardBounds());
+            placementView.rotateProperty().addListener((observable, oldValue, newValue) -> updateBoardBounds());
         }
 
         // We need to control the order that the translate and rotate are done
@@ -65,6 +65,7 @@ public class BoardLocationView extends Group {
         Configuration.get().getBus().register(this);
         
         // TODO: Properties: side, enabled
+        // TODO: Lists: placements
         boardLocation.addPropertyChangeListener("location", event -> updateLocation());
         boardLocation.getBoard().addPropertyChangeListener("dimensions", event -> updateBoardBounds());
         
@@ -72,6 +73,8 @@ public class BoardLocationView extends Group {
         updateLocation();
     }
     
+    // TODO BUG: Doesn't handle case where there is a placement at -,- and board size is set. Leaves
+    // the placement hanging in space.
     private void updateBoardBounds() {
         Platform.runLater(() -> {
             Bounds bounds = placements.getLayoutBounds();

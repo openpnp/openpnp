@@ -3,22 +3,20 @@ package org.openpnp.gui.components.nav;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
+import javax.swing.event.ChangeListener;
+
 import org.openpnp.ConfigurationListener;
-import org.openpnp.events.JobLoadedEvent;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 
-import com.google.common.eventbus.Subscribe;
-
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
@@ -34,8 +32,6 @@ public class FxNavigationView extends JFXPanel {
     Scene scene;
     Pane root;
     MachineView machineView;
-    // TODO: Probably should move to the MachineView or it's own BoardsView.
-    Group boards = new Group();
     Line jogTargetLine;
 
     Scale zoomTx = new Scale(1, 1, 0, 0);
@@ -66,7 +62,7 @@ public class FxNavigationView extends JFXPanel {
 //                zoomToFit((Node) e.getTarget());
 //            }
 //        });
-
+        
         return scene;
     }
     
@@ -124,18 +120,6 @@ public class FxNavigationView extends JFXPanel {
         double minimumZoom = scaledWidth / width;
 
         return minimumZoom;
-    }
-
-    @Subscribe
-    public void jobLoaded(JobLoadedEvent e) {
-        Platform.runLater(() -> {
-            boards.getChildren().clear();
-            for (BoardLocation boardLocation : e.job.getBoardLocations()) {
-                BoardLocationView boardLocationView = new BoardLocationView(boardLocation);
-                boards.getChildren().add(boardLocationView);
-            }
-            zoomToFit();
-        });
     }
 
     EventHandler<MouseEvent> jogDragStartHandler = e -> {
@@ -224,9 +208,16 @@ public class FxNavigationView extends JFXPanel {
                 machineView.getTransforms().add(zoomTx);
                 machineView.getTransforms().add(viewTx);
                 root.getChildren().add(machineView);
-
-                machineView.getChildren().add(0, boards);
-
+ 
+                // When a new job is loaded we zoomToFit() so the user sees the entire job. This
+                // method of doing this is not ideal - I would rather have not exposed the job
+                // property. Ideally we could just have a listener for job loaded, but since
+                // Guava doesn't guarantee listener order we can't be sure the JobView will be
+                // finished adding components.
+                machineView.getJobView().jobProperty().addListener((observable, oldValue, newValue) -> {
+                    zoomToFit();
+                });
+                
                 zoomToFit();
             });
         }
