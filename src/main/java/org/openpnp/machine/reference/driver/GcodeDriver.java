@@ -865,6 +865,38 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
                 new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
     }
+    
+    public LengthUnit getUnits() {
+        return units;
+    }
+
+    public void setUnits(LengthUnit units) {
+        this.units = units;
+    }
+
+    public int getMaxFeedRate() {
+        return maxFeedRate;
+    }
+
+    public void setMaxFeedRate(int maxFeedRate) {
+        this.maxFeedRate = maxFeedRate;
+    }
+
+    public int getTimeoutMilliseconds() {
+        return timeoutMilliseconds;
+    }
+
+    public void setTimeoutMilliseconds(int timeoutMilliseconds) {
+        this.timeoutMilliseconds = timeoutMilliseconds;
+    }
+
+    public int getConnectWaitTimeMilliseconds() {
+        return connectWaitTimeMilliseconds;
+    }
+
+    public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
+        this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
+    }
 
     public static class Axis {
         public enum Type {
