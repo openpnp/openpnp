@@ -3,11 +3,8 @@ package org.openpnp.gui.components.nav;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
-import javax.swing.event.ChangeListener;
-
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -16,6 +13,7 @@ import org.openpnp.util.UiUtils;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -75,11 +73,16 @@ public class FxNavigationView extends JFXPanel {
             return;
         }
         Platform.runLater(() -> {
-            double zoom = getMinimumZoom(node);
+            double zoom = getMinimumZoom(node) * 0.90;
             zoomTx.setX(zoom);
             zoomTx.setY(zoom);
-            viewTx.setX(-node.getBoundsInLocal().getMinX());
-            viewTx.setY(-node.getBoundsInLocal().getMinY());
+            // Get the view port dimensions in unscaled units (instead of pixels).
+            double viewWidth = (getWidth() - getInsets().left - getInsets().right) / zoom;
+            double viewHeight = (getHeight() - getInsets().top - getInsets().bottom) / zoom;
+            // Get the machine view dimensions in unscaled units.
+            Bounds bounds = node.getBoundsInLocal();
+            viewTx.setX(viewWidth / 2 - bounds.getWidth() / 2 - bounds.getMinX());
+            viewTx.setY(viewHeight / 2 - bounds.getHeight() / 2 - bounds.getMinY());
         });
     }
     
