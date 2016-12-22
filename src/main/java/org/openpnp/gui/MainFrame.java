@@ -45,6 +45,7 @@ import javax.swing.Action;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -62,7 +63,6 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
@@ -532,7 +532,7 @@ public class MainFrame extends JFrame {
     public void splitWindows() {
         if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
             // pin panelCameraAndInstructions to a separate JFrame
-            JFrame frameCamera = new JFrame("OpenPnp - Camera");
+            JDialog frameCamera = new JDialog(this, "OpenPnp - Camera", false);
             // as of today no smart way found to get an adjusted size
             // ... so main window size is used for the camera window
             frameCamera.setSize(getFrames()[0].getSize());
@@ -540,7 +540,7 @@ public class MainFrame extends JFrame {
             frameCamera.setVisible(true);
 
             // pin machineControlsPanel to a separate JFrame
-            JFrame frameMachineControls = new JFrame("OpenPnp - Machine Controls");
+            JDialog frameMachineControls = new JDialog(this, "OpenPnp - Machine Controls", false);
             // as of today no smart way found to get an adjusted size
             // ... so hardcoded values used (usually not a good idea)
             frameMachineControls.add(machineControlsPanel);
@@ -753,7 +753,8 @@ public class MainFrame extends JFrame {
             else {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
             }
-            MessageBoxes.infoBox("Windows Style Changed", "Window style has been changed. Please restart OpenPnP to see the changes.");
+            MessageBoxes.infoBox("Windows Style Changed",
+                    "Window style has been changed. Please restart OpenPnP to see the changes.");
         }
     };
 
