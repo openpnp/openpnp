@@ -213,8 +213,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 if (tableModel.getFeeder(i) == event.feeder) {
-                    table.getSelectionModel().setSelectionInterval(i, i);
-                    table.scrollRectToVisible(new Rectangle(table.getCellRect(i, 0, true)));
+                    int index = table.convertRowIndexToView(i);
+                    table.getSelectionModel().setSelectionInterval(index, index);
+                    table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
                     break;
                 }
             }
@@ -238,7 +239,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             table.getSelectionModel().clearSelection();
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 if (tableModel.getFeeder(i).getPart() == part) {
-                    table.getSelectionModel().setSelectionInterval(0, i);
+                    int index = table.convertRowIndexToView(i);
+                    table.getSelectionModel().setSelectionInterval(index, index);
+                    table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
                     break;
                 }
             }
