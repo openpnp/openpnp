@@ -100,9 +100,6 @@ public class JobPanel extends JPanel {
         Finished
     }
 
-    @SuppressWarnings("unused")
-
-    
     final private Configuration configuration;
     final private MainFrame frame;
 
@@ -334,8 +331,9 @@ public class JobPanel extends JPanel {
     private void selectBoardLocation(BoardLocation boardLocation) {
         for (int i = 0; i < boardLocationsTableModel.getRowCount(); i++) {
             if (boardLocationsTableModel.getBoardLocation(i) == boardLocation) {
-                boardLocationsTable.getSelectionModel().setSelectionInterval(i, i);
-                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(i, 0, true)));
+                int index = boardLocationsTable.convertRowIndexToView(i);
+                boardLocationsTable.getSelectionModel().setSelectionInterval(index, index);
+                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(index, 0, true)));
                 break;
             }
         }
@@ -929,10 +927,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int index = boardLocationsTable.getSelectedRow();
-            if (index != -1) {
-                index = boardLocationsTable.convertRowIndexToModel(index);
-                BoardLocation boardLocation = getJob().getBoardLocations().get(index);
+            BoardLocation boardLocation = getSelectedBoardLocation();
+            if (boardLocation != null) {
                 getJob().removeBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
             }

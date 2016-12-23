@@ -25,13 +25,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -57,8 +55,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-
-import com.google.common.eventbus.Subscribe;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -221,8 +217,9 @@ public class JobPlacementsPanel extends JPanel {
     public void selectPlacement(Placement placement) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if (tableModel.getPlacement(i) == placement) {
-                table.getSelectionModel().setSelectionInterval(i, i);
-                table.scrollRectToVisible(new Rectangle(table.getCellRect(i, 0, true)));
+                int index = table.convertRowIndexToView(i);
+                table.getSelectionModel().setSelectionInterval(index, index);
+                table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
                 break;
             }
         }
