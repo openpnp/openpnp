@@ -69,6 +69,7 @@ import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
+import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.importer.SolderPasteGerberImporter;
 import org.openpnp.gui.support.HeadCellValue;
@@ -569,6 +570,7 @@ public class MainFrame extends JFrame {
         registerBoardImporter(EagleBoardImporter.class);
         registerBoardImporter(EagleMountsmdUlpImporter.class);
         registerBoardImporter(KicadPosImporter.class);
+        registerBoardImporter(DipTraceImporter.class);
         registerBoardImporter(NamedCSVImporter.class);
         registerBoardImporter(SolderPasteGerberImporter.class);
     }
