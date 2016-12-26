@@ -154,7 +154,6 @@ public class DipTraceImporter implements BoardImporter {
         private JTextField textFieldFileName;
         private JTextField textFieldBottomFile;
         private final Action browseTopFileAction = new SwingAction();
-        //private final Action browseBottomFileAction = new SwingAction_1();
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
@@ -234,7 +233,7 @@ public class DipTraceImporter implements BoardImporter {
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
-                        return name.toLowerCase().endsWith(".pos");
+                        return name.toLowerCase().endsWith(".csv");
                     }
                 });
                 fileDialog.setVisible(true);
@@ -243,29 +242,6 @@ public class DipTraceImporter implements BoardImporter {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
                 textFieldFileName.setText(file.getAbsolutePath());
-            }
-        }
-
-        private class SwingAction_1 extends AbstractAction {
-            public SwingAction_1() {
-                putValue(NAME, "Browse");
-                putValue(SHORT_DESCRIPTION, "Browse");
-            }
-
-            public void actionPerformed(ActionEvent e) {
-                FileDialog fileDialog = new FileDialog(Dlg.this);
-                fileDialog.setFilenameFilter(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.toLowerCase().endsWith(".pos");
-                    }
-                });
-                fileDialog.setVisible(true);
-                if (fileDialog.getFile() == null) {
-                    return;
-                }
-                File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
-                textFieldBottomFile.setText(file.getAbsolutePath());
             }
         }
 
@@ -286,7 +262,9 @@ public class DipTraceImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
+                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in DipTrace "
+                    		+ "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value."
+                    		+ "The lines that follow are data.");
                     return;
                 }
                 for (Placement placement : placements) {
