@@ -1,5 +1,7 @@
 # Nozzle Setup
 
+TODO: Page needs updating due to recent UI overhaul.
+
 ## Concepts
 In OpenPnP we use a couple names for things that might not be familiar. These will become important down the road, so it's good to have an understanding of them now.
 
