@@ -58,6 +58,8 @@ The units for the X, Y and Z axes are set in the GUI, the default is Millimeters
 The User Interface
 ==================
 
+TODO: Section needs updating due to recent UI overhaul.
+
 OpenPnP is primarily a single window interface, broken up into multiple sections. Those sections will be explained in detail below.
 
 The Main Window
