@@ -82,7 +82,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.pmw.tinylog.Logger;
 
-import com.exe4j.runtime.util.MessageBox;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
