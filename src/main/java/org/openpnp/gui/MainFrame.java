@@ -36,6 +36,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
@@ -66,10 +67,10 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
-import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.importer.SolderPasteGerberImporter;
 import org.openpnp.gui.support.HeadCellValue;
@@ -81,6 +82,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.pmw.tinylog.Logger;
 
+import com.exe4j.runtime.util.MessageBox;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -312,11 +314,13 @@ public class MainFrame extends JFrame {
 
         // Help
         /////////////////////////////////////////////////////////////////////
+        JMenu mnHelp = new JMenu("Help");
+        menuBar.add(mnHelp);
         if (!macOsXMenus) {
-            JMenu mnHelp = new JMenu("Help");
-            menuBar.add(mnHelp);
-
             mnHelp.add(new JMenuItem(aboutAction));
+        }
+        if (isInstallerAvailable()) {
+            mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
 
         contentPane = new JPanel();
@@ -561,6 +565,16 @@ public class MainFrame extends JFrame {
             }
         }
     }
+    
+    public boolean isInstallerAvailable() {
+        try {
+            Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+            return true;
+        }
+        catch (Throwable e) {
+            return false;
+        }
+    }
 
     public JLabel getDroLabel() {
         return droLbl;
@@ -773,6 +787,22 @@ public class MainFrame extends JFrame {
             about();
         }
     };
+    
+    private Action checkForUpdatesAction = new AbstractAction("Check For Updates...") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Class ApplicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+                Class Callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
+                Method launchApplication = ApplicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, Callback);
+                launchApplication.invoke(null, "125", null, false, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch update application.", e);
+            }
+        }
+    };
+    
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;
