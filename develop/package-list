@@ -1,7 +1,9 @@
 org.openpnp
+org.openpnp.events
 org.openpnp.experiments
 org.openpnp.gui
 org.openpnp.gui.components
+org.openpnp.gui.components.nav
 org.openpnp.gui.components.reticle
 org.openpnp.gui.importer
 org.openpnp.gui.importer.rs274x
@@ -18,6 +20,7 @@ org.openpnp.machine.reference.driver
 org.openpnp.machine.reference.driver.wizards
 org.openpnp.machine.reference.feeder
 org.openpnp.machine.reference.feeder.wizards
+org.openpnp.machine.reference.psh
 org.openpnp.machine.reference.signaler
 org.openpnp.machine.reference.vision
 org.openpnp.machine.reference.vision.wizards
