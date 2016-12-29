@@ -1,6 +1,46 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-29
+
+* Auto Feeder Improvements
+
+	ReferenceAutoFeeder can now use actuators in boolean or double mode and the configuration
+	panel has been updated to support each.
+	
+	ReferenceAutoFeeder also now supports a post pick actuator, which is helpful to support
+	feeders that require two movements for a single feed operation. This is common in the
+	Yamaha CL feeders that are becoming popular. The feed actuator is used to retract the guard
+	and the post pick actuator is used to advance the tape after a pick.
+	
+	Existing feeders should not require any changes to support these new features. The defaults
+	have been maintained.
+	
+* Post Pick Supported in Feeder Panel
+
+	The post pick operation is now called from the Feeders tab when you run a Pick operation. This
+	is useful when testing feeders that use this feature. Prior to this addition the post pick
+	operation was only called when a job was running.
+
+* Help Menu
+
+	There is now a new Help menu that has quick links to important documentation and a new
+	option to let you check for updates to OpenPnP. This option is only enabled if you
+	installed OpenPnP with the installer. It will not be available if you built it from
+	source.
+
+* Camera Improvements
+
+	ReferenceCamera is now much smarter about handling problems with invalid images and it should
+	no longer cause high CPU usage when a camera configuration is incorrect. In addition, when
+	it receives a null image it will retry up to 10 times before failing. This is helpful for
+	cameras that sometimes return bad images; common with the ELP series of USB cameras.
+
+* DipTrace Native Import
+
+	With many thanks to @BendRocks, we now have native DipTrace import support. Find the new
+	importer under the File -> Import menu.
+
 # 2016-12-20
 
 * User Interface Improvements
