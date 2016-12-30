@@ -200,6 +200,10 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             fg.release();
         }
     }
+    
+    public double getOpenCvCapturePropertyValue(OpenCvCaptureProperty property) {
+        return fg.get(property.openCvPropertyId);
+    }
 
     public int getDeviceIndex() {
         return deviceIndex;

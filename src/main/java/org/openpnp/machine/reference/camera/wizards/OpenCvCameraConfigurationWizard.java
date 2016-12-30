@@ -20,9 +20,13 @@
 package org.openpnp.machine.reference.camera.wizards;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -34,6 +38,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCaptureProperty;
@@ -131,6 +136,8 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -151,11 +158,15 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
         panel.add(propertyValueTf, "4, 4");
         propertyValueTf.setColumns(10);
         
+        readPropertyValueBtn = new JButton(readPropertyValueAction);
+        readPropertyValueBtn.setHideActionText(true);
+        panel.add(readPropertyValueBtn, "6, 4");
+        
         setBeforeOpenCk = new JCheckBox("Set Before Open");
-        panel.add(setBeforeOpenCk, "6, 4");
+        panel.add(setBeforeOpenCk, "8, 4");
         
         setAfterOpenCk = new JCheckBox("Set After Open");
-        panel.add(setAfterOpenCk, "8, 4");
+        panel.add(setAfterOpenCk, "10, 4");
 
         propertyCb.addItemListener(e -> propertyChanged());
         propertyValueTf.getDocument().addDocumentListener(new DocumentListener() {
@@ -305,6 +316,21 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
             dirty = false;
         }
     }
+    
+    public Action readPropertyValueAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.refresh);
+            putValue(NAME, "Read Property Value");
+            putValue(SHORT_DESCRIPTION, "Read the current property value directly from the camera.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            propertyValueTf.setText("" + camera.getOpenCvCapturePropertyValue((OpenCvCaptureProperty) propertyCb.getSelectedItem()));
+        }
+    };
+
+
 
     private JComboBox comboBoxDeviceIndex;
     private JLabel lblPreferredWidth;
@@ -324,4 +350,5 @@ public class OpenCvCameraConfigurationWizard extends ReferenceCameraConfiguratio
     private JTextField propertyValueTf;
     private JCheckBox setBeforeOpenCk;
     private JCheckBox setAfterOpenCk;
+    private JButton readPropertyValueBtn;
 }
