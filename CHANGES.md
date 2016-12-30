@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-12-30
+
+* OpenCvCamera Capture Properties
+
+	You can now set a number of capture properties on the OpenCvCamera. Not all properties are
+	supported on every system or every camera. This feature is experimental and is primarily
+	intended to allow users to experiment with exposure and format control.
+	
+	To set properties open the configuration for the camera, select the Camera Specific
+	tab and look for the Properties section at the bottom.
+	
+	More information is available at: https://github.com/openpnp/openpnp/issues/328
+	
 # 2016-12-29
 
 * Auto Feeder Improvements
