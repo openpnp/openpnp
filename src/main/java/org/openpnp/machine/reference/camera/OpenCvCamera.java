@@ -136,6 +136,21 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
                     fg.set(pv.property.getPropertyId(), pv.value);
                 }
             }
+            /**
+             * Based on comments in https://github.com/openpnp/openpnp/issues/395 some cameras
+             * may only handle resolution changes before opening while others handle it after
+             * so we do both to try to cover both cases.
+             */
+            if (preferredWidth != 0) {
+                Logger.debug("Setting camera {} width to {}", this, preferredWidth);
+                fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+                Logger.debug("Camera {} reports width {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_WIDTH));
+            }
+            if (preferredHeight != 0) {
+                Logger.debug("Setting camera {} height to {}", this, preferredHeight);
+                fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+                Logger.debug("Camera {} reports height {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_HEIGHT));
+            }
             
             fg.open(deviceIndex);
             
@@ -145,12 +160,20 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
                     fg.set(pv.property.getPropertyId(), pv.value);
                 }
             }
-            
+            /**
+             * Based on comments in https://github.com/openpnp/openpnp/issues/395 some cameras
+             * may only handle resolution changes before opening while others handle it after
+             * so we do both to try to cover both cases.
+             */
             if (preferredWidth != 0) {
+                Logger.debug("Setting camera {} width to {}", this, preferredWidth);
                 fg.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, preferredWidth);
+                Logger.debug("Camera {} reports width {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_WIDTH));
             }
             if (preferredHeight != 0) {
+                Logger.debug("Setting camera {} height to {}", this, preferredHeight);
                 fg.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, preferredHeight);
+                Logger.debug("Camera {} reports height {}", this, fg.get(Highgui.CV_CAP_PROP_FRAME_HEIGHT));
             }
         }
         catch (Exception e) {
