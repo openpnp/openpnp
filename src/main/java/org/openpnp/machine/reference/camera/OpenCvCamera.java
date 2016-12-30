@@ -154,6 +154,10 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
             
             fg.open(deviceIndex);
             
+            for (OpenCvCaptureProperty property : OpenCvCaptureProperty.values()) {
+                Logger.trace("{} {} = {}", this, property, getOpenCvCapturePropertyValue(property));
+            }
+            
             for (OpenCvCapturePropertyValue pv : properties) {
                 if (pv.setAfterOpen) {
                     Logger.debug("Setting property {} on camera {} to {}", pv.property.toString(), this, pv.value);
