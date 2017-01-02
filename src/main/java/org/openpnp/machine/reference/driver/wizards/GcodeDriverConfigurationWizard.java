@@ -85,7 +85,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         unitsCb = new JComboBox(LengthUnit.values());
         settingsPanel.add(unitsCb, "4, 2, fill, default");
         
-        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate");
+        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [mm/Min]");
         settingsPanel.add(lblMaxFeedRate, "2, 4, right, default");
         
         maxFeedRateTf = new JTextField();

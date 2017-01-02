@@ -126,6 +126,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Attribute(required = false)
     protected int maxFeedRate = 1000;
+    
+    @Attribute(required = false)
+    protected float slackCompensation = -0.4f;
 
     @Attribute(required = false)
     protected int timeoutMilliseconds = 5000;
@@ -394,8 +397,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
             // For each included axis, if the axis has a transform, transform the target coordinate
-            // to
-            // it's raw value.
+            // to it's raw value.
             if (xAxis != null && xAxis.getTransform() != null) {
                 x = xAxis.getTransform().toRaw(xAxis, hm, x);
             }
@@ -415,12 +417,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+            command = substituteVariable(command, "FeedRateTenth", maxFeedRate * speed / 10);
 
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
             }
             else {
                 command = substituteVariable(command, "X", x);
+                command = substituteVariable(command, "XSlackOffset", x + slackCompensation); // Slack Compensation
                 haveToMove = true;
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
@@ -433,6 +437,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             }
             else {
                 command = substituteVariable(command, "Y", y);
+                command = substituteVariable(command, "YSlackOffset", y + slackCompensation); // Slack Compensation
                 haveToMove = true;
                 if (yAxis.getPreMoveCommand() != null) {
                     sendGcode(yAxis.getPreMoveCommand());
@@ -874,6 +879,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         this.units = units;
     }
 
+    public float getSlackCompensation() {
+        return slackCompensation;
+    }
+    
+    public void setSlackCompensation(float slackcompensation) {
+        this.slackCompensation = slackcompensation;
+    }
+    
     public int getMaxFeedRate() {
         return maxFeedRate;
     }
