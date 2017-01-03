@@ -30,7 +30,6 @@ import javax.imageio.ImageIO;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederConfigurationWizard;

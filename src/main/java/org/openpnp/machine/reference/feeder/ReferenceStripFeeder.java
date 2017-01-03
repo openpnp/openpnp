@@ -28,7 +28,6 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
@@ -242,15 +241,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // and look for the hole
         Location actualLocation = findClosestHole(camera);
         if (actualLocation == null) {
-            throw new Exception(
-                    "Feeder " + getName() + ": Unable to locate reference hole. End of strip?");
+            throw new Exception("Unable to locate reference hole. End of strip?");
         }
         // make sure it's not too far away
         Length distance = actualLocation.getLinearLengthTo(expectedLocation)
                 .convertToUnits(LengthUnit.Millimeters);
         if (distance.getValue() > 2) {
-            throw new Exception(
-                    "Feeder " + getName() + ": Unable to locate reference hole. End of strip?");
+            throw new Exception("Unable to locate reference hole. End of strip?");
         }
         visionOffsets = actualLocation.subtract(expectedLocation).derive(null, null, 0d, 0d);
         visionLocation = actualLocation;

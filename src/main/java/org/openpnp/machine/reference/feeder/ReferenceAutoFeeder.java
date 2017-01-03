@@ -72,7 +72,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
         }
         if (actuator == null) {
-            throw new Exception(getName() + " feed failed. Unable to find an actuator named " + actuatorName);
+            throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
         }
         if (actuatorType == ActuatorType.Boolean) {
             actuator.actuate(actuatorValue != 0);
@@ -92,7 +92,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
         }
         if (actuator == null) {
-            throw new Exception(getName() + " post pick failed. Unable to find an actuator named " + postPickActuatorName);
+            throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
         }
         if (postPickActuatorType == ActuatorType.Boolean) {
             actuator.actuate(postPickActuatorValue != 0);

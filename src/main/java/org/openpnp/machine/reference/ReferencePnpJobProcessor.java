@@ -507,9 +507,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Part part = placement.getPart();
 
             if (!plannedPlacement.fed) {
+                Exception lastError = null;
+                Feeder lastErrorFeeder = null;
                 while (true) {
                     // Find a compatible, enabled feeder
-                    Feeder feeder = findFeeder(machine, part);
+                    Feeder feeder;
+                    try {
+                        feeder = findFeeder(machine, part);
+                    }
+                    catch (Exception e) {
+                        if (lastError != null) {
+                            throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+                                    part.getId(), 
+                                    lastErrorFeeder.getName(), 
+                                    lastError.getMessage()), 
+                                lastError);
+                        }
+                        else {
+                            throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
+                        }
+                    }
                     plannedPlacement.feeder = feeder;
 
                     // Feed the part
@@ -538,6 +555,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         // more valid feeders the findFeeder() call above will throw and exit the
                         // loop.
                         feeder.setEnabled(false);
+                        lastErrorFeeder = feeder;
+                        lastError = e;
                     }
                 }
                 plannedPlacement.fed = true;
