@@ -66,7 +66,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(settingsPanel);
         settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC, // each line here corresponds to one column in the grid
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -75,7 +75,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC, // each line here corresponds to one row in the grid
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
