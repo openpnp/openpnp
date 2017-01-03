@@ -73,13 +73,21 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC, // each line here corresponds to one row in the grid
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -100,24 +108,24 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         maxFeedRateTf.setColumns(10);
         
         JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
-        settingsPanel.add(lblBacklashOffsetX, "6, 6, right, default");
+        settingsPanel.add(lblBacklashOffsetX, "10, 2, right, default");
         
         backlashOffsetXTf = new JTextField();
-        settingsPanel.add(backlashOffsetXTf, "8, 6, fill, default");
+        settingsPanel.add(backlashOffsetXTf, "12, 2, fill, default");
         backlashOffsetXTf.setColumns(10);
         
         JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
-        settingsPanel.add(lblBacklashOffsetY, "6, 8, right, default");
+        settingsPanel.add(lblBacklashOffsetY, "10, 4, right, default");
         
         backlashOffsetYTf = new JTextField();
-        settingsPanel.add(backlashOffsetYTf, "8, 8, fill, default");
+        settingsPanel.add(backlashOffsetYTf, "12, 4, fill, default");
         backlashOffsetYTf.setColumns(10);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "6, 10, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "14, 2, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "8, 10, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "16, 2, fill, default");
         backlashFeedRateFactorTf.setColumns(10);
         
         JLabel lblCommandTimeoutms = new JLabel("Command Timeout (ms)");
