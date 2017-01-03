@@ -66,14 +66,6 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(settingsPanel);
         settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC, // each line here corresponds to one column in the grid
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -87,7 +79,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC, // each line here corresponds to one row in the grid
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -107,27 +99,6 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         settingsPanel.add(maxFeedRateTf, "8, 4, fill, default");
         maxFeedRateTf.setColumns(5);
         
-        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
-        settingsPanel.add(lblBacklashOffsetX, "10, 2, right, default");
-        
-        backlashOffsetXTf = new JTextField();
-        settingsPanel.add(backlashOffsetXTf, "12, 2, fill, default");
-        backlashOffsetXTf.setColumns(5);
-        
-        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
-        settingsPanel.add(lblBacklashOffsetY, "10, 4, right, default");
-        
-        backlashOffsetYTf = new JTextField();
-        settingsPanel.add(backlashOffsetYTf, "12, 4, fill, default");
-        backlashOffsetYTf.setColumns(5);
-        
-        JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "14, 2, right, default");
-        
-        backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "16, 2, fill, default");
-        backlashFeedRateFactorTf.setColumns(5);
-        
         JLabel lblCommandTimeoutms = new JLabel("Command Timeout [ms]");
         settingsPanel.add(lblCommandTimeoutms, "2, 2, right, default");
         
@@ -141,6 +112,27 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         connectWaitTimeTf = new JTextField();
         settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
         connectWaitTimeTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
+        settingsPanel.add(lblBacklashOffsetX, "2, 6, right, default");
+        
+        backlashOffsetXTf = new JTextField();
+        settingsPanel.add(backlashOffsetXTf, "4, 6, fill, default");
+        backlashOffsetXTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
+        settingsPanel.add(lblBacklashOffsetY, "6, 6, right, default");
+        
+        backlashOffsetYTf = new JTextField();
+        settingsPanel.add(backlashOffsetYTf, "8, 6, fill, default");
+        backlashOffsetYTf.setColumns(5);
+        
+        JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "10, 6, right, default");
+        
+        backlashFeedRateFactorTf = new JTextField();
+        settingsPanel.add(backlashFeedRateFactorTf, "12, 6, fill, default");
+        backlashFeedRateFactorTf.setColumns(5);
 
         JPanel gcodePanel = new JPanel();
         gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
