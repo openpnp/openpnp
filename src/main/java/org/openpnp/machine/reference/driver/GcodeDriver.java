@@ -135,7 +135,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
  
     @Attribute(required = false)
     protected double backlashFeedRateFactor = 0.1;
-    
+
     @Attribute(required = false)
     protected int timeoutMilliseconds = 5000;
 
@@ -427,6 +427,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
+                command = substituteVariable(command, "XSlackOffset", null); // Slack Compensation
             }
             else {
                 command = substituteVariable(command, "X", x);
@@ -440,6 +441,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             if (yAxis == null || yAxis.getCoordinate() == y) {
                 command = substituteVariable(command, "Y", null);
+                command = substituteVariable(command, "YSlackOffset", null); // Slack Compensation
             }
             else {
                 command = substituteVariable(command, "Y", y);
