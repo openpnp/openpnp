@@ -105,42 +105,42 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         
         maxFeedRateTf = new JTextField();
         settingsPanel.add(maxFeedRateTf, "8, 4, fill, default");
-        maxFeedRateTf.setColumns(10);
+        maxFeedRateTf.setColumns(5);
         
         JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
         settingsPanel.add(lblBacklashOffsetX, "10, 2, right, default");
         
         backlashOffsetXTf = new JTextField();
         settingsPanel.add(backlashOffsetXTf, "12, 2, fill, default");
-        backlashOffsetXTf.setColumns(10);
+        backlashOffsetXTf.setColumns(5);
         
         JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
         settingsPanel.add(lblBacklashOffsetY, "10, 4, right, default");
         
         backlashOffsetYTf = new JTextField();
         settingsPanel.add(backlashOffsetYTf, "12, 4, fill, default");
-        backlashOffsetYTf.setColumns(10);
+        backlashOffsetYTf.setColumns(5);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
         settingsPanel.add(lblBacklashFeedSpeedFactor, "14, 2, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
         settingsPanel.add(backlashFeedRateFactorTf, "16, 2, fill, default");
-        backlashFeedRateFactorTf.setColumns(10);
+        backlashFeedRateFactorTf.setColumns(5);
         
-        JLabel lblCommandTimeoutms = new JLabel("Command Timeout (ms)");
+        JLabel lblCommandTimeoutms = new JLabel("Command Timeout [ms]");
         settingsPanel.add(lblCommandTimeoutms, "2, 2, right, default");
         
         commandTimeoutTf = new JTextField();
         settingsPanel.add(commandTimeoutTf, "4, 2, fill, default");
-        commandTimeoutTf.setColumns(10);
+        commandTimeoutTf.setColumns(5);
         
-        JLabel lblConnectWaitTime = new JLabel("Connect Wait Time (ms)");
+        JLabel lblConnectWaitTime = new JLabel("Connect Wait Time [ms]");
         settingsPanel.add(lblConnectWaitTime, "2, 4, right, default");
         
         connectWaitTimeTf = new JTextField();
         settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
-        connectWaitTimeTf.setColumns(10);
+        connectWaitTimeTf.setColumns(5);
 
         JPanel gcodePanel = new JPanel();
         gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
