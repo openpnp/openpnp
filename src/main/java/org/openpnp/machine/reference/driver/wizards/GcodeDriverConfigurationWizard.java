@@ -69,8 +69,14 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -81,51 +87,51 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblUnits = new JLabel("Units");
-        settingsPanel.add(lblUnits, "3, 1, right, default");
+        settingsPanel.add(lblUnits, "6, 2, right, default");
         
         unitsCb = new JComboBox(LengthUnit.values());
-        settingsPanel.add(unitsCb, "4, 1, fill, default");
+        settingsPanel.add(unitsCb, "8, 2, fill, default");
         
-        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [units/Min]");
-        settingsPanel.add(lblMaxFeedRate, "3, 2, right, default");
+        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [Units/Min]");
+        settingsPanel.add(lblMaxFeedRate, "6, 4, right, default");
         
         maxFeedRateTf = new JTextField();
-        settingsPanel.add(maxFeedRateTf, "4, 2, fill, default");
+        settingsPanel.add(maxFeedRateTf, "8, 4, fill, default");
         maxFeedRateTf.setColumns(10);
         
-        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X");
-        settingsPanel.add(lblBacklashOffsetX, "3, 3, right, default");
+        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
+        settingsPanel.add(lblBacklashOffsetX, "6, 6, right, default");
         
         backlashOffsetXTf = new JTextField();
-        settingsPanel.add(backlashOffsetXTf, "4, 3, fill, default");
+        settingsPanel.add(backlashOffsetXTf, "8, 6, fill, default");
         backlashOffsetXTf.setColumns(10);
         
-        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y");
-        settingsPanel.add(lblBacklashOffsetY, "3, 4, right, default");
+        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
+        settingsPanel.add(lblBacklashOffsetY, "6, 8, right, default");
         
         backlashOffsetYTf = new JTextField();
-        settingsPanel.add(backlashOffsetYTf, "4, 4, fill, default");
+        settingsPanel.add(backlashOffsetYTf, "8, 8, fill, default");
         backlashOffsetYTf.setColumns(10);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "3, 5, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "6, 10, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "4, 5, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "8, 10, fill, default");
         backlashFeedRateFactorTf.setColumns(10);
         
         JLabel lblCommandTimeoutms = new JLabel("Command Timeout (ms)");
-        settingsPanel.add(lblCommandTimeoutms, "1, 1, right, default");
+        settingsPanel.add(lblCommandTimeoutms, "2, 2, right, default");
         
         commandTimeoutTf = new JTextField();
-        settingsPanel.add(commandTimeoutTf, "2, 1, fill, default");
+        settingsPanel.add(commandTimeoutTf, "4, 2, fill, default");
         commandTimeoutTf.setColumns(10);
         
         JLabel lblConnectWaitTime = new JLabel("Connect Wait Time (ms)");
-        settingsPanel.add(lblConnectWaitTime, "1, 2, right, default");
+        settingsPanel.add(lblConnectWaitTime, "2, 4, right, default");
         
         connectWaitTimeTf = new JTextField();
-        settingsPanel.add(connectWaitTimeTf, "2, 2, fill, default");
+        settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
         connectWaitTimeTf.setColumns(10);
 
         JPanel gcodePanel = new JPanel();

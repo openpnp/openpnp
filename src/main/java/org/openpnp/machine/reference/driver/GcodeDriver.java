@@ -427,7 +427,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
-                command = substituteVariable(command, "XSlackOffset", null); // Slack Compensation
+                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
             }
             else {
                 command = substituteVariable(command, "X", x);
@@ -441,7 +441,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             if (yAxis == null || yAxis.getCoordinate() == y) {
                 command = substituteVariable(command, "Y", null);
-                command = substituteVariable(command, "YSlackOffset", null); // Slack Compensation
+                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
             }
             else {
                 command = substituteVariable(command, "Y", y);
