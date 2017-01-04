@@ -114,6 +114,23 @@ To use visual homing:
 
 If your homing fiducial is in a different location than the camera can see after homing you can change the location that is searched by adding `<homing-fiducial-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>` to your driver in `machine.xml`.
 
+# Backlash Compensation
+
+The GcodeDriver includes basic basic backlash compensation; also known as slack compensation. When enabled, the machine will always overshoot the target position and then move back to the target at a slower rate. This has been found to resolve issues with improperly tensioned belts and other sources of backlash.
+
+To enable backlash compensation, there are two steps:
+
+1. In the GcodeDriver configuration, set the backlash offset X and Y to a small value that you think is greater than your backlash. Starting with -0.4mm is a good choice. Also set the backlash feed rate factor to 0.1. The max feed rate is multiplied by this value for the backlash move, so using 0.1 will move the head at 10% of it's normal speed for the final position approach.
+2. In the GcodeDriver Gcode configuration, change your move to command to look something like:
+```
+G0 {BacklashOffsetX:X%.4f} {BacklashOffsetY:Y%.4f} {Z:Z%.4f} {Rotation:A%.4f} F{FeedRate:%.0f}
+G1 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:A%.4f} F{BacklashFeedRate:%.0f}
+```
+
+The way this works is that the first command moves past the target position by the backlash offset amount at the normal feed rate. The second command then moves to the final position at the backlash feedrate, which will be slower.
+
+More information about this feature can be found in https://github.com/openpnp/openpnp/issues/318.
+
 # Troubleshooting
 
 ## Asking for Help
