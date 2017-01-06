@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,7 @@ import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -66,6 +68,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Attribute(required = false)
     protected double speed = 1.0D;
+    
+    @ElementMap(required = false)
+    protected HashMap<String, Object> properties = new HashMap<>();
 
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -369,5 +374,15 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public double getSpeed() {
         return speed;
+    }
+
+    @Override
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+
+    @Override
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
     }
 }
