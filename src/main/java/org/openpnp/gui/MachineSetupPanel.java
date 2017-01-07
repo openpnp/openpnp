@@ -21,11 +21,14 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.swing.Action;
@@ -54,6 +57,7 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.util.BeanUtils;
 
 @SuppressWarnings("serial")
 public class MachineSetupPanel extends JPanel implements WizardContainer {
@@ -66,6 +70,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
     private Preferences prefs = Preferences.userNodeForPackage(MachineSetupPanel.class);
     private JTree tree;
+    private DefaultTreeModel treeModel;
     private JTabbedPane tabbedPane;
     private JToolBar toolBar;
 
@@ -107,6 +112,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         searchTextField.setColumns(15);
 
         final JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
@@ -136,32 +142,33 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                 toolBar.removeAll();
 
                 TreePath path = tree.getSelectionPath();
-                for (Object o : path.getPath()) {
-                    PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
-                    Action[] actions = node.obj.getPropertySheetHolderActions();
-                    if (actions != null) {
-                        if (toolBar.getComponentCount() > 0) {
-                            toolBar.addSeparator();
-                        }
-                        for (Action action : actions) {
-                            toolBar.add(action);
+                if (path != null) {
+                    List<Object> pathsReverse = Arrays.asList(path.getPath());
+                    Collections.reverse(pathsReverse);
+                    for (Object o : pathsReverse) {
+                        PropertySheetHolderTreeNode node = (PropertySheetHolderTreeNode) o;
+                        Action[] actions = node.obj.getPropertySheetHolderActions();
+                        if (actions != null) {
+                            for (Action action : actions) {
+                                toolBar.add(action);
+                            }
                         }
                     }
-                }
 
-                PropertySheetHolderTreeNode node =
-                        (PropertySheetHolderTreeNode) path.getLastPathComponent();
-                if (node != null) {
-                    PropertySheet[] propertySheets = node.obj.getPropertySheets();
-                    if (propertySheets != null) {
-                        for (PropertySheet propertySheet : propertySheets) {
-                            String title = propertySheet.getPropertySheetTitle();
-                            JPanel panel = propertySheet.getPropertySheetPanel();
-                            if (title == null) {
-                                title = "Configuration";
-                            }
-                            if (panel != null) {
-                                tabbedPane.add(title, panel);
+                    PropertySheetHolderTreeNode node =
+                            (PropertySheetHolderTreeNode) path.getLastPathComponent();
+                    if (node != null) {
+                        PropertySheet[] propertySheets = node.obj.getPropertySheets();
+                        if (propertySheets != null) {
+                            for (PropertySheet propertySheet : propertySheets) {
+                                String title = propertySheet.getPropertySheetTitle();
+                                JPanel panel = propertySheet.getPropertySheetPanel();
+                                if (title == null) {
+                                    title = "Configuration";
+                                }
+                                if (panel != null) {
+                                    tabbedPane.add(title, panel);
+                                }
                             }
                         }
                     }
@@ -178,7 +185,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
-                tree.setModel(new DefaultTreeModel(
+                tree.setModel(treeModel = new DefaultTreeModel(
                         new PropertySheetHolderTreeNode(Configuration.get().getMachine(), null)));
                 for (int i = 0; i < tree.getRowCount(); i++) {
                     tree.expandRow(i);
@@ -203,6 +210,32 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         public PropertySheetHolderTreeNode(PropertySheetHolder obj, TreeNode parent) {
             this.obj = obj;
             this.parent = parent;
+            loadChildren();
+            /**
+             * If the object we're creating a node for supports property change then we add
+             * a listener. When we get an indexed changed we refresh our children and
+             * when we get a non-indexed change we refresh ourself.
+             * 
+             * TODO: Note: Since we don't know which child got refreshed, we refresh them
+             * all and this causes the JTree to collapse all the other children. This sucks
+             * but there isn't a clean way to know which child changed without including the
+             * property name somewhere.
+             */
+            BeanUtils.addPropertyChangeListener(obj, (PropertyChangeListener) (e) -> {
+                if (e instanceof IndexedPropertyChangeEvent) {
+                    for (PropertySheetHolderTreeNode node : children) {
+                        node.loadChildren();
+                        treeModel.nodeStructureChanged(node);
+                    }
+                }
+                else {
+                    treeModel.nodeChanged(this);
+                }
+            }); 
+        }
+
+        private void loadChildren() {
+            this.children.clear();
             PropertySheetHolder[] children = obj.getChildPropertySheetHolders();
             if (children != null) {
                 for (PropertySheetHolder child : children) {

@@ -134,6 +134,10 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<Class<? extends Camera>> getCompatibleCameraClasses();
 
+    public List<Class<? extends Nozzle>> getCompatibleNozzleClasses();
+
+    public List<Class<? extends Actuator>> getCompatibleActuatorClasses();
+
     public void addFeeder(Feeder feeder) throws Exception;
 
     public void removeFeeder(Feeder feeder);
@@ -141,6 +145,10 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public void addCamera(Camera camera) throws Exception;
 
     public void removeCamera(Camera camera);
+
+    public void addActuator(Actuator actuator) throws Exception;
+
+    public void removeActuator(Actuator actuator);
 
     public PnpJobProcessor getPnpJobProcessor();
     

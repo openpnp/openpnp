@@ -28,11 +28,10 @@ import javax.imageio.ImageIO;
 import javax.swing.Action;
 
 import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
@@ -60,7 +59,13 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     private Thread thread;
 
     public ImageCamera() {
-        unitsPerPixel = new Location(LengthUnit.Inches, 0.04233, 0.04233, 0, 0);
+        setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
+        try {
+            setSourceUri(sourceUri);
+        }
+        catch (Exception e) {
+            
+        }
     }
 
     @SuppressWarnings("unused")
@@ -115,7 +120,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public synchronized BufferedImage capture() {
+    public synchronized BufferedImage internalCapture() {
         /*
          * Create a buffer that we will render the center tile and it's surrounding tiles to.
          */
@@ -160,7 +165,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     public void run() {
         while (!Thread.interrupted()) {
-            BufferedImage frame = capture();
+            BufferedImage frame = internalCapture();
             broadcastCapture(frame);
             try {
                 Thread.sleep(1000 / fps);
@@ -183,12 +188,6 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

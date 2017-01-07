@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -46,12 +47,16 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.events.BoardLocationSelectedEvent;
+import org.openpnp.events.JobLoadedEvent;
+import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
@@ -78,6 +83,8 @@ import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
+import com.google.common.eventbus.Subscribe;
+
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
     enum State {
@@ -93,9 +100,6 @@ public class JobPanel extends JPanel {
         Finished
     }
 
-    @SuppressWarnings("unused")
-
-    
     final private Configuration configuration;
     final private MainFrame frame;
 
@@ -181,12 +185,14 @@ public class JobPanel extends JPanel {
                         boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
                         jobPastePanel.setBoardLocation(boardLocation);
+                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
                     }
                 });
 
         setLayout(new BorderLayout(0, 0));
 
         splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setBorder(null);
         splitPane.setContinuousLayout(true);
         splitPane
@@ -296,6 +302,46 @@ public class JobPanel extends JPanel {
         fsm.addPropertyChangeListener((e) -> {
             updateJobActions();
         });
+        
+        Configuration.get().getBus().register(this);
+    }
+    
+    @Subscribe
+    public void boardLocationSelected(BoardLocationSelectedEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().showTab("Job");
+
+            selectBoardLocation(event.boardLocation);
+        });
+    }
+    
+    @Subscribe
+    public void placementSelected(PlacementSelectedEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().showTab("Job");
+            
+            showTab("Pick and Place");
+
+            selectBoardLocation(event.boardLocation);
+            
+            jobPlacementsPanel.selectPlacement(event.placement);
+        });
+    }
+    
+    private void selectBoardLocation(BoardLocation boardLocation) {
+        for (int i = 0; i < boardLocationsTableModel.getRowCount(); i++) {
+            if (boardLocationsTableModel.getBoardLocation(i) == boardLocation) {
+                int index = boardLocationsTable.convertRowIndexToView(i);
+                boardLocationsTable.getSelectionModel().setSelectionInterval(index, index);
+                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(index, 0, true)));
+                break;
+            }
+        }
+    }
+    
+    private void showTab(String title) {
+        int index = tabbedPane.indexOfTab(title);
+        tabbedPane.setSelectedIndex(index);
     }
 
     public Job getJob() {
@@ -313,6 +359,7 @@ public class JobPanel extends JPanel {
         job.addPropertyChangeListener("file", titlePropertyChangeListener);
         updateTitle();
         updateJobActions();
+        Configuration.get().getBus().post(new JobLoadedEvent(job));
     }
 
     public JobPlacementsPanel getJobPlacementsPanel() {
@@ -650,7 +697,7 @@ public class JobPanel extends JPanel {
         }
         else if (title.equals("Pick and Place"))
         {
-            if(jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
+            if((jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor()) && (Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null))
             {
                // Run the glue dispense processor first, this will deposit glue ready for any component placements
                 jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
@@ -682,7 +729,7 @@ public class JobPanel extends JPanel {
             } while (fsm.getState() == State.Running);
 
             // if this was the glue dispense run and we've finished, kick off the pick & place
-            if(jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
+            if(Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null && jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
                 fsm.send(Message.StartOrPause);
             }
             return null;
@@ -880,10 +927,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int index = boardLocationsTable.getSelectedRow();
-            if (index != -1) {
-                index = boardLocationsTable.convertRowIndexToModel(index);
-                BoardLocation boardLocation = getJob().getBoardLocations().get(index);
+            BoardLocation boardLocation = getSelectedBoardLocation();
+            if (boardLocation != null) {
                 getJob().removeBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
             }

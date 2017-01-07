@@ -41,9 +41,7 @@ import org.onvif.ver10.schema.VideoEncoding;
 import org.onvif.ver10.schema.VideoRateControl;
 import org.onvif.ver10.schema.VideoResolution;
 import org.openpnp.CameraListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
@@ -84,7 +82,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public OnvifIPCamera() {}
 
     @Override
-    public BufferedImage capture() {
+    public BufferedImage internalCapture() {
         if (thread == null) {
             initCamera();
         }
@@ -136,7 +134,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                BufferedImage image = capture();
+                BufferedImage image = internalCapture();
                 if (image != null) {
                     broadcastCapture(image);
                 }
@@ -421,12 +419,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
@@ -41,6 +42,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
 
@@ -62,6 +64,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
+
+    @Element(required = false)
+    private int vacuumLevelPartOn;
+
+    @Element(required = false)
+    private int vacuumLevelPartOff;
+    
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
     public ReferenceNozzleTip() {
@@ -133,7 +142,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] {unloadAction, loadAction};
+        return new Action[] {unloadAction, loadAction, deleteAction};
     }
 
     @Override
@@ -194,6 +203,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return null;
     }
 
+    public int getVacuumLevelPartOn() {
+        return vacuumLevelPartOn;
+    }
+
+    public void setVacuumLevelPartOn(int vacuumLevelPartOn) {
+        this.vacuumLevelPartOn = vacuumLevelPartOn;
+    }
+
+    public int getVacuumLevelPartOff() {
+        return vacuumLevelPartOff;
+    }
+
+    public void setVacuumLevelPartOff(int vacuumLevelPartOff) {
+        this.vacuumLevelPartOff = vacuumLevelPartOff;
+    }
+
     public Calibration getCalibration() {
         return calibration;
     }
@@ -225,6 +250,24 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             UiUtils.submitUiMachineTask(() -> {
                 getParentNozzle().unloadNozzleTip();
             });
+        }
+    };
+    
+    public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Nozzle Tip");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle tip.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete " + getName() + "?",
+                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                getParentNozzle().removeNozzleTip(ReferenceNozzleTip.this);
+            }
         }
     };
 

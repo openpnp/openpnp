@@ -32,6 +32,7 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.ResourceUtils;
 import org.pmw.tinylog.Logger;
@@ -44,6 +45,8 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Style;
+
+import com.google.common.eventbus.EventBus;
 
 public class Configuration extends AbstractModelObject {
     private static Configuration instance;
@@ -70,6 +73,8 @@ public class Configuration extends AbstractModelObject {
     private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
     private File configurationDirectory;
     private Preferences prefs;
+    private Scripting scripting;
+    private EventBus bus = new EventBus();
 
     public static Configuration get() {
         if (instance == null) {
@@ -86,6 +91,14 @@ public class Configuration extends AbstractModelObject {
     private Configuration(File configurationDirectory) {
         this.configurationDirectory = configurationDirectory;
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
+    }
+    
+    public Scripting getScripting() {
+        return scripting;
+    }
+    
+    public EventBus getBus() {
+        return bus;
     }
 
     public File getConfigurationDirectory() {
@@ -270,6 +283,8 @@ public class Configuration extends AbstractModelObject {
         for (ConfigurationListener listener : listeners) {
             listener.configurationComplete(this);
         }
+        
+        scripting = new Scripting();
     }
 
     public synchronized void save() throws Exception {

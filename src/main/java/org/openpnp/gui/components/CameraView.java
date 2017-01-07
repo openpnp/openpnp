@@ -36,6 +36,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -187,6 +189,12 @@ public class CameraView extends JComponent implements CameraListener {
     private long flashLengthMs = 250;
 
     private boolean showName = false;
+    
+    private double zoom = 1d;
+    
+    private boolean dragJogging = false;
+    
+    private MouseEvent dragJoggingTarget = null;
 
     public CameraView() {
         setBackground(Color.black);
@@ -206,6 +214,7 @@ public class CameraView extends JComponent implements CameraListener {
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseMotionListener);
         addComponentListener(componentListener);
+        addMouseWheelListener(mouseWheelListener);
 
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
@@ -437,6 +446,9 @@ public class CameraView extends JComponent implements CameraListener {
         if (cameraViewFilter != null) {
             img = cameraViewFilter.filterCameraImage(camera, img);
         }
+        if (img == null) {
+            return;
+        }
         BufferedImage oldFrame = lastFrame;
         lastFrame = img;
         if (oldFrame == null
@@ -485,12 +497,15 @@ public class CameraView extends JComponent implements CameraListener {
             scaledHeight = (int) (scaledWidth * aspectRatio);
         }
 
+        scaledWidth *= zoom;
+        scaledHeight *= zoom;
+
         imageX = ins.left + (width / 2) - (scaledWidth / 2);
         imageY = ins.top + (height / 2) - (scaledHeight / 2);
 
         scaleRatioX = lastSourceWidth / (double) scaledWidth;
         scaleRatioY = lastSourceHeight / (double) scaledHeight;
-
+        
         lastUnitsPerPixel = camera.getUnitsPerPixel();
         scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
         scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
@@ -540,6 +555,8 @@ public class CameraView extends JComponent implements CameraListener {
             if (selectionEnabled && selection != null) {
                 paintSelection(g2d);
             }
+
+            paintDragJogging(g2d);
         }
         else {
             g.setColor(Color.red);
@@ -555,6 +572,17 @@ public class CameraView extends JComponent implements CameraListener {
             g2d.setColor(new Color(1f, 1f, 1f, alpha));
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
+    }
+    
+    private void paintDragJogging(Graphics2D g2d) {
+        if (!isDragJogging() || dragJoggingTarget == null) {
+            return;
+        }
+        Insets ins = getInsets();
+        int width = getWidth() - ins.left - ins.right;
+        int height = getHeight() - ins.top - ins.bottom;
+        g2d.setColor(Color.white);
+        g2d.drawLine(width / 2, height / 2, dragJoggingTarget.getX(), dragJoggingTarget.getY());
     }
 
     private void paintSelection(Graphics2D g2d) {
@@ -777,13 +805,13 @@ public class CameraView extends JComponent implements CameraListener {
                 textHeight + insets.top + insets.bottom);
     }
 
-    private static void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
+    private void drawImageInfo(Graphics2D g2d, int topLeftX, int topLeftY,
             BufferedImage image) {
         if (image == null) {
             return;
         }
-        String text = String.format("Resolution: %d x %d\nHistogram:", image.getWidth(),
-                image.getHeight());
+        String text = String.format("Resolution: %d x %d\nZoom: %d%%\nHistogram:", image.getWidth(),
+                image.getHeight(), (int) (zoom * 100));
         Insets insets = new Insets(10, 10, 10, 10);
         int interLineSpacing = 4;
         int cornerRadius = 8;
@@ -1227,6 +1255,28 @@ public class CameraView extends JComponent implements CameraListener {
         selectionMode = null;
         selectionActiveHandle = null;
     }
+    
+    private void dragJoggingBegin(MouseEvent e) {
+        this.dragJogging = true;
+        this.dragJoggingTarget = e;
+        repaint();
+    }
+    
+    private void dragJoggingContinue(MouseEvent e) {
+        this.dragJoggingTarget = e;
+        repaint();
+    }
+    
+    private void dragJoggingEnd(MouseEvent e) {
+        this.dragJogging = false;
+        this.dragJoggingTarget = null;
+        repaint();
+        moveToClick(e);
+    }
+    
+    private boolean isDragJogging() {
+        return this.dragJogging;
+    }
 
     private MouseListener mouseListener = new MouseAdapter() {
         @Override
@@ -1263,6 +1313,9 @@ public class CameraView extends JComponent implements CameraListener {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
+            else if (isDragJogging()) {
+                dragJoggingEnd(e);
+            }
             else {
                 endSelection();
             }
@@ -1280,6 +1333,12 @@ public class CameraView extends JComponent implements CameraListener {
             if (selectionEnabled) {
                 continueSelection(e);
             }
+            else if (!isDragJogging()) {
+                dragJoggingBegin(e);
+            }
+            else if (isDragJogging()) {
+                dragJoggingContinue(e);
+            }
         }
     };
 
@@ -1287,6 +1346,17 @@ public class CameraView extends JComponent implements CameraListener {
         @Override
         public void componentResized(ComponentEvent e) {
             calculateScalingData();
+        }
+    };
+    
+    private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            zoom -= e.getPreciseWheelRotation() * 0.01d;
+            zoom = Math.max(zoom, 1.0d);
+            zoom = Math.min(zoom, 100d);
+            calculateScalingData();
+            repaint();
         }
     };
 

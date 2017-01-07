@@ -30,11 +30,9 @@ import javax.swing.Action;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
-import org.openpnp.machine.reference.camera.LtiCivilCamera;
 import org.openpnp.machine.reference.camera.OnvifIPCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.machine.reference.camera.VfwCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
@@ -43,13 +41,17 @@ import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
+import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PasteDispenseJobProcessor;
 import org.openpnp.spi.PnpJobProcessor;
@@ -144,8 +146,8 @@ public class ReferenceMachine extends AbstractMachine {
         children.add(new SimplePropertySheetHolder("Signalers", getSignalers()));
         children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
         children.add(new SimplePropertySheetHolder("Heads", getHeads()));
-        children.add(new SimplePropertySheetHolder("Cameras", getCameras()));
-        children.add(new SimplePropertySheetHolder("Actuators", getActuators()));
+        children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
+        children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
         children.add(
                 new SimplePropertySheetHolder("Driver", Collections.singletonList(getDriver())));
         children.add(new SimplePropertySheetHolder("Job Processors",
@@ -190,12 +192,24 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Camera>> getCompatibleCameraClasses() {
         List<Class<? extends Camera>> l = new ArrayList<>();
         l.add(Webcams.class);
-        l.add(LtiCivilCamera.class);
-        l.add(VfwCamera.class);
         l.add(OpenCvCamera.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
         l.add(SimulatedUpCamera.class);
+        return l;
+    }
+    
+    @Override
+    public List<Class<? extends Nozzle>> getCompatibleNozzleClasses() {
+        List<Class<? extends Nozzle>> l = new ArrayList<>();
+        l.add(ReferenceNozzle.class);
+        return l;
+    }
+
+    @Override
+    public List<Class<? extends Actuator>> getCompatibleActuatorClasses() {
+        List<Class<? extends Actuator>> l = new ArrayList<>();
+        l.add(ReferenceActuator.class);
         return l;
     }
 

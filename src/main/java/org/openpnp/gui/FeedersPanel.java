@@ -20,6 +20,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -40,13 +41,14 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
-import javax.swing.border.TitledBorder;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.ActionGroup;
@@ -65,6 +67,8 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
+
+import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
@@ -145,6 +149,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         tableSorter = new TableRowSorter<>(tableModel);
 
         final JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
@@ -179,7 +184,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 Feeder feeder = getSelectedFeeder();
-
+                
                 feederSelectedActionGroup.setEnabled(feeder != null);
 
                 configurationPanel.removeAll();
@@ -193,10 +198,28 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
                 revalidate();
                 repaint();
+                
+                Configuration.get().getBus().post(new FeederSelectedEvent(feeder));
             }
         });
 
-
+        Configuration.get().getBus().register(this);
+    }
+    
+    @Subscribe
+    public void feederSelected(FeederSelectedEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            mainFrame.showTab("Feeders");
+            
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                if (tableModel.getFeeder(i) == event.feeder) {
+                    int index = table.convertRowIndexToView(i);
+                    table.getSelectionModel().setSelectionInterval(index, index);
+                    table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
+                    break;
+                }
+            }
+        });
     }
 
     /**
@@ -216,7 +239,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             table.getSelectionModel().clearSelection();
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 if (tableModel.getFeeder(i).getPart() == part) {
-                    table.getSelectionModel().setSelectionInterval(0, i);
+                    int index = table.convertRowIndexToView(i);
+                    table.getSelectionModel().setSelectionInterval(index, index);
+                    table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
                     break;
                 }
             }
@@ -384,6 +409,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                         nozzle.pick(feeder.getPart());
                         nozzle.moveToSafeZ();
+                        feeder.postPick(nozzle);
                     }
                     catch (Exception e) {
                         MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);

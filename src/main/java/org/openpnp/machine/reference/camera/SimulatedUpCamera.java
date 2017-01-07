@@ -16,9 +16,7 @@ import javax.swing.Action;
 
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -61,7 +59,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     }
 
     @Override
-    public BufferedImage capture() {
+    public BufferedImage internalCapture() {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
         AffineTransform tx = g.getTransform();
@@ -192,7 +190,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     public void run() {
         while (!Thread.interrupted()) {
-            BufferedImage frame = capture();
+            BufferedImage frame = internalCapture();
             broadcastCapture(frame);
             try {
                 Thread.sleep(1000 / fps);
@@ -215,12 +213,6 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Action[] getPropertySheetHolderActions() {
         // TODO Auto-generated method stub
         return null;
     }

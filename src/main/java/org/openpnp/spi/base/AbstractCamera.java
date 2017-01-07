@@ -11,6 +11,7 @@ import javax.swing.Icon;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -20,7 +21,7 @@ import org.openpnp.spi.VisionProvider;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public abstract class AbstractCamera implements Camera {
+public abstract class AbstractCamera extends AbstractModelObject implements Camera {
     @Attribute
     protected String id;
 
@@ -46,6 +47,8 @@ public abstract class AbstractCamera implements Camera {
     protected Integer width;
 
     protected Integer height;
+    
+    private boolean headSet = false;
 
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
@@ -73,6 +76,7 @@ public abstract class AbstractCamera implements Camera {
     @Override
     public void setName(String name) {
         this.name = name;
+        firePropertyChange("name", null, name);
     }
 
     @Override
@@ -82,7 +86,11 @@ public abstract class AbstractCamera implements Camera {
 
     @Override
     public void setHead(Head head) {
+        if (this.headSet) {
+            throw new Error("Can't change head on camera " + this);
+        }
         this.head = head;
+        this.headSet = true;
     }
 
     @Override
@@ -98,6 +106,7 @@ public abstract class AbstractCamera implements Camera {
     @Override
     public void setLooking(Looking looking) {
         this.looking = looking;
+        firePropertyChange("looking", null, looking);
     }
 
     @Override
@@ -146,26 +155,6 @@ public abstract class AbstractCamera implements Camera {
         }
     }
 
-    @Override
-    public int getWidth() {
-        if (width == null) {
-            BufferedImage image = capture();
-            width = image.getWidth();
-            height = image.getHeight();
-        }
-        return width;
-    }
-
-    @Override
-    public int getHeight() {
-        if (width == null) {
-            BufferedImage image = capture();
-            width = image.getWidth();
-            height = image.getHeight();
-        }
-        return height;
-    }
-
     public long getSettleTimeMs() {
         return settleTimeMs;
     }
@@ -187,6 +176,11 @@ public abstract class AbstractCamera implements Camera {
     @Override
     public void moveToSafeZ() throws Exception {
         moveToSafeZ(getHead().getMachine().getSpeed());
+    }
+    
+    @Override
+    public String toString() {
+        return getName();
     }
     
     protected class ListenerEntry {
