@@ -1,6 +1,27 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-01-06
+
+* ScriptRun CvPipeline Stage
+
+	A new CvPipeline stage has been added called ScriptRun. This stage take a file and
+	runs it as a script with one of the supported built in script engines. This makes
+	it very easy for people to add their own vision logic to a pipeline without having
+	to write a stage.
+	
+	The script is supplied globals of `pipeline` and `stage`.
+	
+	An example script is shown below. It sets all of the pixels of the input image to
+	the color green.
+	
+	```
+	pipeline.workingImage.setTo(new Packages.org.opencv.core.Scalar(0, 255, 0));
+	```
+	
+	By saving the above to a file with the extension .js and selecting it in the stage the
+	script will run each time the stage is evaluated.
+	
 # 2016-12-30
 
 * OpenCvCamera Capture Properties
