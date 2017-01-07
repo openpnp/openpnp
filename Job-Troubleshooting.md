@@ -27,6 +27,6 @@ Finally, and most important, follow each step exactly as it's written. It's temp
 2. Click the position camera button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg) in the feeders toolbar. The camera should center on a part in the feeder. The crosshair should be pointing in the direction you think of as "0 degrees" for that part.
     * In OpenPnP, part orientation is relative to how you choose to work with your data. It's best to think of it in relation to how you place parts on a board. If you placed a part on a board with 0 degrees of rotation, then a feeder with 0 degrees of rotation should show the part in the same way. 
 3. Now click the pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) in the feeders toolbar. The machine should perform a feed operation and then pick the part. The part should be on the end of the nozzle.
-4. In the jog controls, click the park button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) for the C axis. This should return the nozzle back to 0. Examine the part on the nozzle. It should be at 0 degrees, or close to it. If it's a little off, it's okay.
+4. In the jog controls, click the park button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg) for the C axis. This should return the nozzle back to 0. Examine the part on the nozzle. It should be at 0 degrees, or close to it. If it's a little off, it's okay.
 
 
