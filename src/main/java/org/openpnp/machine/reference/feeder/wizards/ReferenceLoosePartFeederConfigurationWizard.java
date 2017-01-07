@@ -39,6 +39,11 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FlowLayout;
 
 public class ReferenceLoosePartFeederConfigurationWizard
         extends AbstractReferenceFeederConfigurationWizard {
@@ -74,6 +79,16 @@ public class ReferenceLoosePartFeederConfigurationWizard
             }
         });
         panel.add(btnResetPipeline, "4, 2");
+        
+        JPanel warningPanel = new JPanel();
+        FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
+        contentPanel.add(warningPanel, 0);
+        
+        JLabel lblWarningThisFeeder = new JLabel("Warning: This feeder is incomplete and experimental. Use at your own risk.");
+        lblWarningThisFeeder.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
+        lblWarningThisFeeder.setForeground(Color.RED);
+        lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
+        warningPanel.add(lblWarningThisFeeder);
     }
 
     private void editPipeline() throws Exception {
