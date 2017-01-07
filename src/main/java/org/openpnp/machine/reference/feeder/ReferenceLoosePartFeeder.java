@@ -43,14 +43,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * TODO: We need to be able to determine "normal" angle for the part, which probably means
- * width and height, which is going to be tough when the body is square. Might need to make
- * it more related to bottom vision so that it can determine the correct angle for what
- * it locates.
+ * TODO: We need to be able to determine "normal" angle for the part, which probably means width and
+ * height, which is going to be tough when the body is square. Might need to make it more related to
+ * bottom vision so that it can determine the correct angle for what it locates.
  * 
- * TODO: Remember the idea of using contours or whatever to find the part and then using
- * template matching to get it's orientation. That would solve the above, and make it work
- * for polarized parts too.
+ * TODO: Remember the idea of using contours or whatever to find the part and then using template
+ * matching to get it's orientation. That would solve the above, and make it work for polarized
+ * parts too.
  * 
  * And related to that, this might be a good time to play with something like SIFT.
  */
@@ -77,7 +76,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
             camera.moveTo(pickLocation);
         }
     }
-    
+
     private Location getPickLocation(Camera camera) throws Exception {
         // Process the pipeline to extract RotatedRect results
         pipeline.setCamera(camera);
@@ -111,11 +110,11 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
                 .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
         return location;
     }
-    
+
     public CvPipeline getPipeline() {
         return pipeline;
     }
-    
+
     public void resetPipeline() {
         pipeline = createDefaultPipeline();
     }
