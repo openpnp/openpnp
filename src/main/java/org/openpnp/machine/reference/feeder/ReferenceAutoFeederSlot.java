@@ -1,6 +1,10 @@
 package org.openpnp.machine.reference.feeder;
 
+import java.util.List;
+
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederSlotConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.LengthUnit;
@@ -26,30 +30,25 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
     private Bank bank;
     private Feeder feeder;
     
-    // TODO: Stuck on race condition in getBanks(). When loading a previously serialized feeder
-    // we call Configuration.get().getMachine() before it's been set, giving an NPE. 
-    // Guess we could fix with a config listener instead of doing it in commit();
-
     public ReferenceAutoFeederSlot() {
         // partId is required in AbstractFeeder to save the config. We don't use it so we just
         // set it to an empty string to make the serializer happy.
         partId = "";
     }
     
-    static synchronized IdentifiableList<Bank> getBanks() {
-        BanksProperty bp = (BanksProperty) Configuration.get().getMachine().getProperty("ReferenceAutoFeederSlot.banks");
-        if (bp == null) {
-            bp = new BanksProperty();
-            bp.banks.add(new Bank());
-            Configuration.get().getMachine().setProperty("ReferenceAutoFeederSlot.banks", bp);
-        }
-        return bp.banks;
-    }
-
     @Commit
     public void commit() {
-//        setBank(banks.get(bankId));
-        feeder = getBank().getFeeder(feederId);
+        Configuration.get().addListener(new ConfigurationListener() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+            }
+            
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                setBank(getBanks().get(bankId));
+                feeder = getBank().getFeeder(feederId);
+            }
+        });
     }
 
     @Persist
@@ -121,6 +120,21 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
         }
         this.feeder = feeder;
     }
+    
+    public static synchronized IdentifiableList<Bank> getBanks() {
+        BanksProperty bp = (BanksProperty) Configuration.get().getMachine().getProperty("ReferenceAutoFeederSlot.banks");
+        if (bp == null) {
+            bp = new BanksProperty();
+            bp.banks.add(new Bank());
+            Configuration.get().getMachine().setProperty("ReferenceAutoFeederSlot.banks", bp);
+        }
+        return bp.banks;
+    }
+    
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceAutoFeederSlotConfigurationWizard(this);
+    }
 
     @Root
     public static class Bank implements Identifiable, Named {
@@ -159,6 +173,15 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
 
         public void setName(String name) {
             this.name = name;
+        }
+        
+        @Override
+        public String toString() {
+            return name;
+        }
+        
+        public List<Feeder> getFeeders() {
+            return feeders;
         }
     }
     
@@ -233,6 +256,11 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
 
         public void setName(String name) {
             this.name = name;
+        }
+        
+        @Override
+        public String toString() {
+            return name;
         }
     }
 }
