@@ -1,5 +1,6 @@
 package org.openpnp.util;
 
+import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -8,6 +9,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.Result;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 
 public class VisionUtils {
     /**
@@ -92,5 +99,18 @@ public class VisionUtils {
 
         // convert it all to pixels
         return length.getValue() / avgUnitsPerPixel;
+    }
+    
+    public static String readQrCode(Camera camera) {
+        BufferedImage image = camera.settleAndCapture();
+        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
+                new BufferedImageLuminanceSource(image)));
+        try {
+            Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
+            return qrCodeResult.getText();    
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 }
