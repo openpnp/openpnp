@@ -58,23 +58,21 @@ The units for the X, Y and Z axes are set in the GUI, the default is Millimeters
 The User Interface
 ==================
 
-TODO: Section needs updating due to recent UI overhaul.
-
 OpenPnP is primarily a single window interface, broken up into multiple sections. Those sections will be explained in detail below.
 
 The Main Window
 ---------------
-![screen shot 2016-06-18 at 10 34 20 am](https://cloud.githubusercontent.com/assets/1182323/16172608/8dad6e20-3541-11e6-84ab-5a87c3bfdc91.png)
+![screen shot 2017-01-09 at 7 59 00 pm](https://cloud.githubusercontent.com/assets/1182323/21791153/962a6e0c-d6a6-11e6-82b7-ba252e94cc79.png)
 
 Machine Controls
 ----------------
-![screen shot 2016-06-18 at 12 59 52 pm](https://cloud.githubusercontent.com/assets/1182323/16173384/98b58fc4-3554-11e6-9382-819aa1d82c11.png)
+![screen shot 2017-01-09 at 7 59 34 pm](https://cloud.githubusercontent.com/assets/1182323/21791132/78884716-d6a6-11e6-8579-fe2021c927b5.png)
 
 The Machine Controls are your interface to interacting with the machine. You can see the current position in the DROs, move the machine using the Jog Controls and perform special operations with the Special Commands section.
 
 Digital Read Outs (DROs)
 ------------------------
-![screen shot 2016-06-18 at 1 01 43 pm](https://cloud.githubusercontent.com/assets/1182323/16173392/d36f81ce-3554-11e6-9eab-b6e6794f913b.png)
+![screen shot 2017-01-09 at 8 03 00 pm](https://cloud.githubusercontent.com/assets/1182323/21791175/b900e7da-d6a6-11e6-8979-17308c278d51.png)
 
 The DROs show the current position of the selected nozzle in your preferred units. You can click the DROs to set them to relative mode which will zero them out and turn them blue. You can use this to measure distances; the DROs will show the distance from where you first clicked them. Click again to go back to normal mode.
 
@@ -82,7 +80,7 @@ Jog Controls
 ------------
 ![screen shot 2016-06-18 at 10 33 18 am](https://cloud.githubusercontent.com/assets/1182323/16172512/1cf472b0-3540-11e6-987a-fff822524944.png)
 
-The Jog Controls are where you can move the selected nozzle. The Distance slider sets the distance each click of the buttons will move the machine. The Park buttons <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg" height="18"> allow you to move either the X/Y axes, the Z axis or the C axis to the Park location defined on your head.
+The Jog Controls are where you can move the selected nozzle. The Distance slider sets the distance each click of the buttons will move the machine. The Speed slider sets the speed of all movements as a percentage from 1 to 100%. The Park buttons <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg" height="18"> allow you to move either the X/Y axes, the Z axis or the C axis to the Park location defined on your head.
 
 The Camera Panel
 ----------------
