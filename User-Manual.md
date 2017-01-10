@@ -69,14 +69,14 @@ Machine Controls
 ![screen shot 2017-01-09 at 7 59 34 pm](https://cloud.githubusercontent.com/assets/1182323/21791132/78884716-d6a6-11e6-8579-fe2021c927b5.png)
 
 The Machine Controls are your interface to interacting with the machine. From here you can:
-* Turn the machine on and off with the power button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power.svg" height="18">.
+* Turn the machine on and off with the power button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/power_button_off.svg" height="18">.
 * Select the nozzle that you'd like to use for setup operations.
 * Jog the currently selected nozzle with the jog buttons.
 * Use the Distance slider to change how far the machine moves with each jog.
 * Use the Speed slider to change how fast movements happen.
 * Use the Special, Actuators and Dispense tabs to trigger more advanced actions.
 * Press the Park buttons <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg" height="18"> to move either the X/Y axes, the Z axis or the C axis to the Park location defined on your head.
-* Press the Home button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/home.svg" height="18"> to perform a homing operation. You should do this each time you start your machine.
+* Press the Home button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_home_black_18px.svg" height="18"> to perform a homing operation. You should do this each time you start your machine.
 
 Digital Read Outs (DROs)
 ------------------------
@@ -96,9 +96,9 @@ You can also hold down Shift and click the Left Mouse Button in a Camera View to
 
 The Tabs
 --------
-![The Tabs](https://globedrop.com/wiki/_media/openpnp:tabswindow.png)
+![screen shot 2017-01-09 at 8 15 26 pm](https://cloud.githubusercontent.com/assets/1182323/21791442/6253b302-d6a8-11e6-806b-222fec908b91.png)
 
-The tabs at the bottom of the window are where all configuration and job setup takes place. These tabs are covered in more detail elsewhere, but here is a brief overview:
+The tabs at the right of the window are where all configuration and job setup takes place. These tabs are covered in more detail elsewhere, but here is a brief overview:
 
 * Job: Job setup and control.
 * Parts: Create new parts, setup bottom vision, pick parts for testing.
