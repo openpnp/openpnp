@@ -35,7 +35,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {"Board", "Width", "Height", "Side", "X", "Y", "Z",
-            "ø", "Enabled?", "Check Fids?"};
+            "🗘", "Enabled?", "Check Fids?"};
 
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
