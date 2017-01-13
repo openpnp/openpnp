@@ -409,6 +409,10 @@ public class JobPanel extends JPanel {
         }
         saveRecentJobs();
     }
+    
+    public void refresh() {
+        boardLocationsTableModel.fireTableDataChanged();
+    }
 
     public void refreshSelectedBoardRow() {
         boardLocationsTableModel.fireTableRowsUpdated(boardLocationsTable.getSelectedRow(),
