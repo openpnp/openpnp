@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -32,9 +33,12 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.JBindings;
+import org.openpnp.gui.support.JBindings.Wrapper;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
@@ -221,15 +225,25 @@ public class ReferenceAutoFeederSlotConfigurationWizard
         addWrappedBinding(feeder, "postPickActuatorName", postPickActuatorName, "text");
         addWrappedBinding(feeder, "postPickActuatorType", postPickActuatorType, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
+
+        /**
+         * The strategy for the bank and feeder properties are a little complex:
+         * We create an observable wrapper for bank and feeder. We add wrapped bindings
+         * for these against the source feeder, so if they are changed, then upon hitting
+         * Apply they will be changed on the source.
+         * In addition we add non-wrapped bindings from the bank and feeder wrappers to their
+         * instance properties such as name and part. Thus they will be updated immediately.
+         */
+        Wrapper<Bank> bankWrapper = new Wrapper<>();
+        Wrapper<Feeder> feederWrapper = new Wrapper<>();
         
-        addWrappedBinding(feeder, "bank", bankCb, "selectedItem");
-        addWrappedBinding(feeder, "feeder", feederCb, "selectedItem");
-        
-        // TODO: These properties aren't really working properly. Probably need to make
-        // them non-wrapped.
-        addWrappedBinding(feeder, "bank.name", bankNameTf, "text");
-        addWrappedBinding(feeder, "feeder.name", feederNameTf, "text");
-        addWrappedBinding(feeder, "feeder.part", feederPartCb, "selectedItem");
+        addWrappedBinding(feeder, "bank", bankWrapper, "value");
+        addWrappedBinding(feeder, "feeder", feederWrapper, "value");
+        bind(UpdateStrategy.READ_WRITE, bankWrapper, "value", bankCb, "selectedItem");
+        bind(UpdateStrategy.READ_WRITE, bankWrapper, "value.name", bankNameTf, "text");
+        bind(UpdateStrategy.READ_WRITE, feederWrapper, "value", feederCb, "selectedItem");
+        bind(UpdateStrategy.READ_WRITE, feederWrapper, "value.name", feederNameTf, "text");
+        bind(UpdateStrategy.READ_WRITE, feederWrapper, "value.part", feederPartCb, "selectedItem");
         
         ComponentDecorators.decorateWithAutoSelect(actuatorName);
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);

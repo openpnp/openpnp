@@ -5,6 +5,7 @@ import java.util.List;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederSlotConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.LengthUnit;
@@ -106,7 +107,10 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
         return bank;
     }
 
-    public void setBank(Bank bank) {
+    public void setBank(Bank bank) throws Exception {
+        if (bank == null) {
+            throw new Exception("Bank is required.");
+        }
         this.bank = bank;
     }
 
@@ -115,6 +119,10 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
     }
 
     public void setFeeder(Feeder feeder) throws Exception {
+        if (feeder == null) {
+            this.feeder = null;
+            return;
+        }
         if (getBank().getFeeder(feeder.getId()) == null) {
             throw new Exception("Can't set feeder from another bank.");
         }
@@ -137,7 +145,7 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
     }
 
     @Root
-    public static class Bank implements Identifiable, Named {
+    public static class Bank extends AbstractModelObject implements Identifiable, Named {
         @ElementList
         private IdentifiableList<ReferenceAutoFeederSlot.Feeder> feeders = new IdentifiableList<>();
 
@@ -172,7 +180,9 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
         }
 
         public void setName(String name) {
+            Object oldValue = this.name;
             this.name = name;
+            firePropertyChange("name", oldValue, name);
         }
         
         @Override
@@ -195,7 +205,7 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
     }
 
     @Root
-    public static class Feeder implements Identifiable, Named {
+    public static class Feeder extends AbstractModelObject implements Identifiable, Named {
         @Attribute(name = "id")
         final private String id;
 
@@ -235,7 +245,9 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
         }
 
         public void setPart(Part part) {
+            Object oldValue = this.part;
             this.part = part;
+            firePropertyChange("part", oldValue, part);
         }
 
         public Part getPart() {
@@ -243,7 +255,9 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
         }
 
         public void setOffsets(Location offsets) {
+            Object oldValue = this.offsets;
             this.offsets = offsets;
+            firePropertyChange("offsets", oldValue, offsets);
         }
 
         public Location getOffsets() {
@@ -255,7 +269,9 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
         }
 
         public void setName(String name) {
+            Object oldValue = this.name;
             this.name = name;
+            firePropertyChange("name", oldValue, name);
         }
         
         @Override
