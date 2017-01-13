@@ -42,9 +42,9 @@ import org.openpnp.gui.support.JBindings.Wrapper;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
-import org.openpnp.machine.reference.feeder.ReferenceAutoFeederSlot;
-import org.openpnp.machine.reference.feeder.ReferenceAutoFeederSlot.Bank;
-import org.openpnp.machine.reference.feeder.ReferenceAutoFeederSlot.Feeder;
+import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder.Bank;
+import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder.Feeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
@@ -52,10 +52,11 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.gui.components.LocationButtonsPanel;
 
-public class ReferenceAutoFeederSlotConfigurationWizard
+public class ReferenceSlotAutoFeederConfigurationWizard
         extends AbstractReferenceFeederConfigurationWizard {
-    private final ReferenceAutoFeederSlot feeder;
+    private final ReferenceSlotAutoFeeder feeder;
     private JTextField actuatorName;
     private JTextField actuatorValue;
     private JTextField postPickActuatorName;
@@ -65,7 +66,7 @@ public class ReferenceAutoFeederSlotConfigurationWizard
     private JTextField feederNameTf;
     private JTextField bankNameTf;
 
-    public ReferenceAutoFeederSlotConfigurationWizard(ReferenceAutoFeederSlot feeder) {
+    public ReferenceSlotAutoFeederConfigurationWizard(ReferenceSlotAutoFeeder feeder) {
         super(feeder);
         this.feeder = feeder;
 
@@ -127,72 +128,133 @@ public class ReferenceAutoFeederSlotConfigurationWizard
         postPickActuatorValue.setColumns(10);
         panelActuator.add(postPickActuatorValue, "8, 6");
         
-        JPanel slotPanel = new JPanel();
-        slotPanel.setBorder(new TitledBorder(null, "Slot", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(slotPanel);
-        slotPanel.setLayout(new FormLayout(new ColumnSpec[] {
+        JPanel bankPanel = new JPanel();
+        bankPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Bank", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(bankPanel);
+        bankPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-        
-        JLabel lblFeeder = new JLabel("Feeder");
-        slotPanel.add(lblFeeder, "2, 2, right, default");
-        
-        feederCb = new JComboBox();
-        slotPanel.add(feederCb, "4, 2, fill, default");
-        
-        feederNameTf = new JTextField();
-        slotPanel.add(feederNameTf, "6, 2, fill, default");
-        feederNameTf.setColumns(10);
-        
-        feederPartCb = new JComboBox();
         try {
-            feederPartCb.setModel(new PartsComboBoxModel());
         }
         catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
-        feederPartCb.setRenderer(new IdentifiableListCellRenderer<Part>());
-        slotPanel.add(feederPartCb, "8, 2, fill, default");
-        
-        JButton newFeederBtn = new JButton(newFeederAction);
-        slotPanel.add(newFeederBtn, "10, 2");
-        
-        JButton deleteFeederBtn = new JButton("Delete");
-        slotPanel.add(deleteFeederBtn, "12, 2");
         
         JLabel lblBank = new JLabel("Bank");
-        slotPanel.add(lblBank, "2, 4, right, default");
+        bankPanel.add(lblBank, "2, 2, right, default");
         
         bankCb = new JComboBox();
-        slotPanel.add(bankCb, "4, 4, fill, default");
+        bankPanel.add(bankCb, "4, 2, fill, default");
         
         bankNameTf = new JTextField();
-        slotPanel.add(bankNameTf, "6, 4, fill, default");
-        bankNameTf.setColumns(10);
+        bankPanel.add(bankNameTf, "6, 2, fill, default");
+        bankNameTf.setColumns(20);
         
         JButton newBankBtn = new JButton(newBankAction);
-        slotPanel.add(newBankBtn, "10, 4");
+        bankPanel.add(newBankBtn, "8, 2");
         
         JButton deleteBankBtn = new JButton("Delete");
-        slotPanel.add(deleteBankBtn, "12, 4");
+        bankPanel.add(deleteBankBtn, "10, 2");
         
-        for (Bank bank : ReferenceAutoFeederSlot.getBanks()) {
+        JPanel feederPanel = new JPanel();
+        feederPanel.setBorder(new TitledBorder(null, "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(feederPanel);
+        feederPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblFeeder = new JLabel("Feeder");
+        feederPanel.add(lblFeeder, "2, 2");
+        
+        feederCb = new JComboBox();
+        feederPanel.add(feederCb, "4, 2");
+        
+        feederNameTf = new JTextField();
+        feederPanel.add(feederNameTf, "6, 2");
+        feederNameTf.setColumns(10);
+        
+        JButton newFeederBtn = new JButton(newFeederAction);
+        feederPanel.add(newFeederBtn, "8, 2");
+        
+        JButton deleteFeederBtn = new JButton("Delete");
+        feederPanel.add(deleteFeederBtn, "10, 2");
+        
+        JLabel lblPart = new JLabel("Part");
+        feederPanel.add(lblPart, "2, 4, right, default");
+        
+        feederPartCb = new JComboBox();
+        feederPanel.add(feederPartCb, "4, 4");
+        feederPartCb.setModel(new PartsComboBoxModel());
+        feederPartCb.setRenderer(new IdentifiableListCellRenderer<Part>());
+        
+        JLabel lblX = new JLabel("X");
+        feederPanel.add(lblX, "4, 8");
+        
+        JLabel lblY = new JLabel("Y");
+        feederPanel.add(lblY, "6, 8");
+        
+        JLabel lblZ = new JLabel("Z");
+        feederPanel.add(lblZ, "8, 8");
+        
+        JLabel lblRotation = new JLabel("Rotation");
+        feederPanel.add(lblRotation, "10, 8");
+        
+        JLabel lblOffsets = new JLabel("Offsets");
+        feederPanel.add(lblOffsets, "2, 10");
+        
+        xOffsetTf = new JTextField();
+        feederPanel.add(xOffsetTf, "4, 10, fill, default");
+        xOffsetTf.setColumns(10);
+        
+        yOffsetTf = new JTextField();
+        feederPanel.add(yOffsetTf, "6, 10, fill, default");
+        yOffsetTf.setColumns(10);
+        
+        zOffsetTf = new JTextField();
+        feederPanel.add(zOffsetTf, "8, 10, fill, default");
+        zOffsetTf.setColumns(10);
+        
+        rotOffsetTf = new JTextField();
+        feederPanel.add(rotOffsetTf, "10, 10, fill, default");
+        rotOffsetTf.setColumns(10);
+        
+        LocationButtonsPanel offsetLocButtons = new LocationButtonsPanel((JTextField) null, (JTextField) null, (JTextField) null, (JTextField) null);
+        feederPanel.add(offsetLocButtons, "12, 10");
+        
+        for (Bank bank : ReferenceSlotAutoFeeder.getBanks()) {
             bankCb.addItem(bank);
         }
         if (feeder.getBank() != null) {
@@ -270,7 +332,7 @@ public class ReferenceAutoFeederSlotConfigurationWizard
         @Override
         public void actionPerformed(ActionEvent e) {
             Bank bank = new Bank();
-            ReferenceAutoFeederSlot.getBanks().add(bank);
+            ReferenceSlotAutoFeeder.getBanks().add(bank);
             bankCb.addItem(bank);
             bankCb.setSelectedItem(bank);
         }
@@ -279,4 +341,8 @@ public class ReferenceAutoFeederSlotConfigurationWizard
     private JComboBox feederCb;
     private JComboBox bankCb;    
     private JComboBox feederPartCb;
+    private JTextField xOffsetTf;
+    private JTextField yOffsetTf;
+    private JTextField zOffsetTf;
+    private JTextField rotOffsetTf;
 }

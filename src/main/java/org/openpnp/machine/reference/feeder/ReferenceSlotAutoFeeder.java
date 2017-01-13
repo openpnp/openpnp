@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederSlotConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceSlotAutoFeederConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Identifiable;
@@ -21,7 +21,7 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
-public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
+public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     @Attribute(required = false)
     private String bankId;
 
@@ -31,7 +31,7 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
     private Bank bank;
     private Feeder feeder;
     
-    public ReferenceAutoFeederSlot() {
+    public ReferenceSlotAutoFeeder() {
         // partId is required in AbstractFeeder to save the config. We don't use it so we just
         // set it to an empty string to make the serializer happy.
         partId = "";
@@ -141,13 +141,13 @@ public class ReferenceAutoFeederSlot extends ReferenceAutoFeeder {
     
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceAutoFeederSlotConfigurationWizard(this);
+        return new ReferenceSlotAutoFeederConfigurationWizard(this);
     }
 
     @Root
     public static class Bank extends AbstractModelObject implements Identifiable, Named {
         @ElementList
-        private IdentifiableList<ReferenceAutoFeederSlot.Feeder> feeders = new IdentifiableList<>();
+        private IdentifiableList<ReferenceSlotAutoFeeder.Feeder> feeders = new IdentifiableList<>();
 
         @Attribute(name = "id")
         final private String id;
