@@ -35,7 +35,7 @@ public class NozzleItem {
     @Override
     public String toString() {
         return String.format("Nozzle: %s - %s %s", nozzle.getName(),
-        		nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName() : "", 
+        		nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName() : "No Nozzle Tip", 
         		nozzle.getHead() != null ? String.format("(Head: %s)", nozzle.getHead().getName()) : "");
     }
 }
