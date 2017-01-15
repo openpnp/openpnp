@@ -27,6 +27,7 @@ import java.util.Locale;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -41,19 +42,19 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.BorderLayout;
-import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private final Camera camera;
+    
+    private static String uppFormat = "%.8f";
+
     private JPanel panelUpp;
     private JButton btnMeasure;
     private JButton btnCancelMeasure;
@@ -166,7 +167,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     @Override
     public void createBindings() {
-        LengthConverter lengthConverter = new LengthConverter();
+        LengthConverter lengthConverter = new LengthConverter(uppFormat);
         LongConverter longConverter = new LongConverter();
 
         addWrappedBinding(camera, "name", nameTf, "text");
@@ -179,8 +180,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         addWrappedBinding(camera, "settleTimeMs", textFieldSettleTime, "text", longConverter);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
+        ComponentDecorators.decorateWithAutoSelect(textFieldUppX);
+        ComponentDecorators.decorateWithAutoSelect(textFieldUppY);
+        ComponentDecorators.decorateWithLengthConversion(textFieldUppX, uppFormat);
+        ComponentDecorators.decorateWithLengthConversion(textFieldUppY, uppFormat);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
@@ -209,10 +212,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             Rectangle selection = cameraView.getSelection();
             double width = Double.parseDouble(textFieldWidth.getText());
             double height = Double.parseDouble(textFieldHeight.getText());
-            textFieldUppX.setText(String.format(Locale.US,
-                    Configuration.get().getLengthDisplayFormat(), (width / selection.width)));
-            textFieldUppY.setText(String.format(Locale.US,
-                    Configuration.get().getLengthDisplayFormat(), (height / selection.height)));
+            textFieldUppX.setText(String.format(Locale.US, uppFormat, (width / selection.width)));
+            textFieldUppY.setText(String.format(Locale.US, uppFormat, (height / selection.height)));
         }
     };
 
