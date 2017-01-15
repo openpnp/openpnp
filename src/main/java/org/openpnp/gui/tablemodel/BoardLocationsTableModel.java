@@ -34,7 +34,7 @@ import org.openpnp.model.Location;
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Board", "Width", "Height", "Side", "X", "Y", "Z",
+    private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
             "Rot.", "Enabled?", "Check Fids?"};
 
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
