@@ -57,7 +57,7 @@ Package Compatibility lets OpenPnP know which Nozzle Tips you want to use for ea
 ![screen shot 2016-06-18 at 11 29 46 am](https://cloud.githubusercontent.com/assets/1182323/16172939/fed3b05e-3547-11e6-8db8-c4cac423a34f.png)
 
 ### Nozzle Tip Changer
-The Nozzle Tip Changer allows OpenPnP to automatically choose the best nozzle tip for a given part. Currently the only supported style of Nozzle Tip Changer is the so called "Four Position" changer. You can configure four motions that insert or remove a nozzle tip. 
+The Nozzle Tip Changer allows OpenPnP to automatically choose the best nozzle tip for a given part. Currently the only supported style of Nozzle Tip Changer is the so called "Four Position" changer. You can configure four motions that insert a nozzle tip. To return a nozzle the four position moves are executed in reverse before picking up a new one. 
 
 TODO: This is an advanced topic and further documentation is needed.
 
