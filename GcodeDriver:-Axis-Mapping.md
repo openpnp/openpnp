@@ -113,5 +113,16 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
 ```
 
 ### Axis Transforms
-* NegatingTransform: For machines with dual nozzles controlled by a single Z motor in a seesaw configuration. This works for rack and pinion drives and belt drives. It does not work for cam based drives. See the examples above for usage.
-* CamTransform: Not yet finished, but will allow use of dual nozzles controlled by a single Z motor in a cam configuration.
+* NegatingTransform: For machines with dual nozzles controlled by a single Z motor in a counterweight configuration. This works for rack and pinion drives and belt drives. It does not work for cam based drives. See the examples above for usage.
+* CamTransform: For machines with dual nozzles controlled by a single Z motor in a seesaw configuration where a cam is used to push down either the left or right nozzle.
+```
+<axis name="z" type="Z" home-coordinate="0.0">
+   <head-mountable-ids class="java.util.HashSet">
+      <string>N1</string>
+      <string>N2</string>
+   </head-mountable-ids>
+   <transform class="org.openpnp.machine.reference.driver.GcodeDriver$CamTransform" cam-radius="24.0" cam-wheel-radius="9.5" cam-wheel-gap="2.0">
+      <negated-head-mountable-id>N2</negated-head-mountable-id>
+   </transform>
+</axis>
+```
