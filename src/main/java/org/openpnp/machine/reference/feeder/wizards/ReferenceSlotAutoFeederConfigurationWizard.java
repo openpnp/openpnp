@@ -366,13 +366,13 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
 
         MutableLocationProxy pickLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "location", pickLocation, "location");
+        addWrappedBinding(feeder, "location", pickLocation, "location");
+        bind(UpdateStrategy.READ_WRITE, pickLocation, "lengthX", xPickLocTf, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, pickLocation, "lengthY", yPickLocTf, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, pickLocation, "lengthZ", zPickLocTf, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, pickLocation, "rotation", rotPickLocTf, "text", doubleConverter);
         bind(UpdateStrategy.READ, pickLocation, "location", offsetLocButtons, "baseLocation");
-        addWrappedBinding(pickLocation, "lengthX", xPickLocTf, "text", lengthConverter);
-        addWrappedBinding(pickLocation, "lengthY", yPickLocTf, "text", lengthConverter);
-        addWrappedBinding(pickLocation, "lengthZ", zPickLocTf, "text", lengthConverter);
-        addWrappedBinding(pickLocation, "rotation", rotPickLocTf, "text", doubleConverter);
-
+        
         /**
          * The strategy for the bank and feeder properties are a little complex:
          * We create an observable wrapper for bank and feeder. We add wrapped bindings

@@ -63,7 +63,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         if (feeder == null) {
             return location;
         }
-        return location.add(feeder.getOffsets());
+        return location.addWithRotation(feeder.getOffsets());
     }
 
     @Override
