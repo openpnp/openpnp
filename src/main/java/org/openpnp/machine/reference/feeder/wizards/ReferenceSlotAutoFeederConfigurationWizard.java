@@ -205,7 +205,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         panel.add(rotOffsetTf, "10, 4");
         rotOffsetTf.setColumns(10);
         
-        LocationButtonsPanel offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
+        offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
         panel.add(offsetLocButtons, "12, 4");
         
         JPanel generalPanel = new JPanel();
@@ -263,7 +263,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         generalPanel.add(rotPickLocTf, "10, 4, fill, default");
         rotPickLocTf.setColumns(10);
         
-        LocationButtonsPanel pickLocButtons = new LocationButtonsPanel(xPickLocTf, yPickLocTf, zPickLocTf, rotPickLocTf);
+        pickLocButtons = new LocationButtonsPanel(xPickLocTf, yPickLocTf, zPickLocTf, rotPickLocTf);
         generalPanel.add(pickLocButtons, "12, 4, fill, fill");
         
         JLabel lblRetryCount = new JLabel("Retry Count");
@@ -367,6 +367,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
 
         MutableLocationProxy pickLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", pickLocation, "location");
+        bind(UpdateStrategy.READ, pickLocation, "location", offsetLocButtons, "baseLocation");
         addWrappedBinding(pickLocation, "lengthX", xPickLocTf, "text", lengthConverter);
         addWrappedBinding(pickLocation, "lengthY", yPickLocTf, "text", lengthConverter);
         addWrappedBinding(pickLocation, "lengthZ", zPickLocTf, "text", lengthConverter);
@@ -463,4 +464,6 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private JTextField zPickLocTf;
     private JTextField rotPickLocTf;
     private JTextField retryCountTf;
+    private LocationButtonsPanel offsetLocButtons;
+    private LocationButtonsPanel pickLocButtons;
 }

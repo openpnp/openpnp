@@ -14,6 +14,8 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     }
 
     public void setLocation(Location location) {
+        Object oldValue = this.location;
         this.location = location;
+        firePropertyChange("location", oldValue, location);
     }
 }

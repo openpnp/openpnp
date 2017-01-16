@@ -60,7 +60,10 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return location;
+        if (feeder == null) {
+            return location;
+        }
+        return location.add(feeder.getOffsets());
     }
 
     @Override
