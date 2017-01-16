@@ -133,7 +133,9 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         BanksProperty bp = (BanksProperty) Configuration.get().getMachine().getProperty("ReferenceAutoFeederSlot.banks");
         if (bp == null) {
             bp = new BanksProperty();
-            bp.banks.add(new Bank());
+            Bank bank = new Bank();
+            bank.setName("Default");
+            bp.banks.add(bank);
             Configuration.get().getMachine().setProperty("ReferenceAutoFeederSlot.banks", bp);
         }
         return bp.banks;
