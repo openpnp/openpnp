@@ -112,6 +112,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         bankCb.addActionListener(e -> {
             feederCb.removeAllItems();
             Bank bank = (Bank) bankCb.getSelectedItem();
+            feederCb.addItem(null);
             if (bank != null) {
                 for (Feeder f : bank.getFeeders()) {
                     feederCb.addItem(f);
@@ -340,6 +341,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         for (Bank bank : ReferenceSlotAutoFeeder.getBanks()) {
             bankCb.addItem(bank);
         }
+        feederCb.addItem(null);
         if (feeder.getBank() != null) {
             for (Feeder f : feeder.getBank().getFeeders()) {
                 feederCb.addItem(f);
