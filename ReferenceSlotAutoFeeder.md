@@ -1,4 +1,4 @@
-ReferenceSlotAutoFeeder allows you to define a number of slots on the machine that feeders can be inserted into. You can move feeders from slot to slot without having to reconfigure the part or location of the feeder. This type of system is most commonly used with the popular Yamaha CL style feeders, but it can be used for any auto feeder that can be moved around the machine.
+ReferenceSlotAutoFeeder allows you to define any number of slots on the machine which feeders can be inserted into. You can move feeders from slot to slot without having to reconfigure the part or location of the feeder. This type of system is most commonly used with the popular Yamaha CL style feeders, but it can be used for any auto feeder that can be moved around the machine.
 
 # Core Concepts
 
