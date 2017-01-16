@@ -369,22 +369,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    Feeder feeder = getSelectedFeeder();
-                    Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+            UiUtils.submitUiMachineTask(() -> {
+                Feeder feeder = getSelectedFeeder();
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
-                    try {
-                        nozzle.moveToSafeZ();
-                        feeder.feed(nozzle);
-                        Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);
-                    }
-                }
-            }.start();
+                nozzle.moveToSafeZ();
+                feeder.feed(nozzle);
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+            });
         }
     };
 
@@ -397,25 +390,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    Feeder feeder = getSelectedFeeder();
-                    Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+            UiUtils.submitUiMachineTask(() -> {
+                Feeder feeder = getSelectedFeeder();
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
-                    try {
-                        nozzle.moveToSafeZ();
-                        feeder.feed(nozzle);
-                        Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                        nozzle.pick(feeder.getPart());
-                        nozzle.moveToSafeZ();
-                        feeder.postPick(nozzle);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(FeedersPanel.this, "Feed Error", e);
-                    }
-                }
-            }.start();
+                nozzle.moveToSafeZ();
+                feeder.feed(nozzle);
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+                nozzle.pick(feeder.getPart());
+                nozzle.moveToSafeZ();
+                feeder.postPick(nozzle);
+            });
         }
     };
 
@@ -449,20 +435,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            new Thread() {
-                public void run() {
-                    Feeder feeder = getSelectedFeeder();
-                    Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+            UiUtils.submitUiMachineTask(() -> {
+                Feeder feeder = getSelectedFeeder();
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
-                    try {
-                        Location pickLocation = feeder.getPickLocation();
-                        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(FeedersPanel.this, "Movement Error", e);
-                    }
-                }
-            }.start();
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+            });
         }
     };
 }

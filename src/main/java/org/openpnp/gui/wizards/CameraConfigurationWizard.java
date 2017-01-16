@@ -27,6 +27,7 @@ import java.util.Locale;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -41,19 +42,19 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.BorderLayout;
-import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private final Camera camera;
+    
+    private static String uppFormat = "%.8f";
+
     private JPanel panelUpp;
     private JButton btnMeasure;
     private JButton btnCancelMeasure;
@@ -108,7 +109,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblWidth = new JLabel("Width");
         panelUpp.add(lblWidth, "2, 2");
 
-        lblHeight = new JLabel("Height");
+        lblHeight = new JLabel("Length");
         panelUpp.add(lblHeight, "4, 2");
 
         lblX = new JLabel("X");
@@ -144,7 +145,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.add(btnCancelMeasure, "12, 4");
 
         lblUppInstructions = new JLabel(
-                "<html>\n<ol>\n<li>Place an object with a known width and height on the table. Graphing paper is a good, easy choice for this.\n<li>Enter the width and height of the object into the Width and Height fields.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Press Measure and use the camera selection rectangle to measure the object. Press Confirm when finished.\n<li>The calculated units per pixel values will be inserted into the X and Y fields.\n</ol>\n</html>");
+                "<html>\n<ol>\n<li>Place an object with a known width and length on the table. Graphing paper is a good, easy choice for this.\n<li>Enter the width and length of the object into the Width and Height fields.\n<li>Jog the camera to where it is centered over the object and in focus.\n<li>Press Measure and use the camera selection rectangle to measure the object. Press Confirm when finished.\n<li>The calculated units per pixel values will be inserted into the X and Y fields.\n</ol>\n</html>");
         panelUpp.add(lblUppInstructions, "2, 6, 10, 1, default, fill");
 
         panelVision = new JPanel();
@@ -166,7 +167,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     @Override
     public void createBindings() {
-        LengthConverter lengthConverter = new LengthConverter();
+        LengthConverter lengthConverter = new LengthConverter(uppFormat);
         LongConverter longConverter = new LongConverter();
 
         addWrappedBinding(camera, "name", nameTf, "text");
@@ -179,8 +180,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         addWrappedBinding(camera, "settleTimeMs", textFieldSettleTime, "text", longConverter);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldUppY);
+        ComponentDecorators.decorateWithAutoSelect(textFieldUppX);
+        ComponentDecorators.decorateWithAutoSelect(textFieldUppY);
+        ComponentDecorators.decorateWithLengthConversion(textFieldUppX, uppFormat);
+        ComponentDecorators.decorateWithLengthConversion(textFieldUppY, uppFormat);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(textFieldWidth);
@@ -209,10 +212,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             Rectangle selection = cameraView.getSelection();
             double width = Double.parseDouble(textFieldWidth.getText());
             double height = Double.parseDouble(textFieldHeight.getText());
-            textFieldUppX.setText(String.format(Locale.US,
-                    Configuration.get().getLengthDisplayFormat(), (width / selection.width)));
-            textFieldUppY.setText(String.format(Locale.US,
-                    Configuration.get().getLengthDisplayFormat(), (height / selection.height)));
+            textFieldUppX.setText(String.format(Locale.US, uppFormat, (width / selection.width)));
+            textFieldUppY.setText(String.format(Locale.US, uppFormat, (height / selection.height)));
         }
     };
 

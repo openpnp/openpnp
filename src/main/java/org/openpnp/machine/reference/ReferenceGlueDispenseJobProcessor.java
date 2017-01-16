@@ -102,8 +102,6 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
 
     protected Head head;
 
-    protected PasteDispenser pasteDispenser;
-
     protected List<JobDispense> jobDispenses = new ArrayList<>();
 
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
@@ -201,7 +199,6 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
-        this.pasteDispenser = this.head.getDefaultPasteDispenser();
         this.jobDispenses.clear();
         this.boardLocationFiducialOverrides.clear();
 
@@ -281,6 +278,8 @@ public class ReferenceGlueDispenseJobProcessor extends AbstractPasteDispenseJobP
             Location dispenseLocation =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
 
+            PasteDispenser pasteDispenser = head.getDefaultPasteDispenser();
+            
             MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
 
             pasteDispenser.dispense(null,null,0);

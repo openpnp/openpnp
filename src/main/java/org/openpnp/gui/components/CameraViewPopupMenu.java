@@ -203,6 +203,18 @@ public class CameraViewPopupMenu extends JPopupMenu {
                 cameraView.setDefaultReticle(reticle);
             }
         });
+        menuItem = new JRadioButtonMenuItem("Orange");
+        buttonGroup.add(menuItem);
+        if (reticle.getColor() == Color.decode("#ffd35d")) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setColor(Color.decode("#ffd35d"));
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
         menu.add(menuItem);
         menuItem = new JRadioButtonMenuItem("Blue");
         buttonGroup.add(menuItem);
@@ -278,6 +290,19 @@ public class CameraViewPopupMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 reticle.setColor(Color.yellow);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("Orange");
+        buttonGroup.add(menuItem);
+        if (reticle.getColor() == Color.decode("#ffd35d")) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setColor(Color.decode("#ffd35d"));
                 cameraView.setDefaultReticle(reticle);
             }
         });
@@ -482,6 +507,19 @@ public class CameraViewPopupMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 reticle.setColor(Color.yellow);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("Orange");
+        buttonGroup.add(menuItem);
+        if (reticle.getColor() == Color.decode("#ffd35d")) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setColor(Color.decode("#ffd35d"));
                 cameraView.setDefaultReticle(reticle);
             }
         });

@@ -103,9 +103,31 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JLabel lblPartOffNozzle;
     private JTextField vacuumLevelPartOn;
     private JTextField vacuumLevelPartOff;
+    private JPanel panel;
+    private JLabel lblName;
+    private JTextField nameTf;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
+        
+        panel = new JPanel();
+        panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panel);
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblName = new JLabel("Name");
+        panel.add(lblName, "2, 2, right, default");
+        
+        nameTf = new JTextField();
+        panel.add(nameTf, "4, 2, fill, default");
+        nameTf.setColumns(10);
 
         panelPackageCompat = new JPanel();
         panelPackageCompat.setBorder(new TitledBorder(null, "Package Compatibility",
@@ -337,6 +359,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
 
+        addWrappedBinding(nozzleTip, "name", nameTf, "text");
+        
         addWrappedBinding(nozzleTip, "allowIncompatiblePackages", chckbxAllowIncompatiblePackages,
                 "selected");
 
@@ -385,6 +409,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", intConverter);
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", intConverter);
 
+        ComponentDecorators.decorateWithAutoSelect(nameTf);
+        
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartZ);

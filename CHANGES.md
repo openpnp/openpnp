@@ -19,6 +19,18 @@ a complete change list, only those that may directly interest or affect users.
 
 	Work was done in https://github.com/openpnp/openpnp/issues/399.
 
+# 2017-01-09
+
+* QR Code Based X Out Example Script
+
+	A new example script called QrCodeXout.js is now included with OpenPnP. It will scan
+	each board in a job for a QR code and if one is found the board will be disabled.
+	This is an easy way to mark bad boards in a panel before starting a job.
+	
+	The purpose of the example script is to show how to use the QR code reader to
+	do a complex task. It can easily be modified to search for other markings or
+	other types of codes.
+
 # 2017-01-06
 
 * ScriptRun CvPipeline Stage

@@ -105,7 +105,7 @@ public class FootprintPanel extends JPanel {
         propertiesPanel.add(bodyWidthTf, "4, 4, left, default");
         bodyWidthTf.setColumns(10);
 
-        JLabel lblBodyHeight = new JLabel("Body Height");
+        JLabel lblBodyHeight = new JLabel("Body Length");
         propertiesPanel.add(lblBodyHeight, "2, 6, right, default");
 
         bodyHeightTf = new JTextField();

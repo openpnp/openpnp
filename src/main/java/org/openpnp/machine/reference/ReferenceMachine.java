@@ -72,10 +72,10 @@ public class ReferenceMachine extends AbstractMachine {
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
 
     @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = new ReferencePasteDispenseJobProcessor();
+    protected PasteDispenseJobProcessor pasteDispenseJobProcessor;
 
     @Element(required = false)
-    protected PasteDispenseJobProcessor glueDispenseJobProcessor = new ReferenceGlueDispenseJobProcessor();
+    protected PasteDispenseJobProcessor glueDispenseJobProcessor;
 
     @Element(required = false)
     protected PartAlignment partAlignment = new ReferenceBottomVision();

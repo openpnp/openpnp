@@ -59,27 +59,31 @@ public class Scripting {
         // over.
         if (!getScriptsDirectory().exists()) {
             getScriptsDirectory().mkdirs();
-            // TODO: It would be better if we just copied all the files from the Examples
-            // directory in the jar, but this is relatively difficult to do.
-            // There is some information on how to do it in:
-            // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
-            File examplesDir = new File(getScriptsDirectory(), "Examples");
-            examplesDir.mkdirs();
-            String[] exampleScripts =
-                    new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
-                            "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js"};
-            for (String name : exampleScripts) {
-                try {
-                    FileUtils.copyURLToFile(
-                            ClassLoader.getSystemResource("scripts/Examples/" + name),
-                            new File(examplesDir, name));
+        }
+
+        // TODO: It would be better if we just copied all the files from the Examples
+        // directory in the jar, but this is relatively difficult to do.
+        // There is some information on how to do it in:
+        // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
+        File examplesDir = new File(getScriptsDirectory(), "Examples");
+        examplesDir.mkdirs();
+        String[] exampleScripts =
+                new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
+                        "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js"};
+        for (String name : exampleScripts) {
+            try {
+                File file = new File(examplesDir, name);
+                if (file.exists()) {
+                    continue;
                 }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("scripts/Examples/" + name),
+                        file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        
+
         this.eventsDirectory = new File(scriptsDirectory, "Events");
         if (!eventsDirectory.exists()) {
             eventsDirectory.mkdirs();
@@ -109,7 +113,7 @@ public class Scripting {
             e.printStackTrace();
         }
     }
-    
+
     public void setMenu(JMenu menu) {
         this.menu = menu;
         // Add a separator and the Refresh Scripts and Open Scripts Directory items
@@ -138,7 +142,7 @@ public class Scripting {
     public File getScriptsDirectory() {
         return scriptsDirectory;
     }
-    
+
     private void watchDirectory(File directory) {
         try {
             directory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
@@ -227,7 +231,7 @@ public class Scripting {
         }
         return items;
     }
-    
+
     private void execute(File script) throws Exception {
         execute(script, null);
     }
@@ -240,7 +244,7 @@ public class Scripting {
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
-        
+
         if (additionalGlobals != null) {
             for (String name : additionalGlobals.keySet()) {
                 engine.put(name, additionalGlobals.get(name));
@@ -251,7 +255,7 @@ public class Scripting {
             engine.eval(reader);
         }
     }
-    
+
     public void on(String event, Map<String, Object> globals) throws Exception {
         Logger.trace("Scripting.on " + event);
         for (File script : FileUtils.listFiles(eventsDirectory, extensions, false)) {
