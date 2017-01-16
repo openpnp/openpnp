@@ -367,6 +367,14 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
 
+        /**
+         * Note that we set up the bindings here differently than everywhere else. In most
+         * wizards the fields are bound with wrapped bindings and the proxy is bound with a hard
+         * binding. Here we do the opposite so that when the user captures a new location
+         * it is set on the proxy immediately. This allows the offsets to update immediately.
+         * I'm not actually sure why we do it the other way everywhere else, since this seems
+         * to work fine. Might not matter in most other cases. 
+         */
         MutableLocationProxy pickLocation = new MutableLocationProxy();
         addWrappedBinding(feeder, "location", pickLocation, "location");
         bind(UpdateStrategy.READ_WRITE, pickLocation, "lengthX", xPickLocTf, "text", lengthConverter);

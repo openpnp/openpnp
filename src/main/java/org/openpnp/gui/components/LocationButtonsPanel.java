@@ -95,7 +95,6 @@ public class LocationButtonsPanel extends JPanel {
     }
 
     public void setBaseLocation(Location baseLocation) {
-        System.out.println("setBaseLocation " + baseLocation);
         this.baseLocation = baseLocation;
     }
     

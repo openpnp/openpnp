@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.feeder;
 
 import java.util.List;
+import java.util.WeakHashMap;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
@@ -47,7 +48,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
                 setBank(getBanks().get(bankId));
-                feeder = getBank().getFeeder(feederId);
+                setFeeder(getBank().getFeeder(feederId));
             }
         });
     }
@@ -129,6 +130,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         if (getBank().getFeeder(feeder.getId()) == null) {
             throw new Exception("Can't set feeder from another bank.");
         }
+        feeder.setOwner(this);
         this.feeder = feeder;
     }
     
@@ -159,7 +161,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
         @Attribute
         private String name;
-
+        
         public Bank() {
             this(Configuration.createId("BNK"));
         }
@@ -224,7 +226,9 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         private Location offsets = new Location(LengthUnit.Millimeters);
 
         private Part part;
-
+        
+        private ReferenceSlotAutoFeeder owner = null;
+        
         public Feeder() {
             this(Configuration.createId("FDR"));
         }
@@ -238,6 +242,18 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
                     part = configuration.getPart(partId);
                 }
             });
+        }
+        
+        public void setOwner(ReferenceSlotAutoFeeder owner) throws Exception {
+            if (this.owner == owner) {
+                return;
+            }
+            if (this.owner != null) {
+                System.out.println(String.format("Remove owner of %s from %s", this, owner));
+                this.owner.setFeeder(null);
+            }
+            System.out.println(String.format("Set owner of %s to %s", this, owner));
+            this.owner = owner;
         }
 
         @Persist
