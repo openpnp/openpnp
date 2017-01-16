@@ -286,6 +286,7 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
             EventQueue.invokeLater(() -> updateDros());
+            EventQueue.invokeLater(() -> comboBoxNozzles.repaint());
         }
 
         @Override
