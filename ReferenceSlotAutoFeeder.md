@@ -24,8 +24,32 @@ Each slot belongs to a bank and any feeder in that bank can be installed in the 
 
 The ReferenceSlotAutoFeeder is an extension of the ReferenceAutoFeeder, and has the same actuator support. You can define an actuator that is triggered to feed the feeder and another to trigger after a part has been picked. It's important to note that the actuator definitions stay with the slot, not the feeder. It is expected that the slot is the hardware interface and it is responsible for controlling whatever feeder is installed.
 
-# Setup and Usage
+# Setup
 
-1. Add a ReferenceSlotAutoFeeder by using the New Feeder button in the Feeders panel.
-2. The feeder will have a default bank assigned. If you have only one bank there's no need to change it.
-3. If this is your first slot, add a new feeder by clicking the New button next to the feeder.
+1. Add a ReferenceSlotAutoFeeder by using the New Feeder button in the Feeders panel. The feeder will have a default bank assigned. If you have only one bank there's no need to change it.
+2. Set the ReferenceSlotAutoFeeder's name by double clicking it in the table. Use whatever name you use to identify the slot on the machine.
+3. Physically mount the feeder you wish to use in this slot.
+4. If this is your first slot, add a new feeder by clicking the New button next to the feeder line in the configuration panel. A new feeder will be created and you can change it's name by typing in the text field.
+5. Choose the part that is installed in the feeder. Typically you will keep this value set until you replace the reel in the feeder.
+6. Set the nominal pick location of the slot by centering the camera over the exposed part in the feeder and click the camera capture button. Once set, the pick location for a fixed slot should never have to change.
+7. Optional: If the part in the installed feeder is not presented in the normal orientation, adjust the camera and then set the offsets by clicking the capture camera button. The offsets will be set to the pick location minus the current location.
+8. Define the actuators that are used to feed the feeder and set any values needed to trigger them.
+9. Click the Feed and Pick button in the toolbar and test it out!
+
+# Usage
+
+Once a slot is configured you should not have to change it's pick location, bank or actuators. In daily use, all you will need to do is change the feeder that is installed in the slot.
+
+## Moving a Feeder to a New Slot
+
+1. Select the slot in the Feeders tab.
+2. In the configuration panel below, click the Feeder dropdown and select the new feeder to install in the slot. If the feeder was previously installed in another slot it will be removed from that slot and installed in the selected one.
+3. Press Apply to save your changes.
+
+## Changing a Part or Reel
+
+To change the part installed in a particular feeder:
+
+1. Select the slot in the Feeders tab that holds the feeder you want to change.
+2. In the configuration panel below, click the Part dropdown and select the new part for this feeder.
+3. Press Apply to save your changes.
