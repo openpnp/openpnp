@@ -47,6 +47,7 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.JBindings.Wrapper;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
@@ -127,7 +128,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JButton newBankBtn = new JButton(newBankAction);
         feederPanel.add(newBankBtn, "8, 2");
         
-        JButton deleteBankBtn = new JButton("Delete");
+        JButton deleteBankBtn = new JButton(deleteBankAction);
         feederPanel.add(deleteBankBtn, "10, 2");
         
         JLabel lblFeeder = new JLabel("Feeder");
@@ -143,7 +144,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JButton newFeederBtn = new JButton(newFeederAction);
         feederPanel.add(newFeederBtn, "8, 4");
         
-        JButton deleteFeederBtn = new JButton("Delete");
+        JButton deleteFeederBtn = new JButton(deleteFeederAction);
         feederPanel.add(deleteFeederBtn, "10, 4");
         
         JLabel lblPart = new JLabel("Part");
@@ -452,6 +453,16 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         }
     };
 
+    private Action deleteFeederAction = new AbstractAction("Delete") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Feeder feeder = (Feeder) feederCb.getSelectedItem();
+            Bank bank = (Bank) bankCb.getSelectedItem();
+            bank.getFeeders().remove(feeder);
+            feederCb.removeItem(feeder);
+        }
+    };
+
     private Action newBankAction = new AbstractAction("New") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -462,6 +473,19 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         }
     };
     
+    private Action deleteBankAction = new AbstractAction("Delete") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Bank bank = (Bank) bankCb.getSelectedItem();
+            if (ReferenceSlotAutoFeeder.getBanks().size() < 2) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Can't delete the only bank. There must always be one bank defined.");
+                return;
+            }
+            ReferenceSlotAutoFeeder.getBanks().remove(bank);
+            bankCb.removeItem(bank);
+        }
+    };
+
     private JComboBox feederCb;
     private JComboBox bankCb;    
     private JComboBox feederPartCb;
