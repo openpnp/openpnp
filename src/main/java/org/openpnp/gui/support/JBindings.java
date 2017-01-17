@@ -43,34 +43,34 @@ import org.openpnp.model.AbstractModelObject;
  * @author Jason von Nieda <jason@vonnieda.org>
  */
 public class JBindings {
-    public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
-            String sourcePropertyName, TS component, String targetPropertyName) {
-        return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName, null,
+    public static <SS, SV, TS, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
+            String sourcePropertyName, TS target, String targetPropertyName) {
+        return new WrappedBinding<>(source, sourcePropertyName, target, targetPropertyName, null,
                 (BindingListener[]) null);
     }
 
-    public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
-            String sourcePropertyName, TS component, String targetPropertyName,
+    public static <SS, SV, TS, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
+            String sourcePropertyName, TS target, String targetPropertyName,
             Converter<SV, TV> converter) {
-        return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName,
+        return new WrappedBinding<>(source, sourcePropertyName, target, targetPropertyName,
                 converter, (BindingListener[]) null);
     }
 
-    public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
-            String sourcePropertyName, TS component, String targetPropertyName,
+    public static <SS, SV, TS, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
+            String sourcePropertyName, TS target, String targetPropertyName,
             Converter<SV, TV> converter, BindingListener... listeners) {
-        return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName,
+        return new WrappedBinding<>(source, sourcePropertyName, target, targetPropertyName,
                 converter, listeners);
     }
 
-    public static <SS, SV, TS extends JComponent, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
-            String sourcePropertyName, TS component, String targetPropertyName,
+    public static <SS, SV, TS, TV> WrappedBinding<SS, SV, TS, TV> bind(SS source,
+            String sourcePropertyName, TS target, String targetPropertyName,
             BindingListener... listeners) {
-        return new WrappedBinding<>(source, sourcePropertyName, component, targetPropertyName, null,
+        return new WrappedBinding<>(source, sourcePropertyName, target, targetPropertyName, null,
                 listeners);
     }
 
-    public static class WrappedBinding<SS, SV, TS extends JComponent, TV> {
+    public static class WrappedBinding<SS, SV, TS, TV> {
         private SS source;
         private BeanProperty<SS, SV> sourceProperty;
         private Wrapper<SV> wrapper;
@@ -80,7 +80,7 @@ public class JBindings {
             wrappedBinding.addBindingListener(listener);
         }
 
-        public WrappedBinding(SS source, String sourcePropertyName, TS component,
+        public WrappedBinding(SS source, String sourcePropertyName, TS target,
                 String targetPropertyName, Converter<SV, TV> converter,
                 BindingListener... listeners) {
             this.source = source;
@@ -89,11 +89,13 @@ public class JBindings {
             BeanProperty<Wrapper<SV>, SV> wrapperProperty = BeanProperty.create("value");
             BeanProperty<TS, TV> targetProperty = BeanProperty.create(targetPropertyName);
             wrappedBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, wrapper,
-                    wrapperProperty, component, targetProperty);
+                    wrapperProperty, target, targetProperty);
             if (converter != null) {
                 wrappedBinding.setConverter(converter);
             }
-            wrappedBinding.addBindingListener(new JComponentBackgroundUpdater(component));
+            if (target instanceof JComponent) {
+                wrappedBinding.addBindingListener(new JComponentBackgroundUpdater((JComponent) target));
+            }
             if (listeners != null) {
                 for (BindingListener listener : listeners) {
                     wrappedBinding.addBindingListener(listener);
@@ -120,6 +122,10 @@ public class JBindings {
 
     public static class Wrapper<T> extends AbstractModelObject {
         private T value;
+        
+        public Wrapper() {
+            this(null);
+        }
 
         public Wrapper(T value) {
             this.value = value;

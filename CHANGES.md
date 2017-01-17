@@ -1,6 +1,24 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-01-15
+
+* ReferenceSlotAutoFeeder
+
+	A new feeder called ReferenceSlotAutoFeeder has been added which provides the capability
+	of a movable auto feeder.
+	
+	ReferenceSlotAutoFeeder allows you to define any number of feeder slots on your machine
+	and each one can contain a feeder. By changing the feeder in a slot you move it's settings
+	from slot to slot without having to reconfigure it's position, part or other settings.
+	
+	The primary purpose of this feeder is for machines that have auto feeders that can be readily
+	moved from position to position.
+	
+	More information at https://github.com/openpnp/openpnp/wiki/ReferenceSlotAutoFeeder.
+
+	Work was done in https://github.com/openpnp/openpnp/issues/399.
+
 # 2017-01-09
 
 * QR Code Based X Out Example Script
