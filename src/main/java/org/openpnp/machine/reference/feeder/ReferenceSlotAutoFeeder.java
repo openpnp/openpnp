@@ -1,7 +1,6 @@
 package org.openpnp.machine.reference.feeder;
 
 import java.util.List;
-import java.util.WeakHashMap;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
@@ -22,6 +21,9 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
 public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     @Attribute(required = false)
     private String bankId;
@@ -30,7 +32,6 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     private String feederId;
 
     private Bank bank;
-    private Feeder feeder;
     
     public ReferenceSlotAutoFeeder() {
         // partId is required in AbstractFeeder to save the config. We don't use it so we just
@@ -56,20 +57,20 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     @Persist
     public void persist() {
         bankId = getBank().getId();
-        feederId = feeder == null ? null : feeder.getId();
+        feederId = getFeeder() == null ? null : getFeeder().getId();
     }
 
     @Override
     public Location getPickLocation() throws Exception {
-        if (feeder == null) {
+        if (getFeeder() == null) {
             return location;
         }
-        return location.addWithRotation(feeder.getOffsets());
+        return location.addWithRotation(getFeeder().getOffsets());
     }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        if (feeder == null) {
+        if (getFeeder() == null) {
             throw new Exception("No feeder loaded in slot.");
         }
         super.feed(nozzle);
@@ -77,7 +78,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
     @Override
     public void postPick(Nozzle nozzle) throws Exception {
-        if (feeder == null) {
+        if (getFeeder() == null) {
             throw new Exception("No feeder loaded in slot.");
         }
         super.postPick(nozzle);
@@ -85,23 +86,23 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
     @Override
     public boolean isEnabled() {
-        return super.isEnabled() && feeder != null;
+        return super.isEnabled() && getFeeder() != null && getFeeder().getPart() != null;
     }
 
     @Override
     public void setPart(Part part) {
-        if (feeder == null) {
+        if (getFeeder() == null) {
             return;
         }
-        feeder.setPart(part);
+        getFeeder().setPart(part);
     }
 
     @Override
     public Part getPart() {
-        if (feeder == null) {
+        if (getFeeder() == null) {
             return null;
         }
-        return feeder.getPart();
+        return getFeeder().getPart();
     }
 
     public Bank getBank() {
@@ -119,19 +120,17 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     }
 
     public Feeder getFeeder() {
-        return feeder;
+        return getBank().getFeeder(this);
     }
 
     public void setFeeder(Feeder feeder) throws Exception {
-        if (feeder == null) {
-            this.feeder = null;
-            return;
+        if (feeder != null) {
+          // Make sure the feeder is in our bank.
+          if (getBank().getFeeder(feeder.getId()) == null) {
+              throw new Exception("Can't set feeder from another bank.");
+          }
         }
-        if (getBank().getFeeder(feeder.getId()) == null) {
-            throw new Exception("Can't set feeder from another bank.");
-        }
-        feeder.setOwner(this);
-        this.feeder = feeder;
+        getBank().setFeeder(this, feeder);
     }
     
     public static synchronized IdentifiableList<Bank> getBanks() {
@@ -144,6 +143,11 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
             Configuration.get().getMachine().setProperty("ReferenceAutoFeederSlot.banks", bp);
         }
         return bp.banks;
+    }
+    
+    @Override
+    public String getName() {
+        return String.format("%s (%s)", name, getFeeder() == null ? "None" : getFeeder().getName());
     }
     
     @Override
@@ -161,6 +165,8 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
         @Attribute
         private String name;
+        
+        BiMap<Feeder, ReferenceSlotAutoFeeder> assignments = HashBiMap.create();
         
         public Bank() {
             this(Configuration.createId("BNK"));
@@ -199,6 +205,14 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         
         public List<Feeder> getFeeders() {
             return feeders;
+        }
+        
+        public void setFeeder(ReferenceSlotAutoFeeder slot, Feeder feeder) throws Exception {
+            assignments.forcePut(feeder, slot);
+        }
+        
+        public Feeder getFeeder(ReferenceSlotAutoFeeder slot) {
+            return assignments.inverse().get(slot);
         }
     }
     
