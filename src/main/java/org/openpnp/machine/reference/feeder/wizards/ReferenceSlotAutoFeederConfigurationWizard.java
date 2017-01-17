@@ -440,6 +440,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(rotOffsetTf);
         
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+        
+        feederPartCb.addActionListener(e -> {
+            notifyChange();
+        });
     }
     
     private Action newFeederAction = new AbstractAction("New") {
