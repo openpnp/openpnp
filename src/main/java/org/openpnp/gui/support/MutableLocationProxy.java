@@ -18,6 +18,17 @@ public class MutableLocationProxy extends AbstractModelObject {
     public void setLocation(Location location) {
         this.location = location;
         firePropertyChange("location", null, getLocation());
+        firePropertyChange("lengthX", null, getLengthX());
+        firePropertyChange("lengthY", null, getLengthY());
+        firePropertyChange("lengthZ", null, getLengthZ());
+        firePropertyChange("rotation", null, getRotation());
+    }
+
+    public Length getLengthX() {
+        if (location == null) {
+            return null;
+        }
+        return location.getLengthX();
     }
 
     public void setLengthX(Length l) {
@@ -36,6 +47,13 @@ public class MutableLocationProxy extends AbstractModelObject {
         }
     }
 
+    public Length getLengthY() {
+        if (location == null) {
+            return null;
+        }
+        return location.getLengthY();
+    }
+
     public void setLengthY(Length l) {
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
@@ -50,6 +68,13 @@ public class MutableLocationProxy extends AbstractModelObject {
             firePropertyChange("lengthY", null, getLengthY());
             firePropertyChange("location", null, getLocation());
         }
+    }
+
+    public Length getLengthZ() {
+        if (location == null) {
+            return null;
+        }
+        return location.getLengthZ();
     }
 
     public void setLengthZ(Length l) {
@@ -68,26 +93,17 @@ public class MutableLocationProxy extends AbstractModelObject {
         }
     }
 
-    public double getRotation() {
+    public Double getRotation() {
+        if (location == null) {
+            return null;
+        }
         return location.getRotation();
     }
 
-    public void setRotation(double rotation) {
+    public void setRotation(Double rotation) {
         location = location.derive(null, null, null, rotation);
         firePropertyChange("rotation", null, getRotation());
         firePropertyChange("location", null, getLocation());
-    }
-
-    public Length getLengthX() {
-        return location.getLengthX();
-    }
-
-    public Length getLengthY() {
-        return location.getLengthY();
-    }
-
-    public Length getLengthZ() {
-        return location.getLengthZ();
     }
 }
 
