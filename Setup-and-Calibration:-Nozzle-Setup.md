@@ -62,7 +62,7 @@ Note that the _First Location_ is always approached from Z0 above and the last m
 
 TODO: This is an advanced topic and further documentation is needed.
 
-![screen shot 2016-06-18 at 11 31 15 am](https://cloud.githubusercontent.com/assets/1182323/16172950/319d6534-3548-11e6-8a3a-ad975e4a6ec4.png)
+![screen shot 2017](https://cloud.githubusercontent.com/assets/4028409/22084570/eced8ab8-ddd0-11e6-9e53-a3dcf60e647b.JPG)
 
 ## Nozzle Jogging
 Now that your nozzle is configured, let's move it around and make sure it's working.
