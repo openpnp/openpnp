@@ -8,6 +8,7 @@
 * [[Importing Centroid Data]]
 * [[Scripting]]
 * [[FAQ]]
+* [[Getting Help]]
 
 ## Development Resources
 * [[Developers Guide]]
