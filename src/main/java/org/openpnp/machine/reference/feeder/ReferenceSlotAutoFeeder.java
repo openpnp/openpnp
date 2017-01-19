@@ -65,7 +65,17 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         if (getFeeder() == null) {
             return location;
         }
-        return location.addWithRotation(getFeeder().getOffsets());
+        
+        // Start with the slot's location.
+        Location pickLocation = getLocation();
+        // Rotate the feeder's offsets by the slot's rotation making the offsets
+        // normal to the slot's orientation.
+        Location offsets = getFeeder().getOffsets().rotateXy(pickLocation.getRotation());
+        // Add the rotated offsets to the pickLocation to get the final pickLocation. We add
+        // with rotation since we need to pick with the combined rotation of the slot and the
+        // offsets.
+        pickLocation = pickLocation.addWithRotation(offsets);
+        return pickLocation;
     }
 
     @Override
