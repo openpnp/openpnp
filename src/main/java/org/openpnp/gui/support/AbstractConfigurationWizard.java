@@ -40,6 +40,7 @@ import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.BeanUtils;
 
 public abstract class AbstractConfigurationWizard extends JPanel implements Wizard {
     protected WizardContainer wizardContainer;
@@ -133,21 +134,12 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 
     public AutoBinding bind(UpdateStrategy updateStrategy, Object source, String sourceProperty,
             Object target, String targetProperty) {
-        AutoBinding binding = Bindings.createAutoBinding(updateStrategy, source,
-                BeanProperty.create(sourceProperty), target, BeanProperty.create(targetProperty));
-        binding.bind();
-        return binding;
+        return BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty);
     }
 
     public AutoBinding bind(UpdateStrategy updateStrategy, Object source, String sourceProperty,
             Object target, String targetProperty, Converter converter) {
-        AutoBinding binding = Bindings.createAutoBinding(updateStrategy, source,
-                BeanProperty.create(sourceProperty), target, BeanProperty.create(targetProperty));
-        if (converter != null) {
-            binding.setConverter(converter);
-        }
-        binding.bind();
-        return binding;
+        return BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty, converter);
     }
 
     public WrappedBinding addWrappedBinding(WrappedBinding binding) {
