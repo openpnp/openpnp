@@ -31,7 +31,7 @@ import org.openpnp.model.Length;
 
 public class FootprintTableModel extends AbstractTableModel {
     private String[] columnNames =
-            new String[] {"Name", "X", "Y", "Width", "Height", "ø", "% Round"};
+            new String[] {"Name", "X", "Y", "Width", "Length", "Rot.", "% Round"};
 
     private Class[] columnTypes =
             new Class[] {String.class, LengthCellValue.class, LengthCellValue.class,

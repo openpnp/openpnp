@@ -1,5 +1,6 @@
 package org.openpnp.util;
 
+import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -8,6 +9,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.Result;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 
 public class VisionUtils {
     /**
@@ -92,5 +99,34 @@ public class VisionUtils {
 
         // convert it all to pixels
         return length.getValue() / avgUnitsPerPixel;
+    }
+    
+    /**
+     * Using the given camera, try to find a QR code and return it's text. This is just a wrapper
+     * for the generic scanBarcode(Camera) function. This one was added before the other and I don't
+     * want to remove it in case people are using it, but it does the same thing. 
+     * @param camera
+     * @return
+     */
+    public static String readQrCode(Camera camera) {
+        return scanBarcode(camera);
+    }
+    
+    /**
+     * Using the given camera, try to find any supported barcode and return it's text. 
+     * @param camera
+     * @return
+     */
+    public static String scanBarcode(Camera camera) {
+        BufferedImage image = camera.settleAndCapture();
+        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
+                new BufferedImageLuminanceSource(image)));
+        try {
+            Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
+            return qrCodeResult.getText();    
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 }

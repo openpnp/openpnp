@@ -204,4 +204,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public void setSpeed(double speed);
 
     public double getSpeed();
+    
+    public Object getProperty(String name);
+    
+    public void setProperty(String name, Object value);
 }

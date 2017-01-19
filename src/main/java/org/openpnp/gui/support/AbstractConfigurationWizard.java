@@ -120,15 +120,15 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     }
 
     public WrappedBinding addWrappedBinding(Object source, String sourceProperty,
-            JComponent component, String componentProperty, Converter converter) {
+            Object target, String targetProperty, Converter converter) {
         return addWrappedBinding(
-                JBindings.bind(source, sourceProperty, component, componentProperty, converter));
+                JBindings.bind(source, sourceProperty, target, targetProperty, converter));
     }
 
     public WrappedBinding addWrappedBinding(Object source, String sourceProperty,
-            JComponent component, String componentProperty) {
+            Object target, String targetProperty) {
         return addWrappedBinding(
-                JBindings.bind(source, sourceProperty, component, componentProperty));
+                JBindings.bind(source, sourceProperty, target, targetProperty));
     }
 
     public AutoBinding bind(UpdateStrategy updateStrategy, Object source, String sourceProperty,

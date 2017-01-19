@@ -224,6 +224,8 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
+            // Note: We specifically bypass the machine submit so that this runs immediately.
+            // That's not really thread safe tho, so it's better than nothing, but not much.
             new Thread(() -> {
                 Machine machine = Configuration.get().getMachine();
                 boolean enable = !machine.isEnabled();
@@ -284,6 +286,7 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
             EventQueue.invokeLater(() -> updateDros());
+            EventQueue.invokeLater(() -> comboBoxNozzles.repaint());
         }
 
         @Override

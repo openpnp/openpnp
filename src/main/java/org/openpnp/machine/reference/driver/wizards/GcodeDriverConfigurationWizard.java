@@ -33,6 +33,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.Command;
@@ -68,10 +69,16 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -80,31 +87,52 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblUnits = new JLabel("Units");
-        settingsPanel.add(lblUnits, "2, 2, right, default");
+        settingsPanel.add(lblUnits, "6, 2, right, default");
         
         unitsCb = new JComboBox(LengthUnit.values());
-        settingsPanel.add(unitsCb, "4, 2, fill, default");
+        settingsPanel.add(unitsCb, "8, 2, fill, default");
         
-        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate");
-        settingsPanel.add(lblMaxFeedRate, "2, 4, right, default");
+        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [Units/Min]");
+        settingsPanel.add(lblMaxFeedRate, "6, 4, right, default");
         
         maxFeedRateTf = new JTextField();
-        settingsPanel.add(maxFeedRateTf, "4, 4, fill, default");
-        maxFeedRateTf.setColumns(10);
+        settingsPanel.add(maxFeedRateTf, "8, 4, fill, default");
+        maxFeedRateTf.setColumns(5);
         
-        JLabel lblCommandTimeoutms = new JLabel("Command Timeout (ms)");
-        settingsPanel.add(lblCommandTimeoutms, "2, 6, right, default");
+        JLabel lblCommandTimeoutms = new JLabel("Command Timeout [ms]");
+        settingsPanel.add(lblCommandTimeoutms, "2, 2, right, default");
         
         commandTimeoutTf = new JTextField();
-        settingsPanel.add(commandTimeoutTf, "4, 6, fill, default");
-        commandTimeoutTf.setColumns(10);
+        settingsPanel.add(commandTimeoutTf, "4, 2, fill, default");
+        commandTimeoutTf.setColumns(5);
         
-        JLabel lblConnectWaitTime = new JLabel("Connect Wait Time (ms)");
-        settingsPanel.add(lblConnectWaitTime, "2, 8, right, default");
+        JLabel lblConnectWaitTime = new JLabel("Connect Wait Time [ms]");
+        settingsPanel.add(lblConnectWaitTime, "2, 4, right, default");
         
         connectWaitTimeTf = new JTextField();
-        settingsPanel.add(connectWaitTimeTf, "4, 8, fill, default");
-        connectWaitTimeTf.setColumns(10);
+        settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
+        connectWaitTimeTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
+        settingsPanel.add(lblBacklashOffsetX, "2, 6, right, default");
+        
+        backlashOffsetXTf = new JTextField();
+        settingsPanel.add(backlashOffsetXTf, "4, 6, fill, default");
+        backlashOffsetXTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
+        settingsPanel.add(lblBacklashOffsetY, "6, 6, right, default");
+        
+        backlashOffsetYTf = new JTextField();
+        settingsPanel.add(backlashOffsetYTf, "8, 6, fill, default");
+        backlashOffsetYTf.setColumns(5);
+        
+        JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "10, 6, right, default");
+        
+        backlashFeedRateFactorTf = new JTextField();
+        settingsPanel.add(backlashFeedRateFactorTf, "12, 6, fill, default");
+        backlashFeedRateFactorTf.setColumns(5);
 
         JPanel gcodePanel = new JPanel();
         gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -249,13 +277,21 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter =
+                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
+        addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
+        addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
+        addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
     }
@@ -390,6 +426,9 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
     private JComboBox<HeadMountableItem> comboBoxHm;
     private JTextArea textAreaCommand;
     private JTextField maxFeedRateTf;
+    private JTextField backlashOffsetXTf;
+    private JTextField backlashOffsetYTf;
+    private JTextField backlashFeedRateFactorTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;

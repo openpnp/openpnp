@@ -126,6 +126,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Attribute(required = false)
     protected int maxFeedRate = 1000;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetX = -1;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetY = -1;
+ 
+    @Attribute(required = false)
+    protected double backlashFeedRateFactor = 0.1;
 
     @Attribute(required = false)
     protected int timeoutMilliseconds = 5000;
@@ -394,8 +403,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
             // For each included axis, if the axis has a transform, transform the target coordinate
-            // to
-            // it's raw value.
+            // to it's raw value.
             if (xAxis != null && xAxis.getTransform() != null) {
                 x = xAxis.getTransform().toRaw(xAxis, hm, x);
             }
@@ -415,12 +423,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+            command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
+                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
             }
             else {
                 command = substituteVariable(command, "X", x);
+                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX); // Backlash Compensation
                 haveToMove = true;
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
@@ -430,9 +441,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             if (yAxis == null || yAxis.getCoordinate() == y) {
                 command = substituteVariable(command, "Y", null);
+                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
             }
             else {
                 command = substituteVariable(command, "Y", y);
+                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
                 haveToMove = true;
                 if (yAxis.getPreMoveCommand() != null) {
                     sendGcode(yAxis.getPreMoveCommand());
@@ -874,6 +887,30 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         this.units = units;
     }
 
+    public double getBacklashOffsetX() {
+        return backlashOffsetX;
+    }
+    
+    public void setBacklashOffsetX(double BacklashOffsetX) {
+        this.backlashOffsetX = BacklashOffsetX;
+    }
+    
+    public double getBacklashOffsetY() {
+        return backlashOffsetY;
+    }
+    
+    public void setBacklashOffsetY(double BacklashOffsetY) {
+        this.backlashOffsetY = BacklashOffsetY;
+    }
+    
+    public double getBacklashFeedRateFactor() {
+        return backlashFeedRateFactor;
+    }
+    
+    public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
+        this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    }
+    
     public int getMaxFeedRate() {
         return maxFeedRate;
     }

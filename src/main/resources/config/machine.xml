@@ -28,11 +28,6 @@
                   <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
                </camera>
             </cameras>
-            <paste-dispensers>
-               <paste-dispenser class="org.openpnp.machine.reference.ReferencePasteDispenser" id="D1" name="D1">
-                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-               </paste-dispenser>
-            </paste-dispensers>
          </head>
       </heads>
       <feeders>
