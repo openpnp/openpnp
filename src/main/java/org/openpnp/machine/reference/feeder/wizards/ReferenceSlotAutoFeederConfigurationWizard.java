@@ -61,6 +61,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.FlowLayout;
 
 public class ReferenceSlotAutoFeederConfigurationWizard
         extends AbstractConfigurationWizard {
@@ -77,14 +78,14 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     public ReferenceSlotAutoFeederConfigurationWizard(ReferenceSlotAutoFeeder feeder) {
         this.feeder = feeder;
         
-        JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(null, "Slot", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(panel_1);
-        panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
+        JPanel slotPanel = new JPanel();
+        slotPanel.setBorder(new TitledBorder(null, "Slot", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(slotPanel);
+        slotPanel.setLayout(new BoxLayout(slotPanel, BoxLayout.Y_AXIS));
         
-        JPanel feederPanel = new JPanel();
-        panel_1.add(feederPanel);
-        feederPanel.setLayout(new FormLayout(new ColumnSpec[] {
+        JPanel whateverPanel = new JPanel();
+        slotPanel.add(whateverPanel);
+        FormLayout fl_whateverPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -103,13 +104,34 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,});
+        fl_whateverPanel.setColumnGroups(new int[][]{new int[]{4, 6, 8, 10}});
+        whateverPanel.setLayout(fl_whateverPanel);
         
-        JLabel lblBank = new JLabel("Feeder Bank");
-        feederPanel.add(lblBank, "2, 2");
+        feederNameTf = new JTextField();
+        whateverPanel.add(feederNameTf, "8, 2, 3, 1");
+        feederNameTf.setColumns(10);
+        
+        JPanel panel_1 = new JPanel();
+        FlowLayout flowLayout_1 = (FlowLayout) panel_1.getLayout();
+        flowLayout_1.setAlignment(FlowLayout.LEFT);
+        whateverPanel.add(panel_1, "12, 2");
+        
+        JButton newFeederBtn = new JButton(newFeederAction);
+        panel_1.add(newFeederBtn);
+        
+        JButton deleteFeederBtn = new JButton(deleteFeederAction);
+        panel_1.add(deleteFeederBtn);
+        
+        JLabel lblBank = new JLabel("Bank");
+        whateverPanel.add(lblBank, "2, 10, right, default");
         
         bankCb = new JComboBox();
-        feederPanel.add(bankCb, "4, 2");
+        whateverPanel.add(bankCb, "4, 10, 3, 1");
         bankCb.addActionListener(e -> {
             feederCb.removeAllItems();
             Bank bank = (Bank) bankCb.getSelectedItem();
@@ -121,159 +143,79 @@ public class ReferenceSlotAutoFeederConfigurationWizard
             }
         });
         
-        bankNameTf = new JTextField();
-        feederPanel.add(bankNameTf, "6, 2");
-        bankNameTf.setColumns(10);
-        
-        JButton newBankBtn = new JButton(newBankAction);
-        feederPanel.add(newBankBtn, "8, 2");
-        
-        JButton deleteBankBtn = new JButton(deleteBankAction);
-        feederPanel.add(deleteBankBtn, "10, 2");
-        
         JLabel lblFeeder = new JLabel("Feeder");
-        feederPanel.add(lblFeeder, "2, 4, right, default");
+        whateverPanel.add(lblFeeder, "2, 2, right, default");
         
         feederCb = new JComboBox();
-        feederPanel.add(feederCb, "4, 4");
+        whateverPanel.add(feederCb, "4, 2, 3, 1");
         
-        feederNameTf = new JTextField();
-        feederPanel.add(feederNameTf, "6, 4");
-        feederNameTf.setColumns(10);
+        JPanel feederPanel = new JPanel();
+        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(feederPanel);
+        FormLayout fl_feederPanel = new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,});
+        fl_feederPanel.setColumnGroups(new int[][]{new int[]{4, 6, 8, 10}});
+        feederPanel.setLayout(fl_feederPanel);
         
-        JButton newFeederBtn = new JButton(newFeederAction);
-        feederPanel.add(newFeederBtn, "8, 4");
+        JLabel lblX_1 = new JLabel("X");
+        feederPanel.add(lblX_1, "4, 2");
         
-        JButton deleteFeederBtn = new JButton(deleteFeederAction);
-        feederPanel.add(deleteFeederBtn, "10, 4");
+        JLabel lblY_1 = new JLabel("Y");
+        feederPanel.add(lblY_1, "6, 2");
+        
+        JLabel lblZ_1 = new JLabel("Z");
+        feederPanel.add(lblZ_1, "8, 2");
+        
+        JLabel lblRotation_1 = new JLabel("Rotation");
+        feederPanel.add(lblRotation_1, "10, 2");
+        
+        JLabel lblOffsets = new JLabel("Offsets");
+        feederPanel.add(lblOffsets, "2, 4");
+        
+        xOffsetTf = new JTextField();
+        feederPanel.add(xOffsetTf, "4, 4");
+        xOffsetTf.setColumns(10);
+        
+        yOffsetTf = new JTextField();
+        feederPanel.add(yOffsetTf, "6, 4");
+        yOffsetTf.setColumns(10);
+        
+        zOffsetTf = new JTextField();
+        feederPanel.add(zOffsetTf, "8, 4");
+        zOffsetTf.setColumns(10);
+        
+        rotOffsetTf = new JTextField();
+        feederPanel.add(rotOffsetTf, "10, 4");
+        rotOffsetTf.setColumns(10);
+        
+        offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
+        feederPanel.add(offsetLocButtons, "12, 4");
         
         JLabel lblPart = new JLabel("Part");
         feederPanel.add(lblPart, "2, 6, right, default");
         
         feederPartCb = new JComboBox();
-        feederPanel.add(feederPartCb, "4, 6");
+        feederPanel.add(feederPartCb, "4, 6, 3, 1");
         feederPartCb.setModel(new PartsComboBoxModel());
         feederPartCb.setRenderer(new IdentifiableListCellRenderer<Part>());
-        
-        JPanel panel = new JPanel();
-        panel_1.add(panel);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-        JLabel lblX = new JLabel("X");
-        panel.add(lblX, "4, 2");
-        
-        JLabel lblY = new JLabel("Y");
-        panel.add(lblY, "6, 2");
-        
-        JLabel lblZ = new JLabel("Z");
-        panel.add(lblZ, "8, 2");
-        
-        JLabel lblRotation = new JLabel("Rotation");
-        panel.add(lblRotation, "10, 2");
-        
-        JLabel lblOffsets = new JLabel("Offsets");
-        panel.add(lblOffsets, "2, 4");
-        
-        xOffsetTf = new JTextField();
-        panel.add(xOffsetTf, "4, 4");
-        xOffsetTf.setColumns(10);
-        
-        yOffsetTf = new JTextField();
-        panel.add(yOffsetTf, "6, 4");
-        yOffsetTf.setColumns(10);
-        
-        zOffsetTf = new JTextField();
-        panel.add(zOffsetTf, "8, 4");
-        zOffsetTf.setColumns(10);
-        
-        rotOffsetTf = new JTextField();
-        panel.add(rotOffsetTf, "10, 4");
-        rotOffsetTf.setColumns(10);
-        
-        offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
-        panel.add(offsetLocButtons, "12, 4");
-        
-        JPanel generalPanel = new JPanel();
-        generalPanel.setBorder(new TitledBorder(null, "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(generalPanel);
-        generalPanel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-        JLabel lblX_1 = new JLabel("X");
-        generalPanel.add(lblX_1, "4, 2");
-        
-        JLabel lblY_1 = new JLabel("Y");
-        generalPanel.add(lblY_1, "6, 2");
-        
-        JLabel lblZ_1 = new JLabel("Z");
-        generalPanel.add(lblZ_1, "8, 2");
-        
-        JLabel lblRotation_1 = new JLabel("Rotation");
-        generalPanel.add(lblRotation_1, "10, 2");
-        
-        JLabel lblPickLocation = new JLabel("Pick Location");
-        generalPanel.add(lblPickLocation, "2, 4");
-        
-        xPickLocTf = new JTextField();
-        generalPanel.add(xPickLocTf, "4, 4, fill, default");
-        xPickLocTf.setColumns(10);
-        
-        yPickLocTf = new JTextField();
-        generalPanel.add(yPickLocTf, "6, 4, fill, default");
-        yPickLocTf.setColumns(10);
-        
-        zPickLocTf = new JTextField();
-        generalPanel.add(zPickLocTf, "8, 4");
-        zPickLocTf.setColumns(10);
-        
-        rotPickLocTf = new JTextField();
-        generalPanel.add(rotPickLocTf, "10, 4, fill, default");
-        rotPickLocTf.setColumns(10);
-        
-        pickLocButtons = new LocationButtonsPanel(xPickLocTf, yPickLocTf, zPickLocTf, rotPickLocTf);
-        generalPanel.add(pickLocButtons, "12, 4, fill, fill");
-        
-        JLabel lblRetryCount = new JLabel("Retry Count");
-        generalPanel.add(lblRetryCount, "2, 6, right, default");
-        
-        retryCountTf = new JTextField();
-        generalPanel.add(retryCountTf, "4, 6, fill, default");
-        retryCountTf.setColumns(10);
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
@@ -343,6 +285,62 @@ public class ReferenceSlotAutoFeederConfigurationWizard
             bankCb.addItem(bank);
         }
         feederCb.addItem(null);
+        
+        JLabel lblX = new JLabel("X");
+        whateverPanel.add(lblX, "4, 4, center, default");
+        
+        JLabel lblY = new JLabel("Y");
+        whateverPanel.add(lblY, "6, 4, center, default");
+        
+        JLabel lblZ = new JLabel("Z");
+        whateverPanel.add(lblZ, "8, 4, center, default");
+        
+        JLabel lblRotation = new JLabel("Rotation");
+        whateverPanel.add(lblRotation, "10, 4, center, default");
+        
+        JLabel lblPickLocation = new JLabel("Location");
+        whateverPanel.add(lblPickLocation, "2, 6, right, default");
+        
+        xPickLocTf = new JTextField();
+        whateverPanel.add(xPickLocTf, "4, 6");
+        xPickLocTf.setColumns(10);
+        
+        yPickLocTf = new JTextField();
+        whateverPanel.add(yPickLocTf, "6, 6");
+        yPickLocTf.setColumns(10);
+        
+        zPickLocTf = new JTextField();
+        whateverPanel.add(zPickLocTf, "8, 6");
+        zPickLocTf.setColumns(10);
+        
+        pickLocButtons = new LocationButtonsPanel(xPickLocTf, yPickLocTf, zPickLocTf, rotPickLocTf);
+        
+        rotPickLocTf = new JTextField();
+        whateverPanel.add(rotPickLocTf, "10, 6");
+        rotPickLocTf.setColumns(10);
+        whateverPanel.add(pickLocButtons, "12, 6");
+        
+        JLabel lblRetryCount = new JLabel("Retry Count");
+        whateverPanel.add(lblRetryCount, "2, 8, right, default");
+        
+        retryCountTf = new JTextField();
+        whateverPanel.add(retryCountTf, "4, 8");
+        retryCountTf.setColumns(10);
+        
+        bankNameTf = new JTextField();
+        whateverPanel.add(bankNameTf, "8, 10, 3, 1");
+        bankNameTf.setColumns(10);
+        
+        JPanel panel = new JPanel();
+        FlowLayout flowLayout = (FlowLayout) panel.getLayout();
+        flowLayout.setAlignment(FlowLayout.LEFT);
+        whateverPanel.add(panel, "12, 10");
+        
+        JButton newBankBtn = new JButton(newBankAction);
+        panel.add(newBankBtn);
+        
+        JButton deleteBankBtn = new JButton(deleteBankAction);
+        panel.add(deleteBankBtn);
         if (feeder.getBank() != null) {
             for (Feeder f : feeder.getBank().getFeeders()) {
                 feederCb.addItem(f);
