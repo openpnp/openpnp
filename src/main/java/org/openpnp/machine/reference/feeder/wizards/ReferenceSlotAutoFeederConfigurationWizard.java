@@ -229,6 +229,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -244,7 +246,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JLabel lblActuatorType = new JLabel("Actuator Type");
         panelActuator.add(lblActuatorType, "6, 2, left, default");
 
-        JLabel lblActuatorValue = new JLabel("Actuator Value (For Boolean, 0 = false, 1 = true)");
+        JLabel lblActuatorValue = new JLabel("Actuator Value");
         panelActuator.add(lblActuatorValue, "8, 2, left, default");
 
         JLabel lblFeed = new JLabel("Feed");
@@ -260,6 +262,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "8, 4");
         actuatorValue.setColumns(10);
+        
+        JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
+        panelActuator.add(lblForBoolean, "10, 4");
 
         JLabel lblPostPick = new JLabel("Post Pick");
         panelActuator.add(lblPostPick, "2, 6, right, default");
@@ -274,6 +279,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         postPickActuatorValue = new JTextField();
         postPickActuatorValue.setColumns(10);
         panelActuator.add(postPickActuatorValue, "8, 6");
+        
+        JLabel lblForBoolean_1 = new JLabel("For Boolean: 1 = True, 0 = False");
+        panelActuator.add(lblForBoolean_1, "10, 6");
         try {
         }
         catch (Throwable t) {
