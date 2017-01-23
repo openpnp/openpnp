@@ -47,7 +47,6 @@ public class SlotFeederConfigDialog extends JDialog {
     private JComboBox bankCb;
     private JComboBox feederCb;
     private JComboBox partCb;
-    private LocationButtonsPanel offsetLocBtns;
 
     public SlotFeederConfigDialog(Frame owner) {
         super(owner, "Slot Feeders", true);
@@ -139,10 +138,6 @@ public class SlotFeederConfigDialog extends JDialog {
         rotOffsetTf = new JTextField();
         mainPanel.add(rotOffsetTf, "10, 12");
         rotOffsetTf.setColumns(10);
-
-        offsetLocBtns = new LocationButtonsPanel((JTextField) null, (JTextField) null,
-                (JTextField) null, (JTextField) null);
-        mainPanel.add(offsetLocBtns, "12, 12, default, fill");
 
         JPanel dialogControlsPanel = new JPanel();
         panel.add(dialogControlsPanel, BorderLayout.SOUTH);
