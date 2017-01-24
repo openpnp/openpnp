@@ -21,7 +21,6 @@ public class Icons {
     public static Icon nozzleTipLoad = getIcon("/icons/nozzletip-load.svg");
     public static Icon nozzleTipUnload = getIcon("/icons/nozzletip-unload.svg");
 
-
     public static Icon captureCamera = getIcon("/icons/capture-camera.svg");
     public static Icon captureTool = getIcon("/icons/capture-nozzle.svg");
     public static Icon capturePin = getIcon("/icons/capture-actuator.svg");
