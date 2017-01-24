@@ -383,7 +383,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     public Action pickFeederAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.load);
+            putValue(SMALL_ICON, Icons.pick);
             putValue(NAME, "Pick");
             putValue(SHORT_DESCRIPTION, "Perform a feed and pick on the selected feeder.");
         }
