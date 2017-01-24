@@ -25,6 +25,8 @@ import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -39,8 +41,10 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -223,11 +227,17 @@ public class JobPanel extends JPanel {
         btnStopJob.setHideActionText(true);
         toolBarBoards.add(btnStopJob);
         toolBarBoards.addSeparator();
-        JButton btnNewBoard = new JButton(newBoardAction);
-        btnNewBoard.setHideActionText(true);
-        toolBarBoards.add(btnNewBoard);
         JButton btnAddBoard = new JButton(addBoardAction);
         btnAddBoard.setHideActionText(true);
+        btnAddBoard.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                JPopupMenu menu = new JPopupMenu();
+                menu.add(new JMenuItem(addNewBoardAction));
+                menu.add(new JMenuItem(addExistingBoardAction));
+                menu.show(btnAddBoard, (int) btnAddBoard.getWidth(), (int) btnAddBoard.getHeight());
+            }
+        });
         toolBarBoards.add(btnAddBoard);
         JButton btnRemoveBoard = new JButton(removeBoardAction);
         btnRemoveBoard.setHideActionText(true);
@@ -842,10 +852,22 @@ public class JobPanel extends JPanel {
             });
         }
     };
-
-    public final Action newBoardAction = new AbstractAction() {
+    
+    public final Action addBoardAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.neww);
+            putValue(NAME, "Add Board...");
+            putValue(SMALL_ICON, Icons.add);
+            putValue(SHORT_DESCRIPTION, "Add a new or existing board to the job.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+
+
+    public final Action addNewBoardAction = new AbstractAction() {
+        {
             putValue(NAME, "New Board...");
             putValue(SHORT_DESCRIPTION, "Create a new board and add it to the job.");
         }
@@ -884,10 +906,9 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public final Action addBoardAction = new AbstractAction() {
+    public final Action addExistingBoardAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "Add Board...");
+            putValue(NAME, "Existing Board...");
             putValue(SHORT_DESCRIPTION, "Add an existing board to the job.");
         }
 
