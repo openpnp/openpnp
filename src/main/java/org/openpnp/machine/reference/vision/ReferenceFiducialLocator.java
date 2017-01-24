@@ -9,30 +9,37 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.apache.commons.io.IOUtils;
+import org.opencv.features2d.KeyPoint;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Root;
 
@@ -42,7 +49,6 @@ import org.simpleframework.xml.Root;
  */
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
-
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         // Find the fids in the board
@@ -89,17 +95,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
 
         return location;
-    }
-
-    public static Location getFiducialLocation(Footprint footprint, Camera camera)
-            throws Exception {
-        // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(), footprint);
-
-        // Wait for camera to settle
-        Thread.sleep(camera.getSettleTimeMs());
-        // Perform vision operation
-        return getBestTemplateMatch(camera, template);
     }
 
     /**
@@ -151,10 +146,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Wait for camera to settle
             Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
-            location = getBestTemplateMatch(camera, template);
+            location = getBestTemplateMatch(camera, template, part);
             if (location == null) {
                 Logger.debug("No matches found!");
-                return null;
+                continue;
             }
             Logger.debug("home fid. located at {}", location);
             // Move to where we actually found the fid
@@ -213,51 +208,67 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 fid.getPart().getPackage().getFootprint());
 
         // Move to where we expect to find the fid
-        Location location =
+        Location expectedlocation =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
-        Logger.debug("Looking for {} at {}", fid.getId(), location);
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        Logger.debug("Looking for {} at {}", fid.getId(), expectedlocation);
+        MovableUtils.moveToLocationAtSafeZ(camera, expectedlocation);
 
-
-        for (int i = 0; i < 3; i++) {
+        Location location = expectedlocation;
+        for (int i = 0; i < 3; i++) { // and the number of the counting shall be three
             // Wait for camera to settle
             Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
-            location = getBestTemplateMatch(camera, template);
+            location = getBestTemplateMatch(camera, template, part);
             if (location == null) {
                 Logger.debug("No matches found!");
-                return null;
+                continue;
             }
             Logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
-            camera.moveTo(location);
+            MovableUtils.moveToLocationAtSafeZ(camera, expectedlocation.add(location));
+            break;
         }
 
         return location;
     }
 
-    private static Location getBestTemplateMatch(final Camera camera, BufferedImage template)
+    private static Location getBestTemplateMatch(final Camera camera, BufferedImage template, Part part)
             throws Exception {
-        VisionProvider visionProvider = camera.getVisionProvider();
-
-        List<TemplateMatch> matches = visionProvider.getTemplateMatches(template);
-
-        if (matches.isEmpty()) {
-            return null;
+        CvPipeline pipeline = createPartPipeline(part);
+        pipeline.setCamera(camera);
+        pipeline.process();
+        Object result = pipeline.getResult("results").model;
+        List<Location> fidLocations = new ArrayList<>();
+        if (result instanceof List) {
+        	if (((List) result).size() > 0) {
+        		if (((List) result).get(0) instanceof KeyPoint) {
+        			List<KeyPoint> kps = (List<KeyPoint>) result;
+	                fidLocations.addAll(kps.stream().map(keyPoint -> {
+	                    return VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
+	                }).sorted((a, b) -> {
+	                    double a1 =
+	                            a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+	                    double b1 =
+	                            b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+	                    return Double.compare(a1, b1);
+	                }).collect(Collectors.toList()));
+        		}
+        	}
+        }
+        
+        try {
+            MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
+                    OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 500);
+        }
+        catch (Exception e) {
+            // if we aren't running in the UI this will fail, and that's okay
         }
 
-        // getTemplateMatches returns results in order of score, but we're
-        // more interested in the result closest to the expected location
-        Collections.sort(matches, new Comparator<TemplateMatch>() {
-            @Override
-            public int compare(TemplateMatch o1, TemplateMatch o2) {
-                double d1 = o1.location.getLinearDistanceTo(camera.getLocation());
-                double d2 = o2.location.getLinearDistanceTo(camera.getLocation());
-                return Double.compare(d1, d2);
-            }
-        });
-
-        return matches.get(0).location;
+        if (fidLocations.isEmpty()) {
+            return null;
+        }
+        
+        return fidLocations.get(0);
     }
 
     /**
@@ -389,5 +400,23 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     public Icon getPropertySheetHolderIcon() {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    // Get the fiducial pipeline from the BootyVision config
+    public static CvPipeline createPartPipeline(Part part) {
+        try {
+            PartAlignment z = Configuration.get().getMachine().getPartAlignment();
+            if (z instanceof ReferenceBottomVision) {
+            	ReferenceBottomVision rbv = (ReferenceBottomVision) z;
+            	return rbv.getPartSettings(part).getPipeline(); // if this is a resource, it may need to be cloned
+            }
+            // that didn't work, use default XML canned resource file
+            String xml = IOUtils.toString(ReferenceNozzleTip.class
+                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
     }
 }
