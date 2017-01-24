@@ -229,4 +229,6 @@ void processCommand() {
 
 This is a configuration from mailing list user Александр Зендриков. It uses an MKS Sbase controller and has two nozzles in a cam configuration.
 
-The files can be found at https://gist.github.com/vonnieda/7a72c5d7b459f8da00e7124e1067f9e7
+The files can be found at https://gist.github.com/vonnieda/7a72c5d7b459f8da00e7124e1067f9e7.
+
+The discussion is at https://groups.google.com/d/msgid/openpnp/f487734a-4af2-4d6a-b8d2-ef4fbe267e49%40googlegroups.com?utm_medium=email&utm_source=footer.
