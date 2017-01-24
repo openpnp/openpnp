@@ -298,7 +298,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
 
     public final Action exportProfileAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.nozzleTipUnload);
+            putValue(SMALL_ICON, Icons.export);
             putValue(NAME, "Export Gcode File");
             putValue(SHORT_DESCRIPTION, "Export the Gcode profile to a file.");
         }
@@ -345,7 +345,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
 
     public final Action importProfileAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.nozzleTipLoad);
+            putValue(SMALL_ICON, Icons.importt);
             putValue(NAME, "Load Gcode File");
             putValue(SHORT_DESCRIPTION, "Import the Gcode profile from a file.");
         }

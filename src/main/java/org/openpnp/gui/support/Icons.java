@@ -9,6 +9,8 @@ public class Icons {
     public static Icon neww = getIcon("/icons/general-new.svg");
     public static Icon copy = getIcon("/icons/copy.svg");
     public static Icon paste = getIcon("/icons/paste.svg");
+    public static Icon export = getIcon("/icons/export.svg");
+    public static Icon importt = getIcon("/icons/import.svg");
     
     public static Icon nozzleAdd = getIcon("/icons/nozzle-add.svg");
     public static Icon nozzleRemove = getIcon("/icons/nozzle-remove.svg");
@@ -16,6 +18,9 @@ public class Icons {
     public static Icon nozzleTip = getIcon("/icons/nozzletip.svg");
     public static Icon nozzleTipAdd = getIcon("/icons/nozzletip-add.svg");
     public static Icon nozzleTipRemove = getIcon("/icons/nozzletip-remove.svg");
+    public static Icon nozzleTipLoad = getIcon("/icons/nozzletip-load.svg");
+    public static Icon nozzleTipUnload = getIcon("/icons/nozzletip-unload.svg");
+
 
     public static Icon captureCamera = getIcon("/icons/capture-camera.svg");
     public static Icon captureTool = getIcon("/icons/capture-nozzle.svg");
@@ -30,9 +35,6 @@ public class Icons {
     public static Icon pause = getIcon("/icons/control-pause.svg");
     public static Icon step = getIcon("/icons/control-next.svg");
     public static Icon stop = getIcon("/icons/control-stop.svg");
-
-    public static Icon nozzleTipLoad = getIcon("/icons/nozzletip-load.svg");
-    public static Icon nozzleTipUnload = getIcon("/icons/nozzletip-unload.svg");
 
     public static Icon twoPointLocate = getIcon("/icons/board-two-placement-locate.svg");
     public static Icon fiducialCheck = getIcon("/icons/board-fiducial-locate.svg");
