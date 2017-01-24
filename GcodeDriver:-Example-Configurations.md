@@ -224,3 +224,9 @@ void processCommand() {
 ```
   </p>
 </details>
+
+### Alex's MKS Sbase 1.3 Configuration
+
+This is a configuration from mailing list user Александр Зендриков. It uses an MKS Sbase controller and has two nozzles in a cam configuration.
+
+The files can be found at https://gist.github.com/vonnieda/7a72c5d7b459f8da00e7124e1067f9e7
