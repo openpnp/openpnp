@@ -32,7 +32,6 @@ org.openpnp.spi
 org.openpnp.spi.base
 org.openpnp.util
 org.openpnp.vision
-org.openpnp.vision.experiments
 org.openpnp.vision.pipeline
 org.openpnp.vision.pipeline.stages
 org.openpnp.vision.pipeline.stages.convert
