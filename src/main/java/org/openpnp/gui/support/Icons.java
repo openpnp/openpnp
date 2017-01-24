@@ -4,14 +4,22 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 public class Icons {
-    public static Icon add = getIcon("/icons/file-add.svg");
-    public static Icon delete = getIcon("/icons/file-remove.svg");
-    public static Icon neww = getIcon("/icons/file-new.svg");
+    public static Icon add = getIcon("/icons/general-add.svg");
+    public static Icon delete = getIcon("/icons/general-remove.svg");
+    public static Icon neww = getIcon("/icons/general-new.svg");
     public static Icon copy = getIcon("/icons/copy.svg");
     public static Icon paste = getIcon("/icons/paste.svg");
+    public static Icon export = getIcon("/icons/export.svg");
+    public static Icon importt = getIcon("/icons/import.svg");
     
     public static Icon nozzleAdd = getIcon("/icons/nozzle-add.svg");
     public static Icon nozzleRemove = getIcon("/icons/nozzle-remove.svg");
+
+    public static Icon nozzleTip = getIcon("/icons/nozzletip.svg");
+    public static Icon nozzleTipAdd = getIcon("/icons/nozzletip-add.svg");
+    public static Icon nozzleTipRemove = getIcon("/icons/nozzletip-remove.svg");
+    public static Icon nozzleTipLoad = getIcon("/icons/nozzletip-load.svg");
+    public static Icon nozzleTipUnload = getIcon("/icons/nozzletip-unload.svg");
 
     public static Icon captureCamera = getIcon("/icons/capture-camera.svg");
     public static Icon captureTool = getIcon("/icons/capture-nozzle.svg");
@@ -27,33 +35,30 @@ public class Icons {
     public static Icon step = getIcon("/icons/control-next.svg");
     public static Icon stop = getIcon("/icons/control-stop.svg");
 
-    public static Icon load = getIcon("/icons/nozzletip-load.svg");
-    public static Icon unload = getIcon("/icons/nozzletip-unload.svg");
-
     public static Icon twoPointLocate = getIcon("/icons/board-two-placement-locate.svg");
     public static Icon fiducialCheck = getIcon("/icons/board-fiducial-locate.svg");
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
+    public static Icon pick = getIcon("/icons/pick.svg");
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
 
     public static Icon partAlign = getIcon("/icons/part-align.svg");
 
-    public static Icon arrowUp = getIcon("/icons/ic_arrow_upward_black_18px.svg");
-    public static Icon arrowDown = getIcon("/icons/ic_arrow_downward_black_18px.svg");
-    public static Icon arrowLeft = getIcon("/icons/ic_arrow_back_black_18px.svg");
-    public static Icon arrowRight = getIcon("/icons/ic_arrow_forward_black_18px.svg");
-    public static Icon home = getIcon("/icons/ic_home_black_18px.svg");
-    public static Icon refresh = getIcon("/icons/ic_refresh_black_18px.svg");
-    public static Icon rotateClockwise = getIcon("/icons/ic_rotate_clockwise_black_18px.svg");
-    public static Icon rotateCounterclockwise =
-            getIcon("/icons/ic_rotate_counterclockwise_black_18px.svg");
-    public static Icon zero = getIcon("/icons/ic_exposure_zero_black_18px.svg");
+    public static Icon arrowUp = getIcon("/icons/arrow-up.svg");
+    public static Icon arrowDown = getIcon("/icons/arrow-down.svg");
+    public static Icon arrowLeft = getIcon("/icons/arrow-left.svg");
+    public static Icon arrowRight = getIcon("/icons/arrow-right.svg");
+    public static Icon home = getIcon("/icons/home.svg");
+    public static Icon refresh = getIcon("/icons/refresh.svg");
+    public static Icon rotateClockwise = getIcon("/icons/rotate-clockwise.svg");
+    public static Icon rotateCounterclockwise = getIcon("/icons/rotate-counterclockwise.svg");
+    public static Icon zero = getIcon("/icons/zero.svg");
     
-    public static Icon navigateFirst = getIcon("/icons/ic_first_page_black_18px.svg");
-    public static Icon navigateLast = getIcon("/icons/ic_last_page_black_18px.svg");
-    public static Icon navigatePrevious = getIcon("/icons/ic_chevron_left_black_18px.svg");
-    public static Icon navigateNext = getIcon("/icons/ic_chevron_right_black_18px.svg");
+    public static Icon navigateFirst = getIcon("/icons/nav-first.svg");
+    public static Icon navigateLast = getIcon("/icons/nav-last.svg");
+    public static Icon navigatePrevious = getIcon("/icons/nav-previous.svg");
+    public static Icon navigateNext = getIcon("/icons/nav-next.svg");
 
     public static Icon powerOn = getIcon("/icons/power_button_on.svg");
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");

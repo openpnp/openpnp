@@ -225,7 +225,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public Action loadAction = new AbstractAction("Load") {
         {
-            putValue(SMALL_ICON, Icons.load);
+            putValue(SMALL_ICON, Icons.nozzleTipLoad);
             putValue(NAME, "Load");
             putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
         }
@@ -240,7 +240,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public Action unloadAction = new AbstractAction("Unload") {
         {
-            putValue(SMALL_ICON, Icons.unload);
+            putValue(SMALL_ICON, Icons.nozzleTipUnload);
             putValue(NAME, "Unload");
             putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
         }
@@ -255,7 +255,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
-            putValue(SMALL_ICON, Icons.delete);
+            putValue(SMALL_ICON, Icons.nozzleTipRemove);
             putValue(NAME, "Delete Nozzle Tip");
             putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle tip.");
         }

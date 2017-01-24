@@ -40,87 +40,13 @@ indicating the actuator pin.
 The camera design element is intended to invoke a camera viewfinder. It is an
 interrupted rectangle, centered within the outline.
 
-
-Icon List
+Toolchain
 =========
-This is a list of the filenames of the icons currently being used in the system
-along with descriptions of each. This can be used as a reference for designing
-a new icon set.
+I (vonnieda) currently use AutoDesk Graphic on Mac for icon editing. I particularly like
+that I can put icons on several layers, name them based on the filenames used in OpenPnP
+and then export them all at once. This is very helpful for aligning icons and making
+sure they use similar design elements.
 
-* add.png
-
- Add an existing object to the list. Document with a plus symbol?
-
-* capture-camera.png
-
- Captures the coordinates of the camera and inserts them into a location field.
-		
-* capture-pin.png
-
- Captures the coordinates of the pin/actuator and inserts them into a location
-field.
-
-* capture-tool-z.png
-
- Captures only the Z coordinate of the tool and inserts it into a location
-field.
-
-* capture-tool.png
-
- Captures the coordinates of the tool and inserts them into a location field.
-
-* center-camera.png
-
- Positions the camera to be in focus over a highlighted location.
-
-* center-pin.png
-
- Positions the pin so that it is touching the highlighted location.
-
-* center-tool.png
-
- Positions the tool so that it is touching the highlighted location.
-
-* delete.png
-
- Delete an object from the list. Document with a X mark?
-
-* feed.png
-
- Command the selected feeder to perform a feed operation.
-
-* new.png
-
- Create a new object. The standard "New Document" type icon could apply here.
-Paper / page with a star?
-
-* pause.png
-
- Pause an operation.
-
-* show-part.png
-
- Show an outline of the part for the selected feeder in the camera view.
- 
- * start.png
-
- Start an operation. Think "play" button. The next X icons could be of a
-standard music player motif.
-
-* step.png
-
- Step through an operation. A riff on start, like a play button with a line to
-the left.
-
-* stop.png
-
- Stop an operation.
-
-* two-point-locate.png
-
- Use two points to define the location and rotation of an object.
- 
- 
 Sources and Attributions
 ========================
 
