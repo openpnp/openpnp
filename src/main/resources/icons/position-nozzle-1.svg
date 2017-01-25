@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="24px"
+   height="24px"
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg2"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="position-nozzle-1.svg">
+  <metadata
+     id="metadata15">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>position-nozzle</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="674"
+     inkscape:window-height="480"
+     id="namedview13"
+     showgrid="false"
+     inkscape:zoom="13.906433"
+     inkscape:cx="12.029786"
+     inkscape:cy="12.119143"
+     inkscape:window-x="2042"
+     inkscape:window-y="762"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title4">position-nozzle</title>
+  <desc
+     id="desc6">Created with Sketch.</desc>
+  <g
+     transform="translate(-0.11403257,-0.0489686)"
+     style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
+     id="Page-1-67"
+     sketch:type="MSPage">
+    <g
+       id="g4213"
+       transform="translate(0.390625,0.0625)">
+      <path
+         style="fill:none;fill-opacity:0.99215686;fill-rule:evenodd;stroke:#005bdb;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
+         id="path4948-2"
+         sodipodi:type="arc"
+         sodipodi:cx="11.54322"
+         sodipodi:cy="17.003504"
+         sodipodi:rx="4.687448"
+         sodipodi:ry="2.3908539"
+         sodipodi:start="0"
+         sodipodi:end="6.2636335"
+         d="m 16.230668,17.003504 a 4.687448,2.3908539 0 0 1 -4.664537,2.390825 4.687448,2.3908539 0 0 1 -4.7101355,-2.367453 4.687448,2.3908539 0 0 1 4.6184905,-2.413969 4.687448,2.3908539 0 0 1 4.755286,2.343854"
+         sodipodi:open="true" />
+      <path
+         sodipodi:open="true"
+         d="m 13.355701,16.940611 a 1.7499642,0.88135195 0 0 1 -1.741411,0.881341 1.7499642,0.88135195 0 0 1 -1.7584339,-0.872725 1.7499642,0.88135195 0 0 1 1.7242199,-0.889873 1.7499642,0.88135195 0 0 1 1.77529,0.864026"
+         sodipodi:end="6.2636335"
+         sodipodi:start="0"
+         sodipodi:ry="0.88135195"
+         sodipodi:rx="1.7499642"
+         sodipodi:cy="16.940611"
+         sodipodi:cx="11.605737"
+         sodipodi:type="arc"
+         id="path4950-9"
+         style="fill:#005bdb;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
+    </g>
+    <g
+       style="fill:#bd0404"
+       id="position-nozzle-5"
+       sketch:type="MSLayerGroup">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 15.272727,9 18,4 6,4 8.7272727,9 Z M 11,10 l 2,0 0,6.986675 -2,0 z"
+         id="Triangle-1-3"
+         sketch:type="MSShapeGroup"
+         sodipodi:nodetypes="cccccccccc" />
+    </g>
+  </g>
+  <defs
+     id="defs8" />
+</svg>
