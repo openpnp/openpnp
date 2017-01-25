@@ -199,7 +199,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 revalidate();
                 repaint();
                 
-                Configuration.get().getBus().post(new FeederSelectedEvent(feeder));
+                Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeedersPanel.this));
             }
         });
 
@@ -208,6 +208,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     
     @Subscribe
     public void feederSelected(FeederSelectedEvent event) {
+        if (event.source == this) {
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             mainFrame.showTab("Feeders");
             
