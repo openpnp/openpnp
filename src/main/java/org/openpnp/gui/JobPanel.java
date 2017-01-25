@@ -189,7 +189,7 @@ public class JobPanel extends JPanel {
                         boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
                         jobPastePanel.setBoardLocation(boardLocation);
-                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
+                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation, JobPanel.this));
                     }
                 });
 
@@ -318,6 +318,9 @@ public class JobPanel extends JPanel {
     
     @Subscribe
     public void boardLocationSelected(BoardLocationSelectedEvent event) {
+        if (event.source == this) {
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             MainFrame.get().showTab("Job");
 
@@ -327,6 +330,9 @@ public class JobPanel extends JPanel {
     
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
+        if (event.source == this || event.source == jobPlacementsPanel) {
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             MainFrame.get().showTab("Job");
             
