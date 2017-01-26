@@ -14,16 +14,16 @@
    version="1.1"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="board-fiducial-locate.svg">
+   sodipodi:docname="feeder-feed.svg">
   <metadata
-     id="metadata18">
+     id="metadata16">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>board-fiducial-locate</dc:title>
+        <dc:title>feeder-feed</dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -36,56 +36,42 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1051"
-     id="namedview16"
+     inkscape:window-width="674"
+     inkscape:window-height="471"
+     id="namedview14"
      showgrid="false"
-     inkscape:zoom="6.9532167"
-     inkscape:cx="-50.275687"
-     inkscape:cy="30.138646"
-     inkscape:window-x="0"
-     inkscape:window-y="420"
-     inkscape:window-maximized="1"
+     inkscape:zoom="5.6568542"
+     inkscape:cx="14.140585"
+     inkscape:cy="21.290329"
+     inkscape:window-x="1971"
+     inkscape:window-y="1043"
+     inkscape:window-maximized="0"
      inkscape:current-layer="svg2" />
   <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
   <title
-     id="title4">board-fiducial-locate</title>
+     id="title4">feeder-feed</title>
   <desc
      id="desc6">Created with Sketch.</desc>
   <defs
      id="defs8" />
   <g
      id="Page-1"
-     stroke="none"
-     stroke-width="1"
-     fill="none"
-     fill-rule="evenodd"
-     sketch:type="MSPage">
+     sketch:type="MSPage"
+     transform="matrix(0,1,-1,0,24.003906,-0.75)"
+     style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1">
+    <g
+       id="feeder-feed"
+       sketch:type="MSLayerGroup"
+       style="fill:#57ae00">
+      <path
+         d="M 4,18 12.5,12 4,6 4,18 4,18 Z M 13,6 13,18 21.5,12 13,6 13,6 Z"
+         id="Shape"
+         sketch:type="MSShapeGroup"
+         inkscape:connector-curvature="0" />
+    </g>
     <g
        id="feeder-show-part-outline"
        sketch:type="MSLayerGroup"
-       transform="translate(-23.750000, -23.750000)" />
-    <rect
-       style="fill:#72b800;fill-opacity:1"
-       height="18"
-       width="18"
-       y="3"
-       x="3"
-       sketch:type="MSShapeGroup"
-       id="Rectangle-3" />
-    <circle
-       style="fill:#e8a547"
-       r="6"
-       cy="12.070338"
-       cx="12.070338"
-       sketch:type="MSShapeGroup"
-       id="Oval-1" />
-    <circle
-       style="fill:#f1d44a"
-       r="3"
-       cy="12.140676"
-       cx="12.140676"
-       sketch:type="MSShapeGroup"
-       id="Oval-2" />
+       transform="translate(-23.75,0.25)" />
   </g>
 </svg>

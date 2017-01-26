@@ -14,7 +14,7 @@
    version="1.1"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="position-camera-1.svg">
+   sodipodi:docname="position-camera.svg">
   <metadata
      id="metadata15">
     <rdf:RDF>
@@ -41,12 +41,12 @@
      id="namedview13"
      showgrid="false"
      inkscape:zoom="11.313708"
-     inkscape:cx="12.715073"
+     inkscape:cx="-1.3828691"
      inkscape:cy="7.3394517"
      inkscape:window-x="2042"
      inkscape:window-y="762"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg2" />
+     inkscape:current-layer="g4942" />
   <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
   <title
      id="title4">position-nozzle</title>
@@ -67,30 +67,33 @@
          d="m 5,15 -2,0 0,4 c 0,1.1 0.9,2 2,2 l 4,0 0,-2 -4,0 0,-4 z M 5,5 9,5 9,3 5,3 C 3.9,3 3,3.9 3,5 L 3,9 5,9 5,5 Z m 14,-2 -4,0 0,2 4,0 0,4 2,0 0,-4 C 21,3.9 20.1,3 19,3 l 0,0 z m 0,16 -4,0 0,2 4,0 c 1.1,0 2,-0.9 2,-2 l 0,-4 -2,0 0,4 z"
          inkscape:connector-curvature="0" />
     </g>
-    <path
-       sodipodi:open="true"
-       d="M 16.191864,12.03172 A 4.2811999,4.2812018 0 0 1 11.93159,16.312871 4.2811999,4.2812018 0 0 1 7.6296682,12.073572 4.2811999,4.2812018 0 0 1 11.847887,7.7509786 4.2811999,4.2812018 0 0 1 16.191045,11.94802"
-       sodipodi:end="6.2636335"
-       sodipodi:start="0"
-       sodipodi:ry="4.2812018"
-       sodipodi:rx="4.2811999"
-       sodipodi:cy="12.03172"
-       sodipodi:cx="11.910664"
-       sodipodi:type="arc"
-       id="path4948"
-       style="fill:none;fill-opacity:0.99215686;fill-rule:evenodd;stroke:#005bdb;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
-    <path
-       style="fill:#005bdb;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
-       id="path4950"
-       sodipodi:type="arc"
-       sodipodi:cx="11.879442"
-       sodipodi:cy="12.000491"
-       sodipodi:rx="1.7499642"
-       sodipodi:ry="1.7499598"
-       sodipodi:start="0"
-       sodipodi:end="6.2636335"
-       d="m 13.629406,12.000491 a 1.7499642,1.7499598 0 0 1 -1.74141,1.749939 1.7499642,1.7499598 0 0 1 -1.758434,-1.732832 1.7499642,1.7499598 0 0 1 1.72422,-1.766879 1.7499642,1.7499598 0 0 1 1.77529,1.715559"
-       sodipodi:open="true" />
+    <g
+       id="g4148">
+      <path
+         style="fill:none;fill-opacity:0.99215686;fill-rule:evenodd;stroke:#005bdb;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
+         id="path4948"
+         sodipodi:type="arc"
+         sodipodi:cx="11.910664"
+         sodipodi:cy="12.03172"
+         sodipodi:rx="4.2811999"
+         sodipodi:ry="4.2812018"
+         sodipodi:start="0"
+         sodipodi:end="6.2636335"
+         d="M 16.191864,12.03172 A 4.2811999,4.2812018 0 0 1 11.93159,16.312871 4.2811999,4.2812018 0 0 1 7.6296682,12.073572 4.2811999,4.2812018 0 0 1 11.847887,7.7509786 4.2811999,4.2812018 0 0 1 16.191045,11.94802"
+         sodipodi:open="true" />
+      <path
+         sodipodi:open="true"
+         d="m 13.629406,12.000491 a 1.7499642,1.7499598 0 0 1 -1.74141,1.749939 1.7499642,1.7499598 0 0 1 -1.758434,-1.732832 1.7499642,1.7499598 0 0 1 1.72422,-1.766879 1.7499642,1.7499598 0 0 1 1.77529,1.715559"
+         sodipodi:end="6.2636335"
+         sodipodi:start="0"
+         sodipodi:ry="1.7499598"
+         sodipodi:rx="1.7499642"
+         sodipodi:cy="12.000491"
+         sodipodi:cx="11.879442"
+         sodipodi:type="arc"
+         id="path4950"
+         style="fill:#005bdb;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
+    </g>
   </g>
   <desc
      id="desc6">Created with Sketch.</desc>

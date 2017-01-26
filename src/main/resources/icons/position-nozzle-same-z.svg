@@ -14,7 +14,7 @@
    version="1.1"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="position-nozzle-alt1.svg">
+   sodipodi:docname="position-nozzle-same-z.svg">
   <metadata
      id="metadata15">
     <rdf:RDF>
@@ -36,17 +36,17 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1080"
-     inkscape:window-height="1891"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
      id="namedview13"
      showgrid="false"
-     inkscape:zoom="5.656854"
-     inkscape:cx="32.970407"
-     inkscape:cy="-35.773887"
-     inkscape:window-x="1920"
-     inkscape:window-y="0"
+     inkscape:zoom="22.627416"
+     inkscape:cx="11.129792"
+     inkscape:cy="13.033558"
+     inkscape:window-x="0"
+     inkscape:window-y="420"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg2"
+     inkscape:current-layer="g4315-0"
      showguides="false"
      inkscape:guide-bbox="true" />
   <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
@@ -89,6 +89,11 @@
        sodipodi:type="arc"
        id="path4950"
        style="fill:#005bdb;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
+    <path
+       style="fill:none;fill-opacity:0;fill-rule:evenodd;stroke:#005bdc;stroke-width:1.011235;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99215686"
+       d="m 3.0866269,18.971945 17.8309101,0"
+       id="path4327-2"
+       inkscape:connector-curvature="0" />
     <g
        style="fill:#bd0404"
        id="g4323-0"
