@@ -43,13 +43,13 @@
      showguides="false"
      inkscape:guide-bbox="true"
      inkscape:snap-to-guides="true"
-     inkscape:zoom="22.627417"
-     inkscape:cx="2.8140787"
-     inkscape:cy="10.687654"
+     inkscape:zoom="46.115141"
+     inkscape:cx="11.517105"
+     inkscape:cy="10.860165"
      inkscape:window-x="0"
      inkscape:window-y="420"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg2"
+     inkscape:current-layer="g4156"
      inkscape:object-paths="true"
      inkscape:snap-grids="true"
      inkscape:object-nodes="true">
@@ -152,7 +152,7 @@
     <path
        inkscape:connector-curvature="0"
        d="m 21.224209,14.121272 -3.070554,3.066378 3.066378,3.070554 -1.023518,1.022126 -3.066378,-3.070554 -3.070554,3.066378 -1.022126,-1.023518 3.070554,-3.066378 -3.066378,-3.070554 1.023518,-1.022126 3.066378,3.070554 3.070554,-3.066378 1.022126,1.023518 z"
-       style="clip-rule:evenodd;fill:#bd0404;fill-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41420996"
+       style="clip-rule:evenodd;fill:#ff5757;fill-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41420996;fill-opacity:1"
        id="path8-3" />
   </g>
 </svg>

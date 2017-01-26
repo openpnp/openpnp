@@ -35,17 +35,17 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="969"
-     inkscape:window-height="1112"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
      id="namedview13"
      showgrid="false"
-     inkscape:zoom="13.906433"
-     inkscape:cx="13.051814"
-     inkscape:cy="-3.8497358"
-     inkscape:window-x="2027"
-     inkscape:window-y="709"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="g3381" />
+     inkscape:zoom="42.15"
+     inkscape:cx="12"
+     inkscape:cy="13"
+     inkscape:window-x="0"
+     inkscape:window-y="420"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
   <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
   <title
      id="title4">capture-nozzle</title>
@@ -63,10 +63,10 @@
        style="fill:#005bd9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
        transform="matrix(0.85714286,0,0,0.85714286,-1.2923613,5.178573)"
-       style="clip-rule:evenodd;fill-rule:evenodd;stroke:#bd0404;stroke-width:2.33333325;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="clip-rule:evenodd;fill-rule:evenodd;stroke:#ff5757;stroke-width:2.33333325;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="g4149">
       <path
-         style="opacity:1;fill:none;fill-rule:evenodd;stroke:#bd0404;stroke-width:2.33333325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="opacity:1;fill:none;fill-rule:evenodd;stroke:#ff5757;stroke-width:2.33333325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          d="m 3.8333333,11.458332 5.8333329,0"
          id="path4145"
          inkscape:connector-curvature="0" />
@@ -74,7 +74,7 @@
          inkscape:connector-curvature="0"
          id="path4144"
          d="m 14.333333,11.458332 5.833333,0"
-         style="opacity:1;fill:none;fill-rule:evenodd;stroke:#bd0404;stroke-width:2.33333325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="opacity:1;fill:none;fill-rule:evenodd;stroke:#ff5757;stroke-width:2.33333325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
   </g>
   <defs
