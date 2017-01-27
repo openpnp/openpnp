@@ -6,7 +6,7 @@ Actuators are generic devices you can attach to your machine to do additional ta
 2. 
     * If you are adding a head mounted actuator, find the head in the tree on the left. Under the head look for Actuators and select it. Head mounted actuators are often attached to devices such as drag feed solenoids and nozzle change tools.
     * If you are adding a machine mounted actuator, find Actuators under the root of the tree and select it. Machine mounted actuators can be used for things like conveyors and lighting.
-3. Add an actuator by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/add.svg).  
+3. Add an actuator by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
 2. Select a actuator driver from the provided list and press the "Accept" button. The newly added actuator will show up in the actuators list.
 3. Click on the name of the new actuator to open it's properties.
 
