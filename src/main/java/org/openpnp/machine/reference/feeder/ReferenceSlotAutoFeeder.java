@@ -34,6 +34,8 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     private Bank bank;
     
     public ReferenceSlotAutoFeeder() {
+        this.id = Configuration.createId("SLOT-");
+        this.name = this.id;
         // partId is required in AbstractFeeder to save the config. We don't use it so we just
         // set it to an empty string to make the serializer happy.
         partId = "";
@@ -161,6 +163,18 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     }
     
     @Override
+    public void setName(String name) {
+        /**
+         * This is kind of an ugly hack to avoid the bug in:
+         * https://github.com/openpnp/openpnp/issues/427.
+         * It removes any instance of the additional info we show in the name when a feeder is
+         * attached.
+         */
+        name = name.replace(String.format("(%s)", getFeeder() == null ? "None" : getFeeder().getName()), "").trim();
+        super.setName(name);
+    }
+    
+    @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceSlotAutoFeederConfigurationWizard(this);
     }
@@ -179,7 +193,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         BiMap<Feeder, ReferenceSlotAutoFeeder> assignments = HashBiMap.create();
         
         public Bank() {
-            this(Configuration.createId("BNK"));
+            this(Configuration.createId("BANK-"));
         }
 
         public Bank(@Attribute(name = "id") String id) {
@@ -254,7 +268,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         private ReferenceSlotAutoFeeder owner = null;
         
         public Feeder() {
-            this(Configuration.createId("FDR"));
+            this(Configuration.createId("SLOTFDR-"));
         }
 
         public Feeder(@Attribute(name = "id") String id) {

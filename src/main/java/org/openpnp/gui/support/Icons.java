@@ -6,7 +6,6 @@ import javax.swing.ImageIcon;
 public class Icons {
     public static Icon add = getIcon("/icons/general-add.svg");
     public static Icon delete = getIcon("/icons/general-remove.svg");
-    public static Icon neww = getIcon("/icons/general-new.svg");
     public static Icon copy = getIcon("/icons/copy.svg");
     public static Icon paste = getIcon("/icons/paste.svg");
     public static Icon export = getIcon("/icons/export.svg");
@@ -15,7 +14,6 @@ public class Icons {
     public static Icon nozzleAdd = getIcon("/icons/nozzle-add.svg");
     public static Icon nozzleRemove = getIcon("/icons/nozzle-remove.svg");
 
-    public static Icon nozzleTip = getIcon("/icons/nozzletip.svg");
     public static Icon nozzleTipAdd = getIcon("/icons/nozzletip-add.svg");
     public static Icon nozzleTipRemove = getIcon("/icons/nozzletip-remove.svg");
     public static Icon nozzleTipLoad = getIcon("/icons/nozzletip-load.svg");
@@ -29,6 +27,8 @@ public class Icons {
     public static Icon centerTool = getIcon("/icons/position-nozzle.svg");
     public static Icon centerToolNoSafeZ = getIcon("/icons/position-nozzle-no-safe-z.svg");
     public static Icon centerPin = getIcon("/icons/position-actuator.svg");
+    public static Icon centerCameraOnFeeder = getIcon("/icons/position-camera-on-feeder.svg");
+    public static Icon centerNozzleOnFeeder = getIcon("/icons/position-nozzle-on-feeder.svg");
 
     public static Icon start = getIcon("/icons/control-start.svg");
     public static Icon pause = getIcon("/icons/control-pause.svg");
@@ -40,8 +40,10 @@ public class Icons {
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");
+    public static Icon place = getIcon("/icons/place.svg");
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
+    
 
     public static Icon partAlign = getIcon("/icons/part-align.svg");
 
