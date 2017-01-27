@@ -34,12 +34,12 @@ Now that the driver is configured, press the green power button <img src="https:
 
 ## Homing
 
-If your machine connected successfully it's time to home it. If you don't have home switches installed you can skip this step. To home the machine click the home button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_home_black_18px.svg).
+If your machine connected successfully it's time to home it. If you don't have home switches installed you can skip this step. To home the machine click the home button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/home.svg).
 
 ## Jogging the Machine
 ![screen shot 2016-06-18 at 10 33 18 am](https://cloud.githubusercontent.com/assets/1182323/16172512/1cf472b0-3540-11e6-987a-fff822524944.png)
 
-With the machine homed, you can now try jogging the machine to make sure everything is working well. Set the Distance slider to 1mm and click the jog buttons ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_back_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_downward_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_forward_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_arrow_upward_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_rotate_clockwise_black_18px.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_rotate_counterclockwise_black_18px.svg) to move the head around. Make sure that the machine moves in the directions specified by the buttons. If it doesn't, check your controller configuration.
+With the machine homed, you can now try jogging the machine to make sure everything is working well. Set the Distance slider to 1mm and click the jog buttons ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-left.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-down.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-right.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/arrow-up.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/rotate-clockwise.svg) ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/rotate-counterclockwise.svg) to move the head around. Make sure that the machine moves in the directions specified by the buttons. If it doesn't, check your controller configuration.
 
 ***
 

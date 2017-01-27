@@ -27,7 +27,7 @@ If you have more than one nozzle tip on your machine:
 
 1. Open the Machine Setup Tab.
 2. Find the nozzle you want to add a nozzle tip to and look for the Nozzle Tips item below it. Select it.
-3. Add the nozzle tip by pressing the add button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-add.svg).  
+3. Add the nozzle tip by pressing the add button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
 4. Select the new nozzle tip to open it's properties.
 
 ## Head Offsets
