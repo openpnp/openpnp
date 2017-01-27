@@ -295,7 +295,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new NozzleTipsPropertySheetHolder(this, "Nozzle Tips", getNozzleTips(), Icons.nozzleTip));
+        children.add(new NozzleTipsPropertySheetHolder(this, "Nozzle Tips", getNozzleTips(), null));
         return children.toArray(new PropertySheetHolder[] {});
     }
 

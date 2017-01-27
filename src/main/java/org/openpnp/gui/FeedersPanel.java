@@ -410,7 +410,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     public Action moveCameraToPickLocation = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.centerCamera);
+            putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
             putValue(NAME, "Move Camera");
             putValue(SHORT_DESCRIPTION,
                     "Move the camera to the selected feeder's current pick location.");
@@ -430,7 +430,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     public Action moveToolToPickLocation = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.centerTool);
+            putValue(SMALL_ICON, Icons.centerNozzleOnFeeder);
             putValue(NAME, "Move Tool");
             putValue(SHORT_DESCRIPTION,
                     "Move the tool to the selected feeder's current pick location.");
