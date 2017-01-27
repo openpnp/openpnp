@@ -76,7 +76,7 @@ The Machine Controls are your interface to interacting with the machine. From he
 * Use the Speed slider to change how fast movements happen.
 * Use the Special, Actuators and Dispense tabs to trigger more advanced actions.
 * Press the Park buttons <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg" height="18"> to move either the X/Y axes, the Z axis or the C axis to the Park location defined on your head.
-* Press the Home button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/ic_home_black_18px.svg" height="18"> to perform a homing operation. You should do this each time you start your machine.
+* Press the Home button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/home.svg" height="18"> to perform a homing operation. You should do this each time you start your machine.
 
 Digital Read Outs (DROs)
 ------------------------
@@ -193,7 +193,7 @@ This is a brief explanation of how to setup and run your first job. For details 
 1. Define packages used in the PCB in the Packages tab.
 2. Define parts used in the PCB in the Parts tab. Reference the previously created Packages.
 3. Setup feeders in the Feeders tab for each unique Part being used in the job.
-4. Create a new board by pressing ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/file-new.svg) in the Job tab and add Placements to it for each Placement in the PCB.
+4. Create a new board by pressing ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg) in the Job tab and add Placements to it for each Placement in the PCB.
 5. Set the position of the board in the Job tab. You can use capture camera ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg) to align it to the corner, use fiducial locate ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-fiducial-locate.svg) to find it automatically or use the two placement manual process ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-two-placement-locate.svg).
 
     For additional information on using fiducials, see [[Fiducials]].
