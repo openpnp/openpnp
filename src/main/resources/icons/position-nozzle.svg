@@ -41,7 +41,7 @@
      id="namedview13"
      showgrid="false"
      inkscape:zoom="42.549164"
-     inkscape:cx="11.997897"
+     inkscape:cx="7.8967588"
      inkscape:cy="10.087188"
      inkscape:window-x="0"
      inkscape:window-y="420"
@@ -105,7 +105,7 @@
          style="fill:#005bdb;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
     </g>
     <g
-       style="fill:#ff5757;fill-opacity:1"
+       style="fill:#bd0404;fill-opacity:1"
        id="g4323-0"
        sketch:type="MSLayerGroup">
       <path
@@ -113,7 +113,7 @@
          d="M 15.272727,9 18,4 6,4 8.7272727,9 15.272727,9 Z M 11,10 l 2,0 0,9 -2,0 0,-9 z"
          id="path4325-6"
          sketch:type="MSShapeGroup"
-         style="fill:#ff5757;fill-opacity:1" />
+         style="fill:#bd0404;fill-opacity:1" />
     </g>
   </g>
 </svg>
