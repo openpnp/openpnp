@@ -45,7 +45,7 @@ Every feeder has a Part field that you must fill in. By telling OpenPnP which pa
 
 ## Pick a Part
 
-Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle. You can use the Discard button we set up previously to drop the part.
+Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/pick.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle. You can use the Discard button we set up previously to drop the part.
 
 ***
 
