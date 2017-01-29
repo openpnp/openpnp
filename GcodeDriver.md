@@ -45,6 +45,13 @@ Used to parse a vacuum report after sending a VACUUM_REQUEST_COMMAND. The regex 
 
 Example: `vacuum:(?<Vacuum>-?\d+)`
 
+This would read a response from the controller in the form of `vacuum:255`. The regex is broken down like this:
+1. `vacuum:` is fixed text that the controller sends before the vacuum value.
+2. The parentheses around the rest of the regex mark everything else as the value we want to capture. This is called a capturing group.
+3. The `?<Vacuum>` gives the capturing group the name "Vacuum", which OpenPnP will use to read the result.
+4. `-?` allows for an optional negative sign before the value.
+5. `\d+` means one or more digits, which represent the value itself.
+
 ### POSITION_REPORT_REGEX
 
 Used to parse a position report. Position reports can be sent by the controller to update OpenPnP when a move has been made outside of the program. This is particularly useful for controllers that support external jogging such as manual jog pendants.
