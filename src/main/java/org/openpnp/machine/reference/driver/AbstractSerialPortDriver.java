@@ -14,6 +14,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
@@ -27,7 +28,7 @@ import jssc.SerialPortTimeoutException;
  * A base class for basic SerialPort based Drivers. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public abstract class AbstractSerialPortDriver implements ReferenceDriver, Closeable {
+public abstract class AbstractSerialPortDriver extends AbstractModelObject implements ReferenceDriver, Closeable {
     public enum DataBits {
         Five(SerialPort.DATABITS_5),
         Six(SerialPort.DATABITS_6),
