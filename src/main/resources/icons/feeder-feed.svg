@@ -14,7 +14,7 @@
    version="1.1"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="feeder-edit.svg">
+   sodipodi:docname="feeder-feed.svg">
   <metadata
      id="metadata15">
     <rdf:RDF>
@@ -41,8 +41,8 @@
      id="namedview13"
      showgrid="false"
      inkscape:zoom="1"
-     inkscape:cx="-262.40885"
-     inkscape:cy="-5.8805897"
+     inkscape:cx="204.73939"
+     inkscape:cy="-54.497487"
      inkscape:window-x="0"
      inkscape:window-y="420"
      inkscape:window-maximized="1"
@@ -72,9 +72,9 @@
   </g>
   <path
      inkscape:connector-curvature="0"
-     d="m 9.5,7.344238 4.443886,4.475732 4.443883,-4.475732 z m 0.11223,5.990917 4.443884,4.475731 L 18.5,13.335155 Z"
+     d="m 9.5,7.533352 4.443886,4.475732 4.443883,-4.475732 z M 9.61223,13.524269 14.056114,18 18.5,13.524269 Z"
      id="Shape-6"
      sketch:type="MSShapeGroup"
-     style="fill:#64c800;fill-rule:evenodd;stroke:none;stroke-width:0.17142858;stroke-miterlimit:4;stroke-dasharray:none;fill-opacity:1"
+     style="fill:#72b800;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.17142858;stroke-miterlimit:4;stroke-dasharray:none"
      sodipodi:nodetypes="cccccccc" />
 </svg>
