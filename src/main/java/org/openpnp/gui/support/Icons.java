@@ -43,6 +43,7 @@ public class Icons {
     public static Icon place = getIcon("/icons/place.svg");
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
+    public static Icon feeder = getIcon("/icons/feeder.svg");
     
 
     public static Icon partAlign = getIcon("/icons/part-align.svg");
