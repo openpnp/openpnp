@@ -46,6 +46,7 @@ Used to parse a vacuum report after sending a VACUUM_REQUEST_COMMAND. The regex 
 Example: `vacuum:(?<Vacuum>-?\d+)`
 
 This would read a response from the controller in the form of `vacuum:255`. The regex is broken down like this:
+
 1. `vacuum:` is fixed text that the controller sends before the vacuum value.
 2. The parentheses around the rest of the regex mark everything else as the value we want to capture. This is called a capturing group.
 3. The `?<Vacuum>` gives the capturing group the name "Vacuum", which OpenPnP will use to read the result.
