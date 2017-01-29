@@ -1,12 +1,148 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-    <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
-    <title>feeder-edit</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-        <g id="feeder-edit" sketch:type="MSLayerGroup" fill="#000000">
-            <path d="M19.8260614,3 L4.17393856,3 C3.52592448,3 3,3.52593591 3,4.17396409 L3,19.8260359 C3,20.4740641 3.52553316,21 4.17354725,21 L19.8252788,21 C20.4736842,21 20.9992174,20.4740641 20.9992174,19.8260359 L20.9992174,4.17396409 C21,3.52593591 20.4740755,3 19.8260614,3 L19.8260614,3 Z M7.34200743,19.1658768 C7.34200743,19.5309796 7.0090002,19.8162529 6.64429662,19.8162529 L4.83447466,19.8162529 C4.47055371,19.8162529 4.18450401,19.5309796 4.18450401,19.1658768 L4.18450401,17.3560155 C4.18450401,16.991304 4.47055371,16.6582895 4.83447466,16.6582895 L6.64429662,16.6582895 C7.00939151,16.6582895 7.34200743,16.9916953 7.34200743,17.3560155 L7.34200743,19.1658768 L7.34200743,19.1658768 Z M7.34200743,6.64437584 C7.34200743,7.00908735 7.0090002,7.34249315 6.64429662,7.34249315 L4.83447466,7.34249315 C4.47055371,7.34249315 4.18450401,7.00908735 4.18450401,6.64437584 L4.18450401,4.83412322 C4.18450401,4.46941171 4.47055371,4.18413844 4.83447466,4.18413844 L6.64429662,4.18413844 C7.00939151,4.18413844 7.34200743,4.46941171 7.34200743,4.83412322 L7.34200743,6.64437584 L7.34200743,6.64437584 Z M7.34200743,12.6443758 C7.34200743,13.0090874 7.0090002,13.3424932 6.64429662,13.3424932 L4.83447466,13.3424932 C4.47055371,13.3424932 4.18450401,13.0090874 4.18450401,12.6443758 L4.18450401,10.8341232 C4.18450401,10.4694117 4.47055371,10.1841384 4.83447466,10.1841384 L6.64429662,10.1841384 C7.00939151,10.1841384 7.34200743,10.4694117 7.34200743,10.8341232 L7.34200743,12.6443758 L7.34200743,12.6443758 Z" id="Shape" sketch:type="MSShapeGroup"></path>
+<svg
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="24px"
+   height="24px"
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg2"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="feeder-edit.svg">
+  <metadata
+     id="metadata15">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>position-nozzle</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
+     id="namedview13"
+     showgrid="false"
+     inkscape:zoom="11.313708"
+     inkscape:cx="38.464141"
+     inkscape:cy="13.748259"
+     inkscape:window-x="0"
+     inkscape:window-y="420"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g4315-0"
+     showguides="false"
+     inkscape:guide-bbox="true"
+     inkscape:snap-midpoints="true"
+     inkscape:object-paths="true"
+     inkscape:showpageshadow="true"
+     showborder="true">
+    <sodipodi:guide
+       position="12.004,19.111948"
+       orientation="1,0"
+       id="guide26"
+       inkscape:locked="false"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)" />
+    <sodipodi:guide
+       position="12.004,12"
+       orientation="0,1"
+       id="guide28"
+       inkscape:locked="false"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)" />
+  </sodipodi:namedview>
+  <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title4">position-nozzle</title>
+  <desc
+     id="desc6">Created with Sketch.</desc>
+  <defs
+     id="defs8">
+    <marker
+       inkscape:stockid="Arrow2Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker6551"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path6553"
+         style="fill:#005bdc;fill-opacity:0.99215686;fill-rule:evenodd;stroke:#005bdc;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:0.99215686"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-0.3,0,0,-0.3,0.69,0)" />
+    </marker>
+  </defs>
+  <g
+     transform="matrix(1.0094828,0,0,0.96871686,5.1896355,-2.6292684)"
+     style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
+     id="g4315-0"
+     sketch:type="MSPage">
+    <g
+       style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
+       id="g4162-6"
+       transform="matrix(1.0001805,0,0,1,-3.1198713,0.69285665)">
+      <g
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1"
+         sketch:type="MSLayerGroup"
+         id="feeder-edit-7"
+         transform="matrix(0.99047054,0,0,1.0322934,-2.0207786,2.0213194)">
+        <path
+           inkscape:connector-curvature="0"
+           sketch:type="MSShapeGroup"
+           id="Shape-5"
+           d="M 19.826061,3 4.1739386,3 C 3.5259245,3 3,3.5259359 3,4.1739641 L 3,19.826036 C 3,20.474064 3.5255332,21 4.1735473,21 l 15.6517317,0 c 0.648405,0 1.173938,-0.525936 1.173938,-1.173964 l 0,-15.6520719 C 21,3.5259359 20.474076,3 19.826061,3 Z M 7.3420074,19.165877 c 0,0.365103 -0.3330072,0.650376 -0.6977108,0.650376 l -1.8098219,0 c -0.363921,0 -0.6499707,-0.285273 -0.6499707,-0.650376 l 0,-1.809861 c 0,-0.364712 0.2860497,-0.697727 0.6499707,-0.697727 l 1.8098219,0 c 0.3650949,0 0.6977108,0.333406 0.6977108,0.697727 z m 0,-12.5215012 c 0,0.3647115 -0.3330072,0.6981173 -0.6977108,0.6981173 l -1.8098219,0 c -0.363921,0 -0.6499707,-0.3334058 -0.6499707,-0.6981173 l 0,-1.8102526 c 0,-0.3647115 0.2860497,-0.6499848 0.6499707,-0.6499848 l 1.8098219,0 c 0.3650949,0 0.6977108,0.2852733 0.6977108,0.6499848 z m 0,6.0000002 c 0,0.364711 -0.3330072,0.698117 -0.6977108,0.698117 l -1.8098219,0 c -0.363921,0 -0.6499707,-0.333406 -0.6499707,-0.698117 l 0,-1.810253 c 0,-0.364711 0.2860497,-0.649985 0.6499707,-0.649985 l 1.8098219,0 c 0.3650949,0 0.6977108,0.285274 0.6977108,0.649985 z"
+           style="fill:#000000;fill-opacity:1" />
+      </g>
+      <rect
+         style="fill:#f1d44a;fill-opacity:1;stroke:none;stroke-width:0.7344259;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect4188-3"
+         width="6.9342442"
+         height="4.1291733"
+         x="8.8719072"
+         y="15.441133" />
+      <rect
+         y="5.1181998"
+         x="8.8719072"
+         height="2.0645866"
+         width="6.9342442"
+         id="rect4514-5"
+         style="fill:#f1d44a;fill-opacity:1;stroke:none;stroke-width:0.51931751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <g
+         transform="matrix(0.97997446,0,0,1.0119118,1.0028982,0.19219639)"
+         style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
+         id="Page-1-6"
+         sketch:type="MSPage">
+        <g
+           style="fill:#72b800;fill-opacity:1"
+           id="file-new-2"
+           sketch:type="MSLayerGroup">
+          <path
+             inkscape:connector-curvature="0"
+             d="m 5,15.9625 0,3.1875 3.1578947,0 L 17.471579,9.749 14.313684,6.5615 Z M 19.913684,7.284 c 0.328421,-0.3315 0.328421,-0.867 0,-1.1985 l -1.970526,-1.989 c -0.328421,-0.3315 -0.858948,-0.3315 -1.187369,0 l -1.541052,1.5555 3.157895,3.1875 z"
+             id="Shape-3-9"
+             sketch:type="MSShapeGroup"
+             style="fill:#72b800;fill-opacity:1" />
         </g>
+      </g>
     </g>
+  </g>
 </svg>

@@ -29,13 +29,17 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.Command;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -48,18 +52,92 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.border.EtchedBorder;
+import java.awt.Color;
+import javax.swing.JTextField;
 
 public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
 
     public GcodeDriverConfigurationWizard(GcodeDriver driver) {
         this.driver = driver;
+        
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(settingsPanel);
+        settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        JLabel lblUnits = new JLabel("Units");
+        settingsPanel.add(lblUnits, "6, 2, right, default");
+        
+        unitsCb = new JComboBox(LengthUnit.values());
+        settingsPanel.add(unitsCb, "8, 2, fill, default");
+        
+        JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [Units/Min]");
+        settingsPanel.add(lblMaxFeedRate, "6, 4, right, default");
+        
+        maxFeedRateTf = new JTextField();
+        settingsPanel.add(maxFeedRateTf, "8, 4, fill, default");
+        maxFeedRateTf.setColumns(5);
+        
+        JLabel lblCommandTimeoutms = new JLabel("Command Timeout [ms]");
+        settingsPanel.add(lblCommandTimeoutms, "2, 2, right, default");
+        
+        commandTimeoutTf = new JTextField();
+        settingsPanel.add(commandTimeoutTf, "4, 2, fill, default");
+        commandTimeoutTf.setColumns(5);
+        
+        JLabel lblConnectWaitTime = new JLabel("Connect Wait Time [ms]");
+        settingsPanel.add(lblConnectWaitTime, "2, 4, right, default");
+        
+        connectWaitTimeTf = new JTextField();
+        settingsPanel.add(connectWaitTimeTf, "4, 4, fill, default");
+        connectWaitTimeTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetX = new JLabel("Backlash Offset X [Units]");
+        settingsPanel.add(lblBacklashOffsetX, "2, 6, right, default");
+        
+        backlashOffsetXTf = new JTextField();
+        settingsPanel.add(backlashOffsetXTf, "4, 6, fill, default");
+        backlashOffsetXTf.setColumns(5);
+        
+        JLabel lblBacklashOffsetY = new JLabel("Backlash Offset Y [Units]");
+        settingsPanel.add(lblBacklashOffsetY, "6, 6, right, default");
+        
+        backlashOffsetYTf = new JTextField();
+        settingsPanel.add(backlashOffsetYTf, "8, 6, fill, default");
+        backlashOffsetYTf.setColumns(5);
+        
+        JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "10, 6, right, default");
+        
+        backlashFeedRateFactorTf = new JTextField();
+        settingsPanel.add(backlashFeedRateFactorTf, "12, 6, fill, default");
+        backlashFeedRateFactorTf.setColumns(5);
 
-        JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP,
-                null, null));
-        contentPanel.add(panel_1);
-        panel_1.setLayout(new FormLayout(
+        JPanel gcodePanel = new JPanel();
+        gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(gcodePanel);
+        gcodePanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -67,13 +145,13 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                         FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),}));
 
         JLabel lblHeadMountable = new JLabel("Head Mountable");
-        panel_1.add(lblHeadMountable, "2, 2");
+        gcodePanel.add(lblHeadMountable, "2, 2");
 
         JLabel lblSetting = new JLabel("Setting");
-        panel_1.add(lblSetting, "4, 2");
+        gcodePanel.add(lblSetting, "4, 2");
 
         comboBoxHm = new JComboBox<>();
-        panel_1.add(comboBoxHm, "2, 4, fill, default");
+        gcodePanel.add(comboBoxHm, "2, 4, fill, default");
 
         comboBoxHm.addItem(new HeadMountableItem(null));
         for (Head head : Configuration.get().getMachine().getHeads()) {
@@ -95,7 +173,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         }
 
         comboBoxCommandType = new JComboBox<>();
-        panel_1.add(comboBoxCommandType, "4, 4, fill, default");
+        gcodePanel.add(comboBoxCommandType, "4, 4, fill, default");
 
         comboBoxHm.addItemListener(new ItemListener() {
             @Override
@@ -112,27 +190,27 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         });
 
         JScrollPane scrollPane = new JScrollPane();
-        panel_1.add(scrollPane, "2, 6, 3, 1, fill, fill");
+        gcodePanel.add(scrollPane, "2, 6, 3, 1, fill, fill");
 
         textAreaCommand = new JTextArea();
         scrollPane.setViewportView(textAreaCommand);
         textAreaCommand.setRows(5);
 
-        JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
+        JPanel importExportPanel = new JPanel();
+        importExportPanel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
+        contentPanel.add(importExportPanel);
+        importExportPanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton btnExportGcodeProfile = new JButton(exportProfileAction);
-        panel.add(btnExportGcodeProfile, "2, 2");
+        importExportPanel.add(btnExportGcodeProfile, "2, 2");
 
         JButton btnCopyGcodeProfile = new JButton(copyProfileToClipboardAction);
-        panel.add(btnCopyGcodeProfile, "2, 4");
+        importExportPanel.add(btnCopyGcodeProfile, "2, 4");
 
         headMountableChanged();
         commandTypeChanged();
@@ -197,11 +275,30 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
     }
 
     @Override
-    public void createBindings() {}
+    public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter =
+                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        
+        addWrappedBinding(driver, "units", unitsCb, "selectedItem");
+        addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
+        addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
+        addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
+        addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
+        addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
+        addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
+        
+        ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
+        ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
+        ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
+        ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
+    }
 
     public final Action exportProfileAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.unload);
+            putValue(SMALL_ICON, Icons.export);
             putValue(NAME, "Export Gcode File");
             putValue(SHORT_DESCRIPTION, "Export the Gcode profile to a file.");
         }
@@ -248,7 +345,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
 
     public final Action importProfileAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.load);
+            putValue(SMALL_ICON, Icons.importt);
             putValue(NAME, "Load Gcode File");
             putValue(SHORT_DESCRIPTION, "Import the Gcode profile from a file.");
         }
@@ -328,6 +425,13 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
     private JComboBox<CommandType> comboBoxCommandType;
     private JComboBox<HeadMountableItem> comboBoxHm;
     private JTextArea textAreaCommand;
+    private JTextField maxFeedRateTf;
+    private JTextField backlashOffsetXTf;
+    private JTextField backlashOffsetYTf;
+    private JTextField backlashFeedRateFactorTf;
+    private JTextField commandTimeoutTf;
+    private JTextField connectWaitTimeTf;
+    private JComboBox unitsCb;
 
     static class HeadMountableItem {
         private HeadMountable hm;

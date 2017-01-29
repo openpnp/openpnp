@@ -19,6 +19,9 @@
 
 package org.openpnp.machine.reference;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -36,10 +39,8 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -63,8 +64,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
-
-
+    private static final int CAPTURE_RETRY_COUNT = 10;
+    
+    private static BufferedImage CAPTURE_ERROR_IMAGE = null;
+    
     @Element(required = false)
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -117,8 +120,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         catch (Exception e) {
             Logger.warn(e);
         }
-        BufferedImage image;
-        while ((image = internalCapture()) == null);
+        BufferedImage image = safeInternalCapture();
         try {
             Map<String, Object> globals = new HashMap<>();
             globals.put("camera", this);
@@ -132,11 +134,40 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     
     protected abstract BufferedImage internalCapture();
     
+    /**
+     * Wraps internalCapture() to ensure that a null image is never returned. Attempts to
+     * retry capture if the capture returns null and if no image can be captured returns a
+     * default image. Several of the low level camera drivers return null when there is a
+     * capture error, but these are often temporary and we would prefer not to have bad
+     * images returned. The retry is intended to smooth this out.
+     * @return
+     */
+    protected synchronized BufferedImage safeInternalCapture() {
+        for (int i = 0; i < CAPTURE_RETRY_COUNT; i++) {
+            BufferedImage image = internalCapture();
+            if (image != null) {
+                return image;
+            }
+            Logger.trace("Camera {} failed to return an image. Retrying.", this);
+        }
+        if (CAPTURE_ERROR_IMAGE == null) {
+            CAPTURE_ERROR_IMAGE = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = (Graphics2D) CAPTURE_ERROR_IMAGE.createGraphics();
+            g.setColor(Color.black);
+            g.fillRect(0, 0, 640, 480);
+            g.setColor(Color.red);
+            g.drawLine(0, 0, 640, 480);
+            g.drawLine(640, 0, 0, 480);
+            g.dispose();
+        }
+        Logger.warn("Camera {} failed to return an image after {} tries.", this, CAPTURE_RETRY_COUNT);
+        return CAPTURE_ERROR_IMAGE;
+    }
+    
     @Override
-    public int getWidth() {
+    public synchronized int getWidth() {
         if (width == null) {
-            BufferedImage image;
-            while ((image = internalCapture()) == null);
+            BufferedImage image = safeInternalCapture();
             width = image.getWidth();
             height = image.getHeight();
         }
@@ -144,10 +175,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
 
     @Override
-    public int getHeight() {
-        if (width == null) {
-            BufferedImage image;
-            while ((image = internalCapture()) == null);
+    public synchronized int getHeight() {
+        if (height == null) {
+            BufferedImage image = safeInternalCapture();
             width = image.getWidth();
             height = image.getHeight();
         }

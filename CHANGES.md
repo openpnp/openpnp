@@ -1,6 +1,127 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-01-27
+
+* Icon Improvements
+
+	With many thanks to @dzach we now have some much improved icons in many parts of OpenPnP.
+	@dzach spent several days working on and refining icons to show their intent better, and
+	to improve usability to persons with color blindness. As a result, several of the icons
+	that used to require you to think for a moment to remember what they were are redesigned
+	to be very clear and easy to understand.
+	
+	References:
+	https://github.com/openpnp/openpnp/pull/429
+	https://github.com/openpnp/openpnp/pull/426
+	https://github.com/openpnp/openpnp/issues/421
+	
+	Thank you @dzach!
+	
+# 2017-01-15
+
+* ReferenceSlotAutoFeeder
+
+	A new feeder called ReferenceSlotAutoFeeder has been added which provides the capability
+	of a movable auto feeder.
+	
+	ReferenceSlotAutoFeeder allows you to define any number of feeder slots on your machine
+	and each one can contain a feeder. By changing the feeder in a slot you move it's settings
+	from slot to slot without having to reconfigure it's position, part or other settings.
+	
+	The primary purpose of this feeder is for machines that have auto feeders that can be readily
+	moved from position to position.
+	
+	More information at https://github.com/openpnp/openpnp/wiki/ReferenceSlotAutoFeeder.
+
+	Work was done in https://github.com/openpnp/openpnp/issues/399.
+
+# 2017-01-09
+
+* QR Code Based X Out Example Script
+
+	A new example script called QrCodeXout.js is now included with OpenPnP. It will scan
+	each board in a job for a QR code and if one is found the board will be disabled.
+	This is an easy way to mark bad boards in a panel before starting a job.
+	
+	The purpose of the example script is to show how to use the QR code reader to
+	do a complex task. It can easily be modified to search for other markings or
+	other types of codes.
+
+# 2017-01-06
+
+* ScriptRun CvPipeline Stage
+
+	A new CvPipeline stage has been added called ScriptRun. This stage take a file and
+	runs it as a script with one of the supported built in script engines. This makes
+	it very easy for people to add their own vision logic to a pipeline without having
+	to write a stage.
+	
+	The script is supplied globals of `pipeline` and `stage`.
+	
+	An example script is shown below. It sets all of the pixels of the input image to
+	the color green.
+	
+	```
+	pipeline.workingImage.setTo(new Packages.org.opencv.core.Scalar(0, 255, 0));
+	```
+	
+	By saving the above to a file with the extension .js and selecting it in the stage the
+	script will run each time the stage is evaluated.
+	
+# 2016-12-30
+
+* OpenCvCamera Capture Properties
+
+	You can now set a number of capture properties on the OpenCvCamera. Not all properties are
+	supported on every system or every camera. This feature is experimental and is primarily
+	intended to allow users to experiment with exposure and format control.
+	
+	To set properties open the configuration for the camera, select the Camera Specific
+	tab and look for the Properties section at the bottom.
+	
+	More information is available at: https://github.com/openpnp/openpnp/issues/328
+	
+# 2016-12-29
+
+* Auto Feeder Improvements
+
+	ReferenceAutoFeeder can now use actuators in boolean or double mode and the configuration
+	panel has been updated to support each.
+	
+	ReferenceAutoFeeder also now supports a post pick actuator, which is helpful to support
+	feeders that require two movements for a single feed operation. This is common in the
+	Yamaha CL feeders that are becoming popular. The feed actuator is used to retract the guard
+	and the post pick actuator is used to advance the tape after a pick.
+	
+	Existing feeders should not require any changes to support these new features. The defaults
+	have been maintained.
+	
+* Post Pick Supported in Feeder Panel
+
+	The post pick operation is now called from the Feeders tab when you run a Pick operation. This
+	is useful when testing feeders that use this feature. Prior to this addition the post pick
+	operation was only called when a job was running.
+
+* Help Menu
+
+	There is now a new Help menu that has quick links to important documentation and a new
+	option to let you check for updates to OpenPnP. This option is only enabled if you
+	installed OpenPnP with the installer. It will not be available if you built it from
+	source.
+
+* Camera Improvements
+
+	ReferenceCamera is now much smarter about handling problems with invalid images and it should
+	no longer cause high CPU usage when a camera configuration is incorrect. In addition, when
+	it receives a null image it will retry up to 10 times before failing. This is helpful for
+	cameras that sometimes return bad images; common with the ELP series of USB cameras.
+
+* DipTrace Native Import
+
+	With many thanks to @BendRocks, we now have native DipTrace import support. Find the new
+	importer under the File -> Import menu.
+
 # 2016-12-20
 
 * User Interface Improvements

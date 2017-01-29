@@ -15,13 +15,12 @@ import org.simpleframework.xml.Attribute;
  * saturationMin, valueMin) and (hueMax, saturationMax, valueMax) are set to black in the output
  * image.
  * 
- * This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor
- * with Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied
+ * This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor with
+ * Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied
  * internally as to not complicate the use of multiple instances of this stage in series.
  * 
- * Note that this stage can be used with any 3 channel, 8 bit per channel color space. The order
- * of the filtered channels is hue, saturation, value, but you can use these ranges for other
- * channels.
+ * Note that this stage can be used with any 3 channel, 8 bit per channel color space. The order of
+ * the filtered channels is hue, saturation, value, but you can use these ranges for other channels.
  */
 public class MaskHsv extends CvStage {
     @Attribute
@@ -98,8 +97,23 @@ public class MaskHsv extends CvStage {
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
         masked.setTo(color);
-        Core.inRange(mat, new Scalar(hueMin, saturationMin, valueMin), new Scalar(hueMax, saturationMax, valueMax), mask);
-        Core.bitwise_not(mask, mask);
+        // FCA Change to have the possibility to work inside the interval or outside (when min>max)
+        Scalar min;
+        Scalar max;
+        if (hueMin <= hueMax) {
+            min = new Scalar(hueMin, saturationMin, valueMin);
+            max = new Scalar(hueMax, saturationMax, valueMax);
+        }
+        else {
+            min = new Scalar(hueMax, saturationMin, valueMin);
+            max = new Scalar(hueMin, saturationMax, valueMax);
+        }
+        Core.inRange(mat, min, max, mask);
+
+        if (hueMin <= hueMax) {
+            Core.bitwise_not(mask, mask);
+        }
+
         mat.copyTo(masked, mask);
         return new Result(masked);
     }

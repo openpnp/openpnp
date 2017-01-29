@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.feeder;
 
 import javax.swing.Action;
 
-import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
@@ -68,7 +67,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         int partX, partY;
 
         if (feedCount >= (trayCountX * trayCountY)) {
-            throw new Exception(String.format("Tray empty on feeder %s.", getName()));
+            throw new Exception("Tray empty.");
         }
 
         if (trayCountX >= trayCountY) {

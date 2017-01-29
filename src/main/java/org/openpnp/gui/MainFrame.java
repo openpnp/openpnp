@@ -22,6 +22,7 @@ package org.openpnp.gui;
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -36,6 +37,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
@@ -45,6 +48,7 @@ import javax.swing.Action;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -62,10 +66,10 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
@@ -247,8 +251,10 @@ public class MainFrame extends JFrame {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
 
-        mnEdit.add(new JMenuItem(jobPanel.newBoardAction));
-        mnEdit.add(new JMenuItem(jobPanel.addBoardAction));
+        JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addNewBoardAction));
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingBoardAction));
+        mnEdit.add(mnEditAddBoard);
         mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
         mnEdit.addSeparator();
         mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
@@ -311,11 +317,16 @@ public class MainFrame extends JFrame {
 
         // Help
         /////////////////////////////////////////////////////////////////////
+        JMenu mnHelp = new JMenu("Help");
+        menuBar.add(mnHelp);
         if (!macOsXMenus) {
-            JMenu mnHelp = new JMenu("Help");
-            menuBar.add(mnHelp);
-
             mnHelp.add(new JMenuItem(aboutAction));
+        }
+        mnHelp.add(quickStartLinkAction);
+        mnHelp.add(setupAndCalibrationLinkAction);
+        mnHelp.add(userManualLinkAction);
+        if (isInstallerAvailable()) {
+            mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
 
         contentPane = new JPanel();
@@ -532,7 +543,7 @@ public class MainFrame extends JFrame {
     public void splitWindows() {
         if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
             // pin panelCameraAndInstructions to a separate JFrame
-            JFrame frameCamera = new JFrame("OpenPnp - Camera");
+            JDialog frameCamera = new JDialog(this, "OpenPnp - Camera", false);
             // as of today no smart way found to get an adjusted size
             // ... so main window size is used for the camera window
             frameCamera.setSize(getFrames()[0].getSize());
@@ -540,7 +551,7 @@ public class MainFrame extends JFrame {
             frameCamera.setVisible(true);
 
             // pin machineControlsPanel to a separate JFrame
-            JFrame frameMachineControls = new JFrame("OpenPnp - Machine Controls");
+            JDialog frameMachineControls = new JDialog(this, "OpenPnp - Machine Controls", false);
             // as of today no smart way found to get an adjusted size
             // ... so hardcoded values used (usually not a good idea)
             frameMachineControls.add(machineControlsPanel);
@@ -560,6 +571,16 @@ public class MainFrame extends JFrame {
             }
         }
     }
+    
+    public boolean isInstallerAvailable() {
+        try {
+            Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+            return true;
+        }
+        catch (Throwable e) {
+            return false;
+        }
+    }
 
     public JLabel getDroLabel() {
         return droLbl;
@@ -569,6 +590,7 @@ public class MainFrame extends JFrame {
         registerBoardImporter(EagleBoardImporter.class);
         registerBoardImporter(EagleMountsmdUlpImporter.class);
         registerBoardImporter(KicadPosImporter.class);
+        registerBoardImporter(DipTraceImporter.class);
         registerBoardImporter(NamedCSVImporter.class);
         registerBoardImporter(SolderPasteGerberImporter.class);
     }
@@ -753,7 +775,8 @@ public class MainFrame extends JFrame {
             else {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
             }
-            MessageBoxes.infoBox("Windows Style Changed", "Window style has been changed. Please restart OpenPnP to see the changes.");
+            MessageBoxes.infoBox("Windows Style Changed",
+                    "Window style has been changed. Please restart OpenPnP to see the changes.");
         }
     };
 
@@ -770,6 +793,76 @@ public class MainFrame extends JFrame {
             about();
         }
     };
+    
+    private Action checkForUpdatesAction = new AbstractAction("Check For Updates...") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Class ApplicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+                Class Callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
+                Method launchApplication = ApplicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, Callback);
+                launchApplication.invoke(null, "125", null, false, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch update application.", e);
+            }
+        }
+    };
+    
+    private Action quickStartLinkAction = new AbstractAction("Quick Start") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            String uri = "https://github.com/openpnp/openpnp/wiki/Quick-Start";
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    throw new Exception("Not supported.");
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
+            }
+        }
+    };
+    
+    private Action setupAndCalibrationLinkAction = new AbstractAction("Setup and Calibration") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            String uri = "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration";
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    throw new Exception("Not supported.");
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
+            }
+        }
+    };
+    
+    private Action userManualLinkAction = new AbstractAction("User Manual") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            String uri = "https://github.com/openpnp/openpnp/wiki/User-Manual";
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    throw new Exception("Not supported.");
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
+            }
+        }
+    };
+    
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;

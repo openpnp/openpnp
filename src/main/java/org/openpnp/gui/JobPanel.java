@@ -25,6 +25,8 @@ import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -39,8 +41,10 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -100,9 +104,6 @@ public class JobPanel extends JPanel {
         Finished
     }
 
-    @SuppressWarnings("unused")
-
-    
     final private Configuration configuration;
     final private MainFrame frame;
 
@@ -188,7 +189,7 @@ public class JobPanel extends JPanel {
                         boardLocationSelectionActionGroup.setEnabled(boardLocation != null);
                         jobPlacementsPanel.setBoardLocation(boardLocation);
                         jobPastePanel.setBoardLocation(boardLocation);
-                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
+                        Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation, JobPanel.this));
                     }
                 });
 
@@ -226,11 +227,17 @@ public class JobPanel extends JPanel {
         btnStopJob.setHideActionText(true);
         toolBarBoards.add(btnStopJob);
         toolBarBoards.addSeparator();
-        JButton btnNewBoard = new JButton(newBoardAction);
-        btnNewBoard.setHideActionText(true);
-        toolBarBoards.add(btnNewBoard);
         JButton btnAddBoard = new JButton(addBoardAction);
         btnAddBoard.setHideActionText(true);
+        btnAddBoard.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                JPopupMenu menu = new JPopupMenu();
+                menu.add(new JMenuItem(addNewBoardAction));
+                menu.add(new JMenuItem(addExistingBoardAction));
+                menu.show(btnAddBoard, (int) btnAddBoard.getWidth(), (int) btnAddBoard.getHeight());
+            }
+        });
         toolBarBoards.add(btnAddBoard);
         JButton btnRemoveBoard = new JButton(removeBoardAction);
         btnRemoveBoard.setHideActionText(true);
@@ -311,6 +318,9 @@ public class JobPanel extends JPanel {
     
     @Subscribe
     public void boardLocationSelected(BoardLocationSelectedEvent event) {
+        if (event.source == this) {
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             MainFrame.get().showTab("Job");
 
@@ -320,6 +330,9 @@ public class JobPanel extends JPanel {
     
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
+        if (event.source == this || event.source == jobPlacementsPanel) {
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             MainFrame.get().showTab("Job");
             
@@ -334,8 +347,9 @@ public class JobPanel extends JPanel {
     private void selectBoardLocation(BoardLocation boardLocation) {
         for (int i = 0; i < boardLocationsTableModel.getRowCount(); i++) {
             if (boardLocationsTableModel.getBoardLocation(i) == boardLocation) {
-                boardLocationsTable.getSelectionModel().setSelectionInterval(i, i);
-                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(i, 0, true)));
+                int index = boardLocationsTable.convertRowIndexToView(i);
+                boardLocationsTable.getSelectionModel().setSelectionInterval(index, index);
+                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(index, 0, true)));
                 break;
             }
         }
@@ -410,6 +424,10 @@ public class JobPanel extends JPanel {
             recentJobs.remove(recentJobs.size() - 1);
         }
         saveRecentJobs();
+    }
+    
+    public void refresh() {
+        boardLocationsTableModel.fireTableDataChanged();
     }
 
     public void refreshSelectedBoardRow() {
@@ -840,10 +858,22 @@ public class JobPanel extends JPanel {
             });
         }
     };
-
-    public final Action newBoardAction = new AbstractAction() {
+    
+    public final Action addBoardAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.neww);
+            putValue(NAME, "Add Board...");
+            putValue(SMALL_ICON, Icons.add);
+            putValue(SHORT_DESCRIPTION, "Add a new or existing board to the job.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+
+
+    public final Action addNewBoardAction = new AbstractAction() {
+        {
             putValue(NAME, "New Board...");
             putValue(SHORT_DESCRIPTION, "Create a new board and add it to the job.");
         }
@@ -882,10 +912,9 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public final Action addBoardAction = new AbstractAction() {
+    public final Action addExistingBoardAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "Add Board...");
+            putValue(NAME, "Existing Board...");
             putValue(SHORT_DESCRIPTION, "Add an existing board to the job.");
         }
 
@@ -929,10 +958,8 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int index = boardLocationsTable.getSelectedRow();
-            if (index != -1) {
-                index = boardLocationsTable.convertRowIndexToModel(index);
-                BoardLocation boardLocation = getJob().getBoardLocations().get(index);
+            BoardLocation boardLocation = getSelectedBoardLocation();
+            if (boardLocation != null) {
                 getJob().removeBoardLocation(boardLocation);
                 boardLocationsTableModel.fireTableDataChanged();
             }

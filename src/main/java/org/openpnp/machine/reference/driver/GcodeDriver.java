@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.driver;
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +14,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
@@ -36,6 +41,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 import com.google.common.base.Joiner;
 
@@ -126,6 +132,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Attribute(required = false)
     protected int maxFeedRate = 1000;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetX = -1;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetY = -1;
+ 
+    @Attribute(required = false)
+    protected double backlashFeedRateFactor = 0.1;
 
     @Attribute(required = false)
     protected int timeoutMilliseconds = 5000;
@@ -140,7 +155,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public ArrayList<Command> commands = new ArrayList<>();
 
     @ElementList(required = false)
-    protected List<ReferenceDriver> subDrivers = new ArrayList<>();
+    protected List<GcodeDriver> subDrivers = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<Axis> axes = new ArrayList<>();
@@ -150,7 +165,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-
+    private transient boolean subDriver = false;
+    
+    @Commit
+    public void commit() {
+        for (GcodeDriver driver : subDrivers) {
+            driver.subDriver = true;
+        }
+    }
+    
     public void createDefaults() {
         axes = new ArrayList<>();
         axes.add(new Axis("x", Axis.Type.X, 0, "*"));
@@ -394,8 +417,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
             // For each included axis, if the axis has a transform, transform the target coordinate
-            // to
-            // it's raw value.
+            // to it's raw value.
             if (xAxis != null && xAxis.getTransform() != null) {
                 x = xAxis.getTransform().toRaw(xAxis, hm, x);
             }
@@ -415,12 +437,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+            command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
+                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
             }
             else {
                 command = substituteVariable(command, "X", x);
+                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX); // Backlash Compensation
                 haveToMove = true;
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
@@ -430,9 +455,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
             if (yAxis == null || yAxis.getCoordinate() == y) {
                 command = substituteVariable(command, "Y", null);
+                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
             }
             else {
                 command = substituteVariable(command, "Y", y);
+                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
                 haveToMove = true;
                 if (yAxis.getPreMoveCommand() != null) {
                     sendGcode(yAxis.getPreMoveCommand());
@@ -853,7 +880,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        if (!subDrivers.isEmpty()) {
+        if (!subDriver) {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
@@ -864,6 +891,90 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
                 new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        if (subDriver) {
+            return null;
+        }
+        else {
+            return new Action[] {addSubDriverAction};
+        }
+    }
+    
+    
+    
+    public Action addSubDriverAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.add);
+            putValue(NAME, "Add Sub-Driver...");
+            putValue(SHORT_DESCRIPTION, "Add a new sub-driver.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            GcodeDriver driver = new GcodeDriver();
+            driver.subDriver = true;
+            subDrivers.add(driver);
+            fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
+        }
+    };
+
+    public LengthUnit getUnits() {
+        return units;
+    }
+
+    public void setUnits(LengthUnit units) {
+        this.units = units;
+    }
+
+    public double getBacklashOffsetX() {
+        return backlashOffsetX;
+    }
+    
+    public void setBacklashOffsetX(double BacklashOffsetX) {
+        this.backlashOffsetX = BacklashOffsetX;
+    }
+    
+    public double getBacklashOffsetY() {
+        return backlashOffsetY;
+    }
+    
+    public void setBacklashOffsetY(double BacklashOffsetY) {
+        this.backlashOffsetY = BacklashOffsetY;
+    }
+    
+    public double getBacklashFeedRateFactor() {
+        return backlashFeedRateFactor;
+    }
+    
+    public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
+        this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    }
+    
+    public int getMaxFeedRate() {
+        return maxFeedRate;
+    }
+
+    public void setMaxFeedRate(int maxFeedRate) {
+        this.maxFeedRate = maxFeedRate;
+    }
+
+    public int getTimeoutMilliseconds() {
+        return timeoutMilliseconds;
+    }
+
+    public void setTimeoutMilliseconds(int timeoutMilliseconds) {
+        this.timeoutMilliseconds = timeoutMilliseconds;
+    }
+
+    public int getConnectWaitTimeMilliseconds() {
+        return connectWaitTimeMilliseconds;
+    }
+
+    public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
+        this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
 
     public static class Axis {
