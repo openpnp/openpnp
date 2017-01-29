@@ -43,6 +43,9 @@ Let's add a Strip Feeder to the machine so that we can test the feeder system.
 ### Part Selection
 Every feeder has a Part field that you must fill in. By telling OpenPnP which part a feeder is holding OpenPnP can make intelligent decisions about which feeders to use for a job. You can even have multiple feeders for the same part, in case it's a part you use many of.
 
+## Locate a part
+To test your settings for a feeder you can make the camera or the nozzle go to the location of the part that's going to be fed next. To position the camera on the part, click the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera-on-feeder.svg) button. To position the nozzle, click the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle-on-feeder.svg) button.
+
 ## Pick a Part
 
 Now that you've configured a feeder, click the Feed and Pick button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/pick.svg) to perform a pick operation. If all goes well the machine should feed a part and pick it up with the nozzle. You can use the Discard button we set up previously to drop the part.
