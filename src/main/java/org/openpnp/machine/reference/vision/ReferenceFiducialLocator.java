@@ -9,16 +9,22 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.CvException;
 import org.opencv.features2d.KeyPoint;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
+import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -33,14 +39,18 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 
 /**
@@ -49,6 +59,59 @@ import org.simpleframework.xml.Root;
  */
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
+
+    @Element(required = true)
+    protected CvPipeline defaultPipeline = createPartPipeline(null);
+
+    @ElementMap(required = false)
+    protected Map<String, CustomFiducialPipelineSettings> fiducialPipelineByPartId = new HashMap<>();
+
+    @Override
+    public Wizard getPartConfigurationWizard(Part part) {
+    	//CustomFiducialPipelineSettings partSettings = getFiducialSettings(part);
+        // this.setCustomFiducialPipeline(part, partSettings.getPipeline());
+        return new ReferenceFiducialLocatorConfigurationWizard(this, part);
+	}
+	
+	public CustomFiducialPipelineSettings getFiducialSettings(Part part) {
+		CustomFiducialPipelineSettings customFidSettings = this.fiducialPipelineByPartId.get(part.getId());
+        if (customFidSettings == null) {
+        	customFidSettings = new CustomFiducialPipelineSettings(false, null);
+        	this.fiducialPipelineByPartId.put(part.getId(), customFidSettings);
+        }
+
+//        if (customFidSettings.getPipeline() == null) {
+//        	try {
+//        		customFidSettings.setPipeline(getDefaultPipeline().clone());
+//        	}
+//        	catch (Exception e) {
+//        	}
+//        }
+        
+        try {
+        	customFidSettings.getPipeline().setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        }
+        catch (Exception e) {
+        }
+        return customFidSettings;
+	}
+
+    public CvPipeline getDefaultPipeline() {
+        return defaultPipeline;
+    }
+
+    public void resetCustomFiducialPipeline(Part part) {
+    	CustomFiducialPipelineSettings customFidSettings = getFiducialSettings(part);
+        if (customFidSettings == null) {
+        	customFidSettings = new CustomFiducialPipelineSettings(true, null);
+        	this.fiducialPipelineByPartId.put(part.getId(), customFidSettings);
+        }
+    	try {
+    		customFidSettings.setPipeline(getDefaultPipeline().clone());
+    	}
+        catch (Exception e) {
+        }
+    }
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         // Find the fids in the board
@@ -131,11 +194,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     pkg.getId()));
         }
 
-        // Create the template
-        BufferedImage template =
-                createTemplate(camera.getUnitsPerPixel(), part.getPackage().getFootprint());
-
-
         // Move to where we expect to find the fid, if user has not specified then we treat 0,0,0,0
         // as the place for this to be
         if (location != null) {
@@ -146,7 +204,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Wait for camera to settle
             Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
-            location = getBestTemplateMatch(camera, template, part);
+            location = findFiducial(camera, part);
             if (location == null) {
                 Logger.debug("No matches found!");
                 continue;
@@ -172,7 +230,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @return
      * @throws Exception
      */
-    private static Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
+    public Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
             throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
@@ -203,10 +261,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     pkg.getId()));
         }
 
-        // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(),
-                fid.getPart().getPackage().getFootprint());
-
         // Move to where we expect to find the fid
         Location expectedlocation =
                 Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
@@ -218,26 +272,44 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Wait for camera to settle
             Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
-            location = getBestTemplateMatch(camera, template, part);
+            location = findFiducial(camera, part);
             if (location == null) {
                 Logger.debug("No matches found!");
                 continue;
             }
+            location = location.add(expectedlocation);
             Logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
-            MovableUtils.moveToLocationAtSafeZ(camera, expectedlocation.add(location));
+            MovableUtils.moveToLocationAtSafeZ(camera, location);
             break;
         }
 
         return location;
     }
 
-    private static Location getBestTemplateMatch(final Camera camera, BufferedImage template, Part part)
+    private Location findFiducial(final Camera camera, Part part)
             throws Exception {
-        CvPipeline pipeline = createPartPipeline(part);
-        pipeline.setCamera(camera);
-        pipeline.process();
-        Object result = pipeline.getResult("results").model;
+    	Object result = null;
+    	CvPipeline pipeline = createPartPipeline(getFiducialSettings(part));
+        try {
+	        pipeline.setCamera(camera);
+	        pipeline.process();
+	        result = pipeline.getResult("results");
+    		// ack, if pipeline is bad... silently repair it, or error out here
+        	if (result == null) {
+        		pipeline = createPartPipeline(null);
+    	        pipeline.setCamera(camera);
+    	        pipeline.process();
+    	        result = pipeline.getResult("results");
+        	}
+        	if (result == null)
+        		throw new CvException("Cannot find 'results' from fiducial locator vision processing");
+        	
+        	result = ((CvStage.Result) result).model;
+        }
+        catch (Throwable t) {
+        	throw new CvException("Error in fiducial locator vision processing");
+        }
         List<Location> fidLocations = new ArrayList<>();
         if (result instanceof List) {
         	if (((List) result).size() > 0) {
@@ -375,7 +447,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Fiducal Locator";
+        return "Fiducial Locator";
     }
 
     @Override
@@ -386,8 +458,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new ReferenceFiducialLocatorConfigurationWizard(this, null))};
     }
 
     @Override
@@ -402,21 +474,70 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return null;
     }
     
-    // Get the fiducial pipeline from the BootyVision config
-    public static CvPipeline createPartPipeline(Part part) {
+    // Get the fiducial pipeline from the config
+    public CvPipeline createPartPipeline(CustomFiducialPipelineSettings settings) {
+		CvPipeline cvp = null;
         try {
-            PartAlignment z = Configuration.get().getMachine().getPartAlignment();
-            if (z instanceof ReferenceBottomVision) {
-            	ReferenceBottomVision rbv = (ReferenceBottomVision) z;
-            	return rbv.getPartSettings(part).getPipeline(); // if this is a resource, it may need to be cloned
-            }
-            // that didn't work, use default XML canned resource file
-            String xml = IOUtils.toString(ReferenceNozzleTip.class
-                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
-            return new CvPipeline(xml);
+        	if (settings != null) {
+				cvp = settings.getPipeline();
+				if (cvp == null) {
+			    	try {
+			    		cvp = getDefaultPipeline().clone();
+			    	}
+			        catch (Exception e) {
+			        }
+				}
+			}
+        	else {
+        		// use default XML canned resource file
+	            String xml = IOUtils.toString(ReferenceFiducialLocator.class
+	                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+	            cvp = new CvPipeline(xml);
+			}
         }
         catch (Exception e) {
             throw new Error(e);
+        }
+        try {
+        	cvp.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        }
+        catch (Exception e) {
+        }
+        return cvp;
+    }
+    
+    @Root
+    public static class CustomFiducialPipelineSettings {
+        @Attribute(required = true)
+        protected boolean enabled;
+
+        @Element(required = false)
+        protected CvPipeline pipeline;
+
+        public CustomFiducialPipelineSettings() {
+        	setEnabled(false);
+            setPipeline(null);
+        }
+
+        public CustomFiducialPipelineSettings(boolean enabled, CvPipeline pipeline) {
+        	setEnabled(enabled);
+        	setPipeline(pipeline);
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public CvPipeline getPipeline() {
+            return pipeline;
+        }
+
+        public void setPipeline(CvPipeline pipeline) {
+            this.pipeline = pipeline;
         }
     }
 }

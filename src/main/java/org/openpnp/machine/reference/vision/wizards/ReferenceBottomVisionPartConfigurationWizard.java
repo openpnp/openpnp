@@ -16,14 +16,11 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -41,7 +38,6 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     private JCheckBox enabledCheckbox;
     private JCheckBox chckbxCenterAfterTest;
-    private JCheckBox chckbxFiducialPipeline;
 
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision,
             Part part) {
@@ -58,7 +54,6 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -82,7 +77,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         chckbxCenterAfterTest = new JCheckBox("Center After Test");
         chckbxCenterAfterTest.setSelected(true);
         panel.add(chckbxCenterAfterTest, "6, 4");
-        
+
         JLabel lblPipeline = new JLabel("Pipeline");
         panel.add(lblPipeline, "2, 6");
 
@@ -109,11 +104,6 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             }
         });
         panel.add(btnLoadDefault, "6, 6");
-        
-        chckbxFiducialPipeline = new JCheckBox("This is a fiducial pipeline");
-        chckbxFiducialPipeline.setSelected(
-        		part.getId().toLowerCase(getDefaultLocale()).startsWith("fiducial"));
-        panel.add(chckbxFiducialPipeline, "4, 8");
     }
 
     private void testAlignment() throws Exception {
@@ -154,24 +144,14 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         // the nozzle.
         location = location.subtract(offsets);
 
-        MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-        //nozzle.moveTo(location);
+        nozzle.moveTo(location);
     }
 
     private void editPipeline() throws Exception {
-    	JDialog dialog;
         CvPipeline pipeline = partSettings.getPipeline();
-        if (chckbxFiducialPipeline.isSelected())
-        {
-        	pipeline.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
-        	dialog = new JDialog(MainFrame.get(), "Fiducial Vision Pipeline");
-        }
-        else
-        {
-        	pipeline.setCamera(VisionUtils.getBottomVisionCamera());
-        	dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
-        }
+        pipeline.setCamera(VisionUtils.getBottomVisionCamera());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);
