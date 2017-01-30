@@ -1,6 +1,23 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-01-27
+
+* Icon Improvements
+
+	With many thanks to @dzach we now have some much improved icons in many parts of OpenPnP.
+	@dzach spent several days working on and refining icons to show their intent better, and
+	to improve usability to persons with color blindness. As a result, several of the icons
+	that used to require you to think for a moment to remember what they were are redesigned
+	to be very clear and easy to understand.
+	
+	References:
+	https://github.com/openpnp/openpnp/pull/429
+	https://github.com/openpnp/openpnp/pull/426
+	https://github.com/openpnp/openpnp/issues/421
+	
+	Thank you @dzach!
+	
 # 2017-01-15
 
 * ReferenceSlotAutoFeeder

@@ -79,7 +79,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        return Icons.editFeeder;
+        return Icons.feeder;
     }
 
     public int getRetryCount() {
