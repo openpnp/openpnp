@@ -43,7 +43,7 @@ public class FeederView extends Group {
         UiUtils.bindTooltip(this, new Tooltip(feeder.getName()));
         
         setOnMouseClicked(event -> {
-            Configuration.get().getBus().post(new FeederSelectedEvent(feeder));
+            Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeederView.this));
         });
         
         Configuration.get().getBus().register(this);
