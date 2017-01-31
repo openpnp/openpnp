@@ -172,6 +172,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
 
+        JPanel fiducialPanel = new JPanel();
+        tabbedPane.addTab("Fiducial", null, new JScrollPane(fiducialPanel), null);
+        fiducialPanel.setLayout(new BorderLayout(0, 0));
+        
         JButton btnNewPart = toolBar.add(newPartAction);
         btnNewPart.setToolTipText("");
         JButton btnDeletePart = toolBar.add(deletePartAction);
@@ -198,6 +202,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 }
 
                 alignmentPanel.removeAll();
+                fiducialPanel.removeAll();
 
                 Part part = getSelection();
                 
@@ -217,7 +222,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
                     if (wizard != null) {
                         wizard.setWizardContainer(PartsPanel.this);
-                        alignmentPanel.add(wizard.getWizardPanel());
+                        fiducialPanel.add(wizard.getWizardPanel());
                     }
                 }
 

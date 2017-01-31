@@ -61,56 +61,41 @@ import org.simpleframework.xml.Root;
 public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Element(required = true)
-    protected CvPipeline defaultPipeline = createPartPipeline(null);
+    protected CvPipeline defaultFiducialPipeline = createPartPipeline(null);
 
     @ElementMap(required = false)
-    protected Map<String, CustomFiducialPipelineSettings> fiducialPipelineByPartId = new HashMap<>();
+    protected Map<String, PartFiducialPipeline> fiducialPipelineByPartId = new HashMap<>();
 
     @Override
     public Wizard getPartConfigurationWizard(Part part) {
-    	//CustomFiducialPipelineSettings partSettings = getFiducialSettings(part);
-        // this.setCustomFiducialPipeline(part, partSettings.getPipeline());
         return new ReferenceFiducialLocatorConfigurationWizard(this, part);
-	}
-	
-	public CustomFiducialPipelineSettings getFiducialSettings(Part part) {
-		CustomFiducialPipelineSettings customFidSettings = this.fiducialPipelineByPartId.get(part.getId());
-        if (customFidSettings == null) {
-        	customFidSettings = new CustomFiducialPipelineSettings(false, null);
-        	this.fiducialPipelineByPartId.put(part.getId(), customFidSettings);
-        }
-
-//        if (customFidSettings.getPipeline() == null) {
-//        	try {
-//        		customFidSettings.setPipeline(getDefaultPipeline().clone());
-//        	}
-//        	catch (Exception e) {
-//        	}
-//        }
-        
-        try {
-        	customFidSettings.getPipeline().setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
-        }
-        catch (Exception e) {
-        }
-        return customFidSettings;
-	}
-
-    public CvPipeline getDefaultPipeline() {
-        return defaultPipeline;
     }
 
-    public void resetCustomFiducialPipeline(Part part) {
-    	CustomFiducialPipelineSettings customFidSettings = getFiducialSettings(part);
-        if (customFidSettings == null) {
-        	customFidSettings = new CustomFiducialPipelineSettings(true, null);
-        	this.fiducialPipelineByPartId.put(part.getId(), customFidSettings);
+    public PartFiducialPipeline getFiducialSettings(Part part) {
+        PartFiducialPipeline fidSettings = this.fiducialPipelineByPartId.get(part.getId());
+
+        if (fidSettings == null) {
+            // was not in XML/table, create new settings record
+            fidSettings = new PartFiducialPipeline(false, null);
+            this.fiducialPipelineByPartId.put(part.getId(), fidSettings);
         }
-    	try {
-    		customFidSettings.setPipeline(getDefaultPipeline().clone());
-    	}
-        catch (Exception e) {
+        else {
+            // got it, set camera if null
+            try {
+                if (fidSettings.getPipeline() != null
+                        && fidSettings.getPipeline().getCamera() == null) {
+                    fidSettings.getPipeline().setCamera(
+                            Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+                }
+            }
+            catch (Exception ignored) {
+            }
         }
+        return fidSettings;
+    }
+
+    public CvPipeline getDefaultPipeline() {
+        return defaultFiducialPipeline;
     }
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
@@ -119,7 +104,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         if (fiducials.size() < 2) {
             throw new Exception(String.format(
-                    "The board side contains only %d placements marked as fiducials, but at least 2 are required.",
+                    "The board side contains %d placements marked as a fiducial, at least 2 are required.",
                     fiducials.size()));
         }
 
@@ -148,12 +133,14 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
         double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
         if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
-            throw new Exception("Located fiducials are more than 1% away from expected.");
+            throw new Exception("Located fiducials are more than 1% away from expected, board location not set.");
         }
 
+        // eh voila
         Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
                 actualLocationA, actualLocationB);
 
+        // convert Z-value units
         location = location.derive(null, null,
                 boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
 
@@ -287,49 +274,50 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return location;
     }
 
-    private Location findFiducial(final Camera camera, Part part)
-            throws Exception {
-    	Object result = null;
-    	CvPipeline pipeline = createPartPipeline(getFiducialSettings(part));
+    private Location findFiducial(final Camera camera, Part part) throws Exception {
+        Object result = null;
+        CvPipeline pipeline = createPartPipeline(getFiducialSettings(part));
         try {
-	        pipeline.setCamera(camera);
-	        pipeline.process();
-	        result = pipeline.getResult("results");
-    		// ack, if pipeline is bad... silently repair it, or error out here
-        	if (result == null) {
-        		pipeline = createPartPipeline(null);
-    	        pipeline.setCamera(camera);
-    	        pipeline.process();
-    	        result = pipeline.getResult("results");
-        	}
-        	if (result == null)
-        		throw new CvException("Cannot find 'results' from fiducial locator vision processing");
-        	
-        	result = ((CvStage.Result) result).model;
+            pipeline.setCamera(camera);
+            pipeline.process();
+            result = pipeline.getResult("results");
+            // ack, if pipeline is bad... silently repair it, or error out here
+            if (result == null) {
+                pipeline = createPartPipeline(null);
+                pipeline.setCamera(camera);
+                pipeline.process();
+                result = pipeline.getResult("results");
+            }
+            if (result == null)
+                throw new CvException(
+                        "Cannot find 'results' from fiducial locator vision processing");
+
+            result = ((CvStage.Result) result).model;
         }
         catch (Throwable t) {
-        	throw new CvException("Error in fiducial locator vision processing");
+            throw new CvException("Error in fiducial locator vision processing");
         }
         List<Location> fidLocations = new ArrayList<>();
         if (result instanceof List) {
-        	if (((List) result).size() > 0) {
-        		if (((List) result).get(0) instanceof KeyPoint) {
-        			List<KeyPoint> kps = (List<KeyPoint>) result;
-	                fidLocations.addAll(kps.stream().map(keyPoint -> {
-	                    return VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y);
-	                }).sorted((a, b) -> {
-	                    double a1 =
-	                            a.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-	                    double b1 =
-	                            b.getLinearDistanceTo(new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-	                    return Double.compare(a1, b1);
-	                }).collect(Collectors.toList()));
-        		}
-        	}
+            if (((List) result).size() > 0) {
+                if (((List) result).get(0) instanceof KeyPoint) {
+                    List<KeyPoint> kps = (List<KeyPoint>) result;
+                    fidLocations.addAll(kps.stream().map(keyPoint -> {
+                        return VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x,
+                                keyPoint.pt.y);
+                    }).sorted((a, b) -> {
+                        double a1 = a.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        double b1 = b.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        return Double.compare(a1, b1);
+                    }).collect(Collectors.toList()));
+                }
+            }
         }
-        
+
         try {
-            MainFrame.get().get().getCameraViews().getCameraView(camera).showFilteredImage(
+            MainFrame.get().getCameraViews().getCameraView(camera).showFilteredImage(
                     OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 500);
         }
         catch (Exception e) {
@@ -339,7 +327,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         if (fidLocations.isEmpty()) {
             return null;
         }
-        
+
         return fidLocations.get(0);
     }
 
@@ -377,9 +365,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         shape = tx.createTransformedShape(shape);
 
         Rectangle2D bounds = shape.getBounds2D();
-        
+
         if (bounds.getWidth() == 0 || bounds.getHeight() == 0) {
-            throw new Exception("Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+            throw new Exception(
+                    "Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
         }
 
         // Make the image 50% bigger than the shape. This gives better
@@ -458,8 +447,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new ReferenceFiducialLocatorConfigurationWizard(this, null))};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(
+                new ReferenceFiducialLocatorConfigurationWizard(this, null))};
     }
 
     @Override
@@ -473,55 +462,58 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     // Get the fiducial pipeline from the config
-    public CvPipeline createPartPipeline(CustomFiducialPipelineSettings settings) {
-		CvPipeline cvp = null;
+    public CvPipeline createPartPipeline(PartFiducialPipeline settings) {
+        CvPipeline cvp = null;
         try {
-        	if (settings != null) {
-				cvp = settings.getPipeline();
-				if (cvp == null) {
-			    	try {
-			    		cvp = getDefaultPipeline().clone();
-			    	}
-			        catch (Exception e) {
-			        }
-				}
-			}
-        	else {
-        		// use default XML canned resource file
-	            String xml = IOUtils.toString(ReferenceFiducialLocator.class
-	                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
-	            cvp = new CvPipeline(xml);
-			}
+            if (settings != null) {
+                // try and get per-part pipeline
+                cvp = settings.getPipeline();
+                if (cvp == null) {
+                    // we tried to get it, but not there. Use default.
+                    try {
+                        cvp = defaultFiducialPipeline.clone();
+                    }
+                    catch (Exception e) {
+                    }
+                }
+            }
+            else {
+                // use default XML canned resource file
+                String xml = IOUtils.toString(ReferenceFiducialLocator.class
+                        .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+                cvp = new CvPipeline(xml);
+            }
         }
         catch (Exception e) {
             throw new Error(e);
         }
+        // try and set camera. If not in the GUI, this will fail and that's okay
         try {
-        	cvp.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+            cvp.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
         }
         catch (Exception e) {
         }
         return cvp;
     }
-    
+
     @Root
-    public static class CustomFiducialPipelineSettings {
+    public static class PartFiducialPipeline {
         @Attribute(required = true)
         protected boolean enabled;
 
         @Element(required = false)
         protected CvPipeline pipeline;
 
-        public CustomFiducialPipelineSettings() {
-        	setEnabled(false);
+        public PartFiducialPipeline() {
+            setEnabled(false);
             setPipeline(null);
         }
 
-        public CustomFiducialPipelineSettings(boolean enabled, CvPipeline pipeline) {
-        	setEnabled(enabled);
-        	setPipeline(pipeline);
+        public PartFiducialPipeline(boolean enabled, CvPipeline pipeline) {
+            setEnabled(enabled);
+            setPipeline(pipeline);
         }
 
         public boolean isEnabled() {
