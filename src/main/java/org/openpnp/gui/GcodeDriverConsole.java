@@ -6,16 +6,9 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.BorderLayout;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.Font;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -104,6 +97,17 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         
         cmdLineTextField = new JTextField();
         gcodeConsole.add(cmdLineTextField,"4, 4");
+        cmdLineTextField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == '\n') {
+                  sendGcodeConCmd();
+                }
+                else {
+                    super.keyTyped(e);
+                }
+            }
+        });
 
         sendGcodeConCmdBtn = new JButton(sendGcodeConCmdAction);
         gcodeConsole.add(sendGcodeConCmdBtn, "6, 4");
@@ -121,19 +125,24 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
     private JTextField cmdLineTextField;
     private JButton sendGcodeConCmdBtn;
     
+    private void sendGcodeConCmd() {
+      String cmd = cmdLineTextField.getText().toUpperCase();
+      textAreaConsole.append("> " + cmd + "\n");
+      try {
+        for(String line: driver.sendCommand(cmd,5000)) {
+          textAreaConsole.append(line + "\n");
+        }
+      }
+      catch (Exception ex) {
+        Logger.debug("Gcode console error: " + ex);
+      }
+    
+    }
+    
     private Action sendGcodeConCmdAction = new AbstractAction("Send") {
         @Override
         public void actionPerformed(ActionEvent e) {
-          try {
-            String cmd = cmdLineTextField.getText().toUpperCase();
-            textAreaConsole.append("> " + cmd + "\n");
-            for(String line: driver.sendCommand(cmd,5000)) {
-              textAreaConsole.append(line + "\n");
-            }
-        }
-        catch (Exception ex) {
-          Logger.debug("Gcode console error: " + ex);
-        }
+        sendGcodeConCmd();
       }
     };
 }
