@@ -27,6 +27,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -724,11 +725,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return responses;
     }
 
-    protected List<String> sendCommand(String command) throws Exception {
+    public List<String> sendCommand(String command) throws Exception {
         return sendCommand(command, timeoutMilliseconds);
     }
 
-    protected List<String> sendCommand(String command, long timeout) throws Exception {
+    public List<String> sendCommand(String command, long timeout) throws Exception {
         List<String> responses = new ArrayList<>();
 
         // Read any responses that might be queued up so that when we wait
@@ -889,8 +890,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
-                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
+                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode"),
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial")
+				};
     }
     
     @Override
