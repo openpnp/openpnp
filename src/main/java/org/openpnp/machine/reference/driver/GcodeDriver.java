@@ -893,7 +893,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode"),
                 new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
                 new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial")
-				};
+        };
     }
     
     @Override
@@ -905,8 +905,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             return new Action[] {addSubDriverAction};
         }
     }
-    
-    
     
     public Action addSubDriverAction = new AbstractAction() {
         {
