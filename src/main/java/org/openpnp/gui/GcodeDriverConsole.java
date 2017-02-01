@@ -103,14 +103,14 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
               switch (e.getKeyCode()) {
                 case 0:  return;
                 
-                case 38: // arrow key UP, older history
+                case KeyEvent.VK_UP: // arrow key UP, older history
                   if (historyCursor < historyLen - 1) {
                     historyCursor++;
                   }
                   cmdLineTextField.setText(history[historyCursor]);
                   break;
                   
-                case 40:  // arrow key DOWN, more recent history
+                case KeyEvent.VK_DOWN:  // arrow key DOWN, more recent history
                   if (historyCursor > 0) {
                     historyCursor--;
                   }
