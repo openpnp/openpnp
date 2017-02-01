@@ -52,7 +52,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         this.driver = driver;
         
         historyLen = 0;
-        historyMaxLen = 50;
+        historyMaxLen = 5;
         history = new String[historyMaxLen];
         historyCursor = 0;
         
@@ -93,8 +93,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         lblCmdLine = new JLabel("Command line:");
         gcodeConsole.add(lblCmdLine, "2, 4");
         
-        cmdLineTextField = new JTextField();              Logger.debug("keyCode = " + e.getKeyCode() + ", historyCursor = " + historyCursor);
-
+        cmdLineTextField = new JTextField();
         gcodeConsole.add(cmdLineTextField,"4, 4");
         
         cmdLineTextField.addKeyListener(new KeyAdapter() {
