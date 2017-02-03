@@ -34,8 +34,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.machine.reference.HTTPActuator;
-import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.machine.reference.HttpActuator;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -43,8 +42,8 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class HTTPActuatorConfigurationWizard extends AbstractConfigurationWizard {
-    private final HTTPActuator actuator;
+public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard {
+    private final HttpActuator actuator;
 
     private JTextField locationX;
     private JTextField locationY;
@@ -65,7 +64,7 @@ public class HTTPActuatorConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblOffURL;
     private JTextField OffURLTf;
 
-    public HTTPActuatorConfigurationWizard(HTTPActuator httpActuator) {
+    public HttpActuatorConfigurationWizard(HttpActuator httpActuator) {
         this.actuator = httpActuator;
         
         panelProperties = new JPanel();
