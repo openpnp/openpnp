@@ -9,7 +9,7 @@ Video tutorials to help with specific tasks in OpenPnP.
 
 * [Strip Feeder Auto Setup](https://www.youtube.com/watch?v=Fs-SwSq5AZw)
 * [Loading Feeder Slots with QR Codes](https://www.youtube.com/watch?v=brLDBEzPWy0)
-* Auto Feeder Setup](https://www.youtube.com/watch?v=mR46r4jFAI4)
+* [Auto Feeder Setup](https://www.youtube.com/watch?v=mR46r4jFAI4)
 
 ## Jobs
 
