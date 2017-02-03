@@ -22,6 +22,7 @@ import javax.swing.JToolBar;
 import org.openpnp.gui.support.JTextLogWriter;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
+import java.awt.event.ActionListener;
 
 public class LogPanel extends JPanel {
     private JTextArea text;
@@ -55,6 +56,14 @@ public class LogPanel extends JPanel {
 
         JButton btnLogLevel = new JButton("Log Level");
         toolBar.add(btnLogLevel);
+        
+        JButton btnClear = new JButton("Clear");
+        btnClear.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                text.setText("");
+            }
+        });
+        toolBar.add(btnClear);
 
         text = new JTextArea();
         text.setFont(new Font("Monospaced", Font.PLAIN, 13));

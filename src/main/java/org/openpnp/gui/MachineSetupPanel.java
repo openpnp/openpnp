@@ -93,10 +93,10 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
-
-        cbExp = new JCheckBox("Expand");
-        cbExp.setAction(action);
-        panel.add(cbExp);
+        
+                cbExp = new JCheckBox("Expand");
+                panel_1.add(cbExp);
+                cbExp.setAction(action);
 
         JLabel lblSearch = new JLabel("Search");
         panel_1.add(lblSearch);
