@@ -1,12 +1,14 @@
 Video tutorials to help with specific tasks in OpenPnP.
 
-## Setup and Calibration
+## Cameras
 
 * Camera Lens Calibration: https://www.youtube.com/watch?v=LNa2LNSpa68
+* Camera Lighting Control: https://www.youtube.com/watch?v=Y4DbYY9a9BQ
 
 ## Feeders
 
 * Strip Feeder Auto Setup: https://www.youtube.com/watch?v=Fs-SwSq5AZw
+* Loading Feeder Slots with QR Codes: https://www.youtube.com/watch?v=brLDBEzPWy0
 
 ## Jobs
 
