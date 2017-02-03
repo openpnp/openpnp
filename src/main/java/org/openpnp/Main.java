@@ -53,7 +53,7 @@ public class Main {
             .addWriter(new RollingFileWriter(logFile.getAbsolutePath(), 100))
             .activate();
         Configurator.currentConfig()
-            .formatPattern("{date:yyyy-MM-dd HH:mm:ss} [{thread}] {class} {level}: {message}")
+            .formatPattern("{date:yyyy-MM-dd HH:mm:ss} {class_name} {level}: {message}")
             .activate();
     }
 
