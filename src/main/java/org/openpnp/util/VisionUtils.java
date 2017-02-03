@@ -101,7 +101,23 @@ public class VisionUtils {
         return length.getValue() / avgUnitsPerPixel;
     }
     
+    /**
+     * Using the given camera, try to find a QR code and return it's text. This is just a wrapper
+     * for the generic scanBarcode(Camera) function. This one was added before the other and I don't
+     * want to remove it in case people are using it, but it does the same thing. 
+     * @param camera
+     * @return
+     */
     public static String readQrCode(Camera camera) {
+        return scanBarcode(camera);
+    }
+    
+    /**
+     * Using the given camera, try to find any supported barcode and return it's text. 
+     * @param camera
+     * @return
+     */
+    public static String scanBarcode(Camera camera) {
         BufferedImage image = camera.settleAndCapture();
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
                 new BufferedImageLuminanceSource(image)));

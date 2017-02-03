@@ -160,7 +160,7 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardLocation.getSide());
-                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(), boardLocation));
+                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(), boardLocation, JobPlacementsPanel.this));
                 }
             }
         });

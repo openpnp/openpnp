@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.driver;
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +14,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
@@ -22,6 +27,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -36,6 +42,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 import com.google.common.base.Joiner;
 
@@ -149,7 +156,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public ArrayList<Command> commands = new ArrayList<>();
 
     @ElementList(required = false)
-    protected List<ReferenceDriver> subDrivers = new ArrayList<>();
+    protected List<GcodeDriver> subDrivers = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<Axis> axes = new ArrayList<>();
@@ -159,7 +166,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-
+    private transient boolean subDriver = false;
+    
+    @Commit
+    public void commit() {
+        for (GcodeDriver driver : subDrivers) {
+            driver.subDriver = true;
+        }
+    }
+    
     public void createDefaults() {
         axes = new ArrayList<>();
         axes.add(new Axis("x", Axis.Type.X, 0, "*"));
@@ -710,11 +725,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return responses;
     }
 
-    protected List<String> sendCommand(String command) throws Exception {
+    public List<String> sendCommand(String command) throws Exception {
         return sendCommand(command, timeoutMilliseconds);
     }
 
-    protected List<String> sendCommand(String command, long timeout) throws Exception {
+    public List<String> sendCommand(String command, long timeout) throws Exception {
         List<String> responses = new ArrayList<>();
 
         // Read any responses that might be queued up so that when we wait
@@ -866,7 +881,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        if (!subDrivers.isEmpty()) {
+        if (!subDriver) {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
@@ -875,10 +890,38 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
-                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
+                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode"),
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial")
+        };
     }
     
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        if (subDriver) {
+            return null;
+        }
+        else {
+            return new Action[] {addSubDriverAction};
+        }
+    }
+    
+    public Action addSubDriverAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.add);
+            putValue(NAME, "Add Sub-Driver...");
+            putValue(SHORT_DESCRIPTION, "Add a new sub-driver.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            GcodeDriver driver = new GcodeDriver();
+            driver.subDriver = true;
+            subDrivers.add(driver);
+            fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
+        }
+    };
+
     public LengthUnit getUnits() {
         return units;
     }

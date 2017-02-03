@@ -49,7 +49,7 @@ public class BoardLocationView extends Group {
         UiUtils.bindTooltip(board, new Tooltip(boardLocation.getBoard().getName()));
 
         setOnMouseClicked(event -> {
-            Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation));
+            Configuration.get().getBus().post(new BoardLocationSelectedEvent(boardLocation, BoardLocationView.this));
         });
 
         Configuration.get().getBus().register(this);

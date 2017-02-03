@@ -13,7 +13,7 @@
    viewBox="0 0 24 24"
    version="1.1"
    id="svg2"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.92.0 15301"
    sodipodi:docname="feeder-edit.svg">
   <metadata
      id="metadata15">
@@ -40,19 +40,17 @@
      inkscape:window-height="1051"
      id="namedview13"
      showgrid="false"
-     inkscape:zoom="11.313708"
-     inkscape:cx="38.464141"
-     inkscape:cy="13.748259"
+     inkscape:zoom="1"
+     inkscape:cx="-73.885105"
+     inkscape:cy="175.61838"
      inkscape:window-x="0"
      inkscape:window-y="420"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g4315-0"
+     inkscape:current-layer="svg2"
      showguides="false"
      inkscape:guide-bbox="true"
      inkscape:snap-midpoints="true"
-     inkscape:object-paths="true"
-     inkscape:showpageshadow="true"
-     showborder="true">
+     inkscape:object-paths="true">
     <sodipodi:guide
        position="12.004,19.111948"
        orientation="1,0"
@@ -97,24 +95,23 @@
      id="g4315-0"
      sketch:type="MSPage">
     <g
-       style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
-       id="g4162-6"
-       transform="matrix(1.0001805,0,0,1,-3.1198713,0.69285665)">
+       id="g4162"
+       transform="translate(-3.116124,0.69285665)">
       <g
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1"
          sketch:type="MSLayerGroup"
-         id="feeder-edit-7"
-         transform="matrix(0.99047054,0,0,1.0322934,-2.0207786,2.0213194)">
+         id="feeder-edit"
+         transform="matrix(0.99064927,0,0,1.0322934,-2.0213148,2.0213194)">
         <path
            inkscape:connector-curvature="0"
            sketch:type="MSShapeGroup"
-           id="Shape-5"
-           d="M 19.826061,3 4.1739386,3 C 3.5259245,3 3,3.5259359 3,4.1739641 L 3,19.826036 C 3,20.474064 3.5255332,21 4.1735473,21 l 15.6517317,0 c 0.648405,0 1.173938,-0.525936 1.173938,-1.173964 l 0,-15.6520719 C 21,3.5259359 20.474076,3 19.826061,3 Z M 7.3420074,19.165877 c 0,0.365103 -0.3330072,0.650376 -0.6977108,0.650376 l -1.8098219,0 c -0.363921,0 -0.6499707,-0.285273 -0.6499707,-0.650376 l 0,-1.809861 c 0,-0.364712 0.2860497,-0.697727 0.6499707,-0.697727 l 1.8098219,0 c 0.3650949,0 0.6977108,0.333406 0.6977108,0.697727 z m 0,-12.5215012 c 0,0.3647115 -0.3330072,0.6981173 -0.6977108,0.6981173 l -1.8098219,0 c -0.363921,0 -0.6499707,-0.3334058 -0.6499707,-0.6981173 l 0,-1.8102526 c 0,-0.3647115 0.2860497,-0.6499848 0.6499707,-0.6499848 l 1.8098219,0 c 0.3650949,0 0.6977108,0.2852733 0.6977108,0.6499848 z m 0,6.0000002 c 0,0.364711 -0.3330072,0.698117 -0.6977108,0.698117 l -1.8098219,0 c -0.363921,0 -0.6499707,-0.333406 -0.6499707,-0.698117 l 0,-1.810253 c 0,-0.364711 0.2860497,-0.649985 0.6499707,-0.649985 l 1.8098219,0 c 0.3650949,0 0.6977108,0.285274 0.6977108,0.649985 z"
+           id="Shape"
+           d="M 19.826061,3 H 4.1739386 C 3.5259245,3 3,3.5259359 3,4.1739641 V 19.826036 C 3,20.474064 3.5255332,21 4.1735473,21 H 19.825279 c 0.648405,0 1.173938,-0.525936 1.173938,-1.173964 V 4.1739641 C 21,3.5259359 20.474076,3 19.826061,3 Z M 7.3420074,19.165877 c 0,0.365103 -0.3330072,0.650376 -0.6977108,0.650376 H 4.8344747 c -0.363921,0 -0.6499707,-0.285273 -0.6499707,-0.650376 v -1.809861 c 0,-0.364712 0.2860497,-0.697727 0.6499707,-0.697727 h 1.8098219 c 0.3650949,0 0.6977108,0.333406 0.6977108,0.697727 z m 0,-12.5215012 c 0,0.3647115 -0.3330072,0.6981173 -0.6977108,0.6981173 H 4.8344747 c -0.363921,0 -0.6499707,-0.3334058 -0.6499707,-0.6981173 V 4.8341232 c 0,-0.3647115 0.2860497,-0.6499848 0.6499707,-0.6499848 h 1.8098219 c 0.3650949,0 0.6977108,0.2852733 0.6977108,0.6499848 z m 0,6.0000002 c 0,0.364711 -0.3330072,0.698117 -0.6977108,0.698117 H 4.8344747 c -0.363921,0 -0.6499707,-0.333406 -0.6499707,-0.698117 v -1.810253 c 0,-0.364711 0.2860497,-0.649985 0.6499707,-0.649985 h 1.8098219 c 0.3650949,0 0.6977108,0.285274 0.6977108,0.649985 z"
            style="fill:#000000;fill-opacity:1" />
       </g>
       <rect
-         style="fill:#f1d44a;fill-opacity:1;stroke:none;stroke-width:0.7344259;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-         id="rect4188-3"
+         style="fill:#c0c0c0;fill-opacity:1;stroke:none;stroke-width:0.7344259;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect4188"
          width="6.9342442"
          height="4.1291733"
          x="8.8719072"
@@ -124,21 +121,21 @@
          x="8.8719072"
          height="2.0645866"
          width="6.9342442"
-         id="rect4514-5"
-         style="fill:#f1d44a;fill-opacity:1;stroke:none;stroke-width:0.51931751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+         id="rect4514"
+         style="fill:#c0c0c0;fill-opacity:1;stroke:none;stroke-width:0.51931751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
       <g
-         transform="matrix(0.97997446,0,0,1.0119118,1.0028982,0.19219639)"
+         transform="matrix(0.98015135,0,0,1.0119118,0.99933198,0.19219639)"
          style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
-         id="Page-1-6"
+         id="Page-1"
          sketch:type="MSPage">
         <g
            style="fill:#72b800;fill-opacity:1"
-           id="file-new-2"
+           id="file-new"
            sketch:type="MSLayerGroup">
           <path
              inkscape:connector-curvature="0"
-             d="m 5,15.9625 0,3.1875 3.1578947,0 L 17.471579,9.749 14.313684,6.5615 Z M 19.913684,7.284 c 0.328421,-0.3315 0.328421,-0.867 0,-1.1985 l -1.970526,-1.989 c -0.328421,-0.3315 -0.858948,-0.3315 -1.187369,0 l -1.541052,1.5555 3.157895,3.1875 z"
-             id="Shape-3-9"
+             d="M 5,15.9625 V 19.15 H 8.1578947 L 17.471579,9.749 14.313684,6.5615 Z M 19.913684,7.284 c 0.328421,-0.3315 0.328421,-0.867 0,-1.1985 l -1.970526,-1.989 c -0.328421,-0.3315 -0.858948,-0.3315 -1.187369,0 l -1.541052,1.5555 3.157895,3.1875 z"
+             id="Shape-3"
              sketch:type="MSShapeGroup"
              style="fill:#72b800;fill-opacity:1" />
         </g>

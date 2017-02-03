@@ -182,6 +182,7 @@ public class LocationButtonsPanel extends JPanel {
                         Location l = getCamera().getLocation();
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
+                            l = l.rotateXy(-baseLocation.getRotation());
                         }
                         Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, null,
                                 textFieldC);
@@ -202,6 +203,7 @@ public class LocationButtonsPanel extends JPanel {
                         Location l = getTool().getLocation();
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
+                            l = l.rotateXy(-baseLocation.getRotation());
                         }
                         Helpers.copyLocationIntoTextFields(l, textFieldX, textFieldY, textFieldZ,
                                 textFieldC);
@@ -226,6 +228,7 @@ public class LocationButtonsPanel extends JPanel {
                         Location l = actuator.getLocation();
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
+                            l = l.rotateXy(-baseLocation.getRotation());
                         }
                         Helpers.copyLocationIntoTextFields(l, textFieldX,
                                 textFieldY, textFieldZ, textFieldC);
@@ -247,6 +250,7 @@ public class LocationButtonsPanel extends JPanel {
                         Camera camera = getCamera();
                         Location location = getParsedLocation();
                         if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
@@ -266,6 +270,7 @@ public class LocationButtonsPanel extends JPanel {
                 HeadMountable tool = getTool();
                 Location location = getParsedLocation();
                 if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
                     location = location.addWithRotation(baseLocation);
                 }
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
@@ -286,6 +291,7 @@ public class LocationButtonsPanel extends JPanel {
                         HeadMountable tool = getTool();
                         Location location = getParsedLocation();
                         if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
                             location = location.addWithRotation(baseLocation);
                         }
                         tool.moveTo(location);
@@ -306,6 +312,7 @@ public class LocationButtonsPanel extends JPanel {
                         Actuator actuator = getActuator();
                         Location location = getParsedLocation();
                         if (baseLocation != null) {
+                            location = location.rotateXy(baseLocation.getRotation());
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(actuator, location);
