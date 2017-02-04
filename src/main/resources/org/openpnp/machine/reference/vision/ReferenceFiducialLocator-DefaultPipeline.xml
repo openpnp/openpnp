@@ -2,9 +2,9 @@
     <stages>
         <cv-stage class="org.openpnp.vision.pipeline.stages.ImageInput" name="template" enabled="true"/>
         <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="capture" enabled="true" settle-first="true"/>
-        <cv-stage class="org.openpnp.vision.pipeline.stages.MatchTemplate" name="match" enabled="true" template-stage-name="template" threshold="0.7" corr="0.85"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.MatchTemplate" name="match" enabled="true" template-stage-name="template" threshold="0.4" corr="0.85"/>
         <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recall1" enabled="true" image-stage-name="capture"/>
-        <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="mask" enabled="true" diameter="150"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="mask" enabled="true" diameter="300"/>
         <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="grey" enabled="true" conversion="Bgr2Gray"/>
         <cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="thresh" enabled="true" threshold="42" auto="false" invert="true"/>
         <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleBlobDetector" name="results" enabled="true"/>

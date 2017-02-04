@@ -12,13 +12,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+import org.apache.commons.io.IOUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartFiducialPipeline;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
-import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
@@ -38,7 +38,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     private final PartFiducialPipeline fiducialSettings;
     private final Part fiducialPart;
 
-    private JCheckBox enabledCheckbox;
+    private JCheckBox useCustomPipelineCheckbox;
     private JCheckBox useTemplateCheckbox;
     private JButton editCustomPipelineButton;
 
@@ -57,14 +57,22 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblPipeline = new JLabel("Fiducial Vision Pipeline");
-        JButton editDefaultPipelineButton = new JButton("Edit Default Fiducial Pipeline");
-        JLabel lblEnabled = new JLabel("Use custom part pipeline?");
-        enabledCheckbox = new JCheckBox("");
-        editCustomPipelineButton = new JButton("Edit Fiducial Pipeline for Part");
-        JLabel lblTemplate = new JLabel("Use part footprint template?");
+        JLabel lblHelp1 = new JLabel("Here you can fine tune vision of parts used as fiducials.");
+        JLabel lblHelp2 = new JLabel("You can edit the default pipeline used for all parts,\nor customize the pipeline for this part.");
+        JLabel lblPipeline = new JLabel("Default pipeline for all parts");
+        JButton editDefaultPipelineButton = new JButton("Edit default fiducial pipeline");
+        JButton resetDefaultPipelineButton = new JButton("Reset default pipeline to factory preset");
+        
+        // per part
+        JLabel lblEnabled = new JLabel("Use custom pipeline for this part?");
+        useCustomPipelineCheckbox = new JCheckBox("");
+        editCustomPipelineButton = new JButton("Edit pipeline for this part");
+        JLabel lblTemplate = new JLabel("Use template matching (default)\n Turn this off to use keypoint locations.");
         useTemplateCheckbox = new JCheckBox("");
 
         editDefaultPipelineButton.addActionListener(new ActionListener() {
@@ -83,7 +91,15 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
 
-        enabledCheckbox.addActionListener(new ActionListener() {
+        resetDefaultPipelineButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    resetDefaultPipeline();
+                });
+            }
+        });
+
+        useCustomPipelineCheckbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
                     handleEnableCheckbox();
@@ -91,19 +107,30 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
 
-        // column then row, 1-based
-        panel.add(lblPipeline, "2, 2");
-        panel.add(editDefaultPipelineButton, "6, 2");
-        panel.add(lblTemplate, "2, 4");
-        panel.add(useTemplateCheckbox, "6, 4");
-        panel.add(lblEnabled, "2, 6");
-        panel.add(enabledCheckbox, "4, 6");
-        panel.add(editCustomPipelineButton, "6, 6");
+        // Clumsy.  Help!
+        panel.add(lblHelp1, "2, 2");
+        panel.add(lblHelp2, "2, 4");
+        panel.add(lblPipeline, "2, 6");
+        panel.add(editDefaultPipelineButton, "4, 6");
+        panel.add(resetDefaultPipelineButton, "6, 6");
+        panel.add(lblEnabled, "2, 8");
+        panel.add(useCustomPipelineCheckbox, "4, 8");
+        panel.add(editCustomPipelineButton, "6, 8");
+        panel.add(lblTemplate, "2, 10");
+        panel.add(useTemplateCheckbox, "4, 10");
         this.fiducialSettings = fiducialLocator.getFiducialSettings(part);
     }
 
     private void editDefaultPipeline() throws Exception {
         CvPipeline pipeline = fiducialLocator.getDefaultPipeline();
+        editPipeline(pipeline);
+    }
+
+    private void resetDefaultPipeline() throws Exception {
+        String xml = IOUtils.toString(ReferenceFiducialLocator.class
+                .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+        CvPipeline pipeline = new CvPipeline(xml);
+        fiducialLocator.setDefaultPipeline(pipeline);
         editPipeline(pipeline);
     }
 
@@ -138,7 +165,10 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 if (templateStage != null) {
                     if (templateStage instanceof ImageInput) {
                         ImageInput imgIn = (ImageInput) templateStage;
-                        template = ReferenceFiducialLocator.createTemplate(camera.getUnitsPerPixel(), fp);
+                        template = fiducialSettings.getTemplate();
+                        if (template == null)
+                            template = ReferenceFiducialLocator.createTemplate(
+                                    camera.getUnitsPerPixel(), fp, fiducialSettings.getTemplateRotation());
                         imgIn.setInputImage(template);
                     }
                 }
@@ -158,7 +188,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     private void handleEnableCheckbox() {
         // if selected but pipeline is null (new) get default
         // do this now instead of on Apply or button will cause Null error
-        if (enabledCheckbox.isSelected() && fiducialSettings.getPipeline() == null) {
+        if (useCustomPipelineCheckbox.isSelected() && fiducialSettings.getPipeline() == null) {
             try {
                 fiducialSettings.setPipeline(fiducialLocator.getDefaultPipeline().clone());
             }
@@ -166,12 +196,12 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         }
         // button is enabled when checkbox is selected
-        editCustomPipelineButton.setEnabled(enabledCheckbox.isSelected());
+        editCustomPipelineButton.setEnabled(useCustomPipelineCheckbox.isSelected());
     }
 
     @Override
     public void createBindings() {
-        addWrappedBinding(fiducialSettings, "useCustomPipeline", enabledCheckbox, "selected");
+        addWrappedBinding(fiducialSettings, "useCustomPipeline", useCustomPipelineCheckbox, "selected");
         addWrappedBinding(fiducialSettings, "useTemplateMatch", useTemplateCheckbox, "selected");
     }
 
@@ -181,8 +211,8 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
         // after load, set button enable
         // and set up pipelines where enabled, but no record in XML (manually edited?)
-        editCustomPipelineButton.setEnabled(enabledCheckbox.isSelected());
-        if (enabledCheckbox.isSelected() && fiducialSettings.getPipeline() == null) {
+        editCustomPipelineButton.setEnabled(useCustomPipelineCheckbox.isSelected());
+        if (useCustomPipelineCheckbox.isSelected() && fiducialSettings.getPipeline() == null) {
             try {
                 fiducialSettings.setPipeline(fiducialLocator.getDefaultPipeline().clone());
             }
@@ -194,19 +224,10 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     @Override
     protected void saveToModel() {
         // before save, nerf the pipeline if not enabled (sorry)
-        if (!enabledCheckbox.isSelected()) {
+        if (!useCustomPipelineCheckbox.isSelected()) {
             fiducialSettings.setPipeline(null);
         }
-        else {
-            // if enabled but we didn't save a pipeline, that's okay, fix on load
-            if (fiducialSettings.getPipeline() == null) {
-                // try {
-                // fiducialSettings.setPipeline(fiducialLocator.getDefaultPipeline().clone());
-                // }
-                // catch (Exception e) {
-                // }
-            }
-        }
+        // if enabled but we didn't save a pipeline, that's okay, fix on load
         super.saveToModel();
     }
 }

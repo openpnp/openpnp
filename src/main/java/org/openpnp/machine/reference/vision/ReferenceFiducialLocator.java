@@ -62,9 +62,12 @@ import org.simpleframework.xml.Root;
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
 
+    // this is the default pipeline, either a copy of the resource XML or 
+    //  pipeline which has been edited by the user
     @Element(required = true)
     protected CvPipeline defaultFiducialPipeline = createPartPipeline(null);
 
+    // map of default and custom pipelines for parts
     @ElementMap(required = false)
     protected Map<String, PartFiducialPipeline> fiducialPipelineByPartId = new HashMap<>();
 
@@ -73,6 +76,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return new ReferenceFiducialLocatorConfigurationWizard(this, part);
     }
 
+    // get settings for this part
+    //  created if not previously in existance
     public PartFiducialPipeline getFiducialSettings(Part part) {
         if (part == null) {
             return null;
@@ -104,6 +109,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return defaultFiducialPipeline;
     }
 
+    public void setDefaultPipeline(CvPipeline cvPipeline) {
+        this.defaultFiducialPipeline = cvPipeline;
+    }
+
+    // find board fiducials, use them to calculate origin of board
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         // Find the fids in the board
         IdentifiableList<Placement> fiducials = getFiducials(boardLocation);
@@ -197,7 +207,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Wait for camera to settle
             Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
-            location = findFiducial(camera, part);
+            location = findFiducial(camera, part, 0.0D);
             if (location == null) {
                 Logger.debug("No matches found!");
                 continue;
@@ -265,7 +275,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Wait for camera to settle
             Thread.sleep(camera.getSettleTimeMs());
             // Perform vision operation
-            location = findFiducial(camera, part);
+            location = findFiducial(camera, part, boardLocation.getLocation().getRotation() + fid.getLocation().getRotation());
             if (location == null) {
                 Logger.debug("No matches found!");
                 continue;
@@ -280,47 +290,70 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return location;
     }
 
-    private Location findFiducial(final Camera camera, Part part) throws Exception {
+    // here's the big magic
+    // use default or custom pipeline for part to pinpoint fiducial location
+    private Location findFiducial(final Camera camera, Part part, double rotation) throws Exception {
         BufferedImage template = null;
         Object result = null;
         
         PartFiducialPipeline settings = getFiducialSettings(part);
         CvPipeline pipeline = createPartPipeline(settings);
         if (settings.isUseTemplateMatch()) {
+            // here we either need a footprint or a previously created template
             Footprint fp = null;
-            try {
-                fp = part.getPackage().getFootprint();
+            if (rotation == settings.getTemplateRotation())
+                template = settings.getTemplate();
+            if (template == null) {
+                // no template
+                try {
+                    fp = part.getPackage().getFootprint();
+                }
+                catch (Exception e) {
+                    // no feet either
+                    fp = null;
+                    Logger.warn("Could not get \"" + part.getId() + "\" footprint, will use keypoint locations.");
+                }
             }
-            catch (Exception e) {
-                fp = null;
-            }
-            if (fp != null) {
+            // got something we can use
+            if (template != null || fp != null) {
+                // look for an ImageInput stage named 'template'.  How boring.
                 CvStage templateStage = pipeline.getStage("template");
-                if (templateStage != null) {
-                    if (templateStage instanceof ImageInput) {
-                        ImageInput imgIn = (ImageInput) templateStage;
-                        template = createTemplate(camera.getUnitsPerPixel(), fp);
+                if ((templateStage != null) && (templateStage instanceof ImageInput)) {
+                    ImageInput imgIn = (ImageInput) templateStage;
+                    // make template if we haven't done so yet
+                    if (template == null)
+                    {
+                        template = createTemplate(camera.getUnitsPerPixel(), fp, rotation);
+                        settings.setTemplate(template);
+                        Logger.debug("Template created for \"" + part.getId() + "\" fiducial");
+                    }
+                    // and if we still have one, use it
+                    if (template != null) {
                         imgIn.setInputImage(template);
+                        imgIn.setEnabled(true);
                     }
                 }
             }
         }
 
-        String target = (template != null) ? "match" : "results";
+        // here template is null if no template match
+        String targetStage = (template != null) ? "match" : "results";
+        
         try {
             pipeline.setCamera(camera);
             pipeline.process();
-            result = pipeline.getResult(target);
+            result = pipeline.getResult(targetStage);
             // ack, if pipeline is bad... silently repair it, or error out here
             if (result == null) {
                 pipeline = createPartPipeline(null);
                 pipeline.setCamera(camera);
                 pipeline.process();
-                result = pipeline.getResult(target);
+                result = pipeline.getResult(targetStage);
             }
+            // if no result, we really can't process this, so error out
             if (result == null)
                 throw new CvException(
-                        "Cannot find '" + target + "' from fiducial locator vision processing");
+                        "Cannot find '" + targetStage + "' from fiducial locator vision processing");
 
             result = ((CvStage.Result) result).model;
         }
@@ -330,6 +363,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         List<Location> fidLocations = new ArrayList<>();
         if (result instanceof List) {
             if (((List) result).size() > 0) {
+                // the two if statements below are mutually exclusive by logic
+                // process keypoints
                 if (((List) result).get(0) instanceof KeyPoint) {
                     List<KeyPoint> kps = (List<KeyPoint>) result;
                     fidLocations.addAll(kps.stream().map(keyPoint -> {
@@ -343,6 +378,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                         return Double.compare(a1, b1);
                     }).collect(Collectors.toList()));
                 }
+                // process template matches
                 if (((List) result).get(0) instanceof TemplateMatch) {
                     List<TemplateMatch> tm = (List<TemplateMatch>) result;
                     fidLocations.addAll(tm.stream().map(templateMatch -> {
@@ -372,6 +408,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             return null;
         }
 
+        // return location closest to expected
         return fidLocations.get(0);
     }
 
@@ -382,7 +419,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @param unitsPerPixel, footprint
      * @return
      */
-    public static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
+    public static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint, double rotation)
             throws Exception {
         Shape shape = footprint.getShape();
 
@@ -404,6 +441,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // by the camera X and Y units per pixels to get pixel locations.
         tx.scale(unitScale, unitScale);
         tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
+        tx.rotate(Math.toRadians(-rotation));
 
         // Transform the Shape and draw it out.
         shape = tx.createTransformedShape(shape);
@@ -552,17 +590,24 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         @Element(required = false)
         protected CvPipeline pipeline;
+        
+        protected BufferedImage template;
+        protected double templateRotation;
 
         public PartFiducialPipeline() {
-            setUseCustomPipeline(false);
-            setUseTemplateMatch(true);
-            setPipeline(null);
+            useCustomPipeline = false;
+            useTemplateMatch = true;
+            pipeline = null;
+            template = null;
+            templateRotation = 99999.9D;
         }
 
         public PartFiducialPipeline(CvPipeline pipeline, boolean useCustomPipeline, boolean useTemplateMatch) {
-            setUseCustomPipeline(useCustomPipeline);
-            setUseTemplateMatch(useTemplateMatch);
-            setPipeline(pipeline);
+            this.useCustomPipeline = useCustomPipeline;
+            this.useTemplateMatch = useTemplateMatch;
+            this.pipeline = pipeline;
+            this.template = null;
+            templateRotation = 99999.9D;
         }
 
         public boolean isUseCustomPipeline() {
@@ -587,6 +632,22 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         public void setPipeline(CvPipeline pipeline) {
             this.pipeline = pipeline;
+        }
+
+        public BufferedImage getTemplate() {
+            return template;
+        }
+
+        public void setTemplate(BufferedImage template) {
+            this.template = template;
+        }
+
+        public double getTemplateRotation() {
+            return templateRotation;
+        }
+
+        public void setTemplateRotation(double templateRotation) {
+            this.templateRotation = templateRotation;
         }
     }
 }
