@@ -67,7 +67,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
@@ -485,25 +484,17 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "4, 1");
 
-        boolean javaFxAvailable = false;
-
         try {
-            Class.forName("javafx.scene.Scene");
-            javaFxAvailable = true;
-        }
-        catch (Throwable e) {
-            Logger.warn(
-                    "JavaFX is not installed. The optional navigation feature will not be available.");
-        }
-
-        if (javaFxAvailable) {
-            navigationPanel = new FxNavigationView();
+            Class c = Class.forName("org.openpnp.gui.components.nav.FxNavigationView");
+            navigationPanel = (Component) c.newInstance();
             JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
             camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
             panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
         }
-        else {
+        catch (Throwable e) {
+            Logger.warn(
+                    "JavaFX is not installed. The optional navigation feature will not be available.");
             cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
