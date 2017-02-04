@@ -1,17 +1,20 @@
 <pipeline>
-	<stages>
-		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="capture" enabled="true" settle-first="true"/>
-		<cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="mask" enabled="true" diameter="150"/>
-		<cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="grey" enabled="true" conversion="Bgr2Gray"/>
-		<cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="thresh" enabled="true" threshold="42" auto="false" invert="true"/>
-   		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug"
-			name="debug1" enabled="false" prefix="fidebug1_" suffix=".png" />
-		<cv-stage class="org.openpnp.vision.pipeline.stages.SimpleBlobDetector" name="results" enabled="true"/>
-		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recall" enabled="true" image-stage-name="capture"/>
-		<cv-stage class="org.openpnp.vision.pipeline.stages.DrawKeyPoints" name="draw" enabled="true" key-points-stage-name="results">
-			<color r="255" g="0" b="255" a="255"/>
-		</cv-stage>
-   		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug"
-			name="debug2" enabled="false" prefix="fidebug2_" suffix=".png" />
+    <stages>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageInput" name="template" enabled="true"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="capture" enabled="true" settle-first="true"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.MatchTemplate" name="match" enabled="true" template-stage-name="template" threshold="0.7" corr="0.85"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recall1" enabled="true" image-stage-name="capture"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="mask" enabled="true" diameter="150"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="grey" enabled="true" conversion="Bgr2Gray"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.Threshold" name="thresh" enabled="true" threshold="42" auto="false" invert="true"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleBlobDetector" name="results" enabled="true"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recall2" enabled="true" image-stage-name="capture"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.DrawTemplateMatches" name="drawmatch" enabled="true" template-matches-stage-name="match">
+            <color r="255" g="0" b="255" a="255"/>
+        </cv-stage>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.DrawKeyPoints" name="draw" enabled="true" key-points-stage-name="results">
+            <color r="255" g="0" b="255" a="255"/>
+        </cv-stage>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="debug2" enabled="false" prefix="fidebug2_" suffix=".png"/>
     </stages>
 </pipeline>

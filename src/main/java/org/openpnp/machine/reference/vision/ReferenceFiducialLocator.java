@@ -47,6 +47,8 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.CvStage.Result.TemplateMatch;
+import org.openpnp.vision.pipeline.stages.ImageInput;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -72,11 +74,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     }
 
     public PartFiducialPipeline getFiducialSettings(Part part) {
+        if (part == null) {
+            return null;
+        }
+        
         PartFiducialPipeline fidSettings = this.fiducialPipelineByPartId.get(part.getId());
 
         if (fidSettings == null) {
             // was not in XML/table, create new settings record
-            fidSettings = new PartFiducialPipeline(false, null);
+            fidSettings = new PartFiducialPipeline();
             this.fiducialPipelineByPartId.put(part.getId(), fidSettings);
         }
         else {
@@ -275,22 +281,46 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     }
 
     private Location findFiducial(final Camera camera, Part part) throws Exception {
+        BufferedImage template = null;
         Object result = null;
-        CvPipeline pipeline = createPartPipeline(getFiducialSettings(part));
+        
+        PartFiducialPipeline settings = getFiducialSettings(part);
+        CvPipeline pipeline = createPartPipeline(settings);
+        if (settings.isUseTemplateMatch()) {
+            Footprint fp = null;
+            try {
+                fp = part.getPackage().getFootprint();
+            }
+            catch (Exception e) {
+                fp = null;
+            }
+            if (fp != null) {
+                CvStage templateStage = pipeline.getStage("template");
+                if (templateStage != null) {
+                    if (templateStage instanceof ImageInput) {
+                        ImageInput imgIn = (ImageInput) templateStage;
+                        template = createTemplate(camera.getUnitsPerPixel(), fp);
+                        imgIn.setInputImage(template);
+                    }
+                }
+            }
+        }
+
+        String target = (template != null) ? "match" : "results";
         try {
             pipeline.setCamera(camera);
             pipeline.process();
-            result = pipeline.getResult("results");
+            result = pipeline.getResult(target);
             // ack, if pipeline is bad... silently repair it, or error out here
             if (result == null) {
                 pipeline = createPartPipeline(null);
                 pipeline.setCamera(camera);
                 pipeline.process();
-                result = pipeline.getResult("results");
+                result = pipeline.getResult(target);
             }
             if (result == null)
                 throw new CvException(
-                        "Cannot find 'results' from fiducial locator vision processing");
+                        "Cannot find '" + target + "' from fiducial locator vision processing");
 
             result = ((CvStage.Result) result).model;
         }
@@ -305,6 +335,20 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     fidLocations.addAll(kps.stream().map(keyPoint -> {
                         return VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x,
                                 keyPoint.pt.y);
+                    }).sorted((a, b) -> {
+                        double a1 = a.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        double b1 = b.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        return Double.compare(a1, b1);
+                    }).collect(Collectors.toList()));
+                }
+                if (((List) result).get(0) instanceof TemplateMatch) {
+                    List<TemplateMatch> tm = (List<TemplateMatch>) result;
+                    fidLocations.addAll(tm.stream().map(templateMatch -> {
+                        return VisionUtils.getPixelCenterOffsets(camera,
+                                templateMatch.x + templateMatch.width/2.0,
+                                templateMatch.y + templateMatch.height/2.0);
                     }).sorted((a, b) -> {
                         double a1 = a.getLinearDistanceTo(
                                 new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
@@ -338,7 +382,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @param unitsPerPixel, footprint
      * @return
      */
-    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
+    public static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
             throws Exception {
         Shape shape = footprint.getShape();
 
@@ -501,27 +545,40 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     @Root
     public static class PartFiducialPipeline {
         @Attribute(required = true)
-        protected boolean enabled;
+        protected boolean useCustomPipeline;
+
+        @Attribute(required = true)
+        protected boolean useTemplateMatch;
 
         @Element(required = false)
         protected CvPipeline pipeline;
 
         public PartFiducialPipeline() {
-            setEnabled(false);
+            setUseCustomPipeline(false);
+            setUseTemplateMatch(true);
             setPipeline(null);
         }
 
-        public PartFiducialPipeline(boolean enabled, CvPipeline pipeline) {
-            setEnabled(enabled);
+        public PartFiducialPipeline(CvPipeline pipeline, boolean useCustomPipeline, boolean useTemplateMatch) {
+            setUseCustomPipeline(useCustomPipeline);
+            setUseTemplateMatch(useTemplateMatch);
             setPipeline(pipeline);
         }
 
-        public boolean isEnabled() {
-            return enabled;
+        public boolean isUseCustomPipeline() {
+            return useCustomPipeline;
         }
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
+        public void setUseCustomPipeline(boolean useCustomPipeline) {
+            this.useCustomPipeline = useCustomPipeline;
+        }
+
+        public boolean isUseTemplateMatch() {
+            return useTemplateMatch;
+        }
+
+        public void setUseTemplateMatch(boolean useTemplateMatch) {
+            this.useTemplateMatch = useTemplateMatch;
         }
 
         public CvPipeline getPipeline() {

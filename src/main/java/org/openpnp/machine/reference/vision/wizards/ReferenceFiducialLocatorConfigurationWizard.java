@@ -3,6 +3,7 @@ package org.openpnp.machine.reference.vision.wizards;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -16,9 +17,14 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartFiducialPipeline;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.stages.ImageInput;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -26,18 +32,20 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+@SuppressWarnings("serial")
 public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
-    private static final long serialVersionUID = 2L;
     private final ReferenceFiducialLocator fiducialLocator;
     private final PartFiducialPipeline fiducialSettings;
+    private final Part fiducialPart;
 
     private JCheckBox enabledCheckbox;
+    private JCheckBox useTemplateCheckbox;
     private JButton editCustomPipelineButton;
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator,
             Part part) {
         this.fiducialLocator = fiducialLocator;
-        this.fiducialSettings = fiducialLocator.getFiducialSettings(part);
+        this.fiducialPart = part;
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "Fiducial Vision Settings", TitledBorder.LEADING,
@@ -48,13 +56,16 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblPipeline = new JLabel("Fiducial Vision Pipeline");
         JButton editDefaultPipelineButton = new JButton("Edit Default Fiducial Pipeline");
-        JLabel lblEnabled = new JLabel("Custom part pipeline enabled?");
+        JLabel lblEnabled = new JLabel("Use custom part pipeline?");
         enabledCheckbox = new JCheckBox("");
         editCustomPipelineButton = new JButton("Edit Fiducial Pipeline for Part");
+        JLabel lblTemplate = new JLabel("Use part footprint template?");
+        useTemplateCheckbox = new JCheckBox("");
 
         editDefaultPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -83,9 +94,12 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         // column then row, 1-based
         panel.add(lblPipeline, "2, 2");
         panel.add(editDefaultPipelineButton, "6, 2");
-        panel.add(lblEnabled, "2, 4");
-        panel.add(enabledCheckbox, "4, 4");
-        panel.add(editCustomPipelineButton, "6, 4");
+        panel.add(lblTemplate, "2, 4");
+        panel.add(useTemplateCheckbox, "6, 4");
+        panel.add(lblEnabled, "2, 6");
+        panel.add(enabledCheckbox, "4, 6");
+        panel.add(editCustomPipelineButton, "6, 6");
+        this.fiducialSettings = fiducialLocator.getFiducialSettings(part);
     }
 
     private void editDefaultPipeline() throws Exception {
@@ -99,13 +113,38 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     }
 
     private void editPipeline(CvPipeline pipeline) {
+        BufferedImage template = null;
+        Camera camera = null;
+        
+        try {
+            camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+        }
+        catch (Exception ignored) {
+        }
         if (pipeline.getCamera() == null) {
+            pipeline.setCamera(camera);
+        }
+
+        try {
+            Footprint fp = null;
             try {
-                pipeline.setCamera(
-                        Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+                fp = fiducialPart.getPackage().getFootprint();
             }
             catch (Exception e) {
+                fp = null;
             }
+            if (fp != null) {
+                CvStage templateStage = pipeline.getStage("template");
+                if (templateStage != null) {
+                    if (templateStage instanceof ImageInput) {
+                        ImageInput imgIn = (ImageInput) templateStage;
+                        template = ReferenceFiducialLocator.createTemplate(camera.getUnitsPerPixel(), fp);
+                        imgIn.setInputImage(template);
+                    }
+                }
+            }
+        }
+        catch (Exception ignored) {
         }
 
         JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Vision Pipeline");
@@ -132,7 +171,8 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public void createBindings() {
-        addWrappedBinding(fiducialSettings, "enabled", enabledCheckbox, "selected");
+        addWrappedBinding(fiducialSettings, "useCustomPipeline", enabledCheckbox, "selected");
+        addWrappedBinding(fiducialSettings, "useTemplateMatch", useTemplateCheckbox, "selected");
     }
 
     @Override
