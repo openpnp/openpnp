@@ -41,6 +41,10 @@ Note: Debug is good for general debugging. Trace is good for when you want very 
 
 See https://github.com/openpnp/openpnp/wiki/GcodeDriver#troubleshooting
 
+## I'm having trouble connecting multiple USB cameras.
+
+See https://github.com/openpnp/openpnp/wiki/USB-Camera-Troubleshooting-FAQ
+
 ## "It would be faster to do it by hand."
 
 This comes up so often on the mailing list I thought it would be worth addressing as a FAQ. Often, when someone is talking about building a machine or discussing requirements, someone will comment with things along the lines of:
