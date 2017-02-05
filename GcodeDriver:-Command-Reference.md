@@ -146,6 +146,16 @@ Sent whenever an Actuator's actuate(double) method is called. This is currently 
 | DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
 | IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
 
+### ACTUATOR_READ_COMMAND
+
+Sent whenever an Actuator's read() method is called. Along with ACTUATOR_READ_REGEX this can be used to read a value from any type of attached sensor or device.
+
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| Id             | String   | The user defined id of the actuator. |
+| Name           | String   | The user defined name of the actuator. |
+| Index          | Index    | The user defined index of the actuator. Can be used to specify a register or port number. |
+
 ### VACUUM_REQUEST_COMMAND
 
 Sent after a pick or place operation to check the vacuum level of the nozzle. The vacuum level will be compared to see if it is within the bounds defined on the NozzleTip.
