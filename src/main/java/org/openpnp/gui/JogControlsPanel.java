@@ -39,7 +39,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
-import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -549,13 +548,13 @@ public class JogControlsPanel extends JPanel {
     private void addActuator(Actuator actuator) {
         String name = actuator.getHead() == null ? actuator.getName()
                 : actuator.getHead().getName() + ":" + actuator.getName();
-        JToggleButton actuatorButton = new JToggleButton(name);
-        actuatorButton.setFocusable(false);
+        JButton actuatorButton = new JButton(name);
         actuatorButton.addActionListener((e) -> {
-            final boolean state = actuatorButton.isSelected();
-            UiUtils.submitUiMachineTask(() -> {
-                actuator.actuate(state);
-            });
+            ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
+            dlg.pack();
+            dlg.revalidate();
+            dlg.setLocationRelativeTo(JogControlsPanel.this);
+            dlg.setVisible(true);
         });
         BeanUtils.addPropertyChangeListener(actuator, "name", e -> {
             actuatorButton.setText(actuator.getHead() == null ? actuator.getName()
@@ -620,6 +619,6 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
-    private Map<Actuator, JToggleButton> actuatorButtons = new HashMap<>();
+    private Map<Actuator, JButton> actuatorButtons = new HashMap<>();
     private JSlider speedSlider;
 }

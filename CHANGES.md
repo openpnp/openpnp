@@ -1,6 +1,23 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-02-05
+
+* Actuator Improvements
+
+	* Actuators can now read String values in a generic fashion. This makes it possible to
+	integrate a variety of sensors into your system and use the output in any way you like,
+	particularly with scripting. The GcodeDriver has been updated to work with this new
+	functionality. 
+	
+	See:
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command
+
+	* The Actuators panel in Jog Controls now offers more options for controlling and testing
+	actuators. You can send true/false boolean values, double values and read a response
+	from each actuator.
+
 # 2017-01-27
 
 * Icon Improvements
