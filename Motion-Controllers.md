@@ -48,3 +48,11 @@ In general, any motion controller that can accept GCode commands for movement an
 Every 3D printer is by definition at least a 4 axis machine and this makes 3D printer firmware tempting for pick and place motion control. The most popular of the bunch is [Marlin](https://github.com/MarlinFirmware/Marlin). Marlin can be used with OpenPnP but it has some inherent limitations based on it's focus on 3D printing. It can be difficult to get acceleration and maximum velocity set up correctly since these are often tied together on a 3D printer. In addition, configuration is complex because you have to remove a lot of the 3D printing functionality. 
 
 It's not recommended to use 3D printer firmware with OpenPnP, but if you work hard enough it can be made to work.
+
+# Drivers
+
+In OpenPnP, the driver is the piece of the program that talks to the motion controller. The driver converts OpenPnP command to motion controller commands. In all of the cases above you should use the [[GcodeDriver]]. It is a flexible, well supported and well documented driver that can be used with almost any motion controller.
+
+OpenPnP also contains a number of motion controller specific drivers such as GrblDriver, OpenBuildsDriver, MarlinDriver, etc. These should only be used if you are using a machine specifically designed for these drivers. In almost every case the GcodeDriver will be a better fit.
+
+There is more information about setting up your driver in [[Setup and Calibration: Driver Setup]].
