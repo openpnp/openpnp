@@ -16,6 +16,8 @@ You should be able to jog the machine in X and Y, rotate your nozzle, and move t
 
 If your machine uses Gcode, you can use a tool like [Printrun](https://github.com/kliment/Printrun) to test the machine.
 
+If you have not yet chosen a motion controller, see [[Motion Controllers]] for some helpful advice.
+
 ## Install OpenPnP
 
 If you haven't already, [download and install OpenPnP](http://openpnp.org/downloads) and start it up for the first time. Run through the [[Quick Start]] to get a basic understanding of the interface and the major controls.
