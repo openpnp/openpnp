@@ -66,7 +66,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
-        VACUUM_REPORT_REGEX(true);
+        VACUUM_REPORT_REGEX(true),
+        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_REGEX(true);
 
         final boolean headMountable;
         final String[] variableNames;
@@ -673,6 +675,39 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         for (ReferenceDriver driver : subDrivers) {
             driver.actuate(actuator, value);
         }
+    }
+    
+    @Override
+    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
+        String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
+        if (command == null || regex == null) {
+            return null;
+        }
+
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            if (line.matches(regex)) {
+                Logger.trace("actuatorRead response: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Value");
+                    return s;
+                }
+                catch (Exception e) {
+                    Logger.warn("Error reading actuator.", e);
+                }
+            }
+        }
+
+        return null;
     }
 
     public synchronized void disconnect() {
