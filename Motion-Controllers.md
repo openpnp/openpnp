@@ -27,6 +27,10 @@ Some Smoothie based boards that are known to work with OpenPnP, and which you ca
     Created by an OpenPnP forum member, this board is designed with PnP in mind and has up to 6 stepper drivers and 6 MOSFET outputs. This board is great for larger, more complex machines.
 * MKS SBASE: A popular Smoothie clone. Cheap, but not very well supported.
 
+## Peter's Head
+
+There is a common style of pick and place often referred to as "Peter's Head". This style of head has one Z axis motor which uses belts or gears to drive two nozzles. Due to the complex homing operation required for this type of head, you may need to use the modified Smoothie firmware found [here](https://github.com/openpnp/Smoothieware) if you have this style of head.
+
 # Other Options
 
 In general, any motion controller that can accept GCode commands for movement and output control will work with OpenPnP. You can even use other protocols than GCode if you are feeling adventurous.
@@ -37,4 +41,10 @@ In general, any motion controller that can accept GCode commands for movement an
 
 ## Grbl
 
-[Grbl](https://github.com/gnea/grbl) is an Open Source motion control system for the Arduino platform. 
+[Grbl](https://github.com/gnea/grbl) is an Open Source motion control system for the Arduino platform. Grbl is very easy to get up and running and can be considered the cheapest option, but it only supports 3 axes by default. This makes it not ideal for pick and place since it leaves you without an option to rotate the nozzle. There is a modification of Grbl available [here](https://github.com/openpnp/grbl) but it is out of date, unsupported and somewhat buggy. You can use it in a pinch if it's all you have, but it's not recommended.
+
+## Marlin and Other 3D Printer Firmwares
+
+Every 3D printer is by definition at least a 4 axis machine and this makes 3D printer firmware tempting for pick and place motion control. The most popular of the bunch is [Marlin](https://github.com/MarlinFirmware/Marlin). Marlin can be used with OpenPnP but it has some inherent limitations based on it's focus on 3D printing. It can be difficult to get acceleration and maximum velocity set up correctly since these are often tied together on a 3D printer. In addition, configuration is complex because you have to remove a lot of the 3D printing functionality. 
+
+It's not recommended to use 3D printer firmware with OpenPnP, but if you work hard enough it can be made to work.
