@@ -3,6 +3,7 @@
 ## New User Resources
 * [[Quick Start]]
 * [[Setup and Calibration]]
+* [[Motion Controllers]]
 * [[User Manual]]
 * [[Video Tutorials]]
 * [[Importing Centroid Data]]
