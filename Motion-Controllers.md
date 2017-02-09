@@ -21,11 +21,11 @@ There are a *lot* of motion controllers available, from Open Source software tha
 Based on years of evidence, and lots and lots of different builds, we recommend a [Smoothie](http://smoothieware.org/) based board for most machines. Smoothie is an Open Source motion controller firmware that runs on a variety of affordable, all in one boards. It's easy to configure, well documented and works great with OpenPnP.
 
 Some Smoothie based boards that are known to work with OpenPnP, and which you can buy online are:
-* Smoothieboard: http://smoothieware.org/getting-smoothieboard
+* **Smoothieboard**: http://smoothieware.org/getting-smoothieboard
     The original. Buying this board helps support the creators of Smoothie. Available with up to 5 stepper drivers and 6 MOSFET outputs.
-* Cohesion3D Remix: http://cohesion3d.com/cohesion3d-remix/
+* **Cohesion3D Remix**: http://cohesion3d.com/cohesion3d-remix/
     Created by an OpenPnP forum member, this board is designed with PnP in mind and has up to 6 stepper drivers and 6 MOSFET outputs. This board is great for larger, more complex machines.
-* MKS SBASE: A popular Smoothie clone. Cheap, but not very well supported.
+* **MKS SBASE**: A popular Smoothie clone. Cheap, but not very well supported.
 
 ## Peter's Head
 
