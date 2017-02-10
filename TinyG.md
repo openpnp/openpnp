@@ -269,6 +269,15 @@ OpenPnP now includes a generic Gcode driver that is far more flexible than the o
 * If you are using TinyG G2 you may need to set DTR and RTS. You can do this from the driver configuration UI in Machine Setup.
 * If your pick and place commands fire before moves are complete, make sure you are using `move-to-complete-regex` as shown in the configuration above.
 
+## Quirks
+
+TinyG has some quirks that make it hard to use for pick and place. I want to look more into these later, so I am putting these references here so I can come back to it:
+
+* G4P0 does not want for end of movement: https://github.com/synthetos/g2/issues/138
+* Movement status not always sent. I think this happens for small moves, mostly: https://github.com/synthetos/g2/issues/139
+* Different Gcode required for small moves: https://groups.google.com/forum/#!msg/openpnp/j-TAyyZ9XQ0/NIl9ZUNnBwAJ
+* Also related to small moves: https://www.synthetos.com/topics/g0-minimum-movement/
+
 # TinygDriver (Outdated, Not Recommended)
 
 ## Driver Source
