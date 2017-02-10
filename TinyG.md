@@ -277,6 +277,9 @@ TinyG has some quirks that make it hard to use for pick and place. I want to loo
 * Movement status not always sent. I think this happens for small moves, mostly: https://github.com/synthetos/g2/issues/139
 * Different Gcode required for small moves: https://groups.google.com/forum/#!msg/openpnp/j-TAyyZ9XQ0/NIl9ZUNnBwAJ
 * Also related to small moves: https://www.synthetos.com/topics/g0-minimum-movement/
+* Alden's answer to Juha's query about this: https://www.synthetos.com/topics/g0-minimum-movement/#post-3790
+    To me this seems like a bug in TinyG that should be fixed. There is no guarantee that another move is coming, so not moving at all seems like an error.
+
 
 # TinygDriver (Outdated, Not Recommended)
 
