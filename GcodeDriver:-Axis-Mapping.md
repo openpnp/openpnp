@@ -157,4 +157,7 @@ It is important to set the cam-radius, cam-wheel-radius, and cam-wheel-gap setti
 
 * **cam-wheel-gap**: The gap between the edge of the cam wheels to the top of the Z axes. This will often be 0 but if there is some space between the wheel and the top of the axis you should set this value to that measurement.
 
+This image helps illustrate the various settings:
+
+![screen shot 2017-02-09 at 6 53 07 pm](https://cloud.githubusercontent.com/assets/1182323/22809587/1b783f3e-eef9-11e6-8afe-fd45c434af34.png)
 
