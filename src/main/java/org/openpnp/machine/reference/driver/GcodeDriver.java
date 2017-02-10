@@ -139,7 +139,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     
     @Attribute(required = false)
     protected double backlashOffsetY = -1;
- 
+    
+    @Attribute(required = false)
+    protected double nonSquarenessFactor = 0;
+    
     @Attribute(required = false)
     protected double backlashFeedRateFactor = 0.1;
 
@@ -445,8 +448,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
             }
             else {
-                command = substituteVariable(command, "X", x);
-                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX); // Backlash Compensation
+                command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
+                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
                 haveToMove = true;
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
@@ -952,6 +955,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     
     public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
         this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    }
+    
+    public void setNonSquarenessFactor(double NonSquarenessFactor) {
+        this.nonSquarenessFactor = NonSquarenessFactor;
+    }
+    
+    public double getNonSquarenessFactor() {
+        return this.nonSquarenessFactor;
     }
     
     public int getMaxFeedRate() {
