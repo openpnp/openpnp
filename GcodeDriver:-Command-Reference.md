@@ -164,3 +164,17 @@ Sent after a pick or place operation to check the vacuum level of the nozzle. Th
 | -------------- | -------- | ----------- |
 | VacuumLevelMin | Integer  | The expected vacuum range minimum. |
 | VacuumLevelMax | Integer  | The expected vacuum range maximum. |
+
+### POST_VISION_HOME_COMMAND
+
+Sent after [visual homing](https://github.com/openpnp/openpnp/wiki/GcodeDriver#visual-homing) is complete to reset the motion controller's coordinates to their home locations. 
+
+| Variable Name  |   Type   | Description |
+| -------------- | -------- | ----------- |
+| X              | Double   | The defined X axis home coordinate. Often 0. |
+| Y              | Double   | The defined Y axis home coordinate. Often 0. |
+
+Example:
+```
+G92 {X:X%.4f} {Y:Y%.4f} ; Send G92 to reset the motion controllers coordinates after homing.
+```
