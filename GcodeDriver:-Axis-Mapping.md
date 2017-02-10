@@ -1,4 +1,4 @@
-### Defining Axes
+# Defining Axes
 
 The first step in axis mapping is to define each axis that your motion controller can control. In general these will correspond to motors on your machine, but not always. Another way to think of it is to consider each individual part of the machine that can move.
 
@@ -13,7 +13,7 @@ A basic axis definition looks like:
    </axis>
 ```
 
-### Mapping Axes to HeadMountables
+# Mapping Axes to HeadMountables
 
 In OpenPnP anything that can be attached to the head is called a HeadMountable. These are your Nozzles, PasteDispensers, Cameras and Actuators. Each of these has an ID.
 
@@ -112,9 +112,31 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
    </axis>
 ```
 
-### Axis Transforms
-* NegatingTransform: For machines with dual nozzles controlled by a single Z motor in a counterweight configuration. This works for rack and pinion drives and belt drives. It does not work for cam based drives. See the examples above for usage.
-* CamTransform: For machines with dual nozzles controlled by a single Z motor in a seesaw configuration where a cam is used to push down either the left or right nozzle.
+# Axis Transforms
+## NegatingTransform
+
+For machines with dual nozzles controlled by a single Z motor in a counterweight configuration. This works for rack and pinion drives and belt drives. It does not work for cam based drives. Commonly referred to as "Peter's Head".
+
+Example:
+```
+<axis name="z" type="Z" home-coordinate="0.0">
+  <head-mountable-ids class="java.util.HashSet">
+     <string>N1</string>
+     <string>N2</string>
+  </head-mountable-ids>
+  <transform class="org.openpnp.machine.reference.driver.GcodeDriver$NegatingTransform">
+     <negated-head-mountable-id>N1</negated-head-mountable-id>
+  </transform>
+</axis>
+```
+
+The `negated-head-mountable-id` specifies which nozzle will have it's coordinate inverted. It's not important to understand the math. Just try one and if the nozzles work backwards, try the other.
+
+## CamTransform
+
+For machines with dual nozzles controlled by a single Z motor in a seesaw configuration where a cam is used to push down either the left or right nozzle.
+
+Example:
 ```
 <axis name="z" type="Z" home-coordinate="0.0">
    <head-mountable-ids class="java.util.HashSet">
@@ -126,3 +148,13 @@ Finally, we define the second rotational axis and include a `T1` pre-move-comman
    </transform>
 </axis>
 ```
+
+It is important to set the cam-radius, cam-wheel-radius, and cam-wheel-gap settings correctly or behavior will be incorrect. See below for their meanings:
+
+* **cam-radius**: This is the distance from the center of the motor shaft to the center of one of the wheels at the end of the cam.
+
+* **cam-wheel-radius**: This is the radius of the wheels or bearings at the end of the cam, typically used to make contact with the Z1 or Z2 axis.
+
+* **cam-wheel-gap**: The gap between the edge of the cam wheels to the top of the Z axes. This will often be 0 but if there is some space between the wheel and the top of the axis you should set this value to that measurement.
+
+
