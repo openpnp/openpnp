@@ -24,6 +24,14 @@ Here is a short description of the feeder types supported by OpenPnP:
 
 * ReferenceTubeFeeder: The simplest feeder which picks from the same location every time. Intended to be used with a vibratory tube feeder that presents a part at the same location repeatedly.
 
+* ReferenceAutoFeeder: A basic auto feeder controller for feeders that feed on their own using hardware. Uses a number of Actuators to perform feed operations.
+
+  See [[ReferenceAutoFeeder]]'s page for more information and help.
+
+* ReferenceSlotAutoFeeder: A feeder slot system masquerading as a regular feeder. Using ReferenceSlotAutoFeeder you can configure slots on advanced feeder systems so that you can easily move feeders from slot to slot. Similar to the ReferenceAutoFeeder, it uses Actuators to trigger feeders.
+
+  See [[ReferenceSlotAutoFeeder]]'s page for more information and help.
+
 ## Adding a Feeder
 Let's add a Strip Feeder to the machine so that we can test the feeder system.
 
