@@ -133,6 +133,13 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         backlashFeedRateFactorTf = new JTextField();
         settingsPanel.add(backlashFeedRateFactorTf, "12, 6, fill, default");
         backlashFeedRateFactorTf.setColumns(5);
+        
+        JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
+        settingsPanel.add(lblNonSquarenessFactor, "10, 4, right, default");
+        
+        NonSquarenessFactorTf = new JTextField();
+        settingsPanel.add(NonSquarenessFactorTf, "12, 4, fill, default");
+        NonSquarenessFactorTf.setColumns(5);
 
         JPanel gcodePanel = new JPanel();
         gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -284,12 +291,14 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
+        addWrappedBinding(driver, "nonSquarenessFactor", NonSquarenessFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
+        ComponentDecorators.decorateWithAutoSelect(NonSquarenessFactorTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
@@ -429,6 +438,7 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
     private JTextField backlashOffsetXTf;
     private JTextField backlashOffsetYTf;
     private JTextField backlashFeedRateFactorTf;
+    private JTextField NonSquarenessFactorTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;
