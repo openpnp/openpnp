@@ -23,7 +23,6 @@ import org.opencv.features2d.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
@@ -37,9 +36,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -47,10 +44,11 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.CvStage.Result.TemplateMatch;
 import org.openpnp.vision.pipeline.stages.ImageInput;
 import org.pmw.tinylog.Logger;
-import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
@@ -290,111 +288,21 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return location;
     }
 
-    // here's the big magic
-    // use default or custom pipeline for part to pinpoint fiducial location
+    /*
+     * use default or custom pipeline for part to pinpoint fiducial location
+     * return the first(closest) identified point
+     */
     private Location findFiducial(final Camera camera, Part part, double rotation) throws Exception {
-        BufferedImage template = null;
-        Object result = null;
-        
+
         PartFiducialPipeline settings = getFiducialSettings(part);
         CvPipeline pipeline = createPartPipeline(settings);
-        if (settings.isUseTemplateMatch()) {
-            // here we either need a footprint or a previously created template
-            Footprint fp = null;
-            if (rotation == settings.getTemplateRotation())
-                template = settings.getTemplate();
-            if (template == null) {
-                // no template
-                try {
-                    fp = part.getPackage().getFootprint();
-                }
-                catch (Exception e) {
-                    // no feet either
-                    fp = null;
-                    Logger.warn("Could not get \"" + part.getId() + "\" footprint, will use keypoint locations.");
-                }
-            }
-            // got something we can use
-            if (template != null || fp != null) {
-                // look for an ImageInput stage named 'template'.  How boring.
-                CvStage templateStage = pipeline.getStage("template");
-                if ((templateStage != null) && (templateStage instanceof ImageInput)) {
-                    ImageInput imgIn = (ImageInput) templateStage;
-                    // make template if we haven't done so yet
-                    if (template == null)
-                    {
-                        template = createTemplate(camera.getUnitsPerPixel(), fp, rotation);
-                        settings.setTemplate(template);
-                        Logger.debug("Template created for \"" + part.getId() + "\" fiducial");
-                    }
-                    // and if we still have one, use it
-                    if (template != null) {
-                        imgIn.setInputImage(template);
-                        imgIn.setEnabled(true);
-                    }
-                }
-            }
-        }
-
-        // here template is null if no template match
-        String targetStage = (template != null) ? "match" : "results";
         
-        try {
-            pipeline.setCamera(camera);
-            pipeline.process();
-            result = pipeline.getResult(targetStage);
-            // ack, if pipeline is bad... silently repair it, or error out here
-            if (result == null) {
-                pipeline = createPartPipeline(null);
-                pipeline.setCamera(camera);
-                pipeline.process();
-                result = pipeline.getResult(targetStage);
-            }
-            // if no result, we really can't process this, so error out
-            if (result == null)
-                throw new CvException(
-                        "Cannot find '" + targetStage + "' from fiducial locator vision processing");
+        insertTemplateIntoPipeline(pipeline, rotation,
+                camera.getUnitsPerPixel(), part, settings);
 
-            result = ((CvStage.Result) result).model;
-        }
-        catch (Throwable t) {
-            throw new CvException("Error in fiducial locator vision processing");
-        }
-        List<Location> fidLocations = new ArrayList<>();
-        if (result instanceof List) {
-            if (((List) result).size() > 0) {
-                // the two if statements below are mutually exclusive by logic
-                // process keypoints
-                if (((List) result).get(0) instanceof KeyPoint) {
-                    List<KeyPoint> kps = (List<KeyPoint>) result;
-                    fidLocations.addAll(kps.stream().map(keyPoint -> {
-                        return VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x,
-                                keyPoint.pt.y);
-                    }).sorted((a, b) -> {
-                        double a1 = a.getLinearDistanceTo(
-                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        double b1 = b.getLinearDistanceTo(
-                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        return Double.compare(a1, b1);
-                    }).collect(Collectors.toList()));
-                }
-                // process template matches
-                if (((List) result).get(0) instanceof TemplateMatch) {
-                    List<TemplateMatch> tm = (List<TemplateMatch>) result;
-                    fidLocations.addAll(tm.stream().map(templateMatch -> {
-                        return VisionUtils.getPixelCenterOffsets(camera,
-                                templateMatch.x + templateMatch.width/2.0,
-                                templateMatch.y + templateMatch.height/2.0);
-                    }).sorted((a, b) -> {
-                        double a1 = a.getLinearDistanceTo(
-                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        double b1 = b.getLinearDistanceTo(
-                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-                        return Double.compare(a1, b1);
-                    }).collect(Collectors.toList()));
-                }
-            }
-        }
+        Object result = getPipelineProcessingResults(camera, pipeline);
+        
+        List<Location> fidLocations = processResultsIntoLocationList(camera, result);        
 
         try {
             MainFrame.get().getCameraViews().getCameraView(camera).showFilteredImage(
@@ -410,6 +318,63 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         // return location closest to expected
         return fidLocations.get(0);
+    }
+    
+    /*
+     * Given a part and it's orientation, create a template
+     * to that rotation and insert it into the pipeline 
+     * if it contains a receiving stage class (ImageInput).
+     * 
+     * Cause no errors, return null on fail
+     */
+    public void insertTemplateIntoPipeline(CvPipeline pipeline,
+            Double rotation, Location unitsPerPixel, 
+            Part part, PartFiducialPipeline settings) {
+
+        BufferedImage template = null;
+        
+        // here we either need a footprint or a previously created template
+        Footprint fp = null;
+        if (rotation == settings.getTemplateRotation())
+            template = settings.getTemplate();
+        if (template == null) {
+            // no template
+            try {
+                fp = part.getPackage().getFootprint();
+            }
+            catch (Exception e) {
+                // no feet either
+                fp = null;
+                Logger.warn("Could not get \"" + part.getId() + "\" footprint, will not use template matching.");
+            }
+        }
+        // got something we can use
+        if (template != null || fp != null) {
+            // look for an ImageInput stage named 'template'
+            CvStage templateStage = pipeline.getStage("template");
+            // if the named stage is of the correct type
+            if ((templateStage != null) && (templateStage instanceof ImageInput)) {
+                ImageInput imgIn = (ImageInput) templateStage;
+                // make template if we haven't done so yet
+                if (template == null)
+                {
+                    try {
+                        template = createTemplate(unitsPerPixel, fp, rotation);
+                        Logger.debug("Template created for \"" + part.getId() + "\" fiducial");
+                    }
+                    catch (Exception e){
+                        template = null;
+                    }
+                }
+                // save template image in settings (nullable)
+                settings.setTemplate(template);
+                // insert template image into this stage
+                if (template != null) {
+                    imgIn.setInputImage(template);
+                    imgIn.setEnabled(true);
+                }
+            }
+        }
     }
 
     /**
@@ -473,6 +438,101 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return template;
     }
 
+    /*
+     * process the pipeline with the camera and return the "results"
+     * throw error if not found
+     */
+    public Object getPipelineProcessingResults(Camera camera, CvPipeline pipeline) {
+        Object result = null;
+        try {
+            pipeline.setCamera(camera);
+            pipeline.process();
+            result = pipeline.getResult("results");
+            // ack, if pipeline is bad... silently repair it, or error out here
+            if (result == null) {
+                pipeline = createPartPipeline(null);
+                pipeline.setCamera(camera);
+                pipeline.process();
+                result = pipeline.getResult("results");
+            }
+            // if no result, we really can't process this, so error out
+            if (result == null)
+                throw new CvException(
+                        "Cannot find \"results\" from fiducial locator vision processing");
+
+            result = ((Result) result).model;
+        }
+        catch (Throwable t) {
+            throw new CvException("Error in fiducial locator vision processing");
+        }
+        
+        return result;
+    }
+    
+    /*
+     * return a list of locations from a pipeline processing result
+     * result may be keypoints, circles, or template matches 
+     * -> watch the lambda functions, Oracle 8 doesn't like them sometimes
+     */
+    private List<Location> processResultsIntoLocationList(Camera camera, Object result) {
+
+        List<Location> fidLocations = new ArrayList<Location>();
+
+        if (result instanceof List) {
+            if (((List) result).size() > 0) {
+                
+                // process keypoints
+                if (((List) result).get(0) instanceof KeyPoint) {
+                    List<KeyPoint> kps = (List<KeyPoint>) result;
+                    fidLocations.addAll(kps.stream().map(keyPoint -> {
+                        return VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x,
+                                keyPoint.pt.y);
+                    }).sorted((a, b) -> {
+                        double a1 = a.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        double b1 = b.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        return Double.compare(a1, b1);
+                    }).collect(Collectors.toList()));
+                }
+                
+                // process template matches
+                if (((List) result).get(0) instanceof TemplateMatch) {
+                    List<TemplateMatch> tm = (List<TemplateMatch>) result;
+                    fidLocations.addAll(tm.stream().map(templateMatch -> {
+                        return VisionUtils.getPixelCenterOffsets(camera,
+                                templateMatch.x + templateMatch.width/2.0,
+                                templateMatch.y + templateMatch.height/2.0);
+                    }).sorted((a, b) -> {
+                        double a1 = a.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        double b1 = b.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        return Double.compare(a1, b1);
+                    }).collect(Collectors.toList()));
+                }
+                
+                // process circle matches
+                if (((List) result).get(0) instanceof Circle) {
+                    List<Circle> tm = (List<Circle>) result;
+                    fidLocations.addAll(tm.stream().map(circle -> {
+                        return VisionUtils.getPixelCenterOffsets(camera,
+                                circle.x,
+                                circle.y);
+                    }).sorted((a, b) -> {
+                        double a1 = a.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        double b1 = b.getLinearDistanceTo(
+                                new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+                        return Double.compare(a1, b1);
+                    }).collect(Collectors.toList()));
+                }
+            }
+        }
+        
+        return fidLocations;
+    }
+    
     /**
      * Given a List of Placements, find the two that are the most distant from each other.
      * 
@@ -582,12 +642,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Root
     public static class PartFiducialPipeline {
-        @Attribute(required = true)
-        protected boolean useCustomPipeline;
-
-        @Attribute(required = true)
-        protected boolean useTemplateMatch;
-
         @Element(required = false)
         protected CvPipeline pipeline;
         
@@ -595,35 +649,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         protected double templateRotation;
 
         public PartFiducialPipeline() {
-            useCustomPipeline = false;
-            useTemplateMatch = true;
             pipeline = null;
             template = null;
             templateRotation = 99999.9D;
         }
 
         public PartFiducialPipeline(CvPipeline pipeline, boolean useCustomPipeline, boolean useTemplateMatch) {
-            this.useCustomPipeline = useCustomPipeline;
-            this.useTemplateMatch = useTemplateMatch;
             this.pipeline = pipeline;
             this.template = null;
             templateRotation = 99999.9D;
-        }
-
-        public boolean isUseCustomPipeline() {
-            return useCustomPipeline;
-        }
-
-        public void setUseCustomPipeline(boolean useCustomPipeline) {
-            this.useCustomPipeline = useCustomPipeline;
-        }
-
-        public boolean isUseTemplateMatch() {
-            return useTemplateMatch;
-        }
-
-        public void setUseTemplateMatch(boolean useTemplateMatch) {
-            this.useTemplateMatch = useTemplateMatch;
         }
 
         public CvPipeline getPipeline() {

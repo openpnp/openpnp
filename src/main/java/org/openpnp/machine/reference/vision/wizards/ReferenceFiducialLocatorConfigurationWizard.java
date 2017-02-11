@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -26,6 +25,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.ImageInput;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -38,8 +38,6 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     private final PartFiducialPipeline fiducialSettings;
     private final Part fiducialPart;
 
-    private JCheckBox useCustomPipelineCheckbox;
-    private JCheckBox useTemplateCheckbox;
     private JButton editCustomPipelineButton;
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator,
@@ -53,27 +51,19 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("right:default"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblHelp1 = new JLabel("Here you can fine tune vision of parts used as fiducials.");
-        JLabel lblHelp2 = new JLabel("You can edit the default pipeline used for all parts,\nor customize the pipeline for this part.");
-        JLabel lblPipeline = new JLabel("Default pipeline for all parts");
-        JButton editDefaultPipelineButton = new JButton("Edit default fiducial pipeline");
-        JButton resetDefaultPipelineButton = new JButton("Reset default pipeline to factory preset");
+        JLabel lblPipeline = new JLabel("Edit default (common) fiducial pipeline");
+        JLabel lblReset = new JLabel("Reset default (common) fiducial pipeline");
+        JButton editDefaultPipelineButton = new JButton("Edit");
+        JButton resetDefaultPipelineButton = new JButton("Reset");
         
         // per part
-        JLabel lblEnabled = new JLabel("Use custom pipeline for this part?");
-        useCustomPipelineCheckbox = new JCheckBox("");
-        editCustomPipelineButton = new JButton("Edit pipeline for this part");
-        JLabel lblTemplate = new JLabel("Use template matching (default)\n Turn this off to use keypoint locations.");
-        useTemplateCheckbox = new JCheckBox("");
+        JLabel lblPart = new JLabel("Edit fiducial pipeline for this part");
+        editCustomPipelineButton = new JButton("Edit");
 
         editDefaultPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -99,25 +89,12 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         });
 
-        useCustomPipelineCheckbox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    handleEnableCheckbox();
-                });
-            }
-        });
-
-        // Clumsy.  Help!
-        panel.add(lblHelp1, "2, 2");
-        panel.add(lblHelp2, "2, 4");
-        panel.add(lblPipeline, "2, 6");
-        panel.add(editDefaultPipelineButton, "4, 6");
-        panel.add(resetDefaultPipelineButton, "6, 6");
-        panel.add(lblEnabled, "2, 8");
-        panel.add(useCustomPipelineCheckbox, "4, 8");
-        panel.add(editCustomPipelineButton, "6, 8");
-        panel.add(lblTemplate, "2, 10");
-        panel.add(useTemplateCheckbox, "4, 10");
+        panel.add(lblPipeline, "2, 2");
+        panel.add(editDefaultPipelineButton, "4, 2");
+        panel.add(lblReset, "2, 4");
+        panel.add(resetDefaultPipelineButton, "4, 4");
+        panel.add(lblPart, "2, 6");
+        panel.add(editCustomPipelineButton, "4, 6");
         this.fiducialSettings = fiducialLocator.getFiducialSettings(part);
     }
 
@@ -175,6 +152,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             }
         }
         catch (Exception ignored) {
+            Logger.info("Could not set \"template\" stage in fiducial pipeline to template image");
         }
 
         JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Vision Pipeline");
@@ -185,49 +163,20 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         dialog.setVisible(true);
     }
 
-    private void handleEnableCheckbox() {
-        // if selected but pipeline is null (new) get default
-        // do this now instead of on Apply or button will cause Null error
-        if (useCustomPipelineCheckbox.isSelected() && fiducialSettings.getPipeline() == null) {
-            try {
-                fiducialSettings.setPipeline(fiducialLocator.getDefaultPipeline().clone());
-            }
-            catch (Exception ignored) {
-            }
-        }
-        // button is enabled when checkbox is selected
-        editCustomPipelineButton.setEnabled(useCustomPipelineCheckbox.isSelected());
-    }
-
     @Override
     public void createBindings() {
-        addWrappedBinding(fiducialSettings, "useCustomPipeline", useCustomPipelineCheckbox, "selected");
-        addWrappedBinding(fiducialSettings, "useTemplateMatch", useTemplateCheckbox, "selected");
     }
 
     @Override
     protected void loadFromModel() {
         super.loadFromModel();
 
-        // after load, set button enable
-        // and set up pipelines where enabled, but no record in XML (manually edited?)
-        editCustomPipelineButton.setEnabled(useCustomPipelineCheckbox.isSelected());
-        if (useCustomPipelineCheckbox.isSelected() && fiducialSettings.getPipeline() == null) {
+        if (fiducialSettings.getPipeline() == null) {
             try {
                 fiducialSettings.setPipeline(fiducialLocator.getDefaultPipeline().clone());
             }
             catch (Exception e) {
             }
         }
-    }
-
-    @Override
-    protected void saveToModel() {
-        // before save, nerf the pipeline if not enabled (sorry)
-        if (!useCustomPipelineCheckbox.isSelected()) {
-            fiducialSettings.setPipeline(null);
-        }
-        // if enabled but we didn't save a pipeline, that's okay, fix on load
-        super.saveToModel();
     }
 }
