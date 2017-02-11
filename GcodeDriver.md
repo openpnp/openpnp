@@ -165,9 +165,10 @@ The GCodeDriver can compensate such non squareness with a "Non-Squareness Factor
 **Measurement method:**
 
 1. Put a piece of graph paper with fine grid into your PnP machine. 
-2. Align the grid with the X-Axis by moving the camera left and right until a refence grid line matches the motion path exactly.
-3. Move the camera into Y direction along a grid line by a defined distance (the further you move the more precise the measurement will be).
-4. Click the DRO and use the relative coordinates to measure the offset.
+2. Align the grid with the X-Axis by moving the camera left and right until a reference grid line matches the motion path exactly.
+3. Move the camera into Y direction along a grid line by a defined distance (the further you move the more precise the measurement will be). 100mm is a good start.
+4. You will probably find that the camera has not traced the Y line exactly and now it is offset from the center of the camera. Click the DRO and use the relative coordinates to measure the offset from the line.
+5. Use the formula in the image above to calculate the Non-Squareness Factor and enter it into the GcodeDriver settings panel.
 
 Positive factors mean a machine leaning right, negatives ones leaning left.
 
