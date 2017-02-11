@@ -160,9 +160,9 @@ No matter how well you planned your pnp machine and how well you assembled it ch
 
 The GCodeDriver can compensate such non squareness with a "Non-Squareness Factor". This factor basically tells the ratio between X offset and Y movement distance.
 
-![](https://cloud.githubusercontent.com/assets/4028409/22855587/2b82cac6-f083-11e6-98f5-cd4471acb922.jpg)
+![](https://cloud.githubusercontent.com/assets/4028409/22855667/5b24e57e-f084-11e6-8bab-6e7d2c6e32dc.jpg)
 
-Measurement method:
+**Measurement method:**
 
 1. Put a piece of graph paper with fine grid into your PnP machine. 
 2. Align the grid with the X-Axis by moving the camera left and right until a refence grid line matches the motion path exactly.
