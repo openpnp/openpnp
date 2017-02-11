@@ -154,6 +154,20 @@ The way this works is that the first command moves past the target position by t
 
 More information about this feature can be found in https://github.com/openpnp/openpnp/issues/318.
 
+# Non-Squareness Compensation
+
+No matter how well you planned your pnp machine and how well you assembled it chances are that the X and Y moving axes are not 100% perpendicular to each other. A very small 0.1° alignment error will already result in a physical offset of 0.52mm (already a bit more than the width of one 0402 component) when the head travels 300mm. 
+
+The GCodeDriver can compensate such non squareness with a "Non-Squareness Factor". This factor basically tells the ratio between X offset and Y movement distance.
+
+![](https://cloud.githubusercontent.com/assets/4028409/22855587/2b82cac6-f083-11e6-98f5-cd4471acb922.jpg)
+
+Measurement method:
+1. Put a piece of graph paper with fine grid into your PnP machine. 
+2. Align the grid with the X-Axis by moving the camera left and right until a refence grid line matches the motion path exactly
+3. Move the camera into Y direction along a grid line by a defined distance (the further you move the more precise the measurement will be).
+4. Click the DRO and use the relative coordinates to measure the offset.
+
 # Troubleshooting
 
 ## Asking for Help
