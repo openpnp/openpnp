@@ -19,4 +19,4 @@ To set up vacuum sensing:
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Feeders|Setup and Calibration: Bottom Vision]] | [[Table of Contents|Setup and Calibration]] | [[Next Steps|Setup and Calibration: Next Steps]] |
+| [[Bottom Vision|Setup and Calibration: Bottom Vision]] | [[Table of Contents|Setup and Calibration]] | [[Next Steps|Setup and Calibration: Next Steps]] |
