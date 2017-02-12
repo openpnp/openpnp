@@ -7,4 +7,4 @@ Bottom Vision is a large and complex topic, and has it's own section of the Wiki
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Feeders|Setup and Calibration: Feeders]] | [[Table of Contents|Setup and Calibration]] | [[Next Steps|Setup and Calibration: Vacuum Sensing]] |
+| [[Feeders|Setup and Calibration: Feeders]] | [[Table of Contents|Setup and Calibration]] | [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]] |
