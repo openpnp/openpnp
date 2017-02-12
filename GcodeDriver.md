@@ -47,23 +47,9 @@ Example: `read:(?<Value>-?\d+)`
 
 This would read a response from the controller in the form of `read:255`. The regex is broken down like this:
 
-1. `read:` is fixed text that the controller sends before the vacuum value.
+1. `read:` is fixed text that the controller sends before the value.
 2. The parentheses around the rest of the regex mark everything else as the value we want to capture. This is called a capturing group.
 3. The `?<Value>` gives the capturing group the name "Value", which OpenPnP will use to read the result.
-4. `-?` allows for an optional negative sign before the value.
-5. `\d+` means one or more digits, which represent the value itself.
-
-### VACUUM_REPORT_REGEX
-
-Used to parse a vacuum report after sending a VACUUM_REQUEST_COMMAND. The regex should contain a named group called Vacuum that includes the vacuum level.
-
-Example: `vacuum:(?<Vacuum>-?\d+)`
-
-This would read a response from the controller in the form of `vacuum:255`. The regex is broken down like this:
-
-1. `vacuum:` is fixed text that the controller sends before the vacuum value.
-2. The parentheses around the rest of the regex mark everything else as the value we want to capture. This is called a capturing group.
-3. The `?<Vacuum>` gives the capturing group the name "Vacuum", which OpenPnP will use to read the result.
 4. `-?` allows for an optional negative sign before the value.
 5. `\d+` means one or more digits, which represent the value itself.
 
