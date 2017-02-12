@@ -1,1 +1,1 @@
-[ahi](Setup and Calibration: Actuators and Other Head Objects]
+[[ahi|Setup and Calibration: Actuators and Other Head Objects]]
