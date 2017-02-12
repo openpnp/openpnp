@@ -57,6 +57,13 @@ There should now be a crosshair with evenly spaced lines in the camera view. Lin
 
 If the lines don't line up, check that you've performed this step correctly. If they do line up in the center but rapidly get worse the further you look from center, read the Lens Calibration section below to perform correction.
 
+## Settle Time
+
+Settle time is the amount of time it takes for your camera to adjust to what it's looking at before a picture can be taken. This usually takes into account any blur from the end of a movement, along with time needed to perform any auto exposure or focus operations. The default settle time is 250 milliseconds. If you find that things like fiducial checks are getting blurry images, you may need to increase the settle time.
+
+1. With the camera selected in the Machine Setup tab, select the General Configuration tab from the right.
+2. In the configuration panel, look for Settle Time (ms) and change the value to the number of milliseconds required. The easiest way to determine the value is to start high (2000ms) and then lower it until you stop getting good results and use a slightly higher value.
+
 ## Lens Calibration
 
 Lens calibration can be used to remove lens distortion from your camera. It can also remove the fisheye effect from short lenses. An easy way to tell if you need lens calibration is to hold a piece of graph paper in front of it and see if the lines look curved in the image. If they do, check out [[Camera Lens Calibration]] to learn how to correct it.
