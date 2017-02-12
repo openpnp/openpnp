@@ -705,7 +705,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                     return s;
                 }
                 catch (Exception e) {
-                    Logger.warn("Error reading actuator.", e);
+                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
                 }
             }
         }
