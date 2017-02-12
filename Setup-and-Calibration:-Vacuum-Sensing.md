@@ -6,7 +6,7 @@ To set up vacuum sensing:
 
 1. Attach a pressure sensor to your machine between the nozzle and the vacuum pump.
 2. Configure your machine controller to be able to read the sensor using a command such as an Mcode or Gcode. How to do this is beyond the scope of this document, but you can ask for help on the mailing list.
-3. [Create an actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators-and-Other-Head-Objects) on the head on the nozzle you want to sense vacuum for. Give it a logical name like "H1VAC".
+3. [Create an actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators) on the head on the nozzle you want to sense vacuum for. Give it a logical name like "H1VAC".
 4. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) for more information.
 5. Set a ACTUATOR_READ_REGEX in your GcodeDriver config on the new Actuator. This regex will be used to read the response to the ACTUATOR_READ_COMMAND. See [actuator-read-regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) for more information.
 6. You can test that the actuator read is working by opening the Actuators tab in Machine Controls, clicking the button for the new actuator and clicking the Read button. You should see the value that was read in the text field.
