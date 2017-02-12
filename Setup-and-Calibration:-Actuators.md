@@ -1,4 +1,4 @@
-# Actuators and Other Head Objects
+# Actuators
 Actuators are generic devices you can attach to your machine to do additional tasks not covered by Nozzles and Cameras. For instance, you can use a solenoid with a pin attached to the head to drag a tape forward to feed it. You can also use Actuators to read values from sensors attached to the machine.
 
 Some of the things OpenPnP uses Actuators for are:
