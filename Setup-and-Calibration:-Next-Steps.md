@@ -8,4 +8,4 @@ Congratulations! If you've reached this point your machine should be fully capab
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Bottom Vision|Setup and Calibration: Bottom Vision]] | [[Table of Contents|Setup and Calibration]] | [[User Manual]] |
+| [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]] | [[Table of Contents|Setup and Calibration]] | [[User Manual]] |
