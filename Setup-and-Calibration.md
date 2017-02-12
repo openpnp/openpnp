@@ -9,7 +9,7 @@ We recommend that you follow the steps in the order they are listed in this guid
 3. [[Top Camera Setup|Setup and Calibration: Top Camera Setup]]
 4. [[Steps Per Mm|Setup and Calibration: Steps Per Mm]]
 5. [[Nozzle Setup|Setup and Calibration: Nozzle Setup]]
-6. [[Actuators and Other Head Objects|Setup and Calibration: Actuators and Other Head Objects]]
+6. [[Actuators|Setup and Calibration: Actuators]]
 7. [[Bottom Camera Setup|Setup and Calibration: Bottom Camera Setup]]
 8. [[Park Location|Setup and Calibration: Park Location]]
 9. [[Discard Location|Setup and Calibration: Discard Location]]
