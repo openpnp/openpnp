@@ -1,4 +1,4 @@
-You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators-and-Other-Head-Objects) system along with [Scripting Events](https://github.com/openpnp/openpnp/wiki/Scripting#scripting-events) to turn lights on and off in response to camera capture events.
+You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators) system along with [Scripting Events](https://github.com/openpnp/openpnp/wiki/Scripting#scripting-events) to turn lights on and off in response to camera capture events.
 
 # Set Up a Lighting Actuator
 1. Add an actuator for the lights you want to control. Select Machine Setup -> ReferenceMachine -> Actuators and then click the green + button to add a new Actuator.
