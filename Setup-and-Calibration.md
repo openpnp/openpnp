@@ -15,7 +15,8 @@ We recommend that you follow the steps in the order they are listed in this guid
 9. [[Discard Location|Setup and Calibration: Discard Location]]
 10. [[Feeders|Setup and Calibration: Feeders]]
 11. [[Bottom Vision|Setup and Calibration: Bottom Vision]]
-12. [[Next Steps|Setup and Calibration: Next Steps]]
+12. [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]]
+13. [[Next Steps|Setup and Calibration: Next Steps]]
 
 ***
 
