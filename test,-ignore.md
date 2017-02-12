@@ -1,1 +1,0 @@
-[[ahi|Setup and Calibration: Actuators and Other Head Objects]]
