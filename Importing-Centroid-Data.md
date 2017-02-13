@@ -19,7 +19,10 @@ Altium
 Others
 ------
 
-OpenPnP includes a Named CSV importer (File -> Import -> Named CSV) which can import many types of CSV files. Coordinate data must be in Millimeters. Example:
+OpenPnP includes a Named CSV importer (File -> Import -> Named CSV) which can import many types of CSV files. Coordinate data must be in Millimeters. Format specifications need to be inside the first 10 lines from file,
+six valid field are required in order to successful import centeroid data.
+
+Example:
 
 ```
 "Designator","Footprint","Mid X","Mid Y","Ref X","Ref Y","Pad X","Pad Y","Layer","Rotation","Comment"
