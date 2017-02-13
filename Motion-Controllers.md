@@ -42,6 +42,10 @@ In general, any motion controller that can accept GCode commands for movement an
 
 [Grbl](https://github.com/gnea/grbl) is an Open Source motion control system for the Arduino platform. Grbl is very easy to get up and running and can be considered the cheapest option, but it only supports 3 axes by default. This makes it not ideal for pick and place since it leaves you without an option to rotate the nozzle. There is a modification of Grbl available [here](https://github.com/openpnp/grbl) but it is out of date, unsupported and somewhat buggy. You can use it in a pinch if it's all you have, but it's not recommended.
 
+## Aprinter
+
+[Aprinter](https://github.com/ambrop72/aprinter) is a modern 3D printer firmware that may be useful for OpenPnP. I don't think of any machines using it yet, but the features list says all the right things and it may be worth looking into.
+
 ## Marlin and Other 3D Printer Firmwares
 
 Every 3D printer is by definition at least a 4 axis machine and this makes 3D printer firmware tempting for pick and place motion control. The most popular of the bunch is [Marlin](https://github.com/MarlinFirmware/Marlin). Marlin can be used with OpenPnP but it has some inherent limitations based on it's focus on 3D printing. It can be difficult to get acceleration and maximum velocity set up correctly since these are often tied together on a 3D printer. In addition, configuration is complex because you have to remove a lot of the 3D printing functionality. 
