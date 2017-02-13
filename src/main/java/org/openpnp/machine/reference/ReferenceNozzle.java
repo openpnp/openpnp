@@ -19,6 +19,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -45,6 +46,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    protected String vacuumSenseActuatorName;
     
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -97,6 +101,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void setHeadOffsets(Location headOffsets) {
         this.headOffsets = headOffsets;
     }
+    
+    public String getVacuumSenseActuatorName() {
+        return vacuumSenseActuatorName;
+    }
+
+    public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
+        this.vacuumSenseActuatorName = vacuumSenseActuatorName;
+    }
 
     @Override
     public ReferenceNozzleTip getNozzleTip() {
@@ -116,6 +128,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getDriver().pick(this);
         getMachine().fireMachineHeadActivity(head);
         Thread.sleep(pickDwellMilliseconds);
+        
+        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        if (actuator != null) {
+            ReferenceNozzleTip nt = getNozzleTip();
+            double vacuumLevel = Double.parseDouble(actuator.read());
+            if (vacuumLevel < nt.getVacuumLevelPartOn()) {
+                throw new Exception(String.format(
+                        "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick.",
+                        vacuumLevel, nt.getVacuumLevelPartOn()));
+            }
+        }
     }
 
     @Override
@@ -128,6 +151,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
         Thread.sleep(placeDwellMilliseconds);
+        
+        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        if (actuator != null) {
+            ReferenceNozzleTip nt = getNozzleTip();
+            double vacuumLevel = Double.parseDouble(actuator.read());
+            if (vacuumLevel > nt.getVacuumLevelPartOff()) {
+                throw new Exception(String.format(
+                        "Place failure: Vacuum level %f is higher than expected value of %f for part off. Part may be stuck to nozzle.",
+                        vacuumLevel, nt.getVacuumLevelPartOff()));
+            }
+        }
     }
     
     @Override

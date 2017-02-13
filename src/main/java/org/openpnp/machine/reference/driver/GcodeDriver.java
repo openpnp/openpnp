@@ -65,6 +65,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        // TODO: Remove the vacuum stuff after 2017-05-01, see https://github.com/openpnp/openpnp/issues/447
         VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
         VACUUM_REPORT_REGEX(true),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
@@ -555,40 +556,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return false;
     }
 
-    private Integer readVacuumLevel(ReferenceNozzle nozzle) throws Exception {
-        String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
-        String regex = getCommand(nozzle, CommandType.VACUUM_REPORT_REGEX);
-        if (command == null || regex == null) {
-            return null;
-        }
-
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-
-        List<String> responses = sendGcode(command);
-
-        for (String line : responses) {
-            Logger.trace("Check {}", line);
-            if (line.matches(regex)) {
-                Logger.trace("Vacuum report: {}", line);
-                Matcher matcher = Pattern.compile(regex).matcher(line);
-                matcher.matches();
-
-                try {
-                    String s = matcher.group("Vacuum");
-                    return Integer.valueOf(s);
-                }
-                catch (Exception e) {
-                    Logger.warn("Error processing vacuum report", e);
-                }
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
@@ -605,13 +572,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
 
         sendGcode(command);
-
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel < nt.getVacuumLevelPartOn()) {
-            throw new Exception(String.format(
-                    "Pick failure: Vacuum level %d is lower than expected value of %d for part on. Part may have failed to pick.",
-                    vacuumLevel, nt.getVacuumLevelPartOn()));
-        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
@@ -630,13 +590,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
         sendGcode(command);
-
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel > nt.getVacuumLevelPartOff()) {
-            throw new Exception(String.format(
-                    "Place failure: Vacuum level %d is higher than expected value of %d for part off. Part may be stuck to nozzle.",
-                    vacuumLevel, nt.getVacuumLevelPartOff()));
-        }
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
@@ -705,7 +658,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                     return s;
                 }
                 catch (Exception e) {
-                    Logger.warn("Error reading actuator.", e);
+                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
                 }
             }
         }
