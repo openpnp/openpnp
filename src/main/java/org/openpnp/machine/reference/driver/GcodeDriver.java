@@ -638,6 +638,16 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command == null || regex == null) {
+            // If the command or regex is null we'll query the subdrivers. The first
+            // to respond with a non-null value wins.
+            for (ReferenceDriver driver : subDrivers) {
+                String val = driver.actuatorRead(actuator);
+                if (val != null) {
+                    return val;
+                }
+            }
+            // If none of the subdrivers returned a value there's nothing left to
+            // do, so return null.
             return null;
         }
 
