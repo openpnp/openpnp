@@ -146,6 +146,10 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblRotation = new JLabel("Rotation");
@@ -200,6 +204,26 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         
         lblNewLabel_1 = new JLabel("(Use 0 for no cropping)");
         panelGeneral.add(lblNewLabel_1, "5, 14");
+        
+        lblScaleWidth = new JLabel("Scale Width");
+        panelGeneral.add(lblScaleWidth, "2, 16, right, default");
+        
+        scaleWidthTf = new JTextField();
+        panelGeneral.add(scaleWidthTf, "4, 16, fill, default");
+        scaleWidthTf.setColumns(10);
+        
+        lbluseFor = new JLabel("(Use 0 for no scaling)");
+        panelGeneral.add(lbluseFor, "5, 16");
+        
+        lblScaleHeight = new JLabel("Scale Height");
+        panelGeneral.add(lblScaleHeight, "2, 18, right, default");
+        
+        scaleHeightTf = new JTextField();
+        panelGeneral.add(scaleHeightTf, "4, 18, fill, default");
+        scaleHeightTf.setColumns(10);
+        
+        label = new JLabel("(Use 0 for no scaling)");
+        panelGeneral.add(label, "5, 18");
 
         panelLocation = new JPanel();
         panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
@@ -319,6 +343,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(referenceCamera, "cropWidth", cropWidthTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "cropHeight", cropHeightTextField, "text", intConverter);
+        addWrappedBinding(referenceCamera, "scaleWidth", scaleWidthTf, "text", intConverter);
+        addWrappedBinding(referenceCamera, "scaleHeight", scaleHeightTf, "text", intConverter);
 
         bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled",
                 calibrationEnabledChk, "selected");
@@ -391,4 +417,10 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
     private JTextField cropHeightTextField;
     private JLabel lblNewLabel;
     private JLabel lblNewLabel_1;
+    private JLabel lblScaleWidth;
+    private JLabel lblScaleHeight;
+    private JTextField scaleWidthTf;
+    private JTextField scaleHeightTf;
+    private JLabel lbluseFor;
+    private JLabel label;
 }
