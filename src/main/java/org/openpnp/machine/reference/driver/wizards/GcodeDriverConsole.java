@@ -36,7 +36,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         this.driver = driver;
 
         historyLen = 0;
-        historyMaxLen = 5;
+        historyMaxLen = 50;
         history = new String[historyMaxLen];
         historyCursor = 0;
 
