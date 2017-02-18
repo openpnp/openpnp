@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -38,6 +37,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
@@ -94,7 +94,13 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Attribute(required = false)
     protected int cropHeight = 0;
-
+    
+    @Attribute(required = false)
+    protected int scaleWidth;
+    
+    @Attribute(required = false)
+    protected int scaleHeight;
+    
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
 
@@ -267,6 +273,22 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         this.cropHeight = cropHeight;
     }
 
+    public int getScaleWidth() {
+        return scaleWidth;
+    }
+
+    public void setScaleWidth(int scaleWidth) {
+        this.scaleWidth = scaleWidth;
+    }
+
+    public int getScaleHeight() {
+        return scaleHeight;
+    }
+
+    public void setScaleHeight(int scaleHeight) {
+        this.scaleHeight = scaleHeight;
+    }
+
     protected BufferedImage transformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
 
@@ -277,6 +299,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         mat = undistort(mat);
 
         // apply affine transformations
+        mat = scale(mat, scaleWidth, scaleHeight);
+        
         mat = rotate(mat, rotation);
 
         mat = offset(mat, offsetX, offsetY);
@@ -313,7 +337,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return mat;
     }
 
-    private Mat rotate(Mat mat, double rotation) {
+    private static Mat rotate(Mat mat, double rotation) {
         if (rotation == 0D) {
             return mat;
         }
@@ -342,7 +366,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         return dst;
     }
 
-    private Mat offset(Mat mat, int offsetX, int offsetY) {
+    private static Mat offset(Mat mat, int offsetX, int offsetY) {
         if (offsetX == 0D && offsetY == 0D) {
             return mat;
         }
@@ -360,6 +384,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
         mapMatrix.release();
 
+        return dst;
+    }
+    
+    private static Mat scale(Mat mat, int scaleWidth, int scaleHeight) {
+        if (scaleWidth == 0 && scaleHeight == 0) {
+            return mat;
+        }
+        Mat dst = new Mat();
+        Imgproc.resize(mat, dst, new Size(scaleWidth, scaleHeight));
+        mat.release();
         return dst;
     }
 
