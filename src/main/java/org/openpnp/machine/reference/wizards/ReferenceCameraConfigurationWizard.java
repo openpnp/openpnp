@@ -25,6 +25,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
+import org.simpleframework.xml.Attribute;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -150,6 +151,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblRotation = new JLabel("Rotation");
@@ -224,6 +227,15 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         
         label = new JLabel("(Use 0 for no scaling)");
         panelGeneral.add(label, "5, 18");
+        
+        lblDeinterlace = new JLabel("De-Interlace");
+        panelGeneral.add(lblDeinterlace, "2, 20");
+        
+        deinterlaceChk = new JCheckBox("");
+        panelGeneral.add(deinterlaceChk, "4, 20");
+        
+        lblremovesInterlacingFrom = new JLabel("(Removes interlacing from stacked frames)");
+        panelGeneral.add(lblremovesInterlacingFrom, "5, 20");
 
         panelLocation = new JPanel();
         panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
@@ -344,7 +356,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(referenceCamera, "cropWidth", cropWidthTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "cropHeight", cropHeightTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "scaleWidth", scaleWidthTf, "text", intConverter);
-        addWrappedBinding(referenceCamera, "scaleHeight", scaleHeightTf, "text", intConverter);
+        addWrappedBinding(referenceCamera, "deinterlace", deinterlaceChk, "selected");
+
 
         bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled",
                 calibrationEnabledChk, "selected");
@@ -423,4 +436,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
     private JTextField scaleHeightTf;
     private JLabel lbluseFor;
     private JLabel label;
+    private JCheckBox deinterlaceChk;
+    private JLabel lblDeinterlace;
+    private JLabel lblremovesInterlacingFrom;
 }
