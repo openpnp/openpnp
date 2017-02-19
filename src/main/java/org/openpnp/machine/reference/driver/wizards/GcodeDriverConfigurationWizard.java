@@ -73,12 +73,12 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -128,17 +128,17 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         backlashOffsetYTf.setColumns(5);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "10, 6, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 8, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "12, 6, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "4, 8, fill, default");
         backlashFeedRateFactorTf.setColumns(5);
         
         JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
-        settingsPanel.add(lblNonSquarenessFactor, "10, 4, right, default");
+        settingsPanel.add(lblNonSquarenessFactor, "2, 10, right, default");
         
         NonSquarenessFactorTf = new JTextField();
-        settingsPanel.add(NonSquarenessFactorTf, "12, 4, fill, default");
+        settingsPanel.add(NonSquarenessFactorTf, "4, 10, fill, default");
         NonSquarenessFactorTf.setColumns(5);
 
         JPanel gcodePanel = new JPanel();
