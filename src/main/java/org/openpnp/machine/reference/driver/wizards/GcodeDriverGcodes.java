@@ -52,12 +52,12 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard {
+public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
     private HashMap<ChangeKey, String> changes = new HashMap<>();
     private boolean ignoreUpdates = false;
 
-    public GcodeDriverConfigurationWizard(GcodeDriver driver) {
+    public GcodeDriverGcodes(GcodeDriver driver) {
         this.driver = driver;
 
         JPanel gcodePanel = new JPanel();
@@ -441,8 +441,8 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
             return true;
         }
         
-        private GcodeDriverConfigurationWizard getOuterType() {
-            return GcodeDriverConfigurationWizard.this;
+        private GcodeDriverGcodes getOuterType() {
+            return GcodeDriverGcodes.this;
         }
     }
 }
