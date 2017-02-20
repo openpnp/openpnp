@@ -39,7 +39,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
-import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -81,7 +80,8 @@ public class JogControlsPanel extends JPanel {
     /**
      * Create the panel.
      */
-    public JogControlsPanel(Configuration configuration, MachineControlsPanel machineControlsPanel) {
+    public JogControlsPanel(Configuration configuration,
+            MachineControlsPanel machineControlsPanel) {
         this.machineControlsPanel = machineControlsPanel;
         this.configuration = configuration;
 
@@ -221,42 +221,24 @@ public class JogControlsPanel extends JPanel {
 
         JPanel panelControls = new JPanel();
         tabbedPane_1.addTab("Jog", null, panelControls, null);
-        panelControls.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panelControls.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton homeButton = new JButton(machineControlsPanel.homeAction);
         // We set this Icon explicitly as a WindowBuilder helper. WindowBuilder can't find the
@@ -317,7 +299,7 @@ public class JogControlsPanel extends JPanel {
                 Configuration.get().getMachine().setSpeed(speedSlider.getValue() * 0.01);
             }
         });
-        
+
         JButton positionNozzleBtn = new JButton(machineControlsPanel.targetToolAction);
         positionNozzleBtn.setIcon(Icons.centerTool);
         positionNozzleBtn.setHideActionText(true);
@@ -351,7 +333,7 @@ public class JogControlsPanel extends JPanel {
         JButton zDownButton = new JButton(zMinusAction);
         zDownButton.setHideActionText(true);
         panelControls.add(zDownButton, "14, 8");
-        
+
         JButton positionCameraBtn = new JButton(machineControlsPanel.targetCameraAction);
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
@@ -562,21 +544,26 @@ public class JogControlsPanel extends JPanel {
                     Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
-    
+
     private void addActuator(Actuator actuator) {
-        String name = actuator.getHead() == null ? actuator.getName() : actuator.getHead().getName() + ":" + actuator.getName(); 
-        JToggleButton actuatorButton = new JToggleButton(name);
-        actuatorButton.setFocusable(false);
-        actuatorButton.addActionListener((e) -> { 
-            final boolean state = actuatorButton.isSelected();
-            UiUtils.submitUiMachineTask(() -> {
-                actuator.actuate(state);
-            });
+        String name = actuator.getHead() == null ? actuator.getName()
+                : actuator.getHead().getName() + ":" + actuator.getName();
+        JButton actuatorButton = new JButton(name);
+        actuatorButton.addActionListener((e) -> {
+            ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
+            dlg.pack();
+            dlg.revalidate();
+            dlg.setLocationRelativeTo(JogControlsPanel.this);
+            dlg.setVisible(true);
+        });
+        BeanUtils.addPropertyChangeListener(actuator, "name", e -> {
+            actuatorButton.setText(actuator.getHead() == null ? actuator.getName()
+                    : actuator.getHead().getName() + ":" + actuator.getName());
         });
         panelActuators.add(actuatorButton);
         actuatorButtons.put(actuator, actuatorButton);
     }
-    
+
     private void removeActuator(Actuator actuator) {
         panelActuators.remove(actuatorButtons.remove(actuator));
     }
@@ -611,7 +598,7 @@ public class JogControlsPanel extends JPanel {
                 }
             }
 
-            
+
             PropertyChangeListener listener = (e) -> {
                 if (e.getOldValue() == null && e.getNewValue() != null) {
                     Actuator actuator = (Actuator) e.getNewValue();
@@ -621,7 +608,7 @@ public class JogControlsPanel extends JPanel {
                     removeActuator((Actuator) e.getOldValue());
                 }
             };
-            
+
             BeanUtils.addPropertyChangeListener(machine, "actuators", listener);
             for (Head head : machine.getHeads()) {
                 BeanUtils.addPropertyChangeListener(head, "actuators", listener);
@@ -631,7 +618,7 @@ public class JogControlsPanel extends JPanel {
             setEnabled(machineControlsPanel.isEnabled());
         }
     };
-    
-    private Map<Actuator, JToggleButton> actuatorButtons = new HashMap<>();
+
+    private Map<Actuator, JButton> actuatorButtons = new HashMap<>();
     private JSlider speedSlider;
 }

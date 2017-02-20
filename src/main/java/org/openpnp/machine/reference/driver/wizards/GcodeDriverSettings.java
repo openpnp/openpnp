@@ -1,14 +1,11 @@
 package org.openpnp.machine.reference.driver.wizards;
 
-import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -18,18 +15,12 @@ import java.io.StringWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -39,13 +30,10 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.GcodeDriver.Command;
-import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
@@ -56,10 +44,10 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard {
+public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
 
-    public GcodeDriverConfigurationWizard(GcodeDriver driver) {
+    public GcodeDriverSettings(GcodeDriver driver) {
         this.driver = driver;
         
         JPanel settingsPanel = new JPanel();
@@ -73,12 +61,12 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -128,150 +116,18 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         backlashOffsetYTf.setColumns(5);
         
         JLabel lblBacklashFeedSpeedFactor = new JLabel("Backlash Feed Rate Factor");
-        settingsPanel.add(lblBacklashFeedSpeedFactor, "10, 6, right, default");
+        settingsPanel.add(lblBacklashFeedSpeedFactor, "2, 8, right, default");
         
         backlashFeedRateFactorTf = new JTextField();
-        settingsPanel.add(backlashFeedRateFactorTf, "12, 6, fill, default");
+        settingsPanel.add(backlashFeedRateFactorTf, "4, 8, fill, default");
         backlashFeedRateFactorTf.setColumns(5);
-
-        JPanel gcodePanel = new JPanel();
-        gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        contentPanel.add(gcodePanel);
-        gcodePanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),}));
-
-        JLabel lblHeadMountable = new JLabel("Head Mountable");
-        gcodePanel.add(lblHeadMountable, "2, 2");
-
-        JLabel lblSetting = new JLabel("Setting");
-        gcodePanel.add(lblSetting, "4, 2");
-
-        comboBoxHm = new JComboBox<>();
-        gcodePanel.add(comboBoxHm, "2, 4, fill, default");
-
-        comboBoxHm.addItem(new HeadMountableItem(null));
-        for (Head head : Configuration.get().getMachine().getHeads()) {
-            for (Nozzle hm : head.getNozzles()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
-            }
-            for (PasteDispenser hm : head.getPasteDispensers()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
-            }
-            for (Camera hm : head.getCameras()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
-            }
-            for (Actuator hm : head.getActuators()) {
-                comboBoxHm.addItem(new HeadMountableItem(hm));
-            }
-        }
-        for (Actuator actuator : Configuration.get().getMachine().getActuators()) {
-            comboBoxHm.addItem(new HeadMountableItem(actuator));
-        }
-
-        comboBoxCommandType = new JComboBox<>();
-        gcodePanel.add(comboBoxCommandType, "4, 4, fill, default");
-
-        comboBoxHm.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                headMountableChanged();
-            }
-        });
-
-        comboBoxCommandType.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                commandTypeChanged();
-            }
-        });
-
-        JScrollPane scrollPane = new JScrollPane();
-        gcodePanel.add(scrollPane, "2, 6, 3, 1, fill, fill");
-
-        textAreaCommand = new JTextArea();
-        scrollPane.setViewportView(textAreaCommand);
-        textAreaCommand.setRows(5);
-
-        JPanel importExportPanel = new JPanel();
-        importExportPanel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        contentPanel.add(importExportPanel);
-        importExportPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JButton btnExportGcodeProfile = new JButton(exportProfileAction);
-        importExportPanel.add(btnExportGcodeProfile, "2, 2");
-
-        JButton btnCopyGcodeProfile = new JButton(copyProfileToClipboardAction);
-        importExportPanel.add(btnCopyGcodeProfile, "2, 4");
-
-        headMountableChanged();
-        commandTypeChanged();
-
-        textAreaCommand.getDocument().addDocumentListener(new DocumentListener() {
-            private void changed() {
-                String text = textAreaCommand.getText();
-                driver.setCommand(getSelectedHeadMountable(), getSelectedCommandType(), text);
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                changed();
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                changed();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                changed();
-            }
-        });
-    }
-
-    private HeadMountable getSelectedHeadMountable() {
-        HeadMountableItem item = (HeadMountableItem) comboBoxHm.getSelectedItem();
-        return item.getHeadMountable();
-    }
-
-    private CommandType getSelectedCommandType() {
-        CommandType commandType = (CommandType) comboBoxCommandType.getSelectedItem();
-        return commandType;
-    }
-
-    private void headMountableChanged() {
-        comboBoxCommandType.removeAllItems();
-        HeadMountable hm = getSelectedHeadMountable();
-        for (CommandType type : CommandType.values()) {
-            if (hm == null || type.isHeadMountable()) {
-                comboBoxCommandType.addItem(type);
-            }
-        }
-    }
-
-    private void commandTypeChanged() {
-        HeadMountableItem item = (HeadMountableItem) comboBoxHm.getSelectedItem();
-        CommandType commandType = getSelectedCommandType();
-        if (item == null || commandType == null) {
-            return;
-        }
-        Command c = driver.getCommand(item.getHeadMountable(), commandType, false);
-        if (c == null) {
-            textAreaCommand.setText("");
-        }
-        else {
-            String text = c.getCommand();
-            textAreaCommand.setText(text);
-        }
+        
+        JLabel lblNonSquarenessFactor = new JLabel("Non-Squareness Factor");
+        settingsPanel.add(lblNonSquarenessFactor, "2, 10, right, default");
+        
+        nonSquarenessFactorTf = new JTextField();
+        settingsPanel.add(nonSquarenessFactorTf, "4, 10, fill, default");
+        nonSquarenessFactorTf.setColumns(5);
     }
 
     @Override
@@ -284,12 +140,14 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
+        addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
         
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetXTf);
+        ComponentDecorators.decorateWithAutoSelect(nonSquarenessFactorTf);
         ComponentDecorators.decorateWithAutoSelect(backlashOffsetYTf);
         ComponentDecorators.decorateWithAutoSelect(backlashFeedRateFactorTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
@@ -422,13 +280,11 @@ public class GcodeDriverConfigurationWizard extends AbstractConfigurationWizard 
             }
         }
     };
-    private JComboBox<CommandType> comboBoxCommandType;
-    private JComboBox<HeadMountableItem> comboBoxHm;
-    private JTextArea textAreaCommand;
     private JTextField maxFeedRateTf;
     private JTextField backlashOffsetXTf;
     private JTextField backlashOffsetYTf;
     private JTextField backlashFeedRateFactorTf;
+    private JTextField nonSquarenessFactorTf;
     private JTextField commandTimeoutTf;
     private JTextField connectWaitTimeTf;
     private JComboBox unitsCb;

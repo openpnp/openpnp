@@ -34,6 +34,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
@@ -43,6 +44,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -79,6 +81,8 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     protected String actuatorName;
     @Element(required = false)
     protected Vision vision = new Vision();
+    @Element(required = false)
+    protected Length backoffDistance = new Length(0, LengthUnit.Millimeters);    
 
     protected Location pickLocation;
 
@@ -165,7 +169,13 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
         // drag the tape
         actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
-
+        
+        // backoff to release tension from the pin
+        if (backoffDistance.getValue() != 0) {
+            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
+            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+        }
+        
         head.moveToSafeZ();
 
         // retract the pin
@@ -299,6 +309,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;
         propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+    }
+
+    public Length getBackoffDistance() {
+        return backoffDistance;
+    }
+
+    public void setBackoffDistance(Length backoffDistance) {
+        this.backoffDistance = backoffDistance;
     }
 
     public Vision getVision() {

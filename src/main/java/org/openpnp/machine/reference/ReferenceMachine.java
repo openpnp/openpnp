@@ -236,6 +236,7 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Actuator>> getCompatibleActuatorClasses() {
         List<Class<? extends Actuator>> l = new ArrayList<>();
         l.add(ReferenceActuator.class);
+        l.add(HttpActuator.class);
         return l;
     }
 

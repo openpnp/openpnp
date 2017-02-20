@@ -42,4 +42,6 @@ public interface Actuator
      * @throws Exception
      */
     public void actuate(double value) throws Exception;
+    
+    public String read() throws Exception;
 }

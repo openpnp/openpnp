@@ -1,6 +1,40 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-02-12
+
+* Generalized Vacuum Sensing (BREAKING CHANGE)
+
+	Vacuum sensing was previously a GcodeDriver only feature. With the recent Actuator
+	Improvements it became possible to extend this feature to all drivers. The vacuum
+	sense feature now uses an Actuator to read values from the pressure sensor, instead
+	of a specialized GcodeDriver command.
+	
+	Configuration is still similar. Instead of defining a VACUUM_REQUEST_COMMAND and
+	VACUUM_REPORT_REGEX you just create an Actuator that uses the same values
+	and set the Actuator name on your nozzle.
+	
+	Due to this configuration change, this is a breaking change. Your vacuum sense
+	will not work until you make the manual changes. You can watch a short video tutorial
+	showing how to make the required changes at: https://www.youtube.com/watch?v=FsZ5dy7n1Ag
+
+# 2017-02-05
+
+* Actuator Improvements
+
+	* Actuators can now read String values in a generic fashion. This makes it possible to
+	integrate a variety of sensors into your system and use the output in any way you like,
+	particularly with scripting. The GcodeDriver has been updated to work with this new
+	functionality. For more information see:
+	
+		https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex
+	
+		https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command
+
+	* The Actuators panel in Jog Controls now offers more options for controlling and testing
+	actuators. You can send true/false boolean values, send double values and read a response
+	from each actuator.
+
 # 2017-01-27
 
 * Icon Improvements

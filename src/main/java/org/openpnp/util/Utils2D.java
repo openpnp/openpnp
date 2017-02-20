@@ -23,6 +23,7 @@ package org.openpnp.util;
 
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
@@ -201,6 +202,41 @@ public class Utils2D {
         }
         while (angle < 0) {
             angle += 360;
+        }
+        return angle;
+    }
+    
+    /**
+     * Calculate the Location along the line formed by a and b with distance from a.
+     * @param a
+     * @param b
+     * @param distance
+     * @return
+     */
+    static public Location getPointAlongLine(Location a, Location b, Length distance) {
+        b = b.convertToUnits(a.getUnits());
+        distance = distance.convertToUnits(a.getUnits());
+        
+        Point vab = b.subtract(a).getXyPoint();
+        double lab = a.getLinearDistanceTo(b);
+        Point vu = new Point(vab.x / lab, vab.y / lab);
+        vu = new Point(vu.x * distance.getValue(), vu.y * distance.getValue());
+        return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
+    }
+
+    static public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
+        secondPoint = secondPoint.convertToUnits(firstPoint.getUnits());
+        
+        double angle = 0.0;
+        // above 0 to 180 degrees
+        if ((secondPoint.getX() > firstPoint.getX())) {
+            angle = (Math.atan2((secondPoint.getX() - firstPoint.getX()),
+                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
+        }
+        // above 180 degrees to 360/0
+        else if ((secondPoint.getX() <= firstPoint.getX())) {
+            angle = 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
+                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
         }
         return angle;
     }

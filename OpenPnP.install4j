@@ -95,9 +95,7 @@
     <staticMembers script="" />
     <customCode />
     <autoUpdate useMinUpdatableVersion="false" minUpdatableVersion="" useMaxUpdatableVersion="false" maxUpdatableVersion="">
-      <commentFiles>
-        <file location="CHANGES.md" languageId="en" />
-      </commentFiles>
+      <commentFiles />
       <customAttributes />
     </autoUpdate>
     <applications>

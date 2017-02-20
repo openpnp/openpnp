@@ -62,6 +62,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JTextField placeDwellTf;
     private JLabel lblChangerEnabled;
     private JLabel lblLimitRota;
+    private JPanel panel;
+    private JLabel lblVacuumSenseActuator;
+    private JTextField vacSenseActuatorNameTf;
 
     public ReferenceNozzleConfigurationWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -188,6 +191,25 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         placeDwellTf = new JTextField();
         panelChanger.add(placeDwellTf, "4, 8, fill, default");
         placeDwellTf.setColumns(10);
+        
+        panel = new JPanel();
+        panel.setBorder(new TitledBorder(null, "Vacuum Sense", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(panel);
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblVacuumSenseActuator = new JLabel("Vacuum Sense Actuator Name");
+        panel.add(lblVacuumSenseActuator, "2, 2, right, default");
+        
+        vacSenseActuatorNameTf = new JTextField();
+        panel.add(vacSenseActuatorNameTf, "4, 2");
+        vacSenseActuatorNameTf.setColumns(10);
 
 
     }
@@ -209,6 +231,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(nozzle, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzle, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
+        addWrappedBinding(nozzle, "vacuumSenseActuatorName", vacSenseActuatorNameTf, "text");
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         ComponentDecorators.decorateWithAutoSelect(pickDwellTf);
@@ -217,5 +240,6 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
+        ComponentDecorators.decorateWithAutoSelect(vacSenseActuatorNameTf);
     }
 }
