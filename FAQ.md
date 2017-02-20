@@ -65,3 +65,14 @@ While some of these reasons might fit your situation, it is important to keep in
 * Any other reason you like!
 
 It's okay to let people know about the complexities of running a machine, but I've found that this topic tends to come up over and over again and people seem to feel the need to really pound the point home that it might cost money or time to run the machine. Make your point, but remember that there are lots of reasons to run a machine other than just building boards for a business.
+
+# What Should I Build?
+
+See http://openpnp.org/hardware/ for a number of options. 
+
+The current recommendation for a build guideline is:
+* [DIY Pick and Place](https://hackaday.io/project/9319-diy-pick-and-place) for frame and X/Y.
+* [ICEpick Direct Drive Head](https://github.com/BETZtechnik/ICEpick--Direct-drive-pick-and-place-head/wiki) for the head.
+* [Quick Change Juki Nozzle Holders](http://www.betztechnik.ca/store/p32/Quick_change_Juki_nozzle_holders-_NEMA_8_5mm_OD_hollow_shaft-_STOCK.html) for nozzle holders and nozzles.
+* [Smoothieboard](http://smoothieware.org/getting-smoothieboard) for motion control.
+* Yamaha CL Feeders (available on Aliexpress and Robotdigg) if you want auto feeders.
