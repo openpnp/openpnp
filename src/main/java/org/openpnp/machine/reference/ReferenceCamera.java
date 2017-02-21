@@ -96,10 +96,10 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     protected int cropHeight = 0;
     
     @Attribute(required = false)
-    protected int scaleWidth;
+    protected int scaleWidth = 0;
     
     @Attribute(required = false)
-    protected int scaleHeight;
+    protected int scaleHeight = 0;
     
     @Attribute(required = false)
     protected boolean deinterlace;
@@ -414,7 +414,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
     
     private static Mat scale(Mat mat, int scaleWidth, int scaleHeight) {
-        if (scaleWidth == 0 && scaleHeight == 0) {
+        if (scaleWidth == 0 || scaleHeight == 0) {
             return mat;
         }
         Mat dst = new Mat();
