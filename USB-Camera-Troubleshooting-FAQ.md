@@ -15,7 +15,7 @@ Most USB cameras on the market today default to uncompressed YUV video mode, whi
 If you have USB 3 specific cameras these should work. USB 2 cameras on a USB 3 port, or a USB 3 hub, will not work. USB 2 devices on a USB 3 bus share a USB 2 bus over the USB 3 cable, so they have the same limitation.
 
 ## Why is it a software limitation?
-Most cameras on the market also support MJPEG compressed video. This is **much** lower bandwidth and you can easily have 2 or more cameras on a port. Unfortunately the library we use for camera capture (OpenCV) does not have a way to tell the camera to switch to MJPEG mode so we are stuck with YUV. There is an effort happening to fix this in https://github.com/openpnp/opencv/issues/12.
+Most cameras on the market also support MJPEG compressed video. This is **much** lower bandwidth and you can easily have 2 or more cameras on a port. Unfortunately the library we use for camera capture (OpenCV) does not have a way to tell the camera to switch to MJPEG mode so we are stuck with YUV. There is an effort happening to fix this in https://github.com/openpnp/openpnp/issues/448 and https://github.com/openpnp/opencv/issues/12.
 
 ## What are some other options?
 ONVIF IP cameras have none of these limitations. If you use these you should be able to use as many as your network will support. **Note: Links to some good ONVIF cameras here would be appreciated.**
