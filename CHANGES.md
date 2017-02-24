@@ -20,6 +20,7 @@ a complete change list, only those that may directly interest or affect users.
 
 	The GCode Driver now features a new tab to manually send GCode commands in a console.
 	
+* GCode Non-Squareness Compensation
 
 	The GCode Driver now also works with machines that are not perfectly square. Details about
 	how to measure and compensate this Non-Squareness Compensation can be found here:
