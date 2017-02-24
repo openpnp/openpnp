@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2017 Sebastian Pichelhofer <sp@apertus.org> based on reference by Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2017 Sebastian Pichelhofer <sp@apertus.org> based on reference by Jason von Nieda
+ * <jason@vonnieda.org>
  * 
  * This file is part of OpenPnP.
  * 
@@ -59,50 +60,45 @@ public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard
     private JPanel panelProperties;
     private JLabel lblName;
     private JTextField nameTf;
-    private JLabel lblOnURL;
-    private JTextField OnURLTf;
-    private JLabel lblOffURL;
-    private JTextField OffURLTf;
+    private JLabel lblOnUrl;
+    private JTextField onUrlTf;
+    private JLabel lblOffUrl;
+    private JTextField offUrlTf;
 
     public HttpActuatorConfigurationWizard(HttpActuator httpActuator) {
         this.actuator = httpActuator;
-        
+
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
-        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+        panelProperties.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
         lblName = new JLabel("Name");
         panelProperties.add(lblName, "2, 2, right, default");
-        
+
         nameTf = new JTextField();
         panelProperties.add(nameTf, "4, 2, fill, default");
         nameTf.setColumns(20);
-        
-        lblOnURL = new JLabel("On URL");
-        panelProperties.add(lblOnURL, "2, 4, right, default");
-        
-        OnURLTf = new JTextField();
-        panelProperties.add(OnURLTf, "4, 4, fill, default");
-        OnURLTf.setColumns(40);
-        
-        lblOffURL = new JLabel("Off URL");
-        panelProperties.add(lblOffURL, "2, 6, right, default");
-        
-        OffURLTf = new JTextField();
-        panelProperties.add(OffURLTf, "4, 6, fill, default");
-        OffURLTf.setColumns(40);
+
+        lblOnUrl = new JLabel("On URL");
+        panelProperties.add(lblOnUrl, "2, 4, right, default");
+
+        onUrlTf = new JTextField();
+        panelProperties.add(onUrlTf, "4, 4, fill, default");
+        onUrlTf.setColumns(40);
+
+        lblOffUrl = new JLabel("Off URL");
+        panelProperties.add(lblOffUrl, "2, 6, right, default");
+
+        offUrlTf = new JTextField();
+        panelProperties.add(offUrlTf, "4, 6, fill, default");
+        offUrlTf.setColumns(40);
 
         headMountablePanel = new JPanel();
         headMountablePanel.setLayout(new BoxLayout(headMountablePanel, BoxLayout.Y_AXIS));
@@ -156,22 +152,19 @@ public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard
         textFieldSafeZ = new JTextField();
         panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
-        
+
         generalPanel = new JPanel();
-        generalPanel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        generalPanel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
         contentPanel.add(generalPanel);
-        generalPanel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+        generalPanel.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
         lblIndex = new JLabel("Index");
         generalPanel.add(lblIndex, "2, 2, right, default");
-        
+
         indexTextField = new JTextField();
         generalPanel.add(indexTextField, "4, 2, fill, default");
         indexTextField.setColumns(10);
@@ -186,8 +179,8 @@ public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard
         IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(actuator, "name", nameTf, "text");
-        addWrappedBinding(actuator, "onURL", OnURLTf, "text");
-        addWrappedBinding(actuator, "offURL", OffURLTf, "text");
+        addWrappedBinding(actuator, "onUrl", onUrlTf, "text");
+        addWrappedBinding(actuator, "offUrl", offUrlTf, "text");
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, actuator, "headOffsets", headOffsets, "location");
         addWrappedBinding(headOffsets, "lengthX", locationX, "text", lengthConverter);
@@ -197,8 +190,8 @@ public class HttpActuatorConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(actuator, "index", indexTextField, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
-        ComponentDecorators.decorateWithAutoSelect(OnURLTf);
-        ComponentDecorators.decorateWithAutoSelect(OffURLTf);
+        ComponentDecorators.decorateWithAutoSelect(onUrlTf);
+        ComponentDecorators.decorateWithAutoSelect(offUrlTf);
         ComponentDecorators.decorateWithAutoSelect(indexTextField);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(locationY);
