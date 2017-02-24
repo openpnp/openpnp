@@ -1,6 +1,31 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-02-24
+
+* HTTP Actuator 
+
+	A new boolean actuator that calls a predefined URL for ON and OFF events. It was developed 
+	for controlling pneumatic feeders that are controlled via a Raspberry Pi with IO shield but
+	maybe there are totally different applications as well.
+	
+* GCode Backlash Compensation
+
+	The GCode Driver now features a few additional parameters to address backlash. 
+	This allows approaching target locations always from a specific direction on X/Y axes.
+	Optionally the final approach can be executed with reduced speed. 
+	Details: https://github.com/openpnp/openpnp/wiki/GcodeDriver#user-content-backlash-compensation
+	
+* GCode Console
+
+	The GCode Driver now features a new tab to manually send GCode commands in a console.
+	
+* GCode Non-Squareness Compensation
+
+	The GCode Driver now also works with machines that are not perfectly square. Details about
+	how to measure and compensate this Non-Squareness Compensation can be found here:
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver#user-content-non-squareness-compensation	
+	
 # 2017-02-12
 
 * Generalized Vacuum Sensing (BREAKING CHANGE)
