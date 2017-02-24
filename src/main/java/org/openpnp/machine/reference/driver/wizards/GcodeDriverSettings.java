@@ -135,12 +135,13 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        DoubleConverter doubleConverterFine = new DoubleConverter("%f");
         
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "backlashOffsetX", backlashOffsetXTf, "text", doubleConverter);
         addWrappedBinding(driver, "backlashOffsetY", backlashOffsetYTf, "text", doubleConverter);
-        addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverter);
+        addWrappedBinding(driver, "nonSquarenessFactor", nonSquarenessFactorTf, "text", doubleConverterFine);
         addWrappedBinding(driver, "backlashFeedRateFactor", backlashFeedRateFactorTf, "text", doubleConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
