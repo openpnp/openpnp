@@ -1,6 +1,13 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-02-27
+
+* GcodeDriver Sub-Driver Delete UI
+
+	You can now delete sub-drivers from the UI by selecting one and clicking the red X button
+	in the toolbar above.
+	
 # 2017-02-24
 
 * HTTP Actuator 
