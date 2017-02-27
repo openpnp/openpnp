@@ -3,6 +3,12 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-02-27
 
+* ReferenceDragFeeder Configuration Actuator Positioning
+
+	Fixes a bug in the ReferenceDragFeeder configuration panel that kept the actuator positioning
+	buttons from showing up. Now when you set an actuator name the position nozzle buttons on
+	these fields will turn into position actuator buttons as they did previously.
+
 * GcodeDriver Sub-Driver Delete UI
 
 	You can now delete sub-drivers from the UI by selecting one and clicking the red X button
