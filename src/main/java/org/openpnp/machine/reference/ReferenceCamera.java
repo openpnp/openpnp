@@ -96,14 +96,17 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     protected int cropHeight = 0;
     
     @Attribute(required = false)
-    protected int scaleWidth;
+    protected int scaleWidth = 0;
     
     @Attribute(required = false)
-    protected int scaleHeight;
+    protected int scaleHeight = 0;
     
+    @Attribute(required = false)
+    protected boolean deinterlace;
+
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
-
+    
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
@@ -288,6 +291,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setScaleHeight(int scaleHeight) {
         this.scaleHeight = scaleHeight;
     }
+    
+    public boolean isDeinterlace() {
+        return deinterlace;
+    }
+
+    public void setDeinterlace(boolean deinterlace) {
+        this.deinterlace = deinterlace;
+    }
 
     protected BufferedImage transformImage(BufferedImage image) {
         Mat mat = OpenCvUtils.toMat(image);
@@ -304,6 +315,8 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         mat = rotate(mat, rotation);
 
         mat = offset(mat, offsetX, offsetY);
+        
+        mat = deinterlace(mat);
 
         if (flipX || flipY) {
             int flipCode;
@@ -335,6 +348,19 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             tmp.release();
         }
         return mat;
+    }
+    
+    private Mat deinterlace(Mat mat) {
+        if (!deinterlace) {
+            return mat;
+        }
+        Mat dst = new Mat(mat.size(), mat.type());
+        for (int i = 0; i < mat.rows() / 2; i++) {
+            mat.row(i).copyTo(dst.row(i * 2));
+            mat.row(i + mat.rows() / 2).copyTo(dst.row(i * 2 + 1));
+        }
+        mat.release();
+        return dst;
     }
 
     private static Mat rotate(Mat mat, double rotation) {
@@ -388,7 +414,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     }
     
     private static Mat scale(Mat mat, int scaleWidth, int scaleHeight) {
-        if (scaleWidth == 0 && scaleHeight == 0) {
+        if (scaleWidth == 0 || scaleHeight == 0) {
             return mat;
         }
         Mat dst = new Mat();
