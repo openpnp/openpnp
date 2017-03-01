@@ -32,17 +32,17 @@ public class SystemLogger extends PrintStream {
         byte[] pb = new byte[len];
         System.arraycopy(buf, off, pb, 0, len);
         String str = new String(pb);
+        str = str.replace(lineSeparator, "");
 
-        if(!str.equals(lineSeparator)) {
-            // There is no generic log function where one could pass the log level
-            switch (logLevel) {
-                case INFO:
-                    Logger.info(str);
-                    break;
-                case ERROR:
-                    Logger.error(str);
-                    break;
-            }
+        // There is no generic log function where one could pass the log level
+        switch (logLevel) {
+            case INFO:
+                Logger.info(str);
+                break;
+            case ERROR:
+                Logger.error(str);
+                break;
         }
+
     }
 }
