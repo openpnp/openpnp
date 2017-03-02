@@ -163,8 +163,8 @@ public class JobPanel extends JPanel {
 
         boardLocationSelectionActionGroup = new ActionGroup(removeBoardAction,
                 captureCameraBoardLocationAction, captureToolBoardLocationAction,
-                moveCameraToBoardLocationAction, moveToolToBoardLocationAction,
-                twoPointLocateBoardLocationAction, fiducialCheckAction);
+                moveCameraToBoardLocationAction, moveCameraToBoardLocationNextAction,
+                moveToolToBoardLocationAction, twoPointLocateBoardLocationAction, fiducialCheckAction);
         boardLocationSelectionActionGroup.setEnabled(false);
 
         boardLocationsTableModel = new BoardLocationsTableModel(configuration);
@@ -255,6 +255,9 @@ public class JobPanel extends JPanel {
         btnPositionCameraBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionCameraBoardLocation);
 
+        JButton btnPositionCameraBoardLocationNext = new JButton(moveCameraToBoardLocationNextAction);
+        btnPositionCameraBoardLocationNext.setHideActionText(true);
+        toolBarBoards.add(btnPositionCameraBoardLocationNext);
         JButton btnPositionToolBoardLocation = new JButton(moveToolToBoardLocationAction);
         btnPositionToolBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionToolBoardLocation);
@@ -1024,6 +1027,24 @@ public class JobPanel extends JPanel {
                     });
                 }
             };
+	public final Action moveCameraToBoardLocationNextAction = new AbstractAction("Move Camera To Board Location") {
+		{
+			putValue(SMALL_ICON, Icons.centerCameraMoveNext);
+			putValue(NAME, "Move Camera To Board Location and Move to the Next Board");
+			putValue(SHORT_DESCRIPTION, "Position the camera at the board's location and move to the next board.");
+		}
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			UiUtils.submitUiMachineTask(() -> {
+				HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
+				Camera camera = tool.getHead().getDefaultCamera();
+				MainFrame.get().getCameraViews().ensureCameraVisible(camera);
+				Location location = getSelectedBoardLocation().getLocation();
+				MovableUtils.moveToLocationAtSafeZ(camera, location);
+				Helpers.selectNextTableRow(boardLocationsTable); 
+			});
+		}
+	};
 
     public final Action moveToolToBoardLocationAction = new AbstractAction() {
         {

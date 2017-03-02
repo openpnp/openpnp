@@ -283,6 +283,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         tableSorter.setRowFilter(rf);
     }
+    public void refresh() {
+        tableModel.refresh();
+    }
 
     @Override
     public void wizardCompleted(Wizard wizard) {

@@ -87,7 +87,7 @@ public class JobPlacementsPanel extends JPanel {
 
         captureAndPositionActionGroup =
                 new ActionGroup(captureCameraPlacementLocation, captureToolPlacementLocation,
-                        moveCameraToPlacementLocation, moveToolToPlacementLocation);
+                        moveCameraToPlacementLocation, moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
@@ -118,6 +118,9 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionCameraPositionLocation);
+        JButton btnPositionCameraPositionNextLocation = new JButton(moveCameraToPlacementLocationNext);
+        btnPositionCameraPositionNextLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionCameraPositionNextLocation);
 
         JButton btnPositionToolPositionLocation = new JButton(moveToolToPlacementLocation);
         btnPositionToolPositionLocation.setHideActionText(true);
@@ -324,6 +327,24 @@ public class JobPlacementsPanel extends JPanel {
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
+    };
+    public final Action moveCameraToPlacementLocationNext = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.centerCameraMoveNext);
+            putValue(NAME, "Move Camera To Placement Location and Move to Next Part");
+            putValue(SHORT_DESCRIPTION, "Position the camera at the placement's location and move to next part.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        	UiUtils.submitUiMachineTask(() -> {
+                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                        getSelection().getLocation());
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
+                        .getDefaultCamera();
+                MovableUtils.moveToLocationAtSafeZ(camera, location); 
+                Helpers.selectNextTableRow(table);   
+            });          
+        };
     };
 
     public final Action moveToolToPlacementLocation = new AbstractAction() {
