@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
@@ -35,6 +36,9 @@ import org.simpleframework.xml.core.Commit;
  */
 @Root(name = "openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
+	@Element(required = false)
+	private PCBPanel pcbPanel = new PCBPanel();
+	
     @ElementList
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
 
@@ -72,7 +76,40 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         firePropertyChange("boardLocations", oldValue, boardLocations);
         boardLocation.removePropertyChangeListener(this);
     }
-
+    
+    public void removeAllBoards()
+    {
+    	// BUGBUG: Verify this is reasonable way of removing all boards. This is 
+    	// used only to delete a panel
+    	ArrayList<BoardLocation> oldValue = boardLocations;
+        boardLocations = new ArrayList<>();
+        
+        firePropertyChange("boardLocations", (Object)oldValue, boardLocations);
+        
+    	for (int i=0; i<oldValue.size(); i++)
+    		oldValue.get(i).removePropertyChangeListener(this);
+    }
+    
+    public void setPCBPanel(PCBPanel panel){
+    	pcbPanel = panel;
+    }
+    
+    public PCBPanel getPCBPanel(){
+    	return pcbPanel;
+    }
+    
+   // public void removePCBPanel(){
+   // 	pcbPanel = new PCBPanel();
+   // }
+    
+    public boolean isUsingPanel()
+    {
+    	if (pcbPanel != null && (pcbPanel.getRows() > 1) || (pcbPanel.getColumns() > 1))
+    		return true;
+    	
+    	return false;
+    }
+    
     public File getFile() {
         return file;
     }

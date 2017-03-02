@@ -4,8 +4,9 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 public class Icons {
-    public static Icon add = getIcon("/icons/general-add.svg");
-    public static Icon delete = getIcon("/icons/general-remove.svg");
+    public static Icon add = getIcon("/icons/file-add.svg");
+    public static Icon delete = getIcon("/icons/file-remove.svg");
+    public static Icon neww = getIcon("/icons/file-new.svg");
     public static Icon copy = getIcon("/icons/copy.svg");
     public static Icon paste = getIcon("/icons/paste.svg");
     public static Icon export = getIcon("/icons/export.svg");
@@ -37,6 +38,9 @@ public class Icons {
 
     public static Icon twoPointLocate = getIcon("/icons/board-two-placement-locate.svg");
     public static Icon fiducialCheck = getIcon("/icons/board-fiducial-locate.svg");
+    public static Icon autoPanelize = getIcon("/icons/panelize.svg");
+    public static Icon autoPanelizeXOut = getIcon("/icons/panelize_xout.svg");
+    public static Icon autoPanelizeFidCheck = getIcon("/icons/panelize_fiducialcheck.svg");
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");

@@ -43,7 +43,18 @@ public class BoardLocation extends AbstractModelObject {
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
-
+   
+    // Copy constructor needed for deep copy of object. Note that none of the fields below 
+    // need a deep copy. 
+    public BoardLocation(BoardLocation obj){
+    	this.location = obj.location;       
+    	this.side = obj.side;               
+    	this.board = obj.board;             
+    	this.boardFile = obj.boardFile;
+    	this.checkFiducials = obj.checkFiducials;
+    	this.enabled = obj.enabled;
+    }
+    
     public BoardLocation(Board board) {
         this();
         setBoard(board);

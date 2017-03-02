@@ -20,7 +20,9 @@ import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -62,12 +64,16 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         Logger.debug("Chose {} and {}", placementA.getId(), placementB.getId());
 
+		return locateBoard(boardLocation, placementA, placementB, new Length(0, LengthUnit.Millimeters));
+	}
+	public Location locateBoard(BoardLocation boardLocation, Placement placementA, Placement placementB, Length fidDia)
+			throws Exception {
         // Run the fiducial check on each and get their actual locations
-        Location actualLocationA = getFiducialLocation(boardLocation, placementA);
+		Location actualLocationA = getFiducialLocation(boardLocation, placementA, fidDia);
         if (actualLocationA == null) {
             throw new Exception("Unable to locate first fiducial.");
         }
-        Location actualLocationB = getFiducialLocation(boardLocation, placementB);
+		Location actualLocationB = getFiducialLocation(boardLocation, placementB, fidDia);
         if (actualLocationB == null) {
             throw new Exception("Unable to locate second fiducial.");
         }
@@ -75,24 +81,22 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         // Calculate the linear distance between the ideal points and the
         // located points. If they differ by more than a few percent we
         // probably made a mistake.
-        double fidDistance =
-                Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
+		double fidDistance = Math.abs(placementA.getLocation().getLinearDistanceTo(placementB.getLocation()));
         double visionDistance = Math.abs(actualLocationA.getLinearDistanceTo(actualLocationB));
         if (Math.abs(fidDistance - visionDistance) > fidDistance * 0.01) {
             throw new Exception("Located fiducials are more than 1% away from expected.");
         }
 
-        Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB,
-                actualLocationA, actualLocationB);
+		Location location = Utils2D.calculateBoardLocation(boardLocation, placementA, placementB, actualLocationA,
+				actualLocationB);
 
-        location = location.derive(null, null,
-                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), null);
+		location = location.derive(null, null, boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(),
+				null);
 
         return location;
     }
 
-    public static Location getFiducialLocation(Footprint footprint, Camera camera)
-            throws Exception {
+	public static Location getFiducialLocation(Footprint footprint, Camera camera) throws Exception {
         // Create the template
         BufferedImage template = createTemplate(camera.getUnitsPerPixel(), footprint);
 
@@ -119,8 +123,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         org.openpnp.model.Package pkg = part.getPackage();
         if (pkg == null) {
-            throw new Exception(
-                    String.format("Part %s does not have a valid package assigned.", part.getId()));
+			throw new Exception(String.format("Part %s does not have a valid package assigned.", part.getId()));
         }
 
         Footprint footprint = pkg.getFootprint();
@@ -137,8 +140,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
 
         // Create the template
-        BufferedImage template =
-                createTemplate(camera.getUnitsPerPixel(), part.getPackage().getFootprint());
+		BufferedImage template = createTemplate(camera.getUnitsPerPixel(), part.getPackage().getFootprint());
 
 
         // Move to where we expect to find the fid, if user has not specified then we treat 0,0,0,0
@@ -177,44 +179,54 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @return
      * @throws Exception
      */
-    private static Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
-            throws Exception {
+	private static Location getFiducialLocation(BoardLocation boardLocation, Placement fid, Length fidDia) throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
         Logger.debug("Locating {}", fid.getId());
 
+		Footprint footprint;
+
+		// Careful...magic number below. Also used in JobPanel. This are for
+		// global panel fiducials, which do not have an entry in the PCB BOM.
+		if ((fid.getId().equals("PanelFid1_a322") || fid.getId().equals("PanelFid2_g301"))) {
+			footprint = new Footprint();
+			Pad p = new Pad();
+			p.setWidth(fidDia.getValue());
+			p.setHeight(fidDia.getValue());
+			p.setRoundness(1);
+			footprint.addPad(p);
+		} else {
         Part part = fid.getPart();
-        if (part == null) {
-            throw new Exception(
-                    String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
-        }
-
-        org.openpnp.model.Package pkg = part.getPackage();
-        if (pkg == null) {
-            throw new Exception(
-                    String.format("Part %s does not have a valid package assigned.", part.getId()));
-        }
-
-        Footprint footprint = pkg.getFootprint();
-        if (footprint == null) {
-            throw new Exception(String.format(
-                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                    pkg.getId()));
-        }
-
-        if (footprint.getShape() == null) {
-            throw new Exception(String.format(
-                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                    pkg.getId()));
-        }
+	        if (part == null) {
+					throw new Exception(String.format("Fiducial %s does not have a valid part assigned.", fid.getId()));
+	        }
+	
+	        org.openpnp.model.Package pkg = part.getPackage();
+	        if (pkg == null) {
+					throw new Exception(String.format("Part %s does not have a valid package assigned.", part.getId()));
+	        }
+	
+	        footprint = pkg.getFootprint();
+	        if (footprint == null) {
+	            throw new Exception(String.format(
+	                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+	                    pkg.getId()));
+	        }
+	
+	        if (footprint.getShape() == null) {
+	            throw new Exception(String.format(
+	                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+	                    pkg.getId()));
+	        }
+		}
 
         // Create the template
-        BufferedImage template = createTemplate(camera.getUnitsPerPixel(),
-                fid.getPart().getPackage().getFootprint());
+		// BufferedImage template = createTemplate(camera.getUnitsPerPixel(),
+		// fid.getPart().getPackage().getFootprint());
+		BufferedImage template = createTemplate(camera.getUnitsPerPixel(), footprint);
 
         // Move to where we expect to find the fid
-        Location location =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
+		Location location = Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
         Logger.debug("Looking for {} at {}", fid.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
@@ -236,8 +248,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return location;
     }
 
-    private static Location getBestTemplateMatch(final Camera camera, BufferedImage template)
-            throws Exception {
+	private static Location getBestTemplateMatch(final Camera camera, BufferedImage template) throws Exception {
         VisionProvider visionProvider = camera.getVisionProvider();
 
         List<TemplateMatch> matches = visionProvider.getTemplateMatches(template);
@@ -267,8 +278,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @param unitsPerPixel, footprint
      * @return
      */
-    private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint)
-            throws Exception {
+	private static BufferedImage createTemplate(Location unitsPerPixel, Footprint footprint) throws Exception {
         Shape shape = footprint.getShape();
 
         if (shape == null) {
@@ -296,15 +306,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Rectangle2D bounds = shape.getBounds2D();
         
         if (bounds.getWidth() == 0 || bounds.getHeight() == 0) {
-            throw new Exception("Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+			throw new Exception(
+					"Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
         }
 
         // Make the image 50% bigger than the shape. This gives better
         // recognition performance because it allows some border around the edges.
         double width = bounds.getWidth() * 1.5;
         double height = bounds.getHeight() * 1.5;
-        BufferedImage template =
-                new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage template = new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = (Graphics2D) template.getGraphics();
 
         g2d.setStroke(new BasicStroke(1f));
@@ -354,8 +364,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         Board board = boardLocation.getBoard();
         IdentifiableList<Placement> fiducials = new IdentifiableList<>();
         for (Placement placement : board.getPlacements()) {
-            if (placement.getType() == Type.Fiducial
-                    && placement.getSide() == boardLocation.getSide()) {
+			if (placement.getType() == Type.Fiducial && placement.getSide() == boardLocation.getSide()) {
                 fiducials.add(placement);
             }
         }
