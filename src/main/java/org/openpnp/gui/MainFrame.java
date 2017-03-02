@@ -250,8 +250,10 @@ public class MainFrame extends JFrame {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
 
-        mnEdit.add(new JMenuItem(jobPanel.addNewBoardAction));
-        mnEdit.add(new JMenuItem(jobPanel.addExistingBoardAction));
+        JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addNewBoardAction));
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingBoardAction));
+        mnEdit.add(mnEditAddBoard);
         mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
         mnEdit.addSeparator();
         mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));

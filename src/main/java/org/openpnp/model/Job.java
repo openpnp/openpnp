@@ -79,8 +79,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     
     public void removeAllBoards()
     {
-    	// BUGBUG: Verify this is reasonable way of removing all boards. This is 
-    	// used only to delete a panel
     	ArrayList<BoardLocation> oldValue = boardLocations;
         boardLocations = new ArrayList<>();
         
@@ -97,10 +95,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public PCBPanel getPCBPanel(){
     	return pcbPanel;
     }
-    
-   // public void removePCBPanel(){
-   // 	pcbPanel = new PCBPanel();
-   // }
     
     public boolean isUsingPanel()
     {

@@ -204,17 +204,16 @@ public class JobPanel extends JPanel {
 			public void tableChanged(TableModelEvent e) {
 				// One of 3 things can be happening here:
 				// First is row 0 is being edited. In normal mode, nothing
-				// special needs to be done
-				// In Auto Panelize mode, the computed panel PCBs must be
-				// updated.
-				// The second is that row 1 or higher needs to be edited. This
-				// can only happen when
+				// special needs to be done. In Auto Panelize mode, the 
+				// computed panel PCBs (that is, the ones PCB derived from 
+				// the panel parameters) must be updated. The second is that 
+				// row 1 or higher needs to be edited. This can only happen when
 				// NOT in autopanelize mode as the editing is blocked in the
-				// BoardLocationTableModel class
-				// Finally, when the table wants to update itself (eg due to
-				// TableDataChange event being fired) it
+				// BoardLocationTableModel class. Finally, when the table wants 
+				// to update itself (eg due to TableDataChange event being fired) it
 				// will set the first row to 0 and the last row to 2147483647
-				// (maxint)
+				// (maxint). This is a behavior of the table...we simply detect 
+				// it here to ascertain the mode
 
 				// Below, we check for each of these.
 				if (e.getFirstRow() == 0 && e.getLastRow() == 0) {
@@ -941,29 +940,17 @@ public class JobPanel extends JPanel {
 					// deep copy the existing rootpcb
 					BoardLocation newPCB = new BoardLocation(rootPCB);
 					
+					// OFfset the sub PCB
 					newPCB.setLocation(newPCB.getLocation().add(
 							new Location(Configuration.get().getSystemUnits(), 
 									(pcbWidthX + pcbPanel.getXGap().getValue()) * i, 
 									(pcbHeightY + pcbPanel.getYGap().getValue()) * j,
 									0, 
 									0)));
-											
+					
+					// Rotate the sub PCB
 					newPCB.setLocation(newPCB.getLocation().rotateXyCenterPoint(rootPCB.getLocation(), rootPCB.getLocation().getRotation()));
 
-					
-					/*
-					// we need the coords to calc the new location
-					double x = newPCB.getLocation().getX();
-					double y = newPCB.getLocation().getY();
-					double z = newPCB.getLocation().getZ();
-					double rot = newPCB.getLocation().getRotation();
-					
-					newPCB.getLocation().rotateXyCenterPoint(center, angle)
-
-					newPCB.setLocation(new Location(Configuration.get().getSystemUnits(),
-							x + (pcbWidthX + pcbPanel.getXGap().getValue()) * i,
-							y + (pcbHeightY + pcbPanel.getYGap().getValue()) * j, z, rot));
-							*/
 					getJob().addBoardLocation(newPCB);
 				}
 			}
@@ -1292,14 +1279,8 @@ public class JobPanel extends JPanel {
 
 				Location fid1 = getJob().getPCBPanel().getFid1();
 				Location fid2 = getJob().getPCBPanel().getFid2();
-				Placement p1 = new Placement("PanelFid1_a322"); // Careful...magic
-																// number. Also
-																// used in
-																// ReferenceFiducialLocator
-				Placement p2 = new Placement("PanelFid2_g301"); // Careful...magic
-																// number. Also
-																// used in
-																// ReferenceFiducialLocator
+				Placement p1 = new Placement("PanelFid1_a322"); // Careful...magic number. Also used in ReferenceFiducialLocator
+				Placement p2 = new Placement("PanelFid2_g301"); // Careful...magic number. Also used in ReferenceFiducialLocator
 				p1.setLocation(fid1);
 				p2.setLocation(fid2);
 
@@ -1401,26 +1382,6 @@ public class JobPanel extends JPanel {
 			panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
 			panel.setLayout(new GridLayout(0, 2, 20, 20));
-
-			/*
-			 * panel.setLayout(new FormLayout( new ColumnSpec[] {
-			 * FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-			 * FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-			 * FormSpecs.RELATED_GAP_COLSPEC},
-			 * 
-			 * new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
-			 * FormSpecs.DEFAULT_ROWSPEC, // cols FormSpecs.RELATED_GAP_ROWSPEC,
-			 * FormSpecs.DEFAULT_ROWSPEC, // rows FormSpecs.RELATED_GAP_ROWSPEC,
-			 * FormSpecs.DEFAULT_ROWSPEC, // spacing x
-			 * FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, //
-			 * spacing y FormSpecs.RELATED_GAP_ROWSPEC,
-			 * FormSpecs.DEFAULT_ROWSPEC, // fid1X
-			 * FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, //
-			 * fid1y FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-			 * // fid2x FormSpecs.RELATED_GAP_ROWSPEC,
-			 * FormSpecs.DEFAULT_ROWSPEC, // fid2y
-			 * FormSpecs.RELATED_GAP_ROWSPEC}));
-			 */
 
 			// Row and column
 			int rows = getJob().getPCBPanel().getRows();
