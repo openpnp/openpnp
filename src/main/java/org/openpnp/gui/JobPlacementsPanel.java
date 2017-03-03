@@ -2,6 +2,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -17,6 +18,7 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -57,6 +59,7 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 
 public class JobPlacementsPanel extends JPanel {
+	private JFrame frame;
     private JTable table;
     private PlacementsTableModel tableModel;
     private ActionGroup boardLocationSelectionActionGroup;
@@ -72,7 +75,8 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
 
-    public JobPlacementsPanel(JobPanel jobPanel) {
+    public JobPlacementsPanel(JFrame frame, JobPanel jobPanel) {
+    	this.frame = frame;
         Configuration configuration = Configuration.get();
 
         boardLocationSelectionActionGroup = new ActionGroup(newAction);
@@ -337,13 +341,16 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
         	UiUtils.submitUiMachineTask(() -> {
+        		Component comp = frame.getFocusOwner();
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location); 
-                Helpers.selectNextTableRow(table);   
-            });          
+                Helpers.selectNextTableRow(table);
+                if (comp!=null)
+					comp.requestFocus();
+            }); 
         };
     };
 

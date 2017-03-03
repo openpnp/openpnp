@@ -21,6 +21,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Rectangle;
@@ -282,7 +283,7 @@ public class JobPanel extends JPanel {
         pnlRight.add(tabbedPane, BorderLayout.CENTER);
 
         jobPastePanel = new JobPastePanel(this);
-        jobPlacementsPanel = new JobPlacementsPanel(this);
+        jobPlacementsPanel = new JobPlacementsPanel(frame, this);
 
         add(splitPane);
 
@@ -1036,12 +1037,19 @@ public class JobPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			UiUtils.submitUiMachineTask(() -> {
+				// Need to keep current focus owner so that the space bar can be
+				// used after the initial click. Otherwise, button focus is lost
+				// when table is updated
+				Component comp = frame.getFocusOwner();
+				
 				HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
 				Camera camera = tool.getHead().getDefaultCamera();
 				MainFrame.get().getCameraViews().ensureCameraVisible(camera);
 				Location location = getSelectedBoardLocation().getLocation();
-				MovableUtils.moveToLocationAtSafeZ(camera, location);
-				Helpers.selectNextTableRow(boardLocationsTable); 
+				MovableUtils.moveToLocationAtSafeZ(camera, location);	
+				Helpers.selectNextTableRow(boardLocationsTable);
+				if (comp!=null)
+					comp.requestFocus();
 			});
 		}
 	};
