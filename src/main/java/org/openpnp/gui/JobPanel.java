@@ -1041,7 +1041,6 @@ public class JobPanel extends JPanel {
 				// used after the initial click. Otherwise, button focus is lost
 				// when table is updated
 				Component comp = frame.getFocusOwner();
-				
 				HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
 				Camera camera = tool.getHead().getDefaultCamera();
 				MainFrame.get().getCameraViews().ensureCameraVisible(camera);
