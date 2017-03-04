@@ -18,7 +18,6 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -87,9 +86,9 @@ public class JobPlacementsPanel extends JPanel {
         multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
         multiSelectionActionGroup.setEnabled(false);
 
-        captureAndPositionActionGroup =
-                new ActionGroup(captureCameraPlacementLocation, captureToolPlacementLocation,
-                        moveCameraToPlacementLocation, moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
+        captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
+                captureToolPlacementLocation, moveCameraToPlacementLocation,
+                moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
@@ -120,7 +119,8 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionCameraPositionLocation);
-        JButton btnPositionCameraPositionNextLocation = new JButton(moveCameraToPlacementLocationNext);
+        JButton btnPositionCameraPositionNextLocation =
+                new JButton(moveCameraToPlacementLocationNext);
         btnPositionCameraPositionNextLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionCameraPositionNextLocation);
 
@@ -165,7 +165,8 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardLocation.getSide());
-                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(), boardLocation, JobPlacementsPanel.this));
+                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
+                            boardLocation, JobPlacementsPanel.this));
                 }
             }
         });
@@ -218,7 +219,7 @@ public class JobPlacementsPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
     }
-    
+
     public void selectPlacement(Placement placement) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if (tableModel.getPlacement(i) == placement) {
@@ -229,7 +230,7 @@ public class JobPlacementsPanel extends JPanel {
             }
         }
     }
-    
+
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
@@ -334,25 +335,27 @@ public class JobPlacementsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.centerCameraMoveNext);
             putValue(NAME, "Move Camera To Placement Location and Move to Next Part");
-            putValue(SHORT_DESCRIPTION, "Position the camera at the placement's location and move to next part.");
+            putValue(SHORT_DESCRIPTION,
+                    "Position the camera at the placement's location and move to next part.");
         }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	UiUtils.submitUiMachineTask(() -> {
-				// Need to keep current focus owner so that the space bar can be
-				// used after the initial click. Otherwise, button focus is lost
-				// when table is updated
-        		Component comp = MainFrame.get().getFocusOwner();
+            UiUtils.submitUiMachineTask(() -> {
+                // Need to keep current focus owner so that the space bar can be
+                // used after the initial click. Otherwise, button focus is lost
+                // when table is updated
+                Component comp = MainFrame.get().getFocusOwner();
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, location); 
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
                 Helpers.selectNextTableRow(table);
-                if (comp!=null){
-					comp.requestFocus();
+                if (comp != null) {
+                    comp.requestFocus();
                 }
-            }); 
+            });
         };
     };
 
