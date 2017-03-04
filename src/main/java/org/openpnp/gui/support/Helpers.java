@@ -68,6 +68,24 @@ public class Helpers {
         index = table.convertRowIndexToView(index);
         table.addRowSelectionInterval(index, index);
     }
+    
+    public static void selectNextTableRow(JTable table){
+    	 int index = table.getSelectedRow();
+    	 
+    	 if (index == -1){
+    		 index = 0;
+    	 }
+    	 
+         table.clearSelection();
+         if (++index > table.getRowCount()-1){
+         	index = 0;
+         }
+         
+         index = table.convertRowIndexToView(index);
+         table.addRowSelectionInterval(index, index);   
+    }
+    
+    
 
     /**
      * Create a unique name consisting of the prefix and an integer. The name is guaranteed to be
