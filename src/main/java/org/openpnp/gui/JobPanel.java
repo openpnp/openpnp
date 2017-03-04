@@ -283,7 +283,7 @@ public class JobPanel extends JPanel {
         pnlRight.add(tabbedPane, BorderLayout.CENTER);
 
         jobPastePanel = new JobPastePanel(this);
-        jobPlacementsPanel = new JobPlacementsPanel(frame, this);
+        jobPlacementsPanel = new JobPlacementsPanel(this);
 
         add(splitPane);
 
@@ -1040,15 +1040,16 @@ public class JobPanel extends JPanel {
 				// Need to keep current focus owner so that the space bar can be
 				// used after the initial click. Otherwise, button focus is lost
 				// when table is updated
-				Component comp = frame.getFocusOwner();
+				Component comp = MainFrame.get().getFocusOwner();
 				HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
 				Camera camera = tool.getHead().getDefaultCamera();
 				MainFrame.get().getCameraViews().ensureCameraVisible(camera);
 				Location location = getSelectedBoardLocation().getLocation();
 				MovableUtils.moveToLocationAtSafeZ(camera, location);	
 				Helpers.selectNextTableRow(boardLocationsTable);
-				if (comp!=null)
+				if (comp!=null){
 					comp.requestFocus();
+				}
 			});
 		}
 	};

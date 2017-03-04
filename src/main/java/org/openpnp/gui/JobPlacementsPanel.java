@@ -59,7 +59,6 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 
 public class JobPlacementsPanel extends JPanel {
-	private JFrame frame;
     private JTable table;
     private PlacementsTableModel tableModel;
     private ActionGroup boardLocationSelectionActionGroup;
@@ -75,8 +74,7 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
 
-    public JobPlacementsPanel(JFrame frame, JobPanel jobPanel) {
-    	this.frame = frame;
+    public JobPlacementsPanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
 
         boardLocationSelectionActionGroup = new ActionGroup(newAction);
@@ -344,15 +342,16 @@ public class JobPlacementsPanel extends JPanel {
 				// Need to keep current focus owner so that the space bar can be
 				// used after the initial click. Otherwise, button focus is lost
 				// when table is updated
-        		Component comp = frame.getFocusOwner();
+        		Component comp = MainFrame.get().getFocusOwner();
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location); 
                 Helpers.selectNextTableRow(table);
-                if (comp!=null)
+                if (comp!=null){
 					comp.requestFocus();
+                }
             }); 
         };
     };
