@@ -81,7 +81,6 @@ public class Helpers {
          	index = 0;
          }
          
-         index = table.convertRowIndexToView(index);
          table.addRowSelectionInterval(index, index);   
     }
     
