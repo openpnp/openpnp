@@ -3,7 +3,7 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-03-05
 
-# Force Upper Case in Gcode Driver Console
+* Force Upper Case in Gcode Driver Console
 
 	There is now an option, on by default, that forces commands sent from the Gcode console
 	to upper case. Previously upper case was forced without option, but now you can turn it off
