@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-03-05
+
+# Force Upper Case in Gcode Driver Console
+
+	There is now an option, on by default, that forces commands sent from the Gcode console
+	to upper case. Previously upper case was forced without option, but now you can turn it off
+	if you like.
+
 # 2017-03-04
 
 * Position Camera and Continue
