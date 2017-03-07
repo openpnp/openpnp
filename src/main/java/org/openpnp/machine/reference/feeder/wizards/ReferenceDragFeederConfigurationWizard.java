@@ -383,11 +383,8 @@ public class ReferenceDragFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backoffDistTf);
 
-        BeanProperty actuatorIdProperty = BeanProperty.create("actuatorId");
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
-                locationButtonsPanelFeedStart, actuatorIdProperty).bind();
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
-                locationButtonsPanelFeedEnd, actuatorIdProperty).bind();
+        bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedStart, "actuatorName");
+        bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedEnd, "actuatorName");
     }
 
     @SuppressWarnings("serial")
