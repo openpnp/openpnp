@@ -1,5 +1,6 @@
 package org.openpnp.gui;
 
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LogEntryListCellRenderer;
 import org.openpnp.gui.support.LogEntryListModel;
 
@@ -13,7 +14,6 @@ import java.util.Objects;
 import java.util.prefs.Preferences;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
@@ -26,7 +26,7 @@ import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.LogEntry;
 
-class LogPanel extends JPanel {
+public class LogPanel extends JPanel {
 
     private Preferences prefs = Preferences.userNodeForPackage(LogPanel.class);
 
@@ -88,12 +88,16 @@ class LogPanel extends JPanel {
 
         JPanel filterControlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        JButton btnClear = new JButton("Clear Panel");
+        JButton btnClear = new JButton(Icons.delete);
+        btnClear.setToolTipText("Clear log");
+
         btnClear.addActionListener(e -> logEntries.clear());
 
         filterControlPanel.add(btnClear);
 
-        JButton btnCopyToClipboard = new JButton("Copy to clipboard");
+        JButton btnCopyToClipboard = new JButton(Icons.copy);
+        btnCopyToClipboard.setToolTipText("Copy to clipboard");
+
         btnCopyToClipboard.addActionListener(e -> {
             StringBuilder sb = new StringBuilder();
             logEntries.getFilteredLogEntries().forEach(logEntry -> sb.append(logEntry.getRenderedLogEntry()));
@@ -102,7 +106,10 @@ class LogPanel extends JPanel {
 
         filterControlPanel.add(btnCopyToClipboard);
 
-        JToggleButton btnScroll = new JToggleButton("Auto Scroll");
+        JToggleButton btnScroll = new JToggleButton(Icons.scrollDownDisabled);
+        btnScroll.setSelectedIcon(Icons.scrollDown);
+        btnScroll.setToolTipText("Auto scrolling");
+
         btnScroll.setSelected(autoScroll);
 
         btnScroll.addActionListener(e -> {
@@ -122,13 +129,15 @@ class LogPanel extends JPanel {
         // Log Panel
         logEntryJList.setCellRenderer(new LogEntryListCellRenderer());
 
-        KeyStroke copyKeystroke = KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK);
-        logEntryJList.registerKeyboardAction(actionEvent -> {
-            ArrayList<LogEntry> logList = (ArrayList<LogEntry>) logEntryJList.getSelectedValuesList();
-            StringBuilder sb = new StringBuilder();
-            logList.forEach(logEntry -> sb.append(logEntry.getRenderedLogEntry()));
-            copyStringToClipboard(sb.toString());
-        }, copyKeystroke, JComponent.WHEN_FOCUSED);
+        logEntryJList.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "log-copy");
+        logEntryJList.getActionMap().put("log-copy", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                ArrayList<LogEntry> logList = (ArrayList<LogEntry>) logEntryJList.getSelectedValuesList();
+                StringBuilder sb = new StringBuilder();
+                logList.forEach(logEntry -> sb.append(logEntry.getRenderedLogEntry()));
+                copyStringToClipboard(sb.toString());
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(logEntryJList);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -234,7 +243,7 @@ class LogPanel extends JPanel {
             }
         });
 
-        searchTextField.setColumns(30);
+        searchTextField.setColumns(20);
         searchField.add(searchTextField);
         return searchField;
     }
