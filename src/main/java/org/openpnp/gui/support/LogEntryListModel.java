@@ -39,7 +39,7 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
         }
     }
 
-    private static final int lineLimit = 10000;
+    private static final int LINE_LIMIT = 10000;
 
     public List<LogEntry> getOriginalLogEntries() {
         return originalLogEntries;
@@ -100,8 +100,8 @@ public class LogEntryListModel extends AbstractListModel<LogEntry> implements Wr
     }
 
     private void trim() {
-        if (originalLogEntries.size() > lineLimit) {
-            originalLogEntries.subList(0, originalLogEntries.size() - lineLimit).clear();
+        if (originalLogEntries.size() > LINE_LIMIT) {
+            originalLogEntries.subList(0, originalLogEntries.size() - LINE_LIMIT).clear();
         }
         filter();
     }
