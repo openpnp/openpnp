@@ -13,10 +13,22 @@ import org.openpnp.util.MovableUtils;
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         implements PnpJobProcessor {
 
+
+    /**
+     * Discard the Part, if any, on the given Head or all Heads if parameter is null. 
+	 * The Nozzle is returned to Safe Z at the end of the operation.
+     * 
+     * @param head
+     * @throws Exception
+     */
     public static void discardAll(Head head) throws Exception {
-        for (Nozzle nozzle : head.getNozzles()) {
-            discard(nozzle);
-        }
+    	for (Head hd : machine.getHeads()) {
+			if(head==null||hd==head) {
+				for (Nozzle nozzle : head.getNozzles()) {
+					discard(nozzle);
+				}
+			}
+		}
     }
 
 
@@ -36,7 +48,12 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
                 Configuration.get().getMachine().getDiscardLocation());
         // discard the part
         nozzle.place();
+		// repeat the air puff to clean filters over discard location
+        nozzle.place();
+        nozzle.place();
+        nozzle.place();
         nozzle.moveToSafeZ();
+        nozzle.place();
     }
 
     public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws Exception {
@@ -49,30 +66,41 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
                 "No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
     }
 
-    public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return true;
-            }
-        }
-        return false;
-    }
+ 		
+	public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
+		if(nozzle==null||nozzle.getNozzleTip()==null) return false;
+	 
+		if(nozzle.isChangerEnabled()) {
+			for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+				if (nozzleTip.canHandle(part)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return nozzle.getNozzleTip().canHandle(part);
+	}
 
     /**
      * Find the first NozzleTip that is able to handle the given Part.
      * 
+	 * @param head , if set to null, it searches all heads.
      * @param part
      * @return
      * @throws Exception If no compatible NozzleTip can be found.
      */
     public static NozzleTip findNozzleTip(Head head, Part part) throws Exception {
-        for (Nozzle nozzle : head.getNozzles()) {
-            try {
-                return findNozzleTip(nozzle, part);
-            }
-            catch (Exception e) {
-            }
-        }
+		for (Head hd : machine.getHeads()) {
+			if(head==null||hd==head) {
+				for (Nozzle nozzle : head.getNozzles()) {
+					try {
+						return findNozzleTip(nozzle, part);
+					}
+					catch (Exception e) {
+					}
+				}
+			}
+		}
         throw new Exception("No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
@@ -84,8 +112,9 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @throws Exception If no Feeder is found that is both enabled and is serving the Part.
      */
     public static Feeder findFeeder(Machine machine, Part part) throws Exception {
+		if(part!=null)
         for (Feeder feeder : machine.getFeeders()) {
-            if (feeder.getPart() == part && feeder.isEnabled()) {
+            if (feeder.getPart().getId().equals(part.getId()) && feeder.isEnabled()) {
                 return feeder;
             }
         }
