@@ -123,6 +123,7 @@ public class NamedCSVImporter implements BoardImporter {
     static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, Len = 0;
     static private int unitsMil_x=0, unitsMil_y=0; //set if units are in mils not mm
     static private char comma = ',';
+    
     //////////////////////////////////////////////////////////
 
     private static int checkCSV(String str[], String val[]) {
@@ -240,6 +241,7 @@ public class NamedCSVImporter implements BoardImporter {
      * csvParser.lastLineNumber() + " " + t );
      */
     //////////////////////////////////////////////////////////
+    
     private static List<Placement> parseFile(File file, boolean createMissingParts)
             throws Exception {
         BufferedReader reader =
