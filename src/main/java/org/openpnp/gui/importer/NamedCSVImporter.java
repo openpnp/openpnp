@@ -121,9 +121,9 @@ public class NamedCSVImporter implements BoardImporter {
     private static final String TBs[] = {"Layer", "layer", "Side", "side", "TB", "tb"};
     //////////////////////////////////////////////////////////
     static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, Len = 0;
-    static private int unitsMil_x=0, unitsMil_y=0; //set if units are in mils not mm
+    static private int units_mils_x=0, units_mils_y=0; //set if units are in mils not mm
     static private char comma = ',';
-    
+
     //////////////////////////////////////////////////////////
 
     private static int checkCSV(String str[], String val[]) {
@@ -135,11 +135,11 @@ public class NamedCSVImporter implements BoardImporter {
                     //check for mil units
                     // TODO This should be done better
                     if (val[j].equals("Ref-X(mil)")) {
-                        unitsMil_x=1;
+                        units_mils_x=1;
                         Logger.trace("X units are in mils");
                     }
                     if (val[j].equals("Ref-Y(mil)")) {
-                        unitsMil_y=1;
+                        units_mils_y=1;
                         Logger.trace("Y units are in mils");
                     }
                     return j;
@@ -241,7 +241,7 @@ public class NamedCSVImporter implements BoardImporter {
      * csvParser.lastLineNumber() + " " + t );
      */
     //////////////////////////////////////////////////////////
-    
+
     private static List<Placement> parseFile(File file, boolean createMissingParts)
             throws Exception {
         BufferedReader reader =
@@ -277,7 +277,7 @@ public class NamedCSVImporter implements BoardImporter {
                 double placementX = Double
                         .parseDouble(as[X].replace(",", ".").replace(" ", "").replace("mm", "").replace("mil",""));
                 //convert mils to mmm
-                if (unitsMil_x==1) 
+                if (units_mils_x==1) 
                 {
                     placementX=placementX*0.0254; 
                 }
@@ -285,7 +285,7 @@ public class NamedCSVImporter implements BoardImporter {
                         .parseDouble(as[Y].replace(",", ".").replace(" ", "").replace("mm", "").replace("mil",""));
 
                 //convert mils to mmm
-                if (unitsMil_y==1) 
+                if (units_mils_y==1) 
                 {
                     placementY=placementY*0.0254; 
                 }
