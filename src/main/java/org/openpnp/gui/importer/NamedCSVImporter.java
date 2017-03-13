@@ -240,7 +240,6 @@ public class NamedCSVImporter implements BoardImporter {
 	 * csvParser.lastLineNumber() + " " + t );
 	 */
 	//////////////////////////////////////////////////////////
-
 	private static List<Placement> parseFile(File file, boolean createMissingParts)
 			throws Exception {
 		BufferedReader reader =
