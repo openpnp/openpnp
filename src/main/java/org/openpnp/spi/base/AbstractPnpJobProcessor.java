@@ -8,6 +8,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.util.MovableUtils;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
@@ -22,7 +23,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @throws Exception
      */
     public static void discardAll(Head head) throws Exception {
-    	for (Head hd : machine.getHeads()) {
+    	for (Head hd : Configuration.get().getMachine().getHeads()) {
 			if(head==null||hd==head) {
 				for (Nozzle nozzle : head.getNozzles()) {
 					discard(nozzle);
@@ -70,7 +71,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
 	public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
 		if(nozzle==null||nozzle.getNozzleTip()==null) return false;
 	 
-		if(nozzle.isChangerEnabled()) {
+		if(((ReferenceNozzle)nozzle).isChangerEnabled()) {
 			for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
 				if (nozzleTip.canHandle(part)) {
 					return true;
@@ -90,7 +91,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @throws Exception If no compatible NozzleTip can be found.
      */
     public static NozzleTip findNozzleTip(Head head, Part part) throws Exception {
-		for (Head hd : machine.getHeads()) {
+		for (Head hd : Configuration.get().getMachine().getHeads()) {
 			if(head==null||hd==head) {
 				for (Nozzle nozzle : head.getNozzles()) {
 					try {
