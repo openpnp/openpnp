@@ -23,6 +23,7 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
@@ -578,6 +579,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.pick(nozzle);
         }
     }
+
+    @Override
+    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
+                         Location endLocation, long dispenseTimeMilliseconds) throws Exception
+    {
+
+    }
+
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
