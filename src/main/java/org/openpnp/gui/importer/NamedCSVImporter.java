@@ -115,8 +115,8 @@ public class NamedCSVImporter implements BoardImporter {
     private static final String Vals[] = {"Value", "value", "Val", "val", "Comment", "comment"};
     private static final String Packs[] =
             {"Footprint", "footprint", "Package", "package", "Pattern", "pattern"};
-    private static final String Xs[] = {"X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX"};
-    private static final String Ys[] = {"Y", "x", "Y (mm)", "x (mm)", "Ref Y", "ref x", "PosY"};
+    private static final String Xs[] = {"X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX", "Ref-X(mm)"};
+    private static final String Ys[] = {"Y", "y", "Y (mm)", "y (mm)", "Ref Y", "ref y", "PosY", "Ref-Y(mm)"};
     private static final String Rots[] = {"Rotation", "rotation", "Rot", "rot", "Rotate"};
     private static final String TBs[] = {"Layer", "layer", "Side", "side", "TB", "tb"};
     //////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ public class NamedCSVImporter implements BoardImporter {
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
-        for (int i = 0; i++ < 10 && (line = reader.readLine()) != null;) {
+        for (int i = 0; i++ <1000 && (line = reader.readLine()) != null;) {
             line = line.trim();
             if (line.length() == 0)
                 continue;
