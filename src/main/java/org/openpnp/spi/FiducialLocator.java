@@ -13,7 +13,7 @@ import org.openpnp.model.Placement;
  * future expansion can occur without requiring configuration changes. 
  */
 public interface FiducialLocator extends PropertySheetHolder {
-	public Location locateBoard(BoardLocation boardLocation, Placement fid1, Placement fid2, Length fidDia) throws Exception;
-    public Location locateBoard(BoardLocation boardLocation) throws Exception;
+	public Location locateBoard(BoardLocation boardLocation) throws Exception;
+    public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception;
     public Location getHomeFiducialLocation(Location location, Part part ) throws Exception;
 }

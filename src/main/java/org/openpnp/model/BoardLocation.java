@@ -33,6 +33,9 @@ public class BoardLocation extends AbstractModelObject {
 
     @Attribute
     private String boardFile;
+    
+    @Attribute(required = false)
+    private String panelId;
 
     @Attribute(required = false)
     private boolean checkFiducials;
@@ -44,8 +47,7 @@ public class BoardLocation extends AbstractModelObject {
         setLocation(new Location(LengthUnit.Millimeters));
     }
    
-    // Copy constructor needed for deep copy of object. Note that none of the fields below 
-    // need a deep copy. 
+    // Copy constructor needed for deep copy of object. 
     public BoardLocation(BoardLocation obj){
     	this.location = obj.location;       
     	this.side = obj.side;               
@@ -103,6 +105,17 @@ public class BoardLocation extends AbstractModelObject {
 
     void setBoardFile(String boardFile) {
         this.boardFile = boardFile;
+    }
+    
+    public String getPanelID()
+    {
+    	return panelId;
+    }
+    
+    public void setPanelId(String id){
+    	String oldValue = this.panelId;
+    	this.panelId = id;
+    	firePropertyChange("panelId", oldValue, panelId);
     }
 
     public boolean isCheckFiducials() {
