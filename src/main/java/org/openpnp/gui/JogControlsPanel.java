@@ -339,6 +339,8 @@ public class JogControlsPanel extends JPanel {
         positionCameraBtn.setHideActionText(true);
         panelControls.add(positionCameraBtn, "22, 8");
 
+
+
         JLabel lblC = new JLabel("C");
         lblC.setHorizontalAlignment(SwingConstants.CENTER);
         lblC.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
@@ -375,6 +377,11 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab("Dispense", null, panelDispensers, null);
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
+
+        JButton positionDispenseBtn = new JButton(machineControlsPanel.targetDispenseAction);
+        positionDispenseBtn.setIcon(Icons.centerTool);
+        positionDispenseBtn.setHideActionText(true);
+        panelDispensers.add(positionDispenseBtn, "22, 8");
     }
 
     private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
