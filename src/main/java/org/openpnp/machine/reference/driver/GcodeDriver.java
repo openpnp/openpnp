@@ -21,13 +21,7 @@ import javax.swing.JOptionPane;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceDriver;
-import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.*;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
@@ -35,10 +29,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -635,7 +626,91 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.actuate(actuator, value);
         }
     }
-    
+
+    @Override
+    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
+                         Location endLocation, long dispenseTimeMilliseconds) throws Exception {
+        Logger.debug("dispense({}, {}, {}, {})",
+                new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
+
+        // Thread.sleep(dispenseTimeMilliseconds);
+        Actuator actuator = Configuration.get().getMachine().getDefaultHead().getActuatorByName("dispenseZ");
+
+        if (actuator == null) {
+            throw new Exception("Post pick failed. Unable to find an actuator named dispenseZ");
+        }
+
+        // drop the z-axis
+        actuator.actuate( true);
+
+        String command = getCommand(dispenser, CommandType.MOVE_TO_COMMAND);
+        command = substituteVariable(command, "Id", dispenser.getId());
+        command = substituteVariable(command, "Name", dispenser.getName());
+
+        float extruderSteps = 500;
+        command = substituteVariable(command, "E", extruderSteps);
+
+        List<String> responses = sendGcode(command);
+
+                /*
+                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+                 * response before continuing. We first search the initial responses from the
+                 * command for the regex. If it's not found we then collect responses for up to
+                 * timeoutMillis while searching the responses for the regex. As soon as it is
+                 * matched we continue. If it's not matched within the timeout we throw an
+                 * Exception.
+                 */
+        String moveToCompleteRegex = getCommand(dispenser, CommandType.MOVE_TO_COMPLETE_REGEX);
+        if (moveToCompleteRegex != null) {
+            if (!containsMatch(responses, moveToCompleteRegex)) {
+                long t = System.currentTimeMillis();
+                boolean done = false;
+                while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
+                    done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
+                }
+                if (!done) {
+                    throw new Exception("Timed out waiting for move to complete.");
+                }
+            }
+        }
+
+        command = getCommand(dispenser, CommandType.MOVE_TO_COMMAND);
+        command = substituteVariable(command, "Id", dispenser.getId());
+        command = substituteVariable(command, "Name", dispenser.getName());
+
+        float retractionSteps = -500;
+        command = substituteVariable(command, "E", retractionSteps);
+
+        responses = sendGcode(command);
+
+                /*
+                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+                 * response before continuing. We first search the initial responses from the
+                 * command for the regex. If it's not found we then collect responses for up to
+                 * timeoutMillis while searching the responses for the regex. As soon as it is
+                 * matched we continue. If it's not matched within the timeout we throw an
+                 * Exception.
+                 */
+        moveToCompleteRegex = getCommand(dispenser, CommandType.MOVE_TO_COMPLETE_REGEX);
+        if (moveToCompleteRegex != null) {
+            if (!containsMatch(responses, moveToCompleteRegex)) {
+                long t = System.currentTimeMillis();
+                boolean done = false;
+                while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
+                    done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
+                }
+                if (!done) {
+                    throw new Exception("Timed out waiting for move to complete.");
+                }
+            }
+        }
+
+        // raise the z-axis
+        actuator.actuate( false);
+
+    }
+
+
     @Override
     public String actuatorRead(ReferenceActuator actuator) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
