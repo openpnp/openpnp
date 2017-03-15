@@ -24,6 +24,9 @@ public class Panel extends AbstractModelObject implements Identifiable {
 	
 	@Element
 	private boolean checkFids;
+	
+	@Element
+	private Part part; 
 
     @ElementList(required = false)
     protected IdentifiableList<Placement> fiducials = new IdentifiableList<>();
@@ -106,6 +109,15 @@ public class Panel extends AbstractModelObject implements Identifiable {
 	public IdentifiableList<Placement> getFiducials() {
 		return fiducials;
 	}
+	
+	public void setPart(Part part){
+		this.part = part;
+	}
+	
+	public Part getPart(){
+		return this.part;
+	}
+	
 
 	@Override
 	public String getId() {

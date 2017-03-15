@@ -83,7 +83,9 @@ import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -95,6 +97,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
+import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
@@ -1428,6 +1431,11 @@ public class JobPanel extends JPanel {
 			textFieldboardPanelFid2Y.setText(String.format("%.3f", fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
 			panel.add(textFieldboardPanelFid2Y, "4, 16, fill, default");
 			
+			panel.add(new JLabel("Global Fiducial Part", JLabel.RIGHT), "2, 16, right, default");
+			JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
+			partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+			panel.add(partsComboBox, "4, 18, fill, default");
+			
 			//panel.add(new JLabel("Fiducial Size", JLabel.RIGHT), "2, 18, right, default");
 			//textFieldFidDiameter = new JTextField();
 			//textFieldFidDiameter.setText(String.format("%.3f", getJob().getPCBPanel().getFidSize().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
@@ -1445,6 +1453,8 @@ public class JobPanel extends JPanel {
 			JButton btnImport = new JButton("OK");
 			btnImport.setAction(okAction);
 			footerPanel.add(btnImport);
+			
+			
 
 			setSize(300, 500);
 			setResizable(false);
@@ -1490,6 +1500,9 @@ public class JobPanel extends JPanel {
 										p0, 
 										p1
 										);
+				
+				
+				//pcbPanel.setPart(part);
 
 				getJob().clearPcbPanel();
 				getJob().addPcbPanel(pcbPanel);

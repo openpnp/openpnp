@@ -105,9 +105,11 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     // single panel in use, even though the underlying plumbing supports a list of 
     // panels. This function is intended to let the rest of OpenPNP know if the 
     // autopanelize function is being used
-    public boolean isUsingPanel()
-    {
-    	if (pcbPanels != null && (pcbPanels.size() == 1) && (pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1)){
+    public boolean isUsingPanel(){
+    	if (pcbPanels == null)
+    		return false;
+    	
+    	if ( (pcbPanels.size() >= 1) && ((pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1))){
     		return true;
     	}
     	
