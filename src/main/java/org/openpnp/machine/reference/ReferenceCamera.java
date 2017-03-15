@@ -43,6 +43,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -451,16 +452,19 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
             return mat;
         }
 
+        // Get the number of images counted so far.
         int count = lensCalibration.getPatternFoundCount();
 
+        // Submit an image for counting. If it is good the count will increase.
         Mat appliedMat = lensCalibration.apply(mat);
         if (appliedMat == null) {
             // nothing was found in the image
             return mat;
         }
 
+        // If the count changed then we have counted a new image, so let the caller know.
         if (count != lensCalibration.getPatternFoundCount()) {
-            // a new image was counted, so let the caller know
+            // If we've reached our goal, finish the process.
             if (lensCalibration.getPatternFoundCount() == calibrationCountGoal) {
                 calibrationCallback.callback(lensCalibration.getPatternFoundCount(),
                         calibrationCountGoal, true);
@@ -468,12 +472,22 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
                 calibration.setCameraMatrixMat(lensCalibration.getCameraMatrix());
                 calibration
                         .setDistortionCoefficientsMat(lensCalibration.getDistortionCoefficients());
+                // Clear the calibration cache
+                if (undistortionMap1 != null) {
+                    undistortionMap1.release();
+                    undistortionMap1 = null;
+                }
+                if (undistortionMap2 != null) {
+                    undistortionMap2.release();
+                    undistortionMap2 = null;
+                }
                 calibration.setEnabled(true);
 
                 lensCalibration.close();
                 lensCalibration = null;
                 calibrating = false;
             }
+            // Otherwise just report the addition.
             else {
                 calibrationCallback.callback(lensCalibration.getPatternFoundCount(),
                         calibrationCountGoal, false);
@@ -572,7 +586,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         public void callback(int progressCurrent, int progressMax, boolean complete);
     }
 
-    public static class LensCalibrationParams {
+    public static class LensCalibrationParams extends AbstractModelObject {
         @Attribute(required = false)
         private boolean enabled = false;
 
@@ -602,7 +616,9 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         }
 
         public void setEnabled(boolean enabled) {
+            Object oldValue = this.isEnabled();
             this.enabled = enabled;
+            firePropertyChange("enabled", oldValue, enabled);
         }
 
         public Mat getCameraMatrixMat() {
