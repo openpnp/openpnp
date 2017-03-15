@@ -13,10 +13,7 @@ import org.openpnp.machine.reference.wizards.ZevatechCenteringStageConfiguration
 import org.openpnp.machine.reference.wizards.ZevatechCenteringStagePartConfigurationWizard;
 import org.openpnp.model.*;
 import org.openpnp.model.Package;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.*;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.*;
@@ -73,14 +70,35 @@ public class ZevatechCenteringStage implements PartAlignment {
         nozzle.moveTo(centeringStageLocation);
         nozzle.place();
 
+        Actuator actuator = nozzle.getHead().getActuatorByName("CenteringStage");
+        if (actuator == null) {
+            actuator = Configuration.get().getMachine().getActuatorByName("CenteringStage");
+        }
+        if (actuator == null) {
+            throw new Exception("Post pick failed. Unable to find an actuator named " + "CenteringSTage");
+        }
+
+        // Final part rotation is a combination of alignment rotation, placement rotation and board rotation. If your board is always at zero rotation (fixed in a jig, perhaps) then you don't have to worry about that one, but you still have placement rotation to deal with.
+        double rotation = 0;
+
+        if(boardLocation != null && placementLocation != null)
+        {
+            rotation = placementLocation.getRotation() + boardLocation.getLocation().getRotation();
+        }
         // actuate the stage centering jaw
+        actuator.actuate(true);
 
         // rotate the stage to our desired angle
+        actuator.actuate(rotation);
 
         // unactuate the stage centering jaw
+        actuator.actuate(false);
 
         // pick the (hopefully now centered) part back up
         nozzle.pick(part);
+
+        // set the stage back to zero
+        actuator.actuate((double) 0);
 
         Location alignmentLocation = new Location(LengthUnit.Millimeters);
         if(placementLocation != null)

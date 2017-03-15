@@ -356,6 +356,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(referenceCamera, "cropWidth", cropWidthTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "cropHeight", cropHeightTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "scaleWidth", scaleWidthTf, "text", intConverter);
+        addWrappedBinding(referenceCamera, "scaleHeight", scaleHeightTf, "text", intConverter);
         addWrappedBinding(referenceCamera, "deinterlace", deinterlaceChk, "selected");
 
 
@@ -379,6 +380,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
         ComponentDecorators.decorateWithAutoSelect(cropWidthTextField);
         ComponentDecorators.decorateWithAutoSelect(cropHeightTextField);
+        ComponentDecorators.decorateWithAutoSelect(scaleWidthTf);
+        ComponentDecorators.decorateWithAutoSelect(scaleHeightTf);
     }
 
     private Action startCalibration = new AbstractAction("Start Lens Calibration") {
