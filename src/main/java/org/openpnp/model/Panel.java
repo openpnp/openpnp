@@ -9,7 +9,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
 public class Panel extends AbstractModelObject implements Identifiable {
-    @Attribute
+	@Element
     private String id;
     
 	@Element
@@ -27,26 +27,49 @@ public class Panel extends AbstractModelObject implements Identifiable {
 
     @ElementList(required = false)
     protected IdentifiableList<Placement> fiducials = new IdentifiableList<>();
+    
+    @SuppressWarnings("unused")
+    public Panel(){
+    	this(null);
+    }
 
 	public Panel(String id) {
 		this.id = id;
+		/*
 		xGap = new Length(0, Configuration.get().getSystemUnits());
 		yGap = new Length(0, Configuration.get().getSystemUnits());
+		Placement p0 = new Placement("PanelFid1");
+		Placement p1 = new Placement("PanelFid2");
+		this.getFiducials().add(p0);
+		this.getFiducials().add(p1);*/
+		
 	}
 
-	// This constructor is used for creating a pcb Panel with two fiducials. Later, a ctor can be
-	// added that will deal with arbitrary number of fids. But in this initial release, a panel with
-	// two fids is contemplated.
-	public Panel(String id, int cols, int rows, Length xGap, Length yGap, Placement fid0, Placement fid1) {
+	// This constructor is used for creating a pcb Panel with two fiducials. In this first release, we only contemplate UI
+	// that supports two fids on a panel
+	
+	public Panel(String id, int cols, int rows, Length xGap, Length yGap, boolean checkFids, Placement fid0, Placement fid1) {
 		this(id);
 		this.columns = cols;
 		this.rows = rows;
 		this.xGap = xGap;
 		this.yGap = yGap;
+		this.checkFids = checkFids;
 		fiducials = new IdentifiableList<>();
 		fiducials.add(fid0);
 		fiducials.add(fid1);
 	}
+	
+	/*
+	public Panel(String id, int cols, int rows, Length xGap, Length yGap, boolean checkFids, IdentifiableList<Placement> fiducials) {
+		this(id);
+		this.columns = cols;
+		this.rows = rows;
+		this.xGap = xGap;
+		this.yGap = yGap;
+		this.checkFids = checkFids;
+		this.fiducials = fiducials;
+	}	*/
 
 	public int getColumns() {
 		return columns;

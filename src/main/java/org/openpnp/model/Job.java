@@ -90,7 +90,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     }
     
     public void addPcbPanel(Panel panel){
-    	
     	pcbPanels.add(panel);
     }
     
@@ -108,8 +107,9 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     // autopanelize function is being used
     public boolean isUsingPanel()
     {
-    	if (pcbPanels != null && (pcbPanels.size() == 1) && (pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1))
+    	if (pcbPanels != null && (pcbPanels.size() == 1) && (pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1)){
     		return true;
+    	}
     	
     	return false;
     }

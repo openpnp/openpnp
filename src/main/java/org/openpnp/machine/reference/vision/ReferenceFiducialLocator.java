@@ -51,10 +51,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 	}
 
     public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
-        // Find the fids in the board
-        IdentifiableList<Placement> fiducials = getFiducials(boardLocation);
-        
-        
+        IdentifiableList<Placement> fiducials;
+               
         if (checkPanel){
         	Panel panel = MainFrame.get().getJobTab().getJob().getPcbPanels().get(boardLocation.getPanelID());
         	fiducials = panel.getFiducials();

@@ -1375,23 +1375,15 @@ public class JobPanel extends JPanel {
 			panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
 			panel.setLayout(new GridLayout(0, 2, 20, 20));
-
-			// If a panel doesn't exist, add it with some defaults
-			if (getJob().getPcbPanels().size() == 0){
-				Panel pcbPanel = new Panel("PCB Panel1", 
-											3,                                       // Columns
-											2,                                       // Rows
-											new Length(0, LengthUnit.Millimeters),   // XGap
-											new Length(0, LengthUnit.Millimeters),   // YGap
-											new Placement("PanelFid1"), 			 // Fid0 Location
-											new Placement("PanelFid2")               // Fid1 Location
-											);
-				getJob().getPcbPanels().add(pcbPanel);
-			}
-			
+		
 			// Row and column
 			int rows = getJob().getPcbPanels().get(0).getRows();
 			int cols = getJob().getPcbPanels().get(0).getColumns();
+			
+			if (rows == 1 && cols == 1){
+				rows = 5;
+				cols = 4;
+			}
 
 			panel.add(new JLabel("Number of Columns", JLabel.RIGHT), "2, 2, right, default");
 			textFieldPCBColumns = new JSpinner(new SpinnerNumberModel(cols, 1, 6, 1));
@@ -1425,7 +1417,7 @@ public class JobPanel extends JPanel {
 			textFieldboardPanelFid1Y.setText(String.format("%.3f", fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
 			panel.add(textFieldboardPanelFid1Y, "4, 12, fill, default");
 
-			Location fid1Loc = getJob().getPcbPanels().get(0).getFiducials().get(0).getLocation();
+			Location fid1Loc = getJob().getPcbPanels().get(0).getFiducials().get(1).getLocation();
 			panel.add(new JLabel("Panel Fid2 X", JLabel.RIGHT), "2, 14, right, default");
 			textFieldboardPanelFid2X = new JTextField();
 			textFieldboardPanelFid2X.setText(String.format("%.3f", fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
@@ -1484,9 +1476,9 @@ public class JobPanel extends JPanel {
 				// The selected PCB is the one we'll panelize
 				BoardLocation rootPCB = getSelectedBoardLocation();
 				
-				Placement p0 = new Placement("GlobalFid1");
+				Placement p0 = new Placement("PanelFid1");
 				p0.setLocation(new Location(Configuration.get().getSystemUnits(), globalFid1X, globalFid1Y, rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
-				Placement p1 = new Placement("GlobalFid2");
+				Placement p1 = new Placement("PanelFid2");
 				p0.setLocation(new Location(Configuration.get().getSystemUnits(), globalFid2X, globalFid2Y, rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
 
 				Panel pcbPanel = new Panel("PCBPanel1", 
@@ -1494,10 +1486,12 @@ public class JobPanel extends JPanel {
 										rows, 
 										new Length(gapX, Configuration.get().getSystemUnits()),
 										new Length(gapY, Configuration.get().getSystemUnits()),
+										false,
 										p0, 
 										p1
 										);
 
+				getJob().clearPcbPanel();
 				getJob().addPcbPanel(pcbPanel);
 				populatePanelSettingsIntoBoardLocations();
 				setVisible(false);
