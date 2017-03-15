@@ -11,7 +11,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
@@ -30,9 +29,6 @@ public abstract class AbstractNozzle extends AbstractModelObject implements Nozz
     protected Head head;
     
     protected Part part;
-
-    @Attribute(required = false)
-    protected PartAlignment partAlignment = null;
 
     public AbstractNozzle() {
         this.id = Configuration.createId("NOZ");
@@ -93,6 +89,4 @@ public abstract class AbstractNozzle extends AbstractModelObject implements Nozz
             fireIndexedPropertyChange("nozzleTips", index, nozzleTip, null);
         }
     }
-
-    public PartAlignment getPartAlignment() { return partAlignment; }
 }
