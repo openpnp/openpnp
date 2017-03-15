@@ -8,6 +8,7 @@ Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/wat
 <details>
   <summary>machine.xml</summary>
   <p>
+
 ```
 <openpnp-machine>
    <machine class="org.openpnp.machine.reference.ReferenceMachine" speed="1.0">
@@ -182,6 +183,7 @@ Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/wat
    </machine>
 </openpnp-machine>
 ```
+
   <p>
 </details>
 
