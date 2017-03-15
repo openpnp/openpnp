@@ -268,6 +268,10 @@ public class NullDriver implements ReferenceDriver {
         Logger.debug("dispense({}, {}, {}, {})",
                 new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
         checkEnabled();
+
+        double extruderAmount=startLocation.getLinearDistanceTo(endLocation);
+        dispenser.moveTo(startLocation);
+        dispenser.moveTo(endLocation);
         Thread.sleep(dispenseTimeMilliseconds);
     }
 

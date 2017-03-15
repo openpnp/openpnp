@@ -34,10 +34,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -584,6 +581,17 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
                          Location endLocation, long dispenseTimeMilliseconds) throws Exception
     {
+        Actuator pasteActuator=Configuration.get().getMachine().getActuatorByName("pasteUpDown");
+
+        // moveTo(startLocation);
+
+        // actuate the paste dispenser
+        pasteActuator.actuate(true);
+
+        // extrude some paste
+      //  moveTo(endLocation);
+
+        pasteActuator.actuate(false);
 
     }
 
