@@ -388,166 +388,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
-        // keep copy for calling subdrivers as to not add offset on offset
-        Location locationOriginal = location;
-
-        location = location.convertToUnits(units);
-        location = location.subtract(hm.getHeadOffsets());
-
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
-        double rotation = location.getRotation();
-
-        Axis xAxis = getAxis(hm, Axis.Type.X);
-        Axis yAxis = getAxis(hm, Axis.Type.Y);
-        Axis zAxis = getAxis(hm, Axis.Type.Z);
-        Axis rotationAxis = getAxis(hm, Axis.Type.Rotation);
-
-        // Handle NaNs, which means don't move this axis for this move. We set the appropriate
-        // axis reference to null, which we'll check for later.
-        if (Double.isNaN(x)) {
-            xAxis = null;
-        }
-        if (Double.isNaN(y)) {
-            yAxis = null;
-        }
-        if (Double.isNaN(z)) {
-            zAxis = null;
-        }
-        if (Double.isNaN(rotation)) {
-            rotationAxis = null;
-        }
-
-        // Only do something if there at least one axis included in the move
-        if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
-
-            // For each included axis, if the axis has a transform, transform the target coordinate
-            // to it's raw value.
-            if (xAxis != null && xAxis.getTransform() != null) {
-                x = xAxis.getTransform().toRaw(xAxis, hm, x);
-            }
-            if (yAxis != null && yAxis.getTransform() != null) {
-                y = yAxis.getTransform().toRaw(yAxis, hm, y);
-            }
-            if (zAxis != null && zAxis.getTransform() != null) {
-                z = zAxis.getTransform().toRaw(zAxis, hm, z);
-            }
-            if (rotationAxis != null && rotationAxis.getTransform() != null) {
-                rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
-            }
-
-            boolean haveToMove = false;
-
-            String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
-            command = substituteVariable(command, "Id", hm.getId());
-            command = substituteVariable(command, "Name", hm.getName());
-            command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
-            command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
-            command = substituteVariable(command, "E", null);
-
-            if (xAxis == null || xAxis.getCoordinate() == x) {
-                command = substituteVariable(command, "X", null);
-                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
-            }
-            else {
-                command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
-                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
-                haveToMove = true;
-                if (xAxis.getPreMoveCommand() != null) {
-                    sendGcode(xAxis.getPreMoveCommand());
-                }
-                xAxis.setCoordinate(x);
-            }
-
-            if (yAxis == null || yAxis.getCoordinate() == y) {
-                command = substituteVariable(command, "Y", null);
-                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
-            }
-            else {
-                command = substituteVariable(command, "Y", y);
-                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
-                haveToMove = true;
-                if (yAxis.getPreMoveCommand() != null) {
-                    sendGcode(yAxis.getPreMoveCommand());
-                }
-            }
-
-            if (zAxis == null || zAxis.getCoordinate() == z) {
-                command = substituteVariable(command, "Z", null);
-            }
-            else {
-                command = substituteVariable(command, "Z", z);
-                haveToMove = true;
-                if (zAxis.getPreMoveCommand() != null) {
-                    sendGcode(zAxis.getPreMoveCommand());
-                }
-            }
-
-            if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
-                command = substituteVariable(command, "Rotation", null);
-            }
-            else {
-                command = substituteVariable(command, "Rotation", rotation);
-                haveToMove = true;
-                if (rotationAxis.getPreMoveCommand() != null) {
-                    sendGcode(rotationAxis.getPreMoveCommand());
-                }
-            }
-
-            // Only give a command when move is necessary
-            if (haveToMove) {
-
-                List<String> responses = sendGcode(command);
-
-                /*
-                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-                 * response before continuing. We first search the initial responses from the
-                 * command for the regex. If it's not found we then collect responses for up to
-                 * timeoutMillis while searching the responses for the regex. As soon as it is
-                 * matched we continue. If it's not matched within the timeout we throw an
-                 * Exception.
-                 */
-                String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
-                if (moveToCompleteRegex != null) {
-                    if (!containsMatch(responses, moveToCompleteRegex)) {
-                        long t = System.currentTimeMillis();
-                        boolean done = false;
-                        while (!done && System.currentTimeMillis() - t < timeoutMilliseconds) {
-                            done = containsMatch(sendCommand(null, 250), moveToCompleteRegex);
-                        }
-                        if (!done) {
-                            throw new Exception("Timed out waiting for move to complete.");
-                        }
-                    }
-                }
-
-                // And save the final values on the axes.
-                if (xAxis != null) {
-                    xAxis.setCoordinate(x);
-                }
-                if (yAxis != null) {
-                    yAxis.setCoordinate(y);
-                }
-                if (zAxis != null) {
-                    zAxis.setCoordinate(z);
-                }
-                if (rotationAxis != null) {
-                    rotationAxis.setCoordinate(rotation);
-                }
-
-            } // there is a move
-
-        } // there were axes involved
-
-        // regardless of any action above the subdriver needs its actions based on original input
-        for (ReferenceDriver driver : subDrivers) {
-            driver.moveTo(hm, locationOriginal, speed);
-        }
-
+            moveTo(hm, location, speed, Double.NaN);
     }
 
-    public void moveToExtrude(ReferenceHeadMountable hm, Location location, double speed, double extrudeAmount)
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, double extrudeAmount)
             throws Exception {
         // keep copy for calling subdrivers as to not add offset on offset
         Location locationOriginal = location;
@@ -605,8 +449,16 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
             command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
-            command = substituteVariable(command, "E", extrudeAmount);
 
+
+            if(!Double.isNaN(extrudeAmount))
+            {
+                command = substituteVariable(command, "E", extrudeAmount);
+            }
+            else
+            {
+                command = substituteVariable(command, "E", null);
+            }
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
                 command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
@@ -753,10 +605,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         // extrude some paste
         double extruderAmount=startLocation.getLinearDistanceTo(endLocation);
-        moveToExtrude(dispenser,endLocation, 5, extruderAmount);
+        moveTo(dispenser,endLocation, 5, extruderAmount);
 
         // extruder retract
-        moveToExtrude(dispenser,endLocation, 5, -extruderAmount);
+        moveTo(dispenser,endLocation, 5, -extruderAmount);
 
         // raise paste dispenser
         pasteActuator.actuate(false);
