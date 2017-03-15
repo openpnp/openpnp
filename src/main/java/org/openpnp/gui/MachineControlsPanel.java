@@ -282,7 +282,7 @@ public class MachineControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 PasteDispenser dispenser = getSelectedPasteDispenser();
                 Camera camera = dispenser.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, dispenser.getLocation());
+                MovableUtils.moveToLocationAtSafeZ(dispenser, camera.getLocation());
             });
         }
     };
