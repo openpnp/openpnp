@@ -190,6 +190,7 @@ Demonstration Video (Pay attention to the red LEDs): https://www.youtube.com/wat
 <details>
   <summary>Arduino Sketch</summary>
   <p>
+
 ```
 String inData;
 
@@ -224,6 +225,7 @@ void processCommand() {
   Serial.println("ok");
 }
 ```
+
   </p>
 </details>
 
