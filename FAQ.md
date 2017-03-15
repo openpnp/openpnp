@@ -49,7 +49,7 @@ See https://github.com/openpnp/openpnp/wiki/USB-Camera-Troubleshooting-FAQ
 
 See https://github.com/openpnp/openpnp/wiki/GcodeDriver#asking-for-help
 
-## My nozzle moves (in Z) when the camera is moved/
+## My nozzle moves (in Z) when the camera is moved.
 
 See https://github.com/openpnp/openpnp/wiki/GcodeDriver#nozzle-is-moving-when-camera-is-moved
 
