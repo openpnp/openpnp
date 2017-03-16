@@ -9,10 +9,10 @@ This page is intended to guide the reader through a basic GcodeDriver setup. For
 Before starting to configure the driver you should collect some information about your machine:
 1. What kind of controller are you using? Some common ones are SmoothieBoard, Cohesion3D ReMix (Smoothie), Grbl, Marlin and TinyG.
 2. Find the command reference for your controller:
-    * Smoothie: http://smoothieware.org/supported-g-codes
-    * Grbl: https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md
-    * Marlin: http://marlinfw.org/meta/gcode/
-    * TinyG: https://github.com/synthetos/TinyG/wiki/Gcode-Support
+    * [Smoothie](http://smoothieware.org/supported-g-codes)
+    * [Grbl](https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md)
+    * [Marlin](http://marlinfw.org/meta/gcode/)
+    * [TinyG](https://github.com/synthetos/TinyG/wiki/Gcode-Support)
 3. Make sure you've selected the GcodeDriver in OpenPnP and restarted it. If you haven't done that yet, see https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup.
 
 ## Document The Hardware
@@ -33,11 +33,11 @@ Next you'll document all the hardware in the machine. This will help you determi
     * Enable: M801, M803, M805, M807, M809, M810
     * Disable: M801, M803, M805, M807, M809, M811
     * Home: M84, G92 Z0, G28 X0 Y0, T1, G92 E0, T0 G92 E0
-    * X stepper: G0 Xnnn
-    * Y stepper G0 Ynnn
-    * Z stepper G0 Znnn
-    * nozzle 1 rotation stepper: T0 G0 Ennn
-    * nozzle 2 rotation stepper: T1 G0 Ennn
+    * X stepper: G0 Xnnn Fnnn
+    * Y stepper G0 Ynnn Fnnn
+    * Z stepper G0 Znnn Fnnn
+    * nozzle 1 rotation stepper: T0 G0 Ennn Fnnn
+    * nozzle 2 rotation stepper: T1 G0 Ennn Fnnn
     * top camera: USB
     * bottom camera: USB
     * camera LEDs: M810 on, M811 off
@@ -69,8 +69,28 @@ Your primary controller is typically the one that controls X and Y. If you don't
 3. Set the max feed rate in Units per Minute. This should match the maximum setting in your controller.
 4. If your controller requires a long time to respond after being opened, increase the Connect Wait Timeout.
 5. If you have commands that take a very long time to run, increase the Command Timeout.
+6. Click Apply before moving on.
 
 ### Gcode
-The Gcode tab is where the vast majority of the work will be done. This is where you will add all the commands you listed above.
+The Gcode tab is where you will add all the commands you listed above. You will also set some special commands that tell OpenPnP how to talk to your controller. If you have more than one controller, only add the commands below for the primary controller. We'll do the secondary controllers later.
 
+1. In the Head Mountable dropdown, select Default.
+2. In the Setting dropdown, select COMMAND_CONFIRM_REGEX. The setting will be shown in the text field below.
+3. Take note of the default setting, which is `^ok.*`. This is a pattern that OpenPnP uses to match against responses from your controller. Almost every controller just responds with "ok", so just use the default unless your know that your controller sends a different kind of response to a command.
+4. Select CONNECT_COMMAND from the Setting dropdown. You'll see the default below and you should replace this with the Connect command, if any, that you recorded above. The CONNECT_COMMAND is sent when OpenPnP connects to the controller.
+5. Select ENABLE_COMMAND and do the same as above. The ENABLE_COMMAND is sent whenever you click the green power button in OpenPnP.
+6. Choose DISABLE_COMMAND and do the same. DISABLE_COMMAND is sent when you click the red power button.
+7. Do the same for HOME_COMMAND, PUMP_ON_COMMAND, PUMP_OFF_COMMAND. If you only have one nozzle, you can also configure PICK_COMMAND and PLACE_COMMAND. PICK_COMMAND is sent when OpenPnP wants to pick up a part. It usually turns on a solenoid valve. PLACE_COMMAND is used when OpenPnP is ready to place the part. It usually turns the same solenoid back off.
+8. Choose MOVE_TO_COMMAND. MOVE_TO_COMMAND is sent any time OpenPnP needs to move the head of the machine. The command includes the position that the controller should move to for each of the four active axes: X, Y, Z, C (Rotation).
 
+    The default command will work for Smoothie based controllers:
+    ```
+    G0 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:E%.4f} F{FeedRate:%.0f} ; Send standard Gcode move
+    M400 ; Wait for moves to complete before returning
+    ```
+
+    The default command sends a standard Gcode movement command and uses variables to substitute in the position that OpenPnP wants to move to. It also include the FeedRate variable so that you can control the speed of movements from within OpenPnP.
+
+    After the movement command, the default sends a `M400` command. This causes Smoothie not to respond `ok` until all motion is complete. It's very important that your command include something like this so that OpenPnP doesn't try to move again before motion has stopped.
+
+    If needed, edit the commands to match those that you recorded for your controller.
