@@ -598,7 +598,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
                          Location endLocation, long dispenseTimeMilliseconds) throws Exception
     {
-        Actuator pasteActuator=Configuration.get().getMachine().getActuatorByName("pasteUpDown");
+        Actuator pasteActuator=Configuration.get().getMachine().getDefaultHead().getActuatorByName("pasteUpDown");
 
         if (pasteActuator == null) {
             throw new Exception("Dispense failed. Unable to find an actuator named " + "pasteUpDown");
