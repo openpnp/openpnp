@@ -599,6 +599,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     {
         Actuator pasteActuator=Configuration.get().getMachine().getActuatorByName("pasteUpDown");
 
+        if (pasteActuator == null) {
+            throw new Exception("Dispense failed. Unable to find an actuator named " + "pasteUpDown");
+        }
 
         moveTo(dispenser, startLocation, 200);
 
