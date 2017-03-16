@@ -375,7 +375,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
         return fiducials;
     }
-
+    
     @Override
     public String getPropertySheetHolderTitle() {
         return "Fiducal Locator";

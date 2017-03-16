@@ -927,7 +927,7 @@ public class JobPanel extends JPanel {
 			Panel pcbPanel = getJob().getPcbPanels().get(0);
 
 			BoardLocation rootPCB = getJob().getBoardLocations().get(0);
-
+			
 			getJob().removeAllBoards();
 			getJob().addBoardLocation(rootPCB);
 
@@ -1279,7 +1279,7 @@ public class JobPanel extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			UiUtils.submitUiMachineTask(() -> {
-				Helpers.selectFirstTableRow(boardLocationsTable);				
+				Helpers.selectFirstTableRow(boardLocationsTable);
 				Location location = Configuration.get().getMachine().getFiducialLocator()
 						.locateBoard(getSelectedBoardLocation(), true);
 				getSelectedBoardLocation().setLocation(location);
@@ -1363,6 +1363,7 @@ public class JobPanel extends JPanel {
 		private JTextField textFieldboardPanelFid2X;
 		private JTextField textFieldboardPanelFid2Y;
 		private JTextField textFieldFidDiameter;
+		private JComboBox partsComboBox;
 		private final Action okAction = new SwingAction();
 		private final Action cancelAction = new SwingAction_1();
 
@@ -1378,6 +1379,12 @@ public class JobPanel extends JPanel {
 			panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
 			panel.setLayout(new GridLayout(0, 2, 20, 20));
+			
+			// Specify a placeholder panel for now if we don't have one already
+			if ( (getJob().getPcbPanels() == null)  || (getJob().getPcbPanels() != null && getJob().getPcbPanels().size() == 0)){
+				getJob().addPcbPanel(new Panel("Panel1"));
+			}
+				
 		
 			// Row and column
 			int rows = getJob().getPcbPanels().get(0).getRows();
@@ -1432,7 +1439,8 @@ public class JobPanel extends JPanel {
 			panel.add(textFieldboardPanelFid2Y, "4, 16, fill, default");
 			
 			panel.add(new JLabel("Global Fiducial Part", JLabel.RIGHT), "2, 16, right, default");
-			JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
+			partsComboBox = new JComboBox(new PartsComboBoxModel());
+			partsComboBox.setSelectedItem( (Object)(getJob().getPcbPanels().get(0).getPart()));
 			partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
 			panel.add(partsComboBox, "4, 18, fill, default");
 			
@@ -1482,28 +1490,33 @@ public class JobPanel extends JPanel {
 				double globalFid1Y = Double.parseDouble(textFieldboardPanelFid1Y.getText());
 				double globalFid2X = Double.parseDouble(textFieldboardPanelFid2X.getText());
 				double globalFid2Y = Double.parseDouble(textFieldboardPanelFid2Y.getText());
+				Part part = (Part)partsComboBox.getSelectedItem();
+	
 
 				// The selected PCB is the one we'll panelize
 				BoardLocation rootPCB = getSelectedBoardLocation();
 				
 				Placement p0 = new Placement("PanelFid1");
+				p0.setType(Placement.Type.Fiducial);
 				p0.setLocation(new Location(Configuration.get().getSystemUnits(), globalFid1X, globalFid1Y, rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
+				p0.setPart(part);
 				Placement p1 = new Placement("PanelFid2");
-				p0.setLocation(new Location(Configuration.get().getSystemUnits(), globalFid2X, globalFid2Y, rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
+				p0.setType(Placement.Type.Fiducial);
+				p1.setLocation(new Location(Configuration.get().getSystemUnits(), globalFid2X, globalFid2Y, rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
+				p1.setPart(part);
 
-				Panel pcbPanel = new Panel("PCBPanel1", 
+				Panel pcbPanel = new Panel("Panel1", 
 										cols, 
 										rows, 
 										new Length(gapX, Configuration.get().getSystemUnits()),
 										new Length(gapY, Configuration.get().getSystemUnits()),
+										part,
 										false,
 										p0, 
 										p1
 										);
 				
 				
-				//pcbPanel.setPart(part);
-
 				getJob().clearPcbPanel();
 				getJob().addPcbPanel(pcbPanel);
 				populatePanelSettingsIntoBoardLocations();

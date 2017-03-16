@@ -23,40 +23,34 @@ public class Panel extends AbstractModelObject implements Identifiable {
 	private Length yGap;
 	
 	@Element
-	private boolean checkFids;
+	private Part part;  // This is the part for the fiducial recognition
 	
 	@Element
-	private Part part; 
-
+	private boolean checkFids;
+	
     @ElementList(required = false)
-    protected IdentifiableList<Placement> fiducials = new IdentifiableList<>();
+    protected IdentifiableList<Placement> fiducials;
     
     @SuppressWarnings("unused")
     public Panel(){
-    	this(null);
+    	fiducials = new IdentifiableList<>();
     }
 
 	public Panel(String id) {
+		this();
 		this.id = id;
-		/*
-		xGap = new Length(0, Configuration.get().getSystemUnits());
-		yGap = new Length(0, Configuration.get().getSystemUnits());
-		Placement p0 = new Placement("PanelFid1");
-		Placement p1 = new Placement("PanelFid2");
-		this.getFiducials().add(p0);
-		this.getFiducials().add(p1);*/
-		
 	}
 
 	// This constructor is used for creating a pcb Panel with two fiducials. In this first release, we only contemplate UI
 	// that supports two fids on a panel
 	
-	public Panel(String id, int cols, int rows, Length xGap, Length yGap, boolean checkFids, Placement fid0, Placement fid1) {
+	public Panel(String id, int cols, int rows, Length xGap, Length yGap, Part part, boolean checkFids, Placement fid0, Placement fid1) {
 		this(id);
 		this.columns = cols;
 		this.rows = rows;
 		this.xGap = xGap;
 		this.yGap = yGap;
+		this.part = part;
 		this.checkFids = checkFids;
 		fiducials = new IdentifiableList<>();
 		fiducials.add(fid0);
@@ -110,13 +104,24 @@ public class Panel extends AbstractModelObject implements Identifiable {
 		return fiducials;
 	}
 	
+	public Part getPart()
+	{
+		return this.part;
+	}
+	
+	public void setPart(Part part)
+	{
+		this.part = part;
+	}
+	
+	/*
 	public void setPart(Part part){
 		this.part = part;
 	}
 	
 	public Part getPart(){
 		return this.part;
-	}
+	}*/
 	
 
 	@Override

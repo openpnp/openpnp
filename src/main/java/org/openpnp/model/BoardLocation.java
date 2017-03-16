@@ -35,7 +35,7 @@ public class BoardLocation extends AbstractModelObject {
     private String boardFile;
     
     @Attribute(required = false)
-    private String panelId;
+    private String panelId = new String("Panel1");  // UI doesn't have a way to specify multiple panels at this point
 
     @Attribute(required = false)
     private boolean checkFiducials;
@@ -53,6 +53,7 @@ public class BoardLocation extends AbstractModelObject {
     	this.side = obj.side;               
     	this.board = obj.board;             
     	this.boardFile = obj.boardFile;
+    	this.panelId = obj.panelId;
     	this.checkFiducials = obj.checkFiducials;
     	this.enabled = obj.enabled;
     }
