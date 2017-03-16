@@ -24,9 +24,9 @@ Most of the drivers in OpenPnP communicate using the serial port. Before you can
 
 See the pages below for additional information on setting up specific drivers within OpenPnP.
 
-* GcodeDriver (Recommended): [[GcodeDriver]]
-* TinyGDriver (Not Recommended, Use GcodeDriver Instead): [[TinyG]]
-* GrblDriver (Not Recommended, Use GcodeDriver Instead): [[Grbl]]
+* [[GcodeDriver]]: Recommended for all Gcode based controllers such as Smoothe, Grbl, TinyG, Marlin, etc.
+* [[TinyGDriver|TinyG]]: Not Recommended. Use GcodeDriver instead.
+* [[GrblDriver|Grbl]]: Not Recommended. Use GcodeDriver instead.
 
 ## Connect
 
