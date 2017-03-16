@@ -456,6 +456,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             if(!Double.isNaN(extrudeAmount))
             {
                 command = substituteVariable(command, "E", extrudeAmount);
+                haveToMove = true;
             }
             else
             {
