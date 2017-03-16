@@ -2,6 +2,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -160,7 +161,8 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardLocation.getSide());
-                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(), boardLocation, JobPlacementsPanel.this));
+                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
+                            boardLocation, JobPlacementsPanel.this));
                 }
             }
         });

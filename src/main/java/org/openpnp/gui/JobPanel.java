@@ -371,7 +371,8 @@ public class JobPanel extends JPanel {
 
                 if (machine.getPasteDispenseJobProcessor() != null) {
                     tabbedPane.addTab("Solder Paste", null, jobPastePanel, null);
-                    machine.getPasteDispenseJobProcessor().addTextStatusListener(textStatusListener);
+                    machine.getPasteDispenseJobProcessor()
+                            .addTextStatusListener(textStatusListener);
                 }
 
                 // Create an empty Job if one is not loaded
@@ -421,7 +422,8 @@ public class JobPanel extends JPanel {
             if (boardLocationsTableModel.getBoardLocation(i) == boardLocation) {
                 int index = boardLocationsTable.convertRowIndexToView(i);
                 boardLocationsTable.getSelectionModel().setSelectionInterval(index, index);
-                boardLocationsTable.scrollRectToVisible(new Rectangle(boardLocationsTable.getCellRect(index, 0, true)));
+                boardLocationsTable.scrollRectToVisible(
+                        new Rectangle(boardLocationsTable.getCellRect(index, 0, true)));
                 break;
             }
         }
@@ -787,15 +789,14 @@ public class JobPanel extends JPanel {
         if (title.equals("Solder Paste")) {
             jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
         }
-        else if (title.equals("Pick and Place"))
-        {
-            if((jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor()) && (Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null))
-            {
+        else if (title.equals("Pick and Place")) {
+            if ((jobProcessor == null
+                    || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
+                    && (Configuration.get().getMachine().getGlueDispenseJobProcessor() != null)) {
                // Run the glue dispense processor first, this will deposit glue ready for any component placements
                 jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
             }
-            else
-            {
+            else {
                 jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
             }
         }
@@ -821,7 +822,9 @@ public class JobPanel extends JPanel {
             } while (fsm.getState() == State.Running);
 
             // if this was the glue dispense run and we've finished, kick off the pick & place
-            if(Configuration.get().getMachine().getGlueDispenseJobProcessor()!=null && jobProcessor==Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
+            if (Configuration.get().getMachine().getGlueDispenseJobProcessor() != null
+                    && jobProcessor == Configuration.get().getMachine()
+                            .getGlueDispenseJobProcessor()) {
                 fsm.send(Message.StartOrPause);
             }
             return null;
@@ -1016,8 +1019,7 @@ public class JobPanel extends JPanel {
             putValue(SHORT_DESCRIPTION, "Add a new or existing board to the job.");
         }
         @Override
-        public void actionPerformed(ActionEvent arg0) {
-        }
+        public void actionPerformed(ActionEvent arg0) {}
     };
     
     public final Action addNewBoardAction = new AbstractAction() {
