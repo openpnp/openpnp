@@ -52,6 +52,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Package;
@@ -111,17 +112,21 @@ public class NamedCSVImporter implements BoardImporter {
     // if((str.indexOf("val")!=-1||str.indexOf("comment"))&&str.indexOf("val")!=-1&&str.indexOf("val")!=-1&&
 
     private static final String Refs[] =
-            {"Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"};
+        {"Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"};
     private static final String Vals[] = {"Value", "value", "Val", "val", "Comment", "comment"};
     private static final String Packs[] =
-            {"Footprint", "footprint", "Package", "package", "Pattern", "pattern"};
-    private static final String Xs[] = {"X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX"};
-    private static final String Ys[] = {"Y", "x", "Y (mm)", "x (mm)", "Ref Y", "ref x", "PosY"};
+        {"Footprint", "footprint", "Package", "package", "Pattern", "pattern"};
+    private static final String Xs[] = {"X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX", "Ref-X(mm)", "Ref-X(mil)"};
+    private static final String Ys[] = {"Y", "y", "Y (mm)", "y (mm)", "Ref Y", "ref y", "PosY", "Ref-Y(mm)", "Ref-Y(mil)"};
     private static final String Rots[] = {"Rotation", "rotation", "Rot", "rot", "Rotate"};
     private static final String TBs[] = {"Layer", "layer", "Side", "side", "TB", "tb"};
+    private static final String Heights[] = {"Height", "height", "Height(mil)", "Height(mm)"};
     //////////////////////////////////////////////////////////
-    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, Len = 0;
+    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Len = 0;
+    static private int units_mils_x=0, units_mils_y=0, units_mils_height=0; //set if units are in mils not mm
+    
     static private char comma = ',';
+
     //////////////////////////////////////////////////////////
 
     private static int checkCSV(String str[], String val[]) {
@@ -129,6 +134,23 @@ public class NamedCSVImporter implements BoardImporter {
             for (int j = 0; j < val.length; j++)
                 if (str[i].equals(val[j])) {
                     Logger.trace("checkCSV: " + val[j] + " = " + j);
+
+                    //check for mil units
+                    // TODO This should be done better, but at moment I don't know a better way...  -trampas
+                    if (val[j].equals("Ref-X(mil)")) {
+                        units_mils_x=1;
+                        Logger.trace("X units are in mils");
+                    }
+                    if (val[j].equals("Ref-Y(mil)")) {
+                        units_mils_y=1;
+                        Logger.trace("Y units are in mils");
+                    }
+                    
+                    if (val[j].equals("Height(mil)")) {
+                        units_mils_height=1;
+                        Logger.trace("Height units are in mils");
+                    }
+                    
                     return j;
                 }
         return -1;
@@ -137,10 +159,16 @@ public class NamedCSVImporter implements BoardImporter {
     private static boolean checkCSV(String str[]) {
         for (int i = 0; i < str.length; i++)
             Logger.trace("checkCSV: " + i + " -> " + str[i]);
+        
+        //note that layer (TB) and Height (HT) are optional and thus checked against -2
         if ((Ref = checkCSV(Refs, str)) != -1 && (Val = checkCSV(Vals, str)) != -1
                 && (Pack = checkCSV(Packs, str)) != -1 && (X = checkCSV(Xs, str)) != -1
-                && (Y = checkCSV(Ys, str)) != -1 && (Rot = checkCSV(Rots, str)) != -1
-                && (TB = checkCSV(TBs, str)) != -2) {
+                && (Y = checkCSV(Ys, str)) != -1 && (Rot = checkCSV(Rots, str)) != -1) {
+            
+            //the following fields are optional 
+            HT = checkCSV(Heights, str); //optional height field
+            TB = checkCSV(TBs, str); //optional top/bottom layer field
+            
             Len = Ref <= Len ? Len : Ref;
             Len = Val <= Len ? Len : Val;
             Len = Pack <= Len ? Len : Pack;
@@ -148,6 +176,7 @@ public class NamedCSVImporter implements BoardImporter {
             Len = Y <= Len ? Len : Y;
             Len = Rot <= Len ? Len : Rot;
             Len = TB <= Len ? Len : TB;
+            Len = HT <= Len ? Len : HT;
             Logger.trace("checkCSV: Len = " + Len);
             return true;
         }
@@ -158,6 +187,7 @@ public class NamedCSVImporter implements BoardImporter {
         Logger.trace("checkCSV: Y = " + Y);
         Logger.trace("checkCSV: Rot = " + Rot);
         Logger.trace("checkCSV: TB = " + TB);
+        Logger.trace("checkCSV: HT = " + HT);
         Ref = -1;
         Val = -1;
         Pack = -1;
@@ -165,6 +195,7 @@ public class NamedCSVImporter implements BoardImporter {
         Y = -1;
         Rot = -1;
         TB = -1;
+        HT=-1;
         Len = 0;
         return false;
     }
@@ -229,14 +260,15 @@ public class NamedCSVImporter implements BoardImporter {
      */
     //////////////////////////////////////////////////////////
 
-    private static List<Placement> parseFile(File file, boolean createMissingParts)
+    private static List<Placement> parseFile(File file, boolean createMissingParts, boolean updateHeights)
             throws Exception {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file)));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
-        for (int i = 0; i++ < 10 && (line = reader.readLine()) != null;) {
+        //TODO why only check first 50 lines? If it is a time out would time based time out be better? 
+        for (int i = 0; i++ <50 && (line = reader.readLine()) != null;) {
             line = line.trim();
             if (line.length() == 0)
                 continue;
@@ -262,9 +294,35 @@ public class NamedCSVImporter implements BoardImporter {
                     Logger.trace("CSV(" + i + ") |" + as[i] + "|");
                 Logger.trace("");
                 double placementX = Double
-                        .parseDouble(as[X].replace(",", ".").replace(" ", "").replace("mm", ""));
+                        .parseDouble(as[X].replace(",", ".").replace(" ", "").replace("mm", "").replace("mil",""));
+                //convert mils to mmm
+                if (units_mils_x==1) 
+                {
+                    placementX=placementX*0.0254; 
+                }
                 double placementY = Double
-                        .parseDouble(as[Y].replace(",", ".").replace(" ", "").replace("mm", ""));
+                        .parseDouble(as[Y].replace(",", ".").replace(" ", "").replace("mm", "").replace("mil",""));
+
+                //convert mils to mmm
+                if (units_mils_y==1) 
+                {
+                    placementY=placementY*0.0254; 
+                }
+                
+                
+                double heightZ=0.0;  //set default height to zero in case not included in CSV
+                if (HT != -1)
+                {
+                    heightZ = Double
+                            .parseDouble(as[HT].replace(",", ".").replace(" ", "").replace("mm", "").replace("mil",""));
+    
+                    //convert mils to mmm
+                    if (units_mils_height==1) 
+                    {
+                        heightZ=heightZ*0.0254; 
+                    }
+                }
+
                 double placementRotation =
                         Double.parseDouble(as[Rot].replace(",", ".").replace(" ", ""));
                 while (placementRotation > 180.0)
@@ -281,8 +339,11 @@ public class NamedCSVImporter implements BoardImporter {
                 if (cfg != null && createMissingParts) {
                     String partId = as[Pack] + "-" + as[Val];
                     Part part = cfg.getPart(partId);
+                
                     if (part == null) {
                         part = new Part(partId);
+                        Length l=new Length(heightZ,LengthUnit.Millimeters);
+                        part.setHeight(l);
                         Package pkg = cfg.getPackage(as[Pack]);
                         if (pkg == null) {
                             pkg = new Package(as[Pack]);
@@ -291,6 +352,18 @@ public class NamedCSVImporter implements BoardImporter {
                         part.setPackage(pkg);
 
                         cfg.addPart(part);
+                    }
+                    
+                    //if part exists and height exist and user wants height updated do it. 
+                    if (cfg != null && updateHeights && HT != -1)
+                    {
+                        String partId2 = as[Pack] + "-" + as[Val];
+                        Part part2 = cfg.getPart(partId2);
+                        if (part2 != null)
+                        {
+                            Length l=new Length(heightZ,LengthUnit.Millimeters);
+                            part2.setHeight(l);
+                        }
                     }
                     placement.setPart(part);
 
@@ -315,6 +388,7 @@ public class NamedCSVImporter implements BoardImporter {
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
+        private JCheckBox chckbxUpdatePartHeight;
 
         public Dlg(Frame parent) {
             super(parent, DESCRIPTION, true);
@@ -348,11 +422,16 @@ public class NamedCSVImporter implements BoardImporter {
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,RowSpec.decode("default:grow")}));
 
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
+            
+            //TODO the placement of the checkbox is not pretty, big space between it and one above, not sure how to fix this -trampas
+            chckbxUpdatePartHeight = new JCheckBox("Update Existing Part Heights");
+            chckbxUpdatePartHeight.setSelected(true);
+            panel_1.add(chckbxUpdatePartHeight, "2, 3");
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -421,7 +500,7 @@ public class NamedCSVImporter implements BoardImporter {
                 try {
                     if (topFile.exists()) {
                         placements
-                                .addAll(parseFile(topFile, chckbxCreateMissingParts.isSelected()));
+                        .addAll(parseFile(topFile, chckbxCreateMissingParts.isSelected(), chckbxUpdatePartHeight.isSelected()));
                     }
                 }
                 catch (Exception e1) {
