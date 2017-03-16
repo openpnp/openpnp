@@ -46,10 +46,13 @@ Next you'll document all the hardware in the machine. This will help you determi
     * nozzle 1 exhaust solenoid: M802 on, M803 off
     * nozzle 2 vacuum solenoid: M804 on, M805 off
     * nozzle 2 exhaust solenoid M806 on, M807 off
+3. Make note of how many axes your machine has, and how many motors you have attached to each axis. For instance, the most basic machine has four axes: X, Y, Z, Rotation, and each one has it's own stepper motor. If you have multiple nozzles you will probably have additional Rotation axes and motors and depending on how your Z axis works you may have more than one Z axis controlled by one Z motor.
 
 ## Multiple Controllers
 
 The GcodeDriver supports controlling multiple controllers at once. This uses a concept called sub-drivers that will be explained below. For now, just remember that if you have multiple controllers you'll need to know which one controls each device too.
+
+## Axis Mapping (TODO)
 
 ## Configure Primary Controller
 
@@ -95,5 +98,14 @@ The Gcode tab is where you will add all the commands you listed above. You will 
 
     If needed, edit the commands to match those that you recorded for your controller. Note that some controllers, like TinyG, don't have a command that will cause it to wait. Instead you have to tell OpenPnP to look for a special response. If your controller is like this, you'll also need to configure MOVE_TO_COMPLETE_REGEX. TinyG, for example, should use `.*stat:3.*`.
 9. Click Apply.
+
+## Test Primary Controller
+You should now be able to connect to the controller and start trying out some of the devices you configured.
+
+1. Click the green power button and connect to your controller. OpenPnP will open the serial port, wait a second or two and then send the CONNECT_COMMAND. Once it connects it will send the ENABLE_COMMAND. You can see what is happening in the Log tab.
+2. Click the Home button and the machine should perform it's homing operation.
+3. Adjust the jog Distance slider to 1.0mm and try jogging in every direction by clicking the jog arrow buttons. See if the machine moves in the directions you expect it to.
+4. Go to the Feeders tab and add a ReferenceTubeFeeder. Click the Feed and Pick button to test your PICK_COMMAND. OpenPnP should turn on the vacuum pump and the vacuum solenoid.
+5. Go to the Machine Controls section and find the Special tab. Click Discard to test the PLACE_COMMAND. OpenPnP will turn off the vacuum pump and the vacuum solenoid.
 
 
