@@ -8,7 +8,7 @@ In OpenPnP, the Driver is the part of the software that interfaces between OpenP
 1. Go to the Machine Setup tab and select the root node of the tree. On most setups it's called "ReferenceMachine". A setup panel will appear on the right.
 2. In the setup panel, select the driver that most closely matches you motion controller or machine. Most machines should use the [[GcodeDriver]]. Click apply.
     
-    **Note: For more information about specific drivers see the Driver Specific Setup section below.**
+    **Note: GcodeDriver is a universal driver that works with many motion controllers. It can be used for TinyG, Smoothie, Marlin, Grbl, etc. You should use GcodeDriver unless you have very specific driver requirements. For more information about specific drivers see the Driver Specific Setup section below.**
 3. OpenPnP will prompt you to restart the program, so do that.
 
 ## Set Serial Port and Baud rate
