@@ -24,9 +24,9 @@ Most of the drivers in OpenPnP communicate using the serial port. Before you can
 
 See the pages below for additional information on setting up specific drivers within OpenPnP.
 
-* Gcode (Recommended): https://github.com/openpnp/openpnp/wiki/GcodeDriver
-* TinyG (Not Recommended, Use GcodeDriver Instead): https://github.com/openpnp/openpnp/wiki/TinyG
-* Grbl (Not Recommended, Use GcodeDriver Instead): https://github.com/openpnp/openpnp/wiki/Grbl
+* GcodeDriver (Recommended): [[GcodeDriver]]
+* TinyGDriver (Not Recommended, Use GcodeDriver Instead): [[TinyG]]
+* GrblDriver (Not Recommended, Use GcodeDriver Instead): [[Grbl]]
 
 ## Connect
 
