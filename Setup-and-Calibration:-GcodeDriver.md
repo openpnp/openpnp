@@ -93,4 +93,7 @@ The Gcode tab is where you will add all the commands you listed above. You will 
 
     After the movement command, the default sends a `M400` command. This causes Smoothie not to respond `ok` until all motion is complete. It's very important that your command include something like this so that OpenPnP doesn't try to move again before motion has stopped.
 
-    If needed, edit the commands to match those that you recorded for your controller.
+    If needed, edit the commands to match those that you recorded for your controller. Note that some controllers, like TinyG, don't have a command that will cause it to wait. Instead you have to tell OpenPnP to look for a special response. If your controller is like this, you'll also need to configure MOVE_TO_COMPLETE_REGEX. TinyG, for example, should use `.*stat:3.*`.
+9. Click Apply.
+
+
