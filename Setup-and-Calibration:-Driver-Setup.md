@@ -6,7 +6,7 @@ In OpenPnP, the Driver is the part of the software that interfaces between OpenP
 ![screen shot 2016-06-18 at 10 48 23 am](https://cloud.githubusercontent.com/assets/1182323/16172727/d84709b8-3542-11e6-89a3-6890e2f0492e.png)
 
 1. Go to the Machine Setup tab and select the root node of the tree. On most setups it's called "ReferenceMachine". A setup panel will appear on the right.
-2. In the setup panel, select the driver that most closely matches you motion controller or machine. Most machines will probably use the [[GcodeDriver]]. Click apply.
+2. In the setup panel, select the driver that most closely matches you motion controller or machine. Most machines should use the [[GcodeDriver]]. Click apply.
   
   **Note: For more information about specific drivers see the Driver Specific Setup section below.**.
 3. OpenPnP will prompt you to restart the program, so do that.
@@ -25,8 +25,8 @@ Most of the drivers in OpenPnP communicate using the serial port. Before you can
 See the pages below for additional information on setting up specific drivers within OpenPnP.
 
 * Gcode (Recommended): https://github.com/openpnp/openpnp/wiki/GcodeDriver
-* TinyG: https://github.com/openpnp/openpnp/wiki/TinyG
-* Grbl: https://github.com/openpnp/openpnp/wiki/Grbl
+* TinyG (Not Recommended, Use GcodeDriver Instead): https://github.com/openpnp/openpnp/wiki/TinyG
+* Grbl (Not Recommended, Use GcodeDriver Instead): https://github.com/openpnp/openpnp/wiki/Grbl
 
 ## Connect
 
