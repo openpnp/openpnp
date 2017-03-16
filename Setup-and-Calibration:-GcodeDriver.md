@@ -13,6 +13,7 @@ Before starting to configure the driver you should collect some information abou
     * Grbl: https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md
     * Marlin: http://marlinfw.org/meta/gcode/
     * TinyG: https://github.com/synthetos/TinyG/wiki/Gcode-Support
+3. Make sure you've selected the GcodeDriver in OpenPnP and restarted it. If you haven't done that yet, see https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup.
 
 ## Document The Hardware
 
@@ -45,3 +46,31 @@ Next you'll document all the hardware in the machine. This will help you determi
     * nozzle 1 exhaust solenoid: M802 on, M803 off
     * nozzle 2 vacuum solenoid: M804 on, M805 off
     * nozzle 2 exhaust solenoid M806 on, M807 off
+
+## Multiple Controllers
+
+The GcodeDriver supports controlling multiple controllers at once. This uses a concept called sub-drivers that will be explained below. For now, just remember that if you have multiple controllers you'll need to know which one controls each device too.
+
+## Configure Primary Controller
+
+Your primary controller is typically the one that controls X and Y. If you don't have multiple controllers then this is the only one you'll need to configure.
+
+### Serial Port
+1. Open the GcodeDriver settings by going to Machine Setup -> Driver -> GcodeDriver and selecting it. The GcodeDriver configuration panel will open below.
+2. In the settings below, open the Serial tab.
+3. Select the port for your controller from the dropdown.
+4. Select the baud rate.
+5. Select any other less common settings that your serial port requires.
+6. Click Apply.
+
+### General Settings
+1. Select the General Settings tab.
+2. Set the Units that your controller uses for movement.
+3. Set the max feed rate in Units per Minute. This should match the maximum setting in your controller.
+4. If your controller requires a long time to respond after being opened, increase the Connect Wait Timeout.
+5. If you have commands that take a very long time to run, increase the Command Timeout.
+
+### Gcode
+The Gcode tab is where the vast majority of the work will be done. This is where you will add all the commands you listed above.
+
+
