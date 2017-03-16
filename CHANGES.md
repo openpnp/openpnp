@@ -3,6 +3,12 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-03-16
 
+* Named CSV Importer Improvements
+
+	Thanks to @Misfittech the Named CSV Importer can now handle Altium R14 files and now
+	has the option to set part heights when available. It also supports the ability to
+	import data that contains values in mils.
+	 
 * Logging Improvements
 
 	With many thanks to @pfried the Log tab and the logging system have seen several improvements:
