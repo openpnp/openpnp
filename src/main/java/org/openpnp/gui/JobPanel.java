@@ -1112,7 +1112,7 @@ public class JobPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
 			if (getJob().isUsingPanel()) {
 				getJob().removeAllBoards();
-				getJob().clearPcbPanel();
+				getJob().clearPcbPanels();
 				boardLocationsTableModel.fireTableDataChanged();
 				addNewBoardAction.setEnabled(true);
 				addExistingBoardAction.setEnabled(true);
@@ -1252,6 +1252,13 @@ public class JobPanel extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			
+			if (job.isUsingPanel() == false){
+				if (job.getBoardLocations().size() > 1){
+					MessageBoxes.errorBox(frame, "Panelize Error", "Panelization can only occur on a single board.");
+				}
+			}
+			
 			DlgAutoPanelize dlg = new DlgAutoPanelize(frame);
 			dlg.setVisible(true);
 		}
@@ -1384,19 +1391,13 @@ public class JobPanel extends JPanel {
 			
 			// Specify a placeholder panel for now if we don't have one already
 			if ( (getJob().getPcbPanels() == null)  || (getJob().getPcbPanels() != null && getJob().getPcbPanels().size() == 0)){
-				getJob().addPcbPanel(new Panel("Panel1"));
+				getJob().addPcbPanel(new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters), new Length(0, LengthUnit.Millimeters), new Part("dummy"), false, new Placement("PanelFid1"), new Placement("PanelFid2") ));
 			}
 				
-		
 			// Row and column
 			int rows = getJob().getPcbPanels().get(0).getRows();
 			int cols = getJob().getPcbPanels().get(0).getColumns();
-			
-			if (rows == 1 && cols == 1){
-				rows = 5;
-				cols = 4;
-			}
-
+		
 			panel.add(new JLabel("Number of Columns", JLabel.RIGHT), "2, 2, right, default");
 			textFieldPCBColumns = new JSpinner(new SpinnerNumberModel(cols, 1, 6, 1));
 			panel.add(textFieldPCBColumns, "4, 2, fill, default");
@@ -1464,8 +1465,6 @@ public class JobPanel extends JPanel {
 			btnImport.setAction(okAction);
 			footerPanel.add(btnImport);
 			
-			
-
 			setSize(300, 500);
 			setResizable(false);
 			setLocationRelativeTo(parent);
@@ -1519,9 +1518,24 @@ public class JobPanel extends JPanel {
 										);
 				
 				
-				getJob().clearPcbPanel();
-				getJob().addPcbPanel(pcbPanel);
-				populatePanelSettingsIntoBoardLocations();
+				getJob().clearPcbPanels();
+				
+				if ( (rows == 1) && (cols == 1)){
+					// Here, the user has effectively shut off panelization by specifying row = col = 1. In this case, we don't
+					// want the panelization info to appear in the job file any longer. We also need to remove all the boards created
+					// by the panelization previously EXCEPT for the root PCB. Remember, too, that the condition upon entry into 
+					// this dlg was that there was a single board in the list. When this feature is turned off, there will again
+					// be a single board in the list
+					BoardLocation b = getJob().getBoardLocations().get(0);
+					getJob().removeAllBoards();
+					getJob().addBoardLocation(b);
+					boardLocationsTableModel.fireTableDataChanged();
+				}
+				else{
+					// Here, panelization is active. 
+					getJob().addPcbPanel(pcbPanel);
+					populatePanelSettingsIntoBoardLocations();
+				}
 				setVisible(false);
 			}
 		}

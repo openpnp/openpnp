@@ -93,7 +93,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     	pcbPanels.add(panel);
     }
     
-    public void clearPcbPanel(){
+    public void clearPcbPanels(){
     	pcbPanels.clear();
     }
     
@@ -106,8 +106,9 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     // panels. This function is intended to let the rest of OpenPNP know if the 
     // autopanelize function is being used
     public boolean isUsingPanel(){
-    	if (pcbPanels == null)
+    	if (pcbPanels == null ){
     		return false;
+    	}
     	
     	if ( (pcbPanels.size() >= 1) && ((pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1))){
     		return true;
