@@ -13,7 +13,7 @@ Before starting to configure the driver you should collect some information abou
     * [Grbl](https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md)
     * [Marlin](http://marlinfw.org/meta/gcode/)
     * [TinyG](https://github.com/synthetos/TinyG/wiki/Gcode-Support)
-3. Make sure you've selected the GcodeDriver in OpenPnP and restarted it. If you haven't done that yet, see https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup.
+3. Make sure you've selected the GcodeDriver in OpenPnP and restarted it. If you haven't done that yet, see [Setup and Calibration: Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup).
 
 ## Document The Hardware
 
