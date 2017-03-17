@@ -96,3 +96,6 @@ The current recommendation for a build guideline is:
 * [Smoothieboard](http://smoothieware.org/getting-smoothieboard) or [Cohesion3D](http://cohesion3d.com/cohesion3d-remix/) for motion control.
 * [ELP 720p USB Cameras](http://www.elpcctv.com/hd-720p-usb-cameras-c-85_87.html) which can be purchased on Amazon, AliExpress and eBay. Lenses are standard M12 mount and can be replaced to customize for your machine's geometry.
 * Yamaha CL Feeders (available on Aliexpress and Robotdigg) if you want auto feeders.
+
+---
+Table of Contents Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
