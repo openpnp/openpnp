@@ -2,7 +2,7 @@
 
 Feeders are sources of parts for OpenPnP to place. A feeder can be as simple as a strip of parts taped to the machine or as complex as a fully automated motorized feeder.
 
-There are currently four types of feeders supported Strip Feeder, Drag Feeder, Tray Feeder, and Tube Feeder. The differences between each type will be covered below.
+There are several different types of feeders available in OpenPnP: Strip Feeder, Drag Feeder, Tray Feeder, Tube Feeder, Auto Feeder and Slot Auto Feeder. The differences between each type will be covered below.
 
 ## Concepts
 ### Pick Location
