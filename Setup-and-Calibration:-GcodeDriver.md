@@ -1,5 +1,7 @@
 # GcodeDriver Configuration (Under Construction)
 
+## Note to Self: It might be more worthwhile to work on the axis config wizard and machine setup wizard rather than spend more hours writing this.
+
 GcodeDriver is a universal driver for any controller that uses Gcode. It can even be used with controllers that don't use Gcode, as long as they accept basic text based commands. You should use GcodeDriver unless you have a very unique machine that requires a special, custom driver.
 
 This page is intended to guide the reader through a basic GcodeDriver setup. For more advanced information, see [[the complete GcodeDriver reference|GcodeDriver]].
