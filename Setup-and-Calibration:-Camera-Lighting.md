@@ -28,3 +28,9 @@ You can customize the way this works by modifying the scripts or the Gcode that 
 If you want to control the Down camera lights, just add another Actuator called DownCamLights. The script is already set up to use it.
 
 Here is a short video showing the steps above: https://www.youtube.com/watch?v=Y4DbYY9a9BQ
+
+***
+
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]] | [[Table of Contents|Setup and Calibration]] | [[Next Steps|Setup and Calibration: Next Steps]] |
