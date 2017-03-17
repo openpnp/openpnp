@@ -16,7 +16,8 @@ You should follow the steps in the order they are listed in this guide since man
 10. [[Feeders|Setup and Calibration: Feeders]]
 11. [[Bottom Vision|Setup and Calibration: Bottom Vision]]
 12. [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]]
-13. [[Next Steps|Setup and Calibration: Next Steps]]
+13. [[Camera Lighting|Setup and Calibration: Camera Lighting]]
+14. [[Next Steps|Setup and Calibration: Next Steps]]
 
 ***
 
