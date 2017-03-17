@@ -2,7 +2,7 @@
 
 This document will guide you through the process of setting up a new machine to work with OpenPnP. Since every machine is different you may find that not every part of this document is applicable to your machine, but it should provide a good starting point for getting your machine up and running.
 
-We recommend that you follow the steps in the order they are listed in this guide since many of the steps depend on previous steps.
+You should follow the steps in the order they are listed in this guide since many of the steps depend on previous steps.
 
 1. [[Before You Start|Setup and Calibration: Before You Start]]
 2. [[Driver Setup|Setup and Calibration: Driver Setup]]
