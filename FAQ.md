@@ -1,3 +1,14 @@
+* [Where are configuration and log files located?](#where-are-configuration-and-log-files-located)
+* [How do I reset my configuration?](#how-do-i-reset-my-configuration)
+* [How do I use a different config directory](#how-do-i-use-a-different-config-directory)
+* [How do I turn on debug logging?](#how-do-i-turn-on-debug-logging)
+* [How do I troubleshoot GcodeDriver?](#how-do-i-troubleshoot-gcodedriver)
+* [I'm having trouble connecting multiple USB cameras.](#im-having-trouble-connecting-multiple-usb-cameras)
+* [I need help configuring GcodeDriver.](#i-need-help-configuring-gcodedriver)
+* [My nozzle moves (in Z) when the camera is moved.](#my-nozzle-moves-in-z-when-the-camera-is-moved)
+* ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
+* [What Should I Build?](#what-should-i-build)
+
 ## Where are configuration and log files located?
 
 The configuration and log files are located in a subdirectory of your user's home directory called `.openpnp`.
