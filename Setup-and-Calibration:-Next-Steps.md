@@ -8,4 +8,4 @@ Congratulations! If you've reached this point your machine should be fully capab
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Vacuum Sensing|Setup and Calibration: Vacuum Sensing]] | [[Table of Contents|Setup and Calibration]] | [[User Manual]] |
+| [[Camera Lighting|Setup and Calibration: Camera Lighting]] | [[Table of Contents|Setup and Calibration]] | [[User Manual]] |
