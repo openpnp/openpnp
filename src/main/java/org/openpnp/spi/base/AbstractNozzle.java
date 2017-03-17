@@ -71,6 +71,12 @@ public abstract class AbstractNozzle extends AbstractModelObject implements Nozz
         return part;
     }
 
+        
+    @Override
+    public void setPart(Part part) {
+        this.part = part;
+    }
+
     @Override
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureTool;
