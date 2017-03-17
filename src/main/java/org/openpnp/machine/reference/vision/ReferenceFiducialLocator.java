@@ -33,6 +33,7 @@ import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Root;
 
@@ -164,6 +165,17 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         return location;
 
     }
+    
+    private static List<Location> findHoles(Camera camera, Length l) {
+        List<Location> holeLocations = new ArrayList<>();
+        new FluentCv().setCamera(camera).settleAndCapture().toGray()
+                .findCirclesHough(new Length(l.getValue()*.9,l.getUnits()), new Length(l.getValue()*1.1,l.getUnits()), 
+                		new Length(l.getValue()*2,l.getUnits()))
+                //.filterCirclesByDistance(feeder.getHoleDistanceMin(), l)
+                //.filterCirclesToLine(feeder.getHoleLineDistanceMax())
+                .convertCirclesToLocations(holeLocations);
+        return holeLocations;
+    }
 
     /**
      * Given a placement containing a fiducial, attempt to find the fiducial using the vision
@@ -226,7 +238,19 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             location = getBestTemplateMatch(camera, template);
             if (location == null) {
                 Logger.debug("No matches found!");
-                return null;
+                
+                if (footprint.getPads().size()==1 && footprint.getPads().get(0).getRoundness()==100)
+                {
+                   Logger.debug("trying Hough circle for fiducial");
+		                	// Determine the scaling factor to go from Outline units to
+		           // Camera units.
+		           Length l = new Length(footprint.getBodyHeight(), footprint.getUnits());
+		           location =findHoles(camera, l).get(0); //get the first which should be closest match if any
+                }
+		        if (location == null)
+		        {
+		        	return null;
+		        }
             }
             Logger.debug("{} located at {}", fid.getId(), location);
             // Move to where we actually found the fid
