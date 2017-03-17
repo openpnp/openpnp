@@ -15,6 +15,7 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.VisionProvider;
@@ -43,6 +44,9 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
 
     protected Head head;
+    
+    protected Part part;
+
 
     protected Integer width;
 
@@ -92,6 +96,19 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         this.head = head;
         this.headSet = true;
     }
+
+         
+    @Override
+    public void setPart(Part part) {
+        this.part = part;
+    }
+
+    
+    @Override
+    public Part getPart() {
+        return part;
+    }
+	
 
     @Override
     public Location getUnitsPerPixel() {
