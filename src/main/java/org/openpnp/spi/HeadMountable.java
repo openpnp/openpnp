@@ -17,4 +17,14 @@ public interface HeadMountable extends Movable, Identifiable, Named {
      * HeadMountable is added to it.
      */
     void setHead(Head head);
+
+    /**
+     * Get the Part that this HeadMountable is attached to.
+     */
+    void getPart(Part part);
+    
+    /**
+     * Set the Part that this HeadMountable is attached to. 
+     */
+    void setPart(Part part);
 }
