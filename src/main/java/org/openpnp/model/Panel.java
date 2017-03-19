@@ -23,7 +23,7 @@ public class Panel extends AbstractModelObject implements Identifiable {
 	private Length yGap;
 	
 	@Element
-	private Part part;  // This is the part for the fiducial recognition
+	private String partId;  
 	
 	@Element
 	private boolean checkFids;
@@ -44,30 +44,19 @@ public class Panel extends AbstractModelObject implements Identifiable {
 	// This constructor is used for creating a pcb Panel with two fiducials. In this first release, we only contemplate UI
 	// that supports two fids on a panel
 	
-	public Panel(String id, int cols, int rows, Length xGap, Length yGap, Part part, boolean checkFids, Placement fid0, Placement fid1) {
+	public Panel(String id, int cols, int rows, Length xGap, Length yGap, String partId, boolean checkFids, Placement fid0, Placement fid1) {
 		this(id);
 		this.columns = cols;
 		this.rows = rows;
 		this.xGap = xGap;
 		this.yGap = yGap;
-		this.part = part;
+		this.partId = partId;
 		this.checkFids = checkFids;
 		fiducials = new IdentifiableList<>();
 		fiducials.add(fid0);
 		fiducials.add(fid1);
 	}
 	
-	/*
-	public Panel(String id, int cols, int rows, Length xGap, Length yGap, boolean checkFids, IdentifiableList<Placement> fiducials) {
-		this(id);
-		this.columns = cols;
-		this.rows = rows;
-		this.xGap = xGap;
-		this.yGap = yGap;
-		this.checkFids = checkFids;
-		this.fiducials = fiducials;
-	}	*/
-
 	public int getColumns() {
 		return columns;
 	}
@@ -104,26 +93,22 @@ public class Panel extends AbstractModelObject implements Identifiable {
 		return fiducials;
 	}
 	
-	public Part getPart()
-	{
-		return this.part;
+	public String getPartId() {
+		return this.partId;
 	}
 	
-	public void setPart(Part part)
-	{
-		this.part = part;
+	public void setPartId(String partId) {
+		this.partId = partId;
 	}
 	
-	/*
-	public void setPart(Part part){
-		this.part = part;
+	public boolean isCheckFiducials() {
+		return this.checkFids;
 	}
 	
-	public Part getPart(){
-		return this.part;
-	}*/
+	public void setCheckFiducials(boolean checkFiducials) {
+		this.checkFids = checkFiducials;
+	}
 	
-
 	@Override
 	public String getId() {
 		return id;
