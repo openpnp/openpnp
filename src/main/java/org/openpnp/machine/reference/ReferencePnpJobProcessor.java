@@ -146,6 +146,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
+    
+    long startTime;
 
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
@@ -284,6 +286,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * @throws Exception
      */
     protected void doPreFlight() throws Exception {
+        startTime = System.currentTimeMillis();
+        
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
@@ -743,6 +747,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Park nozzle.");
             MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
         }
+        
+        Logger.info("Job finished in {}ms", System.currentTimeMillis() - startTime);
     }
 
     protected void doReset() throws Exception {
