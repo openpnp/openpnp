@@ -143,6 +143,11 @@
 			<artifactId>org.eclipse.egit.github.core</artifactId>
 			<version>2.1.5</version>
 		</dependency>
+		<dependency>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.9</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
