@@ -24,7 +24,7 @@ Now that OpenPnP knows where the camera is, let's move the nozzle around and mak
 1. Hold Shift and then Left Click the mouse in the camera view for the bottom camera.
 2. The nozzle will move to the camera and should land where you clicked.
 3. Using the jog controls, move the nozzle forward, backward, left and right while looking at the camera view.
-4. Make sure that when you move the nozzle in each direction it moves the same way in the camera view. If it doesn't, you may need to adjust the [rotation and transforms](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms) of the camera.
+4. Make sure that when you click arrows to move nozzle, in the camera view the nozzle moves in the same direction. For example if you click the up arrow nozzle should move vertical on your screen.  If it doesn't, you may need to adjust the [rotation and transforms](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms) of the camera.
 
 ***
 
