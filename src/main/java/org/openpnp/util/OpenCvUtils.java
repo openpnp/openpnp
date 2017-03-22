@@ -219,6 +219,9 @@ public class OpenCvUtils {
     }
     
     public synchronized static void saveDebugImage(Class implementationClass, String function, String identifier, BufferedImage img) {
+        if (img == null) {
+            return;
+        }
         if (LogUtils.isDebugEnabled()) {
             try {
                 File file = new File(Configuration.get().getConfigurationDirectory(), "log");
@@ -239,6 +242,9 @@ public class OpenCvUtils {
     }
 
     public static void saveDebugImage(Class implementationClass, String function, String identifier, Mat mat) {
+        if (mat == null) {
+            return;
+        }
         saveDebugImage(implementationClass, function, identifier, OpenCvUtils.toBufferedImage(mat));
     }
 }
