@@ -2,6 +2,8 @@ package org.openpnp.imgur;
 
 import java.io.File;
 
+import org.pmw.tinylog.Logger;
+
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -24,6 +26,7 @@ public class Imgur {
                 .field("title", file.getName())
                 .asJson();
         if (!response.getBody().getObject().getBoolean("success")) {
+            Logger.debug(response.getBody().toString());
             throw new Exception(response.getBody().getObject().getJSONObject("data").getString("error"));
         }
         Image image = new Image();
@@ -47,6 +50,7 @@ public class Imgur {
             .field("deletehashes", String.join(",", imageDeleteHashes))
             .asJson();
         if (!response.getBody().getObject().getBoolean("success")) {
+            Logger.debug(response.getBody().toString());
             throw new Exception(response.getBody().getObject().getJSONObject("data").getString("error"));
         }
         Album album = new Album();

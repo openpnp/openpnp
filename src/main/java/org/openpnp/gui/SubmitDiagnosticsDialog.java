@@ -2,7 +2,6 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Desktop;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Robot;
@@ -29,7 +28,6 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
@@ -37,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
 import org.eclipse.egit.github.core.service.GistService;
+import org.openpnp.Main;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.imgur.Imgur;
 import org.openpnp.imgur.Imgur.Album;
@@ -49,7 +48,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class HelpRequestDialog extends JDialog {
+public class SubmitDiagnosticsDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
     private JTextArea descriptionTa;
@@ -66,52 +65,35 @@ public class HelpRequestDialog extends JDialog {
     private JButton okButton;
     private JButton cancelButton;
     private Thread thread;
-    
+
     private BufferedImage screenShot;
 
     /**
      * Create the dialog.
      */
-    public HelpRequestDialog() {
+    public SubmitDiagnosticsDialog() {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
-        FormLayout fl_contentPanel = new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.UNRELATED_GAP_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.UNRELATED_GAP_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.PREF_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.UNRELATED_GAP_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.UNRELATED_GAP_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,});
-        fl_contentPanel.setColumnGroups(new int[][]{new int[]{4, 2}});
+        FormLayout fl_contentPanel = new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.PREF_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,});
+        fl_contentPanel.setColumnGroups(new int[][] {new int[] {4, 2}});
         contentPanel.setLayout(fl_contentPanel);
         {
             lblSubmitAHelp = new JLabel("Submit Diagnostics");
@@ -201,7 +183,7 @@ public class HelpRequestDialog extends JDialog {
                 getRootPane().setDefaultButton(okButton);
             }
         }
-        
+
         // We have to grab a screenshot before the dialog is shown or the screenshot
         // will include the dialog. So we grab it and if we don't need it it just gets
         // ignored.
@@ -209,7 +191,7 @@ public class HelpRequestDialog extends JDialog {
             screenShot = new Robot().createScreenCapture(MainFrame.get().getBounds());
         }
         catch (Exception e) {
-            
+
         }
     }
 
@@ -278,30 +260,34 @@ public class HelpRequestDialog extends JDialog {
                     }
 
                     // Image count + the album + the gist
-                    progressBar.setMaximum(images.size() + 1 + 1);
+                    progressBar.setMaximum(images.size() + (images.isEmpty() ? 0 : 1) + 1);
                     progressBar.setValue(1);
 
-                    Imgur imgur = new Imgur(Configuration.get().getImgurClientId());
-                    List<Image> albumImages = new ArrayList<>();
-                    for (File file : images) {
+                    Album album = null;
+                    if (!images.isEmpty()) {
+                        Imgur imgur = new Imgur(Configuration.get().getImgurClientId());
+                        List<Image> albumImages = new ArrayList<>();
+                        for (File file : images) {
+                            if (Thread.interrupted()) {
+                                return;
+                            }
+                            Image image = imgur.uploadImage(file);
+                            albumImages.add(image);
+                            progressBar.setValue(progressBar.getValue() + 1);
+                        }
+
                         if (Thread.interrupted()) {
                             return;
                         }
-                        Image image = imgur.uploadImage(file);
-                        albumImages.add(image);
+                        album = imgur.createAlbum("OpenPnP Diagnostics Images",
+                                albumImages.toArray(new Image[] {}));
                         progressBar.setValue(progressBar.getValue() + 1);
                     }
 
-                    if (Thread.interrupted()) {
-                        return;
-                    }
-                    Album album = imgur.createAlbum("OpenPnP Diagnostics Images",
-                            albumImages.toArray(new Image[] {}));
-                    progressBar.setValue(progressBar.getValue() + 1);
-
                     Gist gist = new Gist();
-                    gist.setDescription(String.format("OpenPnP Diagnostics: %s; Images: http://imgur.com/a/%s",
-                            descriptionTa.getText(), album.id));
+                    gist.setDescription(String.format("OpenPnP Diagnostics: %s; Images: %s",
+                            descriptionTa.getText(),
+                            album == null ? "None" : "http://imgur.com/a/" + album.id));
                     Map<String, GistFile> gistFiles = new HashMap<>();
                     for (GistFile gistFile : files) {
                         gistFiles.put(gistFile.getFilename(), gistFile);
@@ -335,7 +321,7 @@ public class HelpRequestDialog extends JDialog {
                 }
                 thread = null;
             });
-            
+
             thread.start();
         }
     };
@@ -351,7 +337,7 @@ public class HelpRequestDialog extends JDialog {
                 }
             }
             catch (Exception e) {
-                
+
             }
             setVisible(false);
         }
@@ -371,6 +357,7 @@ public class HelpRequestDialog extends JDialog {
                 Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0));
         sb.append(String.format("Memory Max: %.2f\n",
                 Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0));
+        sb.append(String.format("OpenPnp Version: %s", Main.getVersion()));
         return sb.toString();
     }
 
