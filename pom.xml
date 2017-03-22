@@ -166,23 +166,24 @@
 			<!-- Creates a build number property that is then embedded into the manifest 
 				by the maven-jar-plugin. -->
 			<plugin>
-				<groupId>com.lukegb.mojo</groupId>
-				<artifactId>gitdescribe-maven-plugin</artifactId>
-				<version>3.0</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.3</version>
 				<executions>
 					<execution>
+						<phase>validate</phase>
 						<goals>
-							<goal>gitdescribe</goal>
+							<goal>create</goal>
 						</goals>
-						<id>git-describe</id>
-						<phase>initialize</phase>
-						<configuration>
-							<!-- configuration properties go here. -->
-						</configuration>
 					</execution>
 				</executions>
+				<configuration>
+					<doCheck>false</doCheck>
+					<doUpdate>false</doUpdate>
+					<shortRevisionLength>7</shortRevisionLength>
+				</configuration>
 			</plugin>
-			
+
 			<!-- Specifies the source and class versions that should be used when 
 				compiling and sets the main class to the OpenPnP startup class. -->
 			<plugin>
@@ -218,7 +219,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Implementation-Version>${describe}</Implementation-Version>
+							<Implementation-Version>1.0-${buildNumber}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
