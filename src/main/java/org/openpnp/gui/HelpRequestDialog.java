@@ -283,7 +283,7 @@ public class HelpRequestDialog extends JDialog {
                     progressBar.setMaximum(images.size() + 1 + 1);
                     progressBar.setValue(1);
 
-                    Imgur imgur = new Imgur("620fc1fa8ee0180");
+                    Imgur imgur = new Imgur(Configuration.get().getImgurClientId());
                     List<Image> albumImages = new ArrayList<>();
                     for (File file : images) {
                         if (Thread.interrupted()) {
@@ -302,7 +302,7 @@ public class HelpRequestDialog extends JDialog {
                     progressBar.setValue(progressBar.getValue() + 1);
 
                     Gist gist = new Gist();
-                    gist.setDescription(String.format("%s --- Submitted Images: http://imgur.com/a/%s",
+                    gist.setDescription(String.format("%s; Submitted Images: http://imgur.com/a/%s",
                             descriptionTa.getText(), album.id));
                     Map<String, GistFile> gistFiles = new HashMap<>();
                     for (GistFile gistFile : files) {
