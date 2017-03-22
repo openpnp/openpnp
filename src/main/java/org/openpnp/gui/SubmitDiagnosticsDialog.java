@@ -279,14 +279,16 @@ public class SubmitDiagnosticsDialog extends JDialog {
                             }
                         });
 
-                        Arrays.sort(visionFiles, new Comparator<File>() {
-                            public int compare(File f1, File f2) {
-                                return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
-                            }
-                        });
+                        if (visionFiles != null) {
+                            Arrays.sort(visionFiles, new Comparator<File>() {
+                                public int compare(File f1, File f2) {
+                                    return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
+                                }
+                            });
 
-                        for (int i = 0; i < Math.min(visionFiles.length, 10); i++) {
-                            images.add(visionFiles[i]);
+                            for (int i = 0; i < Math.min(visionFiles.length, 10); i++) {
+                                images.add(visionFiles[i]);
+                            }
                         }
                     }
 
