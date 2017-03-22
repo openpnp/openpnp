@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +41,10 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.imgur.Imgur;
 import org.openpnp.imgur.Imgur.Album;
 import org.openpnp.imgur.Imgur.Image;
+import org.openpnp.model.Board;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -76,24 +80,41 @@ public class SubmitDiagnosticsDialog extends JDialog {
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
-        FormLayout fl_contentPanel = new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.PREF_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.UNRELATED_GAP_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,});
-        fl_contentPanel.setColumnGroups(new int[][] {new int[] {4, 2}});
+        FormLayout fl_contentPanel = new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.PREF_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,});
+        fl_contentPanel.setColumnGroups(new int[][]{new int[]{4, 2}});
         contentPanel.setLayout(fl_contentPanel);
         {
             lblSubmitAHelp = new JLabel("Submit Diagnostics");
@@ -145,24 +166,24 @@ public class SubmitDiagnosticsDialog extends JDialog {
             contentPanel.add(includeLogChk, "4, 20");
         }
         {
-            includeScreenShotChk = new JCheckBox("OpenPnP Window Screen Shot");
-            includeScreenShotChk.setSelected(true);
-            contentPanel.add(includeScreenShotChk, "2, 22");
-        }
-        {
-            includeVisionChk = new JCheckBox("Vision Debug Images (Last 10)");
-            includeVisionChk.setSelected(true);
-            contentPanel.add(includeVisionChk, "4, 22");
-        }
-        {
             includeSystemInfoChk = new JCheckBox("Anonymous System Information");
             includeSystemInfoChk.setSelected(true);
-            contentPanel.add(includeSystemInfoChk, "2, 24");
+            contentPanel.add(includeSystemInfoChk, "2, 22");
         }
         {
-            includeJobChk = new JCheckBox("Current Job Data (Coming Soon)");
-            includeJobChk.setEnabled(false);
-            contentPanel.add(includeJobChk, "4, 24");
+            includeJobChk = new JCheckBox("Current Job Data (Job Will Be Saved First)");
+            includeJobChk.setSelected(true);
+            contentPanel.add(includeJobChk, "4, 22");
+        }
+        {
+            includeScreenShotChk = new JCheckBox("OpenPnP Window Screen Shot");
+            includeScreenShotChk.setSelected(true);
+            contentPanel.add(includeScreenShotChk, "2, 24");
+        }
+        {
+            includeVisionChk = new JCheckBox("Vision Debug Images (10 Newest)");
+            includeVisionChk.setSelected(true);
+            contentPanel.add(includeVisionChk, "4, 24");
         }
         {
             progressBar = new JProgressBar();
@@ -233,7 +254,17 @@ public class SubmitDiagnosticsDialog extends JDialog {
                         files.add(gistFile);
                     }
                     if (includeJobChk.isSelected()) {
-                        // TODO:
+                        File file = File.createTempFile("OpenPnp-Diagnostics", ".job.xml");
+                        Job job = MainFrame.get().getJobTab().getJob();
+                        Configuration.get().saveJob(job, file);
+                        files.add(createGistFile(file));
+                        HashSet<Board> boards = new HashSet<>();
+                        for (BoardLocation bl : job.getBoardLocations()) {
+                            boards.add(bl.getBoard());
+                        }
+                        for (Board board : boards) {
+                            files.add(createGistFile(board.getFile()));
+                        }
                     }
                     if (includeScreenShotChk.isSelected() && screenShot != null) {
                         File file = File.createTempFile("OpenPnP-Screenshot", ".png");
