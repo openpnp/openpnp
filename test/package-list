@@ -11,6 +11,7 @@ org.openpnp.gui.processes
 org.openpnp.gui.support
 org.openpnp.gui.tablemodel
 org.openpnp.gui.wizards
+org.openpnp.imgur
 org.openpnp.logging
 org.openpnp.machine.openbuilds
 org.openpnp.machine.reference
