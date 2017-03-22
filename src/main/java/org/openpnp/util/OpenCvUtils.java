@@ -3,7 +3,10 @@ package org.openpnp.util;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -15,6 +18,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.machine.reference.vision.OpenCvVisionProvider;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -137,7 +141,7 @@ public class OpenCvUtils {
         Logger.debug("houghCircles(Mat, {}, {}, {})",
                 new Object[] {minDiameter, maxDiameter, minDistance});
 
-        saveDebugImage("houghCircles_in", mat);
+        saveDebugImage(OpenCvUtils.class, "houghCircles", "input", mat);
 
         // save a copy of the image for debugging
         Mat debug = mat.clone();
@@ -155,10 +159,10 @@ public class OpenCvUtils {
 
         if (LogUtils.isDebugEnabled()) {
             drawCircles(debug, circles);
-            saveDebugImage("houghCircles_debug", debug);
+            saveDebugImage(OpenCvUtils.class, "houghCircles", "debug", debug);
         }
 
-        saveDebugImage("houghCircles_out", mat);
+        saveDebugImage(OpenCvUtils.class, "houghCircles", "output", mat);
 
         return circles;
     }
@@ -213,18 +217,34 @@ public class OpenCvUtils {
                 (invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY) | Imgproc.THRESH_OTSU);
         return mat;
     }
-
-    public static void saveDebugImage(String name, Mat mat) {
+    
+    public synchronized static void saveDebugImage(Class implementationClass, String function, String identifier, BufferedImage img) {
+        if (img == null) {
+            return;
+        }
         if (LogUtils.isDebugEnabled()) {
             try {
-                BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
-                File file = Configuration.get().createResourceFile(OpenCvUtils.class, name + "_",
-                        ".png");
-                ImageIO.write(debugImage, "PNG", file);
+                File file = new File(Configuration.get().getConfigurationDirectory(), "log");
+                file = new File(file, "vision");
+                file.mkdirs();
+                DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH.mm.ss.SSS");
+                file = new File(file, String.format("%s_%s_%s_%s.png", 
+                        implementationClass.getSimpleName(), 
+                        function, 
+                        df.format(new Date()), 
+                        identifier));
+                ImageIO.write(img, "PNG", file);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void saveDebugImage(Class implementationClass, String function, String identifier, Mat mat) {
+        if (mat == null) {
+            return;
+        }
+        saveDebugImage(implementationClass, function, identifier, OpenCvUtils.toBufferedImage(mat));
     }
 }

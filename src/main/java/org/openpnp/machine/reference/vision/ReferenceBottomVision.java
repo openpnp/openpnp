@@ -102,6 +102,8 @@ public class ReferenceBottomVision implements PartAlignment {
         // Set the angle on the offsets.
         offsets = offsets.derive(null, null, null, -angle);
         Logger.debug("Final offsets {}", offsets);
+        
+        OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result", pipeline.getWorkingImage());
 
         CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
         String s = rect.size.toString() + " " + rect.angle + "°";

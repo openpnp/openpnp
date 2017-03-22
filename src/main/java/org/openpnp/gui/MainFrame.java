@@ -37,6 +37,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.HashMap;
@@ -66,6 +67,11 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
+import org.apache.commons.io.FileUtils;
+import org.eclipse.egit.github.core.Gist;
+import org.eclipse.egit.github.core.GistFile;
+import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.GistService;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.DipTraceImporter;
@@ -81,6 +87,7 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -327,6 +334,8 @@ public class MainFrame extends JFrame {
         if (isInstallerAvailable()) {
             mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
+        mnHelp.addSeparator();
+        mnHelp.add(submitHelpRequestAction);
 
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -851,6 +860,17 @@ public class MainFrame extends JFrame {
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
             }
+        }
+    };
+    
+    private Action submitHelpRequestAction = new AbstractAction("Submit Diagnostics") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            HelpRequestDialog dialog = new HelpRequestDialog();
+            dialog.setModal(true);
+            dialog.setSize(500, 700);
+            dialog.setLocationRelativeTo(MainFrame.get());
+            dialog.setVisible(true);
         }
     };
     
