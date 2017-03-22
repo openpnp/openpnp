@@ -324,11 +324,11 @@ public class MainFrame extends JFrame {
         mnHelp.add(quickStartLinkAction);
         mnHelp.add(setupAndCalibrationLinkAction);
         mnHelp.add(userManualLinkAction);
+        mnHelp.addSeparator();
+        mnHelp.add(submitDiagnosticsAction);
         if (isInstallerAvailable()) {
             mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
-        mnHelp.addSeparator();
-        mnHelp.add(submitDiagnosticsAction);
 
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
