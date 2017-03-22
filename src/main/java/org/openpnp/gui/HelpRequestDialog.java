@@ -66,6 +66,8 @@ public class HelpRequestDialog extends JDialog {
     private JButton okButton;
     private JButton cancelButton;
     private Thread thread;
+    
+    private BufferedImage screenShot;
 
     /**
      * Create the dialog.
@@ -199,6 +201,16 @@ public class HelpRequestDialog extends JDialog {
                 getRootPane().setDefaultButton(okButton);
             }
         }
+        
+        // We have to grab a screenshot before the dialog is shown or the screenshot
+        // will include the dialog. So we grab it and if we don't need it it just gets
+        // ignored.
+        try {
+            screenShot = new Robot().createScreenCapture(MainFrame.get().getBounds());
+        }
+        catch (Exception e) {
+            
+        }
     }
 
     @SuppressWarnings("serial")
@@ -241,23 +253,10 @@ public class HelpRequestDialog extends JDialog {
                     if (includeJobChk.isSelected()) {
                         // TODO:
                     }
-                    if (includeScreenShotChk.isSelected()) {
-                        SwingUtilities.invokeAndWait(() -> {
-                            try {
-                                Dimension size = getSize();
-                                setSize(1, 1);
-                                BufferedImage img =
-                                        new Robot().createScreenCapture(MainFrame.get().getBounds());
-                                File file = File.createTempFile("OpenPnP-Screenshot", ".png");
-                                ImageIO.write(img, "PNG", file);
-                                setVisible(true);
-                                images.add(file);
-                                setSize(size);
-                            }
-                            catch (Exception e1) {
-                                
-                            }
-                        });
+                    if (includeScreenShotChk.isSelected() && screenShot != null) {
+                        File file = File.createTempFile("OpenPnP-Screenshot", ".png");
+                        ImageIO.write(screenShot, "PNG", file);
+                        images.add(file);
                     }
                     if (includeVisionChk.isSelected()) {
                         File[] visionFiles = visionDir.listFiles(new FilenameFilter() {
