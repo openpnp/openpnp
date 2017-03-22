@@ -334,6 +334,7 @@ public class MainFrame extends JFrame {
         if (isInstallerAvailable()) {
             mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
+        mnHelp.addSeparator();
         mnHelp.add(submitHelpRequestAction);
 
         contentPane = new JPanel();
@@ -862,7 +863,7 @@ public class MainFrame extends JFrame {
         }
     };
     
-    private Action submitHelpRequestAction = new AbstractAction("Submit Help Request") {
+    private Action submitHelpRequestAction = new AbstractAction("Submit Diagnostics") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             HelpRequestDialog dialog = new HelpRequestDialog();

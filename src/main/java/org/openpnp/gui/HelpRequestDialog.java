@@ -114,7 +114,7 @@ public class HelpRequestDialog extends JDialog {
         fl_contentPanel.setColumnGroups(new int[][]{new int[]{4, 2}});
         contentPanel.setLayout(fl_contentPanel);
         {
-            lblSubmitAHelp = new JLabel("Submit a Help Request");
+            lblSubmitAHelp = new JLabel("Submit Diagnostics");
             lblSubmitAHelp.setFont(new Font("Lucida Grande", Font.PLAIN, 24));
             contentPanel.add(lblSubmitAHelp, "2, 2, 3, 1");
         }
@@ -123,7 +123,7 @@ public class HelpRequestDialog extends JDialog {
             txtpnToSubmitA.setBackground(UIManager.getColor("Label.background"));
             txtpnToSubmitA.setEditable(false);
             txtpnToSubmitA.setText(
-                    "Describe the problem you are experiencing below and select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open. You can copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information.");
+                    "Describe the problem you are experiencing below, select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open. You can copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information.");
             contentPanel.add(txtpnToSubmitA, "2, 6, 3, 1, fill, fill");
         }
         {
@@ -295,12 +295,12 @@ public class HelpRequestDialog extends JDialog {
                     if (Thread.interrupted()) {
                         return;
                     }
-                    Album album = imgur.createAlbum("OpenPnP Diagnostics Package Images",
+                    Album album = imgur.createAlbum("OpenPnP Diagnostics Images",
                             albumImages.toArray(new Image[] {}));
                     progressBar.setValue(progressBar.getValue() + 1);
 
                     Gist gist = new Gist();
-                    gist.setDescription(String.format("%s; Submitted Images: http://imgur.com/a/%s",
+                    gist.setDescription(String.format("OpenPnP Diagnostics: %s; Images: http://imgur.com/a/%s",
                             descriptionTa.getText(), album.id));
                     Map<String, GistFile> gistFiles = new HashMap<>();
                     for (GistFile gistFile : files) {
