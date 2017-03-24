@@ -14,6 +14,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	    <maven.build.timestamp.format>yyyy-MM-dd_HH-mm-ss</maven.build.timestamp.format>
+	    <openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -219,7 +221,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Implementation-Version>1.0-${buildNumber}</Implementation-Version>
+							<Implementation-Version>${openpnp.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
