@@ -1,6 +1,25 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-03-26
+
+* Auto Update Fixed, Version Number Improvements
+
+	An error that was causing the auto updater to not work has been fixed. In the process,
+	the OpenPnP version numbering scheme has been changed and improved. Version numbers were
+	previously just an inscrutable Git hash. They are now in the format of
+	2017-03-26_18-56-32.0be8a03, with the part before the period representing the date of the
+	build and the part after the period representing the Git hash. This makes it easy to
+	identify when the code was built and how old it is, and the Git hash can be used to
+	identify a specific commit.
+	
+* Glue Feature Removed
+
+	The Glue Dispense feature has been deprecated and removed. This feature was not being used
+	and it was causing maintainability problems. If there is interest in the feature in the
+	future it will be rewritten. More information about this decision is available at
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/1-CSpnoPQGY/k6qUT9VZAQAJ
+
 # 2017-03-21
 
 * Submit Diagnostics
