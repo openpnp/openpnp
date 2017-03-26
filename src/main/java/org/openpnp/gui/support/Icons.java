@@ -68,7 +68,9 @@ public class Icons {
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");
     
     public static Icon park = getIcon("/icons/park.svg");
-    
+
+    public static Icon scrollDown = getIcon("/icons/scroll-down.svg");
+
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new SvgIcon(Icons.class.getResource(resourceName), width, height);

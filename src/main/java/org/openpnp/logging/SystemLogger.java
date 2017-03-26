@@ -27,7 +27,6 @@ public class SystemLogger extends PrintStream {
 
     @Override
     public void write(byte[] buf, int off, int len) {
-        super.write(buf, off, len);
 
         byte[] pb = new byte[len];
         System.arraycopy(buf, off, pb, 0, len);
@@ -43,6 +42,5 @@ public class SystemLogger extends PrintStream {
                 Logger.error(str);
                 break;
         }
-
     }
 }
