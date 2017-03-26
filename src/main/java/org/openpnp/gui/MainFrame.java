@@ -324,6 +324,8 @@ public class MainFrame extends JFrame {
         mnHelp.add(quickStartLinkAction);
         mnHelp.add(setupAndCalibrationLinkAction);
         mnHelp.add(userManualLinkAction);
+        mnHelp.addSeparator();
+        mnHelp.add(submitDiagnosticsAction);
         if (isInstallerAvailable()) {
             mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
@@ -851,6 +853,17 @@ public class MainFrame extends JFrame {
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
             }
+        }
+    };
+    
+    private Action submitDiagnosticsAction = new AbstractAction("Submit Diagnostics") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            SubmitDiagnosticsDialog dialog = new SubmitDiagnosticsDialog();
+            dialog.setModal(true);
+            dialog.setSize(620, 700);
+            dialog.setLocationRelativeTo(MainFrame.get());
+            dialog.setVisible(true);
         }
     };
     

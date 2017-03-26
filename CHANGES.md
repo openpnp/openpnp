@@ -1,6 +1,59 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-03-21
+
+* Submit Diagnostics
+
+	You can now submit a very detailed diagnostics package about OpenPnP right from OpenPnP itself!
+	In the Help menu just click Submit Diagnostics and follow the instructions. The result will
+	be a link to a [Gist](https://gist.github.com/) on Github that contains information and
+	images from OpenPnP. You can share the link on the mailing list or elsewhere to assist
+	people in helping with any issue you might be having.
+
+# 2017-03-16
+
+* Named CSV Importer Improvements
+
+	Thanks to @Misfittech the Named CSV Importer can now handle Altium R14 files and now
+	has the option to set part heights when available. It also supports the ability to
+	import data that contains values in mils.
+	 
+* Logging Improvements
+
+	With many thanks to @pfried the Log tab and the logging system have seen several improvements:
+	* Log panel is now searchable.
+	* Select and copy lines from the log.
+	* Enable/disable system output.
+	* Option to auto-scroll, or not.
+	
+	More information about this feature can be found at:
+	https://github.com/openpnp/openpnp/issues/288
+
+# 2017-03-05
+
+* Force Upper Case in Gcode Driver Console
+
+	There is now an option, on by default, that forces commands sent from the Gcode console
+	to upper case. Previously upper case was forced without option, but now you can turn it off
+	if you like.
+
+# 2017-03-04
+
+* Position Camera and Continue
+
+	Thanks to @BendRocks for two new buttons in the Job and Placements panel. The buttons
+	which look like the Position Camera button with a right arrow added allows you to
+	position the camera and then select either the next board or placement. This allows you
+	to very easily and quickly move through a job and see that all of your placements
+	are configured correctly.
+	
+* Console Output in Log Panel
+
+	Thanks to @pfried, console output (System.out, System.err) is now included in the Log
+	panel at the Info and Error levels respectively. One major benefit of this is that
+	scripting output will now be visible in the Log panel. 
+
 # 2017-02-27
 
 * ReferenceDragFeeder Configuration Actuator Positioning

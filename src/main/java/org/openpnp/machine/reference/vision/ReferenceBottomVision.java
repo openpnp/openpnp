@@ -90,7 +90,7 @@ public class ReferenceBottomVision implements PartAlignment {
         // it. This seems to happen quite a bit when the angle of rotation
         // is close to 0.
         double angle = rect.angle;
-        if (Math.abs(angle) > 45) {
+        while (Math.abs(angle) > 45) {
             if (angle < 0) {
                 angle += 90;
             }
@@ -102,6 +102,8 @@ public class ReferenceBottomVision implements PartAlignment {
         // Set the angle on the offsets.
         offsets = offsets.derive(null, null, null, -angle);
         Logger.debug("Final offsets {}", offsets);
+        
+        OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result", pipeline.getWorkingImage());
 
         CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
         String s = rect.size.toString() + " " + rect.angle + "°";

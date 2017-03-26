@@ -17,7 +17,8 @@ before_deploy:
 - wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_66.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_66.tar.gz
 - wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_66.tar.gz
-- ./install4j6/bin/install4jc -r $TRAVIS_COMMIT -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
+- VERSION=`java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version`
+- ./install4j6/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$TRAVIS_BRANCH OpenPnP.install4j
 - mv installers/updates.xml installers/updates-$TRAVIS_BRANCH.xml
 
 deploy:
@@ -47,3 +48,4 @@ after_deploy:
 - git add -f .
 - git commit -m "Lastest javadoc on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
 - git push -fq origin gh-pages
+

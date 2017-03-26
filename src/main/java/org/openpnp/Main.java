@@ -25,8 +25,10 @@ import java.io.File;
 import javax.swing.UIManager;
 
 import org.openpnp.gui.MainFrame;
+import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.RollingFileWriter;
 
@@ -50,14 +52,27 @@ public class Main {
         File logFile = new File(logDirectory, "OpenPnP.log");
         Configurator
             .currentConfig()
-            .addWriter(new RollingFileWriter(logFile.getAbsolutePath(), 100))
+            .writer(new RollingFileWriter(logFile.getAbsolutePath(), 100))
             .activate();
         Configurator.currentConfig()
             .formatPattern("{date:yyyy-MM-dd HH:mm:ss} {class_name} {level}: {message}")
             .activate();
+
+        // Redirect the stdout and stderr to the LogPanel
+        SystemLogger out = new SystemLogger(System.out, Level.INFO);
+        SystemLogger err = new SystemLogger(System.err, Level.ERROR);
+        System.setOut(out);
+        System.setErr(err);
     }
 
     public static void main(String[] args) {
+        for (String s : args) {
+            if (s.equals("--version")) {
+                System.out.println(getVersion());
+                System.exit(0);
+            }
+        }
+        
         // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         try {
