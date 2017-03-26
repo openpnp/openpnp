@@ -22,10 +22,13 @@ package org.openpnp.machine.reference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.Shape;
 import org.openpnp.machine.reference.ReferencePasteDispenseJobProcessor.JobDispense.Status;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
@@ -282,12 +285,30 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
 
             Location dispenseLocation =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, boardPad.getLocation());
-            
+
+            Rectangle boundShape = boardPad.getPad().getShape().getBounds();
+            double angle = boardPad.getLocation().getRotation();
+
+            Point2D start = new Point2D.Double(dispenseLocation.getX()-(boundShape.getWidth()/2), dispenseLocation.getY());
+            Point2D end = new Point2D.Double(dispenseLocation.getX()+(boundShape.getWidth()/2), dispenseLocation.getY());
+
+            Point2D rotatedStart = new Point2D.Double();
+            Point2D rotatedEnd = new Point2D.Double();
+
+            AffineTransform rotation = new AffineTransform();
+            double angleInRadians = (angle * Math.PI / 180);
+            rotation.rotate(angleInRadians, dispenseLocation.getX(), dispenseLocation.getY());
+            rotation.transform(start, rotatedStart);
+            rotation.transform(end, rotatedEnd);
+
+            Location rotatedStartLocation=dispenseLocation.derive(rotatedStart.getX(),rotatedStart.getY(),null,(double) 0);
+            Location rotatedEndLocation=dispenseLocation.derive(rotatedEnd.getX(),rotatedEnd.getY(),null,(double) 0);;
+
             PasteDispenser pasteDispenser = head.getDefaultPasteDispenser();
 
-            MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
+            MovableUtils.moveToLocationAtSafeZ(pasteDispenser, rotatedStartLocation);
 
-            pasteDispenser.dispense(null,null,0);
+            pasteDispenser.dispense(rotatedStartLocation,rotatedEndLocation,0);
 
             pasteDispenser.moveToSafeZ();
 

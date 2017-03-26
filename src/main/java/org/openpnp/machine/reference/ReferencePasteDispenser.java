@@ -10,6 +10,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractPasteDispenser;
 import org.pmw.tinylog.Logger;
@@ -53,6 +54,7 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
             long dispenseTimeMilliseconds) throws Exception {
         Logger.debug("{}.dispense()", getName());
         Thread.sleep(dispenseTimeMilliseconds);
+
         driver.dispense(this, startLocation, endLocation, dispenseTimeMilliseconds);
         machine.fireMachineHeadActivity(head);
     }

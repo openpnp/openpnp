@@ -1,16 +1,22 @@
 package org.openpnp.spi;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
+import org.openpnp.model.*;
+import org.openpnp.model.Package;
+import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.ElementList;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A method to allow after-pick, pre-place alignment of parts on the nozzle. Bottom vision
  * is an implementation of this interface, but other implementations could include laser
  * alignment or pit alignment.  
  */
-public interface PartAlignment extends PropertySheetHolder {
+public interface PartAlignment extends Identifiable, Named, PropertySheetHolder {
 
     public class PartAlignmentOffset
     {
@@ -54,4 +60,8 @@ public interface PartAlignment extends PropertySheetHolder {
      * @return
      */
     Wizard getPartConfigurationWizard(Part part);
+
+
+    public boolean canHandle(Part part);
+
 }

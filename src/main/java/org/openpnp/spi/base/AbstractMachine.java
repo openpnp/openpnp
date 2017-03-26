@@ -17,13 +17,7 @@ import javax.swing.Icon;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.Signaler;
+import org.openpnp.spi.*;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -62,6 +56,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
+
 
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
@@ -144,6 +142,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Actuator getActuator(String id) {
         return actuators.get(id);
+    }
+
+    @Override
+    public List<PartAlignment> getPartAlignments() {
+        return Collections.unmodifiableList(partAlignments);
     }
 
     @Override

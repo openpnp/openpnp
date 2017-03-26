@@ -98,6 +98,11 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         panel.add(btnResetAllTo, "8, 4");
     }
 
+    @Override
+    public String getWizardName() {
+        return "BottomVision";
+    }
+
     private void editPipeline() throws Exception {
         CvPipeline pipeline = bottomVision.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());

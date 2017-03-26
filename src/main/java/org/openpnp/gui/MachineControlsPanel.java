@@ -276,6 +276,17 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
+    public Action targetDispenseAction = new AbstractAction(null, Icons.centerCamera) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                PasteDispenser dispenser = getSelectedPasteDispenser();
+                Camera camera = dispenser.getHead().getDefaultCamera();
+                MovableUtils.moveToLocationAtSafeZ(dispenser, camera.getLocation());
+            });
+        }
+    };
+
     private void updateStartStopButton(boolean enabled) {
         startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
         startStopMachineAction.putValue(Action.SMALL_ICON,

@@ -25,20 +25,18 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.*;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -176,7 +174,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
     private GcodeDriver parent = null;
-    
+
     @Commit
     public void commit() {
         for (GcodeDriver driver : subDrivers) {
@@ -392,6 +390,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {
+            moveTo(hm, location, speed, Double.NaN);
+    }
+
+    public void moveTo(ReferenceHeadMountable hm, Location location, double speed, double extrudeAmount)
+            throws Exception {
         // keep copy for calling subdrivers as to not add offset on offset
         Location locationOriginal = location;
 
@@ -449,6 +452,16 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
             command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
+
+            if(!Double.isNaN(extrudeAmount))
+            {
+                command = substituteVariable(command, "E", extrudeAmount);
+                haveToMove = true;
+            }
+            else
+            {
+                command = substituteVariable(command, "E", null);
+            }
             if (xAxis == null || xAxis.getCoordinate() == x) {
                 command = substituteVariable(command, "X", null);
                 command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
@@ -580,6 +593,33 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.pick(nozzle);
         }
     }
+
+    @Override
+    public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
+                         Location endLocation, long dispenseTimeMilliseconds) throws Exception
+    {
+        Actuator pasteActuator=Configuration.get().getMachine().getDefaultHead().getActuatorByName("pasteUpDown");
+
+        if (pasteActuator == null) {
+            throw new Exception("Dispense failed. Unable to find an actuator named " + "pasteUpDown");
+        }
+
+        moveTo(dispenser, startLocation, 200);
+
+        // actuate the paste dispenser
+        pasteActuator.actuate(true);
+
+        // extrude some paste
+        double extruderAmount=startLocation.getLinearDistanceTo(endLocation);
+        moveTo(dispenser,endLocation, 5, extruderAmount);
+
+        // extruder retract
+        moveTo(dispenser,endLocation, 5, -extruderAmount);
+
+        // raise paste dispenser
+        pasteActuator.actuate(false);
+    }
+
 
     @Override
     public void place(ReferenceNozzle nozzle) throws Exception {
@@ -928,23 +968,24 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     };
 
     public Action deleteSubDriverAction = new AbstractAction() {
-        {
+     {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Sub-Driver...");
             putValue(SHORT_DESCRIPTION, "Delete the selected sub-driver.");
-        }
+     }
 
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
+     @Override
+     public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
                     "Are you sure you want to delete the selected sub-driver?",
                     "Delete Sub-Driver?", JOptionPane.YES_NO_OPTION);
+
             if (ret == JOptionPane.YES_OPTION) {
-                parent.subDrivers.remove(GcodeDriver.this);
-                parent.fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, GcodeDriver.this, null);
+                    parent.subDrivers.remove(GcodeDriver.this);
+                    parent.fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, GcodeDriver.this, null);
             }
-        }
-    };
+         }
+     };
 
     public LengthUnit getUnits() {
         return units;
