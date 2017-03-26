@@ -51,6 +51,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Color;
 
 public class SubmitDiagnosticsDialog extends JDialog {
 
@@ -92,6 +93,8 @@ public class SubmitDiagnosticsDialog extends JDialog {
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -130,65 +133,73 @@ public class SubmitDiagnosticsDialog extends JDialog {
             contentPanel.add(txtpnToSubmitA, "2, 6, 3, 1, fill, fill");
         }
         {
+            txtpnWarningIfYou = new JTextPane();
+            txtpnWarningIfYou.setText("Warning: If you include a screenshot or Vision Debug Images these images may include output from your machine's cameras. If these images contain content you don't want to share you should uncheck these options. You can review the images from the generated link before sharing it.");
+            txtpnWarningIfYou.setForeground(Color.RED);
+            txtpnWarningIfYou.setBackground(UIManager.getColor("Label.background"));
+            txtpnWarningIfYou.setEditable(false);
+            contentPanel.add(txtpnWarningIfYou, "2, 8, 3, 1, fill, fill");
+        }
+        {
             JLabel lblComments = new JLabel("Please Describe The Issue");
             lblComments.setFont(new Font("Lucida Grande", Font.BOLD, 14));
-            contentPanel.add(lblComments, "2, 10");
+            contentPanel.add(lblComments, "2, 12");
         }
         {
             descriptionTa = new JTextArea();
             descriptionTa.setColumns(60);
             descriptionTa.setRows(10);
-            contentPanel.add(descriptionTa, "2, 12, 3, 1, fill, fill");
+            contentPanel.add(descriptionTa, "2, 14, 3, 1, fill, fill");
         }
         {
             JLabel lblInclude = new JLabel("Include");
             lblInclude.setFont(new Font("Lucida Grande", Font.BOLD, 14));
-            contentPanel.add(lblInclude, "2, 16");
+            contentPanel.add(lblInclude, "2, 18");
         }
         {
             includeMachineXmlChk = new JCheckBox("machine.xml");
             includeMachineXmlChk.setSelected(true);
-            contentPanel.add(includeMachineXmlChk, "2, 18");
+            contentPanel.add(includeMachineXmlChk, "2, 20");
         }
         {
             includePartsXmlChk = new JCheckBox("parts.xml");
             includePartsXmlChk.setSelected(true);
-            contentPanel.add(includePartsXmlChk, "4, 18");
+            contentPanel.add(includePartsXmlChk, "4, 20");
         }
         {
             includePackagesXmlChk = new JCheckBox("packages.xml");
             includePackagesXmlChk.setSelected(true);
-            contentPanel.add(includePackagesXmlChk, "2, 20");
+            contentPanel.add(includePackagesXmlChk, "2, 22");
         }
         {
             includeLogChk = new JCheckBox("Latest Log File");
             includeLogChk.setSelected(true);
-            contentPanel.add(includeLogChk, "4, 20");
+            contentPanel.add(includeLogChk, "4, 22");
         }
         {
             includeSystemInfoChk = new JCheckBox("Anonymous System Information");
             includeSystemInfoChk.setSelected(true);
-            contentPanel.add(includeSystemInfoChk, "2, 22");
+            contentPanel.add(includeSystemInfoChk, "2, 24");
         }
         {
             includeJobChk = new JCheckBox("Current Job Data (Job Will Be Saved First)");
             includeJobChk.setSelected(true);
-            contentPanel.add(includeJobChk, "4, 22");
+            contentPanel.add(includeJobChk, "4, 24");
         }
         {
             includeScreenShotChk = new JCheckBox("OpenPnP Window Screen Shot");
             includeScreenShotChk.setSelected(true);
-            contentPanel.add(includeScreenShotChk, "2, 24");
+            contentPanel.add(includeScreenShotChk, "2, 26");
         }
         {
             includeVisionChk = new JCheckBox("Vision Debug Images (10 Newest)");
             includeVisionChk.setSelected(true);
-            contentPanel.add(includeVisionChk, "4, 24");
+            contentPanel.add(includeVisionChk, "4, 26");
         }
         {
             progressBar = new JProgressBar();
             progressBar.setStringPainted(true);
-            contentPanel.add(progressBar, "2, 28, 3, 1");
+            contentPanel.add(progressBar, "2, 30, 3, 1");
         }
         {
             JPanel buttonPane = new JPanel();
@@ -375,6 +386,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
             setVisible(false);
         }
     };
+    private JTextPane txtpnWarningIfYou;
 
     static String getSystemInfo() throws Exception {
         StringBuffer sb = new StringBuffer();

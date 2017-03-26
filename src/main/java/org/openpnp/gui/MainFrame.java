@@ -861,7 +861,7 @@ public class MainFrame extends JFrame {
         public void actionPerformed(ActionEvent arg0) {
             SubmitDiagnosticsDialog dialog = new SubmitDiagnosticsDialog();
             dialog.setModal(true);
-            dialog.setSize(620, 700);
+            dialog.setSize(620, 720);
             dialog.setLocationRelativeTo(MainFrame.get());
             dialog.setVisible(true);
         }
