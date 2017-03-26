@@ -725,16 +725,7 @@ public class JobPanel extends JPanel {
             jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
         }
         else if (title.equals("Pick and Place")) {
-            if ((jobProcessor == null
-                    || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
-                    && (Configuration.get().getMachine().getGlueDispenseJobProcessor() != null)) {
-                // Run the glue dispense processor first, this will deposit glue ready for any
-                // component placements
-                jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
-            }
-            else {
-                jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
-            }
+            jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
         }
         else {
             throw new Error("Programmer error: Unknown tab title.");
@@ -757,12 +748,6 @@ public class JobPanel extends JPanel {
                 }
             } while (fsm.getState() == State.Running);
 
-            // if this was the glue dispense run and we've finished, kick off the pick & place
-            if (Configuration.get().getMachine().getGlueDispenseJobProcessor() != null
-                    && jobProcessor == Configuration.get().getMachine()
-                            .getGlueDispenseJobProcessor()) {
-                fsm.send(Message.StartOrPause);
-            }
             return null;
         }, (e) -> {
 
