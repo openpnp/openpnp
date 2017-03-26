@@ -1,5 +1,6 @@
 package org.openpnp.gui;
 
+import org.openpnp.gui.support.AutoScroller;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LogEntryListCellRenderer;
 import org.openpnp.gui.support.LogEntryListModel;
@@ -18,8 +19,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
 
 import org.openpnp.logging.SystemLogger;
 import org.pmw.tinylog.Configurator;
@@ -33,15 +32,10 @@ public class LogPanel extends JPanel {
     private static final String PREF_LOG_LEVEL = "LogPanel.logLevel";
     private static final String PREF_LOG_LEVEL_DEF = Level.INFO.toString();
 
-    private static final String PREF_LOG_AUTO_SCROLL = "LogPanel.autoScroll";
-    private static final boolean PREF_LOG_AUTO_SCROLL_DEF = true;
-
-    private boolean autoScroll = PREF_LOG_AUTO_SCROLL_DEF;
     private boolean systemOutEnabled = true;
 
     private LogEntryListModel logEntries = new LogEntryListModel();
     private JList<LogEntry> logEntryJList = new JList<>(logEntries);
-    private JScrollPane scrollPane = new JScrollPane(logEntryJList);
 
     private Level filterLogLevel = Level.TRACE;
     private LogEntryListModel.LogEntryFilter logLevelFilter = new LogEntryListModel.LogEntryFilter();
@@ -57,6 +51,14 @@ public class LogPanel extends JPanel {
         logEntries.addFilter(systemOutFilter);
 
         setLayout(new BorderLayout(0, 0));
+
+        JScrollPane scrollPane = new JScrollPane(logEntryJList);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        add(scrollPane, BorderLayout.CENTER);
+
+        JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
+        AutoScroller autoScroller = new AutoScroller(scrollPane);
+        verticalBar.addAdjustmentListener(autoScroller);
 
         JPanel settingsAndFilterPanel = new JPanel();
         settingsAndFilterPanel.setLayout(new BorderLayout(0, 0));
@@ -107,18 +109,11 @@ public class LogPanel extends JPanel {
 
         filterControlPanel.add(btnCopyToClipboard);
 
-        JToggleButton btnScroll = new JToggleButton(Icons.scrollDownDisabled);
-        btnScroll.setSelectedIcon(Icons.scrollDown);
-        btnScroll.setToolTipText("Auto scrolling");
-
-        btnScroll.setSelected(autoScroll);
+        JButton btnScroll = new JButton(Icons.scrollDown);
+        btnScroll.setToolTipText("Scroll down");
 
         btnScroll.addActionListener(e -> {
-            autoScroll = ((JToggleButton) e.getSource()).isSelected();
-            if (autoScroll) {
-                scrollDownLogPanel();
-            }
-            prefs.putBoolean(PREF_LOG_AUTO_SCROLL, autoScroll);
+            autoScroller.scrollDown();
         });
 
         filterControlPanel.add(btnScroll);
@@ -139,45 +134,6 @@ public class LogPanel extends JPanel {
                 copyStringToClipboard(sb.toString());
             }
         });
-
-
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        add(scrollPane, BorderLayout.CENTER);
-
-        // Scroll down if enabled
-        logEntries.addListDataListener(new ListDataListener() {
-
-            @Override
-            public void intervalAdded(ListDataEvent e) {
-                scrollDownLogPanel();
-            }
-
-            @Override
-            public void intervalRemoved(ListDataEvent e) {
-                scrollDownLogPanel();
-            }
-
-            @Override
-            public void contentsChanged(ListDataEvent e) {
-                scrollDownLogPanel();
-            }
-        });
-
-    }
-
-    private void scrollDownLogPanel() {
-        if (autoScroll) {
-            JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
-            AdjustmentListener downScroller = new AdjustmentListener() {
-                @Override
-                public void adjustmentValueChanged(AdjustmentEvent e) {
-                    Adjustable adjustable = e.getAdjustable();
-                    adjustable.setValue(adjustable.getMaximum());
-                    verticalBar.removeAdjustmentListener(this);
-                }
-            };
-            verticalBar.addAdjustmentListener(downScroller);
-        }
     }
 
     private JCheckBox createSystemOutputCheckbox() {
@@ -196,8 +152,6 @@ public class LogPanel extends JPanel {
     }
 
     private void loadLoggingPreferences() {
-
-        autoScroll = prefs.getBoolean(PREF_LOG_AUTO_SCROLL, PREF_LOG_AUTO_SCROLL_DEF);
 
         // This weird check is here because I mistakenly reused the same config key when
         // switching from slf to tinylog. This meant that some users had an int based
