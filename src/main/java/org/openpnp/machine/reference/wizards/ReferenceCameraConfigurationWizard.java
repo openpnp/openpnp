@@ -305,12 +305,15 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         try {
             // Causes WindowBuilder to fail, so just throw away the error.
             if (referenceCamera.getHead() == null) {
+                // Fixed camera, add the location fields and buttons and turn off offsets.
                 locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
                         textFieldLocationY, textFieldLocationZ, textFieldLocationRotation);
                 panelLocation.add(locationButtonsPanel, "10, 4, fill, fill");
-                panelOffsets.setVisible(false);
+                panelOffsets.setVisible(false);    
+                panelSafeZ.setVisible(false);
             }
             else {
+                // Moving camera, hide location and show only offsets.
                 panelLocation.setVisible(false);
             }
         }
@@ -345,6 +348,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
             addWrappedBinding(headOffsets, "lengthX", textFieldOffX, "text", lengthConverter);
             addWrappedBinding(headOffsets, "lengthY", textFieldOffY, "text", lengthConverter);
             addWrappedBinding(headOffsets, "lengthZ", textFieldOffZ, "text", lengthConverter);
+            addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         }
 
         addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
@@ -352,7 +356,6 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(referenceCamera, "offsetY", textFieldOffsetY, "text", intConverter);
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
-        addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(referenceCamera, "cropWidth", cropWidthTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "cropHeight", cropHeightTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "scaleWidth", scaleWidthTf, "text", intConverter);
