@@ -267,19 +267,28 @@ public class NamedCSVImporter implements BoardImporter {
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
-        //TODO why only check first 50 lines? If it is a time out would time based time out be better? 
-        for (int i = 0; i++ <50 && (line = reader.readLine()) != null;) {
+        // Set the timeout limit, currently it will timeout after 50 milliseconds.
+        // 50ms seems like it should be more than enough.
+        long timeoutLimit = System.currentTimeMillis() + 50;
+        while((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.length() == 0)
                 continue;
-            if (checkLine(line))
+            if (checkLine(line) || System.currentTimeMillis() > timeoutLimit)
                 break;
         }
-
-
+           
         if (Len == 0) {
             reader.close();
-            throw new Exception("Unable to parse CSV File Names");
+            
+            String errorMessage = "Unable to parse CSV File Names";
+            if (System.currentTimeMillis() > timeoutLimit) {
+                // Is this message clear enough?
+                // It throws this when the lineReadThread fails to find the CSV proper headers.
+                errorMessage = "Timout while parsing CSV file. File may contain too much overhead.";
+            }
+            
+            throw new Exception(errorMessage);
         }
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
