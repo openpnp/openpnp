@@ -226,19 +226,21 @@ public class MachineControlsPanel extends JPanel {
             setEnabled(false);
             // Note: We specifically bypass the machine submit so that this runs immediately.
             // That's not really thread safe tho, so it's better than nothing, but not much.
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 Machine machine = Configuration.get().getMachine();
                 boolean enable = !machine.isEnabled();
                 try {
                     Configuration.get().getMachine().setEnabled(enable);
                     setEnabled(true);
                 }
-                catch (Exception t) {
+                catch (Exception t1) {
                     MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure",
-                            t.getMessage());
+                            t1.getMessage());
                     setEnabled(true);
                 }
-            }).start();
+            });
+            thread.setDaemon(true);
+            thread.start();
         }
     };
 

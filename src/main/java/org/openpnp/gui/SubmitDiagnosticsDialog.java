@@ -365,7 +365,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                 }
                 thread = null;
             });
-
+            thread.setDaemon(true);
             thread.start();
         }
     };

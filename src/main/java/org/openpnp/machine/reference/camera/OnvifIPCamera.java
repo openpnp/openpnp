@@ -282,6 +282,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             return;
         }
         thread = new Thread(this);
+        thread.setDaemon(true);
         thread.start();
     }
 

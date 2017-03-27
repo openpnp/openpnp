@@ -162,6 +162,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             return;
         }
         thread = new Thread(this);
+        thread.setDaemon(true);
         thread.start();
     }
 

@@ -191,6 +191,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
             // keep the thread from quickly parsing any responses messages
             // and notifying before we get a change to wait.
             readerThread = new Thread(this);
+            readerThread.setDaemon(true);
             readerThread.start();
             // Wait up to 3 seconds for Grbl to say Hi
             // If we get anything at this point it will have been the settings

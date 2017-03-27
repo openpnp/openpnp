@@ -672,6 +672,7 @@ public class MainFrame extends JFrame {
     }
 
     public boolean quit() {
+        Logger.info("Shutting down...");
         try {
             Preferences.userRoot().flush();
         }
@@ -712,6 +713,7 @@ public class MainFrame extends JFrame {
         catch (Exception e) {
             e.printStackTrace();
         }
+        Logger.info("Shutdown complete, exiting.");
         System.exit(0);
         return true;
     }
