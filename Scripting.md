@@ -112,9 +112,9 @@ upCamLights.actuate(false);
 downCamLights.actuate(false);
 ```
 
-## Running system commands
+## Running System Commands
 
-Run e.g. `firefox` from javascript:
+Run e.g. `firefox` from JavaScript:
 
 ```
 Runtime = Java.type("java.lang.Runtime").getRuntime();
