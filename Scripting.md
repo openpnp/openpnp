@@ -112,11 +112,24 @@ upCamLights.actuate(false);
 downCamLights.actuate(false);
 ```
 
-## Running System Commands
+## Examples running System Commands from javascript
 
-Run e.g. `firefox` from JavaScript:
+#### Call `firefox` from JavaScript:
 
 ```
 Runtime = Java.type("java.lang.Runtime").getRuntime();
 Runtime.exec("firefox");
+```
+
+#### Print a system command (e.g. "ls -l") response:
+
+```
+var imports = new JavaImporter(java.io, java.lang);
+with (imports) {
+  var p = Runtime.getRuntime().exec("ls -l");
+  var stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+  while ((s = stdInput.readLine()) != null)
+    System.out.print(s);
+}
 ```
