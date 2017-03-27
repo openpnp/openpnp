@@ -112,7 +112,7 @@ upCamLights.actuate(false);
 downCamLights.actuate(false);
 ```
 
-### Running system commands
+## Running system commands
 
 Run e.g. `firefox` from javascript:
 
