@@ -112,7 +112,7 @@ upCamLights.actuate(false);
 downCamLights.actuate(false);
 ```
 
-## Examples running System Commands from javascript
+## Examples Running System Commands from JavaScript
 
 #### Call `firefox` from JavaScript:
 
