@@ -74,10 +74,10 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
-    private static Color cellColorSelected = new Color(51, 153, 255); 
-    private static Color jobColorProcessing = new Color(157, 222, 255); 
-    private static Color jobColorPending = new Color(252, 255, 157); 
-    private static Color jobColorComplete = new Color(157, 255, 168); 
+    private static Color cellColorSelected = new Color(51, 153, 255);
+    private static Color jobColorProcessing = new Color(157, 222, 255);
+    private static Color jobColorPending = new Color(252, 255, 157);
+    private static Color jobColorComplete = new Color(157, 255, 168);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
@@ -152,7 +152,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
-        table.setDefaultRenderer(PartCellValue.class, new IdRenderer()); 
+        table.setDefaultRenderer(PartCellValue.class, new IdRenderer());
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -549,51 +549,55 @@ public class JobPlacementsPanel extends JPanel {
             }
         }
     }
-    
+
     class IdRenderer extends DefaultTableCellRenderer {
-    	// This is used just to set backgroud color on Id cell when selected.
-    	// Could not find another way to do this in.
-        public Component getTableCellRendererComponent(JTable table, Object value, 
-        		boolean isSelected, boolean hasFocus, int row, int column) {
+        // This is used just to set backgroud color on Id cell when selected.
+        // Could not find another way to do this in.
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            
+
             if (isSelected) {
-            	setBackground(cellColorSelected);
-            	setForeground(Color.WHITE);
+                setBackground(cellColorSelected);
+                setForeground(Color.WHITE);
             }
             return this;
         }
-        
+
         public void setValue(Object value) {
-        	String id = value.toString();
+            String id = value.toString();
 
-        	// All placements for a specific Id
-        	int pendingSize = ReferencePnpJobProcessor.getJobPlacementsById(id).size();
+            // All placements for a specific Id
+            int pendingSize = ReferencePnpJobProcessor.getJobPlacementsById(id).size();
 
-        	if (pendingSize != 0) {
-        		// All completed placements for a specific Id
-        		int completeSize = ReferencePnpJobProcessor.getCompleteJobPlacementsById(id).size();
-        		// All placements processing for a specific Id
-        		int processingSize = ReferencePnpJobProcessor.getProcessingJobPlacementsById(id).size();
-        		
-        		if (completeSize == pendingSize) {
-        			setBackground(jobColorComplete);
-        		} else if (processingSize > 0) {
-        			setBackground(jobColorProcessing);
-        		} else {
-        			setBackground(jobColorPending);
-        		}
-        		
-        		if (pendingSize > 1) {
-        			id += "  (" + completeSize + " / " + pendingSize + ")";
-        		}
-        	} else {
-				setBackground(Color.WHITE);
-    		}
+            if (pendingSize != 0) {
+                // All completed placements for a specific Id
+                int completeSize = ReferencePnpJobProcessor.getCompleteJobPlacementsById(id).size();
+                // All placements processing for a specific Id
+                int processingSize =
+                        ReferencePnpJobProcessor.getProcessingJobPlacementsById(id).size();
 
-        	setForeground(Color.black);
-        	setText(id);
-        	table.repaint();
+                if (completeSize == pendingSize) {
+                    setBackground(jobColorComplete);
+                }
+                else if (processingSize > 0) {
+                    setBackground(jobColorProcessing);
+                }
+                else {
+                    setBackground(jobColorPending);
+                }
+
+                if (pendingSize > 1) {
+                    id += "  (" + completeSize + " / " + pendingSize + ")";
+                }
+            }
+            else {
+                setBackground(Color.WHITE);
+            }
+
+            setForeground(Color.black);
+            setText(id);
+            table.repaint();
         }
     }
 }
