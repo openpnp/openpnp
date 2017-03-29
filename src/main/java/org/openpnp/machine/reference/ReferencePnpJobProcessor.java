@@ -141,7 +141,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected Head head;
 
-    protected List<JobPlacement> jobPlacements = new ArrayList<>();
+    protected static List<JobPlacement> jobPlacements = new ArrayList<>();
 
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
@@ -796,6 +796,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setParkWhenComplete(boolean parkWhenComplete) {
         this.parkWhenComplete = parkWhenComplete;
     }
+
+    public static List<JobPlacement> getJobPlacementsById(String id) {      
+        return jobPlacements.stream().filter((jobPlacement) -> { 
+          return jobPlacement.toString() == id; 
+        }).collect(Collectors.toList()); 
+      } 
+       
+      public static List<JobPlacement> getProcessingJobPlacementsById(String id) { 
+        return jobPlacements.stream().filter((jobPlacement) -> { 
+          return jobPlacement.status == Status.Processing && 
+              jobPlacement.toString() == id; 
+        }).collect(Collectors.toList()); 
+      } 
+       
+      public static List<JobPlacement> getCompleteJobPlacementsById(String id) {      
+        return jobPlacements.stream().filter((jobPlacement) -> { 
+          return jobPlacement.status == Status.Complete && 
+              jobPlacement.toString() == id; 
+        }).collect(Collectors.toList()); 
+      } 
 
     // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
     Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
