@@ -36,6 +36,11 @@ B = B/(R+G+B)
 ## SimpleBlobDetector
 Actually it detects black circles, anything other don't work.
 
+## MaskHsv
+Remove color from an image based on the HSV color space. Pixels that fall between (hueMin, saturationMin, valueMin) and (hueMax, saturationMax, valueMax) are set to black in the output image.
+This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor with Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied internally as to not complicate the use of multiple instances of this stage in series.
+Note that this stage can be used with any 3 channel, 8 bit per channel color space. The order of the filtered channels is hue, saturation, value, but you can use these ranges for other channels.
+
 ## ScriptRun
 To return a pipeline result you can't use a `return` statement, but instead just let the object be the last thing the script evaluates.
 
