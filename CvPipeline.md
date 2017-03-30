@@ -39,6 +39,9 @@ Actually it detects black circles, anything other don't work.
 ## MaskHsvConvertModelToPoints
 Convert a variety of built in types to Points. Currently handles KeyPoints, Circles and RotatedRects. The center point of each is stored. If the input model is a single value the result will be a single value. If the input is a List the result will be a List.
 
+## DrawKeyPoints
+Draws KeyPoints contained in a List<KeyPoint> by referencing a previous stage's model data.
+
 ## MaskHsv
 Remove color from an image based on the HSV color space. Pixels that fall between (hueMin, saturationMin, valueMin) and (hueMax, saturationMax, valueMax) are set to black in the output image.
 This stage expects the input to be in HSV_FULL format, so you should do a ConvertColor with Bgr2HsvFull before this stage and ConvertColor Hsv2BgrFull after. These are not applied internally as to not complicate the use of multiple instances of this stage in series.
