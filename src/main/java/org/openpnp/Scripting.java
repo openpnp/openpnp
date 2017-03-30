@@ -98,7 +98,7 @@ public class Scripting {
         try {
             watcher = FileSystems.getDefault().newWatchService();
             watchDirectory(getScriptsDirectory());
-            new Thread(() -> {
+       	Thread thread = new Thread(() -> {
                 for (;;) {
                     try {
                         // wait for an event
@@ -107,12 +107,13 @@ public class Scripting {
                         key.reset();
                         // rescan
                         synchronizeMenu(menu, getScriptsDirectory());
-                    }
-                    catch (Exception e) {
+                    } 	catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            thread.setDaemon(true);
+            thread.start();
         }
         catch (Exception e) {
             e.printStackTrace();
