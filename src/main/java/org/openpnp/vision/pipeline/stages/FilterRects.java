@@ -49,7 +49,7 @@ public class FilterRects extends CvStage {
     }
     
     @Attribute
-    @Property(description="Aspect ratio of filtered rects, used if one or both of width and height are 0. If both width and height are 0, then any rect satisfying the aspect ratio specified will be selected.")
+    @Property(description="Aspect ratio of filtered rects, used if one or both of width and height are 0. If both width and height are 0, then any rect size satisfying the aspect ratio specified will be selected.")
     private double aspect = 0.0;
     
     public double getAspect() {
