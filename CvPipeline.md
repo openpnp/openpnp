@@ -20,12 +20,29 @@ Stages may also produce non-image data as output. This data can be used by later
 
 CvPipeline includes a basic UI for editing the pipeline and viewing the results of each stage. At each stage you can view the resulting image and any additional data that was produced.
 
-# Notes about some stages
-  * MaskCircle: Negative parameter negate the mask
-  * Normalize:  on color image it does RGB Max algorithm, removes shadow and looses color information.
-`          R = R/(R+G+B)`
-          `G = G/(R+G+B)`
-          `B = B/(R+G+B)`
-  * SimpleBlobDetector: actually it detect black circles, anything other don't work actually.
- 
+# Stage Documentation
+
+## MaskCircle
+Use a negative value to invert the mask.
+
+## Normalize
+On color images it does RGB Max algorithm, removes shadow and looses color information.
+```
+R = R/(R+G+B)
+G = G/(R+G+B)
+B = B/(R+G+B)
+```
+
+## SimpleBlobDetector
+Actually it detects black circles, anything other don't work.
+
+## ScriptRun
+To return a pipeline result you can't use a `return` statement, but instead just let the object be the last thing the script evaluates.
+
+```
+var Result = Packages.org.openpnp.vision.pipeline.CvStage.Result;
+var result = new Result(pipeline.getWorkingImage(), "I am a model object");
+result;
+```
+
 # FAQ
