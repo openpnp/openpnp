@@ -26,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -43,7 +44,6 @@ import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -55,6 +55,7 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
@@ -74,7 +75,7 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
-    private static Color cellColorSelected = new Color(51, 153, 255);
+    private static Color cellColorSelected = UIManager.getColor("Table.selectionBackground");
     private static Color jobColorProcessing = new Color(157, 222, 255);
     private static Color jobColorPending = new Color(252, 255, 157);
     private static Color jobColorComplete = new Color(157, 255, 168);
@@ -551,7 +552,7 @@ public class JobPlacementsPanel extends JPanel {
     }
 
     class IdRenderer extends DefaultTableCellRenderer {
-        // This is used just to set backgroud color on Id cell when selected.
+        // This is used just to set background color on Id cell when selected.
         // Could not find another way to do this in.
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
@@ -567,17 +568,14 @@ public class JobPlacementsPanel extends JPanel {
         public void setValue(Object value) {
             String id = value.toString();
 
-            // All placements for a specific Id
-            int pendingSize = ReferencePnpJobProcessor.getJobPlacementsById(id).size();
+            PnpJobProcessor pnpJobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+            int totalSize = pnpJobProcessor.getJobPlacementsById(id).size();
+            int completeSize = pnpJobProcessor.getJobPlacementsById(id, "Complete").size();
+            int processingSize = pnpJobProcessor.getJobPlacementsById(id, "Processing").size();
 
-            if (pendingSize != 0) {
-                // All completed placements for a specific Id
-                int completeSize = ReferencePnpJobProcessor.getCompleteJobPlacementsById(id).size();
-                // All placements processing for a specific Id
-                int processingSize =
-                        ReferencePnpJobProcessor.getProcessingJobPlacementsById(id).size();
-
-                if (completeSize == pendingSize) {
+            //
+            if (totalSize != 0) {
+                if (completeSize == totalSize) {
                     setBackground(jobColorComplete);
                 }
                 else if (processingSize > 0) {
@@ -587,8 +585,8 @@ public class JobPlacementsPanel extends JPanel {
                     setBackground(jobColorPending);
                 }
 
-                if (pendingSize > 1) {
-                    id += "  (" + completeSize + " / " + pendingSize + ")";
+                if (totalSize > 1) {
+                    id += "  (" + completeSize + " / " + totalSize + ")";
                 }
             }
             else {
