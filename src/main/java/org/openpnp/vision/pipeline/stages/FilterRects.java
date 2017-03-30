@@ -107,13 +107,13 @@ public class FilterRects extends CvStage {
             // cannot calculate absolute dimensions
             throw new Exception(dimErr);
             
-          } else if (!tolerance.matches("[\\+\\-0-9]*\\.?[0-9]+%")) {
+          } else if (!tolerance.matches("[\\+\\-0-9]*\\.?[0-9]+%*")) {
             // bad input
             throw new Exception("If only aspect is specified, tolerance should be expressed as a percentage, e.g. 5%");
           }
         }
         // parse tolerance
-        if (tolerance.matches("[0-9]*\\.?[0-9]+%*")) {
+        if (tolerance.matches("[\\+\\-0-9]*\\.?[0-9]+%*")) {
           tol = Double.parseDouble(tolerance.replaceAll("%","")) / 100.0;
           tolIsPerc = true;
         } else {
