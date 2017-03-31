@@ -26,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -39,6 +40,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
@@ -53,6 +55,8 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
@@ -72,6 +76,10 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
+    private static Color cellColorSelected = UIManager.getColor("Table.selectionBackground");
+    private static Color jobColorProcessing = new Color(157, 222, 255);
+    private static Color jobColorPending = new Color(252, 255, 157);
+    private static Color jobColorComplete = new Color(157, 255, 168);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
@@ -146,6 +154,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
+        table.setDefaultRenderer(PartCellValue.class, new IdRenderer());
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -540,6 +549,54 @@ public class JobPlacementsPanel extends JPanel {
                 setBackground(statusColorError);
                 setText(status.toString());
             }
+        }
+    }
+
+    class IdRenderer extends DefaultTableCellRenderer {
+        // This is used just to set background color on Id cell when selected.
+        // Could not find another way to do this in.
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            if (isSelected) {
+                setBackground(cellColorSelected);
+                setForeground(Color.WHITE);
+            }
+            return this;
+        }
+
+        public void setValue(Object value) {
+            String id = value.toString();
+
+            PnpJobProcessor pnpJobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+            int totalSize = pnpJobProcessor.getJobPlacementsById(id).size();
+            int completeSize = pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Complete).size();
+            int processingSize = pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Processing).size();
+
+            //
+            if (totalSize != 0) {
+                if (completeSize == totalSize) {
+                    setBackground(jobColorComplete);
+                }
+                else if (processingSize > 0) {
+                    setBackground(jobColorProcessing);
+                }
+                else {
+                    setBackground(jobColorPending);
+                }
+
+                if (totalSize > 1) {
+                    id += "  (" + completeSize + " / " + totalSize + ")";
+                }
+            }
+            else {
+                setBackground(Color.WHITE);
+            }
+
+            setForeground(Color.black);
+            setText(id);
+            table.repaint();
         }
     }
 }
