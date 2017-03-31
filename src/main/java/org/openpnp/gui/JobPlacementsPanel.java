@@ -56,6 +56,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
@@ -570,8 +571,8 @@ public class JobPlacementsPanel extends JPanel {
 
             PnpJobProcessor pnpJobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
             int totalSize = pnpJobProcessor.getJobPlacementsById(id).size();
-            int completeSize = pnpJobProcessor.getJobPlacementsById(id, "Complete").size();
-            int processingSize = pnpJobProcessor.getJobPlacementsById(id, "Processing").size();
+            int completeSize = pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Complete).size();
+            int processingSize = pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Processing).size();
 
             //
             if (totalSize != 0) {

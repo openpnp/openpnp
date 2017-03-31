@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobPlacement.Status;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -46,6 +45,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
@@ -79,34 +79,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Abort,
         Skip,
         Reset
-    }
-
-    public static class JobPlacement {
-        public enum Status {
-            Pending,
-            Processing,
-            Skipped,
-            Complete
-        }
-
-        public final BoardLocation boardLocation;
-        public final Placement placement;
-        public Status status = Status.Pending;
-
-        public JobPlacement(BoardLocation boardLocation, Placement placement) {
-            this.boardLocation = boardLocation;
-            this.placement = placement;
-        }
-
-        public double getPartHeight() {
-            return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
-                    .getValue();
-        }
-
-        @Override
-        public String toString() {
-            return placement.getId();
-        }
     }
 
     public static class PlannedPlacement {
@@ -796,16 +768,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setParkWhenComplete(boolean parkWhenComplete) {
         this.parkWhenComplete = parkWhenComplete;
     }
-
+    
     public List<JobPlacement> getJobPlacementsById(String id) { 
         return jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.toString() == id;
         }).collect(Collectors.toList()); 
     } 
     
-    public List<JobPlacement> getJobPlacementsById(String id, String status) {
+    public List<JobPlacement> getJobPlacementsById(String id, Status status) {
         return jobPlacements.stream().filter((jobPlacement) -> {
-            return jobPlacement.toString() == id && jobPlacement.status.toString() == status;
+            return jobPlacement.toString() == id && jobPlacement.status == status;
         }).collect(Collectors.toList());
     }
 
@@ -836,4 +808,5 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         return countA - countB;
     };
+
 }
