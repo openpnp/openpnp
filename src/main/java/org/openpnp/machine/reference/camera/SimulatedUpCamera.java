@@ -184,6 +184,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     private synchronized void start() {
         if (thread == null) {
             thread = new Thread(this);
+            thread.setDaemon(true);
             thread.start();
         }
     }

@@ -14,6 +14,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	    <maven.build.timestamp.format>yyyy-MM-dd_HH-mm-ss</maven.build.timestamp.format>
+	    <openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -125,8 +127,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.beanshell</groupId>
-    			<artifactId>bsh</artifactId>
-    			<version>2.0b5</version>
+			<artifactId>bsh</artifactId>
+			<version>2.0b5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.tinylog</groupId>
@@ -138,13 +140,21 @@
 			<artifactId>core</artifactId>
 			<version>3.3.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.eclipse.mylyn.github</groupId>
+			<artifactId>org.eclipse.egit.github.core</artifactId>
+			<version>2.1.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.9</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
-		    <!--
-		        Used to specify that the Maven Eclipse task should download
-		        sources and JavaDocs and attach them to the Eclipse project.
-		    -->
+			<!-- Used to specify that the Maven Eclipse task should download sources 
+				and JavaDocs and attach them to the Eclipse project. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
@@ -155,10 +165,8 @@
 				</configuration>
 			</plugin>
 
-			<!--
-			    Creates a build number property that is then embedded into the
-			    manifest by the maven-jar-plugin.
-			-->
+			<!-- Creates a build number property that is then embedded into the manifest 
+				by the maven-jar-plugin. -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
@@ -174,14 +182,12 @@
 				<configuration>
 					<doCheck>false</doCheck>
 					<doUpdate>false</doUpdate>
-					<shortRevisionLength>6</shortRevisionLength>
+					<shortRevisionLength>7</shortRevisionLength>
 				</configuration>
 			</plugin>
 
-			<!--
-			    Specifies the source and class versions that should be used when
-			    compiling and sets the main class to the OpenPnP startup class.
-			-->
+			<!-- Specifies the source and class versions that should be used when 
+				compiling and sets the main class to the OpenPnP startup class. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -191,23 +197,16 @@
 					<target>1.8</target>
 					<mainClass>org.openpnp.app.Main</mainClass>
 					<excludes>
-                    	<!--
-                        <exclude>**/zippy/**</exclude>
-                        -->
+						<!-- <exclude>**/zippy/**</exclude> -->
 					</excludes>
 				</configuration>
 			</plugin>
 
-			<!--
-			    * Enables creation of INDEX.LIST to improve classloader
-			    performance.
-			    * Specifies the main class to make jar runnable.
-			    * Adds Implementation-Version info to jar manifest.
-			    * Creates a classpath entry in jar so that dependencies can be
-			    loaded directly.
-			    * Specifies a classpath prefix so that dependencies can be
-			    bundled in.
-			-->
+			<!-- * Enables creation of INDEX.LIST to improve classloader performance. 
+				* Specifies the main class to make jar runnable. * Adds Implementation-Version 
+				info to jar manifest. * Creates a classpath entry in jar so that dependencies 
+				can be loaded directly. * Specifies a classpath prefix so that dependencies 
+				can be bundled in. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -222,15 +221,13 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Implementation-Version>${project.version} build ${buildNumber}</Implementation-Version>
+							<Implementation-Version>${openpnp.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
 			</plugin>
 
-			<!--
-			    Copies dependencies to target/lib for pickup by jar plugin.
-			-->
+			<!-- Copies dependencies to target/lib for pickup by jar plugin. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -252,9 +249,7 @@
 				</executions>
 			</plugin>
 
-            <!--
-                Specifies the file encoding to be used when copying resources.
-            -->
+			<!-- Specifies the file encoding to be used when copying resources. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>

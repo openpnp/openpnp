@@ -16,7 +16,9 @@ import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -26,8 +28,8 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
 import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -173,12 +175,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-    private transient boolean subDriver = false;
+    private GcodeDriver parent = null;
     
     @Commit
     public void commit() {
         for (GcodeDriver driver : subDrivers) {
-            driver.subDriver = true;
+            driver.parent = this;
         }
     }
     
@@ -201,6 +203,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         connected = false;
         readerThread = new Thread(this);
+        readerThread.setDaemon(true);
         readerThread.start();
 
         // Wait a bit while the controller starts up
@@ -883,7 +886,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        if (!subDriver) {
+        if (parent == null) {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
@@ -901,11 +904,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     
     @Override
     public Action[] getPropertySheetHolderActions() {
-        if (subDriver) {
-            return null;
+        if (parent == null) {
+            return new Action[] {addSubDriverAction};
         }
         else {
-            return new Action[] {addSubDriverAction};
+            return new Action[] {deleteSubDriverAction};
         }
     }
     
@@ -919,9 +922,28 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             GcodeDriver driver = new GcodeDriver();
-            driver.subDriver = true;
+            driver.parent = GcodeDriver.this;
             subDrivers.add(driver);
             fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
+        }
+    };
+
+    public Action deleteSubDriverAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Sub-Driver...");
+            putValue(SHORT_DESCRIPTION, "Delete the selected sub-driver.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete the selected sub-driver?",
+                    "Delete Sub-Driver?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                parent.subDrivers.remove(GcodeDriver.this);
+                parent.fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, GcodeDriver.this, null);
+            }
         }
     };
 

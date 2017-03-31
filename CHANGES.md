@@ -1,6 +1,91 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2016-03-26
+
+* Auto Update Fixed, Version Number Improvements
+
+	An error that was causing the auto updater to not work has been fixed. In the process,
+	the OpenPnP version numbering scheme has been changed and improved. Version numbers were
+	previously just an inscrutable Git hash. They are now in the format of
+	2017-03-26_18-56-32.0be8a03, with the part before the period representing the date of the
+	build and the part after the period representing the Git hash. This makes it easy to
+	identify when the code was built and how old it is, and the Git hash can be used to
+	identify a specific commit.
+	
+* Glue Feature Removed
+
+	The Glue Dispense feature has been deprecated and removed. This feature was not being used
+	and it was causing maintainability problems. If there is interest in the feature in the
+	future it will be rewritten. More information about this decision is available at
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/1-CSpnoPQGY/k6qUT9VZAQAJ
+
+# 2017-03-21
+
+* Submit Diagnostics
+
+	You can now submit a very detailed diagnostics package about OpenPnP right from OpenPnP itself!
+	In the Help menu just click Submit Diagnostics and follow the instructions. The result will
+	be a link to a [Gist](https://gist.github.com/) on Github that contains information and
+	images from OpenPnP. You can share the link on the mailing list or elsewhere to assist
+	people in helping with any issue you might be having.
+
+# 2017-03-16
+
+* Named CSV Importer Improvements
+
+	Thanks to @Misfittech the Named CSV Importer can now handle Altium R14 files and now
+	has the option to set part heights when available. It also supports the ability to
+	import data that contains values in mils.
+	 
+* Logging Improvements
+
+	With many thanks to @pfried the Log tab and the logging system have seen several improvements:
+	* Log panel is now searchable.
+	* Select and copy lines from the log.
+	* Enable/disable system output.
+	* Option to auto-scroll, or not.
+	
+	More information about this feature can be found at:
+	https://github.com/openpnp/openpnp/issues/288
+
+# 2017-03-05
+
+* Force Upper Case in Gcode Driver Console
+
+	There is now an option, on by default, that forces commands sent from the Gcode console
+	to upper case. Previously upper case was forced without option, but now you can turn it off
+	if you like.
+
+# 2017-03-04
+
+* Position Camera and Continue
+
+	Thanks to @BendRocks for two new buttons in the Job and Placements panel. The buttons
+	which look like the Position Camera button with a right arrow added allows you to
+	position the camera and then select either the next board or placement. This allows you
+	to very easily and quickly move through a job and see that all of your placements
+	are configured correctly.
+	
+* Console Output in Log Panel
+
+	Thanks to @pfried, console output (System.out, System.err) is now included in the Log
+	panel at the Info and Error levels respectively. One major benefit of this is that
+	scripting output will now be visible in the Log panel. 
+
+# 2017-02-27
+
+* ReferenceDragFeeder Configuration Actuator Positioning
+
+	Fixes a bug in the ReferenceDragFeeder configuration panel that kept the actuator positioning
+	buttons from showing up. Now when you set an actuator name the position nozzle buttons on
+	these fields will turn into position actuator buttons as they did previously.
+
+* GcodeDriver Sub-Driver Delete UI
+
+	You can now delete sub-drivers from the UI by selecting one and clicking the red X button
+	in the toolbar above.
+	
 # 2017-02-24
 
 * HTTP Actuator 

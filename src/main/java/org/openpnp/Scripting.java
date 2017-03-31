@@ -93,7 +93,7 @@ public class Scripting {
         try {
             watcher = FileSystems.getDefault().newWatchService();
             watchDirectory(getScriptsDirectory());
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 for (;;) {
                     try {
                         // wait for an event
@@ -107,7 +107,9 @@ public class Scripting {
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            thread.setDaemon(true);
+            thread.start();
         }
         catch (Exception e) {
             e.printStackTrace();

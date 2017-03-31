@@ -80,7 +80,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @SuppressWarnings("unused")
     @Commit
-    private void commit() {
+    protected void commit() {
         for (Head head : heads) {
             head.setMachine(this);
         }

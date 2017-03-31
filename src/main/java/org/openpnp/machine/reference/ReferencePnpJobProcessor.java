@@ -146,6 +146,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
+    
+    long startTime;
 
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
@@ -284,6 +286,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * @throws Exception
      */
     protected void doPreFlight() throws Exception {
+        startTime = System.currentTimeMillis();
+        
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
@@ -421,7 +425,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         List<JobPlacement> result = Collect.cartesianProduct(solutions).stream()
                 // Filter out any results that contains the same JobPlacement more than once
                 .filter(list -> {
-                    return new HashSet<JobPlacement>(list).size() == list.size();
+                    // Note: A previous version of this code just dumped everything into a
+                    // set and compared the size. This worked for two nozzles since there would
+                    // never be more than two nulls, but for > 2 nozzles there will always be a
+                    // solution that has > 2 nulls, which means the size will never match.
+                    // This version of the code ignores the nulls (since they are valid
+                    // solutions) and instead only checks for duplicate valid JobPlacements.
+                    // There is probably a more clever way to do this, but it isn't coming
+                    // to me at the moment.
+                    HashSet<JobPlacement> set = new HashSet<>();
+                    for (JobPlacement jp : list) {
+                        if (jp == null) {
+                            continue;
+                        }
+                        if (set.contains(jp)) {
+                            return false;
+                        }
+                        set.add(jp);
+                    }
+                    return true;
                 })
                 // Sort by the solutions that contain the fewest nulls followed by the
                 // solutions that require the fewest nozzle changes.
@@ -721,6 +743,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Park nozzle.");
             MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
         }
+        
+        Logger.info("Job finished in {}ms", System.currentTimeMillis() - startTime);
     }
 
     protected void doReset() throws Exception {

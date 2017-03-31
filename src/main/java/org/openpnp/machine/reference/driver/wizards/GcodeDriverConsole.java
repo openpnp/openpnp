@@ -28,6 +28,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JCheckBox;
 
 public class GcodeDriverConsole extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -36,7 +37,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         this.driver = driver;
 
         historyLen = 0;
-        historyMaxLen = 5;
+        historyMaxLen = 50;
         history = new String[historyMaxLen];
         historyCursor = 0;
 
@@ -45,12 +46,20 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
                 "Gcode console", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(gcodeConsole);
 
-        gcodeConsole.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        gcodeConsole.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JScrollPane scrollPane = new JScrollPane();
         gcodeConsole.add(scrollPane, "2, 2, 5, 1, fill, fill");
@@ -104,6 +113,10 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
 
         sendGcodeConCmdBtn = new JButton(sendGcodeConCmdAction);
         gcodeConsole.add(sendGcodeConCmdBtn, "6, 4");
+        
+        forceUpperCaseChk = new JCheckBox("Force Upper Case");
+        forceUpperCaseChk.setSelected(true);
+        gcodeConsole.add(forceUpperCaseChk, "2, 6");
 
     }
 
@@ -150,8 +163,10 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         // reset historyCursor to the present
         historyCursor = 0;
 
-        // most controllers prefer commands to be in upper case.
-        cmd = cmd.toUpperCase();
+        if (forceUpperCaseChk.isSelected()) {
+            // most controllers prefer commands to be in upper case.
+            cmd = cmd.toUpperCase();
+        }
         // display the command in the console
         textAreaConsole.append("> " + cmd + "\n");
         // Send command and get responses
@@ -171,4 +186,5 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
             sendGcodeConCmd();
         }
     };
+    private JCheckBox forceUpperCaseChk;
 }

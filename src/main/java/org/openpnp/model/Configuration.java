@@ -64,6 +64,7 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_VERTICAL_SCROLL_UNIT_INCREMENT =
             "Configuration.verticalScrollUnitIncrement";
     private static final int PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF = 16;
+    private static final String imgurClientId = "620fc1fa8ee0180";
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
@@ -483,6 +484,10 @@ public class Configuration extends AbstractModelObject {
         serializer.write(job, file);
         job.setFile(file);
         job.setDirty(false);
+    }
+    
+    public String getImgurClientId() {
+        return imgurClientId;
     }
 
     public void saveBoard(Board board) throws Exception {

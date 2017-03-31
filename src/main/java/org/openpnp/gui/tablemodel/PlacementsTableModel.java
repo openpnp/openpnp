@@ -38,7 +38,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Id", "Part", "Side", "X", "Y", "Rot.", "Type", "Status", "Glue", "Check Fids"};
+            new String[] {"Id", "Part", "Side", "X", "Y", "Rot.", "Type", "Status", "Check Fids"};
 
     private Class[] columnTypes = new Class[] {PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
@@ -82,7 +82,7 @@ public class PlacementsTableModel extends AbstractTableModel {
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return columnIndex == 1 || columnIndex == 2 || columnIndex == 3 || columnIndex == 4
-                || columnIndex == 5 || columnIndex == 6 || columnIndex == 8 || columnIndex == 9;
+                || columnIndex == 5 || columnIndex == 6 || columnIndex == 8;
     }
 
     @Override
@@ -126,9 +126,6 @@ public class PlacementsTableModel extends AbstractTableModel {
                 placement.setType((Type) aValue);
             }
             else if (columnIndex == 8) {
-                placement.setGlue((Boolean) aValue);
-            }
-            else if (columnIndex == 9) {
                 placement.setCheckFids((Boolean) aValue);
             }
         }
@@ -185,8 +182,6 @@ public class PlacementsTableModel extends AbstractTableModel {
             case 7:
                 return getPlacementStatus(placement);
             case 8:
-                return placement.getGlue();
-            case 9:
                 return placement.getCheckFids();
             default:
                 return null;
