@@ -49,7 +49,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 	private int feedCount = 0;
 	@Attribute
 	private double trayRotation = 0;
-	@Attribute
+	@Element
 	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
 
 	private Location pickLocation;
