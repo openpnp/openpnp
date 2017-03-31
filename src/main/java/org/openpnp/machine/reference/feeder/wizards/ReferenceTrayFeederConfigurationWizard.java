@@ -335,21 +335,21 @@ public class ReferenceTrayFeederConfigurationWizard extends AbstractConfiguratio
 			addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
 			addWrappedBinding(location, "rotation", textFieldLocationC, "text", doubleConverter);
 			
-			//MutableLocationProxy lastComponentlocation = new MutableLocationProxy();
-			//bind(UpdateStrategy.READ_WRITE, feeder, "lastComponentLocation", location, "location");
-			//addWrappedBinding(lastComponentlocation, "lengthX", textFieldLastLocationX, "text", lengthConverter);
-			//addWrappedBinding(lastComponentlocation, "lengthY", textFieldLastLocationY, "text", lengthConverter);
-			//addWrappedBinding(lastComponentlocation, "lengthZ", textFieldLastLocationZ, "text", lengthConverter);
-			//addWrappedBinding(lastComponentlocation, "rotation", textFieldLastLocationC, "text", doubleConverter);
+			MutableLocationProxy lastComponentlocation = new MutableLocationProxy();
+			bind(UpdateStrategy.READ_WRITE, feeder, "lastComponentLocation", lastComponentlocation, "location");
+			addWrappedBinding(lastComponentlocation, "lengthX", textFieldLastLocationX, "text", lengthConverter);
+			addWrappedBinding(lastComponentlocation, "lengthY", textFieldLastLocationY, "text", lengthConverter);
+			addWrappedBinding(lastComponentlocation, "lengthZ", textFieldLastLocationZ, "text", lengthConverter);
+			addWrappedBinding(lastComponentlocation, "rotation", textFieldLastLocationC, "text", doubleConverter);
 			
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
 			ComponentDecorators.decorateWithAutoSelect(textFieldLocationC);
-			//ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationX);
-			//ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationY);
-			//ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationZ);
-			//ComponentDecorators.decorateWithAutoSelect(textFieldLastLocationC);
+			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationX);
+			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationY);
+			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLastLocationZ);
+			ComponentDecorators.decorateWithAutoSelect(textFieldLastLocationC);
 		}
 
 		MutableLocationProxy offsets = new MutableLocationProxy();
