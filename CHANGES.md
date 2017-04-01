@@ -1,7 +1,26 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2016-03-26
+# 2017-03-31
+
+* Job Placement Status
+
+	With many thanks to @iAmRoland we now have a great status display of placements as a job
+	is run. Their description from the pull request describes the feature nicely:
+	
+	> Once the start button is pressed, it will mark all pending placements with a yellow color. 
+	> When it's processing a placement it will display a blue color on the ID cell. Once it's done
+	> with all placements with the same ID, it then marks that cell with a green color. If no
+	> placement is going to be done then the cell is left white.
+	
+	@iAmRoland even included a nice GIF that shows how it looks:
+	https://camo.githubusercontent.com/954ded479f650507bece8c199c7b73233708097e/687474703a2f2f692e696d6775722e636f6d2f6d6c4130716d6b2e6a7067
+	
+	This work was performed in PR https://github.com/openpnp/openpnp/pull/493 and partially
+	addresses the feature described in issue https://github.com/openpnp/openpnp/issues/205 and
+	https://github.com/openpnp/openpnp/issues/280.
+
+# 2017-03-26
 
 * Auto Update Fixed, Version Number Improvements
 
