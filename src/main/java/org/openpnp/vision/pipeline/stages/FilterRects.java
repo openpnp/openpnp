@@ -17,24 +17,24 @@ import org.pmw.tinylog.Logger;
 public class FilterRects extends CvStage {
     @Attribute
     @Property(description="Width of filtered rects. Filtering takes tolerance into consideration.")
-    private double width = 50.0;
+    private double rectWidth = 50.0;
     
-    public double getWidth() {
-      return width;
+    public double getRectWidth() {
+      return rectWidth;
     }
-    public void setWidth(double width) {
-      this.width = Math.abs(width);
+    public void setRectWidth(double rectWidth) {
+      this.rectWidth = Math.abs(rectWidth);
     }
     
     @Attribute
     @Property(description="Height of filtered rects. Filtering takes tolerance into consideration.")
-    private double height = 50.0;
+    private double rectHeight = 50.0;
 
-    public double getHeight() {
-      return height;
+    public double getRectHeight() {
+      return rectHeight;
     }
-    public void setHeight(double height) {
-      this.height = Math.abs(height);
+    public void setRectHeight(double rectHeight) {
+      this.rectHeight = Math.abs(rectHeight);
     }
     
     @Attribute
@@ -49,31 +49,31 @@ public class FilterRects extends CvStage {
     }
     
     @Attribute
-    @Property(description="Aspect ratio for selecting rects, used if one or both of width and height are 0. If both width and height are 0, then any rect with size satisfying the aspect ratio and tolerance requirements will be selected.")
-    private double aspect = 0.0;
+    @Property(description="Aspect ratio for selecting rects, used if one or both of rectWidth and rectHeight are 0. If both rectWidth and rectHeight are 0, then any rect with size satisfying the aspect ratio and tolerance requirements will be selected.")
+    private double aspectRatio = 0.0;
     
-    public double getAspect() {
-      return aspect;
+    public double getAspectRatio() {
+      return aspectRatio;
     }
-    public void setAspect(double aspect) {
-      this.aspect = Math.abs(aspect);
+    public void setAspectRatio(double aspectRatio) {
+      this.aspectRatio = Math.abs(aspectRatio);
     }
 
     @Attribute
     @Property(description="Tolerance is taken to be a percentage, e.g. 5 = 5%.")
-    private boolean toleranceIsPerc = false;
+    private boolean toleranceIsPercentage = false;
     
-    public boolean gettoleranceIsPerc() {
-        return toleranceIsPerc;
+    public boolean getToleranceIsPercentage() {
+        return toleranceIsPercentage;
     }
 
-    public void settoleranceIsPerc(boolean toleranceIsPerc) {
-        this.toleranceIsPerc = toleranceIsPerc;
+    public void setToleranceIsPercentage(boolean toleranceIsPercentage) {
+        this.toleranceIsPercentage = toleranceIsPercentage;
     }
     
     @Attribute
     @Property(description="Show selection ranges in the Log.")
-    private boolean logSelectionRanges = true;
+    private boolean logSelectionRanges = false;
     
     public boolean getLogSelectionRanges() {
         return logSelectionRanges;
@@ -99,6 +99,9 @@ public class FilterRects extends CvStage {
        Logger.info(s);
       }
     }
+    // assign values here to minimize storage allocation costs in time, and use pointers to these values.
+    private static String[] verdict = {"[REJ]","[PASS]"};
+    
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (rectStageName == null) {
@@ -121,25 +124,25 @@ public class FilterRects extends CvStage {
         List<RotatedRect> results = new ArrayList<RotatedRect>();
                 
         // we need to sort sizes to do comparisons. The following assures w is always greater than h
-        double w = Math.max(width,height), ww, upper_w;
-        double h = Math.min(width, height), hh, upper_h;
+        double w = Math.max(rectWidth,rectHeight), ww, upper_w;
+        double h = Math.min(rectWidth, rectHeight), hh, upper_h;
         double rw, rh, tol, extUpper;
         String pass;
         
         // check the validity of the input
         if (w == 0.0) {
           // this means h is also 0
-          if (aspect == 0.0) {
+          if (aspectRatio == 0.0) {
             // cannot calculate absolute dimensions
-            throw new Exception("Width, height, or width and aspect, or aspect, must be non zero.");
+            throw new Exception("rectWidth, rectHeight, or rectWidth and aspectRatio, or aspectRatio, must be non zero.");
             
-          } else if (!toleranceIsPerc) {
+          } else if (!toleranceIsPercentage) {
             // bad input
-            throw new Exception("If only aspect is specified, tolerance must be expressed as a percentage.");
+            throw new Exception("If only aspectRatio is specified, tolerance must be expressed as a percentage.");
           }
         }
         // parse tolerance
-        if (toleranceIsPerc) {
+        if (toleranceIsPercentage) {
           tol = tolerance / 100.0;
         } else {
           tol = tolerance;
@@ -154,11 +157,11 @@ public class FilterRects extends CvStage {
           tol = Math.abs(tol);
         }
         
-        if (h == 0.0 && aspect != 0.0) {
-          // derive height from aspect
-          h = w / aspect;
+        if (h == 0.0 && aspectRatio != 0.0) {
+          // derive rectHeight from aspect ratio
+          h = w / aspectRatio;
           if (w != 0)
-            logInfo("derived height parameter: " + h);
+            logInfo("derived rectHeight parameter: " + h);
         }
         // iterate over input rects
         for (RotatedRect rect : rects) {
@@ -166,16 +169,16 @@ public class FilterRects extends CvStage {
           rw = Math.max(rect.size.width,rect.size.height);
           rh = Math.min(rect.size.width,rect.size.height);
           
-          if (width == 0.0 && height == 0.0) {
+          if (rectWidth == 0.0 && rectHeight == 0.0) {
             // Any size:
             // Select rects based only on the aspect ratio of each input rectangle
             w = rw;
-            h = rw / aspect;
+            h = rw / aspectRatio;
           } 
           
           // trick to avoid lengthy checking of tolerance criteria bellow
-          ww = toleranceIsPerc ? w : 1;
-          hh = toleranceIsPerc ? h : 1;
+          ww = toleranceIsPercentage ? w : 1;
+          hh = toleranceIsPercentage ? h : 1;
           upper_w = tol * ww * extUpper;
           upper_h = tol * hh * extUpper;
 
@@ -184,15 +187,15 @@ public class FilterRects extends CvStage {
           if (rw >= w - tol * ww && rw <= w + upper_w && rh >= h - tol * hh && rh <= h + upper_h) {
             // rect passes criteria
             results.add(rect);
-            pass = "[PASS]";
+            pass = verdict[1];
           } 
           else {
-            pass = "[REJ] ";
+            pass = verdict[0];
           }
-          logInfo(pass + " widths  range: " + (w - tol * ww) + " <= " + rw + " <= " + (w + upper_w));
-          logInfo(pass + " heights range: " + (h - tol * hh) + " <= " + rh + " <= " + (h + upper_h));
-          if (aspect != 0) {
-            logInfo(pass + " aspect ratio range: " + (aspect * (1 - tol)) + " <= " + (rw / rh) + " <= " + (aspect * (1 + tol)));
+          logInfo(pass + " width  range: " + (w - tol * ww) + " <= " + rw + " <= " + (w + upper_w));
+          logInfo(pass + " height range: " + (h - tol * hh) + " <= " + rh + " <= " + (h + upper_h));
+          if (aspectRatio != 0) {
+            logInfo(pass + " aspectRatio range: " + (aspectRatio * (1 - tol)) + " <= " + (rw / rh) + " <= " + (aspectRatio * (1 + tol)));
           }
         }
         // deside what type to return
