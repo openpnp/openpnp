@@ -906,46 +906,11 @@ public class JobPanel extends JPanel {
 	private void populatePanelSettingsIntoBoardLocations() {
 		if (getJob().isUsingPanel()) {
 			
-			// Here, we're using a panel and 0,0 board location has been updated. Tell
-			// the panel to update the other board locations based on the offset and rotation
+			// Here, we're using a panel and 0,0 board location has been updated. At this point, 
+			// we want the panel to update the other board locations based on the offset and rotation
 			// of the 0,0 panel
 			getJob().getPcbPanels().get(0).SetLocation(getJob());
 			
-			/*
-			Panel pcbPanel = getJob().getPcbPanels().get(0);
-
-			BoardLocation rootPCB = getJob().getBoardLocations().get(0);
-
-			getJob().removeAllBoards();
-			getJob().addBoardLocation(rootPCB);
-
-			double pcbWidthX = rootPCB.getBoard().getDimensions().getX();
-			double pcbHeightY = rootPCB.getBoard().getDimensions().getY();
-
-			for (int j = 0; j < pcbPanel.getRows(); j++) {
-				for (int i = 0; i < pcbPanel.getColumns(); i++) {
-					// We already have board 0,0 in the list as this is the root
-					// PCB. No need to create it.
-					if (i == 0 && j == 0)
-						continue;
-
-					// deep copy the existing rootpcb
-					BoardLocation newPCB = new BoardLocation(rootPCB);
-
-					// OFfset the sub PCB
-					newPCB.setLocation(newPCB.getLocation()
-							.add(new Location(Configuration.get().getSystemUnits(),
-									(pcbWidthX + pcbPanel.getXGap().getValue()) * i,
-									(pcbHeightY + pcbPanel.getYGap().getValue()) * j, 0, 0)));
-
-					// Rotate the sub PCB
-					newPCB.setLocation(newPCB.getLocation().rotateXyCenterPoint(rootPCB.getLocation(),
-							rootPCB.getLocation().getRotation()));
-
-					getJob().addBoardLocation(newPCB);
-				}
-			}*/
-
 			boardLocationsTableModel.fireTableDataChanged();
 			Helpers.selectFirstTableRow(boardLocationsTable);
 		}
