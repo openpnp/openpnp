@@ -905,6 +905,13 @@ public class JobPanel extends JPanel {
 
 	private void populatePanelSettingsIntoBoardLocations() {
 		if (getJob().isUsingPanel()) {
+			
+			// Here, we're using a panel and 0,0 board location has been updated. Tell
+			// the panel to update the other board locations based on the offset and rotation
+			// of the 0,0 panel
+			getJob().getPcbPanels().get(0).SetLocation(getJob());
+			
+			/*
 			Panel pcbPanel = getJob().getPcbPanels().get(0);
 
 			BoardLocation rootPCB = getJob().getBoardLocations().get(0);
@@ -937,7 +944,7 @@ public class JobPanel extends JPanel {
 
 					getJob().addBoardLocation(newPCB);
 				}
-			}
+			}*/
 
 			boardLocationsTableModel.fireTableDataChanged();
 			Helpers.selectFirstTableRow(boardLocationsTable);
