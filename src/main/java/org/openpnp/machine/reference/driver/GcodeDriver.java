@@ -203,6 +203,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         connected = false;
         readerThread = new Thread(this);
+        readerThread.setDaemon(true);
         readerThread.start();
 
         // Wait a bit while the controller starts up

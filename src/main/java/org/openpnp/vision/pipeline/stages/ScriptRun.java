@@ -28,6 +28,17 @@ public class ScriptRun extends CvStage {
         this.file = file;
     }
 
+    @Attribute
+    private String args = new String("");
+
+    public String getArgs() {
+        return args;
+    }
+
+    public void setArgs(String args) {
+        this.args = args;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (!file.exists()) {
@@ -43,6 +54,7 @@ public class ScriptRun extends CvStage {
 
         engine.put("pipeline", pipeline);
         engine.put("stage", this);
+        engine.put("args",args);
 
         try (FileReader reader = new FileReader(file)) {
             Object result = engine.eval(reader);
@@ -51,7 +63,5 @@ public class ScriptRun extends CvStage {
             }
             return null;
         }
-
-
     }
 }

@@ -14,6 +14,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.model.LengthUnit;
@@ -107,6 +108,16 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     }
 
     private void testAlignment() throws Exception {
+        if (!bottomVision.isEnabled()) {
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
+            return;
+        }
+        
+        if (!enabledCheckbox.isSelected()) {
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
+            return;
+        }
+        
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
         // perform the alignment

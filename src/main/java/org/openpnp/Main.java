@@ -68,6 +68,13 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        for (String s : args) {
+            if (s.equals("--version")) {
+                System.out.println(getVersion());
+                System.exit(0);
+            }
+        }
+        
         // http://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html#//apple_ref/doc/uid/TP40001909-212952-TPXREF134
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         try {

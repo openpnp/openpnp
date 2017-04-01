@@ -297,6 +297,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
         connected = false;
         List<String> responses;
         readerThread = new Thread(this);
+        readerThread.setDaemon(true);
         readerThread.start();
 
         try {

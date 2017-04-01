@@ -1,6 +1,54 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-03-31
+
+* Job Placement Status
+
+	With many thanks to @iAmRoland we now have a great status display of placements as a job
+	is run. Their description from the pull request describes the feature nicely:
+	
+	> Once the start button is pressed, it will mark all pending placements with a yellow color. 
+	> When it's processing a placement it will display a blue color on the ID cell. Once it's done
+	> with all placements with the same ID, it then marks that cell with a green color. If no
+	> placement is going to be done then the cell is left white.
+	
+	@iAmRoland even included a nice GIF that shows how it looks:
+	https://camo.githubusercontent.com/954ded479f650507bece8c199c7b73233708097e/687474703a2f2f692e696d6775722e636f6d2f6d6c4130716d6b2e6a7067
+	
+	This work was performed in PR https://github.com/openpnp/openpnp/pull/493 and partially
+	addresses the feature described in issue https://github.com/openpnp/openpnp/issues/205 and
+	https://github.com/openpnp/openpnp/issues/280.
+
+# 2017-03-26
+
+* Auto Update Fixed, Version Number Improvements
+
+	An error that was causing the auto updater to not work has been fixed. In the process,
+	the OpenPnP version numbering scheme has been changed and improved. Version numbers were
+	previously just an inscrutable Git hash. They are now in the format of
+	2017-03-26_18-56-32.0be8a03, with the part before the period representing the date of the
+	build and the part after the period representing the Git hash. This makes it easy to
+	identify when the code was built and how old it is, and the Git hash can be used to
+	identify a specific commit.
+	
+* Glue Feature Removed
+
+	The Glue Dispense feature has been deprecated and removed. This feature was not being used
+	and it was causing maintainability problems. If there is interest in the feature in the
+	future it will be rewritten. More information about this decision is available at
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/1-CSpnoPQGY/k6qUT9VZAQAJ
+
+# 2017-03-21
+
+* Submit Diagnostics
+
+	You can now submit a very detailed diagnostics package about OpenPnP right from OpenPnP itself!
+	In the Help menu just click Submit Diagnostics and follow the instructions. The result will
+	be a link to a [Gist](https://gist.github.com/) on Github that contains information and
+	images from OpenPnP. You can share the link on the mailing list or elsewhere to assist
+	people in helping with any issue you might be having.
+
 # 2017-03-16
 
 * Named CSV Importer Improvements

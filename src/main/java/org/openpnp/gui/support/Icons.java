@@ -73,7 +73,6 @@ public class Icons {
     public static Icon park = getIcon("/icons/park.svg");
 
     public static Icon scrollDown = getIcon("/icons/scroll-down.svg");
-    public static Icon scrollDownDisabled = getIcon("/icons/scroll-down-disabled.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {

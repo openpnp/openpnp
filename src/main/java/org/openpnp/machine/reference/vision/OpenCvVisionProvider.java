@@ -144,10 +144,10 @@ public class OpenCvVisionProvider implements VisionProvider {
         });
 
         long t = System.currentTimeMillis();
-        saveDebugImage(t + "_0_template", templateMat);
-        saveDebugImage(t + "_1_camera", imageMat);
-        saveDebugImage(t + "_2_result", resultMat);
-        saveDebugImage(t + "_3_debug", debugMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "template", templateMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "camera", imageMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "result", resultMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "debug", debugMat);
 
         return matches;
     }
@@ -186,20 +186,6 @@ public class OpenCvVisionProvider implements VisionProvider {
         return new Point[] {new Point(((int) matchLoc.x) + roiX, ((int) matchLoc.y) + roiY)};
     }
 
-    protected void saveDebugImage(String name, Mat mat) {
-        if (LogUtils.isDebugEnabled()) {
-            try {
-                BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
-                File file = Configuration.get().createResourceFile(OpenCvVisionProvider.class,
-                        name + "_", ".png");
-                ImageIO.write(debugImage, "PNG", file);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void locateTemplateMatchesDebug(Mat roiImage, Mat templateImage,
             org.opencv.core.Point matchLoc) {
         if (LogUtils.isDebugEnabled()) {
@@ -209,11 +195,7 @@ public class OpenCvVisionProvider implements VisionProvider {
                                 matchLoc.y + templateImage.rows()),
                         new Scalar(0, 255, 0));
 
-                BufferedImage debugImage = OpenCvUtils.toBufferedImage(roiImage);
-                File file = Configuration.get().createResourceFile(OpenCvVisionProvider.class,
-                        "debug_", ".png");
-                ImageIO.write(debugImage, "PNG", file);
-                Logger.debug("Debug image filename {}", file);
+                OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "locateTemplateMatches", "debug", roiImage);
             }
             catch (Exception e) {
                 e.printStackTrace();
