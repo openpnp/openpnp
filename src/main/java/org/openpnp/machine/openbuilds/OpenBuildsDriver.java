@@ -398,7 +398,7 @@ public class OpenBuildsDriver extends AbstractSerialPortDriver implements Runnab
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join();
+                readerThread.join(3000);
             }
         }
         catch (Exception e) {

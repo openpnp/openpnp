@@ -55,7 +55,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     public Job getJob() {
         return job;
     }
-    
+
     public BoardLocation getBoardLocation(int index) {
         return job.getBoardLocations().get(index);
     }
@@ -75,7 +75,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
         }
         return job.getBoardLocations().size();
     }
-    
+
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         return columnTypes[columnIndex];
@@ -83,11 +83,11 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-    	if (job.isUsingPanel()){
-    		if (rowIndex >= 1){
-    			return false;
-    		}
-    	}
+        if (job.isUsingPanel()) {
+            if (rowIndex >= 1) {
+                return false;
+            }
+        }
         return (columnIndex != 0);
     }
 
@@ -104,7 +104,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 boardLocation.getBoard().setDimensions(location);
-                fireTableCellUpdated(rowIndex, columnIndex);  
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -112,7 +112,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 Location location = boardLocation.getBoard().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 boardLocation.getBoard().setDimensions(location);
-                fireTableCellUpdated(rowIndex, columnIndex); 
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
                 boardLocation.setSide((Side) aValue);
