@@ -44,3 +44,6 @@ The button will bring up a dialog allowing you to specify the row and column of 
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589457/76d2ae0a-178f-11e7-867d-434e5a1769cb.png)
 
+Upon clicking "OK", the specified board will be disabled for this job run. Note that the X-Out choices and corresponding Enable(s) are not reset after a job run. If you run a panel with an X-out, and the next panel doesn't have an X-out, you will need to specify that the subsequent panel has no X-outs. 
+
+![](https://cloud.githubusercontent.com/assets/24760857/24589456/76d15712-178f-11e7-9214-fd2068b85fef.png)
