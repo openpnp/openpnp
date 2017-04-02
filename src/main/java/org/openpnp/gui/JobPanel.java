@@ -769,17 +769,14 @@ public class JobPanel extends JPanel {
 		String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
 		if (title.equals("Solder Paste")) {
 			jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
-		} else if (title.equals("Pick and Place")) {
-			if ((jobProcessor == null || jobProcessor == Configuration.get().getMachine().getPnpJobProcessor())
-					&& (Configuration.get().getMachine().getGlueDispenseJobProcessor() != null)) {
+        }
+        else if (title.equals("Pick and Place")) {
 				// Run the glue dispense processor first, this will deposit glue
 				// ready for any
 				// component placements
-				jobProcessor = Configuration.get().getMachine().getGlueDispenseJobProcessor();
-			} else {
 				jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
 			}
-		} else {
+        else {
 			throw new Error("Programmer error: Unknown tab title.");
 		}
 		jobProcessor.initialize(job);
@@ -795,8 +792,7 @@ public class JobPanel extends JPanel {
 			// the potential race condition where this task may execute before
 			// the
 			// calling task (setting the FSM state) finishes.
-			while (fsm.getState() != State.Running && fsm.getState() != State.Stepping)
-				;
+            while (fsm.getState() != State.Running && fsm.getState() != State.Stepping);
 
 			do {
 				if (!jobProcessor.next()) {
@@ -806,10 +802,6 @@ public class JobPanel extends JPanel {
 
 			// if this was the glue dispense run and we've finished, kick off
 			// the pick & place
-			if (Configuration.get().getMachine().getGlueDispenseJobProcessor() != null
-					&& jobProcessor == Configuration.get().getMachine().getGlueDispenseJobProcessor()) {
-				fsm.send(Message.StartOrPause);
-			}
 			return null;
 		}, (e) -> {
 
