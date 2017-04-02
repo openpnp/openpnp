@@ -23,7 +23,7 @@ CvPipeline includes a basic UI for editing the pipeline and viewing the results 
 # Stage Documentation
 
 ## Note to Contributors
-Instead of adding basic documentation here, please add annotations to the source code and submit a pull request. This allows the documentation to be viewed in the editor. For an example, see [BlurGaussian](https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/vision/pipeline/stages/BlurGaussian.java) and the [Stage](https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/vision/pipeline/Stage.java) and [Property](https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/vision/pipeline/Property.java) annotations.
+**Instead of adding basic documentation here, please add annotations to the source code and submit a pull request. This allows the documentation to be viewed in the editor. For an example, see [BlurGaussian](https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/vision/pipeline/stages/BlurGaussian.java) and the [Stage](https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/vision/pipeline/Stage.java) and [Property](https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/vision/pipeline/Property.java) annotations.**
 
 ## MaskCircle
 Use a negative value to invert the mask.
