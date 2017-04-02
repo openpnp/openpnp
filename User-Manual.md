@@ -174,7 +174,7 @@ Jobs
 
 Job files tell OpenPnP where to find one or more Boards on the machine. A Job might consist of a single Board or of many of the same or even different Boards. Each line in a Job tells OpenPnP where to find one particular Board using machine coordinates. When you run the Job OpenPnP will process all of the Placements for each Board in the Job.
 
-Since a Job can contain many of the same Board you can use it to process a full panel of PCBs. Just add the same Board to the Job for as many as the panel contains and set the position of each in the Job.
+You can also set up panels of PCBs using the [[Panelization]] feature.
 
 Understanding Z
 ---------------
