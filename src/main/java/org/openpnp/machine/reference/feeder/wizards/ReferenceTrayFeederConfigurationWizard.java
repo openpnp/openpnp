@@ -217,8 +217,8 @@ public class ReferenceTrayFeederConfigurationWizard extends AbstractConfiguratio
 			panelLocation.add(textFieldLastLocationC, "8, 12");
 			textFieldLastLocationC.setColumns(8);
 
-			lastLocationButtonsPanel = new LocationButtonsPanel(textFieldLastLocationX, textFieldLastLocationY, textFieldLastLocationZ,
-					textFieldLastLocationC);
+			lastLocationButtonsPanel = new LocationButtonsPanel(textFieldLastLocationX, textFieldLastLocationY,
+					textFieldLastLocationZ, textFieldLastLocationC);
 			panelLocation.add(lastLocationButtonsPanel, "10, 12");
 
 			JPanel panelFields = new JPanel();
@@ -297,20 +297,30 @@ public class ReferenceTrayFeederConfigurationWizard extends AbstractConfiguratio
 			});
 			btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
 			panelFields.add(btnResetFeedCount, "6, 10, left, default");
-			
+
 			JButton btnCalcOffsetsRotation = new JButton(new AbstractAction("Calculate X-Offset & Tray Rotation") {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					//TODO
-					double deltaX = (Double.parseDouble(textFieldLocationX.getText()) - Double.parseDouble(textFieldLastLocationX.getText()));
-					double deltaY = (Double.parseDouble(textFieldLocationY.getText()) - Double.parseDouble(textFieldLastLocationY.getText()));
-					double rot_rad = Math.atan(deltaY/deltaX);
+
+					if (Integer.parseInt(textFieldTrayCountX.getText()) <= 1) {
+						MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+								"Need at least 2 components in tray to calculate offset. Please increase X Tray Count.");
+					}
+					if (Integer.parseInt(textFieldTrayCountY.getText()) < 1) {
+						MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Please increase Y Tray Count.");
+					}
+
+					double deltaX = (Double.parseDouble(textFieldLocationX.getText())
+							- Double.parseDouble(textFieldLastLocationX.getText()));
+					double deltaY = (Double.parseDouble(textFieldLocationY.getText())
+							- Double.parseDouble(textFieldLastLocationY.getText()));
+					double rot_rad = Math.atan(deltaY / deltaX);
 					double rot_deg = Math.toDegrees(rot_rad);
-					double delta_length = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-						
+					double delta_length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
 					textFieldTrayRotation.setText(String.valueOf(rot_deg));
-					textFieldOffsetsX.setText(String.valueOf(delta_length/(Integer.parseInt(textFieldTrayCountX.getText())-1)));
-					//textFieldTrayCountY.setText("0");
+					textFieldOffsetsX.setText(
+							String.valueOf(delta_length / (Integer.parseInt(textFieldTrayCountX.getText()) - 1)));
 				}
 			});
 			btnCalcOffsetsRotation.setHorizontalAlignment(SwingConstants.LEFT);
@@ -334,14 +344,14 @@ public class ReferenceTrayFeederConfigurationWizard extends AbstractConfiguratio
 			addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
 			addWrappedBinding(location, "lengthZ", textFieldLocationZ, "text", lengthConverter);
 			addWrappedBinding(location, "rotation", textFieldLocationC, "text", doubleConverter);
-			
+
 			MutableLocationProxy lastComponentlocation = new MutableLocationProxy();
 			bind(UpdateStrategy.READ_WRITE, feeder, "lastComponentLocation", lastComponentlocation, "location");
 			addWrappedBinding(lastComponentlocation, "lengthX", textFieldLastLocationX, "text", lengthConverter);
 			addWrappedBinding(lastComponentlocation, "lengthY", textFieldLastLocationY, "text", lengthConverter);
 			addWrappedBinding(lastComponentlocation, "lengthZ", textFieldLastLocationZ, "text", lengthConverter);
 			addWrappedBinding(lastComponentlocation, "rotation", textFieldLastLocationC, "text", doubleConverter);
-			
+
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
