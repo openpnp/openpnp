@@ -1482,7 +1482,7 @@ public class JobPanel extends JPanel {
             btnImport.setAction(okAction);
             footerPanel.add(btnImport);
 
-            setSize(300, 500);
+            setSize(400, 600);
             setResizable(false);
             setLocationRelativeTo(parent);
 
