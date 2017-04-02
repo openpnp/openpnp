@@ -23,9 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FileDialog;
-import java.awt.FlowLayout;
 import java.awt.Frame;
-import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -40,33 +38,21 @@ import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
-import javax.swing.InputMap;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -80,13 +66,13 @@ import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.panelization.DlgAutoPanelize;
+import org.openpnp.gui.panelization.DlgPanelXOut;
 import org.openpnp.gui.processes.TwoPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -94,11 +80,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Panel;
-import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
@@ -397,6 +379,10 @@ public class JobPanel extends JPanel {
         });
 
         Configuration.get().getBus().register(this);
+    }
+    
+    public JTable getBoardLocationsTable() {
+        return boardLocationsTable;
     }
 
     @Subscribe
@@ -917,7 +903,7 @@ public class JobPanel extends JPanel {
         }
     }
 
-    private void populatePanelSettingsIntoBoardLocations() {
+    public void populatePanelSettingsIntoBoardLocations() {
         if (getJob().isUsingPanel()) {
 
             // Here, we're using a panel and 0,0 board location has been updated. At this point,
@@ -1254,7 +1240,7 @@ public class JobPanel extends JPanel {
                 }
             }
 
-            DlgAutoPanelize dlg = new DlgAutoPanelize(frame);
+            DlgAutoPanelize dlg = new DlgAutoPanelize(frame, JobPanel.this);
             dlg.setVisible(true);
         }
     };
@@ -1268,7 +1254,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            DlgPanelXOut dlg = new DlgPanelXOut(frame);
+            DlgPanelXOut dlg = new DlgPanelXOut(frame, JobPanel.this);
             dlg.setVisible(true);
         }
     };
@@ -1358,313 +1344,5 @@ public class JobPanel extends JPanel {
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);
     };
-
-    class DlgAutoPanelize extends JDialog {
-        private JSpinner textFieldPCBColumns;
-        private JSpinner textFieldPCBRows;
-        private JTextField textFieldboardXSpacing;
-        private JTextField textFieldboardYSpacing;
-        private JTextField textFieldboardPanelFid1X;
-        private JTextField textFieldboardPanelFid1Y;
-        private JTextField textFieldboardPanelFid2X;
-        private JTextField textFieldboardPanelFid2Y;
-        private JTextField textFieldFidDiameter;
-        private JComboBox partsComboBox;
-        private JCheckBox checkFidsCheckBox;
-        private final Action okAction = new SwingAction();
-        private final Action cancelAction = new SwingAction_1();
-
-        public DlgAutoPanelize(Frame parent) {
-            super(parent, "Panelization Settings", true);
-            getRootPane().setLayout(new BoxLayout(getRootPane(), BoxLayout.Y_AXIS));
-
-            JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Panelize Parameters ", TitledBorder.LEADING,
-                    TitledBorder.TOP, null, null));
-            getRootPane().add(panel);
-
-            panel.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-            panel.setLayout(new GridLayout(0, 2, 20, 20));
-
-            // Specify a placeholder panel for now if we don't have one already
-            if ((getJob().getPanels() == null)
-                    || (getJob().getPanels() != null && getJob().getPanels().size() == 0)) {
-                getJob().addPanel(
-                        new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
-                                new Length(0, LengthUnit.Millimeters), "", false,
-                                new Placement("PanelFid1"), new Placement("PanelFid2")));
-            }
-
-            // Row and column
-            int rows = getJob().getPanels().get(0).getRows();
-            int cols = getJob().getPanels().get(0).getColumns();
-
-            panel.add(new JLabel("Number of Columns", JLabel.RIGHT), "2, 2, right, default");
-            textFieldPCBColumns = new JSpinner(new SpinnerNumberModel(cols, 1, 6, 1));
-            panel.add(textFieldPCBColumns, "4, 2, fill, default");
-
-            panel.add(new JLabel("Number of Rows", JLabel.RIGHT), "2, 4, right, default");
-            textFieldPCBRows = new JSpinner(new SpinnerNumberModel(rows, 1, 6, 1));
-            panel.add(textFieldPCBRows, "4, 4, fill, default");
-
-            // Spacing
-            panel.add(new JLabel("X Spacing", JLabel.RIGHT), "2, 6, right, default");
-            textFieldboardXSpacing = new JTextField();
-            textFieldboardXSpacing.setText(String.format("%.3f", getJob().getPanels().get(0)
-                    .getXGap().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
-            panel.add(textFieldboardXSpacing, "4, 6, fill, default");
-
-            panel.add(new JLabel("Y Spacing", JLabel.RIGHT), "2, 8, right, default");
-            textFieldboardYSpacing = new JTextField();
-            textFieldboardYSpacing.setText(String.format("%.3f", getJob().getPanels().get(0)
-                    .getYGap().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
-            panel.add(textFieldboardYSpacing, "4, 8, fill, default");
-
-            // Fiducial coords
-
-            Location fid0Loc = getJob().getPanels().get(0).getFiducials().get(0).getLocation();
-            panel.add(new JLabel("Panel Fid1 X", JLabel.RIGHT), "2, 10, right, default");
-            textFieldboardPanelFid1X = new JTextField();
-            textFieldboardPanelFid1X.setText(String.format("%.3f",
-                    fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
-            panel.add(textFieldboardPanelFid1X, "4, 10, fill, default");
-
-            panel.add(new JLabel("Panel Fid1 Y", JLabel.RIGHT), "2, 12, right, default");
-            textFieldboardPanelFid1Y = new JTextField();
-            textFieldboardPanelFid1Y.setText(String.format("%.3f",
-                    fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
-            panel.add(textFieldboardPanelFid1Y, "4, 12, fill, default");
-
-            Location fid1Loc = getJob().getPanels().get(0).getFiducials().get(1).getLocation();
-            panel.add(new JLabel("Panel Fid2 X", JLabel.RIGHT), "2, 14, right, default");
-            textFieldboardPanelFid2X = new JTextField();
-            textFieldboardPanelFid2X.setText(String.format("%.3f",
-                    fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
-            panel.add(textFieldboardPanelFid2X, "4, 14, fill, default");
-
-            panel.add(new JLabel("Panel Fid2 Y", JLabel.RIGHT), "2, 16, right, default");
-            textFieldboardPanelFid2Y = new JTextField();
-            textFieldboardPanelFid2Y.setText(String.format("%.3f",
-                    fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
-            panel.add(textFieldboardPanelFid2Y, "4, 16, fill, default");
-
-            panel.add(new JLabel("Global Fiducial Part", JLabel.RIGHT), "2, 16, right, default");
-            partsComboBox = new JComboBox(new PartsComboBoxModel());
-            partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
-
-            // Very verbose...there must be a better way
-            for (int i = 0; i < partsComboBox.getItemCount(); i++) {
-                Part p = (Part) (partsComboBox.getItemAt(i));
-                if (p.getId().equals(getJob().getPanels().get(0).getPartId())) {
-                    partsComboBox.setSelectedIndex(i);
-                    break;
-                }
-            }
-
-            panel.add(partsComboBox, "4, 18, fill, default");
-
-            panel.add(new JLabel("Check Fiducials", JLabel.RIGHT), "2, 20, right, default");
-            checkFidsCheckBox = new JCheckBox();
-            checkFidsCheckBox.setSelected(getJob().getPanels().get(0).isCheckFiducials());
-            panel.add(checkFidsCheckBox, "4, 20, fill, default");
-
-            JPanel footerPanel = new JPanel();
-            FlowLayout flowLayout = (FlowLayout) footerPanel.getLayout();
-            flowLayout.setAlignment(FlowLayout.RIGHT);
-            getRootPane().add(footerPanel);
-
-            JButton btnCancel = new JButton("Cancel");
-            btnCancel.setAction(cancelAction);
-            footerPanel.add(btnCancel);
-
-            JButton btnImport = new JButton("OK");
-            btnImport.setAction(okAction);
-            footerPanel.add(btnImport);
-
-            setSize(400, 600);
-            setResizable(false);
-            setLocationRelativeTo(parent);
-
-            JRootPane rootPane = getRootPane();
-            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
-            InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-            inputMap.put(stroke, "ESCAPE");
-            rootPane.getActionMap().put("ESCAPE", cancelAction);
-        }
-
-        private class SwingAction extends AbstractAction {
-            public SwingAction() {
-                putValue(NAME, "OK");
-                putValue(SHORT_DESCRIPTION, "OK");
-            }
-
-            public void actionPerformed(ActionEvent e) {
-                int cols = (int) (textFieldPCBColumns.getValue());
-                int rows = (int) (textFieldPCBRows.getValue());
-                double gapX = Double.parseDouble(textFieldboardXSpacing.getText());
-                double gapY = Double.parseDouble(textFieldboardYSpacing.getText());
-                double globalFid1X = Double.parseDouble(textFieldboardPanelFid1X.getText());
-                double globalFid1Y = Double.parseDouble(textFieldboardPanelFid1Y.getText());
-                double globalFid2X = Double.parseDouble(textFieldboardPanelFid2X.getText());
-                double globalFid2Y = Double.parseDouble(textFieldboardPanelFid2Y.getText());
-                Part part = (Part) partsComboBox.getSelectedItem();
-
-                // The selected PCB is the one we'll panelize
-                BoardLocation rootPCB = getSelectedBoardLocation();
-
-                Placement p0 = new Placement("PanelFid1");
-                p0.setType(Placement.Type.Fiducial);
-                p0.setLocation(
-                        new Location(Configuration.get().getSystemUnits(), globalFid1X, globalFid1Y,
-                                rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
-                p0.setPart(part);
-                Placement p1 = new Placement("PanelFid2");
-                p0.setType(Placement.Type.Fiducial);
-                p1.setLocation(
-                        new Location(Configuration.get().getSystemUnits(), globalFid2X, globalFid2Y,
-                                rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
-                p1.setPart(part);
-
-                Panel pcbPanel = new Panel("Panel1", cols, rows,
-                        new Length(gapX, Configuration.get().getSystemUnits()),
-                        new Length(gapY, Configuration.get().getSystemUnits()), part.getId(),
-                        checkFidsCheckBox.isSelected(), p0, p1);
-
-                getJob().removeAllPanels();
-
-                if ((rows == 1) && (cols == 1)) {
-                    // Here, the user has effectively shut off panelization by
-                    // specifying row = col = 1. In this case, we don't
-                    // want the panelization info to appear in the job file any
-                    // longer. We also need to remove all the boards created
-                    // by the panelization previously EXCEPT for the root PCB.
-                    // Remember, too, that the condition upon entry into
-                    // this dlg was that there was a single board in the list.
-                    // When this feature is turned off, there will again
-                    // be a single board in the list
-                    BoardLocation b = getJob().getBoardLocations().get(0);
-                    getJob().removeAllBoards();
-                    getJob().addBoardLocation(b);
-                    boardLocationsTableModel.fireTableDataChanged();
-                }
-                else {
-                    // Here, panelization is active.
-                    getJob().addPanel(pcbPanel);
-                    populatePanelSettingsIntoBoardLocations();
-                }
-                setVisible(false);
-            }
-        }
-
-        private class SwingAction_1 extends AbstractAction {
-            public SwingAction_1() {
-                putValue(NAME, "Cancel");
-                putValue(SHORT_DESCRIPTION, "Cancel");
-            }
-
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        }
-    }
-
-    class DlgPanelXOut extends JDialog {
-        private JPanel checkBoxPanel;
-        private JTextField textFieldPCBColumns;
-
-        private final Action okAction = new SwingAction();
-        private final Action cancelAction = new SwingAction_1();
-
-        public DlgPanelXOut(Frame parent) {
-            super(parent, "", true);
-            getRootPane().setLayout(new BoxLayout(getRootPane(), BoxLayout.Y_AXIS));
-
-            // Header
-            JPanel headerPanel = new JPanel();
-            // headerPanel.setLayout(new FlowLayout());
-            headerPanel.add(new JLabel(
-                    "<html>Select the PCB to be DISABLED in the panel.<p>Note that the lower left panel is designated 1,1</html>"));
-            getRootPane().add(headerPanel);
-
-            // Panel with Checkboxes
-            int cols = getJob().getPanels().get(0).getColumns();
-            int rows = getJob().getPanels().get(0).getRows();
-            checkBoxPanel = new JPanel();
-            checkBoxPanel.setBorder(new EmptyBorder(0, 30, 0, 0));
-            checkBoxPanel.setLayout(new GridLayout(rows, cols));
-            getRootPane().add(checkBoxPanel);
-
-            // Checkboxes will be added to the grid as columns from upper left
-            // to lower right. The
-            // board locations are stored as a linear array from lower left to
-            // upper right. To help
-            // sort this out, we store the linear array offset with each
-            // checkbox so that we don't
-            // have to deal with this mapping outside of the few lines below.
-            for (int i = 0; i < rows * cols; i++) {
-                int x = i % cols;
-                int y = i / cols;
-                String lbl = String.format("%d,%d", x + 1, rows - y);
-                JCheckBox cb = new JCheckBox(lbl);
-                cb.putClientProperty("index", (rows - y - 1) * cols + x);
-                checkBoxPanel.add(cb);
-            }
-
-            // Footer
-            JPanel footerPanel = new JPanel();
-            FlowLayout flowLayout = (FlowLayout) footerPanel.getLayout();
-            flowLayout.setAlignment(FlowLayout.RIGHT);
-            getRootPane().add(footerPanel);
-
-            JButton btnCancel = new JButton("Cancel");
-            btnCancel.setAction(cancelAction);
-            footerPanel.add(btnCancel);
-
-            JButton btnImport = new JButton("OK");
-            btnImport.setAction(okAction);
-            footerPanel.add(btnImport);
-
-            setSize(400, 400);
-            setLocationRelativeTo(parent);
-
-            JRootPane rootPane = getRootPane();
-            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
-            InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-            inputMap.put(stroke, "ESCAPE");
-            rootPane.getActionMap().put("ESCAPE", cancelAction);
-        }
-
-        private class SwingAction extends AbstractAction {
-            public SwingAction() {
-                putValue(NAME, "OK");
-                putValue(SHORT_DESCRIPTION, "OK");
-            }
-
-            public void actionPerformed(ActionEvent e) {
-                for (int i = 0; i < checkBoxPanel.getComponentCount(); i++) {
-                    JCheckBox cb = (JCheckBox) checkBoxPanel.getComponent(i);
-                    int index = (int) cb.getClientProperty("index");
-                    getJob().getBoardLocations().get(index).setEnabled(!cb.isSelected());
-                }
-
-                boardLocationsTableModel.fireTableDataChanged();
-                Helpers.selectFirstTableRow(boardLocationsTable);
-
-                setVisible(false);
-            }
-        }
-
-        private class SwingAction_1 extends AbstractAction {
-            public SwingAction_1() {
-                putValue(NAME, "Cancel");
-                putValue(SHORT_DESCRIPTION, "Cancel");
-            }
-
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        }
-    }
 
 }
