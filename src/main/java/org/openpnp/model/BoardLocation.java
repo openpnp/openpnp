@@ -109,7 +109,7 @@ public class BoardLocation extends AbstractModelObject {
         this.boardFile = boardFile;
     }
 
-    public String getPanelID() {
+    public String getPanelId() {
         return panelId;
     }
 

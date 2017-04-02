@@ -119,7 +119,7 @@ public class Panel extends AbstractModelObject implements Identifiable {
     }
 
 
-    public void SetLocation(Job job) {
+    public void setLocation(Job job) {
         BoardLocation rootPCB = job.getBoardLocations().get(0);
 
         job.removeAllBoards();

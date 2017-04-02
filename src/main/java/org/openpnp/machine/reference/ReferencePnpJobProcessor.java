@@ -324,8 +324,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
-        if (job.isUsingPanel() && job.getPcbPanels().get(0).isCheckFiducials()){
-        	Panel p = job.getPcbPanels().get(0);
+        if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
+        	Panel p = job.getPanels().get(0);
         	
         	BoardLocation boardLocation = job.getBoardLocations().get(0);
         	

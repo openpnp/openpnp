@@ -53,8 +53,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         IdentifiableList<Placement> fiducials;
 
         if (checkPanel) {
-            Panel panel = MainFrame.get().getJobTab().getJob().getPcbPanels()
-                    .get(boardLocation.getPanelID());
+            Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
+                    .get(boardLocation.getPanelId());
             fiducials = panel.getFiducials();
         }
         else {

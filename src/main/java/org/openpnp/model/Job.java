@@ -37,7 +37,7 @@ import org.simpleframework.xml.core.Commit;
 @Root(name = "openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
     @ElementList(required = false)
-    protected IdentifiableList<Panel> pcbPanels = new IdentifiableList<>();
+    protected IdentifiableList<Panel> panels = new IdentifiableList<>();
 
     @ElementList
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
@@ -87,16 +87,16 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             oldValue.get(i).removePropertyChangeListener(this);
     }
 
-    public void addPcbPanel(Panel panel) {
-        pcbPanels.add(panel);
+    public void addPanel(Panel panel) {
+        panels.add(panel);
     }
 
-    public void clearPcbPanels() {
-        pcbPanels.clear();
+    public void removeAllPanels() {
+        panels.clear();
     }
 
-    public IdentifiableList<Panel> getPcbPanels() {
-        return pcbPanels;
+    public IdentifiableList<Panel> getPanels() {
+        return panels;
     }
 
     // In the first release of the Auto Panelize software, there is assumed to be a
@@ -104,12 +104,12 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     // panels. This function is intended to let the rest of OpenPNP know if the
     // autopanelize function is being used
     public boolean isUsingPanel() {
-        if (pcbPanels == null) {
+        if (panels == null) {
             return false;
         }
 
-        if ((pcbPanels.size() >= 1)
-                && ((pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1))) {
+        if ((panels.size() >= 1)
+                && ((panels.get(0).getRows() > 1) || (panels.get(0).getColumns() > 1))) {
             return true;
         }
 

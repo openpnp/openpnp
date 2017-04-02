@@ -924,7 +924,7 @@ public class JobPanel extends JPanel {
             // we want the panel to update the other board locations based on the offset and
             // rotation
             // of the 0,0 panel
-            getJob().getPcbPanels().get(0).SetLocation(getJob());
+            getJob().getPanels().get(0).setLocation(getJob());
 
             boardLocationsTableModel.fireTableDataChanged();
             Helpers.selectFirstTableRow(boardLocationsTable);
@@ -1077,7 +1077,7 @@ public class JobPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             if (getJob().isUsingPanel()) {
                 getJob().removeAllBoards();
-                getJob().clearPcbPanels();
+                getJob().removeAllPanels();
                 boardLocationsTableModel.fireTableDataChanged();
                 addNewBoardAction.setEnabled(true);
                 addExistingBoardAction.setEnabled(true);
@@ -1388,17 +1388,17 @@ public class JobPanel extends JPanel {
             panel.setLayout(new GridLayout(0, 2, 20, 20));
 
             // Specify a placeholder panel for now if we don't have one already
-            if ((getJob().getPcbPanels() == null)
-                    || (getJob().getPcbPanels() != null && getJob().getPcbPanels().size() == 0)) {
-                getJob().addPcbPanel(
+            if ((getJob().getPanels() == null)
+                    || (getJob().getPanels() != null && getJob().getPanels().size() == 0)) {
+                getJob().addPanel(
                         new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
                                 new Length(0, LengthUnit.Millimeters), "", false,
                                 new Placement("PanelFid1"), new Placement("PanelFid2")));
             }
 
             // Row and column
-            int rows = getJob().getPcbPanels().get(0).getRows();
-            int cols = getJob().getPcbPanels().get(0).getColumns();
+            int rows = getJob().getPanels().get(0).getRows();
+            int cols = getJob().getPanels().get(0).getColumns();
 
             panel.add(new JLabel("Number of Columns", JLabel.RIGHT), "2, 2, right, default");
             textFieldPCBColumns = new JSpinner(new SpinnerNumberModel(cols, 1, 6, 1));
@@ -1411,19 +1411,19 @@ public class JobPanel extends JPanel {
             // Spacing
             panel.add(new JLabel("X Spacing", JLabel.RIGHT), "2, 6, right, default");
             textFieldboardXSpacing = new JTextField();
-            textFieldboardXSpacing.setText(String.format("%.3f", getJob().getPcbPanels().get(0)
+            textFieldboardXSpacing.setText(String.format("%.3f", getJob().getPanels().get(0)
                     .getXGap().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
             panel.add(textFieldboardXSpacing, "4, 6, fill, default");
 
             panel.add(new JLabel("Y Spacing", JLabel.RIGHT), "2, 8, right, default");
             textFieldboardYSpacing = new JTextField();
-            textFieldboardYSpacing.setText(String.format("%.3f", getJob().getPcbPanels().get(0)
+            textFieldboardYSpacing.setText(String.format("%.3f", getJob().getPanels().get(0)
                     .getYGap().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
             panel.add(textFieldboardYSpacing, "4, 8, fill, default");
 
             // Fiducial coords
 
-            Location fid0Loc = getJob().getPcbPanels().get(0).getFiducials().get(0).getLocation();
+            Location fid0Loc = getJob().getPanels().get(0).getFiducials().get(0).getLocation();
             panel.add(new JLabel("Panel Fid1 X", JLabel.RIGHT), "2, 10, right, default");
             textFieldboardPanelFid1X = new JTextField();
             textFieldboardPanelFid1X.setText(String.format("%.3f",
@@ -1436,7 +1436,7 @@ public class JobPanel extends JPanel {
                     fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
             panel.add(textFieldboardPanelFid1Y, "4, 12, fill, default");
 
-            Location fid1Loc = getJob().getPcbPanels().get(0).getFiducials().get(1).getLocation();
+            Location fid1Loc = getJob().getPanels().get(0).getFiducials().get(1).getLocation();
             panel.add(new JLabel("Panel Fid2 X", JLabel.RIGHT), "2, 14, right, default");
             textFieldboardPanelFid2X = new JTextField();
             textFieldboardPanelFid2X.setText(String.format("%.3f",
@@ -1456,7 +1456,7 @@ public class JobPanel extends JPanel {
             // Very verbose...there must be a better way
             for (int i = 0; i < partsComboBox.getItemCount(); i++) {
                 Part p = (Part) (partsComboBox.getItemAt(i));
-                if (p.getId().equals(getJob().getPcbPanels().get(0).getPartId())) {
+                if (p.getId().equals(getJob().getPanels().get(0).getPartId())) {
                     partsComboBox.setSelectedIndex(i);
                     break;
                 }
@@ -1466,7 +1466,7 @@ public class JobPanel extends JPanel {
 
             panel.add(new JLabel("Check Fiducials", JLabel.RIGHT), "2, 20, right, default");
             checkFidsCheckBox = new JCheckBox();
-            checkFidsCheckBox.setSelected(getJob().getPcbPanels().get(0).isCheckFiducials());
+            checkFidsCheckBox.setSelected(getJob().getPanels().get(0).isCheckFiducials());
             panel.add(checkFidsCheckBox, "4, 20, fill, default");
 
             JPanel footerPanel = new JPanel();
@@ -1531,7 +1531,7 @@ public class JobPanel extends JPanel {
                         new Length(gapY, Configuration.get().getSystemUnits()), part.getId(),
                         checkFidsCheckBox.isSelected(), p0, p1);
 
-                getJob().clearPcbPanels();
+                getJob().removeAllPanels();
 
                 if ((rows == 1) && (cols == 1)) {
                     // Here, the user has effectively shut off panelization by
@@ -1550,7 +1550,7 @@ public class JobPanel extends JPanel {
                 }
                 else {
                     // Here, panelization is active.
-                    getJob().addPcbPanel(pcbPanel);
+                    getJob().addPanel(pcbPanel);
                     populatePanelSettingsIntoBoardLocations();
                 }
                 setVisible(false);
@@ -1588,8 +1588,8 @@ public class JobPanel extends JPanel {
             getRootPane().add(headerPanel);
 
             // Panel with Checkboxes
-            int cols = getJob().getPcbPanels().get(0).getColumns();
-            int rows = getJob().getPcbPanels().get(0).getRows();
+            int cols = getJob().getPanels().get(0).getColumns();
+            int rows = getJob().getPanels().get(0).getRows();
             checkBoxPanel = new JPanel();
             checkBoxPanel.setBorder(new EmptyBorder(0, 30, 0, 0));
             checkBoxPanel.setLayout(new GridLayout(rows, cols));
