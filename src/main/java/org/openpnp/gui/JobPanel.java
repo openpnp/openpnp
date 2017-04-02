@@ -188,10 +188,9 @@ public class JobPanel extends JPanel {
                 new ActionGroup(removeBoardAction, captureCameraBoardLocationAction,
                         captureToolBoardLocationAction, moveCameraToBoardLocationAction,
                         moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
-                        twoPointLocateBoardLocationAction, fiducialCheckAction);
+                        twoPointLocateBoardLocationAction, fiducialCheckAction, panelizeAction);
 		boardLocationSelectionActionGroup.setEnabled(false);
 
-		// panelizeAction.setEnabled(false);
 		panelizeXOutAction.setEnabled(false);
 		panelizeFiducialCheck.setEnabled(false);
 		boardLocationsTableModel = new BoardLocationsTableModel(configuration);
@@ -801,89 +800,77 @@ public class JobPanel extends JPanel {
 			jobProcessor = Configuration.get().getMachine().getPasteDispenseJobProcessor();
         }
         else if (title.equals("Pick and Place")) {
-				// Run the glue dispense processor first, this will deposit glue
-				// ready for any
-				// component placements
-				jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
-			}
+            jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+        }
         else {
-			throw new Error("Programmer error: Unknown tab title.");
-		}
-		jobProcessor.initialize(job);
-		jobRun();
-	}
+            throw new Error("Programmer error: Unknown tab title.");
+        }
+        jobProcessor.initialize(job);
+        jobRun();
+    }
 
-	public void jobRun() {
-		UiUtils.submitUiMachineTask(() -> {
-			// Make sure the FSM has actually transitioned to either Running or
-			// Stepping
-			// before continuing so that we don't accidentally exit early. This
-			// breaks
-			// the potential race condition where this task may execute before
-			// the
-			// calling task (setting the FSM state) finishes.
+    public void jobRun() {
+        UiUtils.submitUiMachineTask(() -> {
+            // Make sure the FSM has actually transitioned to either Running or Stepping
+            // before continuing so that we don't accidentally exit early. This breaks
+            // the potential race condition where this task may execute before the
+            // calling task (setting the FSM state) finishes.
             while (fsm.getState() != State.Running && fsm.getState() != State.Stepping);
 
-			do {
-				if (!jobProcessor.next()) {
-					fsm.send(Message.Finished);
-				}
-			} while (fsm.getState() == State.Running);
+            do {
+                if (!jobProcessor.next()) {
+                    fsm.send(Message.Finished);
+                }
+            } while (fsm.getState() == State.Running);
 
-			// if this was the glue dispense run and we've finished, kick off
-			// the pick & place
-			return null;
-		}, (e) -> {
+            return null;
+        }, (e) -> {
 
-		}, (t) -> {
-			List<String> options = new ArrayList<>();
-			String retryOption = "Try Again";
-			String skipOption = "Skip";
-			String pauseOption = "Pause Job";
+        }, (t) -> {
+            List<String> options = new ArrayList<>();
+            String retryOption = "Try Again";
+            String skipOption = "Skip";
+            String pauseOption = "Pause Job";
 
-			options.add(retryOption);
-			if (jobProcessor.canSkip()) {
-				options.add(skipOption);
-			}
-			options.add(pauseOption);
+            options.add(retryOption);
+            if (jobProcessor.canSkip()) {
+                options.add(skipOption);
+            }
+            options.add(pauseOption);
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
                     options.toArray(), retryOption);
-			String selectedOption = options.get(result);
-			if (selectedOption.equals(retryOption)) {
-				jobRun();
-			}
-			// Skip
-			else if (selectedOption.equals(skipOption)) {
-				UiUtils.messageBoxOnException(() -> {
-					// Tell the job processor to skip the current placement and
-					// then call jobRun()
-					// to start things back up, either running or stepping.
-					jobSkip();
-				});
-			}
-			// Pause or cancel dialog
-			else {
-				// We are either Running or Stepping. If Stepping, there is
-				// nothing to do. Just
-				// clear the dialog and let the user take control. If Running we
-				// need to transition
-				// to Stepping.
-				if (fsm.getState() == State.Running) {
-					try {
-						fsm.send(Message.StartOrPause);
+            String selectedOption = options.get(result);
+            if (selectedOption.equals(retryOption)) {
+                jobRun();
+            }
+            // Skip
+            else if (selectedOption.equals(skipOption)) {
+                UiUtils.messageBoxOnException(() -> {
+                    // Tell the job processor to skip the current placement and then call jobRun()
+                    // to start things back up, either running or stepping.
+                    jobSkip();
+                });
+            }
+            // Pause or cancel dialog
+            else {
+                // We are either Running or Stepping. If Stepping, there is nothing to do. Just
+                // clear the dialog and let the user take control. If Running we need to transition
+                // to Stepping.
+                if (fsm.getState() == State.Running) {
+                    try {
+                        fsm.send(Message.StartOrPause);
                     }
                     catch (Exception e) {
-						// Since we are checking if we're in the Running state
-						// this should not
-						// ever happen. If it does, the Error will let us know.
-						e.printStackTrace();
-						throw new Error(e);
-					}
-				}
-			}
-		});
-	}
+                        // Since we are checking if we're in the Running state this should not
+                        // ever happen. If it does, the Error will let us know.
+                        e.printStackTrace();
+                        throw new Error(e);
+                    }
+                }
+            }
+        });
+    }
 
 	public void jobSkip() {
 		UiUtils.submitUiMachineTask(() -> {
