@@ -219,6 +219,8 @@ public class JobPanel extends JPanel {
                 else if (e.getFirstRow() == 0 && e.getLastRow() == Integer.MAX_VALUE) {
                     // A generic table update in response to TableDataChange
                     // event
+                	updatePanelizationIconState();
+                	
                 }
 
             }
@@ -873,6 +875,13 @@ public class JobPanel extends JPanel {
     }
 
     private void updatePanelizationIconState() {
+    	// If more than board is in the job list, then autopanelize isn't allowed
+        if (getJob().isUsingPanel() == false && boardLocationsTable.getRowCount() > 1){
+        	panelizeAction.setEnabled(false);
+        	panelizeFiducialCheck.setEnabled(false);
+            panelizeXOutAction.setEnabled(false);	
+        }
+        
         if (getJob().getBoardLocations() == null) {
             panelizeFiducialCheck.setEnabled(false);
             panelizeXOutAction.setEnabled(false);
@@ -883,6 +892,8 @@ public class JobPanel extends JPanel {
         if (getJob().isUsingPanel() == false) {
             panelizeFiducialCheck.setEnabled(false);
             panelizeXOutAction.setEnabled(false);
+            addNewBoardAction.setEnabled(true);
+            addBoardAction.setEnabled(true);            
         }
         else {
             addNewBoardAction.setEnabled(false);
@@ -1237,6 +1248,7 @@ public class JobPanel extends JPanel {
                 if (job.getBoardLocations().size() > 1) {
                     MessageBoxes.errorBox(frame, "Panelize Error",
                             "Panelization can only occur on a single board.");
+                    return;
                 }
             }
 
