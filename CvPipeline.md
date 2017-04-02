@@ -39,7 +39,7 @@ B = B/(R+G+B)
 ## SimpleBlobDetector
 Actually it detects black circles, anything other don't work.
 
-## MaskHsvConvertModelToPoints
+## ConvertModelToPoints
 Convert a variety of built in types to Points. Currently handles KeyPoints, Circles and RotatedRects. The center point of each is stored. If the input model is a single value the result will be a single value. If the input is a List the result will be a List.
 
 ## DrawKeyPoints
