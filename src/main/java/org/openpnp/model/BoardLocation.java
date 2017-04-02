@@ -33,6 +33,9 @@ public class BoardLocation extends AbstractModelObject {
 
     @Attribute
     private String boardFile;
+    
+    @Attribute(required = false)
+    private String panelId = new String("Panel1");  // UI doesn't have a way to specify multiple panels at this point
 
     @Attribute(required = false)
     private boolean checkFiducials;
@@ -43,7 +46,18 @@ public class BoardLocation extends AbstractModelObject {
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
-
+   
+    // Copy constructor needed for deep copy of object. 
+    public BoardLocation(BoardLocation obj){
+    	this.location = obj.location;       
+    	this.side = obj.side;               
+    	this.board = obj.board;             
+    	this.boardFile = obj.boardFile;
+    	this.panelId = obj.panelId;
+    	this.checkFiducials = obj.checkFiducials;
+    	this.enabled = obj.enabled;
+    }
+    
     public BoardLocation(Board board) {
         this();
         setBoard(board);
@@ -92,6 +106,17 @@ public class BoardLocation extends AbstractModelObject {
 
     void setBoardFile(String boardFile) {
         this.boardFile = boardFile;
+    }
+    
+    public String getPanelID()
+    {
+    	return panelId;
+    }
+    
+    public void setPanelId(String id){
+    	String oldValue = this.panelId;
+    	this.panelId = id;
+    	firePropertyChange("panelId", oldValue, panelId);
     }
 
     public boolean isCheckFiducials() {

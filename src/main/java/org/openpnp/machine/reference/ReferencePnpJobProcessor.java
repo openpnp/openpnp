@@ -36,6 +36,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
@@ -322,6 +323,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fireTextStatus("Performing fiducial checks.");
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
+        
+        if (job.isUsingPanel() && job.getPcbPanels().get(0).isCheckFiducials()){
+        	Panel p = job.getPcbPanels().get(0);
+        	
+        	BoardLocation boardLocation = job.getBoardLocations().get(0);
+        	
+        	Location location = locator.locateBoard(boardLocation, p.isCheckFiducials());
+        	boardLocationFiducialOverrides.put(boardLocation, location);
+        	Logger.debug("Panel Fiducial check for {}", boardLocation);
+        }
+        
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             if (!boardLocation.isEnabled()) {
                 continue;

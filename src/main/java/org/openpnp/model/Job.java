@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.openpnp.util.IdentifiableList;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
@@ -34,7 +36,10 @@ import org.simpleframework.xml.core.Commit;
  * A Job specifies a list of one or more BoardLocations.
  */
 @Root(name = "openpnp-job")
-public class Job extends AbstractModelObject implements PropertyChangeListener {
+public class Job extends AbstractModelObject implements PropertyChangeListener {	
+    @ElementList(required = false)
+    protected IdentifiableList<Panel> pcbPanels = new IdentifiableList<>();
+	
     @ElementList
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
 
@@ -72,7 +77,46 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         firePropertyChange("boardLocations", oldValue, boardLocations);
         boardLocation.removePropertyChangeListener(this);
     }
-
+    
+    public void removeAllBoards()
+    {
+    	ArrayList<BoardLocation> oldValue = boardLocations;
+        boardLocations = new ArrayList<>();
+        
+        firePropertyChange("boardLocations", (Object)oldValue, boardLocations);
+        
+    	for (int i=0; i<oldValue.size(); i++)
+    		oldValue.get(i).removePropertyChangeListener(this);
+    }
+    
+    public void addPcbPanel(Panel panel){
+    	pcbPanels.add(panel);
+    }
+    
+    public void clearPcbPanels(){
+    	pcbPanels.clear();
+    }
+    
+    public IdentifiableList<Panel> getPcbPanels(){
+    	return pcbPanels;
+    }
+    
+    // In the first release of the Auto Panelize software, there is assumed to be a 
+    // single panel in use, even though the underlying plumbing supports a list of 
+    // panels. This function is intended to let the rest of OpenPNP know if the 
+    // autopanelize function is being used
+    public boolean isUsingPanel(){
+    	if (pcbPanels == null ){
+    		return false;
+    	}
+    	
+    	if ( (pcbPanels.size() >= 1) && ((pcbPanels.get(0).getRows() > 1) || (pcbPanels.get(0).getColumns() > 1))){
+    		return true;
+    	}
+    	
+    	return false;
+    }
+    
     public File getFile() {
         return file;
     }
