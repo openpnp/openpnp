@@ -50,6 +50,7 @@ public class PipelinePanel extends JPanel {
         this.editor = editor;
 
         propertySheetPanel = new PropertySheetPanel();
+        propertySheetPanel.setDescriptionVisible(true);
 
         setLayout(new BorderLayout(0, 0));
 
@@ -91,7 +92,6 @@ public class PipelinePanel extends JPanel {
         stagesTable.getColumnModel().getColumn(0).setPreferredWidth(50);
         stagesTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         stagesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-
         JScrollPane scrollPane = new JScrollPane(stagesTable);
 
         splitPane.setRightComponent(propertySheetPanel);
