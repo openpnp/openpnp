@@ -1237,6 +1237,7 @@ public class JobPanel extends JPanel {
                 if (job.getBoardLocations().size() > 1) {
                     MessageBoxes.errorBox(frame, "Panelize Error",
                             "Panelization can only occur on a single board.");
+                    return;
                 }
             }
 
