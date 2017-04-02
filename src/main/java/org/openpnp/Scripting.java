@@ -31,6 +31,7 @@ import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.io.Files;
+import bsh.Interpreter;
 
 public class Scripting {
     JMenu menu;
@@ -40,6 +41,8 @@ public class Scripting {
     File eventsDirectory;
     WatchService watcher;
 
+	boolean haveBsh=false;
+
     public Scripting() {
         // Collect all the script filename extensions we know how to handle from the list of
         // available scripting engines.
@@ -48,8 +51,10 @@ public class Scripting {
         for (ScriptEngineFactory factory : factories) {
             for (String ext : factory.getExtensions()) {
                 extensions.add(ext.toLowerCase());
+				if(ext.toLowerCase().equals("bsh")) haveBsh=true;
             }
         }
+		if(!haveBsh) extensions.add("bsh");
         this.extensions = extensions.toArray(new String[] {});
 
         this.scriptsDirectory =
@@ -93,7 +98,7 @@ public class Scripting {
         try {
             watcher = FileSystems.getDefault().newWatchService();
             watchDirectory(getScriptsDirectory());
-            Thread thread = new Thread(() -> {
+       	Thread thread = new Thread(() -> {
                 for (;;) {
                     try {
                         // wait for an event
@@ -102,8 +107,7 @@ public class Scripting {
                         key.reset();
                         // rescan
                         synchronizeMenu(menu, getScriptsDirectory());
-                    }
-                    catch (Exception e) {
+                    } 	catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -239,23 +243,42 @@ public class Scripting {
     }
 
     private void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
-        ScriptEngine engine =
-                manager.getEngineByExtension(Files.getFileExtension(script.getName()));
+		String ext = Files.getFileExtension(script.getName()).toLowerCase();
+		if(!haveBsh&&"bsh".equals(ext)) {	// special handling for beanshell
+			Interpreter i = new Interpreter();  // Construct an interpreter
+			i.set("config", Configuration.get());                    // Set variables
+			i.set("machine", Configuration.get().getMachine());
+			i.set("gui", MainFrame.get());
+			i.set("scripting", this);
 
-        engine.put("config", Configuration.get());
-        engine.put("machine", Configuration.get().getMachine());
-        engine.put("gui", MainFrame.get());
-        engine.put("scripting", this);
+			if (additionalGlobals != null) {
+				for (String name : additionalGlobals.keySet()) {
+					i.set(name, additionalGlobals.get(name));
+				}
+			}
+			String path = script.getAbsolutePath();
+			i.set("bsh.cwd", path.substring(0,path.lastIndexOf(File.separator))); // should it be set to .openpnp/scripts ???	
+			i.source(path);	
 
-        if (additionalGlobals != null) {
-            for (String name : additionalGlobals.keySet()) {
-                engine.put(name, additionalGlobals.get(name));
-            }
-        }
+		} else {
+			ScriptEngine engine =
+					manager.getEngineByExtension(ext);
 
-        try (FileReader reader = new FileReader(script)) {
-            engine.eval(reader);
-        }
+			engine.put("config", Configuration.get());
+			engine.put("machine", Configuration.get().getMachine());
+			engine.put("gui", MainFrame.get());
+			engine.put("scripting", this);
+
+			if (additionalGlobals != null) {
+				for (String name : additionalGlobals.keySet()) {
+					engine.put(name, additionalGlobals.get(name));
+				}
+			}
+
+			try (FileReader reader = new FileReader(script)) {
+				engine.eval(reader);
+			}
+		}
     }
 
     public void on(String event, Map<String, Object> globals) throws Exception {
