@@ -34,4 +34,8 @@ If the fiducial information was correctly specified in the panel fiducial dialog
 
 [link to WikiPanelize5.png]
 
+When you have a panelized PCB manufactured for production, the fabrication house will ask you if you can accept "X out" boards. This is there way of asking if you can help them out in terms of improving yield. As a PCB panel increases in size, the chances of a defect occurring increases. Boards for production go through electrical testing, and thus a PCB manufacturer will usually know that a single board in a larger panel has a problem. For example, too much copper was etched away in a certain area resulting in an open. Or not enough copper was etched away in a certain area resulting in a short. In these cases, the manufacturer will mark the board in the panel with a big "X", which indicates to the operator that board should not be placed. 
 
+Since X outs are rare, most panels will have all boards in the panel populated. But if an xout is encountered, the location can be specified in OpenPNP using the Panel X-out button
+
+[link to WikiPanelize6.png]
