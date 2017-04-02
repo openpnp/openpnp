@@ -30,7 +30,7 @@ There is an icon provided in the Job panel to perform a fiducial check on a boar
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589461/76d76ef4-178f-11e7-8756-42ddbb2a25a1.png)
 
-If the fiducial information was correctly specified in the panel fiducial dialog shown above, then OpenPNP will calculate the location of all the boards in the panel and update them in the Job window. Below, we can see the Job window _after_ the panel fiducial check was run. As expected, the rotation for all panels is the same, and the X and Y locations are updated with some rather cryptic values that takes this rotation (and other parameters) into account. 
+If the fiducial information was correctly specified in the panel fiducial dialog shown above, then OpenPNP will calculate the location of all the boards in the panel and update them in the Job window. Below, we can see the Job window _after_ the panel fiducial check was run. As expected, the rotation for all boards in the panel is the same, and the X and Y locations are updated with some rather cryptic values that takes this rotation (and other parameters) into account. 
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589459/76d47ce4-178f-11e7-9e84-810764bc1c1b.png)
 
