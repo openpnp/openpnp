@@ -39,3 +39,8 @@ When you have a panelized PCB manufactured for production, the fabrication house
 Since X outs are rare, most panels will have all boards in the panel populated. But if an xout is encountered, the location can be specified in OpenPNP using the Panel X-out button
 
 [link to WikiPanelize6.png]
+
+The button will bring up a dialog allowing you to specify the row and column of the x-out board(s). And upon clicking OK, the corresponding board in the Job list will be disabled. Note that each time you click the Panel X-out button, you start fresh. What you selected last time isn't remembered because each board is different. 
+
+[link to WikiPanelize7.png]
+
