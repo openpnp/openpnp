@@ -134,7 +134,7 @@ The `negated-head-mountable-id` specifies which nozzle will have it's coordinate
 
 ## CamTransform
 
-For machines with dual nozzles controlled by a single Z motor in a seesaw configuration where a cam is used to push down either the left or right nozzle.
+For machines with dual nozzles controlled by a single Z motor in a seesaw or rocker configuration where a cam is used to push down either the left or right nozzle.
 
 Example:
 ```
@@ -161,3 +161,4 @@ This image helps illustrate the various settings:
 
 ![screen shot 2017-02-09 at 6 53 07 pm](https://cloud.githubusercontent.com/assets/1182323/22809587/1b783f3e-eef9-11e6-8afe-fd45c434af34.png)
 
+Note that after enabling the transform your nozzles will show a Z value that is the combination the cam values. To reset this back to 0 just set the Z head offset of each nozzle to the negative of the offset in Machine Setup -> Nozzles.
