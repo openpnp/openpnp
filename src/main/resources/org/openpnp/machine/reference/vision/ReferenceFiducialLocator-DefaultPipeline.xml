@@ -1,0 +1,11 @@
+<pipeline>
+    <stages>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageInput" name="template" enabled="true"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="capture" enabled="true" settle-first="true"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.MatchTemplate" name="results" enabled="true" template-stage-name="template" threshold="0.4" corr="0.85"/>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.DrawTemplateMatches" name="drawmatch" enabled="true" template-matches-stage-name="results">
+            <color r="255" g="0" b="255" a="255"/>
+        </cv-stage>
+        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="debug" enabled="false" prefix="fidebug2_" suffix=".png"/>
+    </stages>
+</pipeline>
