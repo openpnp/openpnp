@@ -61,10 +61,13 @@ public class Main {
             .activate();
 
         // Redirect the stdout and stderr to the LogPanel
-        SystemLogger out = new SystemLogger(System.out, Level.INFO);
-        SystemLogger err = new SystemLogger(System.err, Level.ERROR);
-        System.setOut(out);
-        System.setErr(err);
+        // TODO: Temporarily commented out because of stack overflows on shutdown
+        // on Windows. See:
+        // https://github.com/openpnp/openpnp/issues/288
+//        SystemLogger out = new SystemLogger(System.out, Level.INFO);
+//        SystemLogger err = new SystemLogger(System.err, Level.ERROR);
+//        System.setOut(out);
+//        System.setErr(err);
     }
 
     public static void main(String[] args) {

@@ -5,7 +5,9 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Stage;
 
+@Stage(description="On color images it does RGB Max algorithm, removes shadow and looses color information.")
 public class Normalize extends CvStage {
 
     private void filter(Mat src){

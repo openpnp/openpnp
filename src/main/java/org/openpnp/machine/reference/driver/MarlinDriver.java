@@ -265,7 +265,7 @@ public class MarlinDriver extends AbstractSerialPortDriver implements Runnable {
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join();
+                readerThread.join(3000);
             }
         }
         catch (Exception e) {

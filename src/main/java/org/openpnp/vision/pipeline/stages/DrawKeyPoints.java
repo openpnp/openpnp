@@ -10,14 +10,13 @@ import org.opencv.features2d.KeyPoint;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Stage;
 import org.openpnp.vision.pipeline.stages.convert.ColorConverter;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.convert.Convert;
 
-/**
- * Draws KeyPoints contained in a List<KeyPoint> by referencing a previous stage's model data. 
- */
+@Stage(description="Draws KeyPoints contained in a List<KeyPoint> by referencing a previous stage's model data.")
 public class DrawKeyPoints extends CvStage {
     @Element(required = false)
     @Convert(ColorConverter.class)

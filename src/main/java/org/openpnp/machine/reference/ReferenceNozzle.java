@@ -46,13 +46,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Element(required = false)
     protected Length safeZ = new Length(0, LengthUnit.Millimeters);
-    
+
     @Element(required = false)
     protected String vacuumSenseActuatorName;
-    
+
     @Attribute(required = false)
     protected boolean invertVacuumSenseLogic;
-    
+
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -104,7 +104,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void setHeadOffsets(Location headOffsets) {
         this.headOffsets = headOffsets;
     }
-    
+
     public String getVacuumSenseActuatorName() {
         return vacuumSenseActuatorName;
     }
@@ -112,7 +112,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
         this.vacuumSenseActuatorName = vacuumSenseActuatorName;
     }
-    
+
     public boolean isInvertVacuumSenseLogic() {
         return invertVacuumSenseLogic;
     }
@@ -139,7 +139,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getDriver().pick(this);
         getMachine().fireMachineHeadActivity(head);
         Thread.sleep(pickDwellMilliseconds);
-        
+
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
             ReferenceNozzleTip nt = getNozzleTip();
@@ -171,7 +171,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
         Thread.sleep(placeDwellMilliseconds);
-        
+
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
             ReferenceNozzleTip nt = getNozzleTip();
@@ -192,7 +192,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
         }
     }
-    
+
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
@@ -219,7 +219,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.debug("NozzleTip is not yet calibrated, calibrating now.");
             nozzleTip.getCalibration().calibrate(nozzleTip);
         }
-        
+
         // If there is a part on the nozzle we take the incoming speed value
         // to be a percentage of the part's speed instead of a percentage of
         // the max speed.
@@ -237,8 +237,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
         }
         if (nozzleTip != null && nozzleTip.getCalibration().isCalibrated()) {
-            location = location
-                    .subtract(nozzleTip.getCalibration().getCalibratedOffset(location.getRotation()));
+            location = location.subtract(
+                    nozzleTip.getCalibration().getCalibratedOffset(location.getRotation()));
             Logger.debug("{}.moveTo({}, {}) (corrected)", getName(), location, speed);
         }
         getDriver().moveTo(this, location, speed);
@@ -266,35 +266,39 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (this.nozzleTip == nozzleTip) {
             return;
         }
-        if (!changerEnabled) {
-            throw new Exception("Can't load nozzle tip, nozzle tip changer is not enabled.");
-        }
-        unloadNozzleTip();
-        Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
+
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+
+        if (changerEnabled) {
+            unloadNozzleTip();
+            Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
+
+            Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
+                    new Object[] {getName(), nozzleTip.getName()});
+            MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation());
+
+            Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location",
+                    new Object[] {getName(), nozzleTip.getName()});
+            moveTo(nt.getChangerMidLocation(), getHead().getMachine().getSpeed() * 0.25);
+
+            Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2",
+                    new Object[] {getName(), nozzleTip.getName()});
+            moveTo(nt.getChangerMidLocation2(), getHead().getMachine().getSpeed());
+
+            Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
+                    new Object[] {getName(), nozzleTip.getName()});
+            moveTo(nt.getChangerEndLocation(), getHead().getMachine().getSpeed());
+            moveToSafeZ(getHead().getMachine().getSpeed());
+
+            Logger.debug("{}.loadNozzleTip({}): Finished",
+                    new Object[] {getName(), nozzleTip.getName()});
+        }
         
-        Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
-                new Object[] {getName(), nozzleTip.getName()});
-        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation());
-        
-        Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location",
-                new Object[] {getName(), nozzleTip.getName()});
-        moveTo(nt.getChangerMidLocation(), getHead().getMachine().getSpeed() * 0.25);
-        
-        Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2",
-                new Object[] {getName(), nozzleTip.getName()});
-        moveTo(nt.getChangerMidLocation2(), getHead().getMachine().getSpeed());
-        
-        Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
-                new Object[] {getName(), nozzleTip.getName()});
-        moveTo(nt.getChangerEndLocation(), getHead().getMachine().getSpeed());
-        moveToSafeZ(getHead().getMachine().getSpeed());
-        
-        Logger.debug("{}.loadNozzleTip({}): Finished",
-                new Object[] {getName(), nozzleTip.getName()});
-        this.nozzleTip = (ReferenceNozzleTip) nozzleTip;
+        this.nozzleTip = nt;
         this.nozzleTip.getCalibration().reset();
         currentNozzleTipId = nozzleTip.getId();
+        firePropertyChange("nozzleTip", null, getNozzleTip());
+        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
     }
 
     @Override
@@ -302,28 +306,31 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             return;
         }
-        if (!changerEnabled) {
-            throw new Exception("Can't unload nozzle tip, nozzle tip changer is not enabled.");
+        
+        if (changerEnabled) {
+            Logger.debug("{}.unloadNozzleTip(): Start", getName());
+            ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+
+            Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
+            MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation());
+
+            Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
+            moveTo(nt.getChangerMidLocation2(), getHead().getMachine().getSpeed());
+
+            Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
+            moveTo(nt.getChangerMidLocation(), getHead().getMachine().getSpeed());
+
+            Logger.debug("{}.unloadNozzleTip(): moveTo Start Location", getName());
+            moveTo(nt.getChangerStartLocation(), getHead().getMachine().getSpeed() * 0.25);
+            moveToSafeZ(getHead().getMachine().getSpeed());
+
+            Logger.debug("{}.unloadNozzleTip(): Finished", getName());
         }
-        Logger.debug("{}.unloadNozzleTip(): Start", getName());
-        ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
         
-        Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
-        MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation());
-        
-        Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
-        moveTo(nt.getChangerMidLocation2(), getHead().getMachine().getSpeed());
-        
-        Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
-        moveTo(nt.getChangerMidLocation(), getHead().getMachine().getSpeed());
-        
-        Logger.debug("{}.unloadNozzleTip(): moveTo Start Location", getName());
-        moveTo(nt.getChangerStartLocation(), getHead().getMachine().getSpeed() * 0.25);
-        moveToSafeZ(getHead().getMachine().getSpeed());
-        
-        Logger.debug("{}.unloadNozzleTip(): Finished", getName());
         nozzleTip = null;
         currentNozzleTipId = null;
+        firePropertyChange("nozzleTip", null, getNozzleTip());
+        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
     }
 
     @Override
@@ -369,9 +376,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] { deleteAction };
+        return new Action[] {deleteAction};
     }
-    
+
     public Action deleteAction = new AbstractAction("Delete Nozzle") {
         {
             putValue(SMALL_ICON, Icons.nozzleRemove);
@@ -389,7 +396,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
         }
     };
-    
+
     @Override
     public String toString() {
         return getName() + " " + getId();
@@ -412,11 +419,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void moveToSafeZ() throws Exception {
         moveToSafeZ(getHead().getMachine().getSpeed());
     }
-    
+
     ReferenceDriver getDriver() {
         return getMachine().getDriver();
     }
-    
+
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }

@@ -8,14 +8,12 @@ import javax.script.ScriptEngineManager;
 
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
 import com.google.common.io.Files;
 
-/**
- * Run an arbitrary script file using the built in scripting engine. pipeline and stage
- * are exposed as globals for use by the script. 
- */
+@Stage(description="Run an arbitrary script file using the built in scripting engine. pipeline and stage are exposed as globals for use by the script. To return a pipeline result you can't use a return statement, but instead just let the object be the last thing the script evaluates.")
 public class ScriptRun extends CvStage {
     @Attribute
     private File file = new File("");

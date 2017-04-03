@@ -92,7 +92,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
 

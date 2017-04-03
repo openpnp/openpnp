@@ -16,12 +16,14 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
@@ -43,10 +45,22 @@ import org.simpleframework.xml.Root;
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
 
-
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
-        // Find the fids in the board
-        IdentifiableList<Placement> fiducials = getFiducials(boardLocation);
+        return locateBoard(boardLocation, false);
+    }
+
+    public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
+        IdentifiableList<Placement> fiducials;
+
+        if (checkPanel) {
+            Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
+                    .get(boardLocation.getPanelId());
+            fiducials = panel.getFiducials();
+        }
+        else {
+            fiducials = getFiducials(boardLocation);
+        }
+
 
         if (fiducials.size() < 2) {
             throw new Exception(String.format(
@@ -294,9 +308,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         shape = tx.createTransformedShape(shape);
 
         Rectangle2D bounds = shape.getBounds2D();
-        
+
         if (bounds.getWidth() == 0 || bounds.getHeight() == 0) {
-            throw new Exception("Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
+            throw new Exception(
+                    "Invalid footprint found, unable to create template for fiducial match. Width and height of pads must be greater than 0. See https://github.com/openpnp/openpnp/wiki/Fiducials.");
         }
 
         // Make the image 50% bigger than the shape. This gives better

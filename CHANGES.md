@@ -1,6 +1,26 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-01
+
+* Auto Panelization
+
+	Thanks to @BendRocks we now have a robust panelization solution in OpenPnP! Panels allow you
+	to quickly set up multiple copies of a board in an array and allow you to have panel
+	fiducials in addition to board fiducials. There is also a quick X out feature that makes it
+	easy to mark boards in the array that are damaged and should not be placed.
+	
+	This feature is a work in progress. There are some known issues and some limitations
+	but it has matured enough that it's ready for people to start trying it out.
+	
+	Full documentation for this feature is coming soon and will be available at:
+	https://github.com/openpnp/openpnp/wiki/Panelization
+	
+	For more information about this feature, please see the following links:
+	https://github.com/openpnp/openpnp/issues/128
+	https://github.com/openpnp/openpnp/pull/456
+	https://groups.google.com/forum/#!msg/openpnp/_ni0LK8LR8g/5u-0-P-1EwAJ;context-place=forum/openpnp
+
 # 2017-03-31
 
 * Job Placement Status
