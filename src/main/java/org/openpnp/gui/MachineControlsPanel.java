@@ -173,7 +173,7 @@ public class MachineControlsPanel extends JPanel {
 
     public void updateDros() {
         Location l = getCurrentLocation();
-        if (l == null) {
+        if (l == null) { 
             return;
         }
 
