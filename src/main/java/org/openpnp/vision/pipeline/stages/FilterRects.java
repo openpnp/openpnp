@@ -110,8 +110,8 @@ public class FilterRects extends CvStage {
        Logger.info(s);
       }
     }
-    // assign values here to minimize storage allocation costs in time, and use pointers to these values.
-    private static String[] verdict = {"[REJ]","[PASS]"};
+    // assign values here to minimize storage allocation costs in time, and use pointers to these values.\u25A0
+    private static String[] verdict = {" ","+"};
     
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
@@ -134,14 +134,33 @@ public class FilterRects extends CvStage {
 
         List<RotatedRect> results = new ArrayList<RotatedRect>();
                 
+        double w, l, wtol, ltol, rw, rl, extUpperW, extUpperL;
+        int sizeType = 0;
+        String pass, sWtol,sLtol;
+        boolean swapped;
+        
         // we need to sort sizes to do comparisons. The following assures w is always greater than l
-        double w = Math.max(width,length), 
-               l = Math.min(width, length);
-        double wtol = Math.max(Math.abs(widthTolerance), Math.abs(lengthTolerance)), 
-               ltol = Math.min(Math.abs(widthTolerance), Math.abs(lengthTolerance));
-        double rw, rl, extUpperW, extUpperL;
-        int anySize = 0;
-        String pass;
+        if (width >= length) {
+          w = width;
+          l = length;
+          /*
+          if tolerances are positive, they are applied as dimension+tolerance/2-tolerance/2
+          if negative, they are is applied as dimension+0-tolerance
+          */
+          extUpperW = widthTolerance >=0? 1:0; 
+          wtol = Math.abs(widthTolerance);
+          extUpperL = lengthTolerance >=0? 1:0;
+          ltol = Math.abs(lengthTolerance);
+        } 
+        else {
+          // swap width and length, and tolerances
+          w = length;
+          l = width;
+          extUpperW = lengthTolerance >=0? 1:0; 
+          wtol = Math.abs(lengthTolerance);
+          extUpperL = widthTolerance >=0? 1:0;
+          ltol = Math.abs(widthTolerance);
+        }
         
         // check the validity of the input
         if (w == 0.0) {
@@ -155,13 +174,13 @@ public class FilterRects extends CvStage {
             throw new Exception("If only aspectRatio is specified, tolerance must be expressed as a percentage.");
           } 
           else {
-            anySize = 2;
+            sizeType = 2;
           }
         }
         else if (l == 0.0 && aspectRatio != 0.0) {
           // derive length from aspect ratio
           l = w / aspectRatio;
-          anySize = 1;
+          sizeType = 1;
         }
         // At this point we have l and/or w set to non-zero, and any tolerance and aspectRatio, 
         // or have l,w zero, and have aspectRatio non-zero, and toleranceIsPercent
@@ -182,26 +201,12 @@ public class FilterRects extends CvStage {
         }
 
         // range will be either dimension +- tolerance/2, or dimension+0-tolerance
-        if (widthTolerance >= 0.0) {
+        if (extUpperW == 1) {
           // tolerance/2 extends above width
-          extUpperW = 1;
           wtol = wtol / 2.0;
         }
-        else {
-          // width is max, tolerance ranges lower
-          extUpperW = 0;
-        }
-        if (lengthTolerance >= 0.0) {
-          extUpperL = 1;
+        if (extUpperL == 1) {
           ltol = ltol / 2.0;
-       }
-        else {
-          extUpperL = 0;
-        }
-        // if only one tolerance is defined, make the other equal to that
-        if (lengthTolerance == 0) {
-          ltol = wtol;
-          extUpperL = extUpperW;
         }
         
         // iterate over input rects
@@ -210,9 +215,10 @@ public class FilterRects extends CvStage {
           rw = Math.max(rect.size.width,rect.size.height);
           rl = Math.min(rect.size.width,rect.size.height);
           
-          if (anySize == 2) {
+          if (sizeType == 2) {
             // Any size:
             // Select rects based only on the aspect ratio of each input rectangle
+            // Parameter l is derived from rw
             w = rw;
             l = rw / aspectRatio;
           } 
@@ -231,24 +237,30 @@ public class FilterRects extends CvStage {
             pass = verdict[0];
           }
           if (enableLogging) {
-            Logger.info(pass + " rect: " + rect);
-            Logger.info("stage: size={}x{} tolerance="+(extUpperW>0?"+-":"+0-") + "{},"+
-              (extUpperL>0
-              ?"+-":"+0-")+ "{} aspect={}", width,length,wtol,ltol,aspectRatio);
-            Logger.info("widths: {} <= {} <= {}, mean = {}",
+            Logger.info("{} rect: xy={},{}, size={}x{}px, angle={}°, area={}", pass, (int)rect.center.x, (int)rect.center.y, (int)rw, (int)rl, (int)rect.angle,(int)(rw * rl));
+            if (toleranceIsPercentage) {
+              sWtol = ""+wtol*100+"%";
+              sLtol = ""+ltol*100+"%";
+            } else {
+              sWtol = ""+(int)(w * wtol)+"px";
+              sLtol = ""+(int)(l * ltol)+"px";
+            }
+            Logger.info("   stage: tolerance={},{}, aspectRatio={}, {}",               (extUpperW>0?"+-":"+0-")+sWtol,(extUpperL >0? "+-":"+0-")+sLtol,
+              aspectRatio, (sizeType==2? "any size":""));
+            Logger.info("   widths: {} <= {} <= {}, mean = {}",
               String.format("%.3f",wlow),  String.format("%.3f",rw), 
               String.format("%.3f",whigh), String.format("%.3f",(wlow + whigh)/2.0));
-            Logger.info("lengths: {} <= {} <= {}, mean = {}", 
+            Logger.info("   lengths: {} <= {} <= {}, mean = {}", 
               String.format("%.3f",llow),  String.format("%.3f",rl), 
               String.format("%.3f",lhigh), String.format("%.3f",(llow + lhigh)/2.0));
-            if (anySize > 0) {
-              Logger.info("aspectRatios: {} <= {} <= {}, mean = {}",
-                String.format("%.3f",aspectRatio * (1 - wtol)/(1+ltol)),
-                String.format("%.3f",rw / rl),
-                String.format("%.3f",aspectRatio * (1 + wtol)/(1-ltol)), 
-                String.format("%.3f",aspectRatio * ((1 - wtol)/(1+ltol) + (1 + wtol)/(1-ltol))/2.0));
+            if (sizeType > 0) {
+              Logger.info("   rect: aspectRatio={}",
+                String.format("%.3f",rw / rl));
             }
           }
+        }
+        if (enableLogging) {
+          Logger.info("Total detected rects: {}",results.size());
         }
         // deside what type to return
         if(results.size()==0) {
