@@ -73,10 +73,20 @@ public class MachineControlsPanel extends JPanel {
 
     private JogControlsPanel jogControlsPanel;
 
-    private Location markLocation = null;
+    private enum DroDisplayEnum {NOZZLE, SAVED, DEFAULTCAM;
+    		private static DroDisplayEnum[] vals = values();
+    		public DroDisplayEnum next(){
+    			return vals[(this.ordinal()+1) % values().length];
+    		}
+    }
+    
+    private DroDisplayEnum droDisplayState = DroDisplayEnum.NOZZLE;
+    private Location markLocation;
 
     private Color droNormalColor = new Color(0xBDFFBE);
     private Color droSavedColor = new Color(0x90cce0);
+    private Color droHeadColor = new Color(0xe1f24c);
+    
 
     /**
      * Create the panel.
@@ -140,7 +150,22 @@ public class MachineControlsPanel extends JPanel {
             return null;
         }
 
-        Location l = selectedNozzle.getLocation();
+        Location l = null;
+        
+        switch (droDisplayState){
+        case NOZZLE:
+        case SAVED:
+        	l = selectedNozzle.getLocation();
+        	break;
+        case DEFAULTCAM:
+        	try {
+				l = selectedNozzle.getHead().getDefaultCamera().getLocation();
+			} catch (Exception e) {
+				return null;
+			}
+        	break;
+        }
+        
         l = l.convertToUnits(configuration.getSystemUnits());
 
         return l;
@@ -148,12 +173,21 @@ public class MachineControlsPanel extends JPanel {
 
     public void updateDros() {
         Location l = getCurrentLocation();
-        if (l == null) {
+        if (l == null) { 
             return;
         }
 
-        if (markLocation != null) {
-            l = l.subtract(markLocation);
+        switch (droDisplayState){
+        case NOZZLE:
+        	MainFrame.get().getDroLabel().setToolTipText("Selected Nozzle");
+        	break;
+        case SAVED:
+        	l = l.subtract(markLocation);
+        	MainFrame.get().getDroLabel().setToolTipText("Relative");
+        	break;
+        case DEFAULTCAM:
+        	MainFrame.get().getDroLabel().setToolTipText("Default Camera");
+        	break;
         }
 
         double x, y, z, c;
@@ -325,14 +359,25 @@ public class MachineControlsPanel extends JPanel {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     SwingUtilities.invokeLater(() -> {
-                        if (markLocation == null) {
-                            markLocation = getCurrentLocation();
-                            MainFrame.get().getDroLabel().setBackground(droSavedColor);
-                        }
-                        else {
-                            markLocation = null;
-                            MainFrame.get().getDroLabel().setBackground(droNormalColor);
-                        }
+                    	
+                    	droDisplayState = droDisplayState.next();
+                    	
+                    	switch (droDisplayState){
+                    	case NOZZLE:
+                    		MainFrame.get().getDroLabel().setBackground(droNormalColor);
+                    		break;
+                    		
+                    	case SAVED:
+                    		markLocation = getCurrentLocation();
+                    		MainFrame.get().getDroLabel().setBackground(droSavedColor);
+                    		break;
+                    		
+                    	case DEFAULTCAM:
+                    		MainFrame.get().getDroLabel().setBackground(droHeadColor);
+                    		break;
+                    		
+                    	}
+                    	
                         updateDros();
                     });
                 }
