@@ -45,7 +45,6 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
