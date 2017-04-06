@@ -1,6 +1,18 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-06
+
+* Tool Selection for Cameras
+
+	Thanks to @BendRocks an old feature has been brought back to life. You can now select
+	head mounted cameras from the Machine Controls tool dropdown box. This causes the DROs
+	to show the coordinates of the camera and allows you to jog from the camera's perspective
+	instead of just the nozzle's. This also makes it possible (although not yet implemented)
+	to do the same kind of thing for paste dispensers when that feature is revived.
+	
+	Work for this feature was performed in: https://github.com/openpnp/openpnp/pull/507
+	
 # 2017-04-01
 
 * Auto Panelization
