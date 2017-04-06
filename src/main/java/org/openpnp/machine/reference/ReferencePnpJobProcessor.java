@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -121,6 +122,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
     
     long startTime;
+    int totalPartsPlaced;
 
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
@@ -260,6 +262,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     protected void doPreFlight() throws Exception {
         startTime = System.currentTimeMillis();
+        totalPartsPlaced = 0;
         
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
@@ -576,6 +579,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             fireTextStatus("Picking %s from %s for %s.", part.getId(), feeder.getName(),
                     placement.getId());
+            
+            ++totalPartsPlaced;
 
             // Pick
             nozzle.pick(part);
@@ -728,7 +733,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
         }
         
-        Logger.info("Job finished in {}ms", System.currentTimeMillis() - startTime);
+        double dtSec = (System.currentTimeMillis() - startTime)/1000.0;
+        DecimalFormat df = new DecimalFormat("###,###.0");
+        
+        Logger.info("Job finished {} parts in {} sec. This is {} pph", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
     }
 
     protected void doReset() throws Exception {
