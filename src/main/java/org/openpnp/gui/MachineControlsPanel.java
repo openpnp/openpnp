@@ -45,6 +45,7 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -361,11 +362,9 @@ public class MachineControlsPanel extends JPanel {
                     comboBoxHeadMountable.addItem(new NozzleItem(nozzle));
                 }
                 
-                try {
-					comboBoxHeadMountable.addItem(new CameraItem(head.getDefaultCamera()));
-				} catch (Exception e1) {
-					
-				}
+                for (Camera camera : head.getCameras()){
+                	comboBoxHeadMountable.addItem(new CameraItem(camera));
+                }
             }
                         
             setSelectedTool( ((HeadMountableItem)comboBoxHeadMountable.getItemAt(0)).getItem() );
@@ -378,7 +377,6 @@ public class MachineControlsPanel extends JPanel {
 
             for (Head head : machine.getHeads()) {
             	
-            	// Jason, what is going on down here????
                 BeanUtils.addPropertyChangeListener(head, "nozzles", (e) -> {
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Nozzle nozzle = (Nozzle) e.getNewValue();
@@ -393,6 +391,21 @@ public class MachineControlsPanel extends JPanel {
                         }
                     }
                 });
+                
+                BeanUtils.addPropertyChangeListener(head, "cameras", (e) -> {
+                    if (e.getOldValue() == null && e.getNewValue() != null) {
+                    	Camera camera = (Camera) e.getNewValue();
+                        comboBoxHeadMountable.addItem(new CameraItem(camera));
+                    }
+                    else if (e.getOldValue() != null && e.getNewValue() == null) {
+                        for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
+	                        	HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
+	                            if (item.getItem() == e.getOldValue()) {
+	                                comboBoxHeadMountable.removeItemAt(i);
+	                            }
+                        	}
+                    }
+                });                
             }
 
         }

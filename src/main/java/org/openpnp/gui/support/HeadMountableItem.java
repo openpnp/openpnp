@@ -35,7 +35,7 @@ public class HeadMountableItem {
 
     @Override
     public String toString() {
-        return String.format("HeadMountable: %s - %s %s", hm.getName(),
+        return String.format("HeadMountable: %s - %s", hm.getName(),
         		hm.getHead() != null ? String.format("(Head: %s)", hm.getHead().getName()) : "");
     }
 }
