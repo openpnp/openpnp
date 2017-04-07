@@ -1,6 +1,8 @@
 # Read This First
 To submit an issue for OpenPnP you must use this template or it will be deleted. Please fill out either the Problem Report or Feature Request section below and delete the other section.
 
+-----------------------------------------------------------------------
+
 # Problem Report
 ## Describe the Issue
 Please describe the issue in as much detail as possible. Without a good description it's impossible for developers to understand the problem.
@@ -22,6 +24,8 @@ What actually happened? Be descriptive.
 The more information you can provide about the issue the more likely it is that a developer will be able to respond.
 
 Whenever possible, please use the Menu -> Help -> Submit Diagnostics feature and include the URL here. Submit Diagnostics makes it easy to include log files, screen capture, debug images, configuration files, etc.
+
+-----------------------------------------------------------------------
 
 # Feature Request
 ## Describe the Feature
