@@ -139,7 +139,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
         catch (Exception e) {
             Logger.warn(e);
         }
-        return image;
+        return last=image;
     }
     
     protected abstract BufferedImage internalCapture();
