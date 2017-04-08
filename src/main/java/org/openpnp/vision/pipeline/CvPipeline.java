@@ -12,6 +12,7 @@ import org.opencv.core.Mat;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.util.OpenCvUtils;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -159,7 +160,9 @@ public class CvPipeline {
      * @return
      */
     public Mat getWorkingImage() {
-        return workingImage;
+        Mat img = workingImage;
+        if(img==null&&camera!=null) img = OpenCvUtils.toMat(camera.lastCaptured());
+        return img;
     }
 
     public void setCamera(Camera camera) {
