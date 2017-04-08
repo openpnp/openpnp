@@ -50,6 +50,8 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
     
     private boolean headSet = false;
 
+    protected BufferedImage last = null;
+    
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
         this.name = getClass().getSimpleName();
@@ -79,6 +81,13 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         firePropertyChange("name", null, name);
     }
 
+
+    @Override
+    public BufferedImage lastCaptured() {
+        if(last==null) return capture();
+        return last;
+    }
+    
     @Override
     public Head getHead() {
         return head;
