@@ -138,6 +138,13 @@ public class VisionUtilsTest {
             return null;
         }
 
+       @Override
+        public BufferedImage lastCaptured() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+       
         @Override
         public void startContinuousCapture(CameraListener listener, int maximumFps) {
             // TODO Auto-generated method stub
