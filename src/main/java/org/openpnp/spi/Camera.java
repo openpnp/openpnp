@@ -59,6 +59,14 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return
      */
     public BufferedImage capture();
+               
+    /**
+     * Return the last captured image from the camera and returns it in it's native format. Fires
+     * the Camera.BeforeCapture and Camera.AfterCapture scripting events before and after.
+     * @return
+     */
+    public BufferedImage lastCaptured(); 
+               
 
     /**
      * Same as capture(), but waits the settle time before capturing.
