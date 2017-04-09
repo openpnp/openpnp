@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-09
+
+* Filter Rotated Rects CvStage
+
+	A new pipeline stage called FilterRects has been added by @dzach. It allows you to filter
+	rotated rects based on given width, length and aspect ratio limits. This can be very helpful
+	for making sure a recognized part is within acceptable size limits.
+
 # 2017-04-06
 
 * Tool Selection for Cameras
