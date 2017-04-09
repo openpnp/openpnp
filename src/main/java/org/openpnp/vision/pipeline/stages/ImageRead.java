@@ -6,12 +6,16 @@ import org.opencv.highgui.Highgui;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
+import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.Property;
 
-/**
- * Replace the working image with the image loaded from a given path.
- */
+@Stage(
+  category   ="Image Processing", 
+  description="Replace the working image with the image loaded from a given path.")
+  
 public class ImageRead extends CvStage {
     @Attribute
+    @Property(description="Absolute path of the image file to read.")
     private File file = new File("");
 
     public File getFile() {
