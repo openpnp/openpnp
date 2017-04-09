@@ -109,26 +109,25 @@ public class FilterRects extends CvStage {
        Logger.info(s);
       }
     }
-    // assign values here to minimize storage allocation costs in time, and use pointers to these values.\u25A0
     private static String[] verdict = {" ","+"};
     
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (rotatedRectsStageName == null) {
-            return null;
+          return null;
         }
         
         Result result = pipeline.getResult(rotatedRectsStageName);
         if (result == null || result.model == null) {
-            return null;
+          return null;
         }
         
         List<RotatedRect> rects; 
         if (result.model instanceof RotatedRect) {
-            rects = Collections.singletonList((RotatedRect)result.model);
+          rects = Collections.singletonList((RotatedRect)result.model);
         }
         else {
-            rects = (List<RotatedRect>)result.model;
+          rects = (List<RotatedRect>)result.model;
         }
 
         List<RotatedRect> results = new ArrayList<RotatedRect>();
@@ -147,23 +146,19 @@ public class FilterRects extends CvStage {
         armin = Math.min(aspectRatioMax, aspectRatioMin);
         
         // check input parameters
-        if (armin == 0 && (wmax == 0 || lmax == 0))
-        {
+        if (armin == 0 && (wmax == 0 || lmax == 0)) {
           // cannot accept this as there will be divisions by 0 
           throw new Exception("If width or length limits are 0, then both aspectRatioMax and aspepctRatioMin must be non zero.");            
         }
-        if (armax != 0 && (wmax == 0 && lmax == 0))
-        {
+        if (armax != 0 && (wmax == 0 && lmax == 0)) {
           sizeType = 2;
         }
-        else if (lmax == 0) 
-        {
+        else if (lmax == 0) {
           // derive length from aspect ratio
           lmax = wmax / armin; lmin = wmin / armax;
           sizeType = 1;
         } 
-        else if (wmax == 0)
-        {
+        else if (wmax == 0) {
           wmax = lmax * armax; wmin = lmin * armin;
           sizeType = 1;
         }
@@ -171,10 +166,12 @@ public class FilterRects extends CvStage {
           sizeType = 3;
         }
         if (enableLogging) {
-          if (sizeType == 1)
+          if (sizeType == 1) {
             Logger.info("Deriving "+(wmax == 0? "width":"length")+ " limits based on aspect ratio limits.");
-          else if (sizeType == 2)
+          }
+          else if (sizeType == 2) {
             Logger.info("Pass any size rect within aspect ratio limits.");
+          }
         }
         
         // iterate over input rects
@@ -184,8 +181,9 @@ public class FilterRects extends CvStage {
           rl = Math.min(rect.size.width,rect.size.height);
           // ignore aspect ratio = NaN or infinity
           rar= rw / rl;
-          if (Double.isNaN(rar) || Double.isInfinite(rar))
+          if (Double.isNaN(rar) || Double.isInfinite(rar)) {
             continue;
+          }
           
           if (sizeType == 2) {
             // Any size:
@@ -197,19 +195,27 @@ public class FilterRects extends CvStage {
           }
 
           // check criteria
-          if (rw >= wmin && rw <= wmax) wok = true;
-          else                          wok = false;
-            
-          if (rl >= lmin && rl <= lmax) lok = true;
-          else                          lok = false;
-            
-          if (rar >= armin && rar <= armax) arok = true;
-          else                              arok = false;
-
+          if (rw >= wmin && rw <= wmax) {
+            wok = true;
+          }
+          else {
+            wok = false;
+          }
+          if (rl >= lmin && rl <= lmax) {
+            lok = true;
+          }
+          else {
+           lok = false;
+          }
+          if (rar >= armin && rar <= armax) {
+            arok = true;
+          }
+          else {
+            arok = false;
+          }
           // if sizeTYpe == 3 we don't care about aspect ratio
           // because specified width and length limits take precedence over aspect ratio limits
-          if (wok && lok && (sizeType == 3 || arok))
-          {
+          if (wok && lok && (sizeType == 3 || arok)) {
             // rect passes criteria
             results.add(rect);
             pass = verdict[1];
