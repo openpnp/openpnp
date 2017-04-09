@@ -8,7 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvStage.Result;
@@ -159,6 +163,11 @@ public class CvPipeline {
      * @return
      */
     public Mat getWorkingImage() {
+        if (workingImage == null || (workingImage.cols() == 0 && workingImage.rows() == 0)) {
+            workingImage = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 0));
+            Core.line(workingImage, new Point(0, 0), new Point(640, 480), new Scalar(0, 0, 255));
+            Core.line(workingImage, new Point(640, 0), new Point(0, 480), new Scalar(0, 0, 255));
+        }
         return workingImage;
     }
 
