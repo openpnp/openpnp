@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org> and Cri.S <phone.cri@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -157,8 +157,6 @@ public class NamedCSVImporter implements BoardImporter {
     }
 
     private static boolean checkCSV(String str[]) {
-        for (int i = 0; i < str.length; i++)
-            Logger.trace("checkCSV: " + i + " -> " + str[i]);
         
         //note that layer (TB) and Height (HT) are optional and thus checked against -2
         if ((Ref = checkCSV(Refs, str)) != -1 && (Val = checkCSV(Vals, str)) != -1
@@ -207,49 +205,37 @@ public class NamedCSVImporter implements BoardImporter {
             str = str.substring(1);
         if (str == null)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("X") == -1 && str.indexOf("x") == -1)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("Y") == -1 && str.indexOf("y") == -1)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("Rot") == -1 && str.indexOf("rot") == -1)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("val") == -1 && str.indexOf("Val") == -1 && str.indexOf("Comment") == -1
                 && str.indexOf("comment") == -1)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("ootprint") == -1 && str.indexOf("ackage") == -1
                 && str.indexOf("attern") == -1)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         if (str.indexOf("Designator") == -1 && str.indexOf("designator") == -1
                 && str.indexOf("Part") == -1 && str.indexOf("part") == -1
                 && str.indexOf("Component") == -1 && str.indexOf("component") == -1
                 && str.indexOf("RefDes") == -1 && str.indexOf("Ref") == -1)
             return false;
-        Logger.trace("checkLine: " + e++ + " ok");
         // seems to have data
         String as[], at[][];
         CSVParser csvParser = new CSVParser(new StringReader(str));
         as = csvParser.getLine();
         comma = ',';
-        Logger.trace("checkLine: comma " + as.length);
         if (as.length >= 6 && checkCSV(as))
             return true;
-        Logger.trace("checkLine: " + e++ + " ok");
         at = csvParser.parse(str, comma = '\t');
-        Logger.trace("checkLine: tab " + as.length);
         if (at.length > 0 && at[0].length >= 6 && checkCSV(at[0]))
             return true;
-        Logger.trace("checkLine: " + e++ + " ok");
         /*
-         * at=csvParser.parse(str,comma=' '); Logger.trace("checkLine: space "+as.length);
-         * if(at.length>0&&at[0].length>=6&&checkCSV(at[0])) return true; Logger.trace(
-         * "checkLine: done "+ e++ +" ok");
-         */
+         * at=csvParser.parse(str,comma=' '); 
+         * if(at.length>0&&at[0].length>=6&&checkCSV(at[0])) return true; 
+		 */
         return false;
     }
 
@@ -288,11 +274,6 @@ public class NamedCSVImporter implements BoardImporter {
             if (as.length <= Len)
                 continue;
             else {
-
-                Logger.trace("CSV: " + as.length);
-                for (int i = 0; i < as.length; i++)
-                    Logger.trace("CSV(" + i + ") |" + as[i] + "|");
-                Logger.trace("");
                 double placementX = Double
                         .parseDouble(as[X].replace(",", ".").replace(" ", "").replace("mm", "").replace("mil",""));
                 //convert mils to mmm
@@ -330,7 +311,6 @@ public class NamedCSVImporter implements BoardImporter {
                 while (placementRotation < -180.0)
                     placementRotation += 360.0;
 
-                Logger.trace("ok");
 
                 Placement placement = new Placement(as[Ref]);
                 placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
@@ -376,9 +356,7 @@ public class NamedCSVImporter implements BoardImporter {
                 c = 0;
                 placements.add(placement);
             }
-        Logger.trace("ok");
         reader.close();
-        Logger.trace("ok");
         return placements;
     }
 
