@@ -1,7 +1,5 @@
 # Nozzle Setup
 
-TODO: Page needs updating due to recent UI overhaul.
-
 ## Concepts
 In OpenPnP we use a couple names for things that might not be familiar. These will become important down the road, so it's good to have an understanding of them now.
 
@@ -46,7 +44,7 @@ Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other
 ## Selecting a Nozzle
 If you have multiple nozzles on your machine, you can select the one you want to work with in OpenPnP by selecting it from the tools dropdown in the Machine Controls panel. The nozzle that is selected here is the one that will be used whenever you tell the machine to move a nozzle.
 
-![screen shot 2016-06-18 at 11 26 13 am](https://cloud.githubusercontent.com/assets/1182323/16172925/a0c8edf8-3547-11e6-95cf-13d5cfba0c11.png)
+![screen shot 2017-04-14 at 6 12 12 pm 2](https://cloud.githubusercontent.com/assets/1182323/25058368/2b3754c4-213e-11e7-9e48-3c984b33d678.png)
 
 ## Advanced
 On more advanced setups, especially those with multiple nozzles and nozzle tips, you may need to setup package compatibility and the nozzle tip changer.
@@ -67,7 +65,7 @@ TODO: This is an advanced topic and further documentation is needed.
 ## Nozzle Jogging
 Now that your nozzle is configured, let's move it around and make sure it's working.
 
-![screen shot 2016-06-18 at 11 33 19 am](https://cloud.githubusercontent.com/assets/1182323/16172974/8bf8e774-3548-11e6-8f5f-9608bc603bb0.png)
+![screen shot 2017-04-14 at 6 12 12 pm 3](https://cloud.githubusercontent.com/assets/1182323/25058367/2b3680f8-213e-11e7-9616-fc062c82d442.png)
 
 1. Make sure you've selected the nozzle as discussed in Selecting a Nozzle above.
 2. Move the camera to an identifiable spot on the machine bed.
