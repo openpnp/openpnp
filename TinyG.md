@@ -1,4 +1,4 @@
-# GcodeDriver (Recommended)
+# GcodeDriver
 
 OpenPnP now includes a generic Gcode driver that is far more flexible than the original TinyG specific driver. We recommend switching to the GcodeDriver. You can learn more about configuring the GcodeDriver at [[GcodeDriver]]. See below for an example configuration that will help.
 
