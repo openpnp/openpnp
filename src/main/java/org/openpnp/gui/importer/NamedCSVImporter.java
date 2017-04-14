@@ -253,18 +253,17 @@ public class NamedCSVImporter implements BoardImporter {
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
-        //TODO why only check first 50 lines? If it is a time out would time based time out be better? 
-        for (int i = 0; i++ <50 && (line = reader.readLine()) != null;) {
+        while((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.length() == 0)
-                continue;
+            	continue;
+            
             if (checkLine(line))
                 break;
         }
-
-
+                   
         if (Len == 0) {
-            reader.close();
+            reader.close();            
             throw new Exception("Unable to parse CSV File Names");
         }
 
