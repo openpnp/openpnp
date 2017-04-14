@@ -1,6 +1,5 @@
 org.openpnp
 org.openpnp.events
-org.openpnp.experiments
 org.openpnp.gui
 org.openpnp.gui.components
 org.openpnp.gui.components.nav
