@@ -793,9 +793,9 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                Class ApplicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
-                Class Callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
-                Method launchApplication = ApplicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, Callback);
+                Class applicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+                Class callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
+                Method launchApplication = applicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, callback);
                 launchApplication.invoke(null, "125", null, false, null);
             }
             catch (Exception e) {

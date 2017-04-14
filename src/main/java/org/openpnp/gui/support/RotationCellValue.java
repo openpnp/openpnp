@@ -26,7 +26,7 @@ import org.openpnp.model.Configuration;
 public class RotationCellValue implements Comparable<RotationCellValue> {
     private static Configuration configuration;
 
-    private double Rotation;
+    private double rotation;
 
     /**
      * When set, the toString() method will show the units contained within the Length instead of
@@ -54,11 +54,11 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
     }
 
     public double getRotation() {
-        return Rotation;
+        return rotation;
     }
 
     public void setRotation(double Rotation) {
-        this.Rotation = Rotation;
+        this.rotation = Rotation;
     }
 
     public boolean isDisplayNativeUnits() {
@@ -71,7 +71,7 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
 
     @Override
     public String toString() {
-        double r = Rotation;
+        double r = rotation;
         return String.format(Locale.US, configuration.getLengthDisplayFormat(), r);
 
     }
@@ -79,10 +79,12 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
     @Override
     public int compareTo(RotationCellValue other)
     {
-        if(getRotation()==other.getRotation())
+        if(getRotation()==other.getRotation()) {
             return 0;
-        if(getRotation() < other.getRotation())
+        }
+        if(getRotation() < other.getRotation()) {
             return -1;
+        }
         return 1;
     }
 }

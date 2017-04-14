@@ -133,8 +133,9 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     }
 
     public synchronized boolean next() throws Exception {
-        if(fsm.getState() == State.Uninitialized)
+        if(fsm.getState() == State.Uninitialized) {
             return false;
+        }
 
         try {
             fsm.send(Message.Next);

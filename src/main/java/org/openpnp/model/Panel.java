@@ -132,8 +132,9 @@ public class Panel extends AbstractModelObject implements Identifiable {
             for (int i = 0; i < getColumns(); i++) {
                 // We already have board 0,0 in the list as this is the root
                 // PCB. No need to create it.
-                if (i == 0 && j == 0)
+                if (i == 0 && j == 0) {
                     continue;
+                }
 
                 // deep copy the existing rootpcb
                 BoardLocation newPCB = new BoardLocation(rootPCB);

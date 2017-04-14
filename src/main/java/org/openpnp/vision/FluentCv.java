@@ -739,8 +739,10 @@ public class FluentCv {
 
         double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
 
-        if (sse <= 1e-10) // for small values return zero
+        if (sse <= 1e-10) {
+            // for small values return zero
             return 0;
+        }
         else {
             double mse = sse / (double) (I1.channels() * I1.total());
             double psnr = 10.0 * Math.log10((255 * 255) / mse);

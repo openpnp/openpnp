@@ -14,8 +14,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	    <maven.build.timestamp.format>yyyy-MM-dd_HH-mm-ss</maven.build.timestamp.format>
-	    <openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
+		<maven.build.timestamp.format>yyyy-MM-dd_HH-mm-ss</maven.build.timestamp.format>
+		<openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -257,6 +257,58 @@
 				<configuration>
 					<encoding>UTF-8</encoding>
 				</configuration>
+			</plugin>
+
+			<!-- Checks source code for common format violations and stops the build if any are found. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>2.17</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>7.6.1</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>validate</id>
+						<phase>validate</phase>
+						<configuration>
+							<checkstyleRules>
+								<module name="Checker">
+									<module name="TreeWalker">
+										<module name="NeedBraces">
+										</module>
+										<module name="OneStatementPerLine">
+										</module>
+										<module name="MemberName">
+											<property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+										</module>
+										<module name="TypeName">
+											<property name="format" value="^[A-Z][a-zA-Z0-9_]*$"/>
+										</module>
+										<module name="MethodName">
+										</module>
+										<module name="LocalVariableName">
+											<property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+										</module>
+									</module>
+								</module>
+							</checkstyleRules>
+							<encoding>UTF-8</encoding>
+							<consoleOutput>true</consoleOutput>
+							<failsOnError>true</failsOnError>
+							<linkXRef>false</linkXRef>
+							<!-- Exclude Eagle importer code, which is auto generated -->
+							<excludes>org/openpnp/model/eagle/xml/*</excludes>
+						</configuration>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

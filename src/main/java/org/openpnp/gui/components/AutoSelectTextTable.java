@@ -154,8 +154,9 @@ public class AutoSelectTextTable extends JTable {
     private void selectAll(EventObject e) {
         final Component editor = getEditorComponent();
 
-        if (editor == null || !(editor instanceof JTextComponent))
+        if (editor == null || !(editor instanceof JTextComponent)) {
             return;
+        }
 
         if (e == null) {
             ((JTextComponent) editor).selectAll();

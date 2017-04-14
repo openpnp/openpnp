@@ -840,7 +840,7 @@ public class Rs274xParser {
      */
     private int peek() throws Exception {
         skipCrLf();
-        return _peek();
+        return peekInternal();
     }
 
     /**
@@ -850,7 +850,7 @@ public class Rs274xParser {
      */
     private void skipCrLf() throws Exception {
         while (true) {
-            int ch = _peek();
+            int ch = peekInternal();
             if (ch == '\n') {
                 lineNumber++;
                 reader.read();
@@ -870,7 +870,7 @@ public class Rs274xParser {
      * @return
      * @throws Exception
      */
-    private int _peek() throws Exception {
+    private int peekInternal() throws Exception {
         reader.mark(1);
         int ch = reader.read();
         if (ch == -1) {

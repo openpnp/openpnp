@@ -421,23 +421,30 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         }
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            ChangeKey other = (ChangeKey) obj;
-            if (!getOuterType().equals(other.getOuterType()))
-                return false;
-            if (command != other.command)
-                return false;
-            if (hm == null) {
-                if (other.hm != null)
-                    return false;
             }
-            else if (!hm.equals(other.hm))
+            if (obj == null) {
                 return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            ChangeKey other = (ChangeKey) obj;
+            if (!getOuterType().equals(other.getOuterType())) {
+                return false;
+            }
+            if (command != other.command) {
+                return false;
+            }
+            if (hm == null) {
+                if (other.hm != null) {
+                    return false;
+                }
+            }
+            else if (!hm.equals(other.hm)) {
+                return false;
+            }
             return true;
         }
         

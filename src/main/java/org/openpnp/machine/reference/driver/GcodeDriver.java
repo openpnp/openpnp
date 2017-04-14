@@ -211,7 +211,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         // Consume any startup messages
         try {
-            while (!sendCommand(null, 250).isEmpty());
+            while (!sendCommand(null, 250).isEmpty()) {
+                
+            }
         }
         catch (Exception e) {
 
