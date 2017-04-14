@@ -25,9 +25,7 @@ User Interface
 --------------
 This image shows the major components of the user interface. We'll reference the names of these components throughout the rest of the guide, so take a moment to get familiar with them.
 
-TODO: Section needs updating due to recent UI overhaul.
-
-![screen shot 2016-06-18 at 10 34 20 am](https://cloud.githubusercontent.com/assets/1182323/16172608/8dad6e20-3541-11e6-84ab-5a87c3bfdc91.png)
+![screen shot 2017-04-14 at 6 15 55 pm](https://cloud.githubusercontent.com/assets/1182323/25058445/1c1ce4f8-213f-11e7-86f7-f30aea7d7425.png)
 
 Moving Around
 -------------
