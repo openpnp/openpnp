@@ -2,6 +2,7 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -25,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -38,6 +40,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
@@ -52,6 +55,8 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
@@ -71,6 +76,10 @@ public class JobPlacementsPanel extends JPanel {
     private static Color statusColorWarning = new Color(252, 255, 157);
     private static Color statusColorReady = new Color(157, 255, 168);
     private static Color statusColorError = new Color(255, 157, 157);
+    private static Color cellColorSelected = UIManager.getColor("Table.selectionBackground");
+    private static Color jobColorProcessing = new Color(157, 222, 255);
+    private static Color jobColorPending = new Color(252, 255, 157);
+    private static Color jobColorComplete = new Color(157, 255, 168);
 
     public JobPlacementsPanel(JobPanel jobPanel) {
         Configuration configuration = Configuration.get();
@@ -85,9 +94,9 @@ public class JobPlacementsPanel extends JPanel {
         multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction);
         multiSelectionActionGroup.setEnabled(false);
 
-        captureAndPositionActionGroup =
-                new ActionGroup(captureCameraPlacementLocation, captureToolPlacementLocation,
-                        moveCameraToPlacementLocation, moveToolToPlacementLocation);
+        captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
+                captureToolPlacementLocation, moveCameraToPlacementLocation,
+                moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
@@ -118,6 +127,10 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
         btnPositionCameraPositionLocation.setHideActionText(true);
         toolBarPlacements.add(btnPositionCameraPositionLocation);
+        JButton btnPositionCameraPositionNextLocation =
+                new JButton(moveCameraToPlacementLocationNext);
+        btnPositionCameraPositionNextLocation.setHideActionText(true);
+        toolBarPlacements.add(btnPositionCameraPositionNextLocation);
 
         JButton btnPositionToolPositionLocation = new JButton(moveToolToPlacementLocation);
         btnPositionToolPositionLocation.setHideActionText(true);
@@ -141,6 +154,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
+        table.setDefaultRenderer(PartCellValue.class, new IdRenderer());
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -160,7 +174,8 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardLocation.getSide());
-                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(), boardLocation, JobPlacementsPanel.this));
+                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
+                            boardLocation, JobPlacementsPanel.this));
                 }
             }
         });
@@ -213,7 +228,7 @@ public class JobPlacementsPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
     }
-    
+
     public void selectPlacement(Placement placement) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if (tableModel.getPlacement(i) == placement) {
@@ -224,7 +239,7 @@ public class JobPlacementsPanel extends JPanel {
             }
         }
     }
-    
+
     public void setBoardLocation(BoardLocation boardLocation) {
         this.boardLocation = boardLocation;
         if (boardLocation == null) {
@@ -324,6 +339,33 @@ public class JobPlacementsPanel extends JPanel {
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             });
         }
+    };
+    public final Action moveCameraToPlacementLocationNext = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.centerCameraMoveNext);
+            putValue(NAME, "Move Camera To Placement Location and Move to Next Part");
+            putValue(SHORT_DESCRIPTION,
+                    "Position the camera at the placement's location and move to next part.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                // Need to keep current focus owner so that the space bar can be
+                // used after the initial click. Otherwise, button focus is lost
+                // when table is updated
+                Component comp = MainFrame.get().getFocusOwner();
+                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                        getSelection().getLocation());
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
+                        .getDefaultCamera();
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
+                Helpers.selectNextTableRow(table);
+                if (comp != null) {
+                    comp.requestFocus();
+                }
+            });
+        };
     };
 
     public final Action moveToolToPlacementLocation = new AbstractAction() {
@@ -507,6 +549,56 @@ public class JobPlacementsPanel extends JPanel {
                 setBackground(statusColorError);
                 setText(status.toString());
             }
+        }
+    }
+
+    class IdRenderer extends DefaultTableCellRenderer {
+        // This is used just to set background color on Id cell when selected.
+        // Could not find another way to do this in.
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            if (isSelected) {
+                setBackground(cellColorSelected);
+                setForeground(Color.WHITE);
+            }
+            return this;
+        }
+
+        public void setValue(Object value) {
+            String id = value.toString();
+
+            PnpJobProcessor pnpJobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
+            int totalSize = pnpJobProcessor.getJobPlacementsById(id).size();
+            int completeSize =
+                    pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Complete).size();
+            int processingSize =
+                    pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Processing).size();
+
+            //
+            if (totalSize != 0) {
+                if (completeSize == totalSize) {
+                    setBackground(jobColorComplete);
+                }
+                else if (processingSize > 0) {
+                    setBackground(jobColorProcessing);
+                }
+                else {
+                    setBackground(jobColorPending);
+                }
+
+                if (totalSize > 1) {
+                    id += "  (" + completeSize + " / " + totalSize + ")";
+                }
+            }
+            else {
+                setBackground(Color.WHITE);
+            }
+
+            setForeground(Color.black);
+            setText(id);
+            table.repaint();
         }
     }
 }

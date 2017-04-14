@@ -131,7 +131,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         if (thread != null) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -162,6 +162,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             return;
         }
         thread = new Thread(this);
+        thread.setDaemon(true);
         thread.start();
     }
 
@@ -222,7 +223,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
         if (thread != null) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
 

@@ -67,7 +67,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.nav.FxNavigationView;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.DipTraceImporter;
 import org.openpnp.gui.importer.EagleBoardImporter;
@@ -325,6 +324,8 @@ public class MainFrame extends JFrame {
         mnHelp.add(quickStartLinkAction);
         mnHelp.add(setupAndCalibrationLinkAction);
         mnHelp.add(userManualLinkAction);
+        mnHelp.addSeparator();
+        mnHelp.add(submitDiagnosticsAction);
         if (isInstallerAvailable()) {
             mnHelp.add(new JMenuItem(checkForUpdatesAction));
         }
@@ -485,25 +486,17 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "4, 1");
 
-        boolean javaFxAvailable = false;
-
         try {
-            Class.forName("javafx.scene.Scene");
-            javaFxAvailable = true;
-        }
-        catch (Throwable e) {
-            Logger.warn(
-                    "JavaFX is not installed. The optional navigation feature will not be available.");
-        }
-
-        if (javaFxAvailable) {
-            navigationPanel = new FxNavigationView();
+            Class c = Class.forName("org.openpnp.gui.components.nav.FxNavigationView");
+            navigationPanel = (Component) c.newInstance();
             JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
             camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
             camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
             panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
         }
-        else {
+        catch (Throwable e) {
+            Logger.warn(
+                    "JavaFX is not installed. The optional navigation feature will not be available.");
             cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
@@ -679,6 +672,7 @@ public class MainFrame extends JFrame {
     }
 
     public boolean quit() {
+        Logger.info("Shutting down...");
         try {
             Preferences.userRoot().flush();
         }
@@ -719,6 +713,7 @@ public class MainFrame extends JFrame {
         catch (Exception e) {
             e.printStackTrace();
         }
+        Logger.info("Shutdown complete, exiting.");
         System.exit(0);
         return true;
     }
@@ -860,6 +855,17 @@ public class MainFrame extends JFrame {
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri);
             }
+        }
+    };
+    
+    private Action submitDiagnosticsAction = new AbstractAction("Submit Diagnostics") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            SubmitDiagnosticsDialog dialog = new SubmitDiagnosticsDialog();
+            dialog.setModal(true);
+            dialog.setSize(620, 720);
+            dialog.setLocationRelativeTo(MainFrame.get());
+            dialog.setVisible(true);
         }
     };
     

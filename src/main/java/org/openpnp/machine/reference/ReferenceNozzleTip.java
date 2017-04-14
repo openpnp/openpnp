@@ -66,10 +66,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
 
     @Element(required = false)
-    private int vacuumLevelPartOn;
+    private double vacuumLevelPartOn;
 
     @Element(required = false)
-    private int vacuumLevelPartOff;
+    private double vacuumLevelPartOff;
     
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
@@ -102,7 +102,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public boolean canHandle(Part part) {
         boolean result =
                 allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
-        Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
+        // Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
         return result;
     }
 
@@ -203,19 +203,19 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return null;
     }
 
-    public int getVacuumLevelPartOn() {
+    public double getVacuumLevelPartOn() {
         return vacuumLevelPartOn;
     }
 
-    public void setVacuumLevelPartOn(int vacuumLevelPartOn) {
+    public void setVacuumLevelPartOn(double vacuumLevelPartOn) {
         this.vacuumLevelPartOn = vacuumLevelPartOn;
     }
 
-    public int getVacuumLevelPartOff() {
+    public double getVacuumLevelPartOff() {
         return vacuumLevelPartOff;
     }
 
-    public void setVacuumLevelPartOff(int vacuumLevelPartOff) {
+    public void setVacuumLevelPartOff(double vacuumLevelPartOff) {
         this.vacuumLevelPartOff = vacuumLevelPartOff;
     }
 

@@ -169,7 +169,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         if (thread != null) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -282,6 +282,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             return;
         }
         thread = new Thread(this);
+        thread.setDaemon(true);
         thread.start();
     }
 
@@ -291,7 +292,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         if (thread != null) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
 

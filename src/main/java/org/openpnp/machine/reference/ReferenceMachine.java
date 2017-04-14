@@ -61,6 +61,7 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
 
@@ -74,6 +75,8 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     protected PasteDispenseJobProcessor pasteDispenseJobProcessor;
 
+    // TODO: Remove after July 1, 2017.
+    @Deprecated
     @Element(required = false)
     protected PasteDispenseJobProcessor glueDispenseJobProcessor;
 
@@ -87,6 +90,12 @@ public class ReferenceMachine extends AbstractMachine {
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
+    @Commit
+    protected void commit() {
+        super.commit();
+        glueDispenseJobProcessor = null;
+    }
+    
     public ReferenceDriver getDriver() {
         return driver;
     }
@@ -212,6 +221,7 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Actuator>> getCompatibleActuatorClasses() {
         List<Class<? extends Actuator>> l = new ArrayList<>();
         l.add(ReferenceActuator.class);
+        l.add(HttpActuator.class);
         return l;
     }
 
@@ -268,10 +278,4 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
-
-    @Override
-    public PasteDispenseJobProcessor getGlueDispenseJobProcessor() {
-        return glueDispenseJobProcessor;
-    }
-
 }

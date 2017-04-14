@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,13 +31,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobPlacement.Status;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
@@ -46,6 +47,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
@@ -79,34 +81,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Abort,
         Skip,
         Reset
-    }
-
-    public static class JobPlacement {
-        public enum Status {
-            Pending,
-            Processing,
-            Skipped,
-            Complete
-        }
-
-        public final BoardLocation boardLocation;
-        public final Placement placement;
-        public Status status = Status.Pending;
-
-        public JobPlacement(BoardLocation boardLocation, Placement placement) {
-            this.boardLocation = boardLocation;
-            this.placement = placement;
-        }
-
-        public double getPartHeight() {
-            return placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters)
-                    .getValue();
-        }
-
-        @Override
-        public String toString() {
-            return placement.getId();
-        }
     }
 
     public static class PlannedPlacement {
@@ -146,6 +120,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
+    
+    long startTime;
+    int totalPartsPlaced;
 
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
@@ -284,6 +261,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * @throws Exception
      */
     protected void doPreFlight() throws Exception {
+        startTime = System.currentTimeMillis();
+        totalPartsPlaced = 0;
+        
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
@@ -346,6 +326,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fireTextStatus("Performing fiducial checks.");
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
+        
+        if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
+        	Panel p = job.getPanels().get(0);
+        	
+        	BoardLocation boardLocation = job.getBoardLocations().get(0);
+        	
+        	Location location = locator.locateBoard(boardLocation, p.isCheckFiducials());
+        	boardLocationFiducialOverrides.put(boardLocation, location);
+        	Logger.debug("Panel Fiducial check for {}", boardLocation);
+        }
+        
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             if (!boardLocation.isEnabled()) {
                 continue;
@@ -421,7 +412,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         List<JobPlacement> result = Collect.cartesianProduct(solutions).stream()
                 // Filter out any results that contains the same JobPlacement more than once
                 .filter(list -> {
-                    return new HashSet<JobPlacement>(list).size() == list.size();
+                    // Note: A previous version of this code just dumped everything into a
+                    // set and compared the size. This worked for two nozzles since there would
+                    // never be more than two nulls, but for > 2 nozzles there will always be a
+                    // solution that has > 2 nulls, which means the size will never match.
+                    // This version of the code ignores the nulls (since they are valid
+                    // solutions) and instead only checks for duplicate valid JobPlacements.
+                    // There is probably a more clever way to do this, but it isn't coming
+                    // to me at the moment.
+                    HashSet<JobPlacement> set = new HashSet<>();
+                    for (JobPlacement jp : list) {
+                        if (jp == null) {
+                            continue;
+                        }
+                        if (set.contains(jp)) {
+                            return false;
+                        }
+                        set.add(jp);
+                    }
+                    return true;
                 })
                 // Sort by the solutions that contain the fewest nulls followed by the
                 // solutions that require the fewest nozzle changes.
@@ -570,6 +579,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             fireTextStatus("Picking %s from %s for %s.", part.getId(), feeder.getName(),
                     placement.getId());
+            
+            ++totalPartsPlaced;
 
             // Pick
             nozzle.pick(part);
@@ -721,6 +732,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Park nozzle.");
             MovableUtils.moveToLocationAtSafeZ(head.getDefaultNozzle(), head.getParkLocation());
         }
+        
+        double dtSec = (System.currentTimeMillis() - startTime)/1000.0;
+        DecimalFormat df = new DecimalFormat("###,###.0");
+        
+        Logger.info("Job finished {} parts in {} sec. This is {} pph", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
     }
 
     protected void doReset() throws Exception {
@@ -772,6 +788,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setParkWhenComplete(boolean parkWhenComplete) {
         this.parkWhenComplete = parkWhenComplete;
     }
+    
+    public List<JobPlacement> getJobPlacementsById(String id) { 
+        return jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.toString() == id;
+        }).collect(Collectors.toList()); 
+    } 
+    
+    public List<JobPlacement> getJobPlacementsById(String id, Status status) {
+        return jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.toString() == id && jobPlacement.status == status;
+        }).collect(Collectors.toList());
+    }
 
     // Sort a List<JobPlacement> by the number of nulls it contains in ascending order.
     Comparator<List<JobPlacement>> byFewestNulls = (a, b) -> {
@@ -800,4 +828,5 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         return countA - countB;
     };
+
 }

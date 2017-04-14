@@ -1,6 +1,225 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-13
+
+* BREAKING CHANGE: Outdated Drivers Removed
+
+	Several outdated drivers have been removed. These are: GrblDriver, MarlinDriver, SprinterDriver
+	TinygDriver. All of these drivers have been replaced with the much better supported
+	GcodeDriver. If you are currently using one of these drivers this version WILL BREAK your
+	configuration. If you need help migrating, please post a question to the mailing list at:
+	
+	http://groups.google.com/group/openpnp
+	
+	More information about this change and the reasoning for it is available at:
+	
+	https://github.com/openpnp/openpnp/issues/415
+	
+
+# 2017-04-09
+
+* Filter Rotated Rects CvStage
+
+	A new pipeline stage called FilterRects has been added by @dzach. It allows you to filter
+	rotated rects based on given width, length and aspect ratio limits. This can be very helpful
+	for making sure a recognized part is within acceptable size limits.
+
+# 2017-04-06
+
+* Tool Selection for Cameras
+
+	Thanks to @BendRocks an old feature has been brought back to life. You can now select
+	head mounted cameras from the Machine Controls tool dropdown box. This causes the DROs
+	to show the coordinates of the camera and allows you to jog from the camera's perspective
+	instead of just the nozzle's. This also makes it possible (although not yet implemented)
+	to do the same kind of thing for paste dispensers when that feature is revived.
+	
+	Work for this feature was performed in: https://github.com/openpnp/openpnp/pull/507
+	
+# 2017-04-01
+
+* Auto Panelization
+
+	Thanks to @BendRocks we now have a robust panelization solution in OpenPnP! Panels allow you
+	to quickly set up multiple copies of a board in an array and allow you to have panel
+	fiducials in addition to board fiducials. There is also a quick X out feature that makes it
+	easy to mark boards in the array that are damaged and should not be placed.
+	
+	This feature is a work in progress. There are some known issues and some limitations
+	but it has matured enough that it's ready for people to start trying it out.
+	
+	Full documentation for this feature is coming soon and will be available at:
+	https://github.com/openpnp/openpnp/wiki/Panelization
+	
+	For more information about this feature, please see the following links:
+	https://github.com/openpnp/openpnp/issues/128
+	https://github.com/openpnp/openpnp/pull/456
+	https://groups.google.com/forum/#!msg/openpnp/_ni0LK8LR8g/5u-0-P-1EwAJ;context-place=forum/openpnp
+
+# 2017-03-31
+
+* Job Placement Status
+
+	With many thanks to @iAmRoland we now have a great status display of placements as a job
+	is run. Their description from the pull request describes the feature nicely:
+	
+	> Once the start button is pressed, it will mark all pending placements with a yellow color. 
+	> When it's processing a placement it will display a blue color on the ID cell. Once it's done
+	> with all placements with the same ID, it then marks that cell with a green color. If no
+	> placement is going to be done then the cell is left white.
+	
+	@iAmRoland even included a nice GIF that shows how it looks:
+	https://camo.githubusercontent.com/954ded479f650507bece8c199c7b73233708097e/687474703a2f2f692e696d6775722e636f6d2f6d6c4130716d6b2e6a7067
+	
+	This work was performed in PR https://github.com/openpnp/openpnp/pull/493 and partially
+	addresses the feature described in issue https://github.com/openpnp/openpnp/issues/205 and
+	https://github.com/openpnp/openpnp/issues/280.
+
+# 2017-03-26
+
+* Auto Update Fixed, Version Number Improvements
+
+	An error that was causing the auto updater to not work has been fixed. In the process,
+	the OpenPnP version numbering scheme has been changed and improved. Version numbers were
+	previously just an inscrutable Git hash. They are now in the format of
+	2017-03-26_18-56-32.0be8a03, with the part before the period representing the date of the
+	build and the part after the period representing the Git hash. This makes it easy to
+	identify when the code was built and how old it is, and the Git hash can be used to
+	identify a specific commit.
+	
+* Glue Feature Removed
+
+	The Glue Dispense feature has been deprecated and removed. This feature was not being used
+	and it was causing maintainability problems. If there is interest in the feature in the
+	future it will be rewritten. More information about this decision is available at
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/1-CSpnoPQGY/k6qUT9VZAQAJ
+
+# 2017-03-21
+
+* Submit Diagnostics
+
+	You can now submit a very detailed diagnostics package about OpenPnP right from OpenPnP itself!
+	In the Help menu just click Submit Diagnostics and follow the instructions. The result will
+	be a link to a [Gist](https://gist.github.com/) on Github that contains information and
+	images from OpenPnP. You can share the link on the mailing list or elsewhere to assist
+	people in helping with any issue you might be having.
+
+# 2017-03-16
+
+* Named CSV Importer Improvements
+
+	Thanks to @Misfittech the Named CSV Importer can now handle Altium R14 files and now
+	has the option to set part heights when available. It also supports the ability to
+	import data that contains values in mils.
+	 
+* Logging Improvements
+
+	With many thanks to @pfried the Log tab and the logging system have seen several improvements:
+	* Log panel is now searchable.
+	* Select and copy lines from the log.
+	* Enable/disable system output.
+	* Option to auto-scroll, or not.
+	
+	More information about this feature can be found at:
+	https://github.com/openpnp/openpnp/issues/288
+
+# 2017-03-05
+
+* Force Upper Case in Gcode Driver Console
+
+	There is now an option, on by default, that forces commands sent from the Gcode console
+	to upper case. Previously upper case was forced without option, but now you can turn it off
+	if you like.
+
+# 2017-03-04
+
+* Position Camera and Continue
+
+	Thanks to @BendRocks for two new buttons in the Job and Placements panel. The buttons
+	which look like the Position Camera button with a right arrow added allows you to
+	position the camera and then select either the next board or placement. This allows you
+	to very easily and quickly move through a job and see that all of your placements
+	are configured correctly.
+	
+* Console Output in Log Panel
+
+	Thanks to @pfried, console output (System.out, System.err) is now included in the Log
+	panel at the Info and Error levels respectively. One major benefit of this is that
+	scripting output will now be visible in the Log panel. 
+
+# 2017-02-27
+
+* ReferenceDragFeeder Configuration Actuator Positioning
+
+	Fixes a bug in the ReferenceDragFeeder configuration panel that kept the actuator positioning
+	buttons from showing up. Now when you set an actuator name the position nozzle buttons on
+	these fields will turn into position actuator buttons as they did previously.
+
+* GcodeDriver Sub-Driver Delete UI
+
+	You can now delete sub-drivers from the UI by selecting one and clicking the red X button
+	in the toolbar above.
+	
+# 2017-02-24
+
+* HTTP Actuator 
+
+	A new boolean actuator that calls a predefined URL for ON and OFF events. It was developed 
+	for controlling pneumatic feeders that are controlled via a Raspberry Pi with IO shield but
+	maybe there are totally different applications as well.
+	
+* GCode Backlash Compensation
+
+	The GCode Driver now features a few additional parameters to address backlash. 
+	This allows approaching target locations always from a specific direction on X/Y axes.
+	Optionally the final approach can be executed with reduced speed. 
+	Details: https://github.com/openpnp/openpnp/wiki/GcodeDriver#user-content-backlash-compensation
+	
+* GCode Console
+
+	The GCode Driver now features a new tab to manually send GCode commands in a console.
+	
+* GCode Non-Squareness Compensation
+
+	The GCode Driver now also works with machines that are not perfectly square. Details about
+	how to measure and compensate this Non-Squareness Compensation can be found here:
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver#user-content-non-squareness-compensation	
+	
+# 2017-02-12
+
+* Generalized Vacuum Sensing (BREAKING CHANGE)
+
+	Vacuum sensing was previously a GcodeDriver only feature. With the recent Actuator
+	Improvements it became possible to extend this feature to all drivers. The vacuum
+	sense feature now uses an Actuator to read values from the pressure sensor, instead
+	of a specialized GcodeDriver command.
+	
+	Configuration is still similar. Instead of defining a VACUUM_REQUEST_COMMAND and
+	VACUUM_REPORT_REGEX you just create an Actuator that uses the same values
+	and set the Actuator name on your nozzle.
+	
+	Due to this configuration change, this is a breaking change. Your vacuum sense
+	will not work until you make the manual changes. You can watch a short video tutorial
+	showing how to make the required changes at: https://www.youtube.com/watch?v=FsZ5dy7n1Ag
+
+# 2017-02-05
+
+* Actuator Improvements
+
+	* Actuators can now read String values in a generic fashion. This makes it possible to
+	integrate a variety of sensors into your system and use the output in any way you like,
+	particularly with scripting. The GcodeDriver has been updated to work with this new
+	functionality. For more information see:
+	
+		https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex
+	
+		https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command
+
+	* The Actuators panel in Jog Controls now offers more options for controlling and testing
+	actuators. You can send true/false boolean values, send double values and read a response
+	from each actuator.
+
 # 2017-01-27
 
 * Icon Improvements

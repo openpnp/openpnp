@@ -45,6 +45,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
@@ -358,6 +359,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(nozzleTip, "name", nameTf, "text");
         
@@ -406,8 +408,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
         
-        addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", intConverter);
-        addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", intConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOn", vacuumLevelPartOn, "text", doubleConverter);
+        addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
         

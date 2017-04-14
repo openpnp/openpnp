@@ -26,6 +26,7 @@ import org.openpnp.vision.pipeline.stages.DrawKeyPoints;
 import org.openpnp.vision.pipeline.stages.DrawRotatedRects;
 import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
 import org.openpnp.vision.pipeline.stages.FilterContours;
+import org.openpnp.vision.pipeline.stages.FilterRects;
 import org.openpnp.vision.pipeline.stages.FindContours;
 import org.openpnp.vision.pipeline.stages.GrabCut;
 import org.openpnp.vision.pipeline.stages.HistogramEqualize;
@@ -47,6 +48,7 @@ import org.openpnp.vision.pipeline.stages.ScriptRun;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
+import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -77,6 +79,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DrawRotatedRects.class);
         registerStageClass(DrawTemplateMatches.class);
         registerStageClass(FilterContours.class);
+        registerStageClass(FilterRects.class);
         registerStageClass(FindContours.class);
         registerStageClass(GrabCut.class);
         registerStageClass(HistogramEqualize.class);
@@ -98,6 +101,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
+        registerStageClass(ThresholdAdaptive.class);
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;

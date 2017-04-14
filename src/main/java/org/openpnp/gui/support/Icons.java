@@ -24,6 +24,7 @@ public class Icons {
     public static Icon capturePin = getIcon("/icons/capture-actuator.svg");
 
     public static Icon centerCamera = getIcon("/icons/position-camera.svg");
+    public static Icon centerCameraMoveNext = getIcon("/icons/position-camera-move-next.svg");
     public static Icon centerTool = getIcon("/icons/position-nozzle.svg");
     public static Icon centerToolNoSafeZ = getIcon("/icons/position-nozzle-no-safe-z.svg");
     public static Icon centerPin = getIcon("/icons/position-actuator.svg");
@@ -37,6 +38,9 @@ public class Icons {
 
     public static Icon twoPointLocate = getIcon("/icons/board-two-placement-locate.svg");
     public static Icon fiducialCheck = getIcon("/icons/board-fiducial-locate.svg");
+    public static Icon autoPanelize = getIcon("/icons/panelize.svg");
+    public static Icon autoPanelizeXOut = getIcon("/icons/panelize_xout.svg");
+    public static Icon autoPanelizeFidCheck = getIcon("/icons/panelize_fiducialcheck.svg");
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");
@@ -67,7 +71,9 @@ public class Icons {
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");
     
     public static Icon park = getIcon("/icons/park.svg");
-    
+
+    public static Icon scrollDown = getIcon("/icons/scroll-down.svg");
+
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new SvgIcon(Icons.class.getResource(resourceName), width, height);

@@ -143,16 +143,28 @@ public class ReferenceDragFeederConfigurationWizard
         panelFields.add(panelLocations);
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelLocations.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 4");
@@ -200,6 +212,13 @@ public class ReferenceDragFeederConfigurationWizard
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
                 textFieldFeedEndZ, null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 8");
+        
+        lblBackoffDistance = new JLabel("Backoff Distance");
+        panelLocations.add(lblBackoffDistance, "2, 10, right, default");
+        
+        backoffDistTf = new JTextField();
+        panelLocations.add(backoffDistTf, "4, 10");
+        backoffDistTf.setColumns(10);
         //
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
@@ -347,6 +366,8 @@ public class ReferenceDragFeederConfigurationWizard
                 intConverter);
         addWrappedBinding(feeder, "vision.areaOfInterest.height", textFieldAoiHeight, "text",
                 intConverter);
+        
+        addWrappedBinding(feeder, "backoffDistance", backoffDistTf, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
@@ -360,12 +381,10 @@ public class ReferenceDragFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiY);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiHeight);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backoffDistTf);
 
-        BeanProperty actuatorIdProperty = BeanProperty.create("actuatorId");
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
-                locationButtonsPanelFeedStart, actuatorIdProperty).bind();
-        Bindings.createAutoBinding(UpdateStrategy.READ, feeder, actuatorIdProperty,
-                locationButtonsPanelFeedEnd, actuatorIdProperty).bind();
+        bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedStart, "actuatorName");
+        bind(UpdateStrategy.READ, feeder, "actuatorName", locationButtonsPanelFeedEnd, "actuatorName");
     }
 
     @SuppressWarnings("serial")
@@ -502,4 +521,6 @@ public class ReferenceDragFeederConfigurationWizard
             });
         }
     };
+    private JLabel lblBackoffDistance;
+    private JTextField backoffDistTf;
 }

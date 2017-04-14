@@ -32,6 +32,8 @@ import org.pmw.tinylog.Logger;
 
 import com.google.common.io.Files;
 
+import bsh.engine.BshScriptEngineFactory;
+
 public class Scripting {
     JMenu menu;
     final ScriptEngineManager manager = new ScriptEngineManager();
@@ -50,6 +52,12 @@ public class Scripting {
                 extensions.add(ext.toLowerCase());
             }
         }
+        
+        manager.registerEngineExtension("bsh", new BshScriptEngineFactory());
+        manager.registerEngineExtension("java", new BshScriptEngineFactory());
+        extensions.add("bsh");
+        extensions.add("java");
+
         this.extensions = extensions.toArray(new String[] {});
 
         this.scriptsDirectory =
@@ -93,7 +101,7 @@ public class Scripting {
         try {
             watcher = FileSystems.getDefault().newWatchService();
             watchDirectory(getScriptsDirectory());
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 for (;;) {
                     try {
                         // wait for an event
@@ -107,7 +115,9 @@ public class Scripting {
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            thread.setDaemon(true);
+            thread.start();
         }
         catch (Exception e) {
             e.printStackTrace();

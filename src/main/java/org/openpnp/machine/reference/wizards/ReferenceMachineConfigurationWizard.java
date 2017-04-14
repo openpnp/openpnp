@@ -19,13 +19,8 @@ import org.openpnp.machine.openbuilds.OpenBuildsDriver;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.GrblDriver;
 import org.openpnp.machine.reference.driver.LinuxCNC;
-import org.openpnp.machine.reference.driver.MarlinDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
-import org.openpnp.machine.reference.driver.SimulatorDriver;
-import org.openpnp.machine.reference.driver.SprinterDriver;
-import org.openpnp.machine.reference.driver.TinygDriver;
 import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -62,12 +57,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
 
         comboBoxDriver.addItem(NullDriver.class.getCanonicalName());
         comboBoxDriver.addItem(GcodeDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(GrblDriver.class.getCanonicalName());
         comboBoxDriver.addItem(LinuxCNC.class.getCanonicalName());
-        comboBoxDriver.addItem(MarlinDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(SimulatorDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(SprinterDriver.class.getCanonicalName());
-        comboBoxDriver.addItem(TinygDriver.class.getCanonicalName());
         comboBoxDriver.addItem(OpenBuildsDriver.class.getCanonicalName());
 
         JPanel panelLocations = new JPanel();

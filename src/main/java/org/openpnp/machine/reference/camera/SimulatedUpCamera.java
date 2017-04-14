@@ -172,7 +172,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
             try {
-                thread.join();
+                thread.join(3000);
             }
             catch (Exception e) {
 
@@ -184,6 +184,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     private synchronized void start() {
         if (thread == null) {
             thread = new Thread(this);
+            thread.setDaemon(true);
             thread.start();
         }
     }

@@ -167,7 +167,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         double partPitchAdjusted = lineLocations[0].getLinearDistanceTo(lineLocations[1]);
         partPitchAdjusted =
                 partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
-        Location l = getPointAlongLine(lineLocations[0], lineLocations[1],
+        Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
                 new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
         // Create the offsets that are required to go from a reference hole
         // to the part in the tape
@@ -175,7 +175,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
         // Determine the angle that the tape is at
-        double angle = getAngleFromPoint(lineLocations[0], lineLocations[1]);
+        double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
         // Rotate the part offsets by the angle to move it into the right
         // coordinate space
         p = Utils2D.rotatePoint(p, angle);
@@ -227,14 +227,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // twice since there are two parts per reference hole.
             // Note the use of holePitch here and partPitch in the
             // alternate case below.
-            expectedLocation = getPointAlongLine(lineLocations[0], lineLocations[1],
+            expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
                     holePitch.multiply((feedCount - 1) / 2));
         }
         else {
             // For tapes with a part pitch >= 4 there is always a reference
             // hole 2mm from a part so we just multiply by the part pitch
             // skipping over holes that are not reference holes.
-            expectedLocation = getPointAlongLine(lineLocations[0], lineLocations[1],
+            expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
                     partPitch.multiply(feedCount - 1));
         }
         MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
@@ -255,11 +255,17 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     private Location findClosestHole(Camera camera) {
         List<Location> holeLocations = new ArrayList<>();
-        BufferedImage image = new FluentCv().setCamera(camera).settleAndCapture("original").toGray()
+        BufferedImage image = new FluentCv()
+                .setCamera(camera)
+                .settleAndCapture("original")
+                .saveDebugImage(ReferenceStripFeeder.class, "findClosestHole", "original")
+                .toGray()
                 .blurGaussian(getHoleBlurKernelSize())
-                .findCirclesHough(getHoleDiameterMin(), getHoleDiameterMax(), getHolePitchMin(),
-                        "circles")
-                .convertCirclesToLocations(holeLocations).drawCircles("original").toBufferedImage();
+                .findCirclesHough(getHoleDiameterMin(), getHoleDiameterMax(), getHolePitchMin(), "circles")
+                .convertCirclesToLocations(holeLocations)
+                .drawCircles("original")
+                .saveDebugImage(ReferenceStripFeeder.class, "findClosestHole", "debug")
+                .toBufferedImage();
         if (holeLocations.isEmpty()) {
             return null;
         }
@@ -275,30 +281,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Length getHoleToPartLateral() {
         Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
         return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
-    }
-
-    static public Location getPointAlongLine(Location a, Location b, Length distance) {
-        Point vab = b.subtract(a).getXyPoint();
-        double lab = a.getLinearDistanceTo(b);
-        Point vu = new Point(vab.x / lab, vab.y / lab);
-        vu = new Point(vu.x * distance.getValue(), vu.y * distance.getValue());
-        return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
-    }
-
-    // Stolen from StackOverflow
-    static public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
-        double angle = 0.0;
-        // above 0 to 180 degrees
-        if ((secondPoint.getX() > firstPoint.getX())) {
-            angle = (Math.atan2((secondPoint.getX() - firstPoint.getX()),
-                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-        }
-        // above 180 degrees to 360/0
-        else if ((secondPoint.getX() <= firstPoint.getX())) {
-            angle = 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
-                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-        }
-        return angle;
     }
 
     public TapeType getTapeType() {

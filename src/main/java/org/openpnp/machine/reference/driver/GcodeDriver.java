@@ -16,7 +16,9 @@ import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -26,7 +28,9 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -64,8 +68,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        // TODO: Remove the vacuum stuff after 2017-05-01, see https://github.com/openpnp/openpnp/issues/447
         VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
-        VACUUM_REPORT_REGEX(true);
+        VACUUM_REPORT_REGEX(true),
+        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_REGEX(true);
 
         final boolean headMountable;
         final String[] variableNames;
@@ -138,7 +145,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     
     @Attribute(required = false)
     protected double backlashOffsetY = -1;
- 
+    
+    @Attribute(required = false)
+    protected double nonSquarenessFactor = 0;
+    
     @Attribute(required = false)
     protected double backlashFeedRateFactor = 0.1;
 
@@ -165,12 +175,12 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-    private transient boolean subDriver = false;
+    private GcodeDriver parent = null;
     
     @Commit
     public void commit() {
         for (GcodeDriver driver : subDrivers) {
-            driver.subDriver = true;
+            driver.parent = this;
         }
     }
     
@@ -193,6 +203,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         connected = false;
         readerThread = new Thread(this);
+        readerThread.setDaemon(true);
         readerThread.start();
 
         // Wait a bit while the controller starts up
@@ -444,8 +455,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
             }
             else {
-                command = substituteVariable(command, "X", x);
-                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX); // Backlash Compensation
+                command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
+                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
                 haveToMove = true;
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
@@ -549,40 +560,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return false;
     }
 
-    private Integer readVacuumLevel(ReferenceNozzle nozzle) throws Exception {
-        String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
-        String regex = getCommand(nozzle, CommandType.VACUUM_REPORT_REGEX);
-        if (command == null || regex == null) {
-            return null;
-        }
-
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-
-        List<String> responses = sendGcode(command);
-
-        for (String line : responses) {
-            Logger.trace("Check {}", line);
-            if (line.matches(regex)) {
-                Logger.trace("Vacuum report: {}", line);
-                Matcher matcher = Pattern.compile(regex).matcher(line);
-                matcher.matches();
-
-                try {
-                    String s = matcher.group("Vacuum");
-                    return Integer.valueOf(s);
-                }
-                catch (Exception e) {
-                    Logger.warn("Error processing vacuum report", e);
-                }
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
@@ -599,13 +576,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
 
         sendGcode(command);
-
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel < nt.getVacuumLevelPartOn()) {
-            throw new Exception(String.format(
-                    "Pick failure: Vacuum level %d is lower than expected value of %d for part on. Part may have failed to pick.",
-                    vacuumLevel, nt.getVacuumLevelPartOn()));
-        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
@@ -624,13 +594,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
         sendGcode(command);
-
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel > nt.getVacuumLevelPartOff()) {
-            throw new Exception(String.format(
-                    "Place failure: Vacuum level %d is higher than expected value of %d for part off. Part may be stuck to nozzle.",
-                    vacuumLevel, nt.getVacuumLevelPartOff()));
-        }
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
@@ -673,6 +636,49 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.actuate(actuator, value);
         }
     }
+    
+    @Override
+    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
+        String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
+        if (command == null || regex == null) {
+            // If the command or regex is null we'll query the subdrivers. The first
+            // to respond with a non-null value wins.
+            for (ReferenceDriver driver : subDrivers) {
+                String val = driver.actuatorRead(actuator);
+                if (val != null) {
+                    return val;
+                }
+            }
+            // If none of the subdrivers returned a value there's nothing left to
+            // do, so return null.
+            return null;
+        }
+
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            if (line.matches(regex)) {
+                Logger.trace("actuatorRead response: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Value");
+                    return s;
+                }
+                catch (Exception e) {
+                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
+                }
+            }
+        }
+
+        return null;
+    }
 
     public synchronized void disconnect() {
         disconnectRequested = true;
@@ -680,7 +686,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join();
+                readerThread.join(3000);
             }
         }
         catch (Exception e) {
@@ -724,11 +730,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return responses;
     }
 
-    protected List<String> sendCommand(String command) throws Exception {
+    public List<String> sendCommand(String command) throws Exception {
         return sendCommand(command, timeoutMilliseconds);
     }
 
-    protected List<String> sendCommand(String command, long timeout) throws Exception {
+    public List<String> sendCommand(String command, long timeout) throws Exception {
         List<String> responses = new ArrayList<>();
 
         // Read any responses that might be queued up so that when we wait
@@ -880,7 +886,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        if (!subDriver) {
+        if (parent == null) {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
@@ -889,21 +895,22 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
-                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
+                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
+                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "General Settings"),
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial")
+        };
     }
     
     @Override
     public Action[] getPropertySheetHolderActions() {
-        if (subDriver) {
-            return null;
-        }
-        else {
+        if (parent == null) {
             return new Action[] {addSubDriverAction};
         }
+        else {
+            return new Action[] {deleteSubDriverAction};
+        }
     }
-    
-    
     
     public Action addSubDriverAction = new AbstractAction() {
         {
@@ -915,9 +922,28 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             GcodeDriver driver = new GcodeDriver();
-            driver.subDriver = true;
+            driver.parent = GcodeDriver.this;
             subDrivers.add(driver);
             fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
+        }
+    };
+
+    public Action deleteSubDriverAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Sub-Driver...");
+            putValue(SHORT_DESCRIPTION, "Delete the selected sub-driver.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete the selected sub-driver?",
+                    "Delete Sub-Driver?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                parent.subDrivers.remove(GcodeDriver.this);
+                parent.fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, GcodeDriver.this, null);
+            }
         }
     };
 
@@ -951,6 +977,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     
     public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
         this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    }
+    
+    public void setNonSquarenessFactor(double NonSquarenessFactor) {
+        this.nonSquarenessFactor = NonSquarenessFactor;
+    }
+    
+    public double getNonSquarenessFactor() {
+        return this.nonSquarenessFactor;
     }
     
     public int getMaxFeedRate() {

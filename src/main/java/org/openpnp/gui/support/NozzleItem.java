@@ -21,19 +21,20 @@ package org.openpnp.gui.support;
 
 import org.openpnp.spi.Nozzle;
 
-public class NozzleItem {
-    private Nozzle nozzle;
+public class NozzleItem extends HeadMountableItem {
 
     public NozzleItem(Nozzle nozzle) {
-        this.nozzle = nozzle;
+    	super(nozzle);
     }
 
     public Nozzle getNozzle() {
-        return nozzle;
+        return (Nozzle)hm;
     }
 
     @Override
     public String toString() {
+    	Nozzle nozzle = (Nozzle)hm;
+    	
         return String.format("Nozzle: %s - %s %s", nozzle.getName(),
         		nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName() : "No Nozzle Tip", 
         		nozzle.getHead() != null ? String.format("(Head: %s)", nozzle.getHead().getName()) : "");

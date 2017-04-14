@@ -236,6 +236,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
             // keep the thread from quickly parsing any responses messages
             // and notifying before we get a change to wait.
             readerThread = new Thread(this);
+            readerThread.setDaemon(true);
             readerThread.start();
             // Wait up to 3 seconds for Grbl to say Hi
             // If we get anything at this point it will have been the settings
@@ -310,7 +311,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join();
+                readerThread.join(3000);
             }
             input.close();
             output.close();
