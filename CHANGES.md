@@ -1,6 +1,62 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-13
+
+* BREAKING CHANGE: Outdated Drivers Removed
+
+	Several outdated drivers have been removed. These are: GrblDriver, MarlinDriver, SprinterDriver
+	TinygDriver. All of these drivers have been replaced with the much better supported
+	GcodeDriver. If you are currently using one of these drivers this version WILL BREAK your
+	configuration. If you need help migrating, please post a question to the mailing list at:
+	
+	http://groups.google.com/group/openpnp
+	
+	More information about this change and the reasoning for it is available at:
+	
+	https://github.com/openpnp/openpnp/issues/415
+	
+
+# 2017-04-09
+
+* Filter Rotated Rects CvStage
+
+	A new pipeline stage called FilterRects has been added by @dzach. It allows you to filter
+	rotated rects based on given width, length and aspect ratio limits. This can be very helpful
+	for making sure a recognized part is within acceptable size limits.
+
+# 2017-04-06
+
+* Tool Selection for Cameras
+
+	Thanks to @BendRocks an old feature has been brought back to life. You can now select
+	head mounted cameras from the Machine Controls tool dropdown box. This causes the DROs
+	to show the coordinates of the camera and allows you to jog from the camera's perspective
+	instead of just the nozzle's. This also makes it possible (although not yet implemented)
+	to do the same kind of thing for paste dispensers when that feature is revived.
+	
+	Work for this feature was performed in: https://github.com/openpnp/openpnp/pull/507
+	
+# 2017-04-01
+
+* Auto Panelization
+
+	Thanks to @BendRocks we now have a robust panelization solution in OpenPnP! Panels allow you
+	to quickly set up multiple copies of a board in an array and allow you to have panel
+	fiducials in addition to board fiducials. There is also a quick X out feature that makes it
+	easy to mark boards in the array that are damaged and should not be placed.
+	
+	This feature is a work in progress. There are some known issues and some limitations
+	but it has matured enough that it's ready for people to start trying it out.
+	
+	Full documentation for this feature is coming soon and will be available at:
+	https://github.com/openpnp/openpnp/wiki/Panelization
+	
+	For more information about this feature, please see the following links:
+	https://github.com/openpnp/openpnp/issues/128
+	https://github.com/openpnp/openpnp/pull/456
+	https://groups.google.com/forum/#!msg/openpnp/_ni0LK8LR8g/5u-0-P-1EwAJ;context-place=forum/openpnp
+
 # 2017-03-31
 
 * Job Placement Status

@@ -311,7 +311,7 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join();
+                readerThread.join(3000);
             }
             input.close();
             output.close();

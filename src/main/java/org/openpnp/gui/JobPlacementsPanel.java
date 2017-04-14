@@ -571,8 +571,10 @@ public class JobPlacementsPanel extends JPanel {
 
             PnpJobProcessor pnpJobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
             int totalSize = pnpJobProcessor.getJobPlacementsById(id).size();
-            int completeSize = pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Complete).size();
-            int processingSize = pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Processing).size();
+            int completeSize =
+                    pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Complete).size();
+            int processingSize =
+                    pnpJobProcessor.getJobPlacementsById(id, JobPlacement.Status.Processing).size();
 
             //
             if (totalSize != 0) {
