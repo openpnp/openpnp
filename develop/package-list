@@ -2,7 +2,6 @@ org.openpnp
 org.openpnp.events
 org.openpnp.gui
 org.openpnp.gui.components
-org.openpnp.gui.components.nav
 org.openpnp.gui.components.reticle
 org.openpnp.gui.importer
 org.openpnp.gui.importer.rs274x
