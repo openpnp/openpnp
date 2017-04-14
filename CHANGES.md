@@ -1,6 +1,22 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-13
+
+* BREAKING CHANGE: Outdated Drivers Removed
+
+	Several outdated drivers have been removed. These are: GrblDriver, MarlinDriver, SprinterDriver
+	TinygDriver. All of these drivers have been replaced with the much better supported
+	GcodeDriver. If you are currently using one of these drivers this version WILL BREAK your
+	configuration. If you need help migrating, please post a question to the mailing list at:
+	
+	http://groups.google.com/group/openpnp
+	
+	More information about this change and the reasoning for it is available at:
+	
+	https://github.com/openpnp/openpnp/issues/415
+	
+
 # 2017-04-09
 
 * Filter Rotated Rects CvStage
