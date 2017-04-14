@@ -41,6 +41,7 @@ import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
@@ -190,6 +191,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Feeder>> l = new ArrayList<>();
         l.add(ReferenceStripFeeder.class);
         l.add(ReferenceTrayFeeder.class);
+        l.add(ReferenceRotatedTrayFeeder.class);
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);

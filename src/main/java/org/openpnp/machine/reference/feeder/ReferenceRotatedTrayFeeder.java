@@ -23,7 +23,7 @@ import javax.swing.Action;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceRotatedTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
@@ -37,7 +37,7 @@ import org.simpleframework.xml.Element;
  * of parts to be picked from without moving any tape. Can handle trays of
  * arbitrary X and Y count.
  */
-public class ReferenceTrayFeeder extends ReferenceFeeder {
+public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	@Attribute
 	private int trayCountX = 1;
@@ -160,7 +160,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
 	@Override
 	public Wizard getConfigurationWizard() {
-		return new ReferenceTrayFeederConfigurationWizard(this);
+		return new ReferenceRotatedTrayFeederConfigurationWizard(this);
 	}
 
 	@Override

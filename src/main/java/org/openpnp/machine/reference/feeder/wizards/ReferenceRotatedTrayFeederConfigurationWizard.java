@@ -45,7 +45,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
@@ -55,8 +55,8 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class ReferenceTrayFeederConfigurationWizard extends AbstractConfigurationWizard {
-	private final ReferenceTrayFeeder feeder;
+public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfigurationWizard {
+	private final ReferenceRotatedTrayFeeder feeder;
 	private final boolean includePickLocation;
 
 	private JTextField textFieldOffsetsX;
@@ -93,11 +93,11 @@ public class ReferenceTrayFeederConfigurationWizard extends AbstractConfiguratio
 	/**
 	 * @wbp.parser.constructor
 	 */
-	public ReferenceTrayFeederConfigurationWizard(ReferenceTrayFeeder feeder) {
+	public ReferenceRotatedTrayFeederConfigurationWizard(ReferenceRotatedTrayFeeder feeder) {
 		this(feeder, true);
 	}
 
-	public ReferenceTrayFeederConfigurationWizard(ReferenceTrayFeeder feeder, boolean includePickLocation) {
+	public ReferenceRotatedTrayFeederConfigurationWizard(ReferenceRotatedTrayFeeder feeder, boolean includePickLocation) {
 		// super(feeder);
 		this.feeder = feeder;
 		this.includePickLocation = includePickLocation;
