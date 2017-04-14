@@ -44,7 +44,6 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
-import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
@@ -85,7 +84,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private JTextField textFieldLastLocationC;
 	private JPanel panelPart;
 
-	private JComboBox comboBoxPart;
+	private JComboBox<?> comboBoxPart;
 	private LocationButtonsPanel locationButtonsPanel;
 	private LocationButtonsPanel lastLocationButtonsPanel;
 	private JTextField retryCountTf;
