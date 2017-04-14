@@ -6,5 +6,5 @@ The fork came from the work of Bob Beattie originally. For more information abou
 
 Original Grbl, with 3 axes is at https://github.com/grbl/grbl.
 
-In OpenPnP you will need to select the `org.openpnp.machine.reference.driver.GrblDriver` driver.
+In OpenPnP you will need to select the `org.openpnp.machine.reference.driver.GcodeDriver` driver.
 
