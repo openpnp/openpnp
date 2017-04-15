@@ -67,28 +67,28 @@ public class Scripting {
         // over.
         if (!getScriptsDirectory().exists()) {
             getScriptsDirectory().mkdirs();
-        }
 
-        // TODO: It would be better if we just copied all the files from the Examples
-        // directory in the jar, but this is relatively difficult to do.
-        // There is some information on how to do it in:
-        // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
-        File examplesDir = new File(getScriptsDirectory(), "Examples");
-        examplesDir.mkdirs();
-        String[] exampleScripts =
-                new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
-                        "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js"};
-        for (String name : exampleScripts) {
-            try {
-                File file = new File(examplesDir, name);
-                if (file.exists()) {
-                    continue;
+            // TODO: It would be better if we just copied all the files from the Examples
+            // directory in the jar, but this is relatively difficult to do.
+            // There is some information on how to do it in:
+            // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
+            File examplesDir = new File(getScriptsDirectory(), "Examples");
+            examplesDir.mkdirs();
+            String[] exampleScripts =
+                    new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
+                            "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js"};
+            for (String name : exampleScripts) {
+                try {
+                    File file = new File(examplesDir, name);
+                    if (file.exists()) {
+                        continue;
+                    }
+                    FileUtils.copyURLToFile(ClassLoader.getSystemResource("scripts/Examples/" + name),
+                            file);
                 }
-                FileUtils.copyURLToFile(ClassLoader.getSystemResource("scripts/Examples/" + name),
-                        file);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
