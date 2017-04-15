@@ -76,8 +76,10 @@ public class Scripting {
         File examplesDir = new File(getScriptsDirectory(), "Examples");
         examplesDir.mkdirs();
         String[] exampleScripts =
-                new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
-                        "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js"};
+                new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
+                        "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
+                        "Python/Print_Hallo_Openpnp.py", "Python/Print_Methods_Vars.py",
+                        "Python/Print_Nozzle_Info.py"};
         for (String name : exampleScripts) {
             try {
                 File file = new File(examplesDir, name);

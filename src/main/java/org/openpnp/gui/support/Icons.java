@@ -69,7 +69,8 @@ public class Icons {
 
     public static Icon powerOn = getIcon("/icons/power_button_on.svg");
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");
-    
+    public static Icon powerOffNoHome = getIcon("/icons/power_button_off_nohome.svg");
+
     public static Icon park = getIcon("/icons/park.svg");
 
     public static Icon scrollDown = getIcon("/icons/scroll-down.svg");

@@ -3,7 +3,7 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-04-14
 
-* Navigation View Removes
+* Navigation View Removed
 
 	The Navigation View has been removed as part of a cleanup effort. This feature was unfinished
 	and is unlikely to ever be finished in this iteration of the UI. Removing it improves startup
