@@ -77,7 +77,10 @@ public class Scripting {
         examplesDir.mkdirs();
         String[] exampleScripts =
                 new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
-                        "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js"};
+                        "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js",
+                        "Clear_Log_Tab.py", "Print_Hallo_Openpnp.py", "Print_Methods_Vars.py",
+                        "Print_Nozzle_Info.py", "Tool_Changer_All_Nozzle_Tips.py",
+                        "Unload_Nozzle.py"};
         for (String name : exampleScripts) {
             try {
                 File file = new File(examplesDir, name);

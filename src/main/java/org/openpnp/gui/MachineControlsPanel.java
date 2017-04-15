@@ -263,6 +263,7 @@ public class MachineControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
             	selectedTool.getHead().home();
+                startStopMachineAction.putValue(Action.SMALL_ICON, Icons.powerOff);
             });
         }
     };
@@ -294,7 +295,7 @@ public class MachineControlsPanel extends JPanel {
     private void updateStartStopButton(boolean enabled) {
         startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
         startStopMachineAction.putValue(Action.SMALL_ICON,
-                enabled ? Icons.powerOff : Icons.powerOn);
+                enabled ? Icons.powerOffNoHome : Icons.powerOn);
     }
 
     private MachineListener machineListener = new MachineListener.Adapter() {
