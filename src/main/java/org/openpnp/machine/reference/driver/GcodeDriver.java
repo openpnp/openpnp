@@ -1193,8 +1193,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         @Override
         public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
-            double raw = Math.toDegrees(
-                    Math.asin((transformedCoordinate - camWheelRadius - camWheelGap) / camRadius));
+            double raw = (transformedCoordinate - camWheelRadius - camWheelGap) / camRadius;
+            raw = Math.min(Math.max(raw, -1), 1);
+            raw = Math.toDegrees(Math.asin(raw));
             if (hm.getId().equals(negatedHeadMountableId)) {
                 raw = -raw;
             }
