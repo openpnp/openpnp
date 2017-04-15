@@ -1,6 +1,23 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-16
+
+* Home Status
+	
+	The "Power On" button now turns yellow when you first enable the machine, and does not
+	turn green until the machine is homed. This helps you notice that you have not yet homed
+	the machine. Thanks to @ldpgh for this helpful feature!
+	
+	More information at https://github.com/openpnp/openpnp/issues/379.
+	
+* Python Script Examples Added
+
+	@ldpgh has added some helpful Python examples to the suite of built in Scripting
+	examples.
+
+	More information at https://github.com/openpnp/openpnp/pull/520.
+	
 # 2017-04-14
 
 * Navigation View Removed
