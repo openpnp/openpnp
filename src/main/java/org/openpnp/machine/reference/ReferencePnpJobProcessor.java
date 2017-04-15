@@ -632,8 +632,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Part part = placement.getPart();
             BoardLocation boardLocation = plannedPlacement.jobPlacement.boardLocation;
             //Check if the individual piece has a fiducial check and check to see if the board is enabled
-            if(jobPlacement.placement.getCheckFids()&&jobPlacement.boardLocation.isEnabled())
+            if(jobPlacement.placement.getCheckFids()&&jobPlacement.boardLocation.isEnabled()) {
                 doIndividualFiducialCheck(jobPlacement.boardLocation);
+            }
 
             // Check if there is a fiducial override for the board location and if so, use it.
             if (boardLocationFiducialOverrides.containsKey(boardLocation)) {

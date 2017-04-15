@@ -241,17 +241,22 @@ public class Length {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Length other = (Length) obj;
-        if (units != other.units)
+        if (units != other.units) {
             return false;
-        if (Double.doubleToLongBits(value) != Double.doubleToLongBits(other.value))
+        }
+        if (Double.doubleToLongBits(value) != Double.doubleToLongBits(other.value)) {
             return false;
+        }
         return true;
     }
 

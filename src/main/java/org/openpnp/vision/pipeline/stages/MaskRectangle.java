@@ -53,8 +53,9 @@ public class MaskRectangle extends CvStage {
         Point low = new Point(mat.cols() / 2 - getWidth() / 2, mat.rows() / 2 - getHeight() / 2);
         Point high = new Point(mat.cols() / 2 + getWidth() / 2, mat.rows() / 2 + getHeight() / 2);
         Core.rectangle(mask, low, high, new Scalar(255, 255, 255), -1);
-        if (getWidth() * getHeight() < 0)
+        if (getWidth() * getHeight() < 0) {
             Core.bitwise_not(mask, mask);
+        }
         mat.copyTo(masked, mask);
         mask.release();
         return new Result(masked);

@@ -155,11 +155,13 @@ public class FilterRects extends CvStage {
         }
         else if (lmax == 0) {
           // derive length from aspect ratio
-          lmax = wmax / armin; lmin = wmin / armax;
+          lmax = wmax / armin; 
+          lmin = wmin / armax;
           sizeType = 1;
         } 
         else if (wmax == 0) {
-          wmax = lmax * armax; wmin = lmin * armin;
+          wmax = lmax * armax; 
+          wmin = lmin * armin;
           sizeType = 1;
         }
         else {

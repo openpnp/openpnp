@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-04-14
+
+* Navigation View Removes
+
+	The Navigation View has been removed as part of a cleanup effort. This feature was unfinished
+	and is unlikely to ever be finished in this iteration of the UI. Removing it improves startup
+	time, removes a dependency on JavaFX and solves some bugs.
+	
+	If you were using this feature and will miss it, please make it known on the mailing list
+	at http://groups.google.com/group/openpnp.
+	
 # 2017-04-13
 
 * BREAKING CHANGE: Outdated Drivers Removed

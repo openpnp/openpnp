@@ -119,7 +119,6 @@ public class MainFrame extends JFrame {
     private JPanel panelCameraAndInstructions;
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
-    private Component navigationPanel;
 
     public static MainFrame get() {
         return mainFrame;
@@ -486,21 +485,9 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "4, 1");
 
-        try {
-            Class c = Class.forName("org.openpnp.gui.components.nav.FxNavigationView");
-            navigationPanel = (Component) c.newInstance();
-            JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
-            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
-            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
-            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
-        }
-        catch (Throwable e) {
-            Logger.warn(
-                    "JavaFX is not installed. The optional navigation feature will not be available.");
-            cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
-                    TitledBorder.TOP, null, null));
-            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
-        }
+        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
         registerBoardImporters();
 
@@ -793,9 +780,9 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                Class ApplicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
-                Class Callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
-                Method launchApplication = ApplicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, Callback);
+                Class applicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+                Class callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
+                Method launchApplication = applicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, callback);
                 launchApplication.invoke(null, "125", null, false, null);
             }
             catch (Exception e) {

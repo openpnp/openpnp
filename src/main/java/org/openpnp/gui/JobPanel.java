@@ -804,7 +804,9 @@ public class JobPanel extends JPanel {
             // before continuing so that we don't accidentally exit early. This breaks
             // the potential race condition where this task may execute before the
             // calling task (setting the FSM state) finishes.
-            while (fsm.getState() != State.Running && fsm.getState() != State.Stepping);
+            while (fsm.getState() != State.Running && fsm.getState() != State.Stepping) {
+                
+            }
 
             do {
                 if (!jobProcessor.next()) {

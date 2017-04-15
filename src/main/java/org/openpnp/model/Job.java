@@ -83,8 +83,9 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 
         firePropertyChange("boardLocations", (Object) oldValue, boardLocations);
 
-        for (int i = 0; i < oldValue.size(); i++)
+        for (int i = 0; i < oldValue.size(); i++) {
             oldValue.get(i).removePropertyChangeListener(this);
+        }
     }
 
     public void addPanel(Panel panel) {
