@@ -78,7 +78,7 @@ public class Scripting {
         String[] exampleScripts =
                 new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
                         "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
-                        "Python/Print_Hallo_Openpnp.py", "Python/Print_Methods_Vars.py",
+                        "Python/Print_Hallo_OpenPnP.py", "Python/Print_Methods_Vars.py",
                         "Python/Print_Nozzle_Info.py"};
         for (String name : exampleScripts) {
             try {
