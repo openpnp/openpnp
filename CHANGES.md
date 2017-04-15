@@ -3,6 +3,14 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-04-16
 
+* Script Directory Ignore
+
+	You can now add an empty .ignore file to any directory under the scripts directory to
+	have that directory be ignored when populating the Scripts menu. This is in support of
+	a feature by @cri-s to improve usability on production machines.
+	
+	More information at https://github.com/openpnp/openpnp/pull/521.
+	
 * Home Status
 	
 	The "Power On" button now turns yellow when you first enable the machine, and does not

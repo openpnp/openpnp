@@ -201,6 +201,9 @@ public class Scripting {
             if (d.equals(eventsDirectory)) {
                 continue;
             }
+            if (new File(d, ".ignore").exists()) {
+                continue;
+            }
             if (!itemNames.contains(d.getName())) {
                 JMenu m = new JMenu(d.getName());
                 addSorted(menu, m);
