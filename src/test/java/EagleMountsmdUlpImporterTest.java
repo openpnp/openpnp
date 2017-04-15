@@ -9,7 +9,7 @@ import com.google.common.io.Files;
 
 public class EagleMountsmdUlpImporterTest {
     @Test
-    public void test() throws Exception {
+    public void testDemoBoard() throws Exception {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
@@ -30,5 +30,42 @@ public class EagleMountsmdUlpImporterTest {
         
         EagleMountsmdUlpImporter.parseFile(top, Side.Top, true);
         EagleMountsmdUlpImporter.parseFile(bottom, Side.Bottom, true);
+    }
+    
+    @Test
+    public void testEAT001() throws Exception {
+        File workingDirectory = Files.createTempDir();
+        workingDirectory = new File(workingDirectory, ".openpnp");
+        System.out.println("Configuration directory: " + workingDirectory);
+
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+
+        File directory = new File("samples", "EAT001");
+        File top = new File(directory, "EAT001.mnt");
+        File bottom = new File(directory, "EAT001.mnb");
+        
+        EagleMountsmdUlpImporter.parseFile(top, Side.Top, true);
+        EagleMountsmdUlpImporter.parseFile(bottom, Side.Bottom, true);
+    }
+
+    /**
+     * Tests to to handle whole numbers in Eagle MN* files. See:
+     * https://github.com/openpnp/openpnp/issues/390
+     * @throws Exception
+     */
+    @Test
+    public void testWholeNumbers() throws Exception {
+        File workingDirectory = Files.createTempDir();
+        workingDirectory = new File(workingDirectory, ".openpnp");
+        System.out.println("Configuration directory: " + workingDirectory);
+
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+
+        File directory = new File("samples", "test");
+        File top = new File(directory, "mountsmd_whole_numbers.mnt");
+        
+        EagleMountsmdUlpImporter.parseFile(top, Side.Top, true);
     }
 }
