@@ -13,6 +13,9 @@ To run a script simply click it's name from the menu.
 
 The Scripts menu also includes a Refresh Scripts item that will manually update the menu and a Open Scripts Directory item that will open the scripts directory using your computer's file manager.
 
+## Ignoring Directories
+If you place an empty file called `.ignore` in any subdirectory under the `scripts` directory then that directory will not be shown in the menu.
+
 ## Language Support
 OpenPnP supports scripts written in JavaScript out of the box and it's easy to add support for other languages. In most cases to add a language it's just a matter of finding a JAR file that implements that language and adding it to your Java classpath. See below for specifics on languages.
 
