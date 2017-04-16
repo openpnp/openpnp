@@ -247,11 +247,19 @@ public class Scripting {
         return items;
     }
 
-    private void execute(File script) throws Exception {
+    public void execute(String script) throws Exception {
+        execute(new File(script), null);
+    }
+    
+    public void execute(File script) throws Exception {
         execute(script, null);
     }
-
-    private void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
+    
+    public void execute(String script, Map<String, Object> additionalGlobals) throws Exception {
+      execute(new File(script), additionalGlobals );
+    }
+    
+    public void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
         ScriptEngine engine =
                 manager.getEngineByExtension(Files.getFileExtension(script.getName()));
 
