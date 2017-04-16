@@ -19,7 +19,7 @@ public class Panel extends AbstractModelObject implements Identifiable {
     @Element
     private Length yGap;
 
-    @Element
+    @Element(required=false)
     private String partId;
 
     @Element
