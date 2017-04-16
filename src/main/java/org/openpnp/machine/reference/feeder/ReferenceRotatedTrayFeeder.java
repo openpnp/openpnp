@@ -40,9 +40,9 @@ import org.simpleframework.xml.Element;
 public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	@Attribute
-	private int trayCountX = 1;
+	private int trayCountCols = 1;
 	@Attribute
-	private int trayCountY = 1;
+	private int trayCountRows = 1;
 	@Element
 	private Location offsets = new Location(LengthUnit.Millimeters);
 	@Attribute
@@ -51,6 +51,8 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	private double trayRotation = 0;
 	@Element
 	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
+	@Element
+	protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
 
 	private Location pickLocation;
 
@@ -67,18 +69,18 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		Logger.debug("{}.feed({})", getName(), nozzle);
 		int partX, partY;
 
-		if (feedCount >= (trayCountX * trayCountY)) {
+		if (feedCount >= (trayCountCols * trayCountRows)) {
 			throw new Exception("Tray empty.");
 		}
 
-		if (trayCountX >= trayCountY) {
+		if (trayCountCols >= trayCountRows) {
 			// X major axis.
-			partX = feedCount / trayCountY;
-			partY = feedCount % trayCountY;
+			partX = feedCount / trayCountRows;
+			partY = feedCount % trayCountRows;
 		} else {
 			// Y major axis.
-			partX = feedCount % trayCountX;
-			partY = feedCount / trayCountX;
+			partX = feedCount % trayCountCols;
+			partY = feedCount / trayCountCols;
 		}
 
 		// Multiply the offsets by the X/Y part indexes to get the total offsets
@@ -88,11 +90,11 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		// 0.0));
 
 		double delta_x1 = partX * offsets.getX() * Math.cos(Math.toRadians(trayRotation));
-		double delta_y1 = Math.sqrt(partX * offsets.getX() * partX * offsets.getX() - delta_x1 * delta_x1);
+		double delta_y1 = Math.sqrt((partX * offsets.getX() * partX * offsets.getX()) - (delta_x1 * delta_x1));
 		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
 
-		double delta_x2 = partY * offsets.getY() * Math.cos(Math.toRadians(90-trayRotation))* -1;
-		double delta_y2 = Math.sqrt(partY * offsets.getY() * partY * offsets.getY() - delta_x2 * delta_x2) * -1;
+		double delta_y2 = partY * offsets.getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
+		double delta_x2 = Math.sqrt((partY * offsets.getY() * partY * offsets.getY()) - (delta_y2 * delta_y2));
 		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
 
 		pickLocation = location.add(delta1.add(delta2));
@@ -103,20 +105,20 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		setFeedCount(getFeedCount() + 1);
 	}
 
-	public int getTrayCountX() {
-		return trayCountX;
+	public int getTrayCountCols() {
+		return trayCountCols;
 	}
 
-	public void setTrayCountX(int trayCountX) {
-		this.trayCountX = trayCountX;
+	public void setTrayCountCols(int trayCountCols) {
+		this.trayCountCols = trayCountCols;
 	}
 
-	public int getTrayCountY() {
-		return trayCountY;
+	public int getTrayCountRows() {
+		return trayCountRows;
 	}
 
-	public void setTrayCountY(int trayCountY) {
-		this.trayCountY = trayCountY;
+	public void setTrayCountRows(int trayCountRows) {
+		this.trayCountRows = trayCountRows;
 	}
 
 	public Location getLastComponentLocation() {
@@ -125,6 +127,14 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	public void setLastComponentLocation(Location LastComponentLocation) {
 		this.lastComponentLocation = LastComponentLocation;
+	}
+
+	public Location getFirstRowLastComponentLocation() {
+		return this.firstRowLastComponentLocation;
+	}
+
+	public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
+		this.firstRowLastComponentLocation = FirstRowLastComponentLocation;
 	}
 
 	public Location getOffsets() {
