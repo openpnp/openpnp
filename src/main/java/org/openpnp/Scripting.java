@@ -76,11 +76,10 @@ public class Scripting {
         File examplesDir = new File(getScriptsDirectory(), "Examples");
         examplesDir.mkdirs();
         String[] exampleScripts =
-                new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
-                        "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js", "QrCodeXout.js",
-                        "Clear_Log_Tab.py", "Print_Hallo_Openpnp.py", "Print_Methods_Vars.py",
-                        "Print_Nozzle_Info.py", "Tool_Changer_All_Nozzle_Tips.py",
-                        "Unload_Nozzle.py"};
+                new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
+                        "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
+                        "Python/Print_Hallo_OpenPnP.py", "Python/Print_Methods_Vars.py",
+                        "Python/Print_Nozzle_Info.py"};
         for (String name : exampleScripts) {
             try {
                 File file = new File(examplesDir, name);
@@ -202,6 +201,9 @@ public class Scripting {
             if (d.equals(eventsDirectory)) {
                 continue;
             }
+            if (new File(d, ".ignore").exists()) {
+                continue;
+            }
             if (!itemNames.contains(d.getName())) {
                 JMenu m = new JMenu(d.getName());
                 addSorted(menu, m);
@@ -245,11 +247,19 @@ public class Scripting {
         return items;
     }
 
-    private void execute(File script) throws Exception {
+    public void execute(String script) throws Exception {
+        execute(new File(script), null);
+    }
+    
+    public void execute(File script) throws Exception {
         execute(script, null);
     }
-
-    private void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
+    
+    public void execute(String script, Map<String, Object> additionalGlobals) throws Exception {
+      execute(new File(script), additionalGlobals );
+    }
+    
+    public void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
         ScriptEngine engine =
                 manager.getEngineByExtension(Files.getFileExtension(script.getName()));
 
