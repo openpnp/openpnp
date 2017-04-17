@@ -1,0 +1,7 @@
+<cv-pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="capture" enabled="true" settle-first="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="dbg_orig" enabled="true" prefix="bv_source_" suffix=".png"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="dbg_final" enabled="true" prefix="bv_result_" suffix=".png"/>
+   </stages>
+</cv-pipeline>

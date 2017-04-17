@@ -16,7 +16,10 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.apache.commons.io.IOUtils;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -34,8 +37,13 @@ import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.stages.SetResult;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
@@ -44,6 +52,8 @@ import org.simpleframework.xml.Root;
  */
 @Root
 public class ReferenceFiducialLocator implements FiducialLocator {
+    @Element(required = false)
+    protected CvPipeline pipeline = createDefaultPipeline();
 
     public Location locateBoard(BoardLocation boardLocation) throws Exception {
         return locateBoard(boardLocation, false);
@@ -191,7 +201,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @return
      * @throws Exception
      */
-    private static Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
+    private Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
             throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
@@ -233,9 +243,12 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
 
+        pipeline.setCamera(camera);
+        SetResult setResult = (SetResult) pipeline.getStage("template");
+        setResult.setImage(OpenCvUtils.toMat(template));
         for (int i = 0; i < 3; i++) {
-            // Wait for camera to settle
-            Thread.sleep(camera.getSettleTimeMs());
+            pipeline.process();
+            
             // Perform vision operation
             location = getBestTemplateMatch(camera, template);
             if (location == null) {
@@ -376,6 +389,31 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
         return fiducials;
     }
+    
+    public CvPipeline getPipeline() {
+        CvStage templateStage = pipeline.getStage("template");
+        if (templateStage == null) {
+            SetResult setResult = new SetResult(null, null);
+            setResult.setName("template");
+            pipeline.insert(setResult, 0);
+        }
+        return pipeline;
+    }
+
+    public void setPipeline(CvPipeline pipeline) {
+        this.pipeline = pipeline;
+    }
+    
+    public static CvPipeline createDefaultPipeline() {
+        try {
+            String xml = IOUtils.toString(ReferenceBottomVision.class
+                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+    }
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -390,8 +428,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        // TODO Auto-generated method stub
-        return null;
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(new ReferenceFiducialLocatorConfigurationWizard(this))};
     }
 
     @Override
