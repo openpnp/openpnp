@@ -160,17 +160,6 @@ Positive factors mean a machine leaning right, negatives ones leaning left.
 
 # Troubleshooting
 
-## Asking for Help
-
-If you are asking for help, especially on the mailing list, please follow the instructions below to make sure that you provide enough information for people to help figure out what the problem is.
-
-1. Turn on trace logging. See https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging for more information.
-2. Perform whatever actions are causing a problem.
-3. Shut down OpenPnP.
-4. Find the OpenPnP.log file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
-5. Find your machine.xml configuration file: https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located
-6. Send both the machine.xml file and the OpenPnP.log file to whoever you are asking for help.
-
 ## Nozzle is Moving When Camera is Moved
 
 If your nozzle is moving when the camera is commanded to move, especially in Z, you need to set up [[GcodeDriver: Axis Mapping]] so that the camera is not included in the Z axis. This is done by specifying only the Nozzle IDs in the Z axis instead of "*". For more information see [[GcodeDriver: Axis Mapping]].
