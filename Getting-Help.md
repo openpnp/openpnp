@@ -14,5 +14,5 @@ If you are having trouble configuring OpenPnP, or you need help with something t
 5. Describe the problem in the "Please Describe the Issue" field.
 6. Uncheck any boxes you don't want to send but be aware that the more data you send the better.
 7. Click Send. Submit Diagnostics will upload the files and then open a URL in your browser. You can look at the page that opens to make sure it's okay.
-8. Send the URL to the Discussion Group or the IRC channel.
+8. Send the URL to the [Discussion Group](https://github.com/openpnp/openpnp/wiki/Getting-Help#discussion-group) or the [IRC channel](https://github.com/openpnp/openpnp/wiki/Getting-Help#live-chat).
 
