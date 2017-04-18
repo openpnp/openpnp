@@ -165,7 +165,7 @@ Boards tell OpenPnP which parts to place and where to place them. Boards are sto
 
 Board files are independent from any user or machine. You can share Board files for a given PCB design and use the file to build that particular PCB.
 
-You will typically create a new Board file by [importing data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data) such as Eagle or KiCAD. Once you've created a Board file for a design there's no need to change it unless the design changes.
+You will typically create a new Board file by importing data from your CAD software such as Eagle or KiCAD. Once you've created a Board file for a design there's no need to change it unless the design changes.
 
 PCB locations represent the 0,0,0 origin of the top of the PCB. This tells the machine where to find 0,0,0 on the board and it performs the math needed to find the individual placements from there. Part height is added when placing a part so that the needle stops at "part height" above the board.
 
