@@ -4,10 +4,7 @@
 * [[Quick Start]]
 * [[Setup and Calibration]]
 * [[User Manual]]
-* [[Motion Controllers]]
 * [[Video Tutorials]]
-* [[Importing Centroid Data]]
-* [[Scripting]]
 * [[FAQ]]
 * [[Getting Help]]
 
