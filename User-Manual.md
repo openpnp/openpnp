@@ -62,7 +62,7 @@ OpenPnP is primarily a single window interface, broken up into multiple sections
 
 The Main Window
 ---------------
-![screen shot 2017-01-09 at 7 59 00 pm](https://cloud.githubusercontent.com/assets/1182323/21791153/962a6e0c-d6a6-11e6-82b7-ba252e94cc79.png)
+![screen shot 2017-04-14 at 6 15 55 pm](https://cloud.githubusercontent.com/assets/1182323/25058445/1c1ce4f8-213f-11e7-86f7-f30aea7d7425.png)
 
 Machine Controls
 ----------------
