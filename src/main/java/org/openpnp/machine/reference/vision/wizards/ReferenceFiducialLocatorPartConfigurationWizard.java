@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -15,10 +14,10 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -31,11 +30,16 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
+public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFiducialLocator fiducialLocator;
+    private final Part part;
+    private final PartSettings partSettings;
 
-    public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator) {
+    public ReferenceFiducialLocatorPartConfigurationWizard(ReferenceFiducialLocator fiducialLocator,
+            Part part) {
         this.fiducialLocator = fiducialLocator;
+        this.part = part;
+        this.partSettings = fiducialLocator.getPartSettings(part);
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
@@ -44,8 +48,6 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -67,45 +69,28 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         });
         panel.add(editPipelineButton, "4, 2");
 
-        JButton btnResetToDefault = new JButton("Reset to Default");
-        btnResetToDefault.addActionListener((e) -> {
+        JButton btnLoadDefault = new JButton("Reset to Default");
+        btnLoadDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current pipeline with the built in default pipeline. Are you sure?",
+                    "This will replace the current part pipeline with the default pipeline. Are you sure?",
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    fiducialLocator.setPipeline(ReferenceFiducialLocator.createDefaultPipeline());
+                    partSettings.setPipeline(fiducialLocator.getPipeline().clone());
                     editPipeline();
                 });
             }
         });
-        panel.add(btnResetToDefault, "6, 2");
-
-        JButton btnResetAllTo = new JButton("Reset All Parts");
-        btnResetAllTo.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace all custom part pipelines with the current pipeline. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    for (PartSettings partSettings : fiducialLocator.getPartSettingsByPartId()
-                            .values()) {
-                        partSettings.setPipeline(fiducialLocator.getPipeline().clone());
-                    }
-                    MessageBoxes.infoBox("Parts Reset",
-                            "All custom part pipelines have been reset.");
-                });
-            }
-        });
-        panel.add(btnResetAllTo, "8, 2");
+        panel.add(btnLoadDefault, "6, 2");
     }
 
     private void editPipeline() throws Exception {
-        CvPipeline pipeline = fiducialLocator.getPipeline();
+        CvPipeline pipeline = partSettings.getPipeline();
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+        BufferedImage template = ReferenceFiducialLocator.createTemplate(camera, part);
         if (pipeline.getStage("template") instanceof SetResult) {
             SetResult setResult = (SetResult) pipeline.getStage("template");
-            // We could inject a default template here since we don't have a part.
+            setResult.setImage(OpenCvUtils.toMat(template));
         }
         pipeline.setCamera(camera);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
@@ -115,7 +100,6 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
     }
-
     @Override
     public void createBindings() {
     }

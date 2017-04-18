@@ -67,6 +67,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.MovableUtils;
@@ -170,6 +171,11 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
+        
+        fiducialPanel = new JPanel();
+        JScrollPane scrollPane = new JScrollPane(fiducialPanel);
+        fiducialPanel.setLayout(new BorderLayout(0, 0));
+        tabbedPane.addTab("Fiducial Locator", null, scrollPane, null);
 
         JButton btnNewPart = toolBar.add(newPartAction);
         btnNewPart.setToolTipText("");
@@ -197,6 +203,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 }
 
                 alignmentPanel.removeAll();
+                fiducialPanel.removeAll();
 
                 Part part = getSelection();
                 
@@ -207,6 +214,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     if (wizard != null) {
                         wizard.setWizardContainer(PartsPanel.this);
                         alignmentPanel.add(wizard.getWizardPanel());
+                    }
+                    
+                    FiducialLocator fiducialLocator =
+                            Configuration.get().getMachine().getFiducialLocator();
+                    wizard = fiducialLocator.getPartConfigurationWizard(part);
+                    if (wizard != null) {
+                        wizard.setWizardContainer(PartsPanel.this);
+                        fiducialPanel.add(wizard.getWizardPanel());
                     }
                 }
 
@@ -342,6 +357,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             });
         }
     };
+    private JPanel fiducialPanel;
 
     @Override
     public void wizardCompleted(Wizard wizard) {}

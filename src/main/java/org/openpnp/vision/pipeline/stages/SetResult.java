@@ -8,6 +8,10 @@ public class SetResult extends CvStage {
     private Mat image;
     private Object model;
     
+    public SetResult() {
+        this(null, null);
+    }
+    
     public SetResult(Mat image, Object model) {
         this.image = image;
         this.model = model;
@@ -31,6 +35,6 @@ public class SetResult extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        return new Result(image, model);
+        return new Result(image.clone(), model);
     }
 }
