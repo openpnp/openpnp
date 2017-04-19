@@ -19,6 +19,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.features2d.KeyPoint;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -260,10 +261,18 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             setResult.setImage(OpenCvUtils.toMat(template));
         }
         for (int i = 0; i < 3; i++) {
+            // Perform vision operation
             pipeline.process();
             
-            // Perform vision operation
-            location = getBestTemplateMatch(camera, template);
+            // Process the results
+            location = getBestResult(camera, (List<KeyPoint>) pipeline.getResult("results").model);
+            
+            // TODO STOPSHIP feel like it would be better to do the conversions explicitly, i.e.
+            // I need a List<KeyPoint> so call a function that will convert whatever to that,
+            // including a singleton, rather than having the user trying to do conversions.
+            // And sorting remains a concern, cause what if they want a different hueristic?
+            
+            
             if (location == null) {
                 Logger.debug("No matches found!");
                 return null;
@@ -274,6 +283,27 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         }
 
         return location;
+    }
+    
+    private static Location getBestResult(Camera camera, List<KeyPoint> keyPoints) {
+        if (keyPoints == null || keyPoints.isEmpty()) {
+            return null;
+        }
+        
+        // getTemplateMatches returns results in order of score, but we're
+        // more interested in the result closest to the expected location
+//        Collections.sort(keyPoints, new Comparator<KeyPoint>() {
+//            @Override
+//            public int compare(KeyPoint o1, KeyPoint o2) {
+//                double d1 = o1.location.getLinearDistanceTo(camera.getLocation());
+//                double d2 = o2.location.getLinearDistanceTo(camera.getLocation());
+//                return Double.compare(d1, d2);
+//            }
+//        });
+//
+//        return matches.get(0).location;
+
+        return null;
     }
 
     private static Location getBestTemplateMatch(final Camera camera, BufferedImage template)
