@@ -158,6 +158,15 @@ The GCodeDriver can compensate such non squareness with a "Non-Squareness Factor
 
 Positive factors mean a machine leaning right, negatives ones leaning left.
 
+Once you have calculated the factor and entered the values, you also need to update your MOVE_TO_COMMAND to include the new values. It should look something like this:
+
+```
+G0 {BacklashOffsetX:X%.4f} {BacklashOffsetY:Y%.4f} {Z:Z%.4f} {Rotation:A%.4f} F{FeedRate:%.0f}
+G1 {X:X%.4f} {Y:Y%.4f} {Z:Z%.4f} {Rotation:A%.4f} F{BacklashFeedRate:%.0f}
+```
+
+The updated command moves past the target point using the backlash offsets and then moves back towards the target point at a slower rate. This ensures that the point is always approached from the same direction, cancelling backlash.
+
 # Troubleshooting
 
 ## Nozzle is Moving When Camera is Moved
