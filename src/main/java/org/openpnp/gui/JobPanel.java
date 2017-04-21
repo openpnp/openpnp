@@ -1357,6 +1357,9 @@ public class JobPanel extends JPanel {
 
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);
+        // Repainting here refreshes the tables, which contain status that needs to be updated.
+        // Would be better to have property notifiers but this is going to have to do for now.
+        repaint();
     };
 
 }

@@ -598,7 +598,6 @@ public class JobPlacementsPanel extends JPanel {
 
             setForeground(Color.black);
             setText(id);
-            table.repaint();
         }
     }
 }
