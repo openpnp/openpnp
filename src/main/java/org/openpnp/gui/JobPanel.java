@@ -680,8 +680,19 @@ public class JobPanel extends JPanel {
                 (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName()));
         frame.setTitle(title);
     }
+    
+    private boolean checkJobStopped() {
+        if (fsm.getState() != State.Stopped) {
+            MessageBoxes.errorBox(this, "Error", "Job must be stopped first.");
+            return false;
+        }
+        return true;
+    }
 
     public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
+        if (!checkJobStopped()) {
+            return;
+        }
         if (getSelectedBoardLocation() == null) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed",
                     "Please select a board in the Jobs tab to import into.");
@@ -726,6 +737,9 @@ public class JobPanel extends JPanel {
     public final Action openJobAction = new AbstractAction("Open Job...") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            if (!checkJobStopped()) {
+                return;
+            }
             if (!checkForModifications()) {
                 return;
             }
@@ -756,6 +770,9 @@ public class JobPanel extends JPanel {
     public final Action newJobAction = new AbstractAction("New Job") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            if (!checkJobStopped()) {
+                return;
+            }
             if (!checkForModifications()) {
                 return;
             }
@@ -1309,6 +1326,9 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            if (!checkJobStopped()) {
+                return;
+            }
             if (!checkForModifications()) {
                 return;
             }
