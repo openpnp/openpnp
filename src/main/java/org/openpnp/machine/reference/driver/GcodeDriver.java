@@ -453,8 +453,17 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
             if (xAxis == null || xAxis.getCoordinate() == x) {
-                command = substituteVariable(command, "X", null);
-                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
+                if(yAxis != null && yAxis.getCoordinate() != y &&
+                   xAxis != null && nonSquarenessFactor != 0) {
+                    command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
+                    command = substituteVariable(command, "BacklashOffsetX", x + nonSquarenessFactor * y);
+
+                    xAxis.setCoordinate(x);
+                }
+                else {
+                    command = substituteVariable(command, "X", null);
+                    command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
+                }
             }
             else {
                 command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
