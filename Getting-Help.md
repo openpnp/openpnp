@@ -10,7 +10,7 @@ If you are having trouble configuring OpenPnP, or you need help with something t
 1. Turn on trace logging. See https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging for more information.
 2. Restart OpenPnP.
 3. Perform whatever actions are causing a problem. Try to do ONLY the minimum needed to show the problem.
-4. Go to Menu -> Help -> Submit Diagnostics.
+4. Go to Menu -> Help -> Submit Diagnostics. If you do not see this option please upgrade to the latest version of OpenPnP.
 5. Describe the problem in the "Please Describe the Issue" field.
 6. Uncheck any boxes you don't want to send but be aware that the more data you send the better.
 7. Click Send. Submit Diagnostics will upload the files and then open a URL in your browser. You can look at the page that opens to make sure it's okay.
