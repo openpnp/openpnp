@@ -18,7 +18,9 @@ Stages may also produce non-image data as output. This data can be used by later
 
 # UI
 
-CvPipeline includes a basic UI for editing the pipeline and viewing the results of each stage. At each stage you can view the resulting image and any additional data that was produced.
+CvPipeline includes a user interface for editing the pipeline and viewing the results of each stage. At each stage you can view the resulting image and any additional data that was produced.
+
+![screen shot 2017-04-30 at 11 54 21 am](https://cloud.githubusercontent.com/assets/1182323/25566302/d7566d44-2d9b-11e7-97e6-07328db96843.png)
 
 # Stage Documentation
 
