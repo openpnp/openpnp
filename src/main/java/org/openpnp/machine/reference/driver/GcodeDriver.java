@@ -444,65 +444,86 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
             }
 
-            boolean haveToMove = false;
-
             String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
             command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
-            if (xAxis == null || xAxis.getCoordinate() == x) {
-                command = substituteVariable(command, "X", null);
-                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
+            /**
+             * NSF gets applied to X and is multiplied by Y
+             * 
+             */
+            
+            boolean includeX = false, includeY = false, includeZ = false, includeRotation = false;
+            
+            // Primary checks to see if an axis should move
+            if (xAxis != null && xAxis.getCoordinate() != x) {
+                includeX = true;
             }
-            else {
+            if (yAxis != null && yAxis.getCoordinate() != y) {
+                includeY = true;
+            }
+            if (zAxis != null && zAxis.getCoordinate() != z) {
+                includeZ = true;
+            }
+            if (rotationAxis != null && rotationAxis.getCoordinate() != rotation) {
+                includeRotation = true;
+            }
+
+            // If Y is moving and there is a non squareness factor we also need to move X, even if
+            // no move was intended for X.
+            if (includeY && nonSquarenessFactor != 0 && xAxis != null) {
+                includeX = true;
+            }
+            
+            if (includeX) {
                 command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
                 command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
-                haveToMove = true;
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
                 }
                 xAxis.setCoordinate(x);
             }
-
-            if (yAxis == null || yAxis.getCoordinate() == y) {
-                command = substituteVariable(command, "Y", null);
-                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
-            }
             else {
+                command = substituteVariable(command, "X", null);
+                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
+            }
+
+            if (includeY) {
                 command = substituteVariable(command, "Y", y);
                 command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
-                haveToMove = true;
                 if (yAxis.getPreMoveCommand() != null) {
                     sendGcode(yAxis.getPreMoveCommand());
                 }
             }
-
-            if (zAxis == null || zAxis.getCoordinate() == z) {
-                command = substituteVariable(command, "Z", null);
-            }
             else {
+                command = substituteVariable(command, "Y", null);
+                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
+            }
+
+            if (includeZ) {
                 command = substituteVariable(command, "Z", z);
-                haveToMove = true;
                 if (zAxis.getPreMoveCommand() != null) {
                     sendGcode(zAxis.getPreMoveCommand());
                 }
             }
-
-            if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
-                command = substituteVariable(command, "Rotation", null);
-            }
             else {
+                command = substituteVariable(command, "Z", null);
+            }
+
+            if (includeRotation) {
                 command = substituteVariable(command, "Rotation", rotation);
-                haveToMove = true;
                 if (rotationAxis.getPreMoveCommand() != null) {
                     sendGcode(rotationAxis.getPreMoveCommand());
                 }
             }
+            else {
+                command = substituteVariable(command, "Rotation", null);
+            }
 
             // Only give a command when move is necessary
-            if (haveToMove) {
+            if (includeX || includeY || includeZ || includeRotation) {
 
                 List<String> responses = sendGcode(command);
 
