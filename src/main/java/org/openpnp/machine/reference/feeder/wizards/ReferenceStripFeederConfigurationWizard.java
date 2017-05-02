@@ -513,8 +513,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     .blurGaussian(feeder.getHoleBlurKernelSize())
                     .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
                             feeder.getHolePitchMin())
-                    .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                            feeder.getHoleDistanceMax())
+                                 .filterCirclesByDistance(feeder.getHoleDistanceMin(),
+                                         feeder.getHoleDistanceMax())
                     .filterCirclesToLine(feeder.getHoleLineDistanceMax())
                     .drawCircles("original", Color.green).toBufferedImage();
         }
