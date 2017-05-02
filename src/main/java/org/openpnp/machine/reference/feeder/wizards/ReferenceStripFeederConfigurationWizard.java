@@ -112,35 +112,30 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         this.feeder = feeder;
 
         panelPart = new JPanel();
-        panelPart.setBorder(
-                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+        panelPart.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
         try {
         }
         catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
-                
-                lblPart = new JLabel("Part");
-                panelPart.add(lblPart, "2, 2, right, default");
-        
-                comboBoxPart = new JComboBox();
-                comboBoxPart.setModel(new PartsComboBoxModel());
-                comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-                panelPart.add(comboBoxPart, "4, 2, left, default");
+
+        lblPart = new JLabel("Part");
+        panelPart.add(lblPart, "2, 2, right, default");
+
+        comboBoxPart = new JComboBox();
+        comboBoxPart.setModel(new PartsComboBoxModel());
+        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
+        panelPart.add(comboBoxPart, "4, 2, left, default");
 
         lblRotationInTape = new JLabel("Rotation In Tape");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
@@ -148,10 +143,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
-        
+
         lblRetryCount = new JLabel("Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
-        
+
         retryCountTf = new JTextField();
         retryCountTf.setText("3");
         panelPart.add(retryCountTf, "4, 6, fill, default");
@@ -381,7 +376,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             firstPartLocation = action.getLocation();
-            final CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
+            final CameraView cameraView =
+                    MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
             cameraView.removeActionListener(this);
             Configuration.get().getMachine().submit(new Callable<Void>() {
                 public Void call() throws Exception {
@@ -416,7 +412,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             secondPartLocation = action.getLocation();
-            final CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
+            final CameraView cameraView =
+                    MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
             cameraView.removeActionListener(this);
             Configuration.get().getMachine().submit(new Callable<Void>() {
                 public Void call() throws Exception {
@@ -426,8 +423,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
                     List<Location> referenceHoles =
                             deriveReferenceHoles(part1HoleLocations, part2HoleLocations);
-                    final Location referenceHole1 = referenceHoles.get(0).derive(null, null, null, 0d);
-                    final Location referenceHole2 = referenceHoles.get(1).derive(null, null, null, 0d);
+                    final Location referenceHole1 =
+                            referenceHoles.get(0).derive(null, null, null, 0d);
+                    final Location referenceHole2 =
+                            referenceHoles.get(1).derive(null, null, null, 0d);
 
                     feeder.setReferenceHoleLocation(referenceHole1);
                     feeder.setLastHoleLocation(referenceHole2);
