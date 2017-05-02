@@ -26,7 +26,7 @@
 <setting id="org.eclipse.jdt.core.formatter.insert_space_after_semicolon_in_for" value="insert"/>
 <setting id="org.eclipse.jdt.core.formatter.disabling_tag" value="@formatter:off"/>
 <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
-<setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="0"/>
+<setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="49"/>
 <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_imports" value="0"/>
 <setting id="org.eclipse.jdt.core.formatter.blank_lines_after_package" value="1"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_space_after_binary_operator" value="insert"/>
@@ -161,7 +161,7 @@
 <setting id="org.eclipse.jdt.core.formatter.insert_space_before_colon_in_for" value="insert"/>
 <setting id="org.eclipse.jdt.core.formatter.alignment_for_resources_in_try" value="80"/>
 <setting id="org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentations" value="false"/>
-<setting id="org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation" value="16"/>
+<setting id="org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation" value="83"/>
 <setting id="org.eclipse.jdt.core.formatter.never_indent_block_comments_on_first_column" value="false"/>
 <setting id="org.eclipse.jdt.core.compiler.source" value="1.8"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_synchronized" value="do not insert"/>
