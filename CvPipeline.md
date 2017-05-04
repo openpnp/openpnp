@@ -22,6 +22,13 @@ CvPipeline includes a user interface for editing the pipeline and viewing the re
 
 ![screen shot 2017-04-30 at 11 54 21 am](https://cloud.githubusercontent.com/assets/1182323/25566302/d7566d44-2d9b-11e7-97e6-07328db96843.png)
 
+# Running the Editor
+
+You can use the pipeline editor within OpenPnP wherever you see an "Edit Pipeline" button. You can also launch it standalone for creating pipelines outside of OpenPnP. To do that you need Java installed.
+
+1. Go to the OpenPnP install directory on the command line.
+2. Run `java -cp openpnp-gui-0.0.1-alpha-SNAPSHOT.jar org.openpnp.vision.pipeline.ui.StandaloneEditor`
+
 # Stage Documentation
 
 ## Note to Contributors
