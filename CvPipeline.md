@@ -29,6 +29,8 @@ You can use the pipeline editor within OpenPnP wherever you see an "Edit Pipelin
 1. Go to the OpenPnP install directory on the command line.
 2. Run `java -cp openpnp-gui-0.0.1-alpha-SNAPSHOT.jar org.openpnp.vision.pipeline.ui.StandaloneEditor`
 
+The standalone pipeline editor has one additional leftmost panel for quickly choosing input images for an `imageRead` stage, with just a single mouse click or an `up` or `down` keypress.
+
 # Stage Documentation
 
 ## Note to Contributors
