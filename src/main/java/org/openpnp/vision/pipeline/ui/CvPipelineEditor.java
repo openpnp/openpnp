@@ -45,6 +45,7 @@ import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.Rotate;
+import org.openpnp.vision.pipeline.stages.RotatedRectsRead;
 import org.openpnp.vision.pipeline.stages.ScriptRun;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
@@ -99,6 +100,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(Normalize.class);
         registerStageClass(ReadModelProperty.class);
         registerStageClass(Rotate.class);
+        registerStageClass(RotatedRectsRead.class);
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
