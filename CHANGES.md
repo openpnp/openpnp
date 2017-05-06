@@ -1,6 +1,16 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+@ 2017-05-06
+
+* New Bottom Vision Scripting Events
+
+	Two new scripting events have been added to assist with bottom vision lighting. They are
+	Vision.PartAlignment.Before and Vision.PartAlignment.After.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#visionpartalignmentbefore for more
+	information.
+
 # 2017-04-16
 
 * Script Directory Ignore
