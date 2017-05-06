@@ -284,8 +284,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter =
-                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
+                                                                           .getLengthDisplayFormat());
 
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
@@ -334,8 +334,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                autoSetupCamera =
-                        Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+                autoSetupCamera = Configuration.get()
+                                               .getMachine()
+                                               .getDefaultHead()
+                                               .getDefaultCamera();
             }
             catch (Exception ex) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Auto Setup Failure", ex);
@@ -344,7 +346,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
             btnAutoSetup.setAction(autoSetupCancel);
 
-            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(autoSetupCamera);
             cameraView.addActionListener(autoSetupPart1Clicked);
             cameraView.setText("Click on the center of the first part in the tape.");
             cameraView.flash();
@@ -364,7 +368,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(ActionEvent e) {
             btnAutoSetup.setAction(autoSetup);
-            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(autoSetupCamera);
             cameraView.setText(null);
             cameraView.setCameraViewFilter(null);
             cameraView.removeActionListener(autoSetupPart1Clicked);
@@ -376,35 +382,40 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             firstPartLocation = action.getLocation();
-            final CameraView cameraView =
-                    MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
+            final CameraView cameraView = MainFrame.get()
+                                                   .getCameraViews()
+                                                   .getCameraView(autoSetupCamera);
             cameraView.removeActionListener(this);
-            Configuration.get().getMachine().submit(new Callable<Void>() {
-                public Void call() throws Exception {
-                    cameraView.setText("Checking first part...");
-                    autoSetupCamera.moveTo(action.getLocation());
-                    part1HoleLocations = findHoles(autoSetupCamera);
+            Configuration.get()
+                         .getMachine()
+                         .submit(new Callable<Void>() {
+                             public Void call() throws Exception {
+                                 cameraView.setText("Checking first part...");
+                                 autoSetupCamera.moveTo(action.getLocation());
+                                 part1HoleLocations = findHoles(autoSetupCamera);
 
-                    cameraView.setText("Now click on the center of the second part in the tape.");
-                    cameraView.flash();
+                                 cameraView.setText(
+                                         "Now click on the center of the second part in the tape.");
+                                 cameraView.flash();
 
-                    cameraView.addActionListener(autoSetupPart2Clicked);
-                    return null;
-                }
-            }, new FutureCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {}
+                                 cameraView.addActionListener(autoSetupPart2Clicked);
+                                 return null;
+                             }
+                         }, new FutureCallback<Void>() {
+                             @Override
+                             public void onSuccess(Void result) {}
 
-                @Override
-                public void onFailure(final Throwable t) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            autoSetupCancel.actionPerformed(null);
-                            MessageBoxes.errorBox(getTopLevelAncestor(), "Auto Setup Failure", t);
-                        }
-                    });
-                }
-            });
+                             @Override
+                             public void onFailure(final Throwable t) {
+                                 SwingUtilities.invokeLater(new Runnable() {
+                                     public void run() {
+                                         autoSetupCancel.actionPerformed(null);
+                                         MessageBoxes.errorBox(getTopLevelAncestor(),
+                                                 "Auto Setup Failure", t);
+                                     }
+                                 });
+                             }
+                         });
         }
     };
 
@@ -412,77 +423,87 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         @Override
         public void actionPerformed(final CameraViewActionEvent action) {
             secondPartLocation = action.getLocation();
-            final CameraView cameraView =
-                    MainFrame.get().getCameraViews().getCameraView(autoSetupCamera);
+            final CameraView cameraView = MainFrame.get()
+                                                   .getCameraViews()
+                                                   .getCameraView(autoSetupCamera);
             cameraView.removeActionListener(this);
-            Configuration.get().getMachine().submit(new Callable<Void>() {
-                public Void call() throws Exception {
-                    cameraView.setText("Checking second part...");
-                    autoSetupCamera.moveTo(action.getLocation());
-                    List<Location> part2HoleLocations = findHoles(autoSetupCamera);
+            Configuration.get()
+                         .getMachine()
+                         .submit(new Callable<Void>() {
+                             public Void call() throws Exception {
+                                 cameraView.setText("Checking second part...");
+                                 autoSetupCamera.moveTo(action.getLocation());
+                                 List<Location> part2HoleLocations = findHoles(autoSetupCamera);
 
-                    List<Location> referenceHoles =
-                            deriveReferenceHoles(part1HoleLocations, part2HoleLocations);
-                    final Location referenceHole1 =
-                            referenceHoles.get(0).derive(null, null, null, 0d);
-                    final Location referenceHole2 =
-                            referenceHoles.get(1).derive(null, null, null, 0d);
+                                 List<Location> referenceHoles = deriveReferenceHoles(
+                                         part1HoleLocations, part2HoleLocations);
+                                 final Location referenceHole1 = referenceHoles.get(0)
+                                                                               .derive(null, null,
+                                                                                       null, 0d);
+                                 final Location referenceHole2 = referenceHoles.get(1)
+                                                                               .derive(null, null,
+                                                                                       null, 0d);
 
-                    feeder.setReferenceHoleLocation(referenceHole1);
-                    feeder.setLastHoleLocation(referenceHole2);
+                                 feeder.setReferenceHoleLocation(referenceHole1);
+                                 feeder.setLastHoleLocation(referenceHole2);
 
-                    Length partPitch = firstPartLocation.getLinearLengthTo(secondPartLocation);
-                    partPitch.setValue(2 * (Math.round(partPitch.getValue() / 2)));
+                                 Length partPitch =
+                                         firstPartLocation.getLinearLengthTo(secondPartLocation);
+                                 partPitch.setValue(2 * (Math.round(partPitch.getValue() / 2)));
 
-                    final Length partPitch_ = partPitch;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            Helpers.copyLocationIntoTextFields(referenceHole1, textFieldFeedStartX,
-                                    textFieldFeedStartY, null);
-                            Helpers.copyLocationIntoTextFields(referenceHole2, textFieldFeedEndX,
-                                    textFieldFeedEndY, null);
-                            textFieldPartPitch.setText(partPitch_.getValue() + "");
-                        }
-                    });
+                                 final Length partPitch_ = partPitch;
+                                 SwingUtilities.invokeLater(new Runnable() {
+                                     public void run() {
+                                         Helpers.copyLocationIntoTextFields(referenceHole1,
+                                                 textFieldFeedStartX, textFieldFeedStartY, null);
+                                         Helpers.copyLocationIntoTextFields(referenceHole2,
+                                                 textFieldFeedEndX, textFieldFeedEndY, null);
+                                         textFieldPartPitch.setText(partPitch_.getValue() + "");
+                                     }
+                                 });
 
-                    feeder.setFeedCount(1);
-                    autoSetupCamera.moveTo(feeder.getPickLocation());
-                    feeder.setFeedCount(0);
+                                 feeder.setFeedCount(1);
+                                 autoSetupCamera.moveTo(feeder.getPickLocation());
+                                 feeder.setFeedCount(0);
 
-                    cameraView.setText("Setup complete!");
-                    Thread.sleep(1500);
-                    cameraView.setText(null);
-                    cameraView.setCameraViewFilter(null);
-                    btnAutoSetup.setAction(autoSetup);
+                                 cameraView.setText("Setup complete!");
+                                 Thread.sleep(1500);
+                                 cameraView.setText(null);
+                                 cameraView.setCameraViewFilter(null);
+                                 btnAutoSetup.setAction(autoSetup);
 
-                    return null;
-                }
-            }, new FutureCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {}
+                                 return null;
+                             }
+                         }, new FutureCallback<Void>() {
+                             @Override
+                             public void onSuccess(Void result) {}
 
-                @Override
-                public void onFailure(final Throwable t) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            autoSetupCancel.actionPerformed(null);
-                            MessageBoxes.errorBox(getTopLevelAncestor(), "Auto Setup Failure", t);
-                        }
-                    });
-                }
-            });
+                             @Override
+                             public void onFailure(final Throwable t) {
+                                 SwingUtilities.invokeLater(new Runnable() {
+                                     public void run() {
+                                         autoSetupCancel.actionPerformed(null);
+                                         MessageBoxes.errorBox(getTopLevelAncestor(),
+                                                 "Auto Setup Failure", t);
+                                     }
+                                 });
+                             }
+                         });
         }
     };
 
     private List<Location> findHoles(Camera camera) {
         List<Location> holeLocations = new ArrayList<>();
-        new FluentCv().setCamera(camera).settleAndCapture().toGray()
-                .blurGaussian(feeder.getHoleBlurKernelSize())
-                .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
-                        feeder.getHolePitchMin())
-                .filterCirclesByDistance(feeder.getHoleDistanceMin(), feeder.getHoleDistanceMax())
-                .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                .convertCirclesToLocations(holeLocations);
+        new FluentCv().setCamera(camera)
+                      .settleAndCapture()
+                      .toGray()
+                      .blurGaussian(feeder.getHoleBlurKernelSize())
+                      .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
+                              feeder.getHolePitchMin())
+                      .filterCirclesByDistance(feeder.getHoleDistanceMin(),
+                              feeder.getHoleDistanceMax())
+                      .filterCirclesToLine(feeder.getHoleLineDistanceMax())
+                      .convertCirclesToLocations(holeLocations);
         return holeLocations;
     }
 
@@ -496,27 +517,35 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
      */
     private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) {
         if (showDetails) {
-            return new FluentCv().setCamera(camera).toMat(image, "original").toGray()
-                    .blurGaussian(feeder.getHoleBlurKernelSize())
-                    .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
-                            feeder.getHolePitchMin(), "houghUnfiltered")
-                    .drawCircles("original", Color.red, "unfiltered").recall("houghUnfiltered")
-                    .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                            feeder.getHoleDistanceMax(), "houghDistanceFiltered")
-                    .drawCircles("unfiltered", Color.blue, "distanceFiltered")
-                    .recall("houghDistanceFiltered")
-                    .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                    .drawCircles("distanceFiltered", Color.green).toBufferedImage();
+            return new FluentCv().setCamera(camera)
+                                 .toMat(image, "original")
+                                 .toGray()
+                                 .blurGaussian(feeder.getHoleBlurKernelSize())
+                                 .findCirclesHough(feeder.getHoleDiameterMin(),
+                                         feeder.getHoleDiameterMax(), feeder.getHolePitchMin(),
+                                         "houghUnfiltered")
+                                 .drawCircles("original", Color.red, "unfiltered")
+                                 .recall("houghUnfiltered")
+                                 .filterCirclesByDistance(feeder.getHoleDistanceMin(),
+                                         feeder.getHoleDistanceMax(), "houghDistanceFiltered")
+                                 .drawCircles("unfiltered", Color.blue, "distanceFiltered")
+                                 .recall("houghDistanceFiltered")
+                                 .filterCirclesToLine(feeder.getHoleLineDistanceMax())
+                                 .drawCircles("distanceFiltered", Color.green)
+                                 .toBufferedImage();
         }
         else {
-            return new FluentCv().setCamera(camera).toMat(image, "original").toGray()
-                    .blurGaussian(feeder.getHoleBlurKernelSize())
-                    .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
-                            feeder.getHolePitchMin())
+            return new FluentCv().setCamera(camera)
+                                 .toMat(image, "original")
+                                 .toGray()
+                                 .blurGaussian(feeder.getHoleBlurKernelSize())
+                                 .findCirclesHough(feeder.getHoleDiameterMin(),
+                                         feeder.getHoleDiameterMax(), feeder.getHolePitchMin())
                                  .filterCirclesByDistance(feeder.getHoleDistanceMin(),
                                          feeder.getHoleDistanceMax())
-                    .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                    .drawCircles("original", Color.green).toBufferedImage();
+                                 .filterCirclesToLine(feeder.getHoleLineDistanceMax())
+                                 .drawCircles("original", Color.green)
+                                 .toBufferedImage();
         }
     }
 
@@ -527,13 +556,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         part2HoleLocations = part2HoleLocations.subList(0, Math.min(2, part2HoleLocations.size()));
 
         // Part 1's reference hole is the one closest to either of part 2's holes.
-        Location part1ReferenceHole = VisionUtils
-                .sortLocationsByDistance(part2HoleLocations.get(0), part1HoleLocations).get(0);
+        Location part1ReferenceHole =
+                VisionUtils.sortLocationsByDistance(part2HoleLocations.get(0), part1HoleLocations)
+                           .get(0);
         // Part 2's reference hole is the one farthest from part 1's reference hole.
-        Location part2ReferenceHole = Lists
-                .reverse(
-                        VisionUtils.sortLocationsByDistance(part1ReferenceHole, part2HoleLocations))
-                .get(0);
+        Location part2ReferenceHole = Lists.reverse(
+                VisionUtils.sortLocationsByDistance(part1ReferenceHole, part2HoleLocations))
+                                           .get(0);
 
         List<Location> referenceHoles = new ArrayList<>();
         referenceHoles.add(part1ReferenceHole);

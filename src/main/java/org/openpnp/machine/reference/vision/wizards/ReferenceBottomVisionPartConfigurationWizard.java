@@ -112,18 +112,19 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
             return;
         }
-        
+
         if (!enabledCheckbox.isSelected()) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
             return;
         }
-        
+
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
         // perform the alignment
 
 
-        PartAlignment.PartAlignmentOffset alignmentOffset = bottomVision.findOffsets(part, null, null, nozzle);
+        PartAlignment.PartAlignmentOffset alignmentOffset =
+                VisionUtils.findPartAlignmentOffsets(bottomVision, part, null, null, nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!chckbxCenterAfterTest.isSelected()) {
