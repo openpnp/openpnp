@@ -115,6 +115,28 @@ upCamLights.actuate(false);
 downCamLights.actuate(false);
 ```
 
+### Vision.PartAlignment.Before
+
+Called before part alignment (bottom vision) takes place.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| part  | [org.openpnp.model.Part](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Part.html) | The Part being aligned. |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The The Nozzle that the part is on. |
+
+### Vision.PartAlignment.After
+
+Called after part alignment (bottom vision) has completed.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| part  | [org.openpnp.model.Part](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Part.html) | The Part being aligned. |
+| nozzle  | [org.openpnp.spi.Nozzle](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Nozzle.html) | The The Nozzle that the part is on. |
+
 ## Examples Running System Commands from JavaScript
 
 #### Call `firefox` from JavaScript:
