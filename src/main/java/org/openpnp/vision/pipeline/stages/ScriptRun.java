@@ -13,6 +13,8 @@ import org.simpleframework.xml.Attribute;
 
 import com.google.common.io.Files;
 
+import bsh.engine.BshScriptEngineFactory;
+
 @Stage(description="Run an arbitrary script file using the built in scripting engine. pipeline and stage are exposed as globals for use by the script. To return a pipeline result you can't use a return statement, but instead just let the object be the last thing the script evaluates.")
 public class ScriptRun extends CvStage {
     @Attribute
@@ -43,8 +45,11 @@ public class ScriptRun extends CvStage {
             return null;
         }
 
-        ScriptEngine engine = new ScriptEngineManager()
-                .getEngineByExtension(Files.getFileExtension(file.getName()));
+        ScriptEngineManager manager = new ScriptEngineManager();
+        // Hack to fix BSH on Windows. See https://github.com/openpnp/openpnp/issues/462
+        manager.registerEngineExtension("bsh", new BshScriptEngineFactory());
+        manager.registerEngineExtension("java", new BshScriptEngineFactory());
+        ScriptEngine engine = manager.getEngineByExtension(Files.getFileExtension(file.getName()));
         
         if (engine == null) {
             throw new Exception("Unable to find scriping engine for " + file);

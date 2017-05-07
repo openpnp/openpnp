@@ -53,6 +53,7 @@ public class Scripting {
             }
         }
         
+        // Hack to fix BSH on Windows. See https://github.com/openpnp/openpnp/issues/462
         manager.registerEngineExtension("bsh", new BshScriptEngineFactory());
         manager.registerEngineExtension("java", new BshScriptEngineFactory());
         extensions.add("bsh");
