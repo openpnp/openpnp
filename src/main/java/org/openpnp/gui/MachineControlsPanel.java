@@ -278,7 +278,7 @@ public class MachineControlsPanel extends JPanel {
     @SuppressWarnings("serial")
     public Action homeAction = new AbstractAction("Home", Icons.home) {
         {
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('H',
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_BACK_QUOTE,
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         }
 
