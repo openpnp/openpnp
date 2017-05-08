@@ -35,7 +35,7 @@ public class MultiMask extends CvStage {
     private Color color = Color.black;
 
     @Attribute(required = false)
-    @Property(description="Stage(s) to input shapes from, or coordinates forming shapes. Values are: One (1) comma separated coordinate pair : radius for circles, 3 colon searated coordinate pairs or more, for polygons. Multiple stages or shapes must be separated by semicolons ';'")
+    @Property(description="Stage(s) to input shapes from, or coordinates forming shapes. X,Y coordinates or sizes are separated by commas, coordinate or size pairs are separated by colons ':'. Multiple stages or shapes are separated by semicolons ';'")
     private String shapes = null;
     
     @Attribute(required = false)
@@ -144,10 +144,30 @@ public class MultiMask extends CvStage {
               }
               break;
             case 2:
-              // this should be a circle: first atom is the center Point, second is the radius
-              coords = atoms[0].split("\\s*,\\s*");
+              // this should be a circle or a rectangle. First atom is the center coordinates
+              coords = item.split("\\s*(,|:)\\s*");
+              Logger.info(coords.length);
               try {
-                Core.circle(mask, new Point(Integer.parseInt(coords[0]),Integer.parseInt(coords[1])), Integer.parseInt(atoms[1]), new Scalar(255,255,255), -1);
+                if (coords.length == 3) {
+                  // A circle: second atom is the radius
+                  Core.circle(
+                    mask, new Point(Integer.parseInt(coords[0]),Integer.parseInt(coords[1])),
+                    Integer.parseInt(coords[2]), 
+                    new Scalar(255,255,255), -1
+                  );
+                } else {
+                  // A rectangle: second atom is the width and height of the rectangle
+                  int[] coord = new int[4];
+                  for (int i=0; i<4; i++) {
+                    coord[i] = Integer.parseInt(coords[i]);
+                  }
+                  // two opposing rectangle vertices
+                  Core.rectangle(mask, 
+                    new Point(coord[0]-(int)coord[2]/2,coord[1]+(int)coord[3]/2), 
+                    new Point(coord[0]+(int)coord[2]/2,coord[1]-(int)coord[3]/2),
+                    new Scalar(255,255,255), -1
+                  );
+                }
               } catch (NumberFormatException e) {
                 Logger.error("Cannot parse number. "+e.getMessage());
               }
