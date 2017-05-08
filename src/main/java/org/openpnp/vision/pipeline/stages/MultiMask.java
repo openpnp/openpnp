@@ -27,7 +27,7 @@ import org.pmw.tinylog.Logger;
   category="Image Processing", 
   description="Mask an image with multiple shapes originating from previous stages or formed with numeric data provided by the user.")
   
-public class MaskMultiple extends CvStage {
+public class MultiMask extends CvStage {
 
     @Element(required = false)
     @Convert(ColorConverter.class)
@@ -35,7 +35,7 @@ public class MaskMultiple extends CvStage {
     private Color color = Color.black;
 
     @Attribute(required = false)
-    @Property(description="Stage(s) to input shapes from, or coordinates forming shapes. Values are: One (1) coordinate pair + radius for circles, 3 coordinate pairs or more, for polygons. Multiple stages or shapes must be separated by semicolons ';'")
+    @Property(description="Stage(s) to input shapes from, or coordinates forming shapes. Values are: One (1) comma separated coordinate pair : radius for circles, 3 colon searated coordinate pairs or more, for polygons. Multiple stages or shapes must be separated by semicolons ';'")
     private String shapes = null;
     
     @Attribute(required = false)
@@ -83,19 +83,20 @@ public class MaskMultiple extends CvStage {
         mask.setTo(FluentCv.colorToScalar(color == null ? FluentCv.indexedColor(0) : color));
         Mat masked = mask.clone();
         
-        String[] items = shapes.split(";");
+        String[] items = shapes.split("\\s*;\\s*"), atoms, coords;
         // we will be constructing an array of polygons
         ArrayList<MatOfPoint> poly = new ArrayList<MatOfPoint>();
         
         for (String item : items) {
         
-          String[] atoms = item.split(","); 
+          atoms = item.split("\\s*:\\s*");
           switch (atoms.length) {
             case 1:
               // this is assumed to be a stage name
               Result result = pipeline.getResult(item);
               if (result == null) {
                 // be nice to the user
+                Logger.error("Could not find stage {}",item);
                 continue;
               }
               if (result.model instanceof RotatedRect) {
@@ -142,24 +143,28 @@ public class MaskMultiple extends CvStage {
                 }
               }
               break;
-            case 3:
-              // this is a circle
-              Core.circle(mask, new Point(Integer.parseInt(atoms[0]),Integer.parseInt(atoms[1])), Integer.parseInt(atoms[2]), new Scalar(255,255,255), -1);
+            case 2:
+              // this should be a circle: first atom is the center Point, second is the radius
+              coords = atoms[0].split("\\s*,\\s*");
+              try {
+                Core.circle(mask, new Point(Integer.parseInt(coords[0]),Integer.parseInt(coords[1])), Integer.parseInt(atoms[1]), new Scalar(255,255,255), -1);
+              } catch (NumberFormatException e) {
+                Logger.error("Cannot parse number. "+e.getMessage());
+              }
               break;
             default:
-              if (atoms.length >= 6 && atoms.length % 2 == 0) {
-                // this is a polygon
-                Point[] points = new Point[(int)atoms.length/2];
-                poly.clear();
-                for (int i=0; i< atoms.length/2; i++) {
-                  points[i] = new Point(Integer.parseInt(atoms[i*2]),Integer.parseInt(atoms[i*2+1]));
+              // this should be a polygon
+              Point[] points = new Point[(int)atoms.length];
+              try {
+                for (int i=0; i< atoms.length; i++) {
+                  coords = atoms[i].split("\\s*,\\s*");
+                  poly.clear();
+                  points[i] = new Point(Integer.parseInt(coords[0]),Integer.parseInt(coords[1]));
+                  poly.add(new MatOfPoint(points));
+                  Core.fillPoly(mask,poly,new Scalar(255,255,255));
                 }
-                poly.add(new MatOfPoint(points));
-                Core.fillPoly(mask,poly,new Scalar(255,255,255));
-                
-              } else {
-                // this is an error
-                Logger.error("Wrong number of coords. Should be a comma separated even sequence of numbers, but got {}",item);
+              } catch (NumberFormatException e) {
+                Logger.error("Cannot parse number. "+e.getMessage());
               }
               break;
           }
