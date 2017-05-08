@@ -25,7 +25,7 @@ import org.pmw.tinylog.Logger;
 
 @Stage(
   category="Image Processing", 
-  description="Mask an image with multiple shapes originating from previous stages or formed with numeric data provided by the user.")
+  description="Mask an image with multiple shapes originating from previous stages.")
   
 public class MaskModel extends CvStage {
 
