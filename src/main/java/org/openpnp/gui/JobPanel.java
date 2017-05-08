@@ -147,8 +147,7 @@ public class JobPanel extends JPanel {
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Stopped);
 
-    public JobPanel(Configuration configuration, MainFrame frame,
-            MachineControlsPanel machineControlsPanel) {
+    public JobPanel(Configuration configuration, MainFrame frame) {
         this.configuration = configuration;
         this.frame = frame;
 

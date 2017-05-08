@@ -69,6 +69,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
+    private final JobPanel jobPanel;
 
     private static final String PREF_JOG_CONTROLS_EXPANDED =
             "MachineControlsPanel.jogControlsExpanded";
@@ -85,14 +86,15 @@ public class MachineControlsPanel extends JPanel {
 
     private Color droNormalColor = new Color(0xBDFFBE);
     private Color droSavedColor = new Color(0x90cce0);
-
+    
     /**
      * Create the panel.
      */
-    public MachineControlsPanel(Configuration configuration) {
+    public MachineControlsPanel(Configuration configuration, JobPanel jobPanel) {
         setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         this.configuration = configuration;
+        this.jobPanel = jobPanel;
 
         createUi();
 
@@ -148,6 +150,10 @@ public class MachineControlsPanel extends JPanel {
 
     public JogControlsPanel getJogControlsPanel() {
         return jogControlsPanel;
+    }
+    
+    public JobPanel getJobPanel() {
+    	return jobPanel;
     }
 
     @Override
