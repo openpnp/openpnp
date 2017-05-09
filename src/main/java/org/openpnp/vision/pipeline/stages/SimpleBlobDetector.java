@@ -26,11 +26,12 @@ package org.openpnp.vision.pipeline.stages;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.List;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.FeatureDetector;
-import org.openpnp.model.Configuration;
+import org.opencv.features2d.KeyPoint;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -239,10 +240,9 @@ public class SimpleBlobDetector extends CvStage {
     }
 
     public Result process(CvPipeline pipeline) throws Exception {
-        Mat src = pipeline.getWorkingImage();
+        Mat mat = pipeline.getWorkingImage();
         FeatureDetector blobDetector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
-        File outputFile = File.createTempFile("Detector", ".YAML", Configuration.get()
-                                                                                .getConfigurationDirectory());
+        File outputFile = File.createTempFile("SimpleBlobDetector", ".YAML");
         writeToFile(outputFile,
                 "%YAML:1.0" // java
                         // parameter
@@ -264,8 +264,10 @@ public class SimpleBlobDetector extends CvStage {
                         + (convexityMax < 0. ? 3.4028234663852886E+038 : convexityMax) + "\n");
         blobDetector.read(outputFile.getAbsolutePath());
         outputFile.delete();
-        MatOfKeyPoint keypoints = new MatOfKeyPoint();
-        blobDetector.detect(src, keypoints);
-        return new Result(keypoints);
+        MatOfKeyPoint kpMat = new MatOfKeyPoint();
+        blobDetector.detect(mat, kpMat);
+        List<KeyPoint> keypoints = kpMat.toList();
+        kpMat.release();
+        return new Result(mat, keypoints);
     }
 }
