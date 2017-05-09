@@ -98,7 +98,7 @@ public class DilateModel extends CvStage {
             // a collection of Rotatedmulti
             ArrayList<RotatedRect> model = new ArrayList<RotatedRect>();
             for (int i=0; i < multi.size(); i++) {
-              // get the 4 points of each rotated rect
+              // dilate each rotated rect
               model.add(dilateRotatedRect((RotatedRect) multi.get(i)));
             }
             return new Result(pipeline.getWorkingImage(),model);
