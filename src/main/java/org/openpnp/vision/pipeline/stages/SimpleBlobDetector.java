@@ -268,6 +268,6 @@ public class SimpleBlobDetector extends CvStage {
         blobDetector.detect(mat, kpMat);
         List<KeyPoint> keypoints = kpMat.toList();
         kpMat.release();
-        return new Result(mat, keypoints);
+        return new Result(null, keypoints);
     }
 }
