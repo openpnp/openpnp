@@ -73,7 +73,8 @@ public class DilateModel extends CvStage {
         if (inStage.model instanceof RotatedRect) {
           // just one RotatedRect
           RotatedRect model = dilateRotatedRect((RotatedRect) inStage.model);
-          
+          return new Result(pipeline.getWorkingImage(),model);
+         
         } else if (inStage.model instanceof Result.Circle) {
           // just one circle
           Result.Circle circle = (Result.Circle) inStage.model;
