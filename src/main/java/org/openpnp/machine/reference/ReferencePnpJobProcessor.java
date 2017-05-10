@@ -611,8 +611,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
+
+            PartAlignment partAlignment = findPartAligner(machine, part);
+
             plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
-                    machine.getPartAlignment(), 
+                    partAlignment,
                     part, 
                     jobPlacement.boardLocation, 
                     placement.getLocation(), nozzle);

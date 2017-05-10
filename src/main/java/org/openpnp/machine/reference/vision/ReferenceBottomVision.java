@@ -2,6 +2,8 @@ package org.openpnp.machine.reference.vision;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -9,6 +11,7 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -19,6 +22,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -33,6 +37,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.ElementList;
 
 public class ReferenceBottomVision implements PartAlignment {
 
@@ -41,12 +46,19 @@ public class ReferenceBottomVision implements PartAlignment {
     protected CvPipeline pipeline = createDefaultPipeline();
 
 
-
     @Attribute(required = false)
     protected boolean enabled = false;
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+
+    @Attribute(required = false)
+    private boolean allowIncompatiblePackages;
+
+    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
+
+    @ElementList(required = false, entry = "id")
+    private Set<String> compatiblePackageIds = new HashSet<>();
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
@@ -114,6 +126,13 @@ public class ReferenceBottomVision implements PartAlignment {
         return new PartAlignmentOffset(offsets,false);
     }
 
+    @Override
+    public boolean canHandle(Part part) {
+        boolean result = enabled && (allowIncompatiblePackages || compatiblePackages.contains(part.getPackage()));
+        Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
+        return result;
+    }
+
     public static CvPipeline createDefaultPipeline() {
         try {
             String xml = IOUtils.toString(ReferenceBottomVision.class
@@ -123,6 +142,40 @@ public class ReferenceBottomVision implements PartAlignment {
         catch (Exception e) {
             throw new Error(e);
         }
+    }
+
+    public ReferenceBottomVision()
+    {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                for (String id : compatiblePackageIds) {
+                    org.openpnp.model.Package pkg = configuration.getPackage(id);
+                    if (pkg == null) {
+                        continue;
+                    }
+                    compatiblePackages.add(pkg);
+                }
+            }
+        });
+    }
+
+    @Override
+    public String getId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setName(String name) {
+        // TODO Auto-generated method stub
+
     }
 
     public CvPipeline getPipeline() {
