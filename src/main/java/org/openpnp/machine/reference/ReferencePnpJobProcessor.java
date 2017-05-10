@@ -614,12 +614,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             PartAlignment partAlignment = findPartAligner(machine, part);
 
-            plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
-                    partAlignment,
-                    part, 
-                    jobPlacement.boardLocation, 
-                    placement.getLocation(), nozzle);
-            Logger.debug("Align {} with {}", part, nozzle);
+            if(partAlignment!=null) {
+                plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
+                        partAlignment,
+                        part,
+                        jobPlacement.boardLocation,
+                        placement.getLocation(), nozzle);
+                Logger.debug("Align {} with {}", part, nozzle);
+            }
+            else
+            {
+                plannedPlacement.alignmentOffsets=null;
+                Logger.debug("Not aligning {} as no compatible enabled aligners defined",part);
+            }
 
             plannedPlacement.stepComplete = true;
         }

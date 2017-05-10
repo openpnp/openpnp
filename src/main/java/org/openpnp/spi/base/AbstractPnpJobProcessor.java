@@ -103,7 +103,9 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
                            return partAlignment;
                        }
         }
-        throw new Exception("No compatible, enabled part aligner found for part " + part.getId());
+
+        // if we can't find a part-aligner, thats ok.. the user might not have defined one, so we place without aligning
+        return null;
     }
 
 }

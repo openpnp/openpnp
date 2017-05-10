@@ -85,7 +85,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Deprecated
     @Element(required = false)
-    protected PartAlignment partAlignment = new ReferenceBottomVision();;
+    protected PartAlignment partAlignment = null;
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();

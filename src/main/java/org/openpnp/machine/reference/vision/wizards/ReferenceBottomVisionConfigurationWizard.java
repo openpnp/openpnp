@@ -110,6 +110,11 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     }
 
     @Override
+    public String getWizardName() {
+        return "BottomVision";
+    }
+
+    @Override
     public void createBindings() {
         addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
     }
