@@ -52,13 +52,6 @@ public class ReferenceBottomVision implements PartAlignment {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
-    @Attribute(required = false)
-    private boolean allowIncompatiblePackages;
-
-    private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
-
-    @ElementList(required = false, entry = "id")
-    private Set<String> compatiblePackageIds = new HashSet<>();
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
@@ -128,7 +121,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public boolean canHandle(Part part) {
-        boolean result = enabled && (allowIncompatiblePackages || compatiblePackages.contains(part.getPackage()));
+        PartSettings partSettings = this.partSettingsByPartId.get(part.getId());
+        boolean result = (enabled &&  partSettings!=null);
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }
@@ -144,21 +138,7 @@ public class ReferenceBottomVision implements PartAlignment {
         }
     }
 
-    public ReferenceBottomVision()
-    {
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                for (String id : compatiblePackageIds) {
-                    org.openpnp.model.Package pkg = configuration.getPackage(id);
-                    if (pkg == null) {
-                        continue;
-                    }
-                    compatiblePackages.add(pkg);
-                }
-            }
-        });
-    }
+
 
     @Override
     public String getId() {
