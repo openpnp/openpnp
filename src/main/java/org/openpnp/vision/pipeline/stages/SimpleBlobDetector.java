@@ -39,43 +39,43 @@ import org.simpleframework.xml.Attribute;
 
 
 public class SimpleBlobDetector extends CvStage {
-    @Attribute
+    @Attribute(required=false)
     private double thresholdStep = 10.;
-    @Attribute
+    @Attribute(required=false)
     private double thresholdMin = 50.;
-    @Attribute
+    @Attribute(required=false)
     private double thresholdMax = 220.;
-    @Attribute
+    @Attribute(required=false)
     private int repeatability = 2;
-    @Attribute
+    @Attribute(required=false)
     private double distBetweenBlobs = 10.;
-    @Attribute
+    @Attribute(required=false)
     private boolean color = true;
-    @Attribute
+    @Attribute(required=false)
     private double colorValue = 0;
-    @Attribute
+    @Attribute(required=false)
     private boolean area = true;
-    @Attribute
+    @Attribute(required=false)
     private double areaMin = 25.;
-    @Attribute
+    @Attribute(required=false)
     private double areaMax = 5000.;
-    @Attribute
+    @Attribute(required=false)
     private boolean circularity = false;
-    @Attribute
+    @Attribute(required=false)
     private double circularityMin = 0.80000001192092896;
-    @Attribute
+    @Attribute(required=false)
     private double circularityMax = -1;
-    @Attribute
+    @Attribute(required=false)
     private boolean inertia = true;
-    @Attribute
+    @Attribute(required=false)
     private double inertiaRatioMin = 1.0000000149011612E-001;
-    @Attribute
+    @Attribute(required=false)
     private double inertiaRatioMax = -1;
-    @Attribute
+    @Attribute(required=false)
     private boolean convexity = true;
-    @Attribute
+    @Attribute(required=false)
     private double convexityMin = 9.4999998807907104E-001;
-    @Attribute
+    @Attribute(required=false)
     private double convexityMax = -1;
 
     public double getThresholdStep() {
