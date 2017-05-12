@@ -172,7 +172,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     @Override
     public String getWizardName() {
-        return "BottomVision";
+        return "ReferenceBottomVision";
     }
 
     @Override
