@@ -198,6 +198,11 @@ The [Job Processor](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/Job
 
 Job Processor is a bit of a black box from a programming point of view. To learn more about how it works it's best to examine the source code.
 
+# Icon Resources
+
+* https://materialdesignicons.com/
+* https://thenounproject.com/
+
 # FAQ
 
 ## How can I manage multiple configurations?
