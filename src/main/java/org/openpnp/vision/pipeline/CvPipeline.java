@@ -134,8 +134,9 @@ public class CvPipeline {
     }
 
     /**
-     * Get the Result returned by the CvStage with the given name. May return null if the stage did
-     * not return a result.
+     * Get the Result returned by the CvStage with the given name. 
+     * If name is '..', then return the previous result. 
+     * May return null if the stage did not return a result.
      * 
      * @param name
      * @return
@@ -143,6 +144,8 @@ public class CvPipeline {
     public Result getResult(String name) {
         if (name == null) {
             return null;
+        } else if (name.matches("..")) {
+          return previousResult;
         }
         return getResult(getStage(name));
     }
@@ -159,19 +162,6 @@ public class CvPipeline {
             return null;
         }
         return results.get(stage);
-    }
-
-    /**
-     * Get the Result returned by the previous CvStage. May return null if the stage did not return a
-     * result.
-     * 
-     * @return
-     */
-    public Result getResult() {
-        if (previousResult == null) {
-            return null;
-        }
-        return previousResult;
     }
 
     /**
