@@ -55,6 +55,8 @@ public class CvPipeline {
 
     private Camera camera;
     
+    private long totalProcessingTimeNs;
+    
     public CvPipeline() {
         
     }
@@ -179,7 +181,17 @@ public class CvPipeline {
         return camera;
     }
 
+    public long getTotalProcessingTimeNs() {
+      return totalProcessingTimeNs;
+    }
+
+    public void setTotalProcessingTimeNs(long totalProcessingTimeNs) {
+      this.totalProcessingTimeNs = totalProcessingTimeNs;
+    }
+
     public void process() {
+
+        totalProcessingTimeNs = 0;
         release();
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
@@ -195,6 +207,7 @@ public class CvPipeline {
                 result = new Result(null, e);
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
+            totalProcessingTimeNs += processingTimeNs;
 
             Mat image = null;
             Object model = null;
