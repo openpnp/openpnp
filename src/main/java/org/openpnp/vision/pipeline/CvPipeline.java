@@ -57,6 +57,8 @@ public class CvPipeline {
     
     private long totalProcessingTimeNs;
     
+    private Result previousResult;
+    
     public CvPipeline() {
         
     }
@@ -146,7 +148,7 @@ public class CvPipeline {
     }
 
     /**
-     * Get the Result returned by give CvStage. May return null if the stage did not return a
+     * Get the Result returned by given CvStage. May return null if the stage did not return a
      * result.
      * 
      * @param stage
@@ -157,6 +159,19 @@ public class CvPipeline {
             return null;
         }
         return results.get(stage);
+    }
+
+    /**
+     * Get the Result returned by the previous CvStage. May return null if the stage did not return a
+     * result.
+     * 
+     * @return
+     */
+    public Result getResult() {
+        if (previousResult == null) {
+            return null;
+        }
+        return previousResult;
     }
 
     /**
@@ -192,6 +207,7 @@ public class CvPipeline {
     public void process() {
 
         totalProcessingTimeNs = 0;
+        previousResult = null;
         release();
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
@@ -236,6 +252,7 @@ public class CvPipeline {
             }
 
             results.put(stage, new Result(image, model, processingTimeNs));
+            previousResult = new Result(image, model, processingTimeNs);
         }
     }
 
