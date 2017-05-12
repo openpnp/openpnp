@@ -45,6 +45,7 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
+import org.openpnp.gui.support.PasteDispenserItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -374,6 +375,10 @@ public class MachineControlsPanel extends JPanel {
 
                 for (Camera camera : head.getCameras()) {
                     comboBoxHeadMountable.addItem(new CameraItem(camera));
+                }
+                
+                for (PasteDispenser dispenser : head.getPasteDispensers()) {
+                    comboBoxHeadMountable.addItem(new PasteDispenserItem(dispenser));
                 }
             }
 
