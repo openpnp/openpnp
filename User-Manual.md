@@ -137,6 +137,14 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 * Ctrl+Plus, Ctrl+Minus: Change the jog distance slider. This changes how far each jog key will move the Nozzle.
 * Shift+Left Mouse Click: Hold Shift and left click the mouse anywhere in the camera view to move the camera to that position.
 
+The below shortcuts are bound to your system command modifier key. On Windows and Linux this is Ctrl, and on Mac it's Cmd:
+* Modifier+O: Open a Job.
+* Modifier+N: New Job.
+* Modifier+S: Save Job.
+* Modifier+E: Enable/Disable Machine (Power Button).
+* Modifier+`: Home.
+
+
 Configuration and Operation
 ===========================
 
