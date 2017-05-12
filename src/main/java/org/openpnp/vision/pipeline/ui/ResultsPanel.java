@@ -172,8 +172,8 @@ public class ResultsPanel extends JPanel {
         }
         matView.setMat(image);
         resultStageNameLabel.setText(result == null || selectedStage == null ? ""
-                : (selectedStage.getName() + " (" + (result.processingTimeNs / 1000000.0)
-                        + " ms)"));
+                : (selectedStage.getName() + " ( " + (result.processingTimeNs / 1000000.0)
+                        + " ms / " + (editor.getPipeline().getTotalProcessingTimeNs() / 1000000.0) + " ms)"));
 
         if (selectedStage == null) {
             firstResultAction.setEnabled(false);
