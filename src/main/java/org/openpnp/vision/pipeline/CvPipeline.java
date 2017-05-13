@@ -203,6 +203,7 @@ public class CvPipeline {
             // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
             Result result = null;
+            boolean err = false;
             try {
                 if (!stage.isEnabled()) {
                     throw new Exception("Stage not enabled.");
@@ -211,6 +212,7 @@ public class CvPipeline {
             }
             catch (Exception e) {
                 result = new Result(null, e);
+                err = true;
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
             totalProcessingTimeNs += processingTimeNs;
@@ -242,7 +244,12 @@ public class CvPipeline {
             }
 
             results.put(stage, new Result(image, model, processingTimeNs));
-            previousResult = new Result(image, model, processingTimeNs);
+
+            if (model == null && previousResult != null && previousResult.model != null && !err) {
+              previousResult = new Result(image, previousResult.model, processingTimeNs);
+            } else {
+              previousResult = new Result(image, model, processingTimeNs);
+            }
         }
     }
 
