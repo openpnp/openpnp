@@ -19,7 +19,7 @@ import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-
+import org.pmw.tinylog.Logger;
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
  * list of CvStage instances. Each CvStage instance can modify the working image and return a new
@@ -244,10 +244,8 @@ public class CvPipeline {
             }
 
             results.put(stage, new Result(image, model, processingTimeNs));
-
-            if (model == null && previousResult != null && previousResult.model != null && !err) {
-              previousResult = new Result(image, previousResult.model, processingTimeNs);
-            } else {
+            // if there is an error, then there is no point in storing the error condition, just skip it
+            if (!err) {
               previousResult = new Result(image, model, processingTimeNs);
             }
         }
