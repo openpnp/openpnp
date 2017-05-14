@@ -246,7 +246,11 @@ public class CvPipeline {
             results.put(stage, new Result(image, model, processingTimeNs));
             // if there is an error, then there is no point in storing the error condition, just skip it
             if (!err) {
-              previousResult = new Result(image, model, processingTimeNs);
+              Mat pmat = null;
+              if (image != null) {
+                pmat = image.clone();
+              }
+              previousResult = new Result(pmat, model, processingTimeNs);
             }
         }
     }
