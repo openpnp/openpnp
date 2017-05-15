@@ -432,7 +432,9 @@ public class CameraView extends JComponent implements CameraListener {
         g.drawImage(lastFrame, 0, 0, sw, sh, sx, sy, sx + sw, sy + sh, null);
         g.dispose();
 
-        while (!future.isDone());
+        while (!future.isDone()) {
+            
+        }
 
         return image;
     }

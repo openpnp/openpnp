@@ -59,7 +59,8 @@ public class ConvertModelToPoints extends CvStage {
             RotatedRect rotatedRect = (RotatedRect) pointHolder;
             return rotatedRect.center;
         }
-        else
+        else {
             throw new Exception("Don't know how to convert " + pointHolder + "to Point.");
+        }
     }
 }

@@ -1,6 +1,67 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-05-07
+
+* Configuration Wizard Performance Improvement
+
+	Due to a bug in a third party library that is used extensively in the configuration wizards
+	in OpenPnP, performance on opening the wizards was often very poor for many users. This was
+	most obvious when clicking through your various feeders, where some users were experiencing
+	up to a 10 second delay in opening the wizard.
+	
+	Unfortunately, the library has been abandoned so even though there is a fix available, it
+	will likely never be released. Instead, we are now "monkey patching" the fix at runtime
+	and this solves the problem.
+	
+	Thanks to @SadMan on IRC for putting me on the path to the fix.
+	
+# 2017-05-06
+
+* New Bottom Vision Scripting Events
+
+	Two new scripting events have been added to assist with bottom vision lighting. They are
+	Vision.PartAlignment.Before and Vision.PartAlignment.After.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#visionpartalignmentbefore for more
+	information.
+
+# 2017-04-16
+
+* Script Directory Ignore
+
+	You can now add an empty .ignore file to any directory under the scripts directory to
+	have that directory be ignored when populating the Scripts menu. This is in support of
+	a feature by @cri-s to improve usability on production machines.
+	
+	More information at https://github.com/openpnp/openpnp/pull/521.
+	
+* Home Status
+	
+	The "Power On" button now turns yellow when you first enable the machine, and does not
+	turn green until the machine is homed. This helps you notice that you have not yet homed
+	the machine. Thanks to @ldpgh for this helpful feature!
+	
+	More information at https://github.com/openpnp/openpnp/issues/379.
+	
+* Python Script Examples Added
+
+	@ldpgh has added some helpful Python examples to the suite of built in Scripting
+	examples.
+
+	More information at https://github.com/openpnp/openpnp/pull/520.
+	
+# 2017-04-14
+
+* Navigation View Removed
+
+	The Navigation View has been removed as part of a cleanup effort. This feature was unfinished
+	and is unlikely to ever be finished in this iteration of the UI. Removing it improves startup
+	time, removes a dependency on JavaFX and solves some bugs.
+	
+	If you were using this feature and will miss it, please make it known on the mailing list
+	at http://groups.google.com/group/openpnp.
+	
 # 2017-04-13
 
 * BREAKING CHANGE: Outdated Drivers Removed

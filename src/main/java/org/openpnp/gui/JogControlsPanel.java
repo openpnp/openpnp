@@ -154,8 +154,8 @@ public class JogControlsPanel extends JPanel {
 
     private void jog(final int x, final int y, final int z, final int c) {
         UiUtils.submitUiMachineTask(() -> {
-            Location l = machineControlsPanel.getSelectedNozzle().getLocation()
-                    .convertToUnits(Configuration.get().getSystemUnits());
+            HeadMountable tool = machineControlsPanel.getSelectedTool();
+            Location l = tool.getLocation().convertToUnits(Configuration.get().getSystemUnits());
             double xPos = l.getX();
             double yPos = l.getY();
             double zPos = l.getZ();
@@ -192,8 +192,7 @@ public class JogControlsPanel extends JPanel {
                 cPos -= jogIncrement;
             }
 
-            machineControlsPanel.getSelectedNozzle()
-                    .moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos));
+            tool.moveTo(new Location(l.getUnits(), xPos, yPos, zPos, cPos));
         });
     }
 

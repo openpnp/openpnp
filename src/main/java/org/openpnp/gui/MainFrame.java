@@ -83,6 +83,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.pmw.tinylog.Logger;
 
+import com.jgoodies.common.swing.MnemonicUtils;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -119,7 +120,6 @@ public class MainFrame extends JFrame {
     private JPanel panelCameraAndInstructions;
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
-    private Component navigationPanel;
 
     public static MainFrame get() {
         return mainFrame;
@@ -221,6 +221,7 @@ public class MainFrame extends JFrame {
         // File
         //////////////////////////////////////////////////////////////////////
         JMenu mnFile = new JMenu("File");
+        mnFile.setMnemonic(KeyEvent.VK_F);
         menuBar.add(mnFile);
 
         mnFile.add(new JMenuItem(jobPanel.newJobAction));
@@ -237,6 +238,7 @@ public class MainFrame extends JFrame {
         //////////////////////////////////////////////////////////////////////
         mnFile.addSeparator();
         mnImport = new JMenu("Import Board");
+        mnImport.setMnemonic(KeyEvent.VK_I);
         mnFile.add(mnImport);
 
 
@@ -248,6 +250,7 @@ public class MainFrame extends JFrame {
         // Edit
         //////////////////////////////////////////////////////////////////////
         JMenu mnEdit = new JMenu("Edit");
+        mnEdit.setMnemonic(KeyEvent.VK_E);
         menuBar.add(mnEdit);
 
         JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
@@ -261,11 +264,13 @@ public class MainFrame extends JFrame {
         // View
         //////////////////////////////////////////////////////////////////////
         JMenu mnView = new JMenu("View");
+        mnView.setMnemonic(KeyEvent.VK_V);
         menuBar.add(mnView);
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
         JMenu mnUnits = new JMenu("System Units");
+        mnUnits.setMnemonic(KeyEvent.VK_S);
         mnView.add(mnUnits);
 
         JMenuItem menuItem;
@@ -285,6 +290,7 @@ public class MainFrame extends JFrame {
         // Job Control
         //////////////////////////////////////////////////////////////////////
         JMenu mnJob = new JMenu("Job Control");
+        mnJob.setMnemonic(KeyEvent.VK_J);
         menuBar.add(mnJob);
 
         mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
@@ -294,17 +300,20 @@ public class MainFrame extends JFrame {
         // Machine
         //////////////////////////////////////////////////////////////////////
         JMenu mnCommands = new JMenu("Machine");
+        mnCommands.setMnemonic(KeyEvent.VK_M);
         menuBar.add(mnCommands);
         mnCommands.addSeparator();
 
         // Scripts
         /////////////////////////////////////////////////////////////////////
         mnScripts = new JMenu("Scripts");
+        mnScripts.setMnemonic(KeyEvent.VK_S);
         menuBar.add(mnScripts);
 
         // Windows
         /////////////////////////////////////////////////////////////////////
         mnWindows = new JMenu("Window");
+        mnWindows.setMnemonic(KeyEvent.VK_W);
         menuBar.add(mnWindows);
 
         JCheckBoxMenuItem windowStyleMultipleMenuItem =
@@ -317,6 +326,7 @@ public class MainFrame extends JFrame {
         // Help
         /////////////////////////////////////////////////////////////////////
         JMenu mnHelp = new JMenu("Help");
+        mnHelp.setMnemonic(KeyEvent.VK_H);
         menuBar.add(mnHelp);
         if (!macOsXMenus) {
             mnHelp.add(new JMenuItem(aboutAction));
@@ -486,21 +496,9 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "4, 1");
 
-        try {
-            Class c = Class.forName("org.openpnp.gui.components.nav.FxNavigationView");
-            navigationPanel = (Component) c.newInstance();
-            JTabbedPane camerasAndNavTabbedPane = new JTabbedPane(JTabbedPane.TOP);
-            camerasAndNavTabbedPane.addTab("Cameras", null, cameraPanel, null);
-            camerasAndNavTabbedPane.addTab("Navigation", null, navigationPanel, null);
-            panelCameraAndInstructions.add(camerasAndNavTabbedPane, BorderLayout.CENTER);
-        }
-        catch (Throwable e) {
-            Logger.warn(
-                    "JavaFX is not installed. The optional navigation feature will not be available.");
-            cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
-                    TitledBorder.TOP, null, null));
-            panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
-        }
+        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
         registerBoardImporters();
 
@@ -606,6 +604,7 @@ public class MainFrame extends JFrame {
             {
                 putValue(NAME, boardImporter.getImporterName());
                 putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+                putValue(MNEMONIC_KEY, KeyEvent.VK_I);
             }
 
             @Override
@@ -744,6 +743,10 @@ public class MainFrame extends JFrame {
     };
 
     private Action inchesUnitSelected = new AbstractAction(LengthUnit.Inches.name()) {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
@@ -753,6 +756,10 @@ public class MainFrame extends JFrame {
     };
 
     private Action millimetersUnitSelected = new AbstractAction(LengthUnit.Millimeters.name()) {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_M);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
@@ -762,6 +769,10 @@ public class MainFrame extends JFrame {
     };
 
     private Action windowStyleMultipleSelected = new AbstractAction("Multiple Window Style") {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_M);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (mnWindows.getItem(0).isSelected()) {
@@ -776,6 +787,10 @@ public class MainFrame extends JFrame {
     };
 
     private Action quitAction = new AbstractAction("Exit") {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_X);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             quit();
@@ -783,6 +798,10 @@ public class MainFrame extends JFrame {
     };
 
     private Action aboutAction = new AbstractAction("About") {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_A);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             about();
@@ -790,12 +809,16 @@ public class MainFrame extends JFrame {
     };
     
     private Action checkForUpdatesAction = new AbstractAction("Check For Updates...") {
+        {
+            putValue(MNEMONIC_KEY, KeyEvent.VK_U);
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                Class ApplicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
-                Class Callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
-                Method launchApplication = ApplicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, Callback);
+                Class applicationLauncher = Class.forName("com.install4j.api.launcher.ApplicationLauncher");
+                Class callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback");
+                Method launchApplication = applicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, callback);
                 launchApplication.invoke(null, "125", null, false, null);
             }
             catch (Exception e) {

@@ -93,10 +93,12 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
     @Override
     public int compareTo(LengthCellValue other)
     {
-        if(getLength().getValue()==other.getLength().getValue())
+        if(getLength().getValue()==other.getLength().getValue()) {
             return 0;
-        if(getLength().getValue() < other.getLength().getValue())
+        }
+        if(getLength().getValue() < other.getLength().getValue()) {
             return -1;
+        }
         return 1;
     }
 }

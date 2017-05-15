@@ -7,7 +7,7 @@
 
 // Load Examples/Utility.js functions into our scope. This will define the
 // task function.
-load(scripting.getScriptsDirectory().toString() + '/Examples/Utility.js');
+load(scripting.getScriptsDirectory().toString() + '/Examples/JavaScript/Utility.js');
 
 // Import some OpenPnP classes we'll use
 var imports = new JavaImporter(org.openpnp.model, org.openpnp.util);

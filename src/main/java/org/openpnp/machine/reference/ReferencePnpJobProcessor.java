@@ -54,6 +54,7 @@ import org.openpnp.util.Collect;
 import org.openpnp.util.FiniteStateMachine;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
@@ -610,9 +611,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             Part part = placement.getPart();
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
-            PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
-            plannedPlacement.alignmentOffsets = alignmentOffset;
-
+            plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
+                    machine.getPartAlignment(), 
+                    part, 
+                    jobPlacement.boardLocation, 
+                    placement.getLocation(), nozzle);
             Logger.debug("Align {} with {}", part, nozzle);
 
             plannedPlacement.stepComplete = true;
@@ -632,8 +635,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Part part = placement.getPart();
             BoardLocation boardLocation = plannedPlacement.jobPlacement.boardLocation;
             //Check if the individual piece has a fiducial check and check to see if the board is enabled
-            if(jobPlacement.placement.getCheckFids()&&jobPlacement.boardLocation.isEnabled())
+            if(jobPlacement.placement.getCheckFids()&&jobPlacement.boardLocation.isEnabled()) {
                 doIndividualFiducialCheck(jobPlacement.boardLocation);
+            }
 
             // Check if there is a fiducial override for the board location and if so, use it.
             if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
