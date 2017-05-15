@@ -90,7 +90,7 @@
       </feeders>
       <cameras/>
        <part-alignments>
-           <part-alignment class="org.openpnp.machine.reference.vision.ReferenceBottomVision" enabled="true">
+           <part-alignment class="org.openpnp.machine.reference.vision.ReferenceBottomVision" enabled="false">
                <pipeline>
                    <stages>
                        <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true"/>
