@@ -121,8 +121,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public boolean canHandle(Part part) {
-        PartSettings partSettings = this.partSettingsByPartId.get(part.getId());
-        boolean result = (enabled &&  partSettings!=null);
+        PartSettings partSettings = getPartSettings(part);
+        boolean result = (enabled &&  partSettings.isEnabled());
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }
