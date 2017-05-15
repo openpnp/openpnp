@@ -173,9 +173,9 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 							FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
 
-			JLabel FirstComponent = new JLabel(
+			JLabel firstComponent = new JLabel(
 					"<html><b>Point A:</b><br /><span style='font-size:7px'>First Row - First Component</span></html>");
-			panelLocation.add(FirstComponent, "2, 4");
+			panelLocation.add(firstComponent, "2, 4");
 
 			lblX_1 = new JLabel("X");
 			panelLocation.add(lblX_1, "4, 2");
@@ -194,9 +194,9 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY, null, null);
 			panelLocation.add(locationButtonsPanel, "8, 4");
 
-			JLabel FirstRowLastComponent = new JLabel(
+			JLabel firstRowLastComponent = new JLabel(
 					"<html><b>Point B:</b><br /><span style='font-size:8px'>First Row - Last Component</span></html>");
-			panelLocation.add(FirstRowLastComponent, "2, 6");
+			panelLocation.add(firstRowLastComponent, "2, 6");
 
 			textFieldFirstRowLastLocationX = new JTextField();
 			panelLocation.add(textFieldFirstRowLastLocationX, "4, 6");
@@ -210,9 +210,9 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 					textFieldFirstRowLastLocationY, null, null);
 			panelLocation.add(lastLocationButtonsPanel, "8, 6");
 
-			JLabel LastComponent = new JLabel(
+			JLabel lastComponent = new JLabel(
 					"<html><b>Point C:</b><br /><span style='font-size:8px'>Last Row - Last Component</span></html>");
-			panelLocation.add(LastComponent, "2, 8");
+			panelLocation.add(lastComponent, "2, 8");
 
 			textFieldLastLocationX = new JTextField();
 			panelLocation.add(textFieldLastLocationX, "4, 8");
@@ -466,8 +466,9 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	}
 
 	public static double round(double value, int places) {
-		if (places < 0)
+		if (places < 0) {
 			throw new IllegalArgumentException();
+		}
 
 		BigDecimal bd = new BigDecimal(value);
 		bd = bd.setScale(places, RoundingMode.HALF_UP);
