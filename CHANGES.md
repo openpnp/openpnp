@@ -1,6 +1,12 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-05-15
+	
+	New tray feeder added: RotaryTrayFeeder
+	This tray feeder takes 3 points (first component, first row last component, last row last component) 
+	to measure the component grid and is rotation agnostic. Feedback and experience reports are welcome.
+
 # 2017-05-07
 
 * Configuration Wizard Performance Improvement
