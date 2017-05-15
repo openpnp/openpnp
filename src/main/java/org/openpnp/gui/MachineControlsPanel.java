@@ -21,8 +21,10 @@ package org.openpnp.gui;
 
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Locale;
@@ -34,6 +36,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -45,6 +48,7 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
+import org.openpnp.gui.support.PasteDispenserItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -244,6 +248,11 @@ public class MachineControlsPanel extends JPanel {
 
     @SuppressWarnings("serial")
     public Action startStopMachineAction = new AbstractAction("Stop", Icons.powerOn) {
+        {
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('E',
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
@@ -269,6 +278,11 @@ public class MachineControlsPanel extends JPanel {
 
     @SuppressWarnings("serial")
     public Action homeAction = new AbstractAction("Home", Icons.home) {
+        {
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_BACK_QUOTE,
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -374,6 +388,10 @@ public class MachineControlsPanel extends JPanel {
 
                 for (Camera camera : head.getCameras()) {
                     comboBoxHeadMountable.addItem(new CameraItem(camera));
+                }
+                
+                for (PasteDispenser dispenser : head.getPasteDispensers()) {
+                    comboBoxHeadMountable.addItem(new PasteDispenserItem(dispenser));
                 }
             }
 

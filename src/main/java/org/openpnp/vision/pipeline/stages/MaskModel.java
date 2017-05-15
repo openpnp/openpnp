@@ -10,6 +10,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -21,7 +22,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.convert.Convert;
 
 @Stage(category = "Image Processing",
-        description = "Mask an image with multiple shapes originating from previous stages.")
+        description = "Mask an image with model shapes originating from previous stages.")
 
 public class MaskModel extends CvStage {
 
@@ -35,8 +36,8 @@ public class MaskModel extends CvStage {
     private String modelStageName = null;
 
     @Attribute(required = false)
-    @Property(description = "Invert the mask.")
-    private boolean inverted = false;
+    @Property(description = "Filter or mask the image.")
+    private boolean isMask = false;
 
     public Color getColor() {
         return color;
@@ -54,18 +55,18 @@ public class MaskModel extends CvStage {
         this.modelStageName = modelStageName;
     }
 
-    public boolean isInverted() {
-        return inverted;
+    public boolean isIsMask() {
+        return isMask;
     }
 
-    public void setInverted(boolean inverted) {
-        this.inverted = inverted;
+    public void setIsMask(boolean isMask) {
+        this.isMask = isMask;
     }
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (modelStageName == null) {
-            throw new Exception("Stage name for mask must be specified.");
+            throw new Exception("Stage name for model must be specified.");
         }
         Mat mat = pipeline.getWorkingImage();
         Mat mask = mat.clone();
@@ -98,7 +99,7 @@ public class MaskModel extends CvStage {
 
         }
         else if (result.model instanceof List<?>) {
-            // we've got multiple Circles or RotatedRects
+            // we've got multiple Circles or RotatedRects, or contours
             ArrayList multi = (ArrayList) result.model;
             if (multi.get(0) instanceof Result.Circle) {
                 // a collection of circles
@@ -121,13 +122,18 @@ public class MaskModel extends CvStage {
                     poly.add(new MatOfPoint(points));
                     Core.fillPoly(mask, poly, new Scalar(255, 255, 255));
                 }
+            } else if (multi.get(0) instanceof MatOfPoint) {
+              // contours
+              for (int i = 0; i < multi.size(); i++) {
+                Imgproc.drawContours(mask, multi, i, new Scalar(255,255,255), -1);
+              }
             }
         }
-        if (inverted) {
+        if (isMask) {
             Core.bitwise_not(mask, mask);
         }
         mat.copyTo(masked, mask);
         mask.release();
-        return new Result(masked, null);
+        return new Result(masked, result.model);
     }
 }
