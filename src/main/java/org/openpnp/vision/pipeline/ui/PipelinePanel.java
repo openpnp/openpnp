@@ -120,21 +120,8 @@ public class PipelinePanel extends JPanel {
                 }
                 CvStage stage = getSelectedStage();
                 editor.stageSelected(stage);
-                if (stage == null) {
-                    propertySheetPanel.setProperties(new Property[] {});
-                    descriptionTa.setText("");
-                }
-                else {
-                    try {
-                        propertySheetPanel.setBeanInfo(stage.getBeanInfo());
-                        propertySheetPanel.readFromObject(stage);
-                        descriptionTa.setText(stage.getDescription());
-                        descriptionTa.setCaretPosition(0);
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
+                refreshDescription();
+                refreshProperties();
             }
         });
 
@@ -175,6 +162,9 @@ public class PipelinePanel extends JPanel {
                 if ("tableCellEditor".equals(e.getPropertyName())) {
                     if (!propertySheetPanel.getTable().isEditing()) {
                         // editing has ended for a cell, save the values
+
+                        refreshDescription();
+                        
                         propertySheetPanel.writeToObject(getSelectedStage());
                         editor.process();
                     }
@@ -182,7 +172,39 @@ public class PipelinePanel extends JPanel {
             }
         });
     }
-
+    
+    private void refreshProperties() {
+        CvStage stage = getSelectedStage();
+        if (stage == null) {
+            propertySheetPanel.setProperties(new Property[] {});
+        }
+        else {
+            try {
+                propertySheetPanel.setBeanInfo(stage.getBeanInfo());
+                propertySheetPanel.readFromObject(stage);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    private void refreshDescription() {
+        CvStage stage = getSelectedStage();
+        if (stage == null) {
+            descriptionTa.setText("");
+        }
+        else {
+            try {
+                descriptionTa.setText(stage.getDescription());
+                descriptionTa.setCaretPosition(0);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     public CvStage getSelectedStage() {
         int index = stagesTable.getSelectedRow();
         if (index == -1) {
