@@ -37,12 +37,12 @@ import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
@@ -50,7 +50,6 @@ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -124,7 +123,9 @@ public class ReferenceMachine extends AbstractMachine {
                     partAlignments.add(partAlignment);
                     partAlignment = null;
                 }
-
+                if (partAlignments.isEmpty()) {
+                    partAlignments.add(new ReferenceBottomVision());
+                }
             }
         });
     }
