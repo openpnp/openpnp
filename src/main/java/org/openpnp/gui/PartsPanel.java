@@ -199,15 +199,22 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 alignmentPanel.removeAll();
 
                 Part part = getSelection();
-                
+
+                tabbedPane.removeAll();
+
                 if (part != null) {
-                    PartAlignment partAlignment =
-                            Configuration.get().getMachine().getPartAlignment();
-                    Wizard wizard = partAlignment.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        wizard.setWizardContainer(PartsPanel.this);
-                        alignmentPanel.add(wizard.getWizardPanel());
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                        Wizard wizard=partAlignment.getPartConfigurationWizard(part);
+                        if (wizard != null) {
+                            JPanel alignPanel = new JPanel();
+                            alignPanel.setLayout(new BorderLayout());
+                            alignPanel.add(wizard.getWizardPanel());
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(alignPanel));
+
+                            wizard.setWizardContainer(PartsPanel.this);
+                        }
                     }
+
                 }
 
                 revalidate();

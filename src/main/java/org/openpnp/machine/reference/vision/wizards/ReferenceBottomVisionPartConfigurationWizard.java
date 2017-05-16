@@ -171,6 +171,11 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     }
 
     @Override
+    public String getWizardName() {
+        return "ReferenceBottomVision";
+    }
+
+    @Override
     public void createBindings() {
         addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
     }

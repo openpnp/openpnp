@@ -8,6 +8,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.MovableUtils;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
@@ -92,5 +93,19 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         throw new Exception("No compatible, enabled feeder found for part " + part.getId());
     }
 
+
+    public static PartAlignment findPartAligner(Machine machine, Part part) throws Exception {
+        for (PartAlignment partAlignment : machine.getPartAlignments())
+        {
+
+                       if(partAlignment.canHandle(part))
+                       {
+                           return partAlignment;
+                       }
+        }
+
+        // if we can't find a part-aligner, thats ok.. the user might not have defined one, so we place without aligning
+        return null;
+    }
 
 }
