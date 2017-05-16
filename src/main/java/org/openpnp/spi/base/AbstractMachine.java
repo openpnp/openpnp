@@ -24,6 +24,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Signaler;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -62,6 +63,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
+
+    @ElementList(required = false)
+    protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
 
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
@@ -134,6 +138,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<PartAlignment> getPartAlignments() {
+        return Collections.unmodifiableList(partAlignments);
     }
 
     @Override

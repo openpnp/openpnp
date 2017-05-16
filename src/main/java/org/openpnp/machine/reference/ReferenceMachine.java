@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.swing.Action;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
@@ -48,6 +49,8 @@ import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -81,8 +84,9 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     protected PasteDispenseJobProcessor glueDispenseJobProcessor;
 
+    @Deprecated
     @Element(required = false)
-    protected PartAlignment partAlignment = new ReferenceBottomVision();
+    protected PartAlignment partAlignment = null;
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
@@ -107,6 +111,22 @@ public class ReferenceMachine extends AbstractMachine {
             close();
         }
         this.driver = driver;
+    }
+
+    public ReferenceMachine()
+    {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+             public void configurationLoaded(Configuration configuration) throws Exception {
+                // move any single partAlignments into our list
+                if (partAlignment != null) {
+                    partAlignments.add(partAlignment);
+                    partAlignment = null;
+                }
+
+            }
+        });
     }
 
     @Override
@@ -165,7 +185,10 @@ public class ReferenceMachine extends AbstractMachine {
                 Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
-        vision.add(getPartAlignment());
+        for (PartAlignment alignment : getPartAlignments())
+        {
+            vision.add(alignment);
+        }
         vision.add(getFiducialLocator());
         children.add(new SimplePropertySheetHolder("Vision", vision));
         return children.toArray(new PropertySheetHolder[] {});
@@ -227,6 +250,8 @@ public class ReferenceMachine extends AbstractMachine {
         return l;
     }
 
+    private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
+
     @Override
     public void home() throws Exception {
         Logger.debug("home");
@@ -261,10 +286,6 @@ public class ReferenceMachine extends AbstractMachine {
         }
     }
 
-    @Override
-    public PartAlignment getPartAlignment() {
-        return partAlignment;
-    }
 
     @Override
     public FiducialLocator getFiducialLocator() {
