@@ -100,7 +100,7 @@ public class MaskModel extends CvStage {
         }
         else if (result.model instanceof List<?>) {
             // we've got multiple Circles or RotatedRects, or contours
-            ArrayList multi = (ArrayList) result.model;
+            List multi = (List) result.model;
             if (multi.get(0) instanceof Result.Circle) {
                 // a collection of circles
                 for (int i = 0; i < multi.size(); i++) {
@@ -122,11 +122,12 @@ public class MaskModel extends CvStage {
                     poly.add(new MatOfPoint(points));
                     Core.fillPoly(mask, poly, new Scalar(255, 255, 255));
                 }
-            } else if (multi.get(0) instanceof MatOfPoint) {
-              // contours
-              for (int i = 0; i < multi.size(); i++) {
-                Imgproc.drawContours(mask, multi, i, new Scalar(255,255,255), -1);
-              }
+            }
+            else if (multi.get(0) instanceof MatOfPoint) {
+                // contours
+                for (int i = 0; i < multi.size(); i++) {
+                    Imgproc.drawContours(mask, multi, i, new Scalar(255, 255, 255), -1);
+                }
             }
         }
         if (isMask) {
