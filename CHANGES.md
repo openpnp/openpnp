@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-05-18
+
+	Two new Scripting events have been added: Job.Starting and Job.Finished. These are called
+	as the job is starting and after it completes. They are intended to aid in using conveyer
+	systems to automatically load and unload PCBs.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#jobstarting for more info.
+
 # 2017-05-15
 	
 	New tray feeder added: RotaryTrayFeeder
