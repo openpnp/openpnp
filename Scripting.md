@@ -59,6 +59,28 @@ Called when system startup is complete.
 
 Variables: None.
 
+### Job.Starting
+
+Called when a job is starting up. The event is fired after the pre-checks for the job have completed, and the machine is ready to start processing the job.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| job  | [org.openpnp.model.Job](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Job.html) | The Job that is starting. |
+| jobProcessor  | [org.openpnp.spi.JobProcessor](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/JobProcessor.html) | The JobProcessor responsible for running the Job. |
+
+### Job.Finished
+
+Called when a job has completed. The machine has parked (if configured) and all processing is finished.
+
+Variables:
+
+| Name  | Type | Description |
+| ------------- | ------------- | -------------- |
+| job  | [org.openpnp.model.Job](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Job.html) | The Job that is starting. |
+| jobProcessor  | [org.openpnp.spi.JobProcessor](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/JobProcessor.html) | The JobProcessor responsible for running the Job. |
+
 ### Camera.BeforeCapture
 
 Called before an image is captured from a Camera. This is intended to be used to control lighting, mirrors, strobes, etc.
