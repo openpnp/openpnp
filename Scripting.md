@@ -78,7 +78,7 @@ Variables:
 
 | Name  | Type | Description |
 | ------------- | ------------- | -------------- |
-| job  | [org.openpnp.model.Job](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Job.html) | The Job that is starting. |
+| job  | [org.openpnp.model.Job](http://openpnp.github.io/openpnp/develop/org/openpnp/model/Job.html) | The Job that has just finished. |
 | jobProcessor  | [org.openpnp.spi.JobProcessor](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/JobProcessor.html) | The JobProcessor responsible for running the Job. |
 
 ### Camera.BeforeCapture
