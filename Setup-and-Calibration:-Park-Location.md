@@ -14,6 +14,15 @@ The Park Location is the location that your head will move to when commanded to 
 1. Jog the nozzle away from the location it was left at in the previous step.
 2. Click the X/Y Park button <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/park.svg" height="18"> in the Jog Controls and see that the nozzle moves to the Park location.
 
+# Enable Park When Job Completes
+If you'd like the machine to park itself when a job completes, you have to turn that option on.
+1. Open Machine Setup -> JobProcessors -> ReferencePnpJobProcessor.
+2. Toggle the Park When Complete checkbox.
+3. Press Apply.
+
+![screen shot 2017-05-19 at 9 06 03 am](https://cloud.githubusercontent.com/assets/1182323/26251290/6a2b21ac-3c72-11e7-82aa-8b17693537c5.png)
+
+
 ***
 
 | Previous Step                 | Jump To                 | Next Step                                   |
