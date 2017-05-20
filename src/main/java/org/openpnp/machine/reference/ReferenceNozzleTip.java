@@ -193,7 +193,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Nozzle getParentNozzle() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                for (NozzleTip nozzleTip : nozzle.Tips()) {
+                for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
                     if (nozzleTip == this) {
                         return nozzle;
                     }
