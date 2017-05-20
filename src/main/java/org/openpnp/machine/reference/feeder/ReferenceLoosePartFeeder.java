@@ -60,7 +60,6 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     private CvPipeline pipeline = createDefaultPipeline();
 
     private Location pickLocation;
-	Nozzle nozzle;
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -70,16 +69,15 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         Camera camera = nozzle.getHead().getDefaultCamera();
-		this.nozzle=nozzle;
         // Move to the feeder pick location
         MovableUtils.moveToLocationAtSafeZ(camera, location);
         for (int i = 0; i < 3; i++) {
-            pickLocation = getPickLocation(camera);
+            pickLocation = getPickLocation(camera, nozzle);
             camera.moveTo(pickLocation);
         }
     }
 
-    private Location getPickLocation(Camera camera) throws Exception {
+    private Location getPickLocation(Camera camera, Nozzle nozzle) throws Exception {
         // Process the pipeline to extract RotatedRect results
         pipeline.setCamera(camera);
         pipeline.setNozzle(nozzle);
