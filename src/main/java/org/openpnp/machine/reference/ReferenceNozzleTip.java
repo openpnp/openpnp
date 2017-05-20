@@ -202,7 +202,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-
+	
     public double getVacuumLevelPartOn() {
         return vacuumLevelPartOn;
     }
@@ -473,7 +473,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         public CvPipeline getPipeline() throws Exception {
             pipeline.setCamera(VisionUtils.getBottomVisionCamera());
-			pipeline.setNozzle(getParentNozzle());
             return pipeline;
         }
 
