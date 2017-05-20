@@ -162,6 +162,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+		pipeline.setNozzle(MainFrame.get().getMachineControls().getSelectedNozzle());
+
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());

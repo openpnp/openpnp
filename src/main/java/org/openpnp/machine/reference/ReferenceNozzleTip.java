@@ -202,7 +202,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-
+	
     public double getVacuumLevelPartOn() {
         return vacuumLevelPartOn;
     }
