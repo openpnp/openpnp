@@ -1,4 +1,4 @@
-package org.openpnp.machine.reference.vision.wizards;
+jjjpackage org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -162,6 +162,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+		pipeline.setNozzle(MainFrame.get().getMachineControls().getSelectedNozzle());
+
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
