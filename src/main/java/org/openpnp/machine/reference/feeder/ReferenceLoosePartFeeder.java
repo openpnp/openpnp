@@ -80,6 +80,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     private Location getPickLocation(Camera camera) throws Exception {
         // Process the pipeline to extract RotatedRect results
         pipeline.setCamera(camera);
+        pipeline.setFeeder(this);
         pipeline.process();
         // Grab the results
         List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult("results").model;
