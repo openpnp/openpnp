@@ -83,6 +83,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         // Process the pipeline to extract RotatedRect results
         pipeline.setCamera(camera);
         pipeline.setNozzle(nozzle);
+        pipeline.setFeeder(this);
         pipeline.process();
         // Grab the results
         List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult("results").model;
