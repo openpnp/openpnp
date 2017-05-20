@@ -1,4 +1,4 @@
-jjjpackage org.openpnp.machine.reference.vision.wizards;
+package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
