@@ -76,6 +76,7 @@ public class ReferenceBottomVision implements PartAlignment {
         CvPipeline pipeline = partSettings.getPipeline();
 
         pipeline.setCamera(camera);
+		pipeline.setNozzle(nozzle);
         pipeline.process();
 
         Result result = pipeline.getResult("result");

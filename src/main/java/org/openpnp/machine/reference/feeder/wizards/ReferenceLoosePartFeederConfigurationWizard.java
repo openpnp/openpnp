@@ -94,6 +94,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
     private void editPipeline() throws Exception {
         CvPipeline pipeline = feeder.getPipeline();
         pipeline.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        pipeline.setFeeder(feeder);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
