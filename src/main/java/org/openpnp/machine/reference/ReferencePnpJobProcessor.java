@@ -593,7 +593,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (feeder != null) {
                 feeder.postPick(nozzle);
             }
-              
+
             plannedPlacement.stepComplete = true;
         }
 
@@ -607,8 +607,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             Nozzle nozzle = plannedPlacement.nozzle;
             JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Placement placement = jobPlacement.placement;            
-            Part part = placement.getPart();          
+            Placement placement = jobPlacement.placement;
+            Part part = placement.getPart();
             fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
             PartAlignment.PartAlignmentOffset alignmentOffset = machine.getPartAlignment().findOffsets(part, jobPlacement.boardLocation, placement.getLocation(), nozzle);
             plannedPlacement.alignmentOffsets = alignmentOffset;
