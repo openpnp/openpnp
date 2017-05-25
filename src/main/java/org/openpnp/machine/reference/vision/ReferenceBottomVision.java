@@ -25,6 +25,7 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
@@ -40,10 +41,11 @@ public class ReferenceBottomVision implements PartAlignment {
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
 
-
-
     @Attribute(required = false)
     protected boolean enabled = false;
+    
+    @Attribute(required = false)
+    protected boolean preRot = false;    
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
@@ -55,8 +57,13 @@ public class ReferenceBottomVision implements PartAlignment {
         if (!isEnabled() || !partSettings.isEnabled()) {
             return new PartAlignmentOffset(new Location(LengthUnit.Millimeters),false);
         }
-
+        
         Camera camera = VisionUtils.getBottomVisionCamera();
+        
+        // Pre-rotate to minimize runout
+        if (preRot){
+        	MovableUtils.moveToLocationAtSafeZ(nozzle, 	camera.getLocation().derive(null,  null,  null,  Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation()));
+        }
 
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0.
@@ -111,7 +118,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets,false);
+        return new PartAlignmentOffset(offsets, preRot);
     }
 
     public static CvPipeline createDefaultPipeline() {
@@ -140,6 +147,14 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+    
+    public boolean isPreRot() {
+        return preRot;
+    }
+
+    public void setPreRot(boolean preRot) {
+        this.preRot = preRot;
+    }    
 
     @Override
     public String getPropertySheetHolderTitle() {
