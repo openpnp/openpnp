@@ -13,6 +13,8 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result.TemplateMatch;
+import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -20,17 +22,22 @@ import org.simpleframework.xml.Attribute;
  * https://github.com/firepick1/FireSight. Scans the working image for matches of a template image
  * and returns a list of matches.
  */
+@Stage(category = "Image Processing",
+        description = "OpenCV based image template matching with local maxima detection improvements.")
+
 public class MatchTemplate extends CvStage {
     /**
      * Name of a prior stage to load the template image from.
      */
     @Attribute
+    @Property(description = "Name of a prior stage to load the template image from.")
     private String templateStageName;
 
     /**
      * If maxVal is below this value, then no matches will be reported. Default is 0.7.
      */
     @Attribute
+    @Property(description = "If maximum value is below this value, then no matches will be reported. Default is 0.7.")
     private double threshold = 0.7f;
 
     /**
@@ -40,7 +47,12 @@ public class MatchTemplate extends CvStage {
      * maximum threshold. Default is 0.85.
      */
     @Attribute
+    @Property(description = "Normalized minimum recognition threshold for the CCOEFF_NORMED method, in the interval [0,1]. Default is 0.85.")
     private double corr = 0.85f;
+
+    @Attribute(required = false)
+    @Property(description = "Normalize results to maximum value.")
+    private boolean normalize = true;
 
     public String getTemplateStageName() {
         return templateStageName;
@@ -64,6 +76,14 @@ public class MatchTemplate extends CvStage {
 
     public void setCorr(double corr) {
         this.corr = corr;
+    }
+
+    public boolean isNormalize() {
+        return normalize;
+    }
+
+    public void setNormalize(boolean normalize) {
+        this.normalize = normalize;
     }
 
     @Override
@@ -91,7 +111,7 @@ public class MatchTemplate extends CvStage {
             int x = point.x;
             int y = point.y;
             TemplateMatch match = new TemplateMatch(x, y, template.cols(), template.rows(),
-                    result.get(y, x)[0] / maxVal);
+                    result.get(y, x)[0] / (normalize? maxVal : 1.0));
             matches.add(match);
         }
 
