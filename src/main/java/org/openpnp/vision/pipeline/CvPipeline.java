@@ -21,7 +21,7 @@ import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.pmw.tinylog.Logger;
+
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
  * list of CvStage instances. Each CvStage instance can modify the working image and return a new
@@ -60,8 +60,6 @@ public class CvPipeline {
     private Feeder feeder;
     
     private long totalProcessingTimeNs;
-    
-    private Result previousResult;
     
     public CvPipeline() {
         
@@ -138,9 +136,8 @@ public class CvPipeline {
     }
 
     /**
-     * Get the Result returned by the CvStage with the given name. 
-     * If name is '..', then return the previous result. 
-     * May return null if the stage did not return a result.
+     * Get the Result returned by the CvStage with the given name. May return null if the stage did
+     * not return a result.
      * 
      * @param name
      * @return
@@ -148,14 +145,12 @@ public class CvPipeline {
     public Result getResult(String name) {
         if (name == null) {
             return null;
-        } else if (name.matches("..")) {
-          return previousResult;
         }
         return getResult(getStage(name));
     }
 
     /**
-     * Get the Result returned by given CvStage. May return null if the stage did not return a
+     * Get the Result returned by give CvStage. May return null if the stage did not return a
      * result.
      * 
      * @param stage
@@ -217,13 +212,11 @@ public class CvPipeline {
     public void process() {
 
         totalProcessingTimeNs = 0;
-        previousResult = null;
         release();
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
             Result result = null;
-            boolean err = false;
             try {
                 if (!stage.isEnabled()) {
                     throw new Exception("Stage not enabled.");
@@ -232,7 +225,6 @@ public class CvPipeline {
             }
             catch (Exception e) {
                 result = new Result(null, e);
-                err = true;
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
             totalProcessingTimeNs += processingTimeNs;
@@ -264,14 +256,6 @@ public class CvPipeline {
             }
 
             results.put(stage, new Result(image, model, processingTimeNs));
-            // if there is an error, then there is no point in storing the error condition, just skip it
-            if (!err) {
-              Mat pmat = null;
-              if (image != null) {
-                pmat = image.clone();
-              }
-              previousResult = new Result(pmat, model, processingTimeNs);
-            }
         }
     }
 
