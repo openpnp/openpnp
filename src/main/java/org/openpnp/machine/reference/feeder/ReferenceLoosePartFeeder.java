@@ -72,14 +72,15 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         // Move to the feeder pick location
         MovableUtils.moveToLocationAtSafeZ(camera, location);
         for (int i = 0; i < 3; i++) {
-            pickLocation = getPickLocation(camera);
+            pickLocation = getPickLocation(camera, nozzle);
             camera.moveTo(pickLocation);
         }
     }
 
-    private Location getPickLocation(Camera camera) throws Exception {
+    private Location getPickLocation(Camera camera, Nozzle nozzle) throws Exception {
         // Process the pipeline to extract RotatedRect results
         pipeline.setCamera(camera);
+        pipeline.setNozzle(nozzle);
         pipeline.setFeeder(this);
         pipeline.process();
         // Grab the results

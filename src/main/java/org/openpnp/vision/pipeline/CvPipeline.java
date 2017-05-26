@@ -15,6 +15,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
@@ -55,6 +56,7 @@ public class CvPipeline {
     private Mat workingImage;
 
     private Camera camera;
+    private Nozzle nozzle;
     private Feeder feeder;
     
     private long totalProcessingTimeNs;
@@ -188,6 +190,14 @@ public class CvPipeline {
         return camera;
     }
 
+    public void setNozzle(Nozzle nozzle) {
+        this.nozzle = nozzle;
+    }
+
+    public Nozzle getNozzle() {
+        return nozzle;
+    }
+  
     public void setFeeder(Feeder feeder) {
         this.feeder = feeder;
     }
