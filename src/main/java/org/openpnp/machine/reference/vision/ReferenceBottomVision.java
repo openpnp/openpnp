@@ -36,17 +36,14 @@ import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 
 public class ReferenceBottomVision implements PartAlignment {
-
-
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
-
 
     @Attribute(required = false)
     protected boolean enabled = false;
     
     @Attribute(required = false)
-    protected boolean preRot = false;    
+    protected boolean preRotate = false;    
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
@@ -62,8 +59,10 @@ public class ReferenceBottomVision implements PartAlignment {
         Camera camera = VisionUtils.getBottomVisionCamera();
         
         // Pre-rotate to minimize runout
-        if (preRot){
-        	MovableUtils.moveToLocationAtSafeZ(nozzle, 	camera.getLocation().derive(null,  null,  null,  Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation()));
+        double preRotateAngle = 0;
+        if (preRotate){
+        	preRotateAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation();
+        	MovableUtils.moveToLocationAtSafeZ(nozzle, 	camera.getLocation().derive(null,  null,  null,  preRotateAngle));
         }
 
         // Create a location that is the Camera's X, Y, it's Z + part height
@@ -72,7 +71,7 @@ public class ReferenceBottomVision implements PartAlignment {
         Length partHeight = part.getHeight();
         Location partHeightLocation =
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
-        startLocation = startLocation.add(partHeightLocation).derive(null, null, null, 0d);
+        startLocation = startLocation.add(partHeightLocation).derive(null, null, null, preRotateAngle);
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
 
@@ -119,7 +118,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets, preRot);
+        return new PartAlignmentOffset(offsets.derive(0d,  0d,  0d,  preRotateAngle), preRotate);
     }
 
     public static CvPipeline createDefaultPipeline() {
@@ -150,11 +149,11 @@ public class ReferenceBottomVision implements PartAlignment {
     }
     
     public boolean isPreRot() {
-        return preRot;
+        return preRotate;
     }
 
     public void setPreRot(boolean preRot) {
-        this.preRot = preRot;
+        this.preRotate = preRot;
     }    
 
     @Override
