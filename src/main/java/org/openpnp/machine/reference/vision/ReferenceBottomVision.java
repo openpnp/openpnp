@@ -62,7 +62,6 @@ public class ReferenceBottomVision implements PartAlignment {
         double preRotateAngle = 0;
         if (preRotate){
         	preRotateAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation();
-        	MovableUtils.moveToLocationAtSafeZ(nozzle, 	camera.getLocation().derive(null,  null,  null,  preRotateAngle));
         }
 
         // Create a location that is the Camera's X, Y, it's Z + part height
