@@ -129,7 +129,12 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets.derive(0d, 0d, 0d, preRotateAngle), preRotate);
+        // Note: See discussion in 
+        // https://groups.google.com/d/msgid/openpnp/61af770d-4c78-401d-a16b-a0881bae64b4%40googlegroups.com?utm_medium=email&utm_source=footer
+        // I have temporarily removed the change described in that discussion because it appears to have
+        // broken bottom vision in all cases.
+        // return new PartAlignmentOffset(offsets.derive(0d, 0d, 0d, preRotateAngle), preRotate);
+        return new PartAlignmentOffset(offsets, false);
     }
 
     @Override
