@@ -44,7 +44,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected boolean enabled = false;
-    
+    -
     @Attribute(required = false)
     protected boolean preRotate = false;    
 
@@ -68,7 +68,7 @@ public class ReferenceBottomVision implements PartAlignment {
         }
 
         // Create a location that is the Camera's X, Y, it's Z + part height
-        // and a rotation of 0.
+        // and a rotation of 0, unless preRotate is enabled
         Location startLocation = camera.getLocation();
         Length partHeight = part.getHeight();
         Location partHeightLocation =
