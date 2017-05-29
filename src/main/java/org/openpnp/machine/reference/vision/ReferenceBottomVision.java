@@ -36,8 +36,11 @@ import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 
 public class ReferenceBottomVision implements PartAlignment {
+
+
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
+
 
     @Attribute(required = false)
     protected boolean enabled = false;
