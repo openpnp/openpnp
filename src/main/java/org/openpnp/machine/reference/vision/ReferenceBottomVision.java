@@ -65,7 +65,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         // Pre-rotate to minimize runout
         double preRotateAngle = 0;
-        if (preRotate) {
+        if (preRotate && boardLocation != null && placementLocation != null) {
             preRotateAngle =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();

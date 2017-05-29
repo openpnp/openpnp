@@ -48,6 +48,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
+        setLooking(Looking.Up);
         Configuration.get()
                      .addListener(new ConfigurationListener.Adapter() {
                          @Override
