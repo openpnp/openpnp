@@ -44,7 +44,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected boolean enabled = false;
-    -
+    
     @Attribute(required = false)
     protected boolean preRotate = false;    
 
