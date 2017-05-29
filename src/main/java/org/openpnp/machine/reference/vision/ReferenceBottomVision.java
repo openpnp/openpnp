@@ -185,12 +185,12 @@ public class ReferenceBottomVision implements PartAlignment {
         this.enabled = enabled;
     }
     
-    public boolean isPreRot() {
+    public boolean isPreRotate() {
         return preRotate;
     }
 
-    public void setPreRot(boolean preRot) {
-        this.preRotate = preRot;
+    public void setPreRotate(boolean preRotate) {
+        this.preRotate = preRotate;
     }    
 
     @Override

@@ -126,6 +126,6 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     @Override
     public void createBindings() {
         addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
-        addWrappedBinding(bottomVision, "preRot", preRotCheckbox, "selected");
+        addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
     }
 }
