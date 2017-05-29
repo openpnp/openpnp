@@ -2,8 +2,6 @@ package org.openpnp.machine.reference.vision;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -11,7 +9,6 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -22,7 +19,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -38,7 +34,6 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.ElementList;
 
 public class ReferenceBottomVision implements PartAlignment {
 
@@ -49,28 +44,31 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected boolean enabled = false;
-    
+
     @Attribute(required = false)
-    protected boolean preRotate = false;    
+    protected boolean preRotate = false;
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
 
     @Override
-    public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
+    public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
+            Location placementLocation, Nozzle nozzle) throws Exception {
         PartSettings partSettings = getPartSettings(part);
 
         if (!isEnabled() || !partSettings.isEnabled()) {
-            return new PartAlignmentOffset(new Location(LengthUnit.Millimeters),false);
+            return new PartAlignmentOffset(new Location(LengthUnit.Millimeters), false);
         }
-        
+
         Camera camera = VisionUtils.getBottomVisionCamera();
-        
+
         // Pre-rotate to minimize runout
         double preRotateAngle = 0;
-        if (preRotate){
-        	preRotateAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation();
+        if (preRotate && boardLocation != null && placementLocation != null) {
+            preRotateAngle =
+                    Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
+                           .getRotation();
         }
 
         // Create a location that is the Camera's X, Y, it's Z + part height
@@ -79,14 +77,15 @@ public class ReferenceBottomVision implements PartAlignment {
         Length partHeight = part.getHeight();
         Location partHeightLocation =
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
-        startLocation = startLocation.add(partHeightLocation).derive(null, null, null, preRotateAngle);
+        startLocation = startLocation.add(partHeightLocation)
+                                     .derive(null, null, null, preRotateAngle);
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
 
         CvPipeline pipeline = partSettings.getPipeline();
 
         pipeline.setCamera(camera);
-		pipeline.setNozzle(nozzle);
+        pipeline.setNozzle(nozzle);
         pipeline.process();
 
         Result result = pipeline.getResult("result");
@@ -118,30 +117,33 @@ public class ReferenceBottomVision implements PartAlignment {
         // Set the angle on the offsets.
         offsets = offsets.derive(null, null, null, -angle);
         Logger.debug("Final offsets {}", offsets);
-        
-        OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result", pipeline.getWorkingImage());
 
-        CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
+        OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result",
+                pipeline.getWorkingImage());
+
+        CameraView cameraView = MainFrame.get()
+                                         .getCameraViews()
+                                         .getCameraView(camera);
         String s = rect.size.toString() + " " + rect.angle + "°";
         cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
                 1500);
 
 
-        return new PartAlignmentOffset(offsets.derive(0d,  0d,  0d,  preRotateAngle), preRotate);
+        return new PartAlignmentOffset(offsets.derive(0d, 0d, 0d, preRotateAngle), preRotate);
     }
 
     @Override
     public boolean canHandle(Part part) {
         PartSettings partSettings = getPartSettings(part);
-        boolean result = (enabled &&  partSettings.isEnabled());
+        boolean result = (enabled && partSettings.isEnabled());
         Logger.debug("{}.canHandle({}) => {}", part.getId(), result);
         return result;
     }
 
     public static CvPipeline createDefaultPipeline() {
         try {
-            String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceBottomVision-DefaultPipeline.xml"));
+            String xml = IOUtils.toString(ReferenceBottomVision.class.getResource(
+                    "ReferenceBottomVision-DefaultPipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -184,14 +186,14 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     public boolean isPreRotate() {
         return preRotate;
     }
 
     public void setPreRotate(boolean preRotate) {
         this.preRotate = preRotate;
-    }    
+    }
 
     @Override
     public String getPropertySheetHolderTitle() {
@@ -239,7 +241,8 @@ public class ReferenceBottomVision implements PartAlignment {
     public Wizard getPartConfigurationWizard(Part part) {
         PartSettings partSettings = getPartSettings(part);
         try {
-            partSettings.getPipeline().setCamera(VisionUtils.getBottomVisionCamera());
+            partSettings.getPipeline()
+                        .setCamera(VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
         }
@@ -261,7 +264,8 @@ public class ReferenceBottomVision implements PartAlignment {
         public PartSettings(ReferenceBottomVision bottomVision) {
             setEnabled(bottomVision.isEnabled());
             try {
-                setPipeline(bottomVision.getPipeline().clone());
+                setPipeline(bottomVision.getPipeline()
+                                        .clone());
             }
             catch (Exception e) {
                 throw new Error(e);
