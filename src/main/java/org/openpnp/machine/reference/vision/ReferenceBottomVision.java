@@ -29,6 +29,7 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
@@ -48,6 +49,9 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected boolean enabled = false;
+    
+    @Attribute(required = false)
+    protected boolean preRotate = false;    
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
@@ -60,16 +64,22 @@ public class ReferenceBottomVision implements PartAlignment {
         if (!isEnabled() || !partSettings.isEnabled()) {
             return new PartAlignmentOffset(new Location(LengthUnit.Millimeters),false);
         }
-
+        
         Camera camera = VisionUtils.getBottomVisionCamera();
+        
+        // Pre-rotate to minimize runout
+        double preRotateAngle = 0;
+        if (preRotate){
+        	preRotateAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation();
+        }
 
         // Create a location that is the Camera's X, Y, it's Z + part height
-        // and a rotation of 0.
+        // and a rotation of 0, unless preRotate is enabled
         Location startLocation = camera.getLocation();
         Length partHeight = part.getHeight();
         Location partHeightLocation =
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
-        startLocation = startLocation.add(partHeightLocation).derive(null, null, null, 0d);
+        startLocation = startLocation.add(partHeightLocation).derive(null, null, null, preRotateAngle);
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
 
@@ -117,7 +127,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets,false);
+        return new PartAlignmentOffset(offsets.derive(0d,  0d,  0d,  preRotateAngle), preRotate);
     }
 
     @Override
@@ -174,6 +184,14 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+    
+    public boolean isPreRotate() {
+        return preRotate;
+    }
+
+    public void setPreRotate(boolean preRotate) {
+        this.preRotate = preRotate;
+    }    
 
     @Override
     public String getPropertySheetHolderTitle() {
