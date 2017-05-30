@@ -50,6 +50,7 @@ import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.Rotate;
 import org.openpnp.vision.pipeline.stages.ScriptRun;
 import org.openpnp.vision.pipeline.stages.SetColor;
+import org.openpnp.vision.pipeline.stages.SimpleBlob;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
@@ -107,6 +108,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(Rotate.class);
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
+        registerStageClass(SimpleBlob.class);
         registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
