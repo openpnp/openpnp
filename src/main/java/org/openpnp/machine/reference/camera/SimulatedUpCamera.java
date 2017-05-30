@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import javax.swing.Action;
-
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
@@ -50,12 +48,16 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationComplete(Configuration configuration) throws Exception {
-                configuration.getMachine().addListener(machineListener);
-            }
-        });
+        setLooking(Looking.Up);
+        Configuration.get()
+                     .addListener(new ConfigurationListener.Adapter() {
+                         @Override
+                         public void configurationComplete(Configuration configuration)
+                                 throws Exception {
+                             configuration.getMachine()
+                                          .addListener(machineListener);
+                         }
+                     });
     }
 
     @Override
@@ -72,8 +74,8 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         g.fillRect(0, 0, width, height);
 
         // figure out our physical viewport size
-        Location phySize = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).multiply(width,
-                height, 0, 0);
+        Location phySize = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters)
+                                             .multiply(width, height, 0, 0);
         double phyWidth = phySize.getX();
         double phyHeight = phySize.getY();
 
@@ -83,9 +85,12 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                 location.getY() - phyHeight / 2, phyWidth, phyHeight);
 
         // determine if there are any nozzles within our bounds and if so render them
-        for (Head head : Configuration.get().getMachine().getHeads()) {
+        for (Head head : Configuration.get()
+                                      .getMachine()
+                                      .getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
-                Location l = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters);
+                Location l = nozzle.getLocation()
+                                   .convertToUnits(LengthUnit.Millimeters);
                 if (phyBounds.contains(l.getX(), l.getY())) {
                     drawNozzle(g, nozzle);
                 }
