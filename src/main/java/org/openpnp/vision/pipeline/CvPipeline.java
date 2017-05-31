@@ -54,6 +54,7 @@ public class CvPipeline {
     private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
 
     private Mat workingImage;
+    private Object workingModel;
     
     private CvStage currentStage;
     private CvStage previousStage;
@@ -183,6 +184,10 @@ public class CvPipeline {
         return workingImage;
     }
 
+    public Object getWorkingModel() {
+      return workingModel;
+    }
+
     public CvStage getCurrentStage() {
       return this.currentStage;
     }
@@ -251,7 +256,9 @@ public class CvPipeline {
                 image = result.image;
                 model = result.model;
             }
-
+            if(stage.isEnabled() && model != null) {
+              workingModel=model;
+            }
             // If the result image is null and there is a working image, replace the result image
             // replace the result image with a clone of the working image.
             if (image == null) {
@@ -289,6 +296,7 @@ public class CvPipeline {
                 result.image.release();
             }
         }
+        workingModel=null;
         results.clear();
     }
 
