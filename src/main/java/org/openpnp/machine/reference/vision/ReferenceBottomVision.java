@@ -107,7 +107,16 @@ public class ReferenceBottomVision implements PartAlignment {
         // so if OpenCV tells us it's rotated more than 45º we correct
         // it. This seems to happen quite a bit when the angle of rotation
         // is close to 0.
-        double angle = rect.angle;
+        while (Math.abs(preRotateAngle) > 45) {
+            if (preRotateAngle < 0) {
+                preRotateAngle += 90;
+            }
+            else {
+                preRotateAngle -= 90;
+            }
+        }
+
+        double angle = rect.angle + preRotateAngle;    // angle is CW, preRotateAngle is CCW
         while (Math.abs(angle) > 45) {
             if (angle < 0) {
                 angle += 90;
@@ -132,7 +141,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle),preRotate);
+        return new PartAlignmentOffset(offsets,false);
     }
 
     @Override
