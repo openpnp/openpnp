@@ -672,11 +672,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         placed on, rotated to correct placement angle, and then picked up again.
                  */
                 if(plannedPlacement.alignmentOffsets.getPreRotated())
-                {
-                    Location location = placementLocation;
-                    location = location.derive(null, null, null,
-                            plannedPlacement.alignmentOffsets.getLocation().getRotation());
-                    placementLocation = location;
+               {
+                    // part is preRotated and offset are related to XY orientatio n. 
+                    // small rotation can be applied (usually below 1/10 degree) 
+                    placementLocation = placementLocation.subtractWithRotation(plannedPlacement.alignmentOffsets.getLocation());
                 }
                 else
                 {

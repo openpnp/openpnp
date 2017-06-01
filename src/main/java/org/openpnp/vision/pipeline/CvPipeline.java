@@ -74,7 +74,20 @@ public class CvPipeline {
         }
     }
 
+    private double value;
     /**
+     * Set double value for pipeline
+     *
+     */
+    public void setValue(double val) {
+        value=val;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+     /**
      * Add the given CvStage to the end of the pipeline using the given name. If name is null a
      * unique one will be generated and set on the stage.
      * 
@@ -87,8 +100,8 @@ public class CvPipeline {
         }
         stage.setName(name);
         stages.add(stage);
-    }
-
+     }
+ 
     /**
      * Add the given CvStage to the end of the pipeline. If the stage does not have a name a unique
      * one will be generated and set on the stage.
