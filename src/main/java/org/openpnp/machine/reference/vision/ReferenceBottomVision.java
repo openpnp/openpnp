@@ -88,8 +88,8 @@ public class ReferenceBottomVision implements PartAlignment {
         pipeline.setNozzle(nozzle);
         pipeline.setValue(preRotateAngle);     
         pipeline.process();
-        preRotate=preRotate||Double.isNaN(pipeline.getValue());
-        preRotateAngle = preRotate ? preRotateAngle : 0.;
+        boolean postRotate = Double.isNaN(pipeline.getValue());
+        preRotateAngle = preRotate || postRotate ? preRotateAngle : 0.;
         
         Result result = pipeline.getResult("result");
         if (!(result.model instanceof RotatedRect)) {
@@ -128,6 +128,15 @@ public class ReferenceBottomVision implements PartAlignment {
 
         // Set the angle on the offsets.
         offsets = offsets.derive(null, null, null, -angle);
+        if(preRotate||postRotate) {
+            Location placementLocation = new Location (LengthUnit.Millimeters);
+            Location location =
+                    new Location(LengthUnit.Millimeters).rotateXyCenterPoint(offsets,angle);
+            location = location.derive(null, null, null, nozzle.getLocation().getRotation()-angle);
+            offsets = location.subtract(offsets);
+        }
+
+
         Logger.debug("Final offsets {}", offsets);
 
         OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result",
@@ -141,7 +150,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets,false);
+        return new PartAlignmentOffset(offsets,preRotate||postRotate);
     }
 
     @Override
