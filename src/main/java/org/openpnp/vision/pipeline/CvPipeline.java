@@ -74,6 +74,7 @@ public class CvPipeline {
         }
     }
 
+    private double value;
     /**
      * Set double value for pipeline
      *
