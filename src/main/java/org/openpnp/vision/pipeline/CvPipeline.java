@@ -75,18 +75,15 @@ public class CvPipeline {
     }
 
     /**
-     * Add the given CvStage to the end of the pipeline using the given name. If name is null a
-     * unique one will be generated and set on the stage.
-     * 
-     * @param name
-     * @param stage
+     * Set double value for pipeline
+     *
      */
-    public void add(String name, CvStage stage) {
-        if (name == null) {
-            name = generateUniqueName();
-        }
-        stage.setName(name);
-        stages.add(stage);
+    public void setValue(double val) {
+        value=val;
+    }
+
+    public double getValue() {
+        return value;
     }
 
     /**
