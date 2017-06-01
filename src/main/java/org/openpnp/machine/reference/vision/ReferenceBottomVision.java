@@ -132,7 +132,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets.derive(null, null, 0., offsets.getRotation() + preRotateAngle),preRotate);
+        return new PartAlignmentOffset(offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle),preRotate);
     }
 
     @Override
