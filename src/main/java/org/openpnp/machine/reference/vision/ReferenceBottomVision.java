@@ -65,7 +65,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         // Pre-rotate to minimize runout
         double preRotateAngle = 0;
-        if (preRotate && boardLocation != null && placementLocation != null) {
+        if ( boardLocation != null && placementLocation != null) {
             preRotateAngle =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();
@@ -78,7 +78,7 @@ public class ReferenceBottomVision implements PartAlignment {
         Location partHeightLocation =
                 new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0);
         startLocation = startLocation.add(partHeightLocation)
-                                     .derive(null, null, null, preRotateAngle);
+                                     .derive(null, null, null, preRotate?preRotateAngle:null);
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
 
@@ -86,8 +86,11 @@ public class ReferenceBottomVision implements PartAlignment {
 
         pipeline.setCamera(camera);
         pipeline.setNozzle(nozzle);
+        pipeline.setValue(preRotateAngle);     
         pipeline.process();
-
+        preRotate=preRotate||Double.isNaN(pipeline.getValue());
+        preRotateAngle = preRotate ? preRotateAngle : 0.;
+        
         Result result = pipeline.getResult("result");
         if (!(result.model instanceof RotatedRect)) {
             throw new Exception("Bottom vision alignment failed for part " + part.getId()
@@ -129,7 +132,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 1500);
 
 
-        return new PartAlignmentOffset(offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle),false);
+        return new PartAlignmentOffset(offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle),preRotate);
     }
 
     @Override
