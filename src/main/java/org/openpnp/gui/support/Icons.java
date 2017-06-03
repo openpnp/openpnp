@@ -66,8 +66,6 @@ public class Icons {
     public static Icon navigateLast = getIcon("/icons/nav-last.svg");
     public static Icon navigatePrevious = getIcon("/icons/nav-previous.svg");
     public static Icon navigateNext = getIcon("/icons/nav-next.svg");
-    public static Icon circle = getIcon("/icons/circle.svg");
-    public static Icon polygon = getIcon("/icons/polygon.svg");
 
     public static Icon powerOn = getIcon("/icons/power_button_on.svg");
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");
