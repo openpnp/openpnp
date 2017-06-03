@@ -53,15 +53,16 @@ public class ResultsPanel extends JPanel {
         add(headerPanel, BorderLayout.NORTH);
         headerPanel.setLayout(new BorderLayout(0, 0));
 
+        JPanel panel = new JPanel();
+        headerPanel.add(panel, BorderLayout.WEST);
+        panel.setLayout(new BorderLayout(0, 0));
+
         resultStageNameLabel = new JLabel("New label");
-        headerPanel.add(resultStageNameLabel, BorderLayout.NORTH);
+        headerPanel.add(resultStageNameLabel, BorderLayout.SOUTH);
         resultStageNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JPanel panel = new JPanel();
-        headerPanel.add(panel, BorderLayout.SOUTH);
-
         JToolBar toolBar = new JToolBar();
-        panel.add(toolBar);
+        panel.add(toolBar, BorderLayout.WEST);
 
         JButton firstResultButton = new JButton(firstResultAction);
         firstResultButton.setHideActionText(true);
@@ -78,8 +79,31 @@ public class ResultsPanel extends JPanel {
         lastResultButton.setHideActionText(true);
         toolBar.add(lastResultButton);
 
+        JToolBar.Separator s1 = new JToolBar.Separator();
+        toolBar.add(s1);
+
+        JButton rangeButtonPoints = new JButton(Icons.circle);
+        rangeButtonPoints.setHideActionText(true);
+        rangeButtonPoints.setActionCommand("points");
+        toolBar.add(rangeButtonPoints);
+        rangeButtonPoints.addActionListener(chooseShapeAction);
+
+        JButton rangeButtonPoly = new JButton(Icons.polygon);
+        rangeButtonPoly.setHideActionText(true);
+        rangeButtonPoly.setActionCommand("poly");
+        toolBar.add(rangeButtonPoly);
+        rangeButtonPoly.addActionListener(chooseShapeAction);
+
         JPanel modelPanel = new JPanel();
         modelPanel.setLayout(new BorderLayout(0, 0));
+
+        JTextPane copyableTextPane = new JTextPane();
+//        copyableTextPane.setContentType("text/html");
+        copyableTextPane.setText("Color ranges:");
+        copyableTextPane.setEditable(false);
+        copyableTextPane.setBackground(null);
+        copyableTextPane.setBorder(null);
+        modelPanel.add(copyableTextPane, BorderLayout.NORTH);
 
         modelTextPane = new JTextPane();
         modelPanel.add(new JScrollPane(modelTextPane));
@@ -97,17 +121,17 @@ public class ResultsPanel extends JPanel {
 
         JLabel matStatusLabel = new JLabel("New label");
         panel_1.add(matStatusLabel, BorderLayout.SOUTH);
-        
+        matView.setTextPane(copyableTextPane);
         matView.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
                 Color color = robot.getPixelColor(e.getXOnScreen(), e.getYOnScreen());
                 float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
                 Point p = matView.scalePoint(e.getPoint());
-                matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d",
-                        color.getRed(),
-                        color.getGreen(),
+                matStatusLabel.setText(String.format("BGR: %03d, %03d, %03d HSB: %03d, %03d, %03d XY: %d, %d",
                         color.getBlue(),
+                        color.getGreen(),
+                        color.getRed(),
                         (int) (255.0 * hsb[0]),
                         (int) (255.0 * hsb[1]),
                         (int) (255.0 * hsb[2]),
@@ -251,6 +275,20 @@ public class ResultsPanel extends JPanel {
             updateAllEverything();
         }
     };
+
+    public final Action chooseShapeAction = new AbstractAction() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        int shapeType = 0;
+        if (e.getActionCommand().equals("poly")) {
+          shapeType = 1;
+        }
+        matView.setShapeType(shapeType);
+        matView.repaint();
+        matView.updateColorRange();
+      }
+    };
+
     private JTextPane modelTextPane;
     private JLabel resultStageNameLabel;
     private MatView matView;
