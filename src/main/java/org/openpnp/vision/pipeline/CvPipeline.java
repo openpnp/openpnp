@@ -56,9 +56,6 @@ public class CvPipeline {
     private Mat workingImage;
     private Object workingModel;
     
-    private CvStage currentStage;
-    private CvStage previousStage;
-
     private Camera camera;
     private Nozzle nozzle;
     private Feeder feeder;
@@ -150,9 +147,6 @@ public class CvPipeline {
         if (name == null) {
             return null;
         }
-        if (name.trim().equals("..")) {
-          return getResult(getPreviousStage());
-        }
         return getResult(getStage(name));
     }
 
@@ -188,14 +182,6 @@ public class CvPipeline {
       return workingModel;
     }
 
-    public CvStage getCurrentStage() {
-      return this.currentStage;
-    }
-    
-    public CvStage getPreviousStage() {
-      return this.previousStage;
-    }
-    
     public void setCamera(Camera camera) {
         this.camera = camera;
     }
@@ -235,7 +221,6 @@ public class CvPipeline {
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
-            currentStage = stage;
             Result result = null;
             try {
                 if (!stage.isEnabled()) {
@@ -248,7 +233,6 @@ public class CvPipeline {
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
             totalProcessingTimeNs += processingTimeNs;
-            previousStage = stage;
 
             Mat image = null;
             Object model = null;
