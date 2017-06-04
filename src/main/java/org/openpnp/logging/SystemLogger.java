@@ -13,12 +13,10 @@ public class SystemLogger extends PrintStream {
     private StringBuilder logMessage = new StringBuilder();
 
     private Level logLevel;
-    private OutputStream out;
     private boolean logToLogger = true;
 
     public SystemLogger(OutputStream out, Level logLevel) {
         super(out);
-        this.out = out;
         this.logLevel = logLevel;
 
         // In order to stop logging on shutdown, we need to make sure that we do not call the Logger anymore
