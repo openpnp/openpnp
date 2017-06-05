@@ -1,0 +1,311 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.opencv.core.Core;
+import org.opencv.core.Core.MinMaxLocResult;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
+import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.CvStage.Result.TemplateMatch;
+
+// user setting of this will prevail
+double threshold = 0.3;
+double corr = 0.85;
+normalize = false;
+showOrientation = true;
+
+static public Mat rotateRect(Mat mat, rect, double degrees) {
+  // get the affine mattrix
+  Mat mapMatrix = Imgproc.getRotationMatrix2D(rect.center, degrees, 1.0);
+  // adjust rect angle to coincide with the rotation. This modifies the input
+  rect.angle -= degrees;
+  // find the new bbox for the now rotated rect
+  Rect bbox = rect.boundingRect();
+  // adjust transformation matrix
+  double[] cx = mapMatrix.get(0, 2);
+  double[] cy = mapMatrix.get(1, 2);
+  cx[0] += bbox.width / 2D - rect.center.x;
+  cy[0] += bbox.height / 2D - rect.center.y;
+  mapMatrix.put(0, 2, cx);
+  mapMatrix.put(1, 2, cy);
+  // rotate and crop
+  Imgproc.warpAffine(mat, mat, mapMatrix, bbox.size(), Imgproc.INTER_LINEAR);
+  mapMatrix.release();
+  // adjust the model to the new center
+  bbox = rect.boundingRect();
+  rect.center.x = bbox.width/2.0;
+  rect.center.y = bbox.height/2.0;
+  return mat;
+}
+
+Result matchTemplate(Mat mat, Mat template) {
+
+    Mat result = new Mat();
+    // TODO: externalize type
+    Imgproc.matchTemplate(mat, template, result, Imgproc.TM_CCOEFF_NORMED);
+
+    MinMaxLocResult mmr = Core.minMaxLoc(result);
+    double maxVal = mmr.maxVal;
+
+    double rangeMin = Math.max(threshold, corr * maxVal);
+    double rangeMax = maxVal;
+
+//    List<TemplateMatch> 
+    matches = new ArrayList();
+    for (Point point : matMaxima(result, rangeMin, rangeMax)) {
+        int x = point.x;
+        int y = point.y;
+        TemplateMatch match = new TemplateMatch(x, y, template.cols(), template.rows(), result.get(y, x)[0] / (normalize? maxVal : 1.0));
+        matches.add(match);
+    }
+
+    Collections.sort(matches, new Comparator() {
+        public int compare(TemplateMatch o1, TemplateMatch o2) {
+            return ((Double) o2.score).compareTo(o1.score);
+        }
+    });
+    return new Result(result, matches);
+}
+
+int BEFORE_INFLECTION = 0;
+int AFTER_INFLECTION = 1;
+
+matMaxima(Mat mat, double rangeMin, double rangeMax) {
+  locations = new ArrayList();
+
+  int rEnd = mat.rows() - 1;
+  int cEnd = mat.cols() - 1;
+
+  // CHECK EACH ROW MAXIMA FOR LOCAL 2D MAXIMA
+  for (int r = 0; r <= rEnd; r++) {
+    state = BEFORE_INFLECTION;
+    double curVal = mat.get(r, 0)[0];
+    for (int c = 1; c <= cEnd; c++) {
+      double val = mat.get(r, c)[0];
+
+      if (val == curVal) {
+        continue;
+      } else if (curVal < val) {
+        if (state == BEFORE_INFLECTION) {
+          // n/a
+        } else {
+            state = BEFORE_INFLECTION;
+        }
+      } else { // curVal > val
+        if (state == BEFORE_INFLECTION) {
+          if (rangeMin <= curVal && curVal <= rangeMax) { // ROW MAXIMA
+            if (
+              0 < r && (mat.get(r - 1, c - 1)[0] >= curVal || mat.get(r - 1, c)[0] >= curVal) ||
+              r < rEnd && (mat.get(r + 1, c - 1)[0] > curVal || mat.get(r + 1, c)[0] > curVal) ||
+              1 < c && (0 < r && mat.get(r - 1, c - 2)[0] >= curVal || mat.get(r, c - 2)[0] > curVal ||
+              r < rEnd && mat.get(r + 1, c - 2)[0] > curVal)
+            ) {
+              // do nothing
+            } else {
+              locations.add(new Point(c - 1, r));
+            }
+          }
+          state = AFTER_INFLECTION;
+        } else {
+            // n/a
+        }
+      }
+      curVal = val;
+    }
+    // PROCESS END OF ROW
+    if (state == BEFORE_INFLECTION) {
+      if (rangeMin <= curVal && curVal <= rangeMax) { // ROW MAXIMA
+        if (
+          0 < r && (mat.get(r - 1, cEnd - 1)[0] >= curVal || mat.get(r - 1, cEnd)[0] >= curVal) ||
+          r < rEnd && (mat.get(r + 1, cEnd - 1)[0] > curVal || mat.get(r + 1, cEnd)[0] > curVal) ||
+          1 < r && mat.get(r - 1, cEnd - 2)[0] >= curVal || mat.get(r, cEnd - 2)[0] > curVal ||
+          r < rEnd && mat.get(r + 1, cEnd - 2)[0] > curVal
+        ) {
+        } else {
+          locations.add(new Point(cEnd, r));
+        }
+      }
+    }
+  }
+  return locations;
+}
+void drawRotatedRect(Mat mat, RotatedRect model, Scalar color) {
+  RotatedRect rect = (RotatedRect) model;
+  ArrayList poly = new ArrayList();
+  // we need this to extract the points
+  Point[] points = new Point[4];
+  // get the 4 points
+  rect.points(points);
+  // reuse poly
+  poly.clear();
+  // convert rect for fillPoly
+  poly.add(new MatOfPoint(points));
+  // draw rect as poly
+  Core.polylines(mat, poly, true, color,2);
+}
+
+if(args.trim().length()>0) {
+  eval(args+";");
+}
+
+Mat oimage = pipeline.getWorkingImage().clone();
+Mat timage = null;
+Result result = new Result(oimage);
+
+if (modelStageName == void || modelStageName.toString().trim().equals("")) {
+  model = pipeline.getWorkingModel();
+} else {
+  model = pipeline.getResult(modelStageName.toString()).model;
+}
+if (model == null || model.size() == 0) {
+  throw new Exception("No model was found.");
+}
+
+if (templateStageName == void || templateStageName.toString().trim().equals("")) {
+  throw new Exception("No template stage was found.");
+}
+template = pipeline.getResult(templateStageName.toString());
+if (template == null) {
+  throw new Exception("No template was found.");
+}
+timage = template.image.clone();
+
+print("==============================");
+
+RotatedRect rrect = null;
+
+if (model instanceof RotatedRect) {
+  rrect = model.clone();
+} else if (model instanceof ArrayList && model.get(0) instanceof RotatedRect){
+  rrect = model.get(0).clone();
+} else {
+  throw new Exception("No model was found. A RotatedRect was expected.");
+}
+
+print("part found = "+rrect);
+
+if (rrect.size.width > rrect.size.height) {
+  rrect.angle +=90.0;
+  double tmp = rrect.size.width;
+  rrect.size.width = rrect.size.height;
+  rrect.size.height = tmp;
+}
+// store original rect for the end
+orect = rrect.clone();
+print("orect = "+orect);
+// crop model to reduce processing time
+bbox = rrect.boundingRect();
+msz = Math.sqrt(Math.pow(bbox.width,2) + Math.pow(bbox.height,2));
+sz = new Size(msz,msz);
+// crop the image
+Mat image = new Mat(sz,oimage.type());
+Imgproc.getRectSubPix(oimage, sz,rrect.center,image);
+// adjust rrect to the new center
+rrect.center.x = sz.width/2.0;
+rrect.center.y = sz.height/2.0;
+print("rrect angle="+rrect.angle);
+
+// variables to keep score and winning rotation
+double maxscore = 0;
+int winrot = 0;
+
+// we need a model for the template
+if (template.model == void || template.model == null) {
+  // no model in template, make one up
+    template.model = new RotatedRect(
+    timage.size(), 
+    new Point(timage.size().width / 2.0, timage.size().height / 2.0), 
+    0.0
+  );
+} else {
+  trect = template.model.clone();
+}
+
+// we will be advancing the rotation in steps of 90 deg
+double angleAdv = 90.0;
+// rotate the template to be the same as rrect
+timage = rotateRect(timage,trect,-rrect.angle);
+
+/*
+drawRotatedRect(timage, trect, new Scalar(255,255,255));
+file = new File("tests/template"+1+".png");
+Highgui.imwrite(file.getAbsolutePath(), timage);
+*/
+
+// adjust loop step according to whether the rect is square or not
+// setting nrmaches = 4 will force 4 steps
+for (int i=1; i<=4; i++) {
+
+  if (i>1) {
+    // fast rotate/flip the template 90deg
+    Core.flip(timage.t(), timage, 1);
+    // reset rect center  to the center of the image
+    trect.center.x = timage.size().width/2.0;
+    trect.center.y = timage.size().height/2.0;
+    trect.angle -= angleAdv;
+    /*
+    file = new File("tests/template"+i+".png");
+    Highgui.imwrite(file.getAbsolutePath(), timage);
+    drawRotatedRect(timage, trect, new Scalar(255,255,255));
+    */
+  }
+  Result mresult = matchTemplate(image,timage);
+  matches = mresult.model;
+  stageScore = 0;
+  for (int j = 0; j < matches.size(); j++) {
+    TemplateMatch match = matches.get(j);
+    double x = match.x;
+    double y = match.y;
+    double score = match.score;
+    double width = match.width;
+    double height = match.height;
+    if (score > maxscore) {
+      maxscore = score;
+      winrot = i;
+    }
+    if (score > stageScore) {
+      stageScore = score;
+    }
+  }
+  print("match"+i+" score = "+stageScore);
+}
+print("winning stage="+winrot);
+
+orect.angle = rrect.angle + (winrot-1) * angleAdv;
+double markAngle = Math.toRadians(orect.angle-90.0);
+
+result.model = new ArrayList();
+if(winrot != 0) {
+
+  // draw orientation mark
+
+  if (showOrientation != void && showOrientation) {
+    Point mark = new Point(
+      orect.center.x + 1.2 * orect.size.height / 2 * Math.cos(markAngle),
+      orect.center.y + 1.2 * orect.size.height / 2 * Math.sin(markAngle)
+    );
+    Core.line(oimage,orect.center,mark, new Scalar(255,255,255),3);
+  }
+  
+  orect.angle = orect.angle % 360.0;
+  print("winning stage = match" + winrot);
+  
+} else {
+
+  // No match was found, deliver rect unchanged. What else can we do?
+  
+  orect = model.get(0);
+  print("NO MATCH FOUND!!!!!!!");
+}
+result.model.add(orect);
+print("model="+result.model);
+result;
