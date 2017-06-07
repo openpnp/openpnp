@@ -81,7 +81,7 @@ public class FilterRects extends CvStage {
       this.aspectRatioMin = Math.abs(aspectRatioMin);
     }
 
-    @Attribute
+    @Attribute(required = false)
     @Property(description="Enable logging of rect data.")
     private boolean enableLogging = false;
     
