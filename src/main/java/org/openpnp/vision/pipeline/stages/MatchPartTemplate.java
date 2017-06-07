@@ -214,7 +214,7 @@ public class MatchPartTemplate extends CvStage {
       
       if (winrot != 0) {
         
-        orect.angle = -orect.angle % 360.0;
+        orect.angle = orect.angle % 360.0;
                 
       } else {
         // No match was found, deliver original model unchanged. What else can we do?
