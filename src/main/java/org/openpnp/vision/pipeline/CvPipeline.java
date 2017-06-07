@@ -13,7 +13,10 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.Feeder;
@@ -21,6 +24,7 @@ import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
+
 
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
@@ -51,16 +55,38 @@ public class CvPipeline {
     @ElementList
     private ArrayList<CvStage> stages = new ArrayList<>();
 
-    private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
+    private Map<String, Result> results = new HashMap<String, Result>();
 
     private Mat workingImage;
 
     private Camera camera;
     private Nozzle nozzle;
     private Feeder feeder;
+    private Part	part;
     
     private long totalProcessingTimeNs;
-    
+
+	
+    /**************************************************************************
+     * Setter for internal flags
+     * Different Naming is used, because internal use only || checkstyle don't allow that
+     * Every flag have a prepending comment line that describes there use
+	 * Default value for flag must be false.
+     */
+	 
+	// indicate if camera is downlooking
+	private boolean downLooking;
+	// indicate if fiducial is searched
+	private boolean fiducial=true;
+	// if inside editor, different path is used, no optimisations
+	private boolean editor=true; // TODO need to be false, actually for legacy code.
+    public void setOptionEditor(boolean val) { 	editor=val; }
+	
+	// return single result, looping disabled
+	private boolean single;
+    public void setOptionSingle(boolean val) {  single=val; }
+    /**************************************************************************/
+
     public CvPipeline() {
         
     }
@@ -116,6 +142,7 @@ public class CvPipeline {
     }
 
     public void remove(CvStage stage) {
+		results.remove(stage.getName()); 
         stages.remove(stage);
     }
 
@@ -146,7 +173,7 @@ public class CvPipeline {
         if (name == null) {
             return null;
         }
-        return getResult(getStage(name));
+        return results.get(name);
     }
 
     /**
@@ -160,25 +187,37 @@ public class CvPipeline {
         if (stage == null) {
             return null;
         }
-        return results.get(stage);
+        return results.get(stage.getName());
     }
 
+	List <Mat> workingImages = new ArrayList<>();
     /**
      * Get the current working image. Primarily intended to be called from CvStage implementations.
      * 
      * @return
      */
     public Mat getWorkingImage() {
+		Mat img;
         if (workingImage == null || (workingImage.cols() == 0 && workingImage.rows() == 0)) {
-            workingImage = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 0));
-            Core.line(workingImage, new Point(0, 0), new Point(640, 480), new Scalar(0, 0, 255));
-            Core.line(workingImage, new Point(640, 0), new Point(0, 480), new Scalar(0, 0, 255));
+            workingImage = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 255));
+			Core.rectangle(workingImage, new Point(10,10), new Point(470,630), new Scalar(0), -1);
+			workingImages.add(workingImage);
         }
-        return workingImage;
+		img = workingImage.clone();
+		workingImages.add(img);
+        return img;
+    }
+
+    public void setWorkingImage(Mat img) { // img get not released !!!
+        workingImage = img;
     }
 
     public void setCamera(Camera camera) {
         this.camera = camera;
+		downLooking = camera.getHead()!=null;
+		if(!downLooking) {
+			fiducial=false;
+		}
     }
 
     public Camera getCamera() {
@@ -194,27 +233,47 @@ public class CvPipeline {
     }
   
     public void setFeeder(Feeder feeder) {
+		fiducial = false;
         this.feeder = feeder;
     }
 
     public Feeder getFeeder() {
         return feeder;
     }
+  
+    public void setPart(Part part) {
+        this.part = part;
+    }
+
+    public Part getPart() {
+        return part;
+    }
 
     public long getTotalProcessingTimeNs() {
       return totalProcessingTimeNs;
     }
 
-    public void setTotalProcessingTimeNs(long totalProcessingTimeNs) {
-      this.totalProcessingTimeNs = totalProcessingTimeNs;
-    }
-
+	
+	private boolean isNull(Object obj) {
+							if(obj!=null) {
+								if(obj instanceof List<?>) {
+									if(((List)obj).size()==0) {
+										return true;
+									}
+									return false;
+								}
+								return false;	
+							}
+							return true;	
+	}
+	
     public void process() {
-
-        totalProcessingTimeNs = 0;
+        long totalProcessingTimeNs = System.nanoTime();
         release();
-        for (CvStage stage : stages) {
-            // Process and time the stage and get the result.
+		int mark=-1,last=stages.size()-1,pos=0;
+		for(int limit=1000;pos>=0&&pos<=last;pos++,limit--) {
+			CvStage stage = stages.get(pos);
+		    // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
             Result result = null;
             try {
@@ -226,8 +285,6 @@ public class CvPipeline {
             catch (Exception e) {
                 result = new Result(null, e);
             }
-            processingTimeNs = System.nanoTime() - processingTimeNs;
-            totalProcessingTimeNs += processingTimeNs;
 
             Mat image = null;
             Object model = null;
@@ -238,25 +295,43 @@ public class CvPipeline {
 
             // If the result image is null and there is a working image, replace the result image
             // replace the result image with a clone of the working image.
-            if (image == null) {
-                if (workingImage != null) {
-                    image = workingImage.clone();
-                }
-            }
-            // If the result image is not null:
-            // Release the working image if the result image is different.
-            // Replace the working image with the result image.
-            // Clone the result image for storage.
-            else {
-                if (workingImage != null && workingImage != image) {
-                    workingImage.release();
-                }
+            if (image != null && workingImage!=image ) {
                 workingImage = image;
-                image = image.clone();
+				if(!workingImages.contains(image)) {
+					workingImages.add(image);
+				}
             }
-
-            results.put(stage, new Result(image, model, processingTimeNs));
+			String id = stage.getName();
+			result= new Result(workingImage, model, processingTimeNs = System.nanoTime() - processingTimeNs);
+			if(id.startsWith("result")&&id.length()==7) {
+				if(id.charAt(6)=='_') {
+					if(isNull(model)) {
+						mark = -1;
+						results.put("result", result);
+						pos=last; // break;
+					} else {
+						if(!single) {
+							mark = pos;
+						}
+					}
+				}
+				if(Character.isDigit(id.charAt(6))) {
+					if(!isNull(model)) {
+						results.put("result", result);
+						if(!editor) {
+							pos=last; // break;
+						}
+					}
+				}
+			}
+			results.put(id, result);
+			if(pos==last&&mark>-1) {
+				if(limit<0) { break ; }
+				pos=--mark;
+			}
         }
+            totalProcessingTimeNs = (System.nanoTime() - totalProcessingTimeNs );
+			this.totalProcessingTimeNs=totalProcessingTimeNs;
     }
 
     /**
@@ -265,15 +340,12 @@ public class CvPipeline {
      * resources from OpenCV.
      */
     public void release() {
-        if (workingImage != null) {
-            workingImage.release();
-        }
-        for (Result result : results.values()) {
-            if (result.image != null) {
-                result.image.release();
-            }
-        }
         results.clear();
+		for(Mat img: workingImages) {
+			img.release();
+		}
+		workingImage=null;
+		workingImages.clear();
     }
 
     /**
@@ -308,7 +380,7 @@ public class CvPipeline {
 
     private String generateUniqueName() {
         for (int i = 0;; i++) {
-            String name = "" + i;
+            String name = "S" + i;
             if (getStage(name) == null) {
                 return name;
             }
