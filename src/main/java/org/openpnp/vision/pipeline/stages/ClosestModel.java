@@ -98,7 +98,7 @@ public class ClosestModel extends CvStage {
         
       } else {
       
-        model = (RotatedRect) pipeline.getResult(modelStageName.toString()).model;
+        model = pipeline.getResult(modelStageName).model;
       }
       if (model == null || image == null) {
         return null;
@@ -110,7 +110,7 @@ public class ClosestModel extends CvStage {
       if (filterStageName != null && !filterStageName.trim().equals("")) {
 
         CvStage filterStage = pipeline.getStage(filterStageName);
-        if (filterStage != null && pipeline.getResult(filterStage).model != null) {
+        if (filterStage != null && pipeline.getResult(filterStage) != null) {
 
           Result filterResult = pipeline.getResult(filterStage);
           if (filterResult.model instanceof RotatedRect) {
