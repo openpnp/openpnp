@@ -14,6 +14,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.openpnp.vision.pipeline.stages.BlurMedian;
+import org.openpnp.vision.pipeline.stages.ClosestModel;
 import org.openpnp.vision.pipeline.stages.ComposeResult;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.ConvertModelToPoints;
@@ -76,6 +77,7 @@ public class CvPipelineEditor extends JPanel {
         stageClasses = new HashSet<>();
         registerStageClass(BlurMedian.class);
         registerStageClass(BlurGaussian.class);
+        registerStageClass(ClosestModel.class);
         registerStageClass(ComposeResult.class);
         registerStageClass(ConvertColor.class);
         registerStageClass(ConvertModelToPoints.class);
