@@ -146,6 +146,17 @@ public class MachineControlsPanel extends JPanel {
         updateDros();
     }
 
+    public Action targetDispenseAction = new AbstractAction(null, Icons.centerCamera) {
+         @Override
+         public void actionPerformed(ActionEvent arg0) {
+                        UiUtils.submitUiMachineTask(() -> {
+                                PasteDispenser dispenser = getSelectedPasteDispenser();
+                                Camera camera = dispenser.getHead().getDefaultCamera();
+                                MovableUtils.moveToLocationAtSafeZ(dispenser, camera.getLocation());
+                        });
+                    }
+     };
+
     public JogControlsPanel getJogControlsPanel() {
         return jogControlsPanel;
     }
@@ -275,6 +286,7 @@ public class MachineControlsPanel extends JPanel {
             thread.start();
         }
     };
+
 
     @SuppressWarnings("serial")
     public Action homeAction = new AbstractAction("Home", Icons.home) {

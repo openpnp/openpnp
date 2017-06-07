@@ -374,6 +374,11 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab("Dispense", null, panelDispensers, null);
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
+
+        JButton positionDispenseBtn = new JButton(machineControlsPanel.targetDispenseAction);
+        positionDispenseBtn.setIcon(Icons.centerTool);
+        positionDispenseBtn.setHideActionText(true);
+        panelDispensers.add(positionDispenseBtn, "22, 8");
     }
 
     private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
