@@ -93,6 +93,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = feeder.getPipeline();
+        pipeline.setNozzle(MainFrame.get().getMachineControls().getSelectedNozzle());
         pipeline.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
         pipeline.setFeeder(feeder);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
