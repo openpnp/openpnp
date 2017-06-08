@@ -19,7 +19,7 @@
          <color r="0" g="0" b="0" a="255"/>
       </cv-stage>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ClosestModel" name="18" enabled="true" model-stage-name="8" filter-stage-name="13" tolerance="0.20000000298023224" scale="1.0"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskModel" name="15" enabled="true" model-stage-name="ClosestModel" is-mask="false">
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskModel" name="15" enabled="true" model-stage-name="18" is-mask="false">
          <color r="0" g="0" b="0" a="255"/>
       </cv-stage>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="9" enabled="true" conversion="Bgr2Gray"/>
