@@ -2,14 +2,18 @@ package org.openpnp.spi.base;
 
 import javax.swing.Icon;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 public abstract class AbstractNozzleTip extends AbstractModelObject implements NozzleTip {
-    @Attribute(required = false)
-    protected double tipDiameter = 1.0;
+    @Element(required = false)
+    protected Length tipDiameter;
 
     @Attribute
     protected String id;
@@ -20,9 +24,10 @@ public abstract class AbstractNozzleTip extends AbstractModelObject implements N
     public AbstractNozzleTip() {
         this.id = Configuration.createId("TIP");
         this.name = getClass().getSimpleName();
+        this.tipDiameter = new Length(1.0, Configuration.get().getSystemUnits());
     }
 
-    public double getTipDiameter() {
+    public Length getTipDiameter() {
         return tipDiameter;
     }
 
@@ -36,7 +41,7 @@ public abstract class AbstractNozzleTip extends AbstractModelObject implements N
         return name;
     }
 
-    public void setTipDiameter(double tipDiameter) {
+    public void setTipDiameter(Length tipDiameter) {
         Object oldValue = this.tipDiameter;
         this.tipDiameter = tipDiameter;
         firePropertyChange("name", oldValue, this.tipDiameter);
