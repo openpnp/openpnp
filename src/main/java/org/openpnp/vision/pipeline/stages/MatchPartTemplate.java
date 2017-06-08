@@ -34,6 +34,18 @@ import org.pmw.tinylog.Logger;
         description = "OpenCV based image template matching with local maxima detection improvements. On match, returns the true orientation of the input model.")
 
 public class MatchPartTemplate extends CvStage {
+
+    @Attribute(required = false)
+    @Property(description = "Enable logging.")
+    private boolean log = false;
+
+    public boolean isLog() {
+        return log;
+    }
+
+    public void setLog(boolean log) {
+        this.log = log;
+    }
     /**
      * Name of a prior stage to load the template image from.
      */
@@ -95,6 +107,9 @@ public class MatchPartTemplate extends CvStage {
       Mat originalImage = pipeline.getWorkingImage().clone();
       
       if (model == null || originalImage == null) {
+        if (log) {
+          Logger.info("No input image or model was found.");
+        }
         return null;
       }
       // check for the existance of a template
@@ -124,7 +139,13 @@ public class MatchPartTemplate extends CvStage {
         
       } else {
         // only RotatedRects are handled
+        if (log) {
+          Logger.info("No model was found. A RotatedRect was expected.");
+        }
         return null;
+      }
+      if (log) {
+        Logger.info("part found = " + rrect);
       }
       // put the model at a known orientation, upright, or portrait 
       if (rrect.size.width > rrect.size.height) {
@@ -149,7 +170,10 @@ public class MatchPartTemplate extends CvStage {
       // adjust rrect to the new center
       rrect.center.x = sz.width/2.0;
       rrect.center.y = sz.height/2.0;
-            // we need a RotatedRect model for the template
+      if (log) {
+        Logger.info("part angle = "+rrect.angle);
+      }
+      // we need a RotatedRect model for the template
       RotatedRect trect =  null;
       if (template.model == null) {
         // no model in template so, make one up
@@ -189,7 +213,7 @@ public class MatchPartTemplate extends CvStage {
         }
         Result mresult = matchTemplate(image,timage);
         List<TemplateMatch> matches = (List<TemplateMatch>) mresult.model;
-        double stageScore = 0;
+        double rotScore = 0;
         // get the best of local matches
         for (int j = 0; j < matches.size(); j++) {
           TemplateMatch match = matches.get(j);
@@ -202,9 +226,12 @@ public class MatchPartTemplate extends CvStage {
             maxscore = score;
             winrot = i;
           }
-          if (score > stageScore) {
-            stageScore = score;
+          if (score > rotScore) {
+            rotScore = score;
           }
+        }
+        if (log) {
+          Logger.info("rotation"+i+" score = "+rotScore);
         }
       }
       // correct original model's angle to the orientation detected
@@ -215,12 +242,18 @@ public class MatchPartTemplate extends CvStage {
       if (winrot != 0) {
         
         orect.angle = orect.angle % 360.0;
-                
+        if (log) {
+          Logger.info("winning rotation = " + winrot);
+        }
       } else {
         // No match was found, deliver original model unchanged. What else can we do?
         orect = (RotatedRect) ((List<?>)model).get(0);
+        Logger.info("NO MATCH FOUND!!!!!!!");
       }
       ((List<RotatedRect>)result.model).add(orect);
+      if (log) {
+        Logger.info("output model = "+result.model);
+      }
       return result;
     }
 
