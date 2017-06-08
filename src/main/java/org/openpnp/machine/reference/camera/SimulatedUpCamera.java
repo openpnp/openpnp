@@ -8,9 +8,6 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
@@ -32,8 +29,6 @@ import org.simpleframework.xml.Root;
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
-
-
     protected int width = 640;
 
     protected int height = 480;
@@ -42,22 +37,9 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     private Thread thread;
 
-    private Map<Nozzle, Part> nozzleParts = new HashMap<>();
-
-    private Location offsets = new Location(LengthUnit.Millimeters);
-
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
         setLooking(Looking.Up);
-        Configuration.get()
-                     .addListener(new ConfigurationListener.Adapter() {
-                         @Override
-                         public void configurationComplete(Configuration configuration)
-                                 throws Exception {
-                             configuration.getMachine()
-                                          .addListener(machineListener);
-                         }
-                     });
     }
 
     @Override
@@ -102,22 +84,34 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         return image;
     }
 
+    
+    // TODO STOPSHIP this is all getting close, and there is good code here, but way too much
+    // mixing of units. Figure out how to do a single scale to UPP at the end (or beginning)
+    // in the transform and then just work in real units.
+    // TODO STOPSHIP Shit. That won't work. All the graphics primitives take ints, not doubles.
     private void drawNozzle(Graphics2D g, Nozzle nozzle) {
-        // g.setColor(Color.white);
-        // Location l = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters);
-        //
-        // Location upp = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-        // Location scale =
-        // new Location(LengthUnit.Millimeters, 1D / upp.getX(), 1D / upp.getY(), 0, 0);
-        // l = l.multiply(scale);
-        //
-        // g.fillOval((int) (l.getX() - 20), (int) (l.getY() - 20), 40, 40);
-
+        AffineTransform tx = g.getTransform();
+        
         g.setStroke(new BasicStroke(1f));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(Color.white);
 
-        Part part = nozzleParts.get(nozzle);
+        LengthUnit units = LengthUnit.Millimeters;
+        Location mmPerPixels = getUnitsPerPixel().convertToUnits(units);
+        Location pixelsPerMm = new Location(units, 1D / mmPerPixels.getX(), 1D / mmPerPixels.getY(), 1, 1);
+        
+        // Set a scale on the transform to convert mm to pixels. Everything below will be drawn
+        // in mm and automatically scaled to pixels by this transform.
+        tx.scale(pixelsPerMm.getX(), pixelsPerMm.getY());
+        
+        // Draw a 1mm circle representation of the nozzle
+        g.setColor(new Color(0, 150, 0));
+        Location nozzleLocation = nozzle
+                .getLocation()
+                .convertToUnits(units)
+                .subtract(getLocation());
+        g.fillOval((int) (nozzleLocation.getX() - 0.5), (int) (nozzleLocation.getY() - 0.5), 1, 1);
+        
+        Part part = nozzle.getPart();
         if (part == null) {
             return;
         }
@@ -132,31 +126,35 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         if (shape == null) {
             return;
         }
-
-        Location upp = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-
-        // Determine the scaling factor to go from Outline units to
-        // Camera units.
-        Length l = new Length(1, footprint.getUnits());
-        l = l.convertToUnits(upp.getUnits());
-        double unitScale = l.getValue();
-
-        // Create a transform to scale the Shape by
-        AffineTransform tx = new AffineTransform();
-
-        // First we scale by units to convert the units and then we scale
-        // by the camera X and Y units per pixels to get pixel locations.
-        tx.scale(unitScale, unitScale);
-        tx.scale(1.0 / upp.getX(), 1.0 / upp.getY());
-
-        tx.translate(offsets.getX(), offsets.getY());
-        // AffineTransform rotates positive clockwise, so we invert the value.
-        tx.rotate(Math.toRadians(offsets.getRotation()));
-
-
-        // Transform the Shape and draw it out.
-        shape = tx.createTransformedShape(shape);
-        g.fill(shape);
+        
+//        // Determine the scaling factor to go from Outline units to
+//        // Camera units (mm)
+//        Location footprintScale = pixelsPerMm.multiply(new Location(footprint.getUnits(), 1, 1, 1, 1));
+//
+//        // Create a transform that will be applied to the footprint.
+//        AffineTransform tx = new AffineTransform();
+//
+//        Location offsets = new Location(LengthUnit.Millimeters, 2, 2, 0, 10);
+//
+////        // Rotate the footprint by the nozzle rotation.
+////        tx.rotate(Math.toRadians(nozzle.getLocation().getRotation()));
+////        // And by the offset error.
+////        tx.rotate(Math.toRadians(offsets.getRotation()));
+//
+//        // Translate the footprint so that it is at the same point as the nozzle.
+//        tx.translate(nozzleOffset.getX(), nozzleOffset.getY());
+//        // And by the offset error.
+//        tx.translate(offsets.getX(), offsets.getY());
+//
+//        // Scale the footprint to pixels.
+//        tx.scale(footprintScale.getX(), footprintScale.getY());
+//        
+//        // Transform the Shape and draw it out.
+//        shape = tx.createTransformedShape(shape);
+//        g.setColor(Color.white);
+//        g.fill(shape);
+        
+        g.setTransform(tx);
     }
 
     @Override
@@ -222,19 +220,4 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         // TODO Auto-generated method stub
         return null;
     }
-
-    private MachineListener machineListener = new MachineListener.Adapter() {
-        @Override
-        public void machineHeadActivity(Machine machine, Head head) {
-            for (Nozzle nozzle : head.getNozzles()) {
-                Part part = nozzleParts.get(nozzle);
-                if (part == null || part != nozzle.getPart()) {
-                    nozzleParts.put(nozzle, nozzle.getPart());
-                    Random r = new Random();
-                    offsets = new Location(LengthUnit.Millimeters, Math.random() * 2 - 1,
-                            Math.random() * 2 - 1, 0, Math.random() * 30 - 15);
-                }
-            }
-        }
-    };
 }
