@@ -48,25 +48,30 @@ public class ReadTemplateImage extends CvStage {
       if (templateFile == null || templateFile.trim().equals("")) {
         return null;
       }
+      // an empty extension has no meaning and confuses the user believing it'll be the default
+      if (extension.trim().equals("")) {
+        extension = ".png";
+      }
       File file = null;
+      String filepath = templateFile;
       /**
       * Read a template image from the path set by the user.
       * If the path ends in 'extension' then the image is read directly from the path
       * If not, then the path is considered a directory containing template images, 
       * and the template file name is deduced by the partID of the part loaded in the feeder of this pipeline
       */
-      if (!templateFile.endsWith(extension)) {
+      if (!filepath.endsWith(extension)) {
         // path is assumed to be a directory containing template images
         if (pipeline.getFeeder() == null || pipeline.getFeeder().getPart() == null) {
           return null;
         }
-        if (!templateFile.endsWith(File.separator)) {
-          templateFile += File.separator;
+        if (!filepath.endsWith(File.separator)) {
+          filepath += File.separator;
         }
-        templateFile +=  pipeline.getFeeder().getPart().getId() + extension;
+        filepath += pipeline.getFeeder().getPart().getId() + extension;
 
       }
-      file = new File(templateFile);
+      file = new File(filepath);
       if (!file.exists()) {
         return null;
       }
