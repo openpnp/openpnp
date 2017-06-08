@@ -8,6 +8,9 @@ import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractNozzleTip extends AbstractModelObject implements NozzleTip {
+    @Attribute(required = false)
+    protected double tipDiameter = 1.0;
+
     @Attribute
     protected String id;
 
@@ -19,6 +22,10 @@ public abstract class AbstractNozzleTip extends AbstractModelObject implements N
         this.name = getClass().getSimpleName();
     }
 
+    public double getTipDiameter() {
+        return tipDiameter;
+    }
+
     @Override
     public String getId() {
         return id;
@@ -27,6 +34,12 @@ public abstract class AbstractNozzleTip extends AbstractModelObject implements N
     @Override
     public String getName() {
         return name;
+    }
+
+    public void setTipDiameter(double tipDiameter) {
+        Object oldValue = this.tipDiameter;
+        this.tipDiameter = tipDiameter;
+        firePropertyChange("name", oldValue, this.tipDiameter);
     }
 
     @Override
