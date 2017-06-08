@@ -375,7 +375,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(nozzleTip, "name", nameTf, "text");
-        addWrappedBinding(nozzleTip, "tipDiameter", tipDiameterTf, "text");
+        addWrappedBinding(nozzleTip, "tipDiameter", tipDiameterTf, "text", lengthConverter);
         
         addWrappedBinding(nozzleTip, "allowIncompatiblePackages", chckbxAllowIncompatiblePackages,
                 "selected");
@@ -426,7 +426,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
-        ComponentDecorators.decorateWithAutoSelect(tipDiameterTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tipDiameterTf);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
