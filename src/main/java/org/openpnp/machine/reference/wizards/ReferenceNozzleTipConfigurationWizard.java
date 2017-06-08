@@ -107,6 +107,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JPanel panel;
     private JLabel lblName;
     private JTextField nameTf;
+    private JLabel lblTipDiameter;
+    private JTextField tipDiameterTf;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -115,6 +117,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -129,6 +135,13 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2, fill, default");
         nameTf.setColumns(10);
+
+        lblTipDiameter = new JLabel("Tip diameter");
+        panel.add(lblTipDiameter, "6, 2, right, default");
+
+        tipDiameterTf = new JTextField();
+        panel.add(tipDiameterTf, "8, 2, fill, default");
+        tipDiameterTf.setColumns(4);
 
         panelPackageCompat = new JPanel();
         panelPackageCompat.setBorder(new TitledBorder(null, "Package Compatibility",
@@ -362,6 +375,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(nozzleTip, "name", nameTf, "text");
+        addWrappedBinding(nozzleTip, "tipDiameter", tipDiameterTf, "text", lengthConverter);
         
         addWrappedBinding(nozzleTip, "allowIncompatiblePackages", chckbxAllowIncompatiblePackages,
                 "selected");
@@ -412,6 +426,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         addWrappedBinding(nozzleTip, "vacuumLevelPartOff", vacuumLevelPartOff, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tipDiameterTf);
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
