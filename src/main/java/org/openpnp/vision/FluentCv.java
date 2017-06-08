@@ -208,6 +208,10 @@ public class FluentCv {
         return store(mat, tag);
     }
 
+    public FluentCv equalizeHist(String... tag) {
+        Imgproc.equalizeHist(mat, mat);
+        return store(mat, tag);
+    } 
     public FluentCv blurMedian(int kernelSize, String... tag) {
         Imgproc.medianBlur(mat, mat, kernelSize);
         return store(mat, tag);
@@ -224,6 +228,7 @@ public class FluentCv {
     public FluentCv findCirclesHough(int minDiameter, int maxDiameter, int minDistance,
             String... tag) {
         Mat circles = new Mat();
+        Imgproc.equalizeHist(mat, mat);
         Imgproc.HoughCircles(mat, circles, Imgproc.CV_HOUGH_GRADIENT, 1, minDistance, 80, 10,
                 minDiameter / 2, maxDiameter / 2);
         store(circles, tag);
