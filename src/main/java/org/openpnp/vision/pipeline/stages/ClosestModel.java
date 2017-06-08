@@ -33,6 +33,18 @@ import org.pmw.tinylog.Logger;
 
 public class ClosestModel extends CvStage {
 
+    @Attribute(required = false)
+    @Property(description = "Allow debug messages in the log.")
+    private boolean debug = false;
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
     @Attribute(required = true)
     @Property(description = "Name of a prior stage to load the model from.")
     private String modelStageName;
@@ -44,6 +56,7 @@ public class ClosestModel extends CvStage {
     public void setModelStageName(String modelStageName) {
         this.modelStageName = modelStageName;
     }
+
 
     @Attribute(required = true)
     @Property(description = "Name of a prior stage to load the filter size from. The filter stage should contain a single RotatedRect model.")
@@ -125,6 +138,9 @@ public class ClosestModel extends CvStage {
           }
         }
       }
+      if (debug) {
+        Logger.info("filter rect = " + frect);
+      }
       Point screenCenter = new Point(image.size().width/2.0, image.size().height/2.0);
       
       if (frect != null) {
@@ -133,7 +149,10 @@ public class ClosestModel extends CvStage {
         tHeightMin = Math.max(frect.size.width,frect.size.height) * (1 - tolerance / 2.0) * scale;
         tWidthMax  = Math.min(frect.size.width,frect.size.height) * (1 + tolerance / 2.0) * scale;
         tWidthMin  = Math.min(frect.size.width,frect.size.height) * (1 - tolerance / 2.0) * scale;
-
+        if (debug) {
+          Logger.info("scale = " + scale + ", tolerance = " + tolerance);
+          Logger.info("scaled filter rect limits = " + tWidthMin + ":" + tWidthMax + " x " + tHeightMin + ":" + tHeightMax);
+        }
       }
       if (model instanceof RotatedRect) {
 
@@ -162,6 +181,9 @@ public class ClosestModel extends CvStage {
           frect != null && 
           (rHeight > tHeightMax || rHeight < tHeightMin || rWidth  > tWidthMax || rWidth  < tWidthMin)
         ) {
+          if (debug) {
+            Logger.info("<<<<<<  filtered out rect with size="+r.size+", because filter size is = "+frect.size.width*scale+"x"+frect.size.height*scale);
+          }
           continue;
         }
         // find distance from center
@@ -184,9 +206,15 @@ public class ClosestModel extends CvStage {
           rrect.size.width = rrect.size.height;
           rrect.size.height = tmp;
         }
+        if (debug) {
+          Logger.info("Delivering model = " + closest);
+        }
         multi.clear();
         multi.add(closest);
         return new Result(null, multi);
+      }
+      if (debug) {
+        Logger.info("No model was found after filtering");
       }
       return null;
     }

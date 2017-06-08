@@ -10,7 +10,7 @@
       <cv-stage class="org.openpnp.vision.pipeline.stages.FindContours" name="6" enabled="true" retrieval-mode="List" approximation-method="None"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.FilterContours" name="7" enabled="true" contours-stage-name="6" min-area="1000.0" max-area="100000.0"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.MinAreaRectContours" name="8" enabled="true" contours-stage-name="7"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.ReadTemplateImage" name="14" enabled="true" template-file="_openpnp/vision/templates/TO-252-480p.png" extension=""/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ReadTemplateImage" name="14" enabled="true" template-file="_openpnp/vision/templates" extension=".png"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="10" enabled="true" conversion="Bgr2Gray"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.Normalize" name="16" enabled="true"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ComposeResult" name="13" enabled="true" image-stage-name="16" model-stage-name="14"/>
