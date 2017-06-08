@@ -6,7 +6,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
