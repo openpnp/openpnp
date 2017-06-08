@@ -33,6 +33,18 @@ import org.pmw.tinylog.Logger;
 
 public class ClosestModel extends CvStage {
 
+    @Attribute(required = false)
+    @Property(description = "Allow log messages in the log.")
+    private boolean log = false;
+
+    public boolean isLog() {
+        return log;
+    }
+
+    public void setLog(boolean log) {
+        this.log = log;
+    }
+
     @Attribute(required = true)
     @Property(description = "Name of a prior stage to load the model from.")
     private String modelStageName;
@@ -44,6 +56,7 @@ public class ClosestModel extends CvStage {
     public void setModelStageName(String modelStageName) {
         this.modelStageName = modelStageName;
     }
+
 
     @Attribute(required = true)
     @Property(description = "Name of a prior stage to load the filter size from. The filter stage should contain a single RotatedRect model.")
@@ -101,6 +114,9 @@ public class ClosestModel extends CvStage {
         model = pipeline.getResult(modelStageName).model;
       }
       if (model == null || image == null) {
+        if (log) {
+          Logger.info("Null image or model");
+        }
         return null;
       }
       // list to keep filtered rotated rects in.
@@ -125,6 +141,9 @@ public class ClosestModel extends CvStage {
           }
         }
       }
+      if (log) {
+        Logger.info("filter rect = " + frect);
+      }
       Point screenCenter = new Point(image.size().width/2.0, image.size().height/2.0);
       
       if (frect != null) {
@@ -133,7 +152,10 @@ public class ClosestModel extends CvStage {
         tHeightMin = Math.max(frect.size.width,frect.size.height) * (1 - tolerance / 2.0) * scale;
         tWidthMax  = Math.min(frect.size.width,frect.size.height) * (1 + tolerance / 2.0) * scale;
         tWidthMin  = Math.min(frect.size.width,frect.size.height) * (1 - tolerance / 2.0) * scale;
-
+        if (log) {
+          Logger.info("scale = " + scale + ", tolerance = " + tolerance);
+          Logger.info("scaled filter limits = " + Math.round(tWidthMin) + ":" + Math.round(tWidthMax) + " x " + Math.round(tHeightMin) + ":" + Math.round(tHeightMax));
+        }
       }
       if (model instanceof RotatedRect) {
 
@@ -146,6 +168,9 @@ public class ClosestModel extends CvStage {
         
       } else {
         // we only handle rotated rects here
+      }
+      if (log && multi.size() == 0) {
+        Logger.info("No input model found.");
       }
       // find the closest rotatedRect to the center of the screen
       // Given the oportunity of a loop through the rects and the size of the model represented by the template, 
@@ -162,6 +187,9 @@ public class ClosestModel extends CvStage {
           frect != null && 
           (rHeight > tHeightMax || rHeight < tHeightMin || rWidth  > tWidthMax || rWidth  < tWidthMin)
         ) {
+          if (log) {
+            Logger.info("<<< filtered out rect with size="+r.size+", because filter size is = "+frect.size.width*scale+"x"+frect.size.height*scale);
+          }
           continue;
         }
         // find distance from center
@@ -184,9 +212,15 @@ public class ClosestModel extends CvStage {
           rrect.size.width = rrect.size.height;
           rrect.size.height = tmp;
         }
+        if (log) {
+          Logger.info("Delivering model = " + closest);
+        }
         multi.clear();
         multi.add(closest);
         return new Result(null, multi);
+      }
+      if (log) {
+        Logger.info("No model was found after filtering");
       }
       return null;
     }
