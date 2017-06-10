@@ -215,9 +215,9 @@ public class ClosestModel extends CvStage {
         if (log) {
           Logger.info("Delivering model = " + closest);
         }
-        multi.clear();
-        multi.add(closest);
-        return new Result(null, multi);
+        ArrayList out = new ArrayList();
+        out.add(closest);
+        return new Result(null, out);
       }
       if (log) {
         Logger.info("No model was found after filtering");
