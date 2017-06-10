@@ -55,10 +55,11 @@ public class WriteTemplateImage extends CvStage {
       }
       String msg = "Could not find a png template image.";
       File file = null;
+      String filepath = templateFile;
 
-      if (templateFile.endsWith(extension)) {
+      if (filepath.endsWith(extension)) {
 
-        file = new File(templateFile);
+        file = new File(filepath);
 
       } else {
 
@@ -70,14 +71,14 @@ public class WriteTemplateImage extends CvStage {
           throw new Exception(msg + " No part in feeder, either.");
         }
         // make sure the specified dir exists, otherwise create it
-        new File(templateFile).mkdirs();
+        new File(filepath).mkdirs();
         
-        if (!templateFile.endsWith(File.separator)) {
+        if (!filepath.endsWith(File.separator)) {
           
-          templateFile += File.separator;
+          filepath += File.separator;
         }
-        templateFile +=  pipeline.getFeeder().getPart().getId() + extension;
-        file = new File(templateFile);
+        filepath +=  pipeline.getFeeder().getPart().getId() + extension;
+        file = new File(filepath);
       }
       // Write template image to disk
       Highgui.imwrite(file.getAbsolutePath(), pipeline.getWorkingImage());
