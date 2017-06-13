@@ -237,8 +237,6 @@ public class MatchPartTemplate extends CvStage {
       // correct original model's angle to the orientation detected
       orect.angle = rrect.angle + (winrot-1) * angleAdv;
       
-      result = new Result(originalImage, new ArrayList<RotatedRect>());
-      
       if (winrot != 0) {
         
         orect.angle = orect.angle % 360.0;
@@ -246,13 +244,17 @@ public class MatchPartTemplate extends CvStage {
           Logger.info("winning rotation = " + winrot);
         }
       } else {
-        // No match was found, deliver original model unchanged. What else can we do?
-        orect = (RotatedRect) ((List<?>)model).get(0);
+        // No match was found. Could deliver the original model unchanged, 
+        // but that would not be expected for polarized parts, since it would be taken as having
+        // the correct orientation. So, return null, instead.
         Logger.info("NO MATCH FOUND!!!!!!!");
+        return null;
       }
+      result = new Result(originalImage, new ArrayList<RotatedRect>());
+
       ((List<RotatedRect>)result.model).add(orect);
       if (log) {
-        Logger.info("output model = "+result.model);
+        Logger.info("output model = " + result.model);
       }
       return result;
     }
