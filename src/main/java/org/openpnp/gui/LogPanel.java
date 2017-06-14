@@ -137,7 +137,7 @@ public class LogPanel extends JPanel {
     }
 
     private JCheckBox createSystemOutputCheckbox() {
-        JCheckBox systemOutCheckbox = new JCheckBox("System output enable");
+        JCheckBox systemOutCheckbox = new JCheckBox("System Output");
         systemOutCheckbox.setSelected(systemOutEnabled);
         systemOutCheckbox.addActionListener(e -> {
             systemOutEnabled = systemOutCheckbox.isSelected();
@@ -215,7 +215,8 @@ public class LogPanel extends JPanel {
     private JPanel createFilterLogLevelPanel() {
         JPanel filterLogLevelPanel = new JPanel();
         filterLogLevelPanel.add(new JLabel("Log Level:"));
-        JComboBox<Level> logLevelFilterComboBox = createLogLevelFilterComboBox(filterLogLevel);
+        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
+        logLevelFilterComboBox.setSelectedItem(filterLogLevel);
         logLevelFilterComboBox.addActionListener(e -> {
             Level logLevel = (Level) logLevelFilterComboBox.getSelectedItem();
             logLevelFilter.setFilter(logEntry -> logEntry.getLevel().compareTo(logLevel) >= 0);
@@ -228,29 +229,18 @@ public class LogPanel extends JPanel {
     private JPanel createGlobalLogLevelPanel() {
         JPanel globalLogLevelPanel = new JPanel();
         globalLogLevelPanel.add(new JLabel("Global Log Level:"));
-        JComboBox<Level> logLevelComboBox = createLogLevelFilterComboBox(Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF)));
-        logLevelComboBox.addActionListener(e -> {
-            Level logLevel = (Level) logLevelComboBox.getSelectedItem();
+        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
+        logLevelFilterComboBox.setSelectedItem((Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF))));
+        logLevelFilterComboBox.addActionListener(e -> {
+            Level logLevel = (Level) logLevelFilterComboBox.getSelectedItem();
             prefs.put(PREF_LOG_LEVEL, logLevel.toString());
             Configurator
                     .currentConfig()
                     .level(logLevel)
                     .activate();
         });
-        globalLogLevelPanel.add(logLevelComboBox);
+        globalLogLevelPanel.add(logLevelFilterComboBox);
         return globalLogLevelPanel;
-    }
-
-    private JComboBox<Level> createLogLevelFilterComboBox(Level selectedLogLevel) {
-        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>();
-
-        for (Level logLevel : Level.values()) {
-            logLevelFilterComboBox.addItem(logLevel);
-        }
-
-        logLevelFilterComboBox.setSelectedItem(selectedLogLevel);
-
-        return logLevelFilterComboBox;
     }
 
     private void copyStringToClipboard(String s) {

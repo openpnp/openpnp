@@ -26,8 +26,10 @@ import javax.swing.UIManager;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.logging.ConsoleWriter;
+import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.RollingFileWriter;
 
@@ -65,13 +67,10 @@ public class Main {
             .activate();
 
         // Redirect the stdout and stderr to the LogPanel
-        // TODO: Temporarily commented out because of stack overflows on shutdown
-        // on Windows. See:
-        // https://github.com/openpnp/openpnp/issues/288
-//        SystemLogger out = new SystemLogger(System.out, Level.INFO);
-//        SystemLogger err = new SystemLogger(System.err, Level.ERROR);
-//        System.setOut(out);
-//        System.setErr(err);
+        SystemLogger out = new SystemLogger(System.out, Level.INFO);
+        SystemLogger err = new SystemLogger(System.err, Level.ERROR);
+        System.setOut(out);
+        System.setErr(err);
     }
     
     private static void monkeyPatchBeansBinding() {
