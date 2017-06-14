@@ -48,21 +48,12 @@ public class SystemLogger extends PrintStream {
          * As tinylog will forward all logs to the console, we do not call the super method
          */
         if (logToLogger) {
-            byte[] pb = new byte[len];
-            System.arraycopy(buf, off, pb, 0, len);
-            String str = new String(pb);
-
-            // String builder cannot handle a byte array
-            for (int i = 0; i < len; i++) {
-                if (i == (len - 1)) {
-                    // The log message will appen a line break, so we remove the original one here
-                    if (pb[i] == '\n') {
-                        logMessage.append(str, 0, str.length() - 1);
-                        flushLogMessage();
-                    } else {
-                        logMessage.append(str, 0, str.length());
-                    }
-                }
+            String str = new String(buf, off, len);
+            if (str.endsWith("\n")) {
+                logMessage.append(str, 0, str.length() - 1);
+                flushLogMessage();
+            } else {
+                logMessage.append(str);
             }
         } else {
             super.write(buf, off, len);
