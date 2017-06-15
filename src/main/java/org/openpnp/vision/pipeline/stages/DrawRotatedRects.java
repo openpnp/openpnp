@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.util.List;
 import java.util.ArrayList;
 import org.opencv.core.Core;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
@@ -41,6 +43,10 @@ public class DrawRotatedRects extends CvStage {
     @Attribute(required = false)
     @Property(description="Radius of circle at center of RotatedRects.")
     private int rectCenterRadius = 20;
+
+    @Attribute(required = false)
+    @Property(description = "Show the orientation of a rotated rect.")
+    private boolean showOrientation = false;
     
     public Color getColor() {
         return color;
@@ -82,6 +88,27 @@ public class DrawRotatedRects extends CvStage {
         this.rectCenterRadius = rectCenterRadius;
     }
 
+    public boolean isShowOrientation() {
+        return showOrientation;
+    }
+
+    public void setShowOrientation(boolean showOrientation) {
+        this.showOrientation = showOrientation;
+    }
+
+    public void drawOrientationMark(Mat image, RotatedRect rrect, Scalar color, int thickness) {
+      double markAngle = Math.toRadians(rrect.angle - 90.0);
+      Core.line(image,
+        rrect.center,
+        new Point(
+          rrect.center.x + 1.2 * rrect.size.height / 2.0 * Math.cos(markAngle),
+          rrect.center.y + 1.2 * rrect.size.height / 2.0 * Math.sin(markAngle)
+        ),
+        color,
+        Math.abs(thickness)
+      );
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (rotatedRectsStageName == null) {
@@ -103,9 +130,13 @@ public class DrawRotatedRects extends CvStage {
         }
         for (int i = 0; i < rects.size(); i++) {
             RotatedRect rect = rects.get(i);
-            FluentCv.drawRotatedRect(mat, rect, color == null ? FluentCv.indexedColor(i) : color, thickness);
+            Color thecolor = (color == null ? FluentCv.indexedColor(i) : color);
+            FluentCv.drawRotatedRect(mat, rect, thecolor, thickness);
             if (drawRectCenter) {
-                Core.circle(mat, rect.center, rectCenterRadius, FluentCv.colorToScalar(color == null ? FluentCv.indexedColor(i) : color), thickness);
+                Core.circle(mat, rect.center, rectCenterRadius, FluentCv.colorToScalar(thecolor), thickness);
+            }
+            if (showOrientation) {
+              drawOrientationMark(mat, rect, FluentCv.colorToScalar(thecolor), thickness);
             }
         }
         return null;
