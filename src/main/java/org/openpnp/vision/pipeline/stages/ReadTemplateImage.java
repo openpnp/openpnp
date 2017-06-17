@@ -19,7 +19,7 @@ import org.simpleframework.xml.Attribute;
 public class ReadTemplateImage extends CvStage {
 
     @Attribute(required = false)
-    @Property(description = "Name of a template image, or name of a directory where an image can be found with a name inferred by the part ID.")
+    @Property(description = "Name of a template image, or name of a directory where an image can be found with a name inferred from part or package ID.")
     private String templateFile;
     
     public String getTemplateFile() {
@@ -54,13 +54,17 @@ public class ReadTemplateImage extends CvStage {
       }
       File file = null;
       String filepath = templateFile;
+      String filename = null;
       /**
       * Read a template image from the path set by the user.
       * If the path ends in 'extension' then the image is read directly from the path
       * If not, then the path is considered a directory containing template images, 
-      * and the template file name is deduced by the partID of the part loaded in the feeder of this pipeline
+      * and the template file name is deduced by the part ID or the package ID 
+      * of the part loaded in the feeder of this pipeline
       */
-      if (!filepath.endsWith(extension)) {
+      if (filepath.endsWith(extension)) {
+        file = new File(filepath);
+      } else {
         // path is assumed to be a directory containing template images
         if (pipeline.getFeeder() == null || pipeline.getFeeder().getPart() == null) {
           return null;
@@ -68,12 +72,16 @@ public class ReadTemplateImage extends CvStage {
         if (!filepath.endsWith(File.separator)) {
           filepath += File.separator;
         }
-        filepath += pipeline.getFeeder().getPart().getId() + extension;
-
-      }
-      file = new File(filepath);
-      if (!file.exists()) {
-        return null;
+        filename = filepath + pipeline.getFeeder().getPart().getId() + extension;
+        file = new File(filename);
+        if (!file.exists()) {
+          // try the package id
+          filename = filepath + pipeline.getFeeder().getPart().getPackage().getId() + extension;
+          file = new File(filename);
+          if (!file.exists()) {
+            return null;
+          }
+        }
       }
       // Read template image from disk
       Mat templateImage = Highgui.imread(file.getAbsolutePath());
