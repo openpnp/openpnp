@@ -41,6 +41,18 @@ public class WriteTemplateImage extends CvStage {
         this.extension = extension;
     }
 
+    @Attribute(required = false)
+    @Property(description = "Write image as a package template.")
+    private boolean asPackage = false;
+
+    public boolean isAsPackage() {
+        return asPackage;
+    }
+
+    public void setAsPackage(boolean asPackage) {
+        this.asPackage = asPackage;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
       /**
@@ -53,7 +65,6 @@ public class WriteTemplateImage extends CvStage {
       if (templateFile == null || templateFile.trim().equals("")) {
         return null;
       }
-      String msg = "Could not find a png template image.";
       File file = null;
       String filepath = templateFile;
 
@@ -68,7 +79,7 @@ public class WriteTemplateImage extends CvStage {
 
         if (pipeline.getFeeder() == null || pipeline.getFeeder().getPart() == null) {
           
-          throw new Exception(msg + " No part in feeder, either.");
+          throw new Exception("No part in feeder. Cannot create template name.");
         }
         // make sure the specified dir exists, otherwise create it
         new File(filepath).mkdirs();
@@ -77,7 +88,11 @@ public class WriteTemplateImage extends CvStage {
           
           filepath += File.separator;
         }
-        filepath +=  pipeline.getFeeder().getPart().getId() + extension;
+        if (asPackage) {
+          filepath +=  pipeline.getFeeder().getPart().getPackage().getId() + extension;
+        } else {
+          filepath +=  pipeline.getFeeder().getPart().getId() + extension;
+        }
         file = new File(filepath);
       }
       // Write template image to disk
