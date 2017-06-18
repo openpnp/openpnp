@@ -1,12 +1,11 @@
 org.openpnp
 org.openpnp.events
-org.openpnp.experiments
 org.openpnp.gui
 org.openpnp.gui.components
-org.openpnp.gui.components.nav
 org.openpnp.gui.components.reticle
 org.openpnp.gui.importer
 org.openpnp.gui.importer.rs274x
+org.openpnp.gui.panelization
 org.openpnp.gui.processes
 org.openpnp.gui.support
 org.openpnp.gui.tablemodel
