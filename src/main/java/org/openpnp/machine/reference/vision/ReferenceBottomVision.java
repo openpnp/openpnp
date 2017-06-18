@@ -34,6 +34,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceBottomVision implements PartAlignment {
 
@@ -50,6 +51,12 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+    
+    @Commit
+    public void commit() {
+        // TODO Temporarily disabled due to bugs, see: https://github.com/openpnp/openpnp/issues/401
+        preRotate = false;
+    }
 
 
     @Override
