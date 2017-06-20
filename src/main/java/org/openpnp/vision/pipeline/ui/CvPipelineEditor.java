@@ -35,7 +35,7 @@ import org.openpnp.vision.pipeline.stages.HistogramEqualize;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
-import org.openpnp.vision.pipeline.stages.ImageWrite;s
+import org.openpnp.vision.pipeline.stages.ImageWrite;
 import org.openpnp.vision.pipeline.stages.ImageWriteDebug;
 import org.openpnp.vision.pipeline.stages.MaskCircle;
 import org.openpnp.vision.pipeline.stages.MaskHsv;
