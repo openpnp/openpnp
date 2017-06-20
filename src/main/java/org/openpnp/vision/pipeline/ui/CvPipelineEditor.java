@@ -35,7 +35,7 @@ import org.openpnp.vision.pipeline.stages.HistogramEqualize;
 import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.openpnp.vision.pipeline.stages.ImageRead;
 import org.openpnp.vision.pipeline.stages.ImageRecall;
-import org.openpnp.vision.pipeline.stages.ImageWrite;
+import org.openpnp.vision.pipeline.stages.ImageWrite;s
 import org.openpnp.vision.pipeline.stages.ImageWriteDebug;
 import org.openpnp.vision.pipeline.stages.MaskCircle;
 import org.openpnp.vision.pipeline.stages.MaskHsv;
@@ -53,6 +53,7 @@ import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
+import org.openpnp.vision.pipeline.stages.ClosedLoop;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -110,6 +111,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
+        registerStageClass(ClosedLoop.class);
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;
