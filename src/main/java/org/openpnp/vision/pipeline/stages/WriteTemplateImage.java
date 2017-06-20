@@ -6,11 +6,13 @@ package org.openpnp.vision.pipeline.stages;
 import java.io.File;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
+import org.openpnp.model.Configuration;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
+import org.pmw.tinylog.Logger;
 
 @Stage(category = "Image Processing",
         description = "Write a template image to disk given a user defined file name, or infer the image's name from the id of the part loaded in the feeder and write it to the path defined by the user.")
@@ -18,7 +20,7 @@ import org.simpleframework.xml.Attribute;
 public class WriteTemplateImage extends CvStage {
 
     @Attribute(required = false)
-    @Property(description = "Name of the template image to write, or name of a directory where the image should be written with a name inferred by the part ID.")
+    @Property(description = "Name of the template image to write, or name of a directory where the image should be written with a name inferred from the part ID.")
     private String templateFile;
     
     public String getTemplateFile() {
@@ -56,21 +58,31 @@ public class WriteTemplateImage extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
       /**
-      * Write a template image to the path set by the user.
+      * Write a template image to the default path or the path set by the user.
       * If the path ends in 'extension' then the image is written directly from the path.
       * If not, then the path is considered a directory for writing template images, 
       * and the template file name to write is deduced by the part ID loaded in the feeder of this pipeline
       */
       
-      if (templateFile == null || templateFile.trim().equals("")) {
-        return null;
-      }
       File file = null;
       String filepath = templateFile;
-
+      // default file location
+      if (filepath == null || filepath.trim().equals("")) {
+        try {
+          filepath = Configuration.get().getConfigurationDirectory().toString();
+        } catch (Throwable e) {
+          Logger.debug(e.getMessage() + " Now trying root path.");
+        }
+        filepath +=  File.separator + "templates" + File.separator + "new";
+      }
+      // user defined file path
       if (filepath.endsWith(extension)) {
 
         file = new File(filepath);
+        if (file.getParentFile() != null) {
+          // make sure the directory exists, if not, create it
+          file.getParentFile().mkdirs();
+        }
 
       } else {
 
@@ -79,7 +91,7 @@ public class WriteTemplateImage extends CvStage {
 
         if (pipeline.getFeeder() == null || pipeline.getFeeder().getPart() == null) {
           
-          throw new Exception("No part in feeder. Cannot create template name.");
+          throw new Exception("No part in feeder. Please provide create template image file path.");
         }
         // make sure the specified dir exists, otherwise create it
         new File(filepath).mkdirs();
