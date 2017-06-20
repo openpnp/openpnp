@@ -8,12 +8,14 @@ import java.io.File;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
+import org.pmw.tinylog.Logger;
 
 @Stage(category = "Image Processing",
         description = "Read a template image from disk given a user defined file name, or infer the image's name from the id of the part loaded in the feeder and load it from a path defined by the user.")
@@ -44,12 +46,21 @@ public class ReadTemplateImage extends CvStage {
         this.extension = extension;
     }
 
+    @Attribute(required = false)
+    @Property(description = "Enable logging.")
+    private boolean log = false;
+
+    public boolean isLog() {
+        return log;
+    }
+
+    public void setLog(boolean log) {
+        this.log = log;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
       
-      if (templateFile == null || templateFile.trim().equals("")) {
-        return null;
-      }
       // an empty extension has no meaning and confuses the user believing it'll be the default
       if (extension.trim().equals("")) {
         extension = ".png";
@@ -60,17 +71,33 @@ public class ReadTemplateImage extends CvStage {
       double width = 0;
       double height = 0;
       /**
-      * Read a template image from the path set by the user.
+      * Read a template image from the default path, or a path set by the user.
       * If the path ends in 'extension' then the image is read directly from the path
       * If not, then the path is considered a directory containing template images, 
       * and the template file name is deduced by the part ID or the package ID 
       * of the part loaded in the feeder of this pipeline
       */
+      // default file location
+      if (filepath == null || filepath.trim().equals("")) {
+        try {
+          filepath = Configuration.get().getConfigurationDirectory().toString();
+        } catch (Throwable e) {
+          Logger.debug(e.getMessage() + " Now trying root path.");
+        }
+        filepath +=  File.separator + "templates";
+      }
       if (filepath.endsWith(extension)) {
+        // user defined file path
         file = new File(filepath);
+        if (log) {
+          Logger.info("Using user defined template image.");
+        }
       } else {
         // path is assumed to be a directory containing template images
         if (pipeline.getFeeder() == null || pipeline.getFeeder().getPart() == null) {
+          if (log) {
+            Logger.info("No feeder, part, or useable templateFile found. Cannot figure out part name.");
+          }
           return null;
         }
         if (!filepath.endsWith(File.separator)) {
@@ -91,7 +118,10 @@ public class ReadTemplateImage extends CvStage {
               width = pipeline.getFeeder().getPart().getPackage().getFootprint().getBodyWidth();
               height = pipeline.getFeeder().getPart().getPackage().getFootprint().getBodyHeight();
               if (width == 0 || height == 0) {
-                // can't create 0 sized template
+                if (log) {
+                 Logger.info("Package body dimensions are not set.");
+                }
+               // can't create 0 sized template
                 return null;
               }
               // portrait mode
@@ -109,11 +139,22 @@ public class ReadTemplateImage extends CvStage {
               templateImage.setTo(new Scalar(255,255,255));
               // create a model
               RotatedRect rrect = new RotatedRect(new Point(width/2, height/2), new Size(width, height), 0.0);
+              if (log) {
+                Logger.info("Using package body as a template.");
+              }
               // that's all we can do for now
               return new Result(templateImage,rrect);
             } else {
               return null;
             }
+          } else {
+            if (log) {
+              Logger.info("Using package template image.");
+            }
+          }
+        } else {
+          if (log) {
+            Logger.info("Using part template image.");
           }
         }
       }
