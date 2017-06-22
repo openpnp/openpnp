@@ -121,10 +121,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
         // perform the alignment
-
-
         PartAlignment.PartAlignmentOffset alignmentOffset =
-                VisionUtils.findPartAlignmentOffsets(bottomVision, part, null, null, nozzle);
+                VisionUtils.findPartAlignmentOffsets(bottomVision, part, null, new Location(LengthUnit.Millimeters), nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!chckbxCenterAfterTest.isSelected()) {
@@ -133,6 +131,14 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         // position the part over camera center
         Location cameraLocation = VisionUtils.getBottomVisionCamera().getLocation();
+		
+		if(alignmentOffset.getPreRotated()) {
+			if(Math.abs(alignmentOffset.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0.,0.))>19.999) {
+				throw new Exception("Offset too big");
+			}
+			nozzle.moveTo(nozzle.getLocation().subtract(alignmentOffset.getLocation()),nozzle.getPart().getSpeed());
+			return;
+		}
 
         // Rotate the point 0,0 using the bottom offsets as a center point by the angle
         // that is
