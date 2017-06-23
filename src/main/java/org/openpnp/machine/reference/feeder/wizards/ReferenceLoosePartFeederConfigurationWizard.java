@@ -57,28 +57,40 @@ public class ReferenceLoosePartFeederConfigurationWizard
         panel.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JButton btnEditPipeline = new JButton("Edit Pipeline");
-        btnEditPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editPipeline();
-                });
-            }
-        });
-        panel.add(btnEditPipeline, "2, 2");
+        JButton btnEditPipeline = new JButton("Edit");
+        btnEditPipeline.addActionListener(new BtnEditPipelineActionListener());
+        
+        JLabel lblFeedPipeline = new JLabel("Feed Pipeline");
+        panel.add(lblFeedPipeline, "2, 2");
+        panel.add(btnEditPipeline, "4, 2");
 
-        JButton btnResetPipeline = new JButton("Reset Pipeline");
-        btnResetPipeline.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                resetPipeline();
-            }
-        });
-        panel.add(btnResetPipeline, "4, 2");
+        JButton btnResetPipeline = new JButton("Reset");
+        btnResetPipeline.addActionListener(new BtnResetPipelineActionListener());
+        panel.add(btnResetPipeline, "6, 2");
+        
+        JLabel lblTrainingPipeline = new JLabel("Training Pipeline");
+        panel.add(lblTrainingPipeline, "2, 4");
+        
+        JButton btnEditTrainingPipeline = new JButton("Edit");
+        btnEditTrainingPipeline.addActionListener(new BtnEditTrainingPipelineActionListener());
+        panel.add(btnEditTrainingPipeline, "4, 4");
+        
+        JButton btnResetTrainingPipeline = new JButton("Reset");
+        btnResetTrainingPipeline.addActionListener(new BtnResetTrainingPipelineActionListener());
+        panel.add(btnResetTrainingPipeline, "6, 4");
         
         JPanel warningPanel = new JPanel();
         FlowLayout flowLayout = (FlowLayout) warningPanel.getLayout();
@@ -105,5 +117,50 @@ public class ReferenceLoosePartFeederConfigurationWizard
 
     private void resetPipeline() {
         feeder.resetPipeline();
+    }
+    
+    private void editTrainingPipeline() throws Exception {
+        CvPipeline pipeline = feeder.getTrainingPipeline();
+        pipeline.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        pipeline.setFeeder(feeder);
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Training Pipeline");
+        dialog.getContentPane().setLayout(new BorderLayout());
+        dialog.getContentPane().add(editor);
+        dialog.setSize(1024, 768);
+        dialog.setVisible(true);
+    }
+
+    private void resetTrainingPipeline() {
+        feeder.resetTrainingPipeline();
+    }
+    
+    private class BtnEditTrainingPipelineActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                editTrainingPipeline();
+            });
+        }
+    }
+    private class BtnResetTrainingPipelineActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                resetTrainingPipeline();
+            });
+        }
+    }
+    private class BtnEditPipelineActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                editPipeline();
+            });
+        }
+    }
+    private class BtnResetPipelineActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                resetPipeline();
+            });
+        }
     }
 }
