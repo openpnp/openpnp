@@ -12,10 +12,16 @@ import org.simpleframework.xml.Attribute;
 
 public class ComposeResult extends CvStage {
     @Attribute(required = false)
-    @Property(description = "Name of a prior stage to retrieve the image from. An empty name will reitrieve the working image.")
+    @Property(
+            description = "Name of a prior stage to retrieve the image from. An empty name will reitrieve the working image.")
     // and working model")
     private String imageStageName;
-    
+
+    @Attribute(required = false)
+    @Property(description = "Name of a prior stage to retrieve the model from.")
+    // and working model")
+    private String modelStageName;
+
     public String getImageStageName() {
         return imageStageName;
     }
@@ -24,11 +30,6 @@ public class ComposeResult extends CvStage {
         this.imageStageName = imageStageName;
     }
 
-    @Attribute(required = false)
-    @Property(description = "Name of a prior stage to retrieve the model from.")
-    // and working model")
-    private String modelStageName;
-    
     public String getModelStageName() {
         return modelStageName;
     }
@@ -39,25 +40,29 @@ public class ComposeResult extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-      
-      Object model = null;
-      Mat image = null;
-      
-      if (modelStageName == null || modelStageName.trim().equals("")) {
-        // use pipeline.getWorkingModel() when it becomes available
-        model = null;
-        // return new Result(pipeline.getWorkingImage());
-      } else {
-        model = pipeline.getResult(modelStageName).model;
-      }
-      if (imageStageName == null || imageStageName.trim().equals("")) {
-        image = pipeline.getWorkingImage();
-      } else {
-        image = pipeline.getResult(imageStageName).image;
-      }
-      if (model == null) {
-        return new Result(image);
-      }
-      return new Result(image, model);
+
+        Object model = null;
+        Mat image = null;
+
+        if (modelStageName == null || modelStageName.trim()
+                                                    .equals("")) {
+            // use pipeline.getWorkingModel() when it becomes available
+            model = null;
+            // return new Result(pipeline.getWorkingImage());
+        }
+        else {
+            model = pipeline.getResult(modelStageName).model;
+        }
+        if (imageStageName == null || imageStageName.trim()
+                                                    .equals("")) {
+            image = pipeline.getWorkingImage();
+        }
+        else {
+            image = pipeline.getResult(imageStageName).image;
+        }
+        if (model == null) {
+            return new Result(image);
+        }
+        return new Result(image, model);
     }
 }
