@@ -112,18 +112,19 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
             return;
         }
-        
+
         if (!enabledCheckbox.isSelected()) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
             return;
         }
-        
+
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
 
         // perform the alignment
 
 
-        PartAlignment.PartAlignmentOffset alignmentOffset = bottomVision.findOffsets(part, null, null, nozzle);
+        PartAlignment.PartAlignmentOffset alignmentOffset =
+                VisionUtils.findPartAlignmentOffsets(bottomVision, part, null, null, nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!chckbxCenterAfterTest.isSelected()) {
@@ -161,12 +162,19 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+		pipeline.setNozzle(MainFrame.get().getMachineControls().getSelectedNozzle());
+
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
+    }
+
+    @Override
+    public String getWizardName() {
+        return "ReferenceBottomVision";
     }
 
     @Override

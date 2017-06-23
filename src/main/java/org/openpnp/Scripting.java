@@ -1,7 +1,9 @@
 package org.openpnp;
 
 import java.awt.Desktop;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.FileSystems;
@@ -22,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -53,6 +56,7 @@ public class Scripting {
             }
         }
         
+        // Hack to fix BSH on Windows. See https://github.com/openpnp/openpnp/issues/462
         manager.registerEngineExtension("bsh", new BshScriptEngineFactory());
         manager.registerEngineExtension("java", new BshScriptEngineFactory());
         extensions.add("bsh");
@@ -131,12 +135,20 @@ public class Scripting {
         // Add a separator and the Refresh Scripts and Open Scripts Directory items
         menu.addSeparator();
         menu.add(new AbstractAction("Refresh Scripts") {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_R);
+            }
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 synchronizeMenu(menu, getScriptsDirectory());
             }
         });
         menu.add(new AbstractAction("Open Scripts Directory") {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_O);
+            }
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {

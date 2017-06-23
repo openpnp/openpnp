@@ -156,9 +156,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        JPanel alignmentPanel = new JPanel();
-        alignmentPanel.setLayout(new BorderLayout());
-        tabbedPane.add("Alignment", new JScrollPane(alignmentPanel));
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -172,11 +169,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
         
-        fiducialPanel = new JPanel();
-        JScrollPane scrollPane = new JScrollPane(fiducialPanel);
-        fiducialPanel.setLayout(new BorderLayout(0, 0));
-        tabbedPane.addTab("Fiducial Locator", null, scrollPane, null);
-
         JButton btnNewPart = toolBar.add(newPartAction);
         btnNewPart.setToolTipText("");
         JButton btnDeletePart = toolBar.add(deletePartAction);
@@ -202,26 +194,31 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     singleSelectionActionGroup.setEnabled(!selections.isEmpty());
                 }
 
-                alignmentPanel.removeAll();
-                fiducialPanel.removeAll();
-
                 Part part = getSelection();
-                
+
+                tabbedPane.removeAll();
+
                 if (part != null) {
-                    PartAlignment partAlignment =
-                            Configuration.get().getMachine().getPartAlignment();
-                    Wizard wizard = partAlignment.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        wizard.setWizardContainer(PartsPanel.this);
-                        alignmentPanel.add(wizard.getWizardPanel());
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                        Wizard wizard=partAlignment.getPartConfigurationWizard(part);
+                        if (wizard != null) {
+                            JPanel panel = new JPanel();
+                            panel.setLayout(new BorderLayout());
+                            panel.add(wizard.getWizardPanel());
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                            wizard.setWizardContainer(PartsPanel.this);
+                        }
                     }
                     
                     FiducialLocator fiducialLocator =
                             Configuration.get().getMachine().getFiducialLocator();
-                    wizard = fiducialLocator.getPartConfigurationWizard(part);
+                    Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
                     if (wizard != null) {
+                        JPanel panel = new JPanel();
+                        panel.setLayout(new BorderLayout());
+                        panel.add(wizard.getWizardPanel());
+                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                         wizard.setWizardContainer(PartsPanel.this);
-                        fiducialPanel.add(wizard.getWizardPanel());
                     }
                 }
 
@@ -357,7 +354,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
             });
         }
     };
-    private JPanel fiducialPanel;
 
     @Override
     public void wizardCompleted(Wizard wizard) {}

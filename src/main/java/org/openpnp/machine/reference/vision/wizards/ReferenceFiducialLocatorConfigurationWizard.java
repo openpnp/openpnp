@@ -119,4 +119,9 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     @Override
     public void createBindings() {
     }
+    
+    @Override
+    public String getWizardName() {
+        return "ReferenceFiducialLocator";
+    }
 }

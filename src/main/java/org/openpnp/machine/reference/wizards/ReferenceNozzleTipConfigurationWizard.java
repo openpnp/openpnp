@@ -107,6 +107,11 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JPanel panel;
     private JLabel lblName;
     private JTextField nameTf;
+    private JTextField textFieldChangerStartSpeed;
+    private JTextField textFieldChangerMidSpeed;
+    private JTextField textFieldChangerMidSpeed2;
+    private JTextField textFieldChangerEndSpeed;
+    private JLabel lblSpeed;
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -163,6 +168,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -184,6 +191,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
         lblZ_1 = new JLabel("Z");
         panelChanger.add(lblZ_1, "8, 2");
+        
+        lblSpeed = new JLabel("Speed");
+        panelChanger.add(lblSpeed, "10, 2");
 
         lblStartLocation = new JLabel("First Location");
         panelChanger.add(lblStartLocation, "2, 4, right, default");
@@ -199,11 +209,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldChangerStartZ = new JTextField();
         panelChanger.add(textFieldChangerStartZ, "8, 4, fill, default");
         textFieldChangerStartZ.setColumns(5);
+        
+        textFieldChangerStartSpeed = new JTextField();
+        panelChanger.add(textFieldChangerStartSpeed, "10, 4, fill, default");
+        textFieldChangerStartSpeed.setColumns(5);
 
         changerStartLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerStartX,
                 textFieldChangerStartY, textFieldChangerStartZ, (JTextField) null);
         changerStartLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerStartLocationButtonsPanel, "10, 4, fill, default");
+        panelChanger.add(changerStartLocationButtonsPanel, "12, 4, fill, default");
 
         lblMiddleLocation = new JLabel("Second Location");
         panelChanger.add(lblMiddleLocation, "2, 6, right, default");
@@ -219,11 +233,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldChangerMidZ = new JTextField();
         panelChanger.add(textFieldChangerMidZ, "8, 6, fill, default");
         textFieldChangerMidZ.setColumns(5);
+        
+        textFieldChangerMidSpeed = new JTextField();
+        textFieldChangerMidSpeed.setColumns(5);
+        panelChanger.add(textFieldChangerMidSpeed, "10, 6, fill, default");
 
         changerMidLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerMidX,
                 textFieldChangerMidY, textFieldChangerMidZ, (JTextField) null);
         changerMidLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerMidLocationButtonsPanel, "10, 6, fill, default");
+        panelChanger.add(changerMidLocationButtonsPanel, "12, 6, fill, default");
         
         lblMiddleLocation_1 = new JLabel("Third Location");
         panelChanger.add(lblMiddleLocation_1, "2, 8, right, default");
@@ -240,9 +258,13 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldMidZ2.setColumns(5);
         panelChanger.add(textFieldMidZ2, "8, 8, fill, default");
         
+        textFieldChangerMidSpeed2 = new JTextField();
+        textFieldChangerMidSpeed2.setColumns(5);
+        panelChanger.add(textFieldChangerMidSpeed2, "10, 8, fill, default");
+        
         changerMidButtons2 = new LocationButtonsPanel(textFieldMidX2, textFieldMidY2, textFieldMidZ2, (JTextField) null);
         changerMidButtons2.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerMidButtons2, "10, 8, fill, default");
+        panelChanger.add(changerMidButtons2, "12, 8, fill, default");
 
         lblEndLocation = new JLabel("Last Location");
         panelChanger.add(lblEndLocation, "2, 10, right, default");
@@ -258,11 +280,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldChangerEndZ = new JTextField();
         panelChanger.add(textFieldChangerEndZ, "8, 10, fill, default");
         textFieldChangerEndZ.setColumns(5);
+        
+        textFieldChangerEndSpeed = new JTextField();
+        textFieldChangerEndSpeed.setColumns(5);
+        panelChanger.add(textFieldChangerEndSpeed, "10, 10, fill, default");
 
         changerEndLocationButtonsPanel = new LocationButtonsPanel(textFieldChangerEndX,
                 textFieldChangerEndY, textFieldChangerEndZ, (JTextField) null);
         changerEndLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
-        panelChanger.add(changerEndLocationButtonsPanel, "10, 10, fill, default");
+        panelChanger.add(changerEndLocationButtonsPanel, "12, 10, fill, default");
         
         panelVacuumSensing = new JPanel();
         panelVacuumSensing.setBorder(new TitledBorder(null, "Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -375,6 +401,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerStartLocation, "lengthZ", textFieldChangerStartZ, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerStartSpeed", textFieldChangerStartSpeed, "text",
+                doubleConverter);
 
         MutableLocationProxy changerMidLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerMidLocation", changerMidLocation,
@@ -385,6 +413,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerMidLocation, "lengthZ", textFieldChangerMidZ, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerMidSpeed", textFieldChangerMidSpeed, "text",
+                doubleConverter);
 
         MutableLocationProxy changerMidLocation2 = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerMidLocation2", changerMidLocation2,
@@ -395,6 +425,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerMidLocation2, "lengthZ", textFieldMidZ2, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerMidSpeed2", textFieldChangerMidSpeed2, "text",
+                doubleConverter);
 
         MutableLocationProxy changerEndLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerEndLocation", changerEndLocation,
@@ -405,6 +437,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 lengthConverter);
         addWrappedBinding(changerEndLocation, "lengthZ", textFieldChangerEndZ, "text",
                 lengthConverter);
+        addWrappedBinding(nozzleTip, "changerEndSpeed", textFieldChangerEndSpeed, "text",
+                doubleConverter);
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox, "selected");
         
@@ -416,18 +450,22 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartSpeed);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidSpeed);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidX2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidY2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMidZ2);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerMidSpeed2);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndSpeed);
         
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOn);
         ComponentDecorators.decorateWithAutoSelect(vacuumLevelPartOff);

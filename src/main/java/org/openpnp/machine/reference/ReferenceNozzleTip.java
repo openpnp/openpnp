@@ -55,12 +55,28 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private double changerStartSpeed = 1.0D;
+    
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private double changerMidSpeed = 1.0D;
+    
     @Element(required = false)
     private Location changerMidLocation2;
+    
+    @Element(required = false)
+    private double changerMidSpeed2 = 1.0D;
+    
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private double changerEndSpeed = 1.0D;
+    
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
@@ -189,6 +205,38 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerEndLocation(Location changerEndLocation) {
         this.changerEndLocation = changerEndLocation;
     }
+    
+    public double getChangerStartSpeed() {
+        return changerStartSpeed;
+    }
+
+    public void setChangerStartSpeed(double changerStartSpeed) {
+        this.changerStartSpeed = changerStartSpeed;
+    }
+
+    public double getChangerMidSpeed() {
+        return changerMidSpeed;
+    }
+
+    public void setChangerMidSpeed(double changerMidSpeed) {
+        this.changerMidSpeed = changerMidSpeed;
+    }
+
+    public double getChangerMidSpeed2() {
+        return changerMidSpeed2;
+    }
+
+    public void setChangerMidSpeed2(double changerMidSpeed2) {
+        this.changerMidSpeed2 = changerMidSpeed2;
+    }
+
+    public double getChangerEndSpeed() {
+        return changerEndSpeed;
+    }
+
+    public void setChangerEndSpeed(double changerEndSpeed) {
+        this.changerEndSpeed = changerEndSpeed;
+    }
 
     private Nozzle getParentNozzle() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
@@ -202,7 +250,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-
+	
     public double getVacuumLevelPartOn() {
         return vacuumLevelPartOn;
     }

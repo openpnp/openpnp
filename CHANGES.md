@@ -1,6 +1,51 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-06-17
+
+	Nozzle Tip Changer now has independent speed settings for each movement. The speeds are a 
+	multiplier, similar to how it's used in other parts of the system. The value
+	is multiplied by the system speed slider to determine the final speed. A 1.0 is "full speed".
+
+# 2017-05-18
+
+	Two new Scripting events have been added: Job.Starting and Job.Finished. These are called
+	as the job is starting and after it completes. They are intended to aid in using conveyer
+	systems to automatically load and unload PCBs.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#jobstarting for more info.
+
+# 2017-05-15
+	
+	New tray feeder added: RotaryTrayFeeder
+	This tray feeder takes 3 points (first component, first row last component, last row last component) 
+	to measure the component grid and is rotation agnostic. Feedback and experience reports are welcome.
+
+# 2017-05-07
+
+* Configuration Wizard Performance Improvement
+
+	Due to a bug in a third party library that is used extensively in the configuration wizards
+	in OpenPnP, performance on opening the wizards was often very poor for many users. This was
+	most obvious when clicking through your various feeders, where some users were experiencing
+	up to a 10 second delay in opening the wizard.
+	
+	Unfortunately, the library has been abandoned so even though there is a fix available, it
+	will likely never be released. Instead, we are now "monkey patching" the fix at runtime
+	and this solves the problem.
+	
+	Thanks to @SadMan on IRC for putting me on the path to the fix.
+	
+# 2017-05-06
+
+* New Bottom Vision Scripting Events
+
+	Two new scripting events have been added to assist with bottom vision lighting. They are
+	Vision.PartAlignment.Before and Vision.PartAlignment.After.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#visionpartalignmentbefore for more
+	information.
+
 # 2017-04-16
 
 * Script Directory Ignore

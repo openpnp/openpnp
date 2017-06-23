@@ -53,7 +53,9 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public void setEnabled(boolean enabled) {
+        Object oldValue = this.enabled;
         this.enabled = enabled;
+        firePropertyChange("enabled", oldValue, enabled);
     }
 
     @Override
