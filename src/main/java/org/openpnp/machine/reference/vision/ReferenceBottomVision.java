@@ -84,7 +84,6 @@ public class ReferenceBottomVision implements PartAlignment {
             pipeline.setCamera(VisionUtils.getBottomVisionCamera());
             pipeline.setNozzle(nozzle);
 			pipeline.setValue(angle);
-				Logger.info("pipeline {} -- angle {} -- nozzleAngle {} ",pipeline.getValue(), angle, nozzleAngle);
 			if(Boolean.getBoolean("develop")) {
             if ("Rotate".equals(pipeline.getStages().get(1).getClass().getSimpleName())) {
                 ((Rotate)pipeline.getStages().get(1)).setDegrees( angle );
@@ -113,7 +112,6 @@ public class ReferenceBottomVision implements PartAlignment {
 			Location offsets = null;
 			int old=999;
 			int rot=999; do {	
-				Logger.info("pipeline {} -- angle {} -- nozzleAngle {} ",pipeline.getValue(), angle, nozzleAngle);
 				offsets = new Location(LengthUnit.Millimeters,Double.NaN, Double.NaN, Double.NaN, placementAngle+angle);
 				nozzle.moveTo(offsets, part.getSpeed());
 				pipeline.process();
@@ -123,6 +121,7 @@ public class ReferenceBottomVision implements PartAlignment {
 				}
 
 				rect = (RotatedRect) pipeline.getResult("result").model;
+		                Logger.debug("Result rect {} inside vision loop", rect);
 				offsets = VisionUtils.getPixelCenterOffsets(pipeline.getCamera(), rect.center.x, rect.center.y).derive(null,null,null,-angle);
 				s = "Align offset for "+part.getName()+": " + offsets.toString() + "     " ;
 				MainFrame.get().setStatus(s);
