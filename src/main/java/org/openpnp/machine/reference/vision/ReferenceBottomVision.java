@@ -126,7 +126,7 @@ public class ReferenceBottomVision implements PartAlignment {
 				s = "Align offset for "+part.getName()+": " + offsets.toString() + "     " ;
 				MainFrame.get().setStatus(s);
 				offsets = offsets.derive(null,null,null,Double.NaN);
-				if(cnt>Integer.getInteger("contours",40)) {
+				if(cnt>Integer.getInteger("contours",40)||Double.isNaN(pipeline.getValue())) {
 					if (rect.size.width < rect.size.height) { rect.angle = 90 + rect.angle; }
 					while (Math.abs(rect.angle) > 45.0) { rect.angle += (rect.angle < 0)? 90 : -90; } 
 					angle=nozzleAngle + rect.angle;
