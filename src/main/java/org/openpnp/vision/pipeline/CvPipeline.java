@@ -59,7 +59,6 @@ public class CvPipeline {
     private Camera camera;
     private Nozzle nozzle;
     private Feeder feeder;
-	private double value;
     
     private long totalProcessingTimeNs;
     
@@ -199,14 +198,6 @@ public class CvPipeline {
         return nozzle;
     }
 	
-    public void setValue(double value) {
-        this.value = value;
-    }
-
-    public double getValue() {
-        return value;
-    }
-  
     public void setFeeder(Feeder feeder) {
         this.feeder = feeder;
     }
