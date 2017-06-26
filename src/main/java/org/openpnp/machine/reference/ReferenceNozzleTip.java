@@ -427,7 +427,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         private Location findCircle() throws Exception {
             Camera camera = VisionUtils.getBottomVisionCamera();
-            pipeline.setCamera(camera);
+            pipeline.setProperty("camera", camera);
             pipeline.process();
             Location location;
             Object result = pipeline.getResult("result").model;
@@ -520,7 +520,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         public CvPipeline getPipeline() throws Exception {
-            pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+            pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
             return pipeline;
         }
 

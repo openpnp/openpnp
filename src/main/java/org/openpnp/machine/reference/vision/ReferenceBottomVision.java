@@ -91,8 +91,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
         CvPipeline pipeline = partSettings.getPipeline();
 
-        pipeline.setCamera(camera);
-        pipeline.setNozzle(nozzle);
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("nozzle", nozzle);
         pipeline.process();
 
         Result result = pipeline.getResult("result");
@@ -249,7 +249,7 @@ public class ReferenceBottomVision implements PartAlignment {
         PartSettings partSettings = getPartSettings(part);
         try {
             partSettings.getPipeline()
-                        .setCamera(VisionUtils.getBottomVisionCamera());
+                        .setProperty("camera", VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
         }

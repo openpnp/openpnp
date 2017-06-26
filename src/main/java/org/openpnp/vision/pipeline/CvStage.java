@@ -170,6 +170,14 @@ public abstract class CvStage {
         public Result(Mat image) {
             this(image, null, 0);
         }
+        
+        public Mat getImage() {
+            return image;
+        }
+        
+        public Object getModel() {
+            return model;
+        }
 
         public static class Circle {
             public double x;

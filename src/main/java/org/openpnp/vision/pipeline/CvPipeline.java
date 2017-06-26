@@ -8,19 +8,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.openpnp.model.Configuration;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.HyphenStyle;
+import org.simpleframework.xml.stream.Style;
 
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
@@ -52,13 +55,11 @@ public class CvPipeline {
     private ArrayList<CvStage> stages = new ArrayList<>();
 
     private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
+    
+    private Map<String, Object> properties = new HashMap<String, Object>();
 
     private Mat workingImage;
     private Object workingModel;
-    
-    private Camera camera;
-    private Nozzle nozzle;
-    private Feeder feeder;
     
     private long totalProcessingTimeNs;
     
@@ -182,30 +183,6 @@ public class CvPipeline {
       return workingModel;
     }
 
-    public void setCamera(Camera camera) {
-        this.camera = camera;
-    }
-
-    public Camera getCamera() {
-        return camera;
-    }
-
-    public void setNozzle(Nozzle nozzle) {
-        this.nozzle = nozzle;
-    }
-
-    public Nozzle getNozzle() {
-        return nozzle;
-    }
-  
-    public void setFeeder(Feeder feeder) {
-        this.feeder = feeder;
-    }
-
-    public Feeder getFeeder() {
-        return feeder;
-    }
-
     public long getTotalProcessingTimeNs() {
       return totalProcessingTimeNs;
     }
@@ -291,7 +268,7 @@ public class CvPipeline {
      * @throws Exception
      */
     public String toXmlString() throws Exception {
-        Serializer ser = Configuration.createSerializer();
+        Serializer ser = createSerializer();
         StringWriter sw = new StringWriter();
         ser.write(this, sw);
         return sw.toString();
@@ -305,7 +282,7 @@ public class CvPipeline {
      */
     public void fromXmlString(String s) throws Exception {
         release();
-        Serializer ser = Configuration.createSerializer();
+        Serializer ser = createSerializer();
         StringReader sr = new StringReader(s);
         CvPipeline pipeline = ser.read(CvPipeline.class, sr);
         stages.clear();
@@ -332,4 +309,31 @@ public class CvPipeline {
             throw new CloneNotSupportedException(e.getMessage());
         }
     }
+    
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+    
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
+    }
+    
+    private static Serializer createSerializer() {
+        Style style = new HyphenStyle();
+        Format format = new Format(style);
+        AnnotationStrategy strategy = new AnnotationStrategy();
+        Serializer serializer = new Persister(strategy, format);
+        return serializer;
+    }
+    
+    // gotta figure out how to make it so properties can either be their native value or
+    // a variable. might mean editing the property editor component to look for variable
+    // tags first, but then where/how do we store it?
+    // oh, maybe CvStage needs a type generic version of getProperty that either returns
+    // the value as the type or the variable's value as the type and then instead of
+    // doing like getRadius you do getProperty<Double>("radius", getRadius()); and all the
+    // actual attributes will have to be defined as string.
+    // would be nice, though, to maintain the bean properties having the correct type somehow -
+    // maybe build all the logic into the editor and add variable overrides instead of overriding
+    // the actual property type
 }
