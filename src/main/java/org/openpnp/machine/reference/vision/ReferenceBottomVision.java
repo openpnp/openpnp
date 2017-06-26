@@ -100,6 +100,8 @@ public class ReferenceBottomVision implements PartAlignment {
 			angle += rect.angle;
 			while (Math.abs(angle) > 45.0) { angle += (angle < 0.)? 90 : -90; } 
 		// error is -angle
+			if(Math.abs(angle)>0.0765) { angle+=0.0567 * Math.signum(angle); } // rounding 
+		// error 
 			nozzle.moveTo(new Location(LengthUnit.Millimeters,Double.NaN, Double.NaN, Double.NaN, placementAngle+angle), part.getSpeed());
 			pipeline.process();
 			if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
