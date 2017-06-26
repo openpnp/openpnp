@@ -197,7 +197,7 @@ public class CvPipeline {
     public Nozzle getNozzle() {
         return nozzle;
     }
-  
+	
     public void setFeeder(Feeder feeder) {
         this.feeder = feeder;
     }
