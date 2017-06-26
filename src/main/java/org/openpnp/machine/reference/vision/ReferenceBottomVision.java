@@ -76,8 +76,7 @@ public class ReferenceBottomVision implements PartAlignment {
         double preRotateAngle = 0;
         if (preRotate) {
 			if(part == null || nozzle.getPart() == null) { throw new Exception("no part on nozzle"); }			
-			if((!part.toString().equals(nozzle.getPart().toString()))) { throw new Exception("Part mismatch with part on nozzle"); }
-			part=nozzle.getPart();
+			if(part!=nozzle.getPart()) { throw new Exception("Part mismatch with part on nozzle"); }
 			double angle = placementLocation.getRotation();
 			if(boardLocation!=null) {
 				angle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation).getRotation();              
