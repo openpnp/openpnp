@@ -106,8 +106,9 @@ public class ReferenceBottomVision implements PartAlignment {
 
 			rect = (RotatedRect) pipeline.getResult("result").model;
                         Logger.debug("Result rect {}", rect);
+		        String s = "Align offset for "+part.getName()+": " + offsets.toString() + "     ";
 			Location offsets = VisionUtils.getPixelCenterOffsets(pipeline.getCamera(), rect.center.x, rect.center.y).derive(null,null,null,Double.NaN);
-                        MainFrame.get().getCameraViews().getCameraView(pipeline.getCamera()).showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),  "Align offset for "+part.getName()+": " + offsets.toString() + "     " , 1500);
+                        MainFrame.get().getCameraViews().getCameraView(pipeline.getCamera()).showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),  s , 1500);
 			return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
 
