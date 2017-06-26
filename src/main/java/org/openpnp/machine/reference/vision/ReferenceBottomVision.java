@@ -69,6 +69,8 @@ public class ReferenceBottomVision implements PartAlignment {
         // Pre-rotate to minimize runout
         double preRotateAngle = 0;
         if (preRotate) {
+		// Prerotate just prerotate nozzle, take picture, adjust rotation and take second picture before getting xy offsets.
+		// is is complicated by the fact that it need some workaround for rotation angle that is not normalized.
 			if(part == null || nozzle.getPart() == null) { throw new Exception("no part on nozzle"); }			
 			if((!part.toString().equals(nozzle.getPart().toString()))) { throw new Exception("Part mismatch with part on nozzle"); }
 			part=nozzle.getPart();
@@ -88,6 +90,7 @@ public class ReferenceBottomVision implements PartAlignment {
 				throw new Exception("Bottom vision alignment failed for part " + part.getId()
 						+ " on nozzle " + nozzle.getName() + ". No result found.");
 			}
+		// first picture was ok, now calc error
 
 
 			RotatedRect rect = ((RotatedRect)(pipeline.getResult("result")).model);
@@ -96,13 +99,14 @@ public class ReferenceBottomVision implements PartAlignment {
 			while (Math.abs(rect.angle) > 45.0) { rect.angle += (rect.angle < 0)? 90 : -90; } 
 			angle += rect.angle;
 			while (Math.abs(angle) > 45.0) { angle += (angle < 0.)? 90 : -90; } 
-
+		// error is -angle
 			nozzle.moveTo(new Location(LengthUnit.Millimeters,Double.NaN, Double.NaN, Double.NaN, placementAngle+angle), part.getSpeed());
 			pipeline.process();
 			if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
 				throw new Exception("Bottom vision alignment failed for part " + part.getId()
-					 " on nozzle " + nozzle.getName() + ". No result found.");
+					+ " on nozzle " + nozzle.getName() + ". No result found.");
 			}
+		// second picture taken
 
 			rect = (RotatedRect) pipeline.getResult("result").model;
                         Logger.debug("Result rect {}", rect);
