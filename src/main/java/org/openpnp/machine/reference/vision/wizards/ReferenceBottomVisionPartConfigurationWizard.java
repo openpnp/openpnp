@@ -139,6 +139,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                                              .getLocation();
 
         if (alignmentOffset.getPreRotated()) {
+            // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
+            // value below.
             if (Math.abs(alignmentOffset.getLocation()
                                         .convertToUnits(LengthUnit.Millimeters)
                                         .getLinearDistanceTo(0., 0.)) > 19.999) {

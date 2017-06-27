@@ -79,10 +79,10 @@ public class ReferenceBottomVision implements PartAlignment {
         double preRotateAngle = 0;
         if (preRotate) {
             if (part == null || nozzle.getPart() == null) {
-                throw new Exception("no part on nozzle");
+                throw new Exception("No part on nozzle.");
             }
             if (part != nozzle.getPart()) {
-                throw new Exception("Part mismatch with part on nozzle");
+                throw new Exception("Part mismatch with part on nozzle.");
             }
             double angle = placementLocation.getRotation();
             if (boardLocation != null) {
@@ -91,16 +91,15 @@ public class ReferenceBottomVision implements PartAlignment {
             }
             angle = angleNorm(angle, 180.);
             double placementAngle = angle;
-            MovableUtils.moveToLocationAtSafeZ(nozzle, VisionUtils.getBottomVisionCamera()
-                                                                  .getLocation()
-                                                                  .add(new Location(part.getHeight()
-                                                                                        .getUnits(),
-                                                                          0.0, 0.0, part.getHeight()
-                                                                                        .getValue(),
-                                                                          0.0))
-                                                                  .derive(null, null, null, angle));
+            MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation()
+                                                             .add(new Location(part.getHeight()
+                                                                                   .getUnits(),
+                                                                     0.0, 0.0, part.getHeight()
+                                                                                   .getValue(),
+                                                                     0.0))
+                                                             .derive(null, null, null, angle));
             CvPipeline pipeline = partSettings.getPipeline();
-            pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+            pipeline.setCamera(camera);
             pipeline.setNozzle(nozzle);
             pipeline.process();
             if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
@@ -112,11 +111,17 @@ public class ReferenceBottomVision implements PartAlignment {
             angle = angleNorm(angleNorm(angle) + angleNorm(
                     (rect.size.width < rect.size.height) ? 90 + rect.angle : rect.angle));
             // error is -angle
+            // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
+            // values below.
             if (Math.abs(angle) > 0.0765) {
                 angle += 0.0567 * Math.signum(angle);
             } // rounding
-            nozzle.moveTo(new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
-                    placementAngle + angle), part.getSpeed());
+            nozzle.moveTo(
+                    new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN,
+                            placementAngle + angle),
+                    nozzle.getHead()
+                          .getMachine()
+                          .getSpeed());
             pipeline.process();
             if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
                 throw new Exception("Bottom vision alignment failed for part " + part.getId()
@@ -125,13 +130,13 @@ public class ReferenceBottomVision implements PartAlignment {
 
             rect = (RotatedRect) pipeline.getResult("result").model;
             Logger.debug("Result rect {}", rect);
-            Location offsets = VisionUtils.getPixelCenterOffsets(pipeline.getCamera(),
-                    rect.center.x, rect.center.y)
-                                          .derive(null, null, null, Double.NaN);
+            Location offsets =
+                    VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
+                               .derive(null, null, null, Double.NaN);
             String s = "Align offset for " + part.getName() + ": " + offsets.toString() + "     ";
             MainFrame.get()
                      .getCameraViews()
-                     .getCameraView(pipeline.getCamera())
+                     .getCameraView(camera)
                      .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
                              1500);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
