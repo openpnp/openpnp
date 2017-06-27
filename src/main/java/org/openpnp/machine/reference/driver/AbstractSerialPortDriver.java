@@ -24,6 +24,10 @@ import jssc.SerialPortException;
 import jssc.SerialPortList;
 import jssc.SerialPortTimeoutException;
 
+import jssc.SerialNativeInterface;
+import java.util.regex.Pattern;
+import java.util.ArrayList;
+
 /**
  * A base class for basic SerialPort based Drivers. Includes functions for connecting,
  * disconnecting, reading and sending lines.
@@ -136,7 +140,23 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
     }
 
     public String[] getPortNames() {
-        return SerialPortList.getPortNames();
+		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
+			ArrayList<String> linuxPortNames = new ArrayList<String>();
+			String pattern = ".*";
+			Pattern rx = Pattern.compile (pattern);
+			for (String portName : SerialPortList.getPortNames ("/dev/serial/by-id/", rx))  {
+				linuxPortNames.add (portName);
+			}
+			for (String portName : SerialPortList.getPortNames ())  {
+				linuxPortNames.add (portName);
+			}
+			String[] portNames = new String[linuxPortNames.size()];
+			linuxPortNames.toArray (portNames);
+			return portNames;
+		}
+		else {
+			return SerialPortList.getPortNames();
+		}
     }
 
     /**
