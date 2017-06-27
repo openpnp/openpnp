@@ -99,7 +99,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    partSettings.setPipeline(bottomVision.getPipeline().clone());
+                    partSettings.setPipeline(bottomVision.getPipeline()
+                                                         .clone());
                     editPipeline();
                 });
             }
@@ -109,20 +110,24 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     private void testAlignment() throws Exception {
         if (!bottomVision.isEnabled()) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                    "Bottom vision is not enabled in Machine Setup.");
             return;
         }
 
         if (!enabledCheckbox.isSelected()) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                    "Bottom vision is not enabled for this part.");
             return;
         }
 
-        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        Nozzle nozzle = MainFrame.get()
+                                 .getMachineControls()
+                                 .getSelectedNozzle();
 
         // perform the alignment
-        PartAlignment.PartAlignmentOffset alignmentOffset =
-                VisionUtils.findPartAlignmentOffsets(bottomVision, part, null, new Location(LengthUnit.Millimeters), nozzle);
+        PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(
+                bottomVision, part, null, new Location(LengthUnit.Millimeters), nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!chckbxCenterAfterTest.isSelected()) {
@@ -130,15 +135,21 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         }
 
         // position the part over camera center
-        Location cameraLocation = VisionUtils.getBottomVisionCamera().getLocation();
-		
-		if(alignmentOffset.getPreRotated()) {
-			if(Math.abs(alignmentOffset.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0.,0.))>19.999) {
-				throw new Exception("Offset too big");
-			}
-			nozzle.moveTo(nozzle.getLocation().subtract(alignmentOffset.getLocation()),nozzle.getPart().getSpeed());
-			return;
-		}
+        Location cameraLocation = VisionUtils.getBottomVisionCamera()
+                                             .getLocation();
+
+        if (alignmentOffset.getPreRotated()) {
+            if (Math.abs(alignmentOffset.getLocation()
+                                        .convertToUnits(LengthUnit.Millimeters)
+                                        .getLinearDistanceTo(0., 0.)) > 19.999) {
+                throw new Exception("Offset too big");
+            }
+            nozzle.moveTo(nozzle.getLocation()
+                                .subtract(alignmentOffset.getLocation()),
+                    nozzle.getPart()
+                          .getSpeed());
+            return;
+        }
 
         // Rotate the point 0,0 using the bottom offsets as a center point by the angle
         // that is
@@ -168,12 +179,16 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());
-		pipeline.setNozzle(MainFrame.get().getMachineControls().getSelectedNozzle());
+        pipeline.setNozzle(MainFrame.get()
+                                    .getMachineControls()
+                                    .getSelectedNozzle());
 
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
+        dialog.getContentPane()
+              .setLayout(new BorderLayout());
+        dialog.getContentPane()
+              .add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
     }

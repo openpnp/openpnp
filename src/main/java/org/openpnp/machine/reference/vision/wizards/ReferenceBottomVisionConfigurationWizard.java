@@ -89,8 +89,9 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
-                            .values()) {
-                        partSettings.setPipeline(bottomVision.getPipeline().clone());
+                                                                 .values()) {
+                        partSettings.setPipeline(bottomVision.getPipeline()
+                                                             .clone());
                     }
                     MessageBoxes.infoBox("Parts Reset",
                             "All custom part pipelines have been reset.");
@@ -98,7 +99,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             }
         });
         panel.add(btnResetAllTo, "8, 4");
-        
+
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         panel.add(lblPreRot, "2, 6");
 
@@ -109,11 +110,15 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     private void editPipeline() throws Exception {
         CvPipeline pipeline = bottomVision.getPipeline();
         pipeline.setCamera(VisionUtils.getBottomVisionCamera());
-		pipeline.setNozzle(MainFrame.get().getMachineControls().getSelectedNozzle());
+        pipeline.setNozzle(MainFrame.get()
+                                    .getMachineControls()
+                                    .getSelectedNozzle());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
+        dialog.getContentPane()
+              .setLayout(new BorderLayout());
+        dialog.getContentPane()
+              .add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
     }
