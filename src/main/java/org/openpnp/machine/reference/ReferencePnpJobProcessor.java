@@ -671,15 +671,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         - this is useful for say an external rotating stage that the component is
                         placed on, rotated to correct placement angle, and then picked up again.
                  */
-                if(plannedPlacement.alignmentOffsets.getPreRotated())
-                {
-                    Location location = placementLocation;
-                    location = location.derive(null, null, null,
-                            plannedPlacement.alignmentOffsets.getLocation().getRotation());
-                    placementLocation = location;
+                if (plannedPlacement.alignmentOffsets.getPreRotated()) {
+                    placementLocation = placementLocation.subtractWithRotation(
+                            plannedPlacement.alignmentOffsets.getLocation());
                 }
-                else
-                {
+                else {
                     Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();
                     // Rotate the point 0,0 using the alignment offsets as a center point by the angle
                     // that is
