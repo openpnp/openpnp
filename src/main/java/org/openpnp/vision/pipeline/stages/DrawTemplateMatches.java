@@ -56,11 +56,11 @@ public class DrawTemplateMatches extends CvStage {
         List<TemplateMatch> matches = (List<TemplateMatch>) result.model;
         for (int i = 0; i < matches.size(); i++) {
             TemplateMatch match = matches.get(i);
-            double x = match.x;
-            double y = match.y;
             double score = match.score;
             double width = match.width;
             double height = match.height;
+            double x = match.x - (width / 2);
+            double y = match.y - (height / 2);
             Color color_ = this.color == null ? FluentCv.indexedColor(i) : this.color;
             Scalar color = FluentCv.colorToScalar(color_);
             Core.rectangle(mat, new org.opencv.core.Point(x, y),
