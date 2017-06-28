@@ -12,6 +12,7 @@ import org.simpleframework.xml.Attribute;
 public class Rotate extends CvStage {
     @Attribute
     private double degrees;
+    private double deg=Double.NaN;
     
     public double getDegrees() {
         return degrees;
@@ -24,15 +25,21 @@ public class Rotate extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
-        
-        if (degrees == 0D) {
+        if(deg == Double.NaN) {
+            deg=degrees;
+            if (degrees == 773768283) {
+                deg = -pipeline.getNozzle().getLocation().getRotation();
+            }
+        }
+
+        if (deg == 0D) {
             return null;
         }
 
         // See:
         // http://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c
         Point center = new Point(mat.width() / 2D, mat.height() / 2D);
-        Mat mapMatrix = Imgproc.getRotationMatrix2D(center, degrees, 1.0);
+        Mat mapMatrix = Imgproc.getRotationMatrix2D(center, deg, 1.0);
 
         // determine bounding rectangle
         Rect bbox = new RotatedRect(center, mat.size(), degrees).boundingRect();
