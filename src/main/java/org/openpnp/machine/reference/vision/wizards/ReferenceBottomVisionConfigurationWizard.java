@@ -89,8 +89,9 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
-                            .values()) {
-                        partSettings.setPipeline(bottomVision.getPipeline().clone());
+                                                                 .values()) {
+                        partSettings.setPipeline(bottomVision.getPipeline()
+                                                             .clone());
                     }
                     MessageBoxes.infoBox("Parts Reset",
                             "All custom part pipelines have been reset.");
@@ -98,16 +99,12 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
             }
         });
         panel.add(btnResetAllTo, "8, 4");
-        
+
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
-        preRotCheckbox.setEnabled(false);
         panel.add(preRotCheckbox, "4, 6");
-        
-        JLabel lblcurrentlyInDevelopment = new JLabel("(Currently in development)");
-        panel.add(lblcurrentlyInDevelopment, "6, 6, 3, 1");
     }
 
     private void editPipeline() throws Exception {
@@ -116,8 +113,10 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 		pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Bottom Vision Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
+        dialog.getContentPane()
+              .setLayout(new BorderLayout());
+        dialog.getContentPane()
+              .add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
     }
