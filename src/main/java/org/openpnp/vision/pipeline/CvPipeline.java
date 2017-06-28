@@ -325,15 +325,4 @@ public class CvPipeline {
         Serializer serializer = new Persister(strategy, format);
         return serializer;
     }
-    
-    // gotta figure out how to make it so properties can either be their native value or
-    // a variable. might mean editing the property editor component to look for variable
-    // tags first, but then where/how do we store it?
-    // oh, maybe CvStage needs a type generic version of getProperty that either returns
-    // the value as the type or the variable's value as the type and then instead of
-    // doing like getRadius you do getProperty<Double>("radius", getRadius()); and all the
-    // actual attributes will have to be defined as string.
-    // would be nice, though, to maintain the bean properties having the correct type somehow -
-    // maybe build all the logic into the editor and add variable overrides instead of overriding
-    // the actual property type
 }
