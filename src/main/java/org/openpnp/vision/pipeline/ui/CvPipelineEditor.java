@@ -18,7 +18,7 @@ import org.openpnp.vision.pipeline.stages.ClosestModel;
 import org.openpnp.vision.pipeline.stages.ComposeResult;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.ConvertModelToPoints;
-import org.openpnp.vision.pipeline.stages.CreateTemplateImage;
+import org.openpnp.vision.pipeline.stages.CreateModelTemplateImage;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DetectEdgesLaplacian;
@@ -51,14 +51,14 @@ import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
-import org.openpnp.vision.pipeline.stages.ReadTemplateImage;
+import org.openpnp.vision.pipeline.stages.ReadPartTemplateImage;
 import org.openpnp.vision.pipeline.stages.Rotate;
 import org.openpnp.vision.pipeline.stages.ScriptRun;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
-import org.openpnp.vision.pipeline.stages.WriteTemplateImage;
+import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -81,7 +81,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(ComposeResult.class);
         registerStageClass(ConvertColor.class);
         registerStageClass(ConvertModelToPoints.class);
-        registerStageClass(CreateTemplateImage.class);
+        registerStageClass(CreateModelTemplateImage.class);
         registerStageClass(DetectCirclesHough.class);
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DetectEdgesRobertsCross.class);
@@ -114,14 +114,14 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MinAreaRectContours.class);
         registerStageClass(Normalize.class);
         registerStageClass(ReadModelProperty.class);
-        registerStageClass(ReadTemplateImage.class);
+        registerStageClass(ReadPartTemplateImage.class);
         registerStageClass(Rotate.class);
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
-        registerStageClass(WriteTemplateImage.class);
+        registerStageClass(WritePartTemplateImage.class);
     }
 
     private final static Set<Class<? extends CvStage>> stageClasses;

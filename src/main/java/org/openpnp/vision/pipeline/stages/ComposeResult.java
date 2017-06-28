@@ -13,7 +13,7 @@ import org.simpleframework.xml.Attribute;
 public class ComposeResult extends CvStage {
     @Attribute(required = false)
     @Property(
-            description = "Name of a prior stage to retrieve the image from. An empty name will reitrieve the working image.")
+            description = "Name of a prior stage to retrieve the image from. An empty name will retrieve the working image.")
     // and working model")
     private String imageStageName;
 

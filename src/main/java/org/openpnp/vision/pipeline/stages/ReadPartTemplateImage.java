@@ -24,7 +24,7 @@ import org.simpleframework.xml.Attribute;
 @Stage(category = "Image Processing",
         description = "Read a template image from disk given a user defined file name, or infer the image's name from the id of the part loaded in the feeder and load it from a path defined by the user.")
 
-public class ReadTemplateImage extends CvStage {
+public class ReadPartTemplateImage extends CvStage {
 
     @Attribute(required = false)
     @Property(

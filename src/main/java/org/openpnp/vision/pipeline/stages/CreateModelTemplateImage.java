@@ -18,7 +18,7 @@ import org.simpleframework.xml.Attribute;
 @Stage(category = "Image Processing",
         description = "Create a cropped template image in portrait orientation based on a model.")
 
-public class CreateTemplateImage extends CvStage {
+public class CreateModelTemplateImage extends CvStage {
     @Attribute(required = false)
     @Property(description = "Name of a prior stage to retrieve the model from.")
     private String modelStageName;

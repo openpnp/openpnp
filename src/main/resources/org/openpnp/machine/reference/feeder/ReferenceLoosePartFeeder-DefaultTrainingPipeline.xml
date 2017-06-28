@@ -16,7 +16,7 @@
       <cv-stage class="org.openpnp.vision.pipeline.stages.MaskModel" name="12" enabled="true" model-stage-name="9" is-mask="false">
          <color r="0" g="0" b="0" a="255"/>
       </cv-stage>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.CreateTemplateImage" name="14" enabled="true" model-stage-name="10" degrees="0.0"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.WriteTemplateImage" name="13" enabled="true" template-file="_openpnp/vision/templates/new" extension=".png"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.CreateModelTemplateImage" name="14" enabled="true" model-stage-name="10" degrees="0.0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.WritePartTemplateImage" name="13" enabled="true" template-file="_openpnp/vision/templates/new" extension=".png"/>
    </stages>
 </cv-pipeline>

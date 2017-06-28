@@ -17,7 +17,7 @@ import org.simpleframework.xml.Attribute;
 @Stage(category = "Image Processing",
         description = "Write a template image to disk given a user defined file name, or infer the image's name from the id of the part loaded in the feeder and write it to the path defined by the user.")
 
-public class WriteTemplateImage extends CvStage {
+public class WritePartTemplateImage extends CvStage {
 
     @Attribute(required = false)
     @Property(
