@@ -226,6 +226,9 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     private MachineListener machineListener = new MachineListener.Adapter() {
         @Override
         public void machineHeadActivity(Machine machine, Head head) {
+            if (head == null) {
+                return;
+            }
             for (Nozzle nozzle : head.getNozzles()) {
                 Part part = nozzleParts.get(nozzle);
                 if (part == null || part != nozzle.getPart()) {
