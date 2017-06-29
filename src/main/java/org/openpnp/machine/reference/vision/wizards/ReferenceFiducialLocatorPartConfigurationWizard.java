@@ -92,7 +92,7 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
             SetResult setResult = (SetResult) pipeline.getStage("template");
             setResult.setImage(OpenCvUtils.toMat(template));
         }
-        pipeline.setCamera(camera);
+        pipeline.setProperty("camera", camera);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Locator Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());

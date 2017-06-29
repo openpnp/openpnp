@@ -107,7 +107,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
             SetResult setResult = (SetResult) pipeline.getStage("template");
             // We could inject a default template here since we don't have a part.
         }
-        pipeline.setCamera(camera);
+        pipeline.setProperty("camera", camera);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Locator Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());

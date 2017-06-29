@@ -255,7 +255,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         PartSettings partSettings = getPartSettings(part);
         CvPipeline pipeline = partSettings.getPipeline();
         
-        pipeline.setCamera(camera);
+        pipeline.setProperty("camera", camera);
         if (pipeline.getStage("template") instanceof SetResult) {
             SetResult setResult = (SetResult) pipeline.getStage("template");
             setResult.setImage(OpenCvUtils.toMat(template));
@@ -507,7 +507,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     public Wizard getPartConfigurationWizard(Part part) {
         PartSettings partSettings = getPartSettings(part);
         try {
-            partSettings.getPipeline().setCamera(VisionUtils.getBottomVisionCamera());
+            partSettings.getPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
         }
