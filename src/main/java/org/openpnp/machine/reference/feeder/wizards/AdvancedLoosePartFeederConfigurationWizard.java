@@ -105,8 +105,8 @@ public class AdvancedLoosePartFeederConfigurationWizard
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = feeder.getPipeline();
-        pipeline.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
-        pipeline.setFeeder(feeder);
+        pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        pipeline.setProperty("feeder", feeder);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
@@ -121,8 +121,8 @@ public class AdvancedLoosePartFeederConfigurationWizard
     
     private void editTrainingPipeline() throws Exception {
         CvPipeline pipeline = feeder.getTrainingPipeline();
-        pipeline.setCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
-        pipeline.setFeeder(feeder);
+        pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        pipeline.setProperty("feeder", feeder);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Training Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());

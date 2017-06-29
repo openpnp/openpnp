@@ -71,9 +71,9 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     private Location getPickLocation(Camera camera, Nozzle nozzle) throws Exception {
         // Process the pipeline to extract RotatedRect results
-        pipeline.setCamera(camera);
-        pipeline.setNozzle(nozzle);
-        pipeline.setFeeder(this);
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("nozzle", nozzle);
+        pipeline.setProperty("feeder", this);
         pipeline.process();
         // Grab the results
         List<RotatedRect> results = (List<RotatedRect>) pipeline.getResult("results").model;

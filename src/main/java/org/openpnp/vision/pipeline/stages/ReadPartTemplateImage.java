@@ -30,6 +30,7 @@ import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Feeder;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -119,9 +120,9 @@ public class ReadPartTemplateImage extends CvStage {
             }
         }
         else {
+            Feeder feeder = (Feeder) pipeline.getProperty("feeder");
             // path is assumed to be a directory containing template images
-            if (pipeline.getFeeder() == null || pipeline.getFeeder()
-                                                        .getPart() == null) {
+            if (feeder == null || feeder.getPart() == null) {
                 if (log) {
                     Logger.info(
                             "No feeder, part, or useable templateFile found. Cannot figure out part name.");
@@ -131,17 +132,15 @@ public class ReadPartTemplateImage extends CvStage {
             if (!filepath.endsWith(File.separator)) {
                 filepath += File.separator;
             }
-            filename = filepath + pipeline.getFeeder()
-                                          .getPart()
-                                          .getId()
+            filename = filepath + feeder.getPart()
+                                        .getId()
                     + extension;
             file = new File(filename);
             if (!file.exists()) {
                 // try the package id
-                filename = filepath + pipeline.getFeeder()
-                                              .getPart()
-                                              .getPackage()
-                                              .getId()
+                filename = filepath + feeder.getPart()
+                                            .getPackage()
+                                            .getId()
                         + extension;
                 file = new File(filename);
                 if (!file.exists()) {
@@ -150,20 +149,17 @@ public class ReadPartTemplateImage extends CvStage {
                     // TODO: it would be best if we could define a package outline, e.g. as a
                     // polygon
                     // and use that to draw the part and match templates
-                    if (pipeline.getFeeder()
-                                .getPart()
-                                .getPackage()
-                                .getFootprint() != null) {
-                        width = pipeline.getFeeder()
-                                        .getPart()
-                                        .getPackage()
-                                        .getFootprint()
-                                        .getBodyWidth();
-                        height = pipeline.getFeeder()
-                                         .getPart()
-                                         .getPackage()
-                                         .getFootprint()
-                                         .getBodyHeight();
+                    if (feeder.getPart()
+                              .getPackage()
+                              .getFootprint() != null) {
+                        width = feeder.getPart()
+                                      .getPackage()
+                                      .getFootprint()
+                                      .getBodyWidth();
+                        height = feeder.getPart()
+                                       .getPackage()
+                                       .getFootprint()
+                                       .getBodyHeight();
                         if (width == 0 || height == 0) {
                             if (log) {
                                 Logger.info("Package body dimensions are not set.");
@@ -178,7 +174,7 @@ public class ReadPartTemplateImage extends CvStage {
                             height = tmp;
                         }
                         // get length conversion value from camera
-                        Camera camera = pipeline.getCamera();
+                        Camera camera = (Camera) pipeline.getProperty("camera");
                         width /= camera.getUnitsPerPixel()
                                        .getX();
                         height /= camera.getUnitsPerPixel()
