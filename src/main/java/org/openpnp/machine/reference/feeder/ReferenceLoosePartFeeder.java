@@ -59,9 +59,6 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
 
-    @Element(required = false)
-    private CvPipeline trainingPipeline = createDefaultTrainingPipeline();
-
     private Location pickLocation;
 
     @Override
@@ -124,14 +121,6 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         pipeline = createDefaultPipeline();
     }
 
-    public CvPipeline getTrainingPipeline() {
-        return trainingPipeline;
-    }
-
-    public void resetTrainingPipeline() {
-        trainingPipeline = createDefaultTrainingPipeline();
-    }
-
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceLoosePartFeederConfigurationWizard(this);
@@ -163,17 +152,6 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         try {
             String xml = IOUtils.toString(ReferenceLoosePartFeeder.class
                     .getResource("ReferenceLoosePartFeeder-DefaultPipeline.xml"));
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }
-    }
-    
-    public static CvPipeline createDefaultTrainingPipeline() {
-        try {
-            String xml = IOUtils.toString(ReferenceLoosePartFeeder.class
-                    .getResource("ReferenceLoosePartFeeder-DefaultTrainingPipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
