@@ -3,6 +3,28 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-06-28
 
+* CvPipeline Properties (Breaking Change)
+
+	In an effort to make it easier for developers to integrate custom functionality in CvPipelines,
+	the pipeline now has a map of properties that can be set be callers. This allows callers of
+	a pipeline to feed values in for the pipeline to use. This can be things like cameras, feeders,
+	parts, nozzles, etc. 
+	
+	This functionality replaces the previously added setFeeder and setNozzle calls. These calls
+	were too specific to certain pipelines and did not represent a good development direction
+	for the pipeline as it would eventually become cluttered with variables that did not
+	make sense for the pipeline as a whole.
+
+	Breaking Change: All existing stages have been migrated to the property system. If you have
+	custom stages that used getNozzle or getFeeder you will need to make minor updates to switch
+	these to use properties instead.
+	
+	* getNozzle() becomes (Nozzle) getProperty("nozzle")
+	* getFeeder() becomes (Feeder) getProperty("feeder")
+	
+	Finally, this change is the first step into supporting variables in CvPipeline. Eventually
+	you will be able to reference proeprties and other objects when setting parameters in stages.
+	 
 * AdvancedLoosePartFeeder
 
 	ReferenceLoosePartFeeder has received a big upgrade thanks to @dzach. The
