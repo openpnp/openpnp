@@ -1,6 +1,25 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-06-28
+
+* AdvancedLoosePartFeeder
+
+	ReferenceLoosePartFeeder has received a big upgrade thanks to @dzach. The
+	new AdvancedLoosePartFeeder is able to be trained to recognize the orientation of loose parts,
+	allowing perfect placement of loose bins of both polarized and unpolartized parts. This
+	provides a complete feeding solution with no feeders at all!
+	
+	A lot of work and discussion has gone into this feature. For more details see:
+	https://github.com/openpnp/openpnp/issues/573#issuecomment-311633280
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/zqeeh6mGqtk/Ix9MgDbvCAAJ
+	
+	It is expected that the default pipelines will need to be tuned and updated as we
+	get more experience with this new system. Please post your feedback about this feeder
+	to the mailing list.
+	
+	Thank you @dzach!
+	
 # 2017-06-17
 
 	Nozzle Tip Changer now has independent speed settings for each movement. The speeds are a 
