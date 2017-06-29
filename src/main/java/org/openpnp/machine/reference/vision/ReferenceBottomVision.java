@@ -99,8 +99,8 @@ public class ReferenceBottomVision implements PartAlignment {
                                                                      0.0))
                                                              .derive(null, null, null, angle));
             CvPipeline pipeline = partSettings.getPipeline();
-            pipeline.setCamera(camera);
-            pipeline.setNozzle(nozzle);
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("nozzle", nozzle);
             pipeline.process();
             if (!((pipeline.getResult("result")).model instanceof RotatedRect)) {
                 throw new Exception("Bottom vision alignment failed for part " + part.getId()
@@ -155,8 +155,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
         CvPipeline pipeline = partSettings.getPipeline();
 
-        pipeline.setCamera(camera);
-        pipeline.setNozzle(nozzle);
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("nozzle", nozzle);
         pipeline.process();
 
         Result result = pipeline.getResult("result");
@@ -314,7 +314,7 @@ public class ReferenceBottomVision implements PartAlignment {
         PartSettings partSettings = getPartSettings(part);
         try {
             partSettings.getPipeline()
-                        .setCamera(VisionUtils.getBottomVisionCamera());
+                        .setProperty("camera", VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
         }
