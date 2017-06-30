@@ -1,13 +1,5 @@
 package org.openpnp.machine.reference.vision;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,7 +21,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
-import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
@@ -38,16 +30,12 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.stages.SetResult;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -209,15 +197,33 @@ public class ReferenceFiducialLocator implements FiducialLocator {
             // Perform vision operation
             pipeline.process();
             
-            // Process the results
+            // Get the results
             List<KeyPoint> keypoints = (List<KeyPoint>) pipeline.getResult("results").getModel();
             if (keypoints == null || keypoints.isEmpty()) {
                 Logger.debug("No matches found!");
                 return null;
             }
             
-            KeyPoint keypoint = keypoints.get(0);
-            location = VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y); 
+            // Convert to Locations
+            List<Location> locations = new ArrayList<Location>();
+            for (KeyPoint keypoint : keypoints) {
+                locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+            }
+            
+            System.out.println(locations);
+            
+            // Sort by distance from center.
+            Collections.sort(locations, new Comparator<Location>() {
+                @Override
+                public int compare(Location o1, Location o2) {
+                    double d1 = o1.getLinearDistanceTo(camera.getLocation());
+                    double d2 = o2.getLinearDistanceTo(camera.getLocation());
+                    return Double.compare(d1, d2);
+                }
+            });
+            
+            // And use the closest result
+            location = locations.get(0);
             
             Logger.debug("{} located at {}", part.getId(), location);
             // Move to where we actually found the fid
