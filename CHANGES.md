@@ -1,6 +1,14 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-06-30
+
+* SimulatedUpCamera Rewrite
+
+	The SimulatedUpCamera has been rewritten to work much better. It is now included in the default
+	configuration so that you can test out bottom vision before you have a machine. It's also
+	been made testable, so there is now test coverage for basic bottom vision operations.
+
 # 2017-06-28
 
 * CvPipeline Properties (Breaking Change)
