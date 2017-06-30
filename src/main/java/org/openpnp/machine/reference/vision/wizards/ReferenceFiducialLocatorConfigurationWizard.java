@@ -19,6 +19,9 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
+import org.openpnp.model.Footprint.Pad;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -33,6 +36,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceFiducialLocator fiducialLocator;
+    private static Part defaultPart = createDefaultPart();
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator) {
         this.fiducialLocator = fiducialLocator;
@@ -99,21 +103,37 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         });
         panel.add(btnResetAllTo, "8, 2");
     }
-
+    
     private void editPipeline() throws Exception {
         CvPipeline pipeline = fiducialLocator.getPipeline();
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        if (pipeline.getStage("template") instanceof SetResult) {
-            SetResult setResult = (SetResult) pipeline.getStage("template");
-            // We could inject a default template here since we don't have a part.
-        }
         pipeline.setProperty("camera", camera);
+        pipeline.setProperty("part", defaultPart);
+        pipeline.setProperty("package", defaultPart.getPackage());
+        pipeline.setProperty("footprint", defaultPart.getPackage().getFootprint());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Locator Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
         dialog.getContentPane().add(editor);
         dialog.setSize(1024, 768);
         dialog.setVisible(true);
+    }
+
+    private static Part createDefaultPart() {
+        Pad pad = new Pad();
+        pad.setX(0.);
+        pad.setY(0.);
+        pad.setWidth(1.);
+        pad.setHeight(1.);
+        pad.setRoundness(100);
+        pad.setName("1");
+        Footprint footprint = new Footprint();
+        footprint.addPad(pad);
+        org.openpnp.model.Package pkg = new org.openpnp.model.Package("TMP");
+        pkg.setFootprint(footprint);
+        Part part = new Part("TMP");
+        part.setPackage(pkg);
+        return part;
     }
 
     @Override

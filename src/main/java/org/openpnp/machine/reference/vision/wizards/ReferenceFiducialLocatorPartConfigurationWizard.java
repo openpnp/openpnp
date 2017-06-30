@@ -87,12 +87,10 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        BufferedImage template = ReferenceFiducialLocator.createTemplate(camera, part);
-        if (pipeline.getStage("template") instanceof SetResult) {
-            SetResult setResult = (SetResult) pipeline.getStage("template");
-            setResult.setImage(OpenCvUtils.toMat(template));
-        }
         pipeline.setProperty("camera", camera);
+        pipeline.setProperty("part", part);
+        pipeline.setProperty("package", part.getPackage());
+        pipeline.setProperty("footprint", part.getPackage().getFootprint());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), "Fiducial Locator Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
