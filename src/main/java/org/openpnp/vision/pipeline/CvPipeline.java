@@ -8,17 +8,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.openpnp.model.Configuration;
-import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.BlurGaussian;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.HyphenStyle;
+import org.simpleframework.xml.stream.Style;
 
 /**
  * A CvPipeline performs computer vision operations on a working image by processing in series a
@@ -50,10 +55,11 @@ public class CvPipeline {
     private ArrayList<CvStage> stages = new ArrayList<>();
 
     private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
+    
+    private Map<String, Object> properties = new HashMap<String, Object>();
 
     private Mat workingImage;
-
-    private Camera camera;
+    private Object workingModel;
     
     private long totalProcessingTimeNs;
     
@@ -173,12 +179,8 @@ public class CvPipeline {
         return workingImage;
     }
 
-    public void setCamera(Camera camera) {
-        this.camera = camera;
-    }
-
-    public Camera getCamera() {
-        return camera;
+    public Object getWorkingModel() {
+      return workingModel;
     }
 
     public long getTotalProcessingTimeNs() {
@@ -215,7 +217,9 @@ public class CvPipeline {
                 image = result.image;
                 model = result.model;
             }
-
+            if(stage.isEnabled() && model != null) {
+              workingModel=model;
+            }
             // If the result image is null and there is a working image, replace the result image
             // replace the result image with a clone of the working image.
             if (image == null) {
@@ -253,6 +257,7 @@ public class CvPipeline {
                 result.image.release();
             }
         }
+        workingModel=null;
         results.clear();
     }
 
@@ -263,7 +268,7 @@ public class CvPipeline {
      * @throws Exception
      */
     public String toXmlString() throws Exception {
-        Serializer ser = Configuration.createSerializer();
+        Serializer ser = createSerializer();
         StringWriter sw = new StringWriter();
         ser.write(this, sw);
         return sw.toString();
@@ -277,7 +282,7 @@ public class CvPipeline {
      */
     public void fromXmlString(String s) throws Exception {
         release();
-        Serializer ser = Configuration.createSerializer();
+        Serializer ser = createSerializer();
         StringReader sr = new StringReader(s);
         CvPipeline pipeline = ser.read(CvPipeline.class, sr);
         stages.clear();
@@ -303,5 +308,21 @@ public class CvPipeline {
         catch (Exception e) {
             throw new CloneNotSupportedException(e.getMessage());
         }
+    }
+    
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+    
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
+    }
+    
+    private static Serializer createSerializer() {
+        Style style = new HyphenStyle();
+        Format format = new Format(style);
+        AnnotationStrategy strategy = new AnnotationStrategy();
+        Serializer serializer = new Persister(strategy, format);
+        return serializer;
     }
 }

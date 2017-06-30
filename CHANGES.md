@@ -1,6 +1,61 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-06-28
+
+* CvPipeline Properties (Breaking Change)
+
+	In an effort to make it easier for developers to integrate custom functionality in CvPipelines,
+	the pipeline now has a map of properties that can be set be callers. This allows callers of
+	a pipeline to feed values in for the pipeline to use. This can be things like cameras, feeders,
+	parts, nozzles, etc. 
+	
+	This functionality replaces the previously added setFeeder and setNozzle calls. These calls
+	were too specific to certain pipelines and did not represent a good development direction
+	for the pipeline as it would eventually become cluttered with variables that did not
+	make sense for the pipeline as a whole.
+
+	Breaking Change: All existing stages have been migrated to the property system. If you have
+	custom stages that used getNozzle or getFeeder you will need to make minor updates to switch
+	these to use properties instead.
+	
+	* getNozzle() becomes (Nozzle) getProperty("nozzle")
+	* getFeeder() becomes (Feeder) getProperty("feeder")
+	
+	Finally, this change is the first step into supporting variables in CvPipeline. Eventually
+	you will be able to reference proeprties and other objects when setting parameters in stages.
+	 
+* AdvancedLoosePartFeeder
+
+	ReferenceLoosePartFeeder has received a big upgrade thanks to @dzach. The
+	new AdvancedLoosePartFeeder is able to be trained to recognize the orientation of loose parts,
+	allowing perfect placement of loose bins of both polarized and unpolartized parts. This
+	provides a complete feeding solution with no feeders at all!
+	
+	A lot of work and discussion has gone into this feature. For more details see:
+	https://github.com/openpnp/openpnp/issues/573#issuecomment-311633280
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/zqeeh6mGqtk/Ix9MgDbvCAAJ
+	
+	It is expected that the default pipelines will need to be tuned and updated as we
+	get more experience with this new system. Please post your feedback about this feeder
+	to the mailing list.
+	
+	Thank you @dzach!
+	
+# 2017-06-17
+
+	Nozzle Tip Changer now has independent speed settings for each movement. The speeds are a 
+	multiplier, similar to how it's used in other parts of the system. The value
+	is multiplied by the system speed slider to determine the final speed. A 1.0 is "full speed".
+
+# 2017-05-18
+
+	Two new Scripting events have been added: Job.Starting and Job.Finished. These are called
+	as the job is starting and after it completes. They are intended to aid in using conveyer
+	systems to automatically load and unload PCBs.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#jobstarting for more info.
+
 # 2017-05-15
 	
 	New tray feeder added: RotaryTrayFeeder

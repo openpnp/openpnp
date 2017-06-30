@@ -29,7 +29,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
-import org.openpnp.machine.reference.feeder.wizards.ReferenceLoosePartFeederConfigurationWizard;
+import org.openpnp.machine.reference.feeder.wizards.AdvancedLoosePartFeederConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
@@ -42,22 +42,14 @@ import org.simpleframework.xml.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/*
- * TODO: We need to be able to determine "normal" angle for the part, which probably means width and
- * height, which is going to be tough when the body is square. Might need to make it more related to
- * bottom vision so that it can determine the correct angle for what it locates.
- * 
- * TODO: Remember the idea of using contours or whatever to find the part and then using template
- * matching to get it's orientation. That would solve the above, and make it work for polarized
- * parts too.
- * 
- * And related to that, this might be a good time to play with something like SIFT.
- */
-public class ReferenceLoosePartFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceLoosePartFeeder.class);
+public class AdvancedLoosePartFeeder extends ReferenceFeeder {
+    private final static Logger logger = LoggerFactory.getLogger(AdvancedLoosePartFeeder.class);
 
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
+
+    @Element(required = false)
+    private CvPipeline trainingPipeline = createDefaultTrainingPipeline();
 
     private Location pickLocation;
 
@@ -100,7 +92,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
         // Get the result's Location
         // Update the location with the result's rotation
-        location = location.derive(null, null, null, result.angle);
+        location = location.derive(null, null, null, -(result.angle + getLocation().getRotation()));
         // Update the location with the correct Z, which is the configured Location's Z
         // plus the part height.
         location =
@@ -121,9 +113,17 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         pipeline = createDefaultPipeline();
     }
 
+    public CvPipeline getTrainingPipeline() {
+        return trainingPipeline;
+    }
+
+    public void resetTrainingPipeline() {
+        trainingPipeline = createDefaultTrainingPipeline();
+    }
+
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceLoosePartFeederConfigurationWizard(this);
+        return new AdvancedLoosePartFeederConfigurationWizard(this);
     }
 
     @Override
@@ -150,8 +150,19 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 
     public static CvPipeline createDefaultPipeline() {
         try {
-            String xml = IOUtils.toString(ReferenceLoosePartFeeder.class
-                    .getResource("ReferenceLoosePartFeeder-DefaultPipeline.xml"));
+            String xml = IOUtils.toString(AdvancedLoosePartFeeder.class
+                    .getResource("AdvancedLoosePartFeeder-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+    
+    public static CvPipeline createDefaultTrainingPipeline() {
+        try {
+            String xml = IOUtils.toString(AdvancedLoosePartFeeder.class
+                    .getResource("AdvancedLoosePartFeeder-DefaultTrainingPipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {

@@ -13,7 +13,7 @@ import org.simpleframework.xml.Attribute;
 
 /**
  * Base class for a stage in a CvPipeline. A CvStage has a unique name within a pipeline and is able
- * to perform computer vision operations reuslting in either a modified working image or a new image
+ * to perform computer vision operations resulting in either a modified working image or a new image
  * and optional model data extracted from the image.
  */
 public abstract class CvStage {
@@ -22,7 +22,7 @@ public abstract class CvStage {
 
     @Attribute(required = false)
     private boolean enabled = true;
-
+    
     /**
      * Perform an operation in a pipeline. Typical implementations will call
      * CvPipeline#getWorkingImage(), perform some type of operation on the image and will return a
@@ -170,6 +170,14 @@ public abstract class CvStage {
         public Result(Mat image) {
             this(image, null, 0);
         }
+        
+        public Mat getImage() {
+            return image;
+        }
+        
+        public Object getModel() {
+            return model;
+        }
 
         public static class Circle {
             public double x;
@@ -179,6 +187,30 @@ public abstract class CvStage {
             public Circle(double x, double y, double diameter) {
                 this.x = x;
                 this.y = y;
+                this.diameter = diameter;
+            }
+            
+            public double getX() {
+                return x;
+            }
+
+            public void setX(double x) {
+                this.x = x;
+            }
+
+            public double getY() {
+                return y;
+            }
+
+            public void setY(double y) {
+                this.y = y;
+            }
+
+            public double getDiameter() {
+                return diameter;
+            }
+
+            public void setDiameter(double diameter) {
                 this.diameter = diameter;
             }
 
@@ -200,6 +232,46 @@ public abstract class CvStage {
                 this.y = y;
                 this.width = width;
                 this.height = height;
+                this.score = score;
+            }
+            
+            public double getX() {
+                return x;
+            }
+
+            public void setX(double x) {
+                this.x = x;
+            }
+
+            public double getY() {
+                return y;
+            }
+
+            public void setY(double y) {
+                this.y = y;
+            }
+
+            public double getWidth() {
+                return width;
+            }
+
+            public void setWidth(double width) {
+                this.width = width;
+            }
+
+            public double getHeight() {
+                return height;
+            }
+
+            public void setHeight(double height) {
+                this.height = height;
+            }
+
+            public double getScore() {
+                return score;
+            }
+
+            public void setScore(double score) {
                 this.score = score;
             }
 
