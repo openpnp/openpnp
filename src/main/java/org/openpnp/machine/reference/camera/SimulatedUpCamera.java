@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
@@ -22,6 +23,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Root;
+
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
@@ -81,32 +83,24 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     }
 
 
-    // TODO STOPSHIP this is all getting close, and there is good code here, but way too much
-    // mixing of units. Figure out how to do a single scale to UPP at the end (or beginning)
-    // in the transform and then just work in real units.
-    // TODO STOPSHIP Shit. That won't work. All the graphics primitives take ints, not doubles.
     private void drawNozzle(Graphics2D g, Nozzle nozzle) {
-        AffineTransform tx = g.getTransform();
-
-        g.setStroke(new BasicStroke(1f));
+        g.setStroke(new BasicStroke(2f));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         LengthUnit units = LengthUnit.Millimeters;
-        Location mmPerPixels = getUnitsPerPixel().convertToUnits(units);
-        Location pixelsPerMm =
-                new Location(units, 1D / mmPerPixels.getX(), 1D / mmPerPixels.getY(), 1, 1);
+        Location unitsPerPixel = getUnitsPerPixel().convertToUnits(units);
+        
+        // Draw the nozzle
+        // Get nozzle offsets from camera
+        Location offsets = nozzle.getLocation()
+                .convertToUnits(units)
+                .subtractWithRotation(getLocation());
+        
+        // Create a nozzle shape
+        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets);
 
-        // Set a scale on the transform to convert mm to pixels. Everything below will be drawn
-        // in mm and automatically scaled to pixels by this transform.
-        tx.scale(pixelsPerMm.getX(), pixelsPerMm.getY());
 
-        // Draw a 1mm circle representation of the nozzle
-        g.setColor(new Color(0, 150, 0));
-        Location nozzleLocation = nozzle.getLocation()
-                                        .convertToUnits(units)
-                                        .subtract(getLocation());
-        g.fillOval((int) (nozzleLocation.getX() - 0.5), (int) (nozzleLocation.getY() - 0.5), 1, 1);
-
+        // Draw the part
         Part part = nozzle.getPart();
         if (part == null) {
             return;
@@ -118,42 +112,31 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
             return;
         }
 
-        Shape shape = footprint.getShape();
-        if (shape == null) {
-            return;
+        if (footprint.getUnits() != units) {
+            throw new Error("Not yet supported.");
         }
-
-        // // Determine the scaling factor to go from Outline units to
-        // // Camera units (mm)
-        // Location footprintScale = pixelsPerMm.multiply(new Location(footprint.getUnits(), 1, 1,
-        // 1, 1));
-        //
-        // // Create a transform that will be applied to the footprint.
-        // AffineTransform tx = new AffineTransform();
-        //
-        // Location offsets = new Location(LengthUnit.Millimeters, 2, 2, 0, 10);
-        //
-        //// // Rotate the footprint by the nozzle rotation.
-        //// tx.rotate(Math.toRadians(nozzle.getLocation().getRotation()));
-        //// // And by the offset error.
-        //// tx.rotate(Math.toRadians(offsets.getRotation()));
-        //
-        // // Translate the footprint so that it is at the same point as the nozzle.
-        // tx.translate(nozzleOffset.getX(), nozzleOffset.getY());
-        // // And by the offset error.
-        // tx.translate(offsets.getX(), offsets.getY());
-        //
-        // // Scale the footprint to pixels.
-        // tx.scale(footprintScale.getX(), footprintScale.getY());
-        //
-        // // Transform the Shape and draw it out.
-        // shape = tx.createTransformedShape(shape);
-        // g.setColor(Color.white);
-        // g.fill(shape);
-
-        g.setTransform(tx);
+        
+        // First draw the body in dark grey.
+        fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets);
+        
+        // Then draw the pads in white
+        fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets);
     }
-
+    
+    private void fillShape(Graphics2D g, Shape shape, Color color, Location unitsPerPixel, Location offsets) {
+        AffineTransform tx = new AffineTransform();
+        // Scale to pixels
+        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
+        // Translate and rotate to offsets
+        tx.translate(offsets.getX(), offsets.getY());
+        tx.rotate(Math.toRadians(offsets.getRotation()));
+        // Transform
+        shape = tx.createTransformedShape(shape);
+        // Draw
+        g.setColor(color);
+        g.fill(shape);
+    }
+    
     @Override
     public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
         start();

@@ -1,7 +1,7 @@
 <openpnp-packages>
    <package id="R0805" description="R0805">
       <outline units="Millimeters"/>
-      <footprint units="Millimeters">
+      <footprint units="Millimeters" body-width="2.032" body-height="1.27">
          <pad name="1" x="-0.95" y="0.0" width="1.3" height="1.5" rotation="90.0" roundness="0.0"/>
          <pad name="2" x="0.95" y="0.0" width="1.3" height="1.5" rotation="90.0" roundness="0.0"/>
       </footprint>
