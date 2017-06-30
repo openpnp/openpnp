@@ -14,7 +14,6 @@ import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
@@ -30,9 +29,9 @@ import org.simpleframework.xml.Root;
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
-    protected int width = 640;
+    protected int width = 1280;
 
-    protected int height = 480;
+    protected int height = 1280;
 
     protected int fps = 10;
 
