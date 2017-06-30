@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -22,6 +23,8 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 
@@ -34,6 +37,9 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
     protected int fps = 10;
 
     private Thread thread;
+    
+    @Element(required=false)
+    private Location errorOffsets = new Location(LengthUnit.Millimeters);
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
@@ -97,8 +103,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
                 .subtractWithRotation(getLocation());
         
         // Create a nozzle shape
-        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets);
-
+        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);
 
         // Draw the part
         Part part = nozzle.getPart();
@@ -117,19 +122,24 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         }
         
         // First draw the body in dark grey.
-        fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets);
+        fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets, true);
         
         // Then draw the pads in white
-        fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets);
+        fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets, true);
     }
     
-    private void fillShape(Graphics2D g, Shape shape, Color color, Location unitsPerPixel, Location offsets) {
+    private void fillShape(Graphics2D g, Shape shape, Color color, Location unitsPerPixel, Location offsets, boolean addError) {
         AffineTransform tx = new AffineTransform();
         // Scale to pixels
         tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
         // Translate and rotate to offsets
         tx.translate(offsets.getX(), offsets.getY());
-        tx.rotate(Math.toRadians(offsets.getRotation()));
+        tx.rotate(Math.toRadians(Utils2D.normalizeAngle(offsets.getRotation())));
+        if (addError) {
+            // Translate and rotate to error offsets
+            tx.translate(errorOffsets.getX(), errorOffsets.getY());
+            tx.rotate(Math.toRadians(Utils2D.normalizeAngle(errorOffsets.getRotation())));
+        }
         // Transform
         shape = tx.createTransformedShape(shape);
         // Draw
@@ -137,6 +147,14 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         g.fill(shape);
     }
     
+    public Location getErrorOffsets() {
+        return errorOffsets;
+    }
+
+    public void setErrorOffsets(Location errorOffsets) {
+        this.errorOffsets = errorOffsets;
+    }
+
     @Override
     public synchronized void startContinuousCapture(CameraListener listener, int maximumFps) {
         start();
@@ -187,7 +205,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceCameraConfigurationWizard(this);
+        return new SimulatedUpCameraConfigurationWizard(this);
     }
 
     @Override
