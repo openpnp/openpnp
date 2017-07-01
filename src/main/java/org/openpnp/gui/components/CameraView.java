@@ -200,15 +200,6 @@ public class CameraView extends JComponent implements CameraListener {
         setBackground(Color.black);
         setOpaque(true);
 
-        String reticlePref = prefs.get(PREF_RETICLE, null);
-        try {
-            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
-            setDefaultReticle(reticle);
-        }
-        catch (Exception e) {
-            // Logger.warn("Warning: Unable to load Reticle preference");
-        }
-
         popupMenu = new CameraViewPopupMenu(this);
 
         addMouseListener(mouseListener);
@@ -233,6 +224,10 @@ public class CameraView extends JComponent implements CameraListener {
                 }
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
+    }
+    
+    private String getReticlePrefKey() {
+        return PREF_RETICLE + "." + camera.getId();
     }
 
     public CameraView(int maximumFps) {
@@ -276,6 +271,23 @@ public class CameraView extends JComponent implements CameraListener {
         if (this.camera != null) {
             this.camera.startContinuousCapture(this, maximumFps);
         }
+        // load the reticle pref, if any
+        try {
+            String reticleXml = prefs.get(getReticlePrefKey(), null);
+            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+            setDefaultReticle(reticle);
+        }
+        catch (Exception e) {
+            try {
+                
+            }
+            catch (Exception e1) {
+                String reticleXml = prefs.get(PREF_RETICLE, null);
+                Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+                setDefaultReticle(reticle);
+            }
+        }
+
     }
 
     public Camera getCamera() {
@@ -293,7 +305,7 @@ public class CameraView extends JComponent implements CameraListener {
     public void setDefaultReticle(Reticle reticle) {
         setReticle(DEFAULT_RETICLE_KEY, reticle);
 
-        prefs.put(PREF_RETICLE, XmlSerialize.serialize(reticle));
+        prefs.put(getReticlePrefKey(), XmlSerialize.serialize(reticle));
         try {
             prefs.flush();
         }
