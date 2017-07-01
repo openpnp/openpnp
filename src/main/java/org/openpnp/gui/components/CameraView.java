@@ -69,6 +69,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
@@ -278,13 +279,14 @@ public class CameraView extends JComponent implements CameraListener {
             setDefaultReticle(reticle);
         }
         catch (Exception e) {
+            Logger.debug("Failed to load camera specific reticle, checking default.");
             try {
-                
-            }
-            catch (Exception e1) {
                 String reticleXml = prefs.get(PREF_RETICLE, null);
                 Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
                 setDefaultReticle(reticle);
+            }
+            catch (Exception e1) {
+                Logger.debug("No reticle preference found.");
             }
         }
 
