@@ -3,6 +3,11 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-06-30
 
+* Power On, No Home Behavior
+
+	Now when you hit the power on button the home button becomes highlighted to indicate you should
+	home the machine. Previously the power button would change color which was confusing. 
+
 * SimulatedUpCamera Rewrite
 
 	The SimulatedUpCamera has been rewritten to work much better. It is now included in the default
