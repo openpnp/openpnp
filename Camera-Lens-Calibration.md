@@ -4,7 +4,7 @@ The calibration process consists of showing a known pattern to the camera in a v
 
 To calibrate the camera lens:
 
-1. Download and print a pattern from http://nerian.com/support/resources/patterns/. Make sure that the full pattern is visible on the page and there is some whitespace in the margins.
+1. Download and print a pattern from http://nerian.com/support/resources/patterns/. When printing the pattern, scale it so that it takes up the full field of view on the camera, but with enough room to rotate the pattern around a bit.
 
 2. Mount the printed pattern to a piece of cardboard or stiff cardstock. It needs to stay relatively flat during the calibration process and you will be moving it around.
 
