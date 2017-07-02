@@ -10,7 +10,7 @@
 4. You should now see the Package Explorer tab. Right click in this area and select Import.
 5. On the Import screen, expand "Git", select "Projects from Git" and click Next.
 6. On the Select Repository Source screen select "Clone URI" and click Next.
-7. On the Source Git Repository screen enter `https://github.com/openpnp/openpnp.git` in the URI field and click Next.
+7. On the Source Git Repository screen enter `https://github.com/openpnp/openpnp.git` in the URI field<sup>1</sup> or enter the address to your fork at Github if you would like to contribute back to the project later<sup>2</sup> and click Next.
 8. On the Branch Selection screen select the "develop" branch and unselect all other branches, then click Next.
 9. On the Local Destination screen enter the directory where you would like to store the OpenPnP source code. You can keep the default if it's okay. Then click Next.
 10. Eclipse will now download the OpenPnP source code. This may take a few minutes.
@@ -22,5 +22,6 @@
 16. After a few seconds OpenPnP will start. Close OpenPnP.
 17. You can now edit files in Eclipse and the changes will automatically compile. To run OpenPnP again with your changes just click the green Run button in the toolbar. The button is a green circle with a white right facing arrow in it.
 
-
+* <sup>1</sup> It is possible to later change so your clone is pointing to your fork at Github.
+* <sup>2</sup> You cannot directly push your changes to OpenPnP, it must go through your own fork.
 
