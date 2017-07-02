@@ -1,12 +1,158 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-    <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
-    <title>position-nozzle</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-        <g id="position-nozzle" sketch:type="MSLayerGroup" fill="#BD0404">
-            <path d="M15.2727273,9 L18,4 L6,4 L8.72727273,9 L15.2727273,9 Z M11,10 L13,10 L13,19 L11,19 L11,10 Z" id="Triangle-1" sketch:type="MSShapeGroup"></path>
-        </g>
+<svg
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="position-nozzle.svg"
+   inkscape:version="0.92.0 15301"
+   id="svg2"
+   version="1.1"
+   viewBox="0 0 24 24"
+   height="25.6"
+   width="25.6">
+  <metadata
+     id="metadata15">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>position-nozzle</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:guide-bbox="true"
+     showguides="true"
+     inkscape:snap-text-baseline="true"
+     inkscape:snap-page="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-center="true"
+     inkscape:snap-midpoints="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:object-nodes="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:object-paths="true"
+     showborder="false"
+     inkscape:current-layer="g4148"
+     inkscape:window-maximized="1"
+     inkscape:window-y="420"
+     inkscape:window-x="0"
+     inkscape:cy="16.871172"
+     inkscape:cx="7.2335418"
+     inkscape:zoom="16"
+     showgrid="false"
+     id="namedview13"
+     inkscape:window-height="1051"
+     inkscape:window-width="1920"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     bordercolor="#666666"
+     pagecolor="#ffffff">
+    <sodipodi:guide
+       position="12,16.5"
+       orientation="1,0"
+       id="guide4148"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="24.616699,14"
+       orientation="0,1"
+       id="guide4150"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="16.0625,7.9999999"
+       orientation="0,1"
+       id="guide4152"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="5.9999999,14.3"
+       orientation="1,0"
+       id="guide4154"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="18,18"
+       orientation="1,0"
+       id="guide4156"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="32.173359,20"
+       orientation="0,1"
+       id="guide4205"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="42.624999,2.5"
+       orientation="0,1"
+       id="guide4207"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title4">position-nozzle</title>
+  <desc
+     id="desc6">Created with Sketch.</desc>
+  <defs
+     id="defs8" />
+  <g
+     transform="matrix(1.0094828,0,0,0.96871686,-0.1158968,0.13175717)"
+     style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
+     id="g4315-0"
+     sketch:type="MSPage">
+    <g
+       style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1"
+       id="g4148"
+       transform="matrix(1.0990707,0,0,1.1453215,-1.0885779,2.6004942)">
+      <circle
+         style="fill:none;fill-opacity:0.99215686;fill-rule:evenodd;stroke:#005bdb;stroke-width:1.35196924;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
+         id="path4948"
+         cx="11.910664"
+         cy="12.03172"
+         r="4.2812347" />
+      <path
+         sodipodi:open="true"
+         d="m 13.713289,12.03172 a 1.8026252,1.8026206 0 0 1 -1.793814,1.802599 1.8026252,1.8026206 0 0 1 -1.81135,-1.784977 1.8026252,1.8026206 0 0 1 1.776106,-1.820049 1.8026252,1.8026206 0 0 1 1.828713,1.767185"
+         sodipodi:end="6.2636335"
+         sodipodi:start="0"
+         sodipodi:ry="1.8026206"
+         sodipodi:rx="1.8026252"
+         sodipodi:cy="12.03172"
+         sodipodi:cx="11.910664"
+         sodipodi:type="arc"
+         id="path4950"
+         style="fill:#005bdb;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:1.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
     </g>
+    <g
+       style="fill:#bd0404;fill-opacity:1"
+       id="g4323-0"
+       sketch:type="MSLayerGroup"
+       transform="matrix(1,0,0,1.0322934,4.3125528e-8,-0.13601214)">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 15.244067,9 17.945721,4 H 6.0584458 l 2.7016534,5 z m -4.23259,1 h 1.981213 v 9 h -1.981213 z"
+         id="path4325-6"
+         sketch:type="MSShapeGroup"
+         style="fill:#bd0404;fill-opacity:1" />
+    </g>
+  </g>
 </svg>

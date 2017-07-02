@@ -69,6 +69,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class CameraView extends JComponent implements CameraListener {
@@ -200,15 +201,6 @@ public class CameraView extends JComponent implements CameraListener {
         setBackground(Color.black);
         setOpaque(true);
 
-        String reticlePref = prefs.get(PREF_RETICLE, null);
-        try {
-            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticlePref);
-            setDefaultReticle(reticle);
-        }
-        catch (Exception e) {
-            // Logger.warn("Warning: Unable to load Reticle preference");
-        }
-
         popupMenu = new CameraViewPopupMenu(this);
 
         addMouseListener(mouseListener);
@@ -233,6 +225,10 @@ public class CameraView extends JComponent implements CameraListener {
                 }
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
+    }
+    
+    private String getReticlePrefKey() {
+        return PREF_RETICLE + "." + camera.getId();
     }
 
     public CameraView(int maximumFps) {
@@ -276,6 +272,24 @@ public class CameraView extends JComponent implements CameraListener {
         if (this.camera != null) {
             this.camera.startContinuousCapture(this, maximumFps);
         }
+        // load the reticle pref, if any
+        try {
+            String reticleXml = prefs.get(getReticlePrefKey(), null);
+            Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+            setDefaultReticle(reticle);
+        }
+        catch (Exception e) {
+            Logger.debug("Failed to load camera specific reticle, checking default.");
+            try {
+                String reticleXml = prefs.get(PREF_RETICLE, null);
+                Reticle reticle = (Reticle) XmlSerialize.deserialize(reticleXml);
+                setDefaultReticle(reticle);
+            }
+            catch (Exception e1) {
+                Logger.debug("No reticle preference found.");
+            }
+        }
+
     }
 
     public Camera getCamera() {
@@ -293,7 +307,7 @@ public class CameraView extends JComponent implements CameraListener {
     public void setDefaultReticle(Reticle reticle) {
         setReticle(DEFAULT_RETICLE_KEY, reticle);
 
-        prefs.put(PREF_RETICLE, XmlSerialize.serialize(reticle));
+        prefs.put(getReticlePrefKey(), XmlSerialize.serialize(reticle));
         try {
             prefs.flush();
         }
@@ -432,7 +446,9 @@ public class CameraView extends JComponent implements CameraListener {
         g.drawImage(lastFrame, 0, 0, sw, sh, sx, sy, sx + sw, sy + sh, null);
         g.dispose();
 
-        while (!future.isDone());
+        while (!future.isDone()) {
+            
+        }
 
         return image;
     }

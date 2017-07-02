@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
@@ -35,6 +36,9 @@ import org.simpleframework.xml.core.Commit;
  */
 @Root(name = "openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
+    @ElementList(required = false)
+    protected IdentifiableList<Panel> panels = new IdentifiableList<>();
+
     @ElementList
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
 
@@ -71,6 +75,46 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         boardLocations.remove(boardLocation);
         firePropertyChange("boardLocations", oldValue, boardLocations);
         boardLocation.removePropertyChangeListener(this);
+    }
+
+    public void removeAllBoards() {
+        ArrayList<BoardLocation> oldValue = boardLocations;
+        boardLocations = new ArrayList<>();
+
+        firePropertyChange("boardLocations", (Object) oldValue, boardLocations);
+
+        for (int i = 0; i < oldValue.size(); i++) {
+            oldValue.get(i).removePropertyChangeListener(this);
+        }
+    }
+
+    public void addPanel(Panel panel) {
+        panels.add(panel);
+    }
+
+    public void removeAllPanels() {
+        panels.clear();
+    }
+
+    public IdentifiableList<Panel> getPanels() {
+        return panels;
+    }
+
+    // In the first release of the Auto Panelize software, there is assumed to be a
+    // single panel in use, even though the underlying plumbing supports a list of
+    // panels. This function is intended to let the rest of OpenPNP know if the
+    // autopanelize function is being used
+    public boolean isUsingPanel() {
+        if (panels == null) {
+            return false;
+        }
+
+        if ((panels.size() >= 1)
+                && ((panels.get(0).getRows() > 1) || (panels.get(0).getColumns() > 1))) {
+            return true;
+        }
+
+        return false;
     }
 
     public File getFile() {

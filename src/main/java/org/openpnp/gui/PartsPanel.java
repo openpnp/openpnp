@@ -142,6 +142,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
 
         JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
@@ -198,15 +199,22 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 alignmentPanel.removeAll();
 
                 Part part = getSelection();
-                
+
+                tabbedPane.removeAll();
+
                 if (part != null) {
-                    PartAlignment partAlignment =
-                            Configuration.get().getMachine().getPartAlignment();
-                    Wizard wizard = partAlignment.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        wizard.setWizardContainer(PartsPanel.this);
-                        alignmentPanel.add(wizard.getWizardPanel());
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                        Wizard wizard=partAlignment.getPartConfigurationWizard(part);
+                        if (wizard != null) {
+                            JPanel alignPanel = new JPanel();
+                            alignPanel.setLayout(new BorderLayout());
+                            alignPanel.add(wizard.getWizardPanel());
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(alignPanel));
+
+                            wizard.setWizardContainer(PartsPanel.this);
+                        }
                     }
+
                 }
 
                 revalidate();
@@ -311,7 +319,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
     public final Action pickPartAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.load);
+            putValue(SMALL_ICON, Icons.pick);
             putValue(NAME, "Pick Part");
             putValue(SHORT_DESCRIPTION, "Pick the selected part from the first available feeder.");
         }

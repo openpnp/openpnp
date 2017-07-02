@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.Collections;
 
 import org.openpnp.model.Location;
 
@@ -154,8 +155,6 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor();
 
-    public PasteDispenseJobProcessor getGlueDispenseJobProcessor();
-
     public Future<Object> submit(Runnable runnable);
 
     public <T> Future<T> submit(Callable<T> callable);
@@ -194,7 +193,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Head getDefaultHead() throws Exception;
 
-    public PartAlignment getPartAlignment();
+    public List<PartAlignment> getPartAlignments();
 
     public FiducialLocator getFiducialLocator();
 
@@ -203,4 +202,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public void setSpeed(double speed);
 
     public double getSpeed();
+    
+    public Object getProperty(String name);
+    
+    public void setProperty(String name, Object value);
 }

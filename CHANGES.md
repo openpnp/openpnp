@@ -1,6 +1,527 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-06-30
+
+* Power On, No Home Behavior
+
+	Now when you hit the power on button the home button becomes highlighted to indicate you should
+	home the machine. Previously the power button would change color which was confusing. 
+
+* SimulatedUpCamera Rewrite
+
+	The SimulatedUpCamera has been rewritten to work much better. It is now included in the default
+	configuration so that you can test out bottom vision before you have a machine. It's also
+	been made testable, so there is now test coverage for basic bottom vision operations.
+
+# 2017-06-28
+
+* CvPipeline Properties (Breaking Change)
+
+	In an effort to make it easier for developers to integrate custom functionality in CvPipelines,
+	the pipeline now has a map of properties that can be set be callers. This allows callers of
+	a pipeline to feed values in for the pipeline to use. This can be things like cameras, feeders,
+	parts, nozzles, etc. 
+	
+	This functionality replaces the previously added setFeeder and setNozzle calls. These calls
+	were too specific to certain pipelines and did not represent a good development direction
+	for the pipeline as it would eventually become cluttered with variables that did not
+	make sense for the pipeline as a whole.
+
+	Breaking Change: All existing stages have been migrated to the property system. If you have
+	custom stages that used getNozzle or getFeeder you will need to make minor updates to switch
+	these to use properties instead.
+	
+	* getNozzle() becomes (Nozzle) getProperty("nozzle")
+	* getFeeder() becomes (Feeder) getProperty("feeder")
+	
+	Finally, this change is the first step into supporting variables in CvPipeline. Eventually
+	you will be able to reference properties and other objects when setting parameters in stages.
+	 
+* AdvancedLoosePartFeeder
+
+	ReferenceLoosePartFeeder has received a big upgrade thanks to @dzach. The
+	new AdvancedLoosePartFeeder is able to be trained to recognize the orientation of loose parts,
+	allowing perfect placement of loose bins of both polarized and unpolartized parts. This
+	provides a complete feeding solution with no feeders at all!
+	
+	A lot of work and discussion has gone into this feature. For more details see:
+	https://github.com/openpnp/openpnp/issues/573#issuecomment-311633280
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/zqeeh6mGqtk/Ix9MgDbvCAAJ
+	
+	It is expected that the default pipelines will need to be tuned and updated as we
+	get more experience with this new system. Please post your feedback about this feeder
+	to the mailing list.
+	
+	Thank you @dzach!
+	
+# 2017-06-17
+
+* Nozzle Tip Changer Speed Settings
+
+	Nozzle Tip Changer now has independent speed settings for each movement. The speeds are a 
+	multiplier, similar to how it's used in other parts of the system. The value
+	is multiplied by the system speed slider to determine the final speed. A 1.0 is "full speed".
+
+# 2017-05-18
+
+* New Scripting Events
+
+	Two new Scripting events have been added: Job.Starting and Job.Finished. These are called
+	as the job is starting and after it completes. They are intended to aid in using conveyer
+	systems to automatically load and unload PCBs.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#jobstarting for more info.
+
+# 2017-05-15
+	
+	New tray feeder added: RotaryTrayFeeder
+	This tray feeder takes 3 points (first component, first row last component, last row last component) 
+	to measure the component grid and is rotation agnostic. Feedback and experience reports are welcome.
+
+# 2017-05-07
+
+* Configuration Wizard Performance Improvement
+
+	Due to a bug in a third party library that is used extensively in the configuration wizards
+	in OpenPnP, performance on opening the wizards was often very poor for many users. This was
+	most obvious when clicking through your various feeders, where some users were experiencing
+	up to a 10 second delay in opening the wizard.
+	
+	Unfortunately, the library has been abandoned so even though there is a fix available, it
+	will likely never be released. Instead, we are now "monkey patching" the fix at runtime
+	and this solves the problem.
+	
+	Thanks to @SadMan on IRC for putting me on the path to the fix.
+	
+# 2017-05-06
+
+* New Bottom Vision Scripting Events
+
+	Two new scripting events have been added to assist with bottom vision lighting. They are
+	Vision.PartAlignment.Before and Vision.PartAlignment.After.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#visionpartalignmentbefore for more
+	information.
+
+# 2017-04-16
+
+* Script Directory Ignore
+
+	You can now add an empty .ignore file to any directory under the scripts directory to
+	have that directory be ignored when populating the Scripts menu. This is in support of
+	a feature by @cri-s to improve usability on production machines.
+	
+	More information at https://github.com/openpnp/openpnp/pull/521.
+	
+* Home Status
+	
+	The "Power On" button now turns yellow when you first enable the machine, and does not
+	turn green until the machine is homed. This helps you notice that you have not yet homed
+	the machine. Thanks to @ldpgh for this helpful feature!
+	
+	More information at https://github.com/openpnp/openpnp/issues/379.
+	
+* Python Script Examples Added
+
+	@ldpgh has added some helpful Python examples to the suite of built in Scripting
+	examples.
+
+	More information at https://github.com/openpnp/openpnp/pull/520.
+	
+# 2017-04-14
+
+* Navigation View Removed
+
+	The Navigation View has been removed as part of a cleanup effort. This feature was unfinished
+	and is unlikely to ever be finished in this iteration of the UI. Removing it improves startup
+	time, removes a dependency on JavaFX and solves some bugs.
+	
+	If you were using this feature and will miss it, please make it known on the mailing list
+	at http://groups.google.com/group/openpnp.
+	
+# 2017-04-13
+
+* BREAKING CHANGE: Outdated Drivers Removed
+
+	Several outdated drivers have been removed. These are: GrblDriver, MarlinDriver, SprinterDriver
+	TinygDriver. All of these drivers have been replaced with the much better supported
+	GcodeDriver. If you are currently using one of these drivers this version WILL BREAK your
+	configuration. If you need help migrating, please post a question to the mailing list at:
+	
+	http://groups.google.com/group/openpnp
+	
+	More information about this change and the reasoning for it is available at:
+	
+	https://github.com/openpnp/openpnp/issues/415
+	
+
+# 2017-04-09
+
+* Filter Rotated Rects CvStage
+
+	A new pipeline stage called FilterRects has been added by @dzach. It allows you to filter
+	rotated rects based on given width, length and aspect ratio limits. This can be very helpful
+	for making sure a recognized part is within acceptable size limits.
+
+# 2017-04-06
+
+* Tool Selection for Cameras
+
+	Thanks to @BendRocks an old feature has been brought back to life. You can now select
+	head mounted cameras from the Machine Controls tool dropdown box. This causes the DROs
+	to show the coordinates of the camera and allows you to jog from the camera's perspective
+	instead of just the nozzle's. This also makes it possible (although not yet implemented)
+	to do the same kind of thing for paste dispensers when that feature is revived.
+	
+	Work for this feature was performed in: https://github.com/openpnp/openpnp/pull/507
+	
+# 2017-04-01
+
+* Auto Panelization
+
+	Thanks to @BendRocks we now have a robust panelization solution in OpenPnP! Panels allow you
+	to quickly set up multiple copies of a board in an array and allow you to have panel
+	fiducials in addition to board fiducials. There is also a quick X out feature that makes it
+	easy to mark boards in the array that are damaged and should not be placed.
+	
+	This feature is a work in progress. There are some known issues and some limitations
+	but it has matured enough that it's ready for people to start trying it out.
+	
+	Full documentation for this feature is coming soon and will be available at:
+	https://github.com/openpnp/openpnp/wiki/Panelization
+	
+	For more information about this feature, please see the following links:
+	https://github.com/openpnp/openpnp/issues/128
+	https://github.com/openpnp/openpnp/pull/456
+	https://groups.google.com/forum/#!msg/openpnp/_ni0LK8LR8g/5u-0-P-1EwAJ;context-place=forum/openpnp
+
+# 2017-03-31
+
+* Job Placement Status
+
+	With many thanks to @iAmRoland we now have a great status display of placements as a job
+	is run. Their description from the pull request describes the feature nicely:
+	
+	> Once the start button is pressed, it will mark all pending placements with a yellow color. 
+	> When it's processing a placement it will display a blue color on the ID cell. Once it's done
+	> with all placements with the same ID, it then marks that cell with a green color. If no
+	> placement is going to be done then the cell is left white.
+	
+	@iAmRoland even included a nice GIF that shows how it looks:
+	https://camo.githubusercontent.com/954ded479f650507bece8c199c7b73233708097e/687474703a2f2f692e696d6775722e636f6d2f6d6c4130716d6b2e6a7067
+	
+	This work was performed in PR https://github.com/openpnp/openpnp/pull/493 and partially
+	addresses the feature described in issue https://github.com/openpnp/openpnp/issues/205 and
+	https://github.com/openpnp/openpnp/issues/280.
+
+# 2017-03-26
+
+* Auto Update Fixed, Version Number Improvements
+
+	An error that was causing the auto updater to not work has been fixed. In the process,
+	the OpenPnP version numbering scheme has been changed and improved. Version numbers were
+	previously just an inscrutable Git hash. They are now in the format of
+	2017-03-26_18-56-32.0be8a03, with the part before the period representing the date of the
+	build and the part after the period representing the Git hash. This makes it easy to
+	identify when the code was built and how old it is, and the Git hash can be used to
+	identify a specific commit.
+	
+* Glue Feature Removed
+
+	The Glue Dispense feature has been deprecated and removed. This feature was not being used
+	and it was causing maintainability problems. If there is interest in the feature in the
+	future it will be rewritten. More information about this decision is available at
+	https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/openpnp/1-CSpnoPQGY/k6qUT9VZAQAJ
+
+# 2017-03-21
+
+* Submit Diagnostics
+
+	You can now submit a very detailed diagnostics package about OpenPnP right from OpenPnP itself!
+	In the Help menu just click Submit Diagnostics and follow the instructions. The result will
+	be a link to a [Gist](https://gist.github.com/) on Github that contains information and
+	images from OpenPnP. You can share the link on the mailing list or elsewhere to assist
+	people in helping with any issue you might be having.
+
+# 2017-03-16
+
+* Named CSV Importer Improvements
+
+	Thanks to @Misfittech the Named CSV Importer can now handle Altium R14 files and now
+	has the option to set part heights when available. It also supports the ability to
+	import data that contains values in mils.
+	 
+* Logging Improvements
+
+	With many thanks to @pfried the Log tab and the logging system have seen several improvements:
+	* Log panel is now searchable.
+	* Select and copy lines from the log.
+	* Enable/disable system output.
+	* Option to auto-scroll, or not.
+	
+	More information about this feature can be found at:
+	https://github.com/openpnp/openpnp/issues/288
+
+# 2017-03-05
+
+* Force Upper Case in Gcode Driver Console
+
+	There is now an option, on by default, that forces commands sent from the Gcode console
+	to upper case. Previously upper case was forced without option, but now you can turn it off
+	if you like.
+
+# 2017-03-04
+
+* Position Camera and Continue
+
+	Thanks to @BendRocks for two new buttons in the Job and Placements panel. The buttons
+	which look like the Position Camera button with a right arrow added allows you to
+	position the camera and then select either the next board or placement. This allows you
+	to very easily and quickly move through a job and see that all of your placements
+	are configured correctly.
+	
+* Console Output in Log Panel
+
+	Thanks to @pfried, console output (System.out, System.err) is now included in the Log
+	panel at the Info and Error levels respectively. One major benefit of this is that
+	scripting output will now be visible in the Log panel. 
+
+# 2017-02-27
+
+* ReferenceDragFeeder Configuration Actuator Positioning
+
+	Fixes a bug in the ReferenceDragFeeder configuration panel that kept the actuator positioning
+	buttons from showing up. Now when you set an actuator name the position nozzle buttons on
+	these fields will turn into position actuator buttons as they did previously.
+
+* GcodeDriver Sub-Driver Delete UI
+
+	You can now delete sub-drivers from the UI by selecting one and clicking the red X button
+	in the toolbar above.
+	
+# 2017-02-24
+
+* HTTP Actuator 
+
+	A new boolean actuator that calls a predefined URL for ON and OFF events. It was developed 
+	for controlling pneumatic feeders that are controlled via a Raspberry Pi with IO shield but
+	maybe there are totally different applications as well.
+	
+* GCode Backlash Compensation
+
+	The GCode Driver now features a few additional parameters to address backlash. 
+	This allows approaching target locations always from a specific direction on X/Y axes.
+	Optionally the final approach can be executed with reduced speed. 
+	Details: https://github.com/openpnp/openpnp/wiki/GcodeDriver#user-content-backlash-compensation
+	
+* GCode Console
+
+	The GCode Driver now features a new tab to manually send GCode commands in a console.
+	
+* GCode Non-Squareness Compensation
+
+	The GCode Driver now also works with machines that are not perfectly square. Details about
+	how to measure and compensate this Non-Squareness Compensation can be found here:
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver#user-content-non-squareness-compensation	
+	
+# 2017-02-12
+
+* Generalized Vacuum Sensing (BREAKING CHANGE)
+
+	Vacuum sensing was previously a GcodeDriver only feature. With the recent Actuator
+	Improvements it became possible to extend this feature to all drivers. The vacuum
+	sense feature now uses an Actuator to read values from the pressure sensor, instead
+	of a specialized GcodeDriver command.
+	
+	Configuration is still similar. Instead of defining a VACUUM_REQUEST_COMMAND and
+	VACUUM_REPORT_REGEX you just create an Actuator that uses the same values
+	and set the Actuator name on your nozzle.
+	
+	Due to this configuration change, this is a breaking change. Your vacuum sense
+	will not work until you make the manual changes. You can watch a short video tutorial
+	showing how to make the required changes at: https://www.youtube.com/watch?v=FsZ5dy7n1Ag
+
+# 2017-02-05
+
+* Actuator Improvements
+
+	* Actuators can now read String values in a generic fashion. This makes it possible to
+	integrate a variety of sensors into your system and use the output in any way you like,
+	particularly with scripting. The GcodeDriver has been updated to work with this new
+	functionality. For more information see:
+	
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex
+	
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command
+
+	* The Actuators panel in Jog Controls now offers more options for controlling and testing
+	actuators. You can send true/false boolean values, send double values and read a response
+	from each actuator.
+
+# 2017-01-27
+
+* Icon Improvements
+
+	With many thanks to @dzach we now have some much improved icons in many parts of OpenPnP.
+	@dzach spent several days working on and refining icons to show their intent better, and
+	to improve usability to persons with color blindness. As a result, several of the icons
+	that used to require you to think for a moment to remember what they were are redesigned
+	to be very clear and easy to understand.
+	
+	References:
+	https://github.com/openpnp/openpnp/pull/429
+	https://github.com/openpnp/openpnp/pull/426
+	https://github.com/openpnp/openpnp/issues/421
+	
+	Thank you @dzach!
+	
+# 2017-01-15
+
+* ReferenceSlotAutoFeeder
+
+	A new feeder called ReferenceSlotAutoFeeder has been added which provides the capability
+	of a movable auto feeder.
+	
+	ReferenceSlotAutoFeeder allows you to define any number of feeder slots on your machine
+	and each one can contain a feeder. By changing the feeder in a slot you move it's settings
+	from slot to slot without having to reconfigure it's position, part or other settings.
+	
+	The primary purpose of this feeder is for machines that have auto feeders that can be readily
+	moved from position to position.
+	
+	More information at https://github.com/openpnp/openpnp/wiki/ReferenceSlotAutoFeeder.
+
+	Work was done in https://github.com/openpnp/openpnp/issues/399.
+
+# 2017-01-09
+
+* QR Code Based X Out Example Script
+
+	A new example script called QrCodeXout.js is now included with OpenPnP. It will scan
+	each board in a job for a QR code and if one is found the board will be disabled.
+	This is an easy way to mark bad boards in a panel before starting a job.
+	
+	The purpose of the example script is to show how to use the QR code reader to
+	do a complex task. It can easily be modified to search for other markings or
+	other types of codes.
+
+# 2017-01-06
+
+* ScriptRun CvPipeline Stage
+
+	A new CvPipeline stage has been added called ScriptRun. This stage take a file and
+	runs it as a script with one of the supported built in script engines. This makes
+	it very easy for people to add their own vision logic to a pipeline without having
+	to write a stage.
+	
+	The script is supplied globals of `pipeline` and `stage`.
+	
+	An example script is shown below. It sets all of the pixels of the input image to
+	the color green.
+	
+	```
+	pipeline.workingImage.setTo(new Packages.org.opencv.core.Scalar(0, 255, 0));
+	```
+	
+	By saving the above to a file with the extension .js and selecting it in the stage the
+	script will run each time the stage is evaluated.
+	
+# 2016-12-30
+
+* OpenCvCamera Capture Properties
+
+	You can now set a number of capture properties on the OpenCvCamera. Not all properties are
+	supported on every system or every camera. This feature is experimental and is primarily
+	intended to allow users to experiment with exposure and format control.
+	
+	To set properties open the configuration for the camera, select the Camera Specific
+	tab and look for the Properties section at the bottom.
+	
+	More information is available at: https://github.com/openpnp/openpnp/issues/328
+	
+# 2016-12-29
+
+* Auto Feeder Improvements
+
+	ReferenceAutoFeeder can now use actuators in boolean or double mode and the configuration
+	panel has been updated to support each.
+	
+	ReferenceAutoFeeder also now supports a post pick actuator, which is helpful to support
+	feeders that require two movements for a single feed operation. This is common in the
+	Yamaha CL feeders that are becoming popular. The feed actuator is used to retract the guard
+	and the post pick actuator is used to advance the tape after a pick.
+	
+	Existing feeders should not require any changes to support these new features. The defaults
+	have been maintained.
+	
+* Post Pick Supported in Feeder Panel
+
+	The post pick operation is now called from the Feeders tab when you run a Pick operation. This
+	is useful when testing feeders that use this feature. Prior to this addition the post pick
+	operation was only called when a job was running.
+
+* Help Menu
+
+	There is now a new Help menu that has quick links to important documentation and a new
+	option to let you check for updates to OpenPnP. This option is only enabled if you
+	installed OpenPnP with the installer. It will not be available if you built it from
+	source.
+
+* Camera Improvements
+
+	ReferenceCamera is now much smarter about handling problems with invalid images and it should
+	no longer cause high CPU usage when a camera configuration is incorrect. In addition, when
+	it receives a null image it will retry up to 10 times before failing. This is helpful for
+	cameras that sometimes return bad images; common with the ELP series of USB cameras.
+
+* DipTrace Native Import
+
+	With many thanks to @BendRocks, we now have native DipTrace import support. Find the new
+	importer under the File -> Import menu.
+
+# 2016-12-20
+
+* User Interface Improvements
+
+	This change introduces a new layout and some changes to the main user interface. The purpose
+	of this change is to improve use of screen real estate for the things that people spend the
+	most time interacting with.
+	
+	The main change is that the screen is now split vertically instead of horizontally. Cameras
+	have been moved to the upper left and jog controls to the lower left. The tabs and tables have
+	been moved to the right side of the screen and are now stacked rather than side by side.
+	
+	The primary benefit of this change is that it takes better advantage of the trend towards wider
+	screens. Previously, users with wide (but short) screens had very limited space to work in
+	due to the fixed sizes of several components. With the screen now split vertically it is
+	now possible to use the full height of the screen to see jobs, placements and configuration
+	information.
+	
+	Other minor changes are:
+	* You can now collapse the jog controls to get them out of the way if you prefer to use the
+	keyboard shortcuts or camera jogging.
+	* DROs have been moved from the Machine Controls section to the bottom right of the status
+	bar. For too long the DROs have taken up a huge amount of screen space for something that
+	is really not that useful. You can still switch between relative and absolute mode by clicking
+	on them.
+	
+	Here are some screenshots to show the major differences. The first shows the interface before
+	the changes, the next shows the new user interface with jog controls expanded and the third
+	shows the new interface with jog controls collapsed.
+	
+	![screen shot 2016-12-20 at 5 53 55 pm](https://cloud.githubusercontent.com/assets/1182323/21372675/562c4ae6-c6de-11e6-8071-86b126f78b95.png)
+
+	![screen shot 2016-12-20 at 5 37 16 pm](https://cloud.githubusercontent.com/assets/1182323/21372503/1c1ac8f6-c6dd-11e6-89ee-64e922fbcdcf.png)
+
+	![screen shot 2016-12-20 at 5 40 57 pm](https://cloud.githubusercontent.com/assets/1182323/21372502/1c11244a-c6dd-11e6-9f4a-fb37ba47c5e0.png)
+	
+	Finally, I would like to send a special Thank You to @FinalPhoenix, who has generously
+	volunteered to help with improving OpenPnP's user interface and overall user experience!
+	
+	Many of these changes were suggested by @FinalPhoenix and with her help I hope to make
+	OpenPnP far more enjoyable and easy to use than it has ever been.
+	 
 # 2016-12-19
 
 * Introduction of Navigation Panel

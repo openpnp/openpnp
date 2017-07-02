@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.swing.Action;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.ImageCamera;
@@ -35,8 +36,12 @@ import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
@@ -45,6 +50,7 @@ import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -59,6 +65,7 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceMachine extends AbstractMachine {
 
@@ -70,13 +77,16 @@ public class ReferenceMachine extends AbstractMachine {
     protected PnpJobProcessor pnpJobProcessor = new ReferencePnpJobProcessor();
 
     @Element(required = false)
-    protected PasteDispenseJobProcessor pasteDispenseJobProcessor = new ReferencePasteDispenseJobProcessor();
+    protected PasteDispenseJobProcessor pasteDispenseJobProcessor;
 
+    // TODO: Remove after July 1, 2017.
+    @Deprecated
     @Element(required = false)
-    protected PasteDispenseJobProcessor glueDispenseJobProcessor = new ReferenceGlueDispenseJobProcessor();
+    protected PasteDispenseJobProcessor glueDispenseJobProcessor;
 
+    @Deprecated
     @Element(required = false)
-    protected PartAlignment partAlignment = new ReferenceBottomVision();
+    protected PartAlignment partAlignment = null;
 
     @Element(required = false)
     protected FiducialLocator fiducialLocator = new ReferenceFiducialLocator();
@@ -85,6 +95,12 @@ public class ReferenceMachine extends AbstractMachine {
 
     private List<Class<? extends Feeder>> registeredFeederClasses = new ArrayList<>();
 
+    @Commit
+    protected void commit() {
+        super.commit();
+        glueDispenseJobProcessor = null;
+    }
+    
     public ReferenceDriver getDriver() {
         return driver;
     }
@@ -95,6 +111,24 @@ public class ReferenceMachine extends AbstractMachine {
             close();
         }
         this.driver = driver;
+    }
+
+    public ReferenceMachine()
+    {
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
+            @Override
+             public void configurationLoaded(Configuration configuration) throws Exception {
+                // move any single partAlignments into our list
+                if (partAlignment != null) {
+                    partAlignments.add(partAlignment);
+                    partAlignment = null;
+                }
+                if (partAlignments.isEmpty()) {
+                    partAlignments.add(new ReferenceBottomVision());
+                }
+            }
+        });
     }
 
     @Override
@@ -153,7 +187,10 @@ public class ReferenceMachine extends AbstractMachine {
                 Arrays.asList(getPnpJobProcessor()/* , getPasteDispenseJobProcessor() */)));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
-        vision.add(getPartAlignment());
+        for (PartAlignment alignment : getPartAlignments())
+        {
+            vision.add(alignment);
+        }
         vision.add(getFiducialLocator());
         children.add(new SimplePropertySheetHolder("Vision", vision));
         return children.toArray(new PropertySheetHolder[] {});
@@ -179,9 +216,13 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Feeder>> l = new ArrayList<>();
         l.add(ReferenceStripFeeder.class);
         l.add(ReferenceTrayFeeder.class);
+        l.add(ReferenceRotatedTrayFeeder.class);
         l.add(ReferenceDragFeeder.class);
         l.add(ReferenceTubeFeeder.class);
         l.add(ReferenceAutoFeeder.class);
+        l.add(ReferenceSlotAutoFeeder.class);
+        l.add(ReferenceLoosePartFeeder.class);
+        l.add(AdvancedLoosePartFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -208,8 +249,11 @@ public class ReferenceMachine extends AbstractMachine {
     public List<Class<? extends Actuator>> getCompatibleActuatorClasses() {
         List<Class<? extends Actuator>> l = new ArrayList<>();
         l.add(ReferenceActuator.class);
+        l.add(HttpActuator.class);
         return l;
     }
+
+    private List<Class<? extends PartAlignment>> registeredAlignmentClasses = new ArrayList<>();
 
     @Override
     public void home() throws Exception {
@@ -245,10 +289,6 @@ public class ReferenceMachine extends AbstractMachine {
         }
     }
 
-    @Override
-    public PartAlignment getPartAlignment() {
-        return partAlignment;
-    }
 
     @Override
     public FiducialLocator getFiducialLocator() {
@@ -264,10 +304,4 @@ public class ReferenceMachine extends AbstractMachine {
     public PasteDispenseJobProcessor getPasteDispenseJobProcessor() {
         return pasteDispenseJobProcessor;
     }
-
-    @Override
-    public PasteDispenseJobProcessor getGlueDispenseJobProcessor() {
-        return glueDispenseJobProcessor;
-    }
-
 }

@@ -9,14 +9,14 @@ import org.opencv.core.Scalar;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Property;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
-/**
- * Mask everything in the working image outside of a circle centered at the center of the image
- * with the specified diameter.
- */
+@Stage(description="Mask everything in the working image outside of a circle centered at the center of the image with the specified diameter.")
 public class MaskCircle extends CvStage {
     @Attribute
+    @Property(description="The diameter of the circle to mask. Use a negative value to invert the mask.")
     private int diameter = 100;
     
     public int getDiameter() {
@@ -36,7 +36,9 @@ public class MaskCircle extends CvStage {
         mask.setTo(color);
         masked.setTo(color);
         Core.circle(mask, new Point(mat.cols() / 2, mat.rows() / 2),  Math.abs(diameter) / 2, new Scalar(255, 255, 255), -1);
-        if(diameter<0) Core.bitwise_not(mask,mask);
+        if(diameter < 0) {
+            Core.bitwise_not(mask,mask);
+        }
         mat.copyTo(masked, mask);
         mask.release();
         return new Result(masked);

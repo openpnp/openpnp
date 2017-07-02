@@ -1,6 +1,8 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -16,8 +18,10 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BoxLayout;
 import javax.swing.DropMode;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -50,13 +54,14 @@ public class PipelinePanel extends JPanel {
         this.editor = editor;
 
         propertySheetPanel = new PropertySheetPanel();
+        propertySheetPanel.setDescriptionVisible(true);
 
         setLayout(new BorderLayout(0, 0));
 
-        JSplitPane splitPane = new JSplitPane();
-        add(splitPane, BorderLayout.CENTER);
-        splitPane.setContinuousLayout(true);
-        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        JSplitPane splitPaneMain = new JSplitPane();
+        add(splitPaneMain, BorderLayout.CENTER);
+        splitPaneMain.setContinuousLayout(true);
+        splitPaneMain.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
         JToolBar toolbar = new JToolBar();
         add(toolbar, BorderLayout.NORTH);
@@ -83,6 +88,9 @@ public class PipelinePanel extends JPanel {
         pasteButton.setHideActionText(true);
         toolbar.add(pasteButton);
 
+        JSplitPane splitPaneStages = new JSplitPane();
+        splitPaneStages.setOrientation(JSplitPane.VERTICAL_SPLIT);
+
         stagesTable = new JTable(stagesTableModel = new StagesTableModel(editor.getPipeline()));
         stagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         stagesTable.setDragEnabled(true);
@@ -91,11 +99,16 @@ public class PipelinePanel extends JPanel {
         stagesTable.getColumnModel().getColumn(0).setPreferredWidth(50);
         stagesTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         stagesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        JScrollPane scrollPaneStages = new JScrollPane(stagesTable);
+        splitPaneStages.setLeftComponent(scrollPaneStages);
 
-        JScrollPane scrollPane = new JScrollPane(stagesTable);
-
-        splitPane.setRightComponent(propertySheetPanel);
-        splitPane.setLeftComponent(scrollPane);
+        JScrollPane scrollPaneDescription = new JScrollPane();
+        splitPaneStages.setRightComponent(scrollPaneDescription);
+        scrollPaneDescription.setMinimumSize(new Dimension(50, 50));
+        descriptionTa = new JEditorPane("text/html", "<html/>");
+        scrollPaneDescription.setViewportView(descriptionTa);
+        descriptionTa.setText("");
+        descriptionTa.setEditable(false);
 
         // Listen for changes to the selection of the table and update the properties for the
         // selected stage.
@@ -107,18 +120,8 @@ public class PipelinePanel extends JPanel {
                 }
                 CvStage stage = getSelectedStage();
                 editor.stageSelected(stage);
-                if (stage == null) {
-                    propertySheetPanel.setProperties(new Property[] {});
-                }
-                else {
-                    try {
-                        propertySheetPanel.setBeanInfo(stage.getBeanInfo());
-                        propertySheetPanel.readFromObject(stage);
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
+                refreshDescription();
+                refreshProperties();
             }
         });
 
@@ -145,13 +148,11 @@ public class PipelinePanel extends JPanel {
             }
         });
 
-        // Set the divider location after it's added to the view
-        addHierarchyListener(new HierarchyListener() {
-            @Override
-            public void hierarchyChanged(HierarchyEvent e) {
-                splitPane.setDividerLocation(0.5);
-            }
-        });
+        splitPaneMain.setLeftComponent(splitPaneStages);
+        splitPaneMain.setRightComponent(propertySheetPanel);
+        
+        splitPaneMain.setResizeWeight(0.5);
+        splitPaneStages.setResizeWeight(0.80);
 
         // Listen for editing events in the properties and process the pipeline to update the
         // results.
@@ -161,6 +162,9 @@ public class PipelinePanel extends JPanel {
                 if ("tableCellEditor".equals(e.getPropertyName())) {
                     if (!propertySheetPanel.getTable().isEditing()) {
                         // editing has ended for a cell, save the values
+
+                        refreshDescription();
+                        
                         propertySheetPanel.writeToObject(getSelectedStage());
                         editor.process();
                     }
@@ -168,7 +172,39 @@ public class PipelinePanel extends JPanel {
             }
         });
     }
-
+    
+    private void refreshProperties() {
+        CvStage stage = getSelectedStage();
+        if (stage == null) {
+            propertySheetPanel.setProperties(new Property[] {});
+        }
+        else {
+            try {
+                propertySheetPanel.setBeanInfo(stage.getBeanInfo());
+                propertySheetPanel.readFromObject(stage);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    private void refreshDescription() {
+        CvStage stage = getSelectedStage();
+        if (stage == null) {
+            descriptionTa.setText("");
+        }
+        else {
+            try {
+                descriptionTa.setText(stage.getDescription());
+                descriptionTa.setCaretPosition(0);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     public CvStage getSelectedStage() {
         int index = stagesTable.getSelectedRow();
         if (index == -1) {
@@ -292,4 +328,5 @@ public class PipelinePanel extends JPanel {
             editor.process();
         }
     };
+    private JEditorPane descriptionTa;
 }

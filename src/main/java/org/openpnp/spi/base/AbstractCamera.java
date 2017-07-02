@@ -178,6 +178,11 @@ public abstract class AbstractCamera extends AbstractModelObject implements Came
         moveToSafeZ(getHead().getMachine().getSpeed());
     }
     
+    @Override
+    public String toString() {
+        return getName();
+    }
+    
     protected class ListenerEntry {
         public CameraListener listener;
         public int maximumFps;

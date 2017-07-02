@@ -74,7 +74,9 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
+import org.pmw.tinylog.Logger;
 
 /**
  * A fluent API for some of the most commonly used OpenCV primitives. Successive operations modify a
@@ -313,6 +315,16 @@ public class FluentCv {
 
     public FluentCv write(File file) throws Exception {
         ImageIO.write(toBufferedImage(), "PNG", file);
+        return this;
+    }
+    
+    public FluentCv saveDebugImage(Class implementationClass, String function, String identifier) {
+        try {
+            OpenCvUtils.saveDebugImage(implementationClass, function, identifier, mat);
+        }
+        catch (Exception e) {
+            Logger.error(e, "Failed to save debug image.");
+        }
         return this;
     }
 
@@ -727,8 +739,10 @@ public class FluentCv {
 
         double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
 
-        if (sse <= 1e-10) // for small values return zero
+        if (sse <= 1e-10) {
+            // for small values return zero
             return 0;
+        }
         else {
             double mse = sse / (double) (I1.channels() * I1.total());
             double psnr = 10.0 * Math.log10((255 * 255) / mse);

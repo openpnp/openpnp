@@ -14,6 +14,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceDriver;
 import org.openpnp.machine.reference.ReferencePasteDispenser;
 import org.openpnp.machine.reference.driver.wizards.AbstractSerialPortDriverConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Location;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
@@ -23,11 +24,15 @@ import jssc.SerialPortException;
 import jssc.SerialPortList;
 import jssc.SerialPortTimeoutException;
 
+import jssc.SerialNativeInterface;
+import java.util.regex.Pattern;
+import java.util.ArrayList;
+
 /**
  * A base class for basic SerialPort based Drivers. Includes functions for connecting,
  * disconnecting, reading and sending lines.
  */
-public abstract class AbstractSerialPortDriver implements ReferenceDriver, Closeable {
+public abstract class AbstractSerialPortDriver extends AbstractModelObject implements ReferenceDriver, Closeable {
     public enum DataBits {
         Five(SerialPort.DATABITS_5),
         Six(SerialPort.DATABITS_6),
@@ -135,7 +140,23 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
     }
 
     public String[] getPortNames() {
-        return SerialPortList.getPortNames();
+		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
+			ArrayList<String> linuxPortNames = new ArrayList<String>();
+			String pattern = ".*";
+			Pattern rx = Pattern.compile (pattern);
+			for (String portName : SerialPortList.getPortNames ("/dev/serial/by-id/", rx))  {
+				linuxPortNames.add (portName);
+			}
+			for (String portName : SerialPortList.getPortNames ())  {
+				linuxPortNames.add (portName);
+			}
+			String[] portNames = new String[linuxPortNames.size()];
+			linuxPortNames.toArray (portNames);
+			return portNames;
+		}
+		else {
+			return SerialPortList.getPortNames();
+		}
     }
 
     /**
@@ -378,13 +399,15 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
         @Override
         public int read(byte[] buf, int offset, int length) throws IOException {
 
-            if (buf.length < offset + length)
+            if (buf.length < offset + length) {
                 length = buf.length - offset;
+            }
 
             int available = this.available();
 
-            if (available > length)
+            if (available > length) {
                 available = length;
+            }
 
             try {
                 byte[] readBuf = serialPort.readBytes(available);
@@ -449,11 +472,13 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
          */
         public int blockingRead(byte[] buf, int offset, int length, int timeout)
                 throws IOException {
-            if (buf.length < offset + length)
+            if (buf.length < offset + length) {
                 throw new IOException("Not enough buffer space for serial data");
+            }
 
-            if (timeout < 1)
+            if (timeout < 1) {
                 return read(buf, offset, length);
+            }
 
             try {
                 byte[] readBuf = serialPort.readBytes(length, timeout);
@@ -470,8 +495,9 @@ public abstract class AbstractSerialPortDriver implements ReferenceDriver, Close
             int ret;
             try {
                 ret = serialPort.getInputBufferBytesCount();
-                if (ret >= 0)
+                if (ret >= 0) {
                     return ret;
+                }
                 throw new IOException("Error checking available bytes from the serial port.");
             }
             catch (Exception e) {

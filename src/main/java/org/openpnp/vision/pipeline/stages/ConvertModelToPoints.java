@@ -8,13 +8,10 @@ import org.opencv.core.RotatedRect;
 import org.opencv.features2d.KeyPoint;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
-/**
- * Convert a variety of built in types to Points. Currently handles KeyPoints, Circles and
- * RotatedRects. The center point of each is stored. If the input model is a single value the result
- * will be a single value. If the input is a List the result will be a List.
- */
+@Stage(description="Convert a variety of built in types to Points. Currently handles KeyPoints, Circles and RotatedRects. The center point of each is stored. If the input model is a single value the result will be a single value. If the input is a List the result will be a List.")
 public class ConvertModelToPoints extends CvStage {
     @Attribute(required = false)
     private String modelStageName;
@@ -62,7 +59,8 @@ public class ConvertModelToPoints extends CvStage {
             RotatedRect rotatedRect = (RotatedRect) pointHolder;
             return rotatedRect.center;
         }
-        else
+        else {
             throw new Exception("Don't know how to convert " + pointHolder + "to Point.");
+        }
     }
 }

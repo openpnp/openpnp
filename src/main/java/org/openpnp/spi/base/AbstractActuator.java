@@ -64,4 +64,10 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
     public void moveToSafeZ() throws Exception {
         moveToSafeZ(getHead().getMachine().getSpeed());
     }
+
+    @Override
+    public String read() throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

@@ -1,7 +1,9 @@
 package org.openpnp;
 
 import java.awt.Desktop;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.FileSystems;
@@ -22,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -31,6 +34,8 @@ import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.io.Files;
+
+import bsh.engine.BshScriptEngineFactory;
 
 public class Scripting {
     JMenu menu;
@@ -50,6 +55,13 @@ public class Scripting {
                 extensions.add(ext.toLowerCase());
             }
         }
+        
+        // Hack to fix BSH on Windows. See https://github.com/openpnp/openpnp/issues/462
+        manager.registerEngineExtension("bsh", new BshScriptEngineFactory());
+        manager.registerEngineExtension("java", new BshScriptEngineFactory());
+        extensions.add("bsh");
+        extensions.add("java");
+
         this.extensions = extensions.toArray(new String[] {});
 
         this.scriptsDirectory =
@@ -59,27 +71,33 @@ public class Scripting {
         // over.
         if (!getScriptsDirectory().exists()) {
             getScriptsDirectory().mkdirs();
-            // TODO: It would be better if we just copied all the files from the Examples
-            // directory in the jar, but this is relatively difficult to do.
-            // There is some information on how to do it in:
-            // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
-            File examplesDir = new File(getScriptsDirectory(), "Examples");
-            examplesDir.mkdirs();
-            String[] exampleScripts =
-                    new String[] {"Call_Java.js", "Hello_World.js", "Print_Scripting_Info.js",
-                            "Reset_Strip_Feeders.js", "Move_Machine.js", "Utility.js"};
-            for (String name : exampleScripts) {
-                try {
-                    FileUtils.copyURLToFile(
-                            ClassLoader.getSystemResource("scripts/Examples/" + name),
-                            new File(examplesDir, name));
+        }
+
+        // TODO: It would be better if we just copied all the files from the Examples
+        // directory in the jar, but this is relatively difficult to do.
+        // There is some information on how to do it in:
+        // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
+        File examplesDir = new File(getScriptsDirectory(), "Examples");
+        examplesDir.mkdirs();
+        String[] exampleScripts =
+                new String[] {"JavaScript/Call_Java.js", "JavaScript/Hello_World.js", "JavaScript/Print_Scripting_Info.js",
+                        "JavaScript/Reset_Strip_Feeders.js", "JavaScript/Move_Machine.js", "JavaScript/Utility.js", "JavaScript/QrCodeXout.js",
+                        "Python/Print_Hallo_OpenPnP.py", "Python/Print_Methods_Vars.py",
+                        "Python/Print_Nozzle_Info.py"};
+        for (String name : exampleScripts) {
+            try {
+                File file = new File(examplesDir, name);
+                if (file.exists()) {
+                    continue;
                 }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("scripts/Examples/" + name),
+                        file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        
+
         this.eventsDirectory = new File(scriptsDirectory, "Events");
         if (!eventsDirectory.exists()) {
             eventsDirectory.mkdirs();
@@ -89,7 +107,7 @@ public class Scripting {
         try {
             watcher = FileSystems.getDefault().newWatchService();
             watchDirectory(getScriptsDirectory());
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 for (;;) {
                     try {
                         // wait for an event
@@ -103,24 +121,34 @@ public class Scripting {
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            thread.setDaemon(true);
+            thread.start();
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
-    
+
     public void setMenu(JMenu menu) {
         this.menu = menu;
         // Add a separator and the Refresh Scripts and Open Scripts Directory items
         menu.addSeparator();
         menu.add(new AbstractAction("Refresh Scripts") {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_R);
+            }
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 synchronizeMenu(menu, getScriptsDirectory());
             }
         });
         menu.add(new AbstractAction("Open Scripts Directory") {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_O);
+            }
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -138,7 +166,7 @@ public class Scripting {
     public File getScriptsDirectory() {
         return scriptsDirectory;
     }
-    
+
     private void watchDirectory(File directory) {
         try {
             directory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
@@ -185,6 +213,9 @@ public class Scripting {
             if (d.equals(eventsDirectory)) {
                 continue;
             }
+            if (new File(d, ".ignore").exists()) {
+                continue;
+            }
             if (!itemNames.contains(d.getName())) {
                 JMenu m = new JMenu(d.getName());
                 addSorted(menu, m);
@@ -227,12 +258,20 @@ public class Scripting {
         }
         return items;
     }
+
+    public void execute(String script) throws Exception {
+        execute(new File(script), null);
+    }
     
-    private void execute(File script) throws Exception {
+    public void execute(File script) throws Exception {
         execute(script, null);
     }
-
-    private void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
+    
+    public void execute(String script, Map<String, Object> additionalGlobals) throws Exception {
+      execute(new File(script), additionalGlobals );
+    }
+    
+    public void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
         ScriptEngine engine =
                 manager.getEngineByExtension(Files.getFileExtension(script.getName()));
 
@@ -240,7 +279,7 @@ public class Scripting {
         engine.put("machine", Configuration.get().getMachine());
         engine.put("gui", MainFrame.get());
         engine.put("scripting", this);
-        
+
         if (additionalGlobals != null) {
             for (String name : additionalGlobals.keySet()) {
                 engine.put(name, additionalGlobals.get(name));
@@ -251,7 +290,7 @@ public class Scripting {
             engine.eval(reader);
         }
     }
-    
+
     public void on(String event, Map<String, Object> globals) throws Exception {
         Logger.trace("Scripting.on " + event);
         for (File script : FileUtils.listFiles(eventsDirectory, extensions, false)) {

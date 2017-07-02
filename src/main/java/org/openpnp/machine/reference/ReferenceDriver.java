@@ -106,6 +106,17 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
 
     /**
+     * Read a String value from the given Actuator.
+     * 
+     * @param actuator
+     * @return
+     * @throws Exception
+     */
+    public default String actuatorRead(ReferenceActuator actuator) throws Exception {
+        return null;
+    }
+
+    /**
      * Attempts to enable the Driver, turning on all outputs.
      * 
      * @param enabled
@@ -115,6 +126,6 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
 
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
             Location endLocation, long dispenseTimeMilliseconds) throws Exception;
-    
+
     public default void createDefaults() {};
 }

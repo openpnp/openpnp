@@ -97,25 +97,32 @@ public class Ransac {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             RansacLine other = (RansacLine) obj;
             if (a == null) {
-                if (other.a != null)
+                if (other.a != null) {
                     return false;
+                }
             }
-            else if (!a.equals(other.a))
+            else if (!a.equals(other.a)) {
                 return false;
+            }
             if (b == null) {
-                if (other.b != null)
+                if (other.b != null) {
                     return false;
+                }
             }
-            else if (!b.equals(other.b))
+            else if (!b.equals(other.b)) {
                 return false;
+            }
             return true;
         }
 

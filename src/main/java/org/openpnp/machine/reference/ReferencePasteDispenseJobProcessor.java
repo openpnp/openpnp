@@ -103,8 +103,6 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
 
     protected Head head;
 
-    protected PasteDispenser pasteDispenser;
-
     protected List<JobDispense> jobDispenses = new ArrayList<>();
 
     protected Map<BoardLocation, Location> boardLocationFiducialOverrides = new HashMap<>();
@@ -135,8 +133,9 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     }
 
     public synchronized boolean next() throws Exception {
-        if(fsm.getState() == State.Uninitialized)
+        if(fsm.getState() == State.Uninitialized) {
             return false;
+        }
 
         try {
             fsm.send(Message.Next);
@@ -208,7 +207,6 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         // Create some shortcuts for things that won't change during the run
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
-        this.pasteDispenser = this.head.getDefaultPasteDispenser();
         this.jobDispenses.clear();
         this.boardLocationFiducialOverrides.clear();
 
@@ -285,6 +283,8 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
 
             Location dispenseLocation =
                     Utils2D.calculateBoardPlacementLocation(boardLocation, boardPad.getLocation());
+            
+            PasteDispenser pasteDispenser = head.getDefaultPasteDispenser();
 
             MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
 

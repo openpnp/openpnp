@@ -23,13 +23,10 @@ package org.openpnp.machine.reference.vision;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -40,7 +37,6 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.OpenCvVisionProviderConfigurationWizard;
-import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.util.ImageUtils;
@@ -116,7 +112,7 @@ public class OpenCvVisionProvider implements VisionProvider {
         double rangeMax = maxVal;
 
         List<TemplateMatch> matches = new ArrayList<>();
-        for (Point point : matMaxima(resultMat, rangeMin, rangeMax)) {
+        for (Point point : OpenCvUtils.matMaxima(resultMat, rangeMin, rangeMax)) {
             TemplateMatch match = new TemplateMatch();
             int x = point.x;
             int y = point.y;
@@ -144,10 +140,10 @@ public class OpenCvVisionProvider implements VisionProvider {
         });
 
         long t = System.currentTimeMillis();
-        saveDebugImage(t + "_0_template", templateMat);
-        saveDebugImage(t + "_1_camera", imageMat);
-        saveDebugImage(t + "_2_result", resultMat);
-        saveDebugImage(t + "_3_debug", debugMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "template", templateMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "camera", imageMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "result", resultMat);
+        OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "getTemplateMatches", "debug", debugMat);
 
         return matches;
     }
@@ -186,20 +182,6 @@ public class OpenCvVisionProvider implements VisionProvider {
         return new Point[] {new Point(((int) matchLoc.x) + roiX, ((int) matchLoc.y) + roiY)};
     }
 
-    protected void saveDebugImage(String name, Mat mat) {
-        if (LogUtils.isDebugEnabled()) {
-            try {
-                BufferedImage debugImage = OpenCvUtils.toBufferedImage(mat);
-                File file = Configuration.get().createResourceFile(OpenCvVisionProvider.class,
-                        name + "_", ".png");
-                ImageIO.write(debugImage, "PNG", file);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void locateTemplateMatchesDebug(Mat roiImage, Mat templateImage,
             org.opencv.core.Point matchLoc) {
         if (LogUtils.isDebugEnabled()) {
@@ -209,125 +191,11 @@ public class OpenCvVisionProvider implements VisionProvider {
                                 matchLoc.y + templateImage.rows()),
                         new Scalar(0, 255, 0));
 
-                BufferedImage debugImage = OpenCvUtils.toBufferedImage(roiImage);
-                File file = Configuration.get().createResourceFile(OpenCvVisionProvider.class,
-                        "debug_", ".png");
-                ImageIO.write(debugImage, "PNG", file);
-                Logger.debug("Debug image filename {}", file);
+                OpenCvUtils.saveDebugImage(OpenCvVisionProvider.class, "locateTemplateMatches", "debug", roiImage);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    enum MinMaxState {
-        BEFORE_INFLECTION,
-        AFTER_INFLECTION
-    }
-
-    static List<Point> matMaxima(Mat mat, double rangeMin, double rangeMax) {
-        List<Point> locations = new ArrayList<>();
-
-        int rEnd = mat.rows() - 1;
-        int cEnd = mat.cols() - 1;
-
-        // CHECK EACH ROW MAXIMA FOR LOCAL 2D MAXIMA
-        for (int r = 0; r <= rEnd; r++) {
-            MinMaxState state = MinMaxState.BEFORE_INFLECTION;
-            double curVal = mat.get(r, 0)[0];
-            for (int c = 1; c <= cEnd; c++) {
-                double val = mat.get(r, c)[0];
-
-                if (val == curVal) {
-                    continue;
-                }
-                else if (curVal < val) {
-                    if (state == MinMaxState.BEFORE_INFLECTION) {
-                        // n/a
-                    }
-                    else {
-                        state = MinMaxState.BEFORE_INFLECTION;
-                    }
-                }
-                else { // curVal > val
-                    if (state == MinMaxState.BEFORE_INFLECTION) {
-                        if (rangeMin <= curVal && curVal <= rangeMax) { // ROW
-                                                                        // MAXIMA
-                            if (0 < r && (mat.get(r - 1, c - 1)[0] >= curVal
-                                    || mat.get(r - 1, c)[0] >= curVal)) {
-                                // cout << "reject:r-1 " << r << "," << c-1 <<
-                                // endl;
-                                // - x x
-                                // - - -
-                                // - - -
-                            }
-                            else if (r < rEnd && (mat.get(r + 1, c - 1)[0] > curVal
-                                    || mat.get(r + 1, c)[0] > curVal)) {
-                                // cout << "reject:r+1 " << r << "," << c-1 <<
-                                // endl;
-                                // - - -
-                                // - - -
-                                // - x x
-                            }
-                            else if (1 < c && (0 < r && mat.get(r - 1, c - 2)[0] >= curVal
-                                    || mat.get(r, c - 2)[0] > curVal
-                                    || r < rEnd && mat.get(r + 1, c - 2)[0] > curVal)) {
-                                // cout << "reject:c-2 " << r << "," << c-1 <<
-                                // endl;
-                                // x - -
-                                // x - -
-                                // x - -
-                            }
-                            else {
-                                locations.add(new Point(c - 1, r));
-                            }
-                        }
-                        state = MinMaxState.AFTER_INFLECTION;
-                    }
-                    else {
-                        // n/a
-                    }
-                }
-
-                curVal = val;
-            }
-
-            // PROCESS END OF ROW
-            if (state == MinMaxState.BEFORE_INFLECTION) {
-                if (rangeMin <= curVal && curVal <= rangeMax) { // ROW MAXIMA
-                    if (0 < r && (mat.get(r - 1, cEnd - 1)[0] >= curVal
-                            || mat.get(r - 1, cEnd)[0] >= curVal)) {
-                        // cout << "rejectEnd:r-1 " << r << "," << cEnd-1 <<
-                        // endl;
-                        // - x x
-                        // - - -
-                        // - - -
-                    }
-                    else if (r < rEnd && (mat.get(r + 1, cEnd - 1)[0] > curVal
-                            || mat.get(r + 1, cEnd)[0] > curVal)) {
-                        // cout << "rejectEnd:r+1 " << r << "," << cEnd-1 <<
-                        // endl;
-                        // - - -
-                        // - - -
-                        // - x x
-                    }
-                    else if (1 < r && mat.get(r - 1, cEnd - 2)[0] >= curVal
-                            || mat.get(r, cEnd - 2)[0] > curVal
-                            || r < rEnd && mat.get(r + 1, cEnd - 2)[0] > curVal) {
-                        // cout << "rejectEnd:cEnd-2 " << r << "," << cEnd-1 <<
-                        // endl;
-                        // x - -
-                        // x - -
-                        // x - -
-                    }
-                    else {
-                        locations.add(new Point(cEnd, r));
-                    }
-                }
-            }
-        }
-
-        return locations;
     }
 }

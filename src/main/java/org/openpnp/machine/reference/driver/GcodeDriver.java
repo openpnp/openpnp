@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.driver;
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +14,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JOptionPane;
+
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceDriver;
@@ -21,7 +28,10 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
-import org.openpnp.machine.reference.driver.wizards.GcodeDriverConfigurationWizard;
+import org.openpnp.machine.reference.ReferencePasteDispenser;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverConsole;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverGcodes;
+import org.openpnp.machine.reference.driver.wizards.GcodeDriverSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -36,6 +46,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 
 import com.google.common.base.Joiner;
 
@@ -58,8 +69,14 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        // TODO: Remove the vacuum stuff after 2017-05-01, see https://github.com/openpnp/openpnp/issues/447
         VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
-        VACUUM_REPORT_REGEX(true);
+        VACUUM_REPORT_REGEX(true),
+        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_REGEX(true),
+        PRE_DISPENSE_COMMAND(false, "DispenseTime"),
+        DISPENSE_COMMAND(false, "DispenseTime"),
+        POST_DISPENSE_COMMAND(false, "DispenseTime");
 
         final boolean headMountable;
         final String[] variableNames;
@@ -126,6 +143,18 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
     @Attribute(required = false)
     protected int maxFeedRate = 1000;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetX = -1;
+    
+    @Attribute(required = false)
+    protected double backlashOffsetY = -1;
+    
+    @Attribute(required = false)
+    protected double nonSquarenessFactor = 0;
+    
+    @Attribute(required = false)
+    protected double backlashFeedRateFactor = 0.1;
 
     @Attribute(required = false)
     protected int timeoutMilliseconds = 5000;
@@ -140,7 +169,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public ArrayList<Command> commands = new ArrayList<>();
 
     @ElementList(required = false)
-    protected List<ReferenceDriver> subDrivers = new ArrayList<>();
+    protected List<GcodeDriver> subDrivers = new ArrayList<>();
 
     @ElementList(required = false)
     protected List<Axis> axes = new ArrayList<>();
@@ -150,7 +179,15 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     private boolean connected;
     private LinkedBlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private Set<Nozzle> pickedNozzles = new HashSet<>();
-
+    private GcodeDriver parent = null;
+    
+    @Commit
+    public void commit() {
+        for (GcodeDriver driver : subDrivers) {
+            driver.parent = this;
+        }
+    }
+    
     public void createDefaults() {
         axes = new ArrayList<>();
         axes.add(new Axis("x", Axis.Type.X, 0, "*"));
@@ -170,6 +207,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         connected = false;
         readerThread = new Thread(this);
+        readerThread.setDaemon(true);
         readerThread.start();
 
         // Wait a bit while the controller starts up
@@ -177,7 +215,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         // Consume any startup messages
         try {
-            while (!sendCommand(null, 250).isEmpty());
+            while (!sendCommand(null, 250).isEmpty()) {
+                
+            }
         }
         catch (Exception e) {
 
@@ -209,6 +249,29 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         for (ReferenceDriver driver : subDrivers) {
             driver.setEnabled(enabled);
         }
+    }
+
+    @Override
+    public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
+        Logger.debug("dispense({}, {}, {}, {})", new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
+
+        String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
+        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
+
+        sendGcode(command);
+
+        for (ReferenceDriver driver: subDrivers )
+        {
+            driver.dispense(dispenser,startLocation,endLocation,dispenseTimeMilliseconds);
+        }
+
+        command = getCommand(null, CommandType.DISPENSE_COMMAND);
+        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
+        sendGcode(command);
+
+        command = getCommand(null, CommandType.POST_DISPENSE_COMMAND);
+        command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
+        sendGcode(command);
     }
 
     @Override
@@ -394,8 +457,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         if (xAxis != null || yAxis != null || zAxis != null || rotationAxis != null) {
 
             // For each included axis, if the axis has a transform, transform the target coordinate
-            // to
-            // it's raw value.
+            // to it's raw value.
             if (xAxis != null && xAxis.getTransform() != null) {
                 x = xAxis.getTransform().toRaw(xAxis, hm, x);
             }
@@ -409,60 +471,86 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
                 rotation = rotationAxis.getTransform().toRaw(rotationAxis, hm, rotation);
             }
 
-            boolean haveToMove = false;
-
             String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
             command = substituteVariable(command, "Id", hm.getId());
             command = substituteVariable(command, "Name", hm.getName());
             command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+            command = substituteVariable(command, "BacklashFeedRate", maxFeedRate * speed * backlashFeedRateFactor);
 
-            if (xAxis == null || xAxis.getCoordinate() == x) {
-                command = substituteVariable(command, "X", null);
+            /**
+             * NSF gets applied to X and is multiplied by Y
+             * 
+             */
+            
+            boolean includeX = false, includeY = false, includeZ = false, includeRotation = false;
+            
+            // Primary checks to see if an axis should move
+            if (xAxis != null && xAxis.getCoordinate() != x) {
+                includeX = true;
             }
-            else {
-                command = substituteVariable(command, "X", x);
-                haveToMove = true;
+            if (yAxis != null && yAxis.getCoordinate() != y) {
+                includeY = true;
+            }
+            if (zAxis != null && zAxis.getCoordinate() != z) {
+                includeZ = true;
+            }
+            if (rotationAxis != null && rotationAxis.getCoordinate() != rotation) {
+                includeRotation = true;
+            }
+
+            // If Y is moving and there is a non squareness factor we also need to move X, even if
+            // no move was intended for X.
+            if (includeY && nonSquarenessFactor != 0 && xAxis != null) {
+                includeX = true;
+            }
+            
+            if (includeX) {
+                command = substituteVariable(command, "X", x + nonSquarenessFactor * y);
+                command = substituteVariable(command, "BacklashOffsetX", x + backlashOffsetX + nonSquarenessFactor * y); // Backlash Compensation
                 if (xAxis.getPreMoveCommand() != null) {
                     sendGcode(xAxis.getPreMoveCommand());
                 }
                 xAxis.setCoordinate(x);
             }
-
-            if (yAxis == null || yAxis.getCoordinate() == y) {
-                command = substituteVariable(command, "Y", null);
-            }
             else {
+                command = substituteVariable(command, "X", null);
+                command = substituteVariable(command, "BacklashOffsetX", null); // Backlash Compensation
+            }
+
+            if (includeY) {
                 command = substituteVariable(command, "Y", y);
-                haveToMove = true;
+                command = substituteVariable(command, "BacklashOffsetY", y + backlashOffsetY); // Backlash Compensation
                 if (yAxis.getPreMoveCommand() != null) {
                     sendGcode(yAxis.getPreMoveCommand());
                 }
             }
-
-            if (zAxis == null || zAxis.getCoordinate() == z) {
-                command = substituteVariable(command, "Z", null);
-            }
             else {
+                command = substituteVariable(command, "Y", null);
+                command = substituteVariable(command, "BacklashOffsetY", null); // Backlash Compensation
+            }
+
+            if (includeZ) {
                 command = substituteVariable(command, "Z", z);
-                haveToMove = true;
                 if (zAxis.getPreMoveCommand() != null) {
                     sendGcode(zAxis.getPreMoveCommand());
                 }
             }
-
-            if (rotationAxis == null || rotationAxis.getCoordinate() == rotation) {
-                command = substituteVariable(command, "Rotation", null);
-            }
             else {
+                command = substituteVariable(command, "Z", null);
+            }
+
+            if (includeRotation) {
                 command = substituteVariable(command, "Rotation", rotation);
-                haveToMove = true;
                 if (rotationAxis.getPreMoveCommand() != null) {
                     sendGcode(rotationAxis.getPreMoveCommand());
                 }
             }
+            else {
+                command = substituteVariable(command, "Rotation", null);
+            }
 
             // Only give a command when move is necessary
-            if (haveToMove) {
+            if (includeX || includeY || includeZ || includeRotation) {
 
                 List<String> responses = sendGcode(command);
 
@@ -522,40 +610,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return false;
     }
 
-    private Integer readVacuumLevel(ReferenceNozzle nozzle) throws Exception {
-        String command = getCommand(nozzle, CommandType.VACUUM_REQUEST_COMMAND);
-        String regex = getCommand(nozzle, CommandType.VACUUM_REPORT_REGEX);
-        if (command == null || regex == null) {
-            return null;
-        }
-
-        ReferenceNozzleTip nt = nozzle.getNozzleTip();
-
-        command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
-        command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
-
-        List<String> responses = sendGcode(command);
-
-        for (String line : responses) {
-            Logger.trace("Check {}", line);
-            if (line.matches(regex)) {
-                Logger.trace("Vacuum report: {}", line);
-                Matcher matcher = Pattern.compile(regex).matcher(line);
-                matcher.matches();
-
-                try {
-                    String s = matcher.group("Vacuum");
-                    return Integer.valueOf(s);
-                }
-                catch (Exception e) {
-                    Logger.warn("Error processing vacuum report", e);
-                }
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public void pick(ReferenceNozzle nozzle) throws Exception {
         pickedNozzles.add(nozzle);
@@ -572,13 +626,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
 
         sendGcode(command);
-
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel < nt.getVacuumLevelPartOn()) {
-            throw new Exception(String.format(
-                    "Pick failure: Vacuum level %d is lower than expected value of %d for part on. Part may have failed to pick.",
-                    vacuumLevel, nt.getVacuumLevelPartOn()));
-        }
 
         for (ReferenceDriver driver : subDrivers) {
             driver.pick(nozzle);
@@ -597,13 +644,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         command = substituteVariable(command, "VacuumLevelPartOn", nt.getVacuumLevelPartOn());
         command = substituteVariable(command, "VacuumLevelPartOff", nt.getVacuumLevelPartOff());
         sendGcode(command);
-
-        Integer vacuumLevel = readVacuumLevel(nozzle);
-        if (vacuumLevel != null && vacuumLevel > nt.getVacuumLevelPartOff()) {
-            throw new Exception(String.format(
-                    "Place failure: Vacuum level %d is higher than expected value of %d for part off. Part may be stuck to nozzle.",
-                    vacuumLevel, nt.getVacuumLevelPartOff()));
-        }
 
         pickedNozzles.remove(nozzle);
         if (pickedNozzles.size() < 1) {
@@ -646,6 +686,49 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
             driver.actuate(actuator, value);
         }
     }
+    
+    @Override
+    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
+        String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
+        if (command == null || regex == null) {
+            // If the command or regex is null we'll query the subdrivers. The first
+            // to respond with a non-null value wins.
+            for (ReferenceDriver driver : subDrivers) {
+                String val = driver.actuatorRead(actuator);
+                if (val != null) {
+                    return val;
+                }
+            }
+            // If none of the subdrivers returned a value there's nothing left to
+            // do, so return null.
+            return null;
+        }
+
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+
+        List<String> responses = sendGcode(command);
+
+        for (String line : responses) {
+            if (line.matches(regex)) {
+                Logger.trace("actuatorRead response: {}", line);
+                Matcher matcher = Pattern.compile(regex).matcher(line);
+                matcher.matches();
+
+                try {
+                    String s = matcher.group("Value");
+                    return s;
+                }
+                catch (Exception e) {
+                    throw new Exception("Failed to read Actuator " + actuator.getName(), e);
+                }
+            }
+        }
+
+        return null;
+    }
 
     public synchronized void disconnect() {
         disconnectRequested = true;
@@ -653,7 +736,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         try {
             if (readerThread != null && readerThread.isAlive()) {
-                readerThread.join();
+                readerThread.join(3000);
             }
         }
         catch (Exception e) {
@@ -697,11 +780,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return responses;
     }
 
-    protected List<String> sendCommand(String command) throws Exception {
+    public List<String> sendCommand(String command) throws Exception {
         return sendCommand(command, timeoutMilliseconds);
     }
 
-    protected List<String> sendCommand(String command, long timeout) throws Exception {
+    public List<String> sendCommand(String command, long timeout) throws Exception {
         List<String> responses = new ArrayList<>();
 
         // Read any responses that might be queued up so that when we wait
@@ -763,8 +846,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // Read any additional responses that came in after the initial one.
         responseQueue.drainTo(responses);
 
-        Logger.debug("sendCommand({}, {}) => {}",
-                new Object[] {command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
+        Logger.debug("sendCommand({} {}, {}) => {}",
+                new Object[] {portName, command, timeout == Long.MAX_VALUE ? -1 : timeout, responses});
         return responses;
     }
 
@@ -853,7 +936,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        if (!subDrivers.isEmpty()) {
+        if (parent == null) {
             children.add(new SimplePropertySheetHolder("Sub-Drivers", subDrivers));
         }
         return children.toArray(new PropertySheetHolder[] {});
@@ -862,8 +945,120 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial"),
-                new PropertySheetWizardAdapter(new GcodeDriverConfigurationWizard(this), "Gcode")};
+                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
+                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "General Settings"),
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(super.getConfigurationWizard(), "Serial")
+        };
+    }
+    
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        if (parent == null) {
+            return new Action[] {addSubDriverAction};
+        }
+        else {
+            return new Action[] {deleteSubDriverAction};
+        }
+    }
+    
+    public Action addSubDriverAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.add);
+            putValue(NAME, "Add Sub-Driver...");
+            putValue(SHORT_DESCRIPTION, "Add a new sub-driver.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            GcodeDriver driver = new GcodeDriver();
+            driver.parent = GcodeDriver.this;
+            subDrivers.add(driver);
+            fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
+        }
+    };
+
+    public Action deleteSubDriverAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Sub-Driver...");
+            putValue(SHORT_DESCRIPTION, "Delete the selected sub-driver.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Are you sure you want to delete the selected sub-driver?",
+                    "Delete Sub-Driver?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                parent.subDrivers.remove(GcodeDriver.this);
+                parent.fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, GcodeDriver.this, null);
+            }
+        }
+    };
+
+    public LengthUnit getUnits() {
+        return units;
+    }
+
+    public void setUnits(LengthUnit units) {
+        this.units = units;
+    }
+
+    public double getBacklashOffsetX() {
+        return backlashOffsetX;
+    }
+    
+    public void setBacklashOffsetX(double BacklashOffsetX) {
+        this.backlashOffsetX = BacklashOffsetX;
+    }
+    
+    public double getBacklashOffsetY() {
+        return backlashOffsetY;
+    }
+    
+    public void setBacklashOffsetY(double BacklashOffsetY) {
+        this.backlashOffsetY = BacklashOffsetY;
+    }
+    
+    public double getBacklashFeedRateFactor() {
+        return backlashFeedRateFactor;
+    }
+    
+    public void setBacklashFeedRateFactor(double BacklashFeedRateFactor) {
+        this.backlashFeedRateFactor = BacklashFeedRateFactor;
+    }
+    
+    public void setNonSquarenessFactor(double NonSquarenessFactor) {
+        this.nonSquarenessFactor = NonSquarenessFactor;
+    }
+    
+    public double getNonSquarenessFactor() {
+        return this.nonSquarenessFactor;
+    }
+    
+    public int getMaxFeedRate() {
+        return maxFeedRate;
+    }
+
+    public void setMaxFeedRate(int maxFeedRate) {
+        this.maxFeedRate = maxFeedRate;
+    }
+
+    public int getTimeoutMilliseconds() {
+        return timeoutMilliseconds;
+    }
+
+    public void setTimeoutMilliseconds(int timeoutMilliseconds) {
+        this.timeoutMilliseconds = timeoutMilliseconds;
+    }
+
+    public int getConnectWaitTimeMilliseconds() {
+        return connectWaitTimeMilliseconds;
+    }
+
+    public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
+        this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
 
     public static class Axis {
@@ -1046,8 +1241,9 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         @Override
         public double toRaw(Axis axis, HeadMountable hm, double transformedCoordinate) {
-            double raw = Math.toDegrees(
-                    Math.asin((transformedCoordinate - camWheelRadius - camWheelGap) / camRadius));
+            double raw = (transformedCoordinate - camWheelRadius - camWheelGap) / camRadius;
+            raw = Math.min(Math.max(raw, -1), 1);
+            raw = Math.toDegrees(Math.asin(raw));
             if (hm.getId().equals(negatedHeadMountableId)) {
                 raw = -raw;
             }

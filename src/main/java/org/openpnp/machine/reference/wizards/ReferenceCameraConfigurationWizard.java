@@ -25,6 +25,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
+import org.simpleframework.xml.Attribute;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -146,6 +147,12 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblRotation = new JLabel("Rotation");
@@ -200,6 +207,35 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         
         lblNewLabel_1 = new JLabel("(Use 0 for no cropping)");
         panelGeneral.add(lblNewLabel_1, "5, 14");
+        
+        lblScaleWidth = new JLabel("Scale Width");
+        panelGeneral.add(lblScaleWidth, "2, 16, right, default");
+        
+        scaleWidthTf = new JTextField();
+        panelGeneral.add(scaleWidthTf, "4, 16, fill, default");
+        scaleWidthTf.setColumns(10);
+        
+        lbluseFor = new JLabel("(Use 0 for no scaling)");
+        panelGeneral.add(lbluseFor, "5, 16");
+        
+        lblScaleHeight = new JLabel("Scale Height");
+        panelGeneral.add(lblScaleHeight, "2, 18, right, default");
+        
+        scaleHeightTf = new JTextField();
+        panelGeneral.add(scaleHeightTf, "4, 18, fill, default");
+        scaleHeightTf.setColumns(10);
+        
+        label = new JLabel("(Use 0 for no scaling)");
+        panelGeneral.add(label, "5, 18");
+        
+        lblDeinterlace = new JLabel("De-Interlace");
+        panelGeneral.add(lblDeinterlace, "2, 20");
+        
+        deinterlaceChk = new JCheckBox("");
+        panelGeneral.add(deinterlaceChk, "4, 20");
+        
+        lblremovesInterlacingFrom = new JLabel("(Removes interlacing from stacked frames)");
+        panelGeneral.add(lblremovesInterlacingFrom, "5, 20");
 
         panelLocation = new JPanel();
         panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
@@ -269,12 +305,15 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         try {
             // Causes WindowBuilder to fail, so just throw away the error.
             if (referenceCamera.getHead() == null) {
+                // Fixed camera, add the location fields and buttons and turn off offsets.
                 locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
                         textFieldLocationY, textFieldLocationZ, textFieldLocationRotation);
                 panelLocation.add(locationButtonsPanel, "10, 4, fill, fill");
-                panelOffsets.setVisible(false);
+                panelOffsets.setVisible(false);    
+                panelSafeZ.setVisible(false);
             }
             else {
+                // Moving camera, hide location and show only offsets.
                 panelLocation.setVisible(false);
             }
         }
@@ -309,6 +348,7 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
             addWrappedBinding(headOffsets, "lengthX", textFieldOffX, "text", lengthConverter);
             addWrappedBinding(headOffsets, "lengthY", textFieldOffY, "text", lengthConverter);
             addWrappedBinding(headOffsets, "lengthZ", textFieldOffZ, "text", lengthConverter);
+            addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         }
 
         addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
@@ -316,9 +356,12 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(referenceCamera, "offsetY", textFieldOffsetY, "text", intConverter);
         addWrappedBinding(referenceCamera, "flipX", chckbxFlipX, "selected");
         addWrappedBinding(referenceCamera, "flipY", checkBoxFlipY, "selected");
-        addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         addWrappedBinding(referenceCamera, "cropWidth", cropWidthTextField, "text", intConverter);
         addWrappedBinding(referenceCamera, "cropHeight", cropHeightTextField, "text", intConverter);
+        addWrappedBinding(referenceCamera, "scaleWidth", scaleWidthTf, "text", intConverter);
+        addWrappedBinding(referenceCamera, "scaleHeight", scaleHeightTf, "text", intConverter);
+        addWrappedBinding(referenceCamera, "deinterlace", deinterlaceChk, "selected");
+
 
         bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled",
                 calibrationEnabledChk, "selected");
@@ -340,6 +383,8 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
         ComponentDecorators.decorateWithAutoSelect(cropWidthTextField);
         ComponentDecorators.decorateWithAutoSelect(cropHeightTextField);
+        ComponentDecorators.decorateWithAutoSelect(scaleWidthTf);
+        ComponentDecorators.decorateWithAutoSelect(scaleHeightTf);
     }
 
     private Action startCalibration = new AbstractAction("Start Lens Calibration") {
@@ -391,4 +436,13 @@ public class ReferenceCameraConfigurationWizard extends AbstractConfigurationWiz
     private JTextField cropHeightTextField;
     private JLabel lblNewLabel;
     private JLabel lblNewLabel_1;
+    private JLabel lblScaleWidth;
+    private JLabel lblScaleHeight;
+    private JTextField scaleWidthTf;
+    private JTextField scaleHeightTf;
+    private JLabel lbluseFor;
+    private JLabel label;
+    private JCheckBox deinterlaceChk;
+    private JLabel lblDeinterlace;
+    private JLabel lblremovesInterlacingFrom;
 }

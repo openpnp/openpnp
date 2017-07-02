@@ -55,21 +55,37 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private double changerStartSpeed = 1.0D;
+    
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private double changerMidSpeed = 1.0D;
+    
     @Element(required = false)
     private Location changerMidLocation2;
+    
+    @Element(required = false)
+    private double changerMidSpeed2 = 1.0D;
+    
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
+    
+    @Element(required = false)
+    private double changerEndSpeed = 1.0D;
+    
     @Element(required = false)
     private Calibration calibration = new Calibration();
 
 
     @Element(required = false)
-    private int vacuumLevelPartOn;
+    private double vacuumLevelPartOn;
 
     @Element(required = false)
-    private int vacuumLevelPartOff;
+    private double vacuumLevelPartOff;
     
     private Set<org.openpnp.model.Package> compatiblePackages = new HashSet<>();
 
@@ -102,7 +118,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public boolean canHandle(Part part) {
         boolean result =
                 allowIncompatiblePackages || compatiblePackages.contains(part.getPackage());
-        Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
+        // Logger.debug("{}.canHandle({}) => {}", getName(), part.getId(), result);
         return result;
     }
 
@@ -189,6 +205,38 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void setChangerEndLocation(Location changerEndLocation) {
         this.changerEndLocation = changerEndLocation;
     }
+    
+    public double getChangerStartSpeed() {
+        return changerStartSpeed;
+    }
+
+    public void setChangerStartSpeed(double changerStartSpeed) {
+        this.changerStartSpeed = changerStartSpeed;
+    }
+
+    public double getChangerMidSpeed() {
+        return changerMidSpeed;
+    }
+
+    public void setChangerMidSpeed(double changerMidSpeed) {
+        this.changerMidSpeed = changerMidSpeed;
+    }
+
+    public double getChangerMidSpeed2() {
+        return changerMidSpeed2;
+    }
+
+    public void setChangerMidSpeed2(double changerMidSpeed2) {
+        this.changerMidSpeed2 = changerMidSpeed2;
+    }
+
+    public double getChangerEndSpeed() {
+        return changerEndSpeed;
+    }
+
+    public void setChangerEndSpeed(double changerEndSpeed) {
+        this.changerEndSpeed = changerEndSpeed;
+    }
 
     private Nozzle getParentNozzle() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
@@ -202,20 +250,20 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-
-    public int getVacuumLevelPartOn() {
+	
+    public double getVacuumLevelPartOn() {
         return vacuumLevelPartOn;
     }
 
-    public void setVacuumLevelPartOn(int vacuumLevelPartOn) {
+    public void setVacuumLevelPartOn(double vacuumLevelPartOn) {
         this.vacuumLevelPartOn = vacuumLevelPartOn;
     }
 
-    public int getVacuumLevelPartOff() {
+    public double getVacuumLevelPartOff() {
         return vacuumLevelPartOff;
     }
 
-    public void setVacuumLevelPartOff(int vacuumLevelPartOff) {
+    public void setVacuumLevelPartOff(double vacuumLevelPartOff) {
         this.vacuumLevelPartOff = vacuumLevelPartOff;
     }
 
@@ -225,7 +273,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public Action loadAction = new AbstractAction("Load") {
         {
-            putValue(SMALL_ICON, Icons.load);
+            putValue(SMALL_ICON, Icons.nozzleTipLoad);
             putValue(NAME, "Load");
             putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
         }
@@ -240,7 +288,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public Action unloadAction = new AbstractAction("Unload") {
         {
-            putValue(SMALL_ICON, Icons.unload);
+            putValue(SMALL_ICON, Icons.nozzleTipUnload);
             putValue(NAME, "Unload");
             putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
         }
@@ -255,7 +303,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
-            putValue(SMALL_ICON, Icons.delete);
+            putValue(SMALL_ICON, Icons.nozzleTipRemove);
             putValue(NAME, "Delete Nozzle Tip");
             putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle tip.");
         }
@@ -379,7 +427,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
         private Location findCircle() throws Exception {
             Camera camera = VisionUtils.getBottomVisionCamera();
-            pipeline.setCamera(camera);
+            pipeline.setProperty("camera", camera);
             pipeline.process();
             Location location;
             Object result = pipeline.getResult("result").model;
@@ -472,7 +520,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
 
         public CvPipeline getPipeline() throws Exception {
-            pipeline.setCamera(VisionUtils.getBottomVisionCamera());
+            pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
             return pipeline;
         }
 

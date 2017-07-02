@@ -28,6 +28,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.util.BeanUtils;
 
 public class FeedersTableModel extends AbstractTableModel {
     final private Configuration configuration;
@@ -39,6 +40,9 @@ public class FeedersTableModel extends AbstractTableModel {
         this.configuration = configuration;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             public void configurationComplete(Configuration configuration) throws Exception {
+                BeanUtils.addPropertyChangeListener(configuration.getMachine(), "feeders", event -> {
+                    refresh();
+                });
                 refresh();
             }
         });
@@ -80,7 +84,6 @@ public class FeedersTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 3) {
                 feeder.setEnabled((Boolean) aValue);
-                refresh();
             }
         }
         catch (Exception e) {

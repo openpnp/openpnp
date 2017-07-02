@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,10 +24,12 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Signaler;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -61,11 +64,17 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @ElementList(required = false)
     protected IdentifiableList<Actuator> actuators = new IdentifiableList<>();
 
+    @ElementList(required = false)
+    protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
+
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
 
     @Attribute(required = false)
     protected double speed = 1.0D;
+    
+    @ElementMap(required = false)
+    protected HashMap<String, Object> properties = new HashMap<>();
 
     protected Set<MachineListener> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -75,7 +84,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @SuppressWarnings("unused")
     @Commit
-    private void commit() {
+    protected void commit() {
         for (Head head : heads) {
             head.setMachine(this);
         }
@@ -129,6 +138,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public Camera getCamera(String id) {
         return cameras.get(id);
+    }
+
+    @Override
+    public List<PartAlignment> getPartAlignments() {
+        return Collections.unmodifiableList(partAlignments);
     }
 
     @Override
@@ -369,5 +383,15 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public double getSpeed() {
         return speed;
+    }
+
+    @Override
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+
+    @Override
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
     }
 }

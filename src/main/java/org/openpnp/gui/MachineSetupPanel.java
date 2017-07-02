@@ -21,6 +21,8 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -31,9 +33,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.prefs.Preferences;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JCheckBox;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -73,6 +77,8 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
     private DefaultTreeModel treeModel;
     private JTabbedPane tabbedPane;
     private JToolBar toolBar;
+    private final Action action = new SwingAction();
+    private JCheckBox cbExp;
 
     public MachineSetupPanel() {
         setLayout(new BorderLayout(0, 0));
@@ -87,6 +93,10 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
+        
+                cbExp = new JCheckBox("Expand");
+                panel_1.add(cbExp);
+                cbExp.setAction(action);
 
         JLabel lblSearch = new JLabel("Search");
         panel_1.add(lblSearch);
@@ -112,6 +122,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         searchTextField.setColumns(15);
 
         final JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
@@ -186,8 +197,13 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             public void configurationComplete(Configuration configuration) throws Exception {
                 tree.setModel(treeModel = new DefaultTreeModel(
                         new PropertySheetHolderTreeNode(Configuration.get().getMachine(), null)));
-                for (int i = 0; i < tree.getRowCount(); i++) {
+                for (int i = 1; i < tree.getRowCount(); i++) {
+                  if (cbExp.isSelected()) {
                     tree.expandRow(i);
+                  }
+                  else {
+                    tree.collapseRow(i);
+                  }
                 }
             }
         });
@@ -303,4 +319,21 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
             return this;
         }
     };
+    private class SwingAction extends AbstractAction {
+        public SwingAction() {
+            putValue(NAME, "Expand");
+            putValue(SHORT_DESCRIPTION, "Expand machine configuration tree");
+        }
+        
+        public void actionPerformed(ActionEvent e) {
+          for (int i = 1; i < tree.getRowCount(); i++) {
+            if (cbExp.isSelected()) {
+              tree.expandRow(i);
+            }
+            else {
+              tree.collapseRow(i);
+            }
+          }
+        }
+    }
 }
