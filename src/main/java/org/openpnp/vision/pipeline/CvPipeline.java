@@ -136,7 +136,7 @@ public class CvPipeline {
         }
         return null;
     }
-
+    
     /**
      * Get the Result returned by the CvStage with the given name. May return null if the stage did
      * not return a result.
@@ -220,7 +220,7 @@ public class CvPipeline {
             if(stage.isEnabled() && model != null) {
               workingModel=model;
             }
-            // If the result image is null and there is a working image, replace the result image
+            // If the result image is null and there is a working image,
             // replace the result image with a clone of the working image.
             if (image == null) {
                 if (workingImage != null) {
