@@ -110,7 +110,7 @@ Simply import the `openpnp` folder as a Maven project.
 
 ## Framework
 
-OpenPnP is written in Java using Swing and WindowBuilder. Dependency and build management are performed using Maven. The majority of the code has been written using the Eclipse IDE but the system uses no Eclipse specific components and any IDE can be used.
+OpenPnP is written in Java using [Swing](https://en.wikipedia.org/wiki/Swing_(Java)) and [WindowBuilder](https://eclipse.org/windowbuilder/). Dependency and build management are performed using Maven. The majority of the code has been written using the Eclipse IDE but the system uses no Eclipse specific components and any IDE can be used.
 
 Bindings and property change listeners are used extensively wherever possible. Bindings are provided by JBindings with some custom helper code that is part of OpenPnP.
 
