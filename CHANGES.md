@@ -1,6 +1,24 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-07-02
+
+* Fiducial Vision Converted to CvPipeline
+
+	The fiducial vision system has been converted to use the CvPipeline system as per
+	https://github.com/openpnp/openpnp/issues/329.
+	
+	This allows users to easily edit the vision pipeline for fiducials, making it easy to
+	customize for different board and lighting scenarios. Pipeline editing works the same
+	as in bottom vision; you can edit the pipeline on a part by part basis or at a global
+	default.
+	
+	The default pipeline included with OpenPnP is an exact duplicate of the code that used to
+	be used internally - it has just been converted to pipeline form to make it editable.
+	
+	If you notice a degradation in fiducial performance, please post a message to the
+	mailing list at http://groups.google.com/group/openpnp
+
 # 2017-06-30
 
 * Power On, No Home Behavior
