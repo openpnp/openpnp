@@ -126,12 +126,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                  *  */
                 if (changerStartSpeed != null) {
                  changerStartToMidSpeed = changerStartSpeed;
+                 changerStartSpeed = null;
             	}
                 if (changerMidSpeed != null) {
                 	changerMidToMid2Speed = changerMidSpeed;
+                	changerMidSpeed = null;
                 }
                 if (changerMidSpeed2 !=null) {
                 	changerMid2ToEndSpeed = changerMidSpeed2;
+                	changerMidSpeed2 = null;
                 }
                 if (changerEndSpeed != null) {
                 	changerEndSpeed = null;
