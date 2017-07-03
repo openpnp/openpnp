@@ -14,15 +14,24 @@ A loose part feeder is different: It works with loose parts scattered on its sur
 
 _A 2x3 loose part holder_
 
-A loose part feeder's job is to detect the position and orientation of the parts, so that they can be picked and placed correctly on the PCB board. The task of detecting parts is assumed by the vision system, which uses the down looking camera (AKA the [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Top-Camera-Setup)) to take images of the parts for image processing and detection.
+A loose part feeder's job is to detect the position and orientation of the parts, so that they can be picked and placed correctly on the PCB board. The task of detecting parts is assumed by the vision system, which uses the down looking camera (AKA the [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Top-Camera-Setup)) to take images of the parts for image processing and model detection.
 
-## ReferenceLoosePartFeeder and AdvancedLoosePartFeeder
+## The AdvancedLoosePartFeeder
 
-OpenPnP, at present, provides two loose part feeders, namely the _ReferenceLoosePartFeeder_ and the _AdvancedLoosePartFeeder_. Though they both feed loose parts, their methods for detecting parts are different:
-- _ReferenceLoosePartFeeder_ offers simple detection for non-polarized parts with a +-45° orientation range. Only the shape outline of the part is considered for detection while surface features, marks, assymmetries et.c. are ignored.
-- _AdvahcedLoosePartFeeder_ offers template matching detection for both polarized and non-polarized parts with a 360° orientation range. Surface features, marks, asymmetries et.c. are matched to determine true orientation.
+OpenPnP job processor expects a list of rotated rectangles, properly oriented, as the output of a loose part feeder.
 
-## Adding a loose part feeder
+Achieving correct orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model with its +-45° orientation range. The following images show the limitations of such a simple model:
+
+![referenceloosepartfeeder1](https://user-images.githubusercontent.com/1109829/27792865-5aabf50c-6004-11e7-908a-c03b03d08418.png) ![referenceloosepartfeeder3](https://user-images.githubusercontent.com/1109829/27792863-5a9eb554-6004-11e7-9350-60937a10cbcd.png)
+
+_Detection of SOT223-3 and C1206 packages using simple `RotatedRect` models. Notice the orientation lines of the parts pointing to different/wrong directions._
+
+Evidently, detecting polarized parts require more than fitting rectangles on part outlines, e.g. taking into consideration surface features, text marking, pin1 marks, asymmetries et.c. Additionally, there should be a notion of what the software considers "proper" orientation in respect with the conventions used by the CAD program that designed the PCB and put the parts on it. The following images show the desired result:
+
+![referenceloosepartfeeder2](https://user-images.githubusercontent.com/1109829/27792864-5aa813ce-6004-11e7-8bff-77c1ef15d3c5.png) ![referenceloosepartfeeder4](https://user-images.githubusercontent.com/1109829/27792862-5a62aec4-6004-11e7-907b-a94f4cf63791.png)  ![referenceloosepartfeeder5](https://user-images.githubusercontent.com/1109829/27793971-dc2bfe2a-6008-11e7-919a-3dd5a6328c70.png)
+
+## Adding an AdvancedLoosePartFeeder
+
 Loose part feeders [can be added to OpenPnP](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Feeders#adding-a-feeder) through the `Create feeder` button in the _Feeders_ tab:
 
 ![add_feeder](https://user-images.githubusercontent.com/1109829/27770481-162114ce-5f48-11e7-8cff-4c894f731137.png)
