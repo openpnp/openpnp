@@ -23,7 +23,7 @@ OpenPnP, at present, provides two loose part feeders, namely the _ReferenceLoose
 - _AdvahcedLoosePartFeeder_ offers template matching detection for both polarized and non-polarized parts with a 360° orientation range. Surface features, marks, asymmetries et.c. are matched to determine true orientation.
 
 ## Adding a loose part feeder
-Loose part feeders can be added to OpenPnP through the `Create feeder` button in the _Feeders_ tab:
+Loose part feeders [can be added to OpenPnP](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Feeders#adding-a-feeder) through the `Create feeder` button in the _Feeders_ tab:
 
 ![add_feeder](https://user-images.githubusercontent.com/1109829/27770481-162114ce-5f48-11e7-8cff-4c894f731137.png)
 
