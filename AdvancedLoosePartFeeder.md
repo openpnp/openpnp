@@ -22,13 +22,13 @@ OpenPnP job processor expects a list of rotated rectangles, properly oriented, a
 
 Achieving proper orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model. The following images show the limitations of such a simple model:
 
-![referenceloosepartfeeder1](https://user-images.githubusercontent.com/1109829/27792865-5aabf50c-6004-11e7-908a-c03b03d08418.png) ![referenceloosepartfeeder3](https://user-images.githubusercontent.com/1109829/27792863-5a9eb554-6004-11e7-9350-60937a10cbcd.png)
-
+![referenceloosepartfeeder1](https://user-images.githubusercontent.com/1109829/27795792-210cd6b6-6010-11e7-87b3-73e9aba35199.png) ![referenceloosepartfeeder3](https://user-images.githubusercontent.com/1109829/27795793-210ffa3a-6010-11e7-9f20-41543d5d6532.png)
 _Detection of SOT223-3 and C1206 packages using simple `RotatedRect` models. Notice the orientation lines of the parts pointing to different/wrong directions._
 
 Evidently, detecting polarized parts require more than fitting rectangles on part outlines, e.g. taking into consideration surface features, text marking, pin1 marks, asymmetries et.c. Additionally, there should be a notion of what the software considers "proper" orientation in respect with the conventions used by the CAD program that designed the PCB and put the parts on it. The following images show the desired result:
 
-![referenceloosepartfeeder2](https://user-images.githubusercontent.com/1109829/27792864-5aa813ce-6004-11e7-8bff-77c1ef15d3c5.png) ![referenceloosepartfeeder4](https://user-images.githubusercontent.com/1109829/27792862-5a62aec4-6004-11e7-907b-a94f4cf63791.png)  ![referenceloosepartfeeder5](https://user-images.githubusercontent.com/1109829/27793971-dc2bfe2a-6008-11e7-919a-3dd5a6328c70.png)
+![referenceloosepartfeeder2](https://user-images.githubusercontent.com/1109829/27795795-2125676c-6010-11e7-8065-1e638a06726d.png) ![referenceloosepartfeeder4](https://user-images.githubusercontent.com/1109829/27795794-2118bbac-6010-11e7-95e2-78836f99b46e.png) ![referenceloosepartfeeder5](https://user-images.githubusercontent.com/1109829/27795796-215df37a-6010-11e7-9c33-a02555105c4a.png)
+
 
 As mentioned above, proper orientation when detecting a part requires knowledge in advance by the feeder of what is considered to be "proper"; therefore, there has to be some kind of training of the feeder to recognize and match "proper" orientation. Even in the case of non-polarized parts, when trying to orient a part in a "square", horizontal or vertical, position, the feeder needs to know whether "portrait" or "landscape" mode is desired.
  
