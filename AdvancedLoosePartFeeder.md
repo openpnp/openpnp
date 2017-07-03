@@ -23,6 +23,7 @@ OpenPnP job processor expects a list of rotated rectangles, properly oriented, a
 Achieving proper orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model. The following images show the limitations of such a simple model:
 
 ![referenceloosepartfeeder1](https://user-images.githubusercontent.com/1109829/27795792-210cd6b6-6010-11e7-87b3-73e9aba35199.png) ![referenceloosepartfeeder3](https://user-images.githubusercontent.com/1109829/27795793-210ffa3a-6010-11e7-9f20-41543d5d6532.png)
+
 _Detection of SOT223-3 and C1206 packages using simple `RotatedRect` models. Notice the orientation lines of the parts pointing to different/wrong directions._
 
 Evidently, detecting polarized parts require more than fitting rectangles on part outlines, e.g. taking into consideration surface features, text marking, pin1 marks, asymmetries et.c. Additionally, there should be a notion of what the software considers "proper" orientation in respect with the conventions used by the CAD program that designed the PCB and put the parts on it. The following images show the desired result:
