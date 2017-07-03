@@ -17,10 +17,10 @@ _A 2x3 loose part holder_
 A loose part feeder's job is to detect the position and orientation of the parts, so that they can be picked and placed correctly on the PCB board. The task of detecting parts is assumed by the vision system, which uses the down looking camera (AKA the [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Top-Camera-Setup)) to take images of the parts for image processing and model detection.
 
 ## The AdvancedLoosePartFeeder
-
+### What is needed
 OpenPnP job processor expects a list of rotated rectangles, properly oriented, as the output of a loose part feeder.
 
-Achieving correct orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model. The following images show the limitations of such a simple model:
+Achieving proper orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model. The following images show the limitations of such a simple model:
 
 ![referenceloosepartfeeder1](https://user-images.githubusercontent.com/1109829/27792865-5aabf50c-6004-11e7-908a-c03b03d08418.png) ![referenceloosepartfeeder3](https://user-images.githubusercontent.com/1109829/27792863-5a9eb554-6004-11e7-9350-60937a10cbcd.png)
 
@@ -30,6 +30,8 @@ Evidently, detecting polarized parts require more than fitting rectangles on par
 
 ![referenceloosepartfeeder2](https://user-images.githubusercontent.com/1109829/27792864-5aa813ce-6004-11e7-8bff-77c1ef15d3c5.png) ![referenceloosepartfeeder4](https://user-images.githubusercontent.com/1109829/27792862-5a62aec4-6004-11e7-907b-a94f4cf63791.png)  ![referenceloosepartfeeder5](https://user-images.githubusercontent.com/1109829/27793971-dc2bfe2a-6008-11e7-919a-3dd5a6328c70.png)
 
+As mentioned above, proper orientation when detecting a part requires knowledge in advance by the feeder of what is considered to be "proper"; therefore, there has to be some kind of training of the feeder to recognize and match "proper" orientation. Even in the case of non-polarized parts, when trying to orient a part in a "square", horizontal or vertical, position, the feeder needs to know whether "portrait" or "landscape" mode is desired.
+ 
 ## Adding an AdvancedLoosePartFeeder
 
 Loose part feeders [can be added to OpenPnP](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Feeders#adding-a-feeder) through the `Create feeder` button in the _Feeders_ tab:
