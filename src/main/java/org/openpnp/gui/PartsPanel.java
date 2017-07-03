@@ -67,6 +67,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.MovableUtils;
@@ -155,9 +156,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        JPanel alignmentPanel = new JPanel();
-        alignmentPanel.setLayout(new BorderLayout());
-        tabbedPane.add("Alignment", new JScrollPane(alignmentPanel));
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -170,7 +168,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
-
+        
         JButton btnNewPart = toolBar.add(newPartAction);
         btnNewPart.setToolTipText("");
         JButton btnDeletePart = toolBar.add(deletePartAction);
@@ -196,8 +194,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     singleSelectionActionGroup.setEnabled(!selections.isEmpty());
                 }
 
-                alignmentPanel.removeAll();
-
                 Part part = getSelection();
 
                 tabbedPane.removeAll();
@@ -206,15 +202,24 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
                         Wizard wizard=partAlignment.getPartConfigurationWizard(part);
                         if (wizard != null) {
-                            JPanel alignPanel = new JPanel();
-                            alignPanel.setLayout(new BorderLayout());
-                            alignPanel.add(wizard.getWizardPanel());
-                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(alignPanel));
-
+                            JPanel panel = new JPanel();
+                            panel.setLayout(new BorderLayout());
+                            panel.add(wizard.getWizardPanel());
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                             wizard.setWizardContainer(PartsPanel.this);
                         }
                     }
-
+                    
+                    FiducialLocator fiducialLocator =
+                            Configuration.get().getMachine().getFiducialLocator();
+                    Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
+                    if (wizard != null) {
+                        JPanel panel = new JPanel();
+                        panel.setLayout(new BorderLayout());
+                        panel.add(wizard.getWizardPanel());
+                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                        wizard.setWizardContainer(PartsPanel.this);
+                    }
                 }
 
                 revalidate();

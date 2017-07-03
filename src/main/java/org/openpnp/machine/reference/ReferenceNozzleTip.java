@@ -46,7 +46,19 @@ import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
 
-
+	
+    
+    /// TODO REMOVE in future release
+    @Element(required = false)
+    private Double changerStartSpeed = null;
+    @Element(required = false)
+    private Double changerMidSpeed = null;
+    @Element(required = false)
+    private Double changerMidSpeed2 = null;
+    @Element(required = false)
+    private Double changerEndSpeed = null;
+    /// END TODO
+    
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
 
@@ -57,25 +69,23 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required = false)
-    private double changerStartSpeed = 1.0D;
+    private double changerStartToMidSpeed = 1D;
     
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
     
     @Element(required = false)
-    private double changerMidSpeed = 1.0D;
+    private double changerMidToMid2Speed = 1D;
     
     @Element(required = false)
     private Location changerMidLocation2;
     
     @Element(required = false)
-    private double changerMidSpeed2 = 1.0D;
+    private double changerMid2ToEndSpeed = 1D;
     
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
     
-    @Element(required = false)
-    private double changerEndSpeed = 1.0D;
     
     @Element(required = false)
     private Calibration calibration = new Calibration();
@@ -109,6 +119,25 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                  */
                 if (changerMidLocation2 == null) {
                     changerMidLocation2 = changerMidLocation.derive(null, null, null, null);
+                }
+                /*
+                 * Backwards compatibility for speed settings.
+                 *  Map the old variables to new one if present in machine.xlm and null the old ones
+                 *  */
+                if (changerStartSpeed != null) {
+                 changerStartToMidSpeed = changerStartSpeed;
+                 changerStartSpeed = null;
+            	}
+                if (changerMidSpeed != null) {
+                	changerMidToMid2Speed = changerMidSpeed;
+                	changerMidSpeed = null;
+                }
+                if (changerMidSpeed2 !=null) {
+                	changerMid2ToEndSpeed = changerMidSpeed2;
+                	changerMidSpeed2 = null;
+                }
+                if (changerEndSpeed != null) {
+                	changerEndSpeed = null;
                 }
             }
         });
@@ -206,36 +235,28 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.changerEndLocation = changerEndLocation;
     }
     
-    public double getChangerStartSpeed() {
-        return changerStartSpeed;
+    public double getChangerStartToMidSpeed() {
+        return changerStartToMidSpeed;
     }
 
-    public void setChangerStartSpeed(double changerStartSpeed) {
-        this.changerStartSpeed = changerStartSpeed;
+    public void setChangerStartToMidSpeed(double changerStartToMidSpeed) {
+        this.changerStartToMidSpeed = changerStartToMidSpeed;
     }
 
-    public double getChangerMidSpeed() {
-        return changerMidSpeed;
+    public double getChangerMidToMid2Speed() {
+        return changerMidToMid2Speed;
     }
 
-    public void setChangerMidSpeed(double changerMidSpeed) {
-        this.changerMidSpeed = changerMidSpeed;
+    public void setChangerMidToMid2Speed(double changerMidToMid2Speed) {
+        this.changerMidToMid2Speed = changerMidToMid2Speed;
     }
 
-    public double getChangerMidSpeed2() {
-        return changerMidSpeed2;
+    public double getChangerMid2ToEndSpeed() {
+        return changerMid2ToEndSpeed;
     }
 
-    public void setChangerMidSpeed2(double changerMidSpeed2) {
-        this.changerMidSpeed2 = changerMidSpeed2;
-    }
-
-    public double getChangerEndSpeed() {
-        return changerEndSpeed;
-    }
-
-    public void setChangerEndSpeed(double changerEndSpeed) {
-        this.changerEndSpeed = changerEndSpeed;
+    public void setChangerMid2ToEndSpeed(double changerMid2ToEndSpeed) {
+        this.changerMid2ToEndSpeed = changerMid2ToEndSpeed;
     }
 
     private Nozzle getParentNozzle() {

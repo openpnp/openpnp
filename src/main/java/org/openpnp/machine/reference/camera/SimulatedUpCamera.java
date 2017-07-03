@@ -6,58 +6,43 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 import org.openpnp.CameraListener;
-import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.wizards.ReferenceCameraConfigurationWizard;
+import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.Utils2D;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+
 
 @Root
 public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
+    protected int width = 1280;
 
-
-    protected int width = 640;
-
-    protected int height = 480;
+    protected int height = 1280;
 
     protected int fps = 10;
 
     private Thread thread;
-
-    private Map<Nozzle, Part> nozzleParts = new HashMap<>();
-
-    private Location offsets = new Location(LengthUnit.Millimeters);
+    
+    @Element(required=false)
+    private Location errorOffsets = new Location(LengthUnit.Millimeters);
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
         setLooking(Looking.Up);
-        Configuration.get()
-                     .addListener(new ConfigurationListener.Adapter() {
-                         @Override
-                         public void configurationComplete(Configuration configuration)
-                                 throws Exception {
-                             configuration.getMachine()
-                                          .addListener(machineListener);
-                         }
-                     });
     }
 
     @Override
@@ -102,22 +87,25 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         return image;
     }
 
+
     private void drawNozzle(Graphics2D g, Nozzle nozzle) {
-        // g.setColor(Color.white);
-        // Location l = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters);
-        //
-        // Location upp = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-        // Location scale =
-        // new Location(LengthUnit.Millimeters, 1D / upp.getX(), 1D / upp.getY(), 0, 0);
-        // l = l.multiply(scale);
-        //
-        // g.fillOval((int) (l.getX() - 20), (int) (l.getY() - 20), 40, 40);
-
-        g.setStroke(new BasicStroke(1f));
+        g.setStroke(new BasicStroke(2f));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(Color.white);
 
-        Part part = nozzleParts.get(nozzle);
+        LengthUnit units = LengthUnit.Millimeters;
+        Location unitsPerPixel = getUnitsPerPixel().convertToUnits(units);
+        
+        // Draw the nozzle
+        // Get nozzle offsets from camera
+        Location offsets = nozzle.getLocation()
+                .convertToUnits(units)
+                .subtractWithRotation(getLocation());
+        
+        // Create a nozzle shape
+        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), Color.green, unitsPerPixel, offsets, false);
+
+        // Draw the part
+        Part part = nozzle.getPart();
         if (part == null) {
             return;
         }
@@ -128,35 +116,42 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
             return;
         }
 
-        Shape shape = footprint.getShape();
-        if (shape == null) {
-            return;
+        if (footprint.getUnits() != units) {
+            throw new Error("Not yet supported.");
         }
-
-        Location upp = getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
-
-        // Determine the scaling factor to go from Outline units to
-        // Camera units.
-        Length l = new Length(1, footprint.getUnits());
-        l = l.convertToUnits(upp.getUnits());
-        double unitScale = l.getValue();
-
-        // Create a transform to scale the Shape by
+        
+        // First draw the body in dark grey.
+        fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets, true);
+        
+        // Then draw the pads in white
+        fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets, true);
+    }
+    
+    private void fillShape(Graphics2D g, Shape shape, Color color, Location unitsPerPixel, Location offsets, boolean addError) {
         AffineTransform tx = new AffineTransform();
-
-        // First we scale by units to convert the units and then we scale
-        // by the camera X and Y units per pixels to get pixel locations.
-        tx.scale(unitScale, unitScale);
-        tx.scale(1.0 / upp.getX(), 1.0 / upp.getY());
-
+        // Scale to pixels
+        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
+        // Translate and rotate to offsets
         tx.translate(offsets.getX(), offsets.getY());
-        // AffineTransform rotates positive clockwise, so we invert the value.
-        tx.rotate(Math.toRadians(offsets.getRotation()));
-
-
-        // Transform the Shape and draw it out.
+        tx.rotate(Math.toRadians(Utils2D.normalizeAngle(offsets.getRotation())));
+        if (addError) {
+            // Translate and rotate to error offsets
+            tx.translate(errorOffsets.getX(), errorOffsets.getY());
+            tx.rotate(Math.toRadians(Utils2D.normalizeAngle(errorOffsets.getRotation())));
+        }
+        // Transform
         shape = tx.createTransformedShape(shape);
+        // Draw
+        g.setColor(color);
         g.fill(shape);
+    }
+    
+    public Location getErrorOffsets() {
+        return errorOffsets;
+    }
+
+    public void setErrorOffsets(Location errorOffsets) {
+        this.errorOffsets = errorOffsets;
     }
 
     @Override
@@ -209,7 +204,7 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new ReferenceCameraConfigurationWizard(this);
+        return new SimulatedUpCameraConfigurationWizard(this);
     }
 
     @Override
@@ -222,22 +217,4 @@ public class SimulatedUpCamera extends ReferenceCamera implements Runnable {
         // TODO Auto-generated method stub
         return null;
     }
-
-    private MachineListener machineListener = new MachineListener.Adapter() {
-        @Override
-        public void machineHeadActivity(Machine machine, Head head) {
-            if (head == null) {
-                return;
-            }
-            for (Nozzle nozzle : head.getNozzles()) {
-                Part part = nozzleParts.get(nozzle);
-                if (part == null || part != nozzle.getPart()) {
-                    nozzleParts.put(nozzle, nozzle.getPart());
-                    Random r = new Random();
-                    offsets = new Location(LengthUnit.Millimeters, Math.random() * 2 - 1,
-                            Math.random() * 2 - 1, 0, Math.random() * 30 - 15);
-                }
-            }
-        }
-    };
 }

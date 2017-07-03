@@ -48,7 +48,7 @@ public class FootprintReticle implements Reticle {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setColor(color);
 
-        Shape shape = footprint.getShape();
+        Shape shape = footprint.getPadsShape();
         if (shape == null) {
             return;
         }

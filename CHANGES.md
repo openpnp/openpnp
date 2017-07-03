@@ -1,6 +1,51 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-07-02
+
+* Improved Nozzle Changer Speed Support
+
+	With thanks to @lilltroll77 we now have improved nozzle changer speed control. The speed
+	controls added recently had a limitation where different speeds would be used for different
+	parts of the movement. You can now define three speeds that are used between the four
+	movements and they are applied during those transitions whether it is for load or unload.
+	
+	Note that since the configuration has changed slightly for this feature, you should
+	check your speed settings before running a nozzle change with this new version. Settings
+	should be migrated over automatically, but it is prudent to check them before using.
+	
+	More information about this change is available at:
+	https://github.com/openpnp/openpnp/issues/584
+
+* Fiducial Vision Converted to CvPipeline
+
+	The fiducial vision system has been converted to use the CvPipeline system as per
+	https://github.com/openpnp/openpnp/issues/329.
+	
+	This allows users to easily edit the vision pipeline for fiducials, making it easy to
+	customize for different board and lighting scenarios. Pipeline editing works the same
+	as in bottom vision; you can edit the pipeline on a part by part basis or at a global
+	default.
+	
+	The default pipeline included with OpenPnP is an exact duplicate of the code that used to
+	be used internally - it has just been converted to pipeline form to make it editable.
+	
+	If you notice a degradation in fiducial performance, please post a message to the
+	mailing list at http://groups.google.com/group/openpnp
+
+# 2017-06-30
+
+* Power On, No Home Behavior
+
+	Now when you hit the power on button the home button becomes highlighted to indicate you should
+	home the machine. Previously the power button would change color which was confusing. 
+
+* SimulatedUpCamera Rewrite
+
+	The SimulatedUpCamera has been rewritten to work much better. It is now included in the default
+	configuration so that you can test out bottom vision before you have a machine. It's also
+	been made testable, so there is now test coverage for basic bottom vision operations.
+
 # 2017-06-28
 
 * CvPipeline Properties (Breaking Change)
@@ -23,7 +68,7 @@ a complete change list, only those that may directly interest or affect users.
 	* getFeeder() becomes (Feeder) getProperty("feeder")
 	
 	Finally, this change is the first step into supporting variables in CvPipeline. Eventually
-	you will be able to reference proeprties and other objects when setting parameters in stages.
+	you will be able to reference properties and other objects when setting parameters in stages.
 	 
 * AdvancedLoosePartFeeder
 
@@ -44,11 +89,15 @@ a complete change list, only those that may directly interest or affect users.
 	
 # 2017-06-17
 
+* Nozzle Tip Changer Speed Settings
+
 	Nozzle Tip Changer now has independent speed settings for each movement. The speeds are a 
 	multiplier, similar to how it's used in other parts of the system. The value
 	is multiplied by the system speed slider to determine the final speed. A 1.0 is "full speed".
 
 # 2017-05-18
+
+* New Scripting Events
 
 	Two new Scripting events have been added: Job.Starting and Job.Finished. These are called
 	as the job is starting and after it completes. They are intended to aid in using conveyer
@@ -334,9 +383,9 @@ a complete change list, only those that may directly interest or affect users.
 	particularly with scripting. The GcodeDriver has been updated to work with this new
 	functionality. For more information see:
 	
-		https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex
 	
-		https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command
+	https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command
 
 	* The Actuators panel in Jog Controls now offers more options for controlling and testing
 	actuators. You can send true/false boolean values, send double values and read a response
