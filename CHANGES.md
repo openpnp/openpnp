@@ -3,6 +3,20 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-07-02
 
+* Improved Nozzle Changer Speed Support
+
+	With thanks to @lilltroll77 we now have improved nozzle changer speed control. The speed
+	controls added recently had a limitation where different speeds would be used for different
+	parts of the movement. You can now define three speeds that are used between the four
+	movements and they are applied during those transitions whether it is for load or unload.
+	
+	Note that since the configuration has changed slightly for this feature, you should
+	check your speed settings before running a nozzle change with this new version. Settings
+	should be migrated over automatically, but it is prudent to check them before using.
+	
+	More information about this change is available at:
+	https://github.com/openpnp/openpnp/issues/584
+
 * Fiducial Vision Converted to CvPipeline
 
 	The fiducial vision system has been converted to use the CvPipeline system as per
