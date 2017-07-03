@@ -10,7 +10,7 @@ _8mm tape strips and holder._
 
 A loose part feeder is different: It works with loose parts scattered on its surface in no particular order. A loose part feeder can be populated with parts that fell off their carrier, ejected by the machine, used parts et.c.:
 
-![loosepartfeeder_mockup_all](https://user-images.githubusercontent.com/1109829/27770342-b4201920-5f45-11e7-8e83-6974acbd075c.png)
+![loosepartfeeder_mockup1](https://user-images.githubusercontent.com/1109829/27796112-7c3ca9e8-6011-11e7-85f3-54a084c4d3e4.png)
 
 _A 2x3 loose part holder_
 
