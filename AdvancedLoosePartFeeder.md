@@ -44,6 +44,13 @@ The two feeders are listed in the popup dialog:
 
 Both of these feeders use the OpenCV based [CvPipeline](https://github.com/openpnp/openpnp/wiki/CvPipeline) to do image processing. The CvPipeline works by separating the image pixels belonging to parts from the background using image processing techniques and deliver a model of the parts located in the coordinate space of the PnP machine.
 
-## How a loose part feeder works
-
-(To be continued)
+## Training an AdvancedLoosePartFeeder
+(add content)
+## Editing the pipeline
+(add content)
+## Using the AdvancedLoosePartFeeder
+(add content)
+## How the AdvancedLoosePartFeeder works
+(add content)
+## Limitations
+(add content)
