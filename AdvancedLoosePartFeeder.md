@@ -20,7 +20,7 @@ A loose part feeder's job is to detect the position and orientation of the parts
 
 OpenPnP job processor expects a list of rotated rectangles, properly oriented, as the output of a loose part feeder.
 
-Achieving correct orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model with its +-45° orientation range. The following images show the limitations of such a simple model:
+Achieving correct orientation is not trivial. Simply modeling parts with rotated rectangles is not sufficient for proper part detection, given the inherent uncertainty in the rotation of a RotatedRect model. The following images show the limitations of such a simple model:
 
 ![referenceloosepartfeeder1](https://user-images.githubusercontent.com/1109829/27792865-5aabf50c-6004-11e7-908a-c03b03d08418.png) ![referenceloosepartfeeder3](https://user-images.githubusercontent.com/1109829/27792863-5a9eb554-6004-11e7-9350-60937a10cbcd.png)
 
