@@ -1,3 +1,4 @@
+* [How do I get help?](#how-do-i-get-help)
 * [Where are configuration and log files located?](#where-are-configuration-and-log-files-located)
 * [How do I reset my configuration?](#how-do-i-reset-my-configuration)
 * [How do I use a different config directory](#how-do-i-use-a-different-config-directory)
@@ -8,6 +9,10 @@
 * [My nozzle moves (in Z) when the camera is moved.](#my-nozzle-moves-in-z-when-the-camera-is-moved)
 * ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
 * [What Should I Build?](#what-should-i-build)
+
+## How do I get help?
+
+Check out https://github.com/openpnp/openpnp/wiki/Getting-Help for information on getting help and supplying good information.
 
 ## Where are configuration and log files located?
 
