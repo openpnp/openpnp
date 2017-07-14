@@ -27,6 +27,7 @@ If you have more than one nozzle tip on your machine:
 2. Find the nozzle you want to add a nozzle tip to and look for the Nozzle Tips item below it. Select it.
 3. Add the nozzle tip by pressing the add button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
 4. Select the new nozzle tip to open it's properties.
+5. To use the machine with the nozzle tip you just created you need to load it onto the nozzle. Press the load button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to do this.
 
 ## Head Offsets
 Nozzle Head Offsets tell OpenPnP where your nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzle is from the camera in real world units.
