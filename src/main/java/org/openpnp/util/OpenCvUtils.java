@@ -32,12 +32,6 @@ public class OpenCvUtils {
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
-    /**
-     * TODO: This probably doesn't work right on submats. Need to test and fix.
-     * 
-     * @param m
-     * @return
-     */
     public static BufferedImage toBufferedImage(Mat m) {
         Integer type = null;
         if (m.type() == CvType.CV_8UC1) {

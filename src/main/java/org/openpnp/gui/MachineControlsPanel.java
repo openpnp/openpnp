@@ -103,7 +103,6 @@ public class MachineControlsPanel extends JPanel {
         if (selectedTool instanceof Nozzle) {
             return (Nozzle) selectedTool;
         }
-
         try {
             return configuration.getMachine().getDefaultHead().getDefaultNozzle();
         }
@@ -114,9 +113,10 @@ public class MachineControlsPanel extends JPanel {
 
 
     public PasteDispenser getSelectedPasteDispenser() {
+        if (selectedTool instanceof PasteDispenser) {
+            return (PasteDispenser) selectedTool;
+        }
         try {
-            // TODO: We don't actually have a way to select a dispenser yet, so
-            // until we do we just return the first one.
             return Configuration.get().getMachine().getDefaultHead().getDefaultPasteDispenser();
         }
         catch (Exception e) {

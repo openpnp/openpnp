@@ -194,7 +194,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     private Location getVisionOffsets(Head head, Location pickLocation) throws Exception {
         Logger.debug("getVisionOffsets({}, {})", head.getName(), pickLocation);
         // Find the Camera to be used for vision
-        // TODO: Consider caching this
         Camera camera = null;
         for (Camera c : head.getCameras()) {
             if (c.getVisionProvider() != null) {

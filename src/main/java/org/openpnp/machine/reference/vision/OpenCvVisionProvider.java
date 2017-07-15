@@ -82,7 +82,6 @@ public class OpenCvVisionProvider implements VisionProvider {
      * @return
      */
     public List<TemplateMatch> getTemplateMatches(BufferedImage template) {
-        // TODO: ROI
         BufferedImage image = camera.capture();
 
         // Convert the camera image and template image to the same type. This
@@ -104,7 +103,6 @@ public class OpenCvVisionProvider implements VisionProvider {
         MinMaxLocResult mmr = Core.minMaxLoc(resultMat);
         double maxVal = mmr.maxVal;
 
-        // TODO: Externalize?
         double threshold = 0.7f;
         double corr = 0.85f;
 

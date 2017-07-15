@@ -638,8 +638,6 @@ public class CameraView extends JComponent implements CameraListener {
         if (selectionTextDelegate != null) {
             String text = selectionTextDelegate.getSelectionText(this);
             if (text != null) {
-                // TODO: Be awesome like Apple and move the overlay inside
-                // the rect if it goes past the edge of the window
                 drawTextOverlay(g2d, (int) (rx + rw + 6), (int) (ry + rh + 6), text);
             }
         }

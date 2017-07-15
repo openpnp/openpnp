@@ -84,9 +84,6 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-/**
- * TODO: Consider adding some type of heartbeat to the firmware.
- */
 public class LinuxCNC implements ReferenceDriver, Runnable {
 
     private static final double minimumRequiredVersion = 0.81;
