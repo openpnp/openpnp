@@ -48,7 +48,6 @@ public abstract class AbstractPasteDispenser implements PasteDispenser {
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

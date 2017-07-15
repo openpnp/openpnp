@@ -302,7 +302,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -314,13 +313,11 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
     

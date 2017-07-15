@@ -238,19 +238,16 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public String getId() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void setName(String name) {
-        // TODO Auto-generated method stub
 
     }
 
@@ -285,7 +282,6 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -297,13 +293,11 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 

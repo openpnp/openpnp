@@ -420,7 +420,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

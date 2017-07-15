@@ -51,7 +51,6 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -67,7 +66,6 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
 
     @Override
     public String read() throws Exception {
-        // TODO Auto-generated method stub
         return null;
     }
 }

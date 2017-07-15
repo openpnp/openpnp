@@ -198,7 +198,6 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 

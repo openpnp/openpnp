@@ -101,7 +101,6 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 

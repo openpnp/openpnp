@@ -207,7 +207,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        // TODO Auto-generated method stub
 
     }
 
@@ -428,7 +427,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -439,7 +437,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -450,20 +447,17 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
             Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-        // TODO Auto-generated method stub
 
     }
 }

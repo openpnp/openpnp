@@ -181,7 +181,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
