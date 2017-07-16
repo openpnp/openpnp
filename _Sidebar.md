@@ -6,7 +6,7 @@ OpenPnP
 * [[GcodeDriver]]
     * [Commands](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference)
     * [Regular Expressions](https://github.com/openpnp/openpnp/wiki/GcodeDriver#regular-expressions-receiving-responses)
-    * [Axis Config](https://github.com/openpnp/openpnp/wiki/GcodeDriver#axis-mapping)
+    * [Axis Config](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Axis-Mapping)
     * [Sub-Drivers](https://github.com/openpnp/openpnp/wiki/GcodeDriver#sub-drivers)
     * [Examples](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Example-Configurations)
 * [[User Manual]]
