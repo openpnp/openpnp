@@ -221,7 +221,8 @@ public class JogControlsPanel extends JPanel {
                             targetLocation, new Length(1.0, l.getUnits()));
                     if (!safe) {
                         throw new Exception(
-                                "Z Axis would move against " + boardLocation.toString());
+                                "Nozzle would crash into board: " + boardLocation.toString() + "\n" +
+                                "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel.");
                     }
                 }
             }
@@ -325,9 +326,6 @@ public class JogControlsPanel extends JPanel {
         homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
         panelControls.add(homeButton, "2, 2");
-
-        boardProtectionOverrideCheck = new JCheckBox("Override Board Protection");
-        panelControls.add(boardProtectionOverrideCheck, "24, 2");
 
         JLabel lblXy = new JLabel("X/Y");
         lblXy.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
@@ -458,6 +456,14 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab("Dispense", null, panelDispensers, null);
         FlowLayout flowLayout = (FlowLayout) panelDispensers.getLayout();
         flowLayout.setAlignment(FlowLayout.LEFT);
+        
+        JPanel panelSafety = new JPanel();
+        tabbedPane_1.addTab("Safety", null, panelSafety, null);
+        panelSafety.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+
+        boardProtectionOverrideCheck = new JCheckBox("Override Board Protection");
+        boardProtectionOverrideCheck.setToolTipText("Disable protection of the nozzle jogging closer than 1mm to any loaded board.");
+        panelSafety.add(boardProtectionOverrideCheck, "1, 1");
     }
 
     private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
