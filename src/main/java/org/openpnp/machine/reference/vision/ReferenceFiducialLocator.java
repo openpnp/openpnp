@@ -194,11 +194,19 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         pipeline.setProperty("footprint", footprint);
         
         for (int i = 0; i < 3; i++) {
-            // Perform vision operation
-            pipeline.process();
+            List<KeyPoint> keypoints;
+            try {
+                // Perform vision operation
+                pipeline.process();
+                
+                // Get the results
+                keypoints = (List<KeyPoint>) pipeline.getResult("results").getModel();
+            }
+            catch (Exception e) {
+                Logger.debug(e);
+                return null;
+            }
             
-            // Get the results
-            List<KeyPoint> keypoints = (List<KeyPoint>) pipeline.getResult("results").getModel();
             if (keypoints == null || keypoints.isEmpty()) {
                 Logger.debug("No matches found!");
                 return null;
