@@ -69,9 +69,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
-        // TODO: Remove the vacuum stuff after 2017-05-01, see https://github.com/openpnp/openpnp/issues/447
-        VACUUM_REQUEST_COMMAND(true, "VacuumLevelPartOn", "VacuumLevelPartOff"),
-        VACUUM_REPORT_REGEX(true),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
         ACTUATOR_READ_REGEX(true),
         PRE_DISPENSE_COMMAND(false, "DispenseTime"),

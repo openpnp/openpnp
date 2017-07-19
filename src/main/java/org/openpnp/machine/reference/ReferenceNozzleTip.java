@@ -37,18 +37,13 @@ import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzleTip extends AbstractNozzleTip {
-
-	
-    
-    /// TODO REMOVE in future release
+    // TODO Remove after October 1, 2017.
     @Element(required = false)
     private Double changerStartSpeed = null;
     @Element(required = false)
@@ -57,7 +52,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Double changerMidSpeed2 = null;
     @Element(required = false)
     private Double changerEndSpeed = null;
-    /// END TODO
+    // END TODO Remove after October 1, 2017.
     
     @ElementList(required = false, entry = "id")
     private Set<String> compatiblePackageIds = new HashSet<>();
@@ -181,7 +176,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 

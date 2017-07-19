@@ -195,7 +195,6 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 

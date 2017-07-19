@@ -1,6 +1,22 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-07-15
+
+* Code Cleanup: Potential Breaking Change
+
+	As part of a scheduled code cleanup several old configuration settings have been removed. If
+	you have upgraded within the past few months you should not see any change, but if your
+	configuration is very old it may fail to load with this version. If you get an error
+	starting OpenPnP after upgrading to this version, please look for and remove the following
+	lines from your machine.xml:
+	* `glue-dispense-job-processor`
+	* `vacuum-request-command` See https://www.youtube.com/watch?v=FsZ5dy7n1Ag
+	* `vacuum-report-regex` See https://www.youtube.com/watch?v=FsZ5dy7n1Ag
+	* In board files: `glue` attribute.
+	
+	If you have any trouble with this please post to the mailing list for help.
+	
 # 2017-07-02
 
 * Improved Nozzle Changer Speed Support

@@ -129,7 +129,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
