@@ -969,6 +969,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             GcodeDriver driver = new GcodeDriver();
+            driver.commands.add(new Command(null, CommandType.COMMAND_CONFIRM_REGEX, "^ok.*"));
             driver.parent = GcodeDriver.this;
             subDrivers.add(driver);
             fireIndexedPropertyChange("subDrivers", subDrivers.size() - 1, null, driver);
