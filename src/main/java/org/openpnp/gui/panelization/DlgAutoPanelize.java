@@ -25,7 +25,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.JobPanel;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -52,6 +55,10 @@ public class DlgAutoPanelize extends JDialog {
     private JCheckBox checkFidsCheckBox;
     private final Action okAction = new SwingAction();
     private final Action cancelAction = new SwingAction_1();
+    
+    DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+    IntegerConverter integerConverter = new IntegerConverter();
+    LengthConverter lengthConverter = new LengthConverter();
 
     public DlgAutoPanelize(Frame parent, JobPanel jobPanel) {
         super(parent, "Panelization Settings", true);
@@ -59,96 +66,59 @@ public class DlgAutoPanelize extends JDialog {
         
         getRootPane().setLayout(new BoxLayout(getRootPane(), BoxLayout.Y_AXIS));
 
-        JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Panelize Parameters ", TitledBorder.LEADING,
+        JPanel jPanel = new JPanel();
+        jPanel.setBorder(new TitledBorder(null, "Panelize Parameters ", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        getRootPane().add(panel);
+        getRootPane().add(jPanel);
 
-        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        jPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        panel.setLayout(new GridLayout(0, 2, 20, 20));
+        jPanel.setLayout(new GridLayout(0, 2, 20, 20));
 
-        // Specify a placeholder panel for now if we don't have one already
-        if ((jobPanel.getJob().getPanels() == null)
-                || (jobPanel.getJob().getPanels() != null && jobPanel.getJob().getPanels().size() == 0)) {
-            jobPanel.getJob().addPanel(
-                    new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
-                            new Length(0, LengthUnit.Millimeters), "", false,
-                            new Placement("PanelFid1"), new Placement("PanelFid2")));
-        }
-        
-        // Row and column
-        int rows = jobPanel.getJob().getPanels().get(0).getRows();
-        int cols = jobPanel.getJob().getPanels().get(0).getColumns();
+        jPanel.add(new JLabel("Number of Columns", JLabel.RIGHT), "2, 2, right, default");
+        textFieldPCBColumns = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+        jPanel.add(textFieldPCBColumns, "4, 2, fill, default");
 
-        panel.add(new JLabel("Number of Columns", JLabel.RIGHT), "2, 2, right, default");
-        textFieldPCBColumns = new JSpinner(new SpinnerNumberModel(cols, 1, 6, 1));
-        panel.add(textFieldPCBColumns, "4, 2, fill, default");
-
-        panel.add(new JLabel("Number of Rows", JLabel.RIGHT), "2, 4, right, default");
-        textFieldPCBRows = new JSpinner(new SpinnerNumberModel(rows, 1, 6, 1));
-        panel.add(textFieldPCBRows, "4, 4, fill, default");
+        jPanel.add(new JLabel("Number of Rows", JLabel.RIGHT), "2, 4, right, default");
+        textFieldPCBRows = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+        jPanel.add(textFieldPCBRows, "4, 4, fill, default");
 
         // Spacing
-        panel.add(new JLabel("X Spacing", JLabel.RIGHT), "2, 6, right, default");
+        jPanel.add(new JLabel("X Spacing", JLabel.RIGHT), "2, 6, right, default");
         textFieldboardXSpacing = new JTextField();
-        textFieldboardXSpacing.setText(String.format("%.3f", jobPanel.getJob().getPanels().get(0)
-                .getXGap().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
-        panel.add(textFieldboardXSpacing, "4, 6, fill, default");
+        jPanel.add(textFieldboardXSpacing, "4, 6, fill, default");
 
-        panel.add(new JLabel("Y Spacing", JLabel.RIGHT), "2, 8, right, default");
+        jPanel.add(new JLabel("Y Spacing", JLabel.RIGHT), "2, 8, right, default");
         textFieldboardYSpacing = new JTextField();
-        textFieldboardYSpacing.setText(String.format("%.3f", jobPanel.getJob().getPanels().get(0)
-                .getYGap().convertToUnits(Configuration.get().getSystemUnits()).getValue()));
-        panel.add(textFieldboardYSpacing, "4, 8, fill, default");
+        jPanel.add(textFieldboardYSpacing, "4, 8, fill, default");
 
         // Fiducial coords
 
-        Location fid0Loc = jobPanel.getJob().getPanels().get(0).getFiducials().get(0).getLocation();
-        panel.add(new JLabel("Panel Fid1 X", JLabel.RIGHT), "2, 10, right, default");
+        jPanel.add(new JLabel("Panel Fid1 X", JLabel.RIGHT), "2, 10, right, default");
         textFieldboardPanelFid1X = new JTextField();
-        textFieldboardPanelFid1X.setText(String.format("%.3f",
-                fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
-        panel.add(textFieldboardPanelFid1X, "4, 10, fill, default");
+        jPanel.add(textFieldboardPanelFid1X, "4, 10, fill, default");
 
-        panel.add(new JLabel("Panel Fid1 Y", JLabel.RIGHT), "2, 12, right, default");
+        jPanel.add(new JLabel("Panel Fid1 Y", JLabel.RIGHT), "2, 12, right, default");
         textFieldboardPanelFid1Y = new JTextField();
-        textFieldboardPanelFid1Y.setText(String.format("%.3f",
-                fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
-        panel.add(textFieldboardPanelFid1Y, "4, 12, fill, default");
+        jPanel.add(textFieldboardPanelFid1Y, "4, 12, fill, default");
 
-        Location fid1Loc = jobPanel.getJob().getPanels().get(0).getFiducials().get(1).getLocation();
-        panel.add(new JLabel("Panel Fid2 X", JLabel.RIGHT), "2, 14, right, default");
+        jPanel.add(new JLabel("Panel Fid2 X", JLabel.RIGHT), "2, 14, right, default");
         textFieldboardPanelFid2X = new JTextField();
-        textFieldboardPanelFid2X.setText(String.format("%.3f",
-                fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
-        panel.add(textFieldboardPanelFid2X, "4, 14, fill, default");
+        jPanel.add(textFieldboardPanelFid2X, "4, 14, fill, default");
 
-        panel.add(new JLabel("Panel Fid2 Y", JLabel.RIGHT), "2, 16, right, default");
+        jPanel.add(new JLabel("Panel Fid2 Y", JLabel.RIGHT), "2, 16, right, default");
         textFieldboardPanelFid2Y = new JTextField();
-        textFieldboardPanelFid2Y.setText(String.format("%.3f",
-                fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
-        panel.add(textFieldboardPanelFid2Y, "4, 16, fill, default");
+        jPanel.add(textFieldboardPanelFid2Y, "4, 16, fill, default");
 
-        panel.add(new JLabel("Global Fiducial Part", JLabel.RIGHT), "2, 16, right, default");
+        jPanel.add(new JLabel("Panel Fiducial Part", JLabel.RIGHT), "2, 16, right, default");
         partsComboBox = new JComboBox(new PartsComboBoxModel());
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+        
+        jPanel.add(partsComboBox, "4, 18, fill, default");
 
-        // Very verbose...there must be a better way
-        for (int i = 0; i < partsComboBox.getItemCount(); i++) {
-            Part p = (Part) (partsComboBox.getItemAt(i));
-            if (p.getId().equals(jobPanel.getJob().getPanels().get(0).getPartId())) {
-                partsComboBox.setSelectedIndex(i);
-                break;
-            }
-        }
-
-        panel.add(partsComboBox, "4, 18, fill, default");
-
-        panel.add(new JLabel("Check Fiducials", JLabel.RIGHT), "2, 20, right, default");
+        jPanel.add(new JLabel("Check Panel Fiducials", JLabel.RIGHT), "2, 20, right, default");
         checkFidsCheckBox = new JCheckBox();
-        checkFidsCheckBox.setSelected(jobPanel.getJob().getPanels().get(0).isCheckFiducials());
-        panel.add(checkFidsCheckBox, "4, 20, fill, default");
+        jPanel.add(checkFidsCheckBox, "4, 20, fill, default");
 
         JPanel footerPanel = new JPanel();
         FlowLayout flowLayout = (FlowLayout) footerPanel.getLayout();
@@ -172,6 +142,38 @@ public class DlgAutoPanelize extends JDialog {
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", cancelAction);
+        
+        // Specify a placeholder panel for now if we don't have one already
+        if (jobPanel.getJob().getPanels() == null || jobPanel.getJob().getPanels().isEmpty()) {
+            jobPanel.getJob().addPanel(
+                    new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
+                            new Length(0, LengthUnit.Millimeters), "", false,
+                            new Placement("PanelFid1"), new Placement("PanelFid2")));
+        }
+
+        // Set current values.
+        Panel panel = jobPanel.getJob().getPanels().get(0);
+        int rows = panel.getRows();
+        int cols = panel.getColumns();
+        
+        textFieldPCBColumns.setValue(cols);
+        textFieldPCBRows.setValue(rows);
+        partsComboBox.setSelectedItem(panel.getFiducialPart());
+        textFieldboardXSpacing.setText(String.format("%.3f", panel.getXGap()
+                .convertToUnits(Configuration.get().getSystemUnits()).getValue()));
+        textFieldboardYSpacing.setText(String.format("%.3f", panel.getYGap()
+                .convertToUnits(Configuration.get().getSystemUnits()).getValue()));
+        Location fid0Loc = panel.getFiducials().get(0).getLocation();
+        Location fid1Loc = panel.getFiducials().get(1).getLocation();
+        textFieldboardPanelFid1X.setText(String.format("%.3f",
+                fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
+        textFieldboardPanelFid1Y.setText(String.format("%.3f",
+                fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
+        textFieldboardPanelFid2X.setText(String.format("%.3f",
+                fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
+        textFieldboardPanelFid2Y.setText(String.format("%.3f",
+                fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
+        checkFidsCheckBox.setSelected(panel.isCheckFiducials());
     }
 
     private class SwingAction extends AbstractAction {
