@@ -40,6 +40,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.util.UiUtils;
 
 public class DlgAutoPanelize extends JDialog {
     final private JobPanel jobPanel;
@@ -185,66 +186,68 @@ public class DlgAutoPanelize extends JDialog {
         }
 
         public void actionPerformed(ActionEvent e) {
-            int cols = (int) (textFieldPCBColumns.getValue());
-            int rows = (int) (textFieldPCBRows.getValue());
-            Length gapX = lengthConverter.convertReverse(textFieldboardXSpacing.getText());
-            Length gapY = lengthConverter.convertReverse(textFieldboardYSpacing.getText());
-            Length globalFid1X = lengthConverter.convertReverse(textFieldboardPanelFid1X.getText());
-            Length globalFid1Y = lengthConverter.convertReverse(textFieldboardPanelFid1Y.getText());
-            Length globalFid2X = lengthConverter.convertReverse(textFieldboardPanelFid2X.getText());
-            Length globalFid2Y = lengthConverter.convertReverse(textFieldboardPanelFid2Y.getText());
-            Part part = (Part) partsComboBox.getSelectedItem();
-            String partId = part == null ? null : part.getId();
-
-            // The selected PCB is the one we'll panelize
-            BoardLocation rootPCB = jobPanel.getSelectedBoardLocation();
-
-            Placement p0 = new Placement("PanelFid1");
-            p0.setType(Placement.Type.Fiducial);
-            MutableLocationProxy p0Location = new MutableLocationProxy();
-            p0Location.setLocation(new Location(LengthUnit.Millimeters));
-            p0Location.setLengthX(globalFid1X);
-            p0Location.setLengthY(globalFid1Y);
-            p0Location.setRotation(rootPCB.getLocation().getRotation());
-            p0.setLocation(p0Location.getLocation());
-            p0.setPart(part);
-            
-            Placement p1 = new Placement("PanelFid2");
-            p1.setType(Placement.Type.Fiducial);
-            MutableLocationProxy p1Location = new MutableLocationProxy();
-            p1Location.setLocation(new Location(LengthUnit.Millimeters));
-            p1Location.setLengthX(globalFid2X);
-            p1Location.setLengthY(globalFid2Y);
-            p1Location.setRotation(rootPCB.getLocation().getRotation());
-            p1.setLocation(p1Location.getLocation());
-            p1.setPart(part);
-
-            Panel pcbPanel = new Panel("Panel1", cols, rows, gapX, gapY, partId,
-                    checkFidsCheckBox.isSelected(), p0, p1);
-
-            jobPanel.getJob().removeAllPanels();
-
-            if ((rows == 1) && (cols == 1)) {
-                // Here, the user has effectively shut off panelization by
-                // specifying row = col = 1. In this case, we don't
-                // want the panelization info to appear in the job file any
-                // longer. We also need to remove all the boards created
-                // by the panelization previously EXCEPT for the root PCB.
-                // Remember, too, that the condition upon entry into
-                // this dlg was that there was a single board in the list.
-                // When this feature is turned off, there will again
-                // be a single board in the list
-                BoardLocation b = jobPanel.getJob().getBoardLocations().get(0);
-                jobPanel.getJob().removeAllBoards();
-                jobPanel.getJob().addBoardLocation(b);
-                jobPanel.refresh();
-            }
-            else {
-                // Here, panelization is active.
-                jobPanel.getJob().addPanel(pcbPanel);
-                jobPanel.populatePanelSettingsIntoBoardLocations();
-            }
-            setVisible(false);
+            UiUtils.messageBoxOnException(() -> {
+                int cols = (int) (textFieldPCBColumns.getValue());
+                int rows = (int) (textFieldPCBRows.getValue());
+                Length gapX = lengthConverter.convertReverse(textFieldboardXSpacing.getText());
+                Length gapY = lengthConverter.convertReverse(textFieldboardYSpacing.getText());
+                Length globalFid1X = lengthConverter.convertReverse(textFieldboardPanelFid1X.getText());
+                Length globalFid1Y = lengthConverter.convertReverse(textFieldboardPanelFid1Y.getText());
+                Length globalFid2X = lengthConverter.convertReverse(textFieldboardPanelFid2X.getText());
+                Length globalFid2Y = lengthConverter.convertReverse(textFieldboardPanelFid2Y.getText());
+                Part part = (Part) partsComboBox.getSelectedItem();
+                String partId = part == null ? null : part.getId();
+    
+                // The selected PCB is the one we'll panelize
+                BoardLocation rootPCB = jobPanel.getSelectedBoardLocation();
+    
+                Placement p0 = new Placement("PanelFid1");
+                p0.setType(Placement.Type.Fiducial);
+                MutableLocationProxy p0Location = new MutableLocationProxy();
+                p0Location.setLocation(new Location(LengthUnit.Millimeters));
+                p0Location.setLengthX(globalFid1X);
+                p0Location.setLengthY(globalFid1Y);
+                p0Location.setRotation(rootPCB.getLocation().getRotation());
+                p0.setLocation(p0Location.getLocation());
+                p0.setPart(part);
+                
+                Placement p1 = new Placement("PanelFid2");
+                p1.setType(Placement.Type.Fiducial);
+                MutableLocationProxy p1Location = new MutableLocationProxy();
+                p1Location.setLocation(new Location(LengthUnit.Millimeters));
+                p1Location.setLengthX(globalFid2X);
+                p1Location.setLengthY(globalFid2Y);
+                p1Location.setRotation(rootPCB.getLocation().getRotation());
+                p1.setLocation(p1Location.getLocation());
+                p1.setPart(part);
+    
+                Panel pcbPanel = new Panel("Panel1", cols, rows, gapX, gapY, partId,
+                        checkFidsCheckBox.isSelected(), p0, p1);
+    
+                jobPanel.getJob().removeAllPanels();
+    
+                if ((rows == 1) && (cols == 1)) {
+                    // Here, the user has effectively shut off panelization by
+                    // specifying row = col = 1. In this case, we don't
+                    // want the panelization info to appear in the job file any
+                    // longer. We also need to remove all the boards created
+                    // by the panelization previously EXCEPT for the root PCB.
+                    // Remember, too, that the condition upon entry into
+                    // this dlg was that there was a single board in the list.
+                    // When this feature is turned off, there will again
+                    // be a single board in the list
+                    BoardLocation b = jobPanel.getJob().getBoardLocations().get(0);
+                    jobPanel.getJob().removeAllBoards();
+                    jobPanel.getJob().addBoardLocation(b);
+                    jobPanel.refresh();
+                }
+                else {
+                    // Here, panelization is active.
+                    jobPanel.getJob().addPanel(pcbPanel);
+                    jobPanel.populatePanelSettingsIntoBoardLocations();
+                }
+                setVisible(false);
+            });
         }
     }
 
