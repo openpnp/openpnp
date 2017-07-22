@@ -25,10 +25,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.JobPanel;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -50,7 +52,6 @@ public class DlgAutoPanelize extends JDialog {
     private JTextField textFieldboardPanelFid1Y;
     private JTextField textFieldboardPanelFid2X;
     private JTextField textFieldboardPanelFid2Y;
-    private JTextField textFieldFidDiameter;
     private JComboBox partsComboBox;
     private JCheckBox checkFidsCheckBox;
     private final Action okAction = new SwingAction();
@@ -143,6 +144,13 @@ public class DlgAutoPanelize extends JDialog {
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", cancelAction);
         
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardXSpacing);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardYSpacing);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid1X);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid1Y);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid2X);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldboardPanelFid2Y);
+        
         // Specify a placeholder panel for now if we don't have one already
         if (jobPanel.getJob().getPanels() == null || jobPanel.getJob().getPanels().isEmpty()) {
             jobPanel.getJob().addPanel(
@@ -159,20 +167,14 @@ public class DlgAutoPanelize extends JDialog {
         textFieldPCBColumns.setValue(cols);
         textFieldPCBRows.setValue(rows);
         partsComboBox.setSelectedItem(panel.getFiducialPart());
-        textFieldboardXSpacing.setText(String.format("%.3f", panel.getXGap()
-                .convertToUnits(Configuration.get().getSystemUnits()).getValue()));
-        textFieldboardYSpacing.setText(String.format("%.3f", panel.getYGap()
-                .convertToUnits(Configuration.get().getSystemUnits()).getValue()));
+        textFieldboardXSpacing.setText(lengthConverter.convertForward(panel.getXGap()));
+        textFieldboardYSpacing.setText(lengthConverter.convertForward(panel.getYGap()));
         Location fid0Loc = panel.getFiducials().get(0).getLocation();
+        textFieldboardPanelFid1X.setText(lengthConverter.convertForward(fid0Loc.getLengthX()));
+        textFieldboardPanelFid1Y.setText(lengthConverter.convertForward(fid0Loc.getLengthY()));
         Location fid1Loc = panel.getFiducials().get(1).getLocation();
-        textFieldboardPanelFid1X.setText(String.format("%.3f",
-                fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
-        textFieldboardPanelFid1Y.setText(String.format("%.3f",
-                fid0Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
-        textFieldboardPanelFid2X.setText(String.format("%.3f",
-                fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getX()));
-        textFieldboardPanelFid2Y.setText(String.format("%.3f",
-                fid1Loc.convertToUnits(Configuration.get().getSystemUnits()).getY()));
+        textFieldboardPanelFid2X.setText(lengthConverter.convertForward(fid1Loc.getLengthX()));
+        textFieldboardPanelFid2Y.setText(lengthConverter.convertForward(fid1Loc.getLengthY()));
         checkFidsCheckBox.setSelected(panel.isCheckFiducials());
     }
 
@@ -185,33 +187,39 @@ public class DlgAutoPanelize extends JDialog {
         public void actionPerformed(ActionEvent e) {
             int cols = (int) (textFieldPCBColumns.getValue());
             int rows = (int) (textFieldPCBRows.getValue());
-            double gapX = Double.parseDouble(textFieldboardXSpacing.getText());
-            double gapY = Double.parseDouble(textFieldboardYSpacing.getText());
-            double globalFid1X = Double.parseDouble(textFieldboardPanelFid1X.getText());
-            double globalFid1Y = Double.parseDouble(textFieldboardPanelFid1Y.getText());
-            double globalFid2X = Double.parseDouble(textFieldboardPanelFid2X.getText());
-            double globalFid2Y = Double.parseDouble(textFieldboardPanelFid2Y.getText());
+            Length gapX = lengthConverter.convertReverse(textFieldboardXSpacing.getText());
+            Length gapY = lengthConverter.convertReverse(textFieldboardYSpacing.getText());
+            Length globalFid1X = lengthConverter.convertReverse(textFieldboardPanelFid1X.getText());
+            Length globalFid1Y = lengthConverter.convertReverse(textFieldboardPanelFid1Y.getText());
+            Length globalFid2X = lengthConverter.convertReverse(textFieldboardPanelFid2X.getText());
+            Length globalFid2Y = lengthConverter.convertReverse(textFieldboardPanelFid2Y.getText());
             Part part = (Part) partsComboBox.getSelectedItem();
+            String partId = part == null ? null : part.getId();
 
             // The selected PCB is the one we'll panelize
             BoardLocation rootPCB = jobPanel.getSelectedBoardLocation();
 
             Placement p0 = new Placement("PanelFid1");
             p0.setType(Placement.Type.Fiducial);
-            p0.setLocation(
-                    new Location(Configuration.get().getSystemUnits(), globalFid1X, globalFid1Y,
-                            rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
+            MutableLocationProxy p0Location = new MutableLocationProxy();
+            p0Location.setLocation(new Location(LengthUnit.Millimeters));
+            p0Location.setLengthX(globalFid1X);
+            p0Location.setLengthY(globalFid1Y);
+            p0Location.setRotation(rootPCB.getLocation().getRotation());
+            p0.setLocation(p0Location.getLocation());
             p0.setPart(part);
+            
             Placement p1 = new Placement("PanelFid2");
-            p0.setType(Placement.Type.Fiducial);
-            p1.setLocation(
-                    new Location(Configuration.get().getSystemUnits(), globalFid2X, globalFid2Y,
-                            rootPCB.getLocation().getZ(), rootPCB.getLocation().getRotation()));
+            p1.setType(Placement.Type.Fiducial);
+            MutableLocationProxy p1Location = new MutableLocationProxy();
+            p1Location.setLocation(new Location(LengthUnit.Millimeters));
+            p1Location.setLengthX(globalFid2X);
+            p1Location.setLengthY(globalFid2Y);
+            p1Location.setRotation(rootPCB.getLocation().getRotation());
+            p1.setLocation(p1Location.getLocation());
             p1.setPart(part);
 
-            Panel pcbPanel = new Panel("Panel1", cols, rows,
-                    new Length(gapX, Configuration.get().getSystemUnits()),
-                    new Length(gapY, Configuration.get().getSystemUnits()), part.getId(),
+            Panel pcbPanel = new Panel("Panel1", cols, rows, gapX, gapY, partId,
                     checkFidsCheckBox.isSelected(), p0, p1);
 
             jobPanel.getJob().removeAllPanels();
