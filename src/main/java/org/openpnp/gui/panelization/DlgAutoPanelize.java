@@ -113,8 +113,21 @@ public class DlgAutoPanelize extends JDialog {
         jPanel.add(textFieldboardPanelFid2Y, "4, 16, fill, default");
 
         jPanel.add(new JLabel("Panel Fiducial Part", JLabel.RIGHT), "2, 16, right, default");
-        partsComboBox = new JComboBox(new PartsComboBoxModel());
-        partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+        partsComboBox = new JComboBox();
+        partsComboBox.setEditable(false);
+        partsComboBox.setLightWeightPopupEnabled(false);
+        partsComboBox.setMaximumRowCount(7);
+
+        for (Part p: Configuration.get().getParts()) {
+                        /* @vonnieda wants all several 1000+ parts on drop down list
+                         * instead of only fiducials for selecting fiducials.
+                         * with small jobs only i have seen 1400 parts increase per year.
+                         */
+                        // if(p.getId().toLowerCase().startsWith("fid")) {  
+                            partsComboBox.addItem(p.getId()); 
+                        // } else { continue; } 
+            if (p.getId().equals(jobPanel.getJob().getPanels().get(0).getPartId())) { partsComboBox.setSelectedItem(p.getId()); }
+        }
         
         jPanel.add(partsComboBox, "4, 18, fill, default");
 
