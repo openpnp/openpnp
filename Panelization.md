@@ -1,6 +1,6 @@
 Panelizing is the process of taking a single board design, and replicating it in X and/or Y directions. Assembly houses prefer panelized designs because it lets you take a small board with a few parts and turn it into a large panel with lots of parts, thus minimizing the time related to board changeover. 
 
-## Panelization Limits
+## Panelization Limitations
 In the current release, it is expected that there is a single board loaded in the job. It's not possible to have several PCB loaded in the job, and panelize just one of the PCB or all of the PCB. You must have a job loaded with a single PCB loaded.
 
 ## Panelization Attributes
@@ -12,6 +12,9 @@ The image below shows a panelized design. There are a few key features readily v
 Note that each board in the panel also has fiducials. If you have fiducials on your panel, in many cases you don't need them on each board. OpenPNP will work with just board fiducials, just panel fiducials, or board and panel fiducials. The final choice will be related to the overall accuracy of your machine. A very accurate machine could get by with just panel fiducials. 
 
 In the panel image above, notice that in the X direction the boards are spaced line-to-line. That is, the right edge of the 0,0 board is butted directly against the left edge of the 1,0 board. This is an X spacing of 0. In the Y direction, there is a small gap because this design uses castellated vias. The Y spacing in this case is 1 mm. 
+
+Below is a drawing highlighting some of the key concepts. 
+![](https://user-images.githubusercontent.com/24760857/28502812-766aba98-6faf-11e7-8d72-569b414988d8.PNG)
 
 ## Coordinate Systems
 There are two coordinate systems to keep mind when panelizing a board. You can think of these as global coordinates and PCB coordinates. This is not a big shift from what is done today. Normally in OpenPNP, you specify each PCB location in global coordinates, and then you specify each part on the PCB in PCB coordinates. Part coordinates are relative to the PCB XY location.
