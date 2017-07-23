@@ -1,5 +1,10 @@
 Panelizing is the process of taking a single board design, and replicating it in X and/or Y directions. Assembly houses prefer panelized designs because it lets you take a small board with a few parts and turn it into a large panel with lots of parts, thus minimizing the time related to board changeover. 
 
+## Panelization Limits
+In the current release, it is expected that there is a single board loaded in the job. It's not possible to have several PCB loaded in the job, and panelize just one of the PCB or all of the PCB. You must have a job loaded with a single PCB loaded.
+
+## Panelization Attributes
+
 The image below shows a panelized design. There are a few key features readily visible on this panel. First, the panel is a 3x3 configuration--there are 3 rows of the design and 3 columns of the design. Second, note that lower left left and upper right have fiducials. As with fiducials on a single PCB, fiducials here help the PNP machine orient the board and determine if any rotation is present. In the image below, it's clear that the image is rotated. This was done for testing.
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24583526/f4908b70-1701-11e7-8f6c-890540e15435.png)
@@ -8,10 +13,17 @@ Note that each board in the panel also has fiducials. If you have fiducials on y
 
 In the panel image above, notice that in the X direction the boards are spaced line-to-line. That is, the right edge of the 0,0 board is butted directly against the left edge of the 1,0 board. This is an X spacing of 0. In the Y direction, there is a small gap because this design uses castellated vias. The Y spacing in this case is 1 mm. 
 
+## Coordinate Systems
+There are two coordinate systems to keep mind when panelizing a board. You can think of these as global coordinates and PCB coordinates. This is not a big shift from what is done today. Normally in OpenPNP, you specify each PCB location in global coordinates, and then you specify each part on the PCB in PCB coordinates. Part coordinates are relative to the PCB XY location.
+
+Panelization builds on that. Each of the PCB created by panelizing has a new global coordinate, the the parts for each PCB are located identically. That is C1 and PCB 0, 0 is in the same place as C1 on PCB 3,2.
+
+Where it can get confusing is that panel fiducials are specified relative to the PCB 0,0 lower-left location. 
+
 ## Setting the Design Origin 
+The lower left corner of PCB 0,0 (the lower-left PCB) is the design origin--**which is NOT NECESSARILY THE LOWER LEFT OF THE panel**. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 0,0.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
 
-The lower left corner of PCB 0,0 (the lower-left PCB) is the design origin--**NOT THE LOWER LEFT OF THE PCB**. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 0,0.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
-
+## Panelizing the Design
 To panelize a design, create a job as you normally would, specifying the expected width and height. With the board selected, you'll see the panelize icon become active.
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589463/76e48fa8-178f-11e7-9668-61875589a153.png)
@@ -32,10 +44,16 @@ There is an icon provided in the Job panel to perform a fiducial check on a boar
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589461/76d76ef4-178f-11e7-8756-42ddbb2a25a1.png)
 
+## Fiducials
+it is expected that the panel will have two fiducials that are specified in the Panelization dialog. This could be unique fiducials, or they could be any fiducials that are on individual PCBs (located as far apart as possible, ideally). If no fiducials are on the panel or board, then you could leave the fiducial values as zeros and un-tick the "Check Panel Fiducials" checkbox. Doing this would jump straight to the normal board processing.
+
+Very Important: When you specify fiducial locations in the Panelization Settings dialog, you must specify them in panel coordinates. 
+
 If the fiducial information was correctly specified in the panel fiducial dialog shown above, then OpenPNP will calculate the location of all the boards in the panel and update them in the Job window. Below, we can see the Job window _after_ the panel fiducial check was run. As expected, the rotation for all boards in the panel is the same, and the X and Y locations are updated with some rather cryptic values that takes this rotation (and other parameters) into account. 
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589459/76d47ce4-178f-11e7-9e84-810764bc1c1b.png)
 
+## X-Outs
 When you have a panelized PCB manufactured for production, the fabrication house will ask you if you can accept "X out" boards. This is their way of asking if you can help them out in terms of improving yield (which, in turn, will mean lower cost for you). As a PCB panel increases in size, the chances of a defect occurring increases. Boards for production go through electrical testing, and thus a PCB manufacturer will usually know that a single board in a larger panel has a problem. For example, too much copper was etched away in a certain area resulting in an open. Or not enough copper was etched away in a certain area resulting in a short. In these cases, the manufacturer will mark the board in the panel with a big "X", which indicates to the operator that board should not be placed due to a fault in that particular board
 
 Since X-outs are rare, most panels will have all boards in the panel populated. But if an X-out is encountered, the location can be specified in OpenPNP using the Panel X-out button
