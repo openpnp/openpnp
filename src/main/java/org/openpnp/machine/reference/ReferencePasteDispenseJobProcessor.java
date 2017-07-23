@@ -44,6 +44,10 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
+import org.openpnp.model.Pad;
+import org.openpnp.model.Point;
+import org.openpnp.model.Line;
+
 
 @Root
 public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {
@@ -281,23 +285,87 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
                 boardLocation = boardLocation2;
             }
 
-            Location dispenseLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, boardPad.getLocation());
-            
+            Pad pad = boardPad.getPad();
+            java.awt.Rectangle bounds = pad.getShape().getBounds();
+
+            boolean vertical = bounds.getHeight() > bounds.getWidth();
+            double needleDiameter = 0.3;
+
+            double passes = 0;
+
+            if(vertical) {
+                passes = Math.max(1, bounds.getHeight() / (needleDiameter * 2));
+            }
+            else
+            {
+                passes = Math.max(1, bounds.getWidth() / (needleDiameter * 2));
+
+            }
+
+            Location padLocation = boardPad.getLocation();
+
+            List<Line> toolpaths = new ArrayList<>();
+
+            for (int i = 0; i < Math.round(passes); i++)
+            {
+                Line toolpath;
+                if (vertical)
+                {
+                    double x = (padLocation.getX() - bounds.getHeight() / 2 + (double) bounds.getWidth() / (passes + 1) * (i + 1));
+                    double y = (padLocation.getY() - bounds.getWidth() / 2 + needleDiameter);
+
+                    Point startPoint = new Point(x,y);
+                    Point endPoint = new Point(x, padLocation.getY() + (bounds.getWidth() / 2) - needleDiameter);
+
+                    toolpath = new Line(startPoint, endPoint);
+                }
+                else
+                {
+                    double x = (padLocation.getX() - bounds.getHeight() / 2 + needleDiameter);
+                    double y = (padLocation.getY() - bounds.getWidth() / 2 + (double) bounds.getWidth() / (passes + 1) * (i + 1));
+
+                    Point startPoint = new Point(x,y);
+                    Point endPoint = new Point(padLocation.getX() + (bounds.getWidth() / 2) - needleDiameter, y);
+
+                    toolpath = new Line(startPoint, endPoint);
+                }
+                toolpaths.add(toolpath);
+            }
+
+
             PasteDispenser pasteDispenser = head.getDefaultPasteDispenser();
 
-            MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
+            for(int iIndex=0;iIndex<toolpaths.size();iIndex++)
+            {
+                Line line = toolpaths.get(iIndex);
+
+                Location startLoc = padLocation.derive(line.getFrom().getX(),line.getFrom().getY(),Double.NaN,Double.NaN);
+                Location endLoc = padLocation.derive(line.getTo().getX(),line.getTo().getY(),Double.NaN,Double.NaN);
+
+                Location dispenseStartLocation =
+                        Utils2D.calculateBoardPlacementLocation(boardLocation, startLoc);
+                Location dispenseEndLocation =
+                        Utils2D.calculateBoardPlacementLocation(boardLocation, endLoc);
+
+                MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseStartLocation);
+                MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseEndLocation);
+
+            }
+
+
+/*            MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
 
             pasteDispenser.dispense(null,null,0);
 
             pasteDispenser.moveToSafeZ();
-
+*/
             // Mark the dispense as finished
             jobDispense.status = Status.Complete;
 
-            Logger.debug("Dispensed {} ", dispenseLocation);
+            // Logger.debug("Dispensed {} ", dispenseLocation);
         }
     }
+
 
 
     protected void doCleanup() throws Exception {

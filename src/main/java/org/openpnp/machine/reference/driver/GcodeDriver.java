@@ -252,7 +252,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
     public void dispense(ReferencePasteDispenser dispenser,Location startLocation,Location endLocation,long dispenseTimeMilliseconds) throws Exception {
         Logger.debug("dispense({}, {}, {}, {})", new Object[] {dispenser, startLocation, endLocation, dispenseTimeMilliseconds});
 
-        String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
+     /*   String command = getCommand(null, CommandType.PRE_DISPENSE_COMMAND);
         command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
 
         sendGcode(command);
@@ -268,7 +268,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         command = getCommand(null, CommandType.POST_DISPENSE_COMMAND);
         command = substituteVariable(command, "DispenseTime", dispenseTimeMilliseconds);
-        sendGcode(command);
+        sendGcode(command); */
+
+        moveTo(dispenser,startLocation,1);
+        moveTo(dispenser,endLocation,1);
     }
 
     @Override
