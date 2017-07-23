@@ -11,7 +11,7 @@ The image below shows a panelized design. There are a few key features readily v
 
 Note that each board in the panel also has fiducials. If you have fiducials on your panel, in many cases you don't need them on each board. OpenPNP will work with just board fiducials, just panel fiducials, or board and panel fiducials. The final choice will be related to the overall accuracy of your machine. A very accurate machine could get by with just panel fiducials. 
 
-In the panel image above, notice that in the X direction the boards are spaced line-to-line. That is, the right edge of the 0,0 board is butted directly against the left edge of the 1,0 board. This is an X spacing of 0. In the Y direction, there is a small gap because this design uses castellated vias. The Y spacing in this case is 1 mm. 
+In the panel image above, notice that in the X direction the boards are spaced line-to-line. That is, the right edge of the 1,1 board is butted directly against the left edge of the 1,0 board. This is an X spacing of 0. In the Y direction, there is a small gap because this design uses castellated vias. The Y spacing in this case is 1 mm. 
 
 Below is a drawing highlighting some of the key concepts. Note that PCB 1,1 is the lower left PCB and it is the original PCB you specified. All of the derived PCBs will be based from that location. The lower left of PCB 1,1 is also the design origin. Each PCB will have a unique location in the jobs panel, but the pick and place list for each PCB will be identical,
 ![](https://user-images.githubusercontent.com/24760857/28502812-766aba98-6faf-11e7-8d72-569b414988d8.PNG)
@@ -19,7 +19,7 @@ Below is a drawing highlighting some of the key concepts. Note that PCB 1,1 is t
 The X and Y spacing must be specified and will come from the PCB design. 
 
 ## Setting the Design Origin 
-The lower left corner of PCB 1,1 (the lower-left PCB) is the design origin--**which is NOT NECESSARILY THE LOWER LEFT OF THE panel**. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 0,0.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
+The lower left corner of PCB 1,1 (the lower-left PCB) is the design origin--**which is NOT NECESSARILY THE LOWER LEFT OF THE panel**. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 1,1.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
 
 ## Panelizing the Design
 To panelize a design, create a job as you normally would, specifying the expected width and height. With the board selected, you'll see the panelize icon become active.
@@ -30,7 +30,7 @@ Clicking the panelize design opens a dialog, allowing you specify several parame
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589462/76e110e4-178f-11e7-9085-8078d84d2ee7.png)
 
-In the above image, we've specified the panelized design is a 3x3 array, the X and Y spacings discussed above have been entered, and the panel fiducial locations have been entered. We've also specified a part for the fiducial--in this case the fiducial was 1mm dot. When we select OK, the job list is auto-populated with derived boards. The math at this point is straightforward: We can see the first board location of 0,0 and the derived boards are spaced as expected give the X and Y spacing we entered in the dialog. 
+In the above image, we've specified the panelized design is a 3x3 array, the X and Y spacings discussed above have been entered, and the panel fiducial locations have been entered. We've also specified a part for the fiducial--in this case the fiducial was 1mm dot. When we select OK, the job list is auto-populated with derived boards. The math at this point is straightforward: We can see the first board location of 1,1 and the derived boards are spaced as expected give the X and Y spacing we entered in the dialog. 
 
 ![](https://cloud.githubusercontent.com/assets/24760857/24589460/76d4d0d6-178f-11e7-8112-c5066a2eba87.png)
 
