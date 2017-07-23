@@ -288,7 +288,12 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             Pad pad = boardPad.getPad();
             java.awt.Rectangle bounds = pad.getShape().getBounds();
 
-            boolean vertical = bounds.getHeight() > bounds.getWidth();
+            boolean vertical = false  ;
+            if((boardPad.getLocation().getRotation() >=90 &&  boardPad.getLocation().getRotation() >=180)  || boardPad.getLocation().getRotation() == 0 )
+            {
+                vertical = true;
+            }
+
             double needleDiameter = 0.3;
 
             double passes = 0;
@@ -311,18 +316,18 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
                 Line toolpath;
                 if (vertical)
                 {
-                    double x = (padLocation.getX() - bounds.getHeight() / 2 + (double) bounds.getWidth() / (passes + 1) * (i + 1));
-                    double y = (padLocation.getY() - bounds.getWidth() / 2 + needleDiameter);
+                    double x = (padLocation.getX() - bounds.getWidth() / 2 + (double) bounds.getWidth() / (passes + 1) * (i + 1));
+                    double y = (padLocation.getY() - bounds.getHeight() / 2 + needleDiameter);
 
                     Point startPoint = new Point(x,y);
-                    Point endPoint = new Point(x, padLocation.getY() + (bounds.getWidth() / 2) - needleDiameter);
+                    Point endPoint = new Point(x, padLocation.getY() + (bounds.getHeight() / 2) - needleDiameter);
 
                     toolpath = new Line(startPoint, endPoint);
                 }
                 else
                 {
-                    double x = (padLocation.getX() - bounds.getHeight() / 2 + needleDiameter);
-                    double y = (padLocation.getY() - bounds.getWidth() / 2 + (double) bounds.getWidth() / (passes + 1) * (i + 1));
+                    double x = (padLocation.getX() - bounds.getWidth() / 2 + needleDiameter);
+                    double y = (padLocation.getY() - bounds.getHeight() / 2 + (double) bounds.getHeight() / (passes + 1) * (i + 1));
 
                     Point startPoint = new Point(x,y);
                     Point endPoint = new Point(padLocation.getX() + (bounds.getWidth() / 2) - needleDiameter, y);
@@ -348,6 +353,8 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
                         Utils2D.calculateBoardPlacementLocation(boardLocation, endLoc);
 
                 MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseStartLocation);
+
+                pasteDispenser.dispense(dispenseStartLocation,dispenseEndLocation,0);
                 MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseEndLocation);
 
             }
