@@ -8,7 +8,9 @@ Note that each board in the panel also has fiducials. If you have fiducials on y
 
 In the panel image above, notice that in the X direction the boards are spaced line-to-line. That is, the right edge of the 0,0 board is butted directly against the left edge of the 1,0 board. This is an X spacing of 0. In the Y direction, there is a small gap because this design uses castellated vias. The Y spacing in this case is 1 mm. 
 
-In this design, the lower left corner of PCB 0,0 is the design origin. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. 
+Setting the Design Origin## 
+
+The lower left corner of PCB 0,0 (the lower-left PCB) is the design origin. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 0,0.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
 
 To panelize a design, create a job as you normally would, specifying the expected width and height. With the board selected, you'll see the panelize icon become active.
 
