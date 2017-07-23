@@ -13,18 +13,13 @@ Note that each board in the panel also has fiducials. If you have fiducials on y
 
 In the panel image above, notice that in the X direction the boards are spaced line-to-line. That is, the right edge of the 0,0 board is butted directly against the left edge of the 1,0 board. This is an X spacing of 0. In the Y direction, there is a small gap because this design uses castellated vias. The Y spacing in this case is 1 mm. 
 
-Below is a drawing highlighting some of the key concepts. 
+Below is a drawing highlighting some of the key concepts. Note that PCB 1,1 is the lower left PCB and it is the original PCB you specified. All of the derived PCBs will be based from that location. The lower left of PCB 1,1 is also the design origin. Each PCB will have a unique location in the jobs panel, but the pick and place list for each PCB will be identical,
 ![](https://user-images.githubusercontent.com/24760857/28502812-766aba98-6faf-11e7-8d72-569b414988d8.PNG)
 
-## Coordinate Systems
-There are two coordinate systems to keep mind when panelizing a board. You can think of these as global coordinates and PCB coordinates. This is not a big shift from what is done today. Normally in OpenPNP, you specify each PCB location in global coordinates, and then you specify each part on the PCB in PCB coordinates. Part coordinates are relative to the PCB XY location.
-
-Panelization builds on that. Each of the PCB created by panelizing has a new global coordinate, the the parts for each PCB are located identically. That is C1 and PCB 0, 0 is in the same place as C1 on PCB 3,2.
-
-Where it can get confusing is that panel fiducials are specified relative to the PCB 0,0 lower-left location. 
+The X and Y spacing must be specified and will come from the PCB design. 
 
 ## Setting the Design Origin 
-The lower left corner of PCB 0,0 (the lower-left PCB) is the design origin--**which is NOT NECESSARILY THE LOWER LEFT OF THE panel**. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 0,0.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
+The lower left corner of PCB 1,1 (the lower-left PCB) is the design origin--**which is NOT NECESSARILY THE LOWER LEFT OF THE panel**. This means the lower left panel fiducial will have a negative Y. We'll enter that information below. This has important implications for your PCB export. **You need to export your PCB such that the lower-left corner of the lower-left PCB is 0,0.** If your design has rails, then some of the those rails (and rail fiducials) will have negative values. 
 
 ## Panelizing the Design
 To panelize a design, create a job as you normally would, specifying the expected width and height. With the board selected, you'll see the panelize icon become active.
