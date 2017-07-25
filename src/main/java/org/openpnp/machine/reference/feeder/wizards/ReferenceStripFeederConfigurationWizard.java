@@ -19,8 +19,10 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -55,6 +58,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
@@ -62,8 +66,13 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.opencv.core.Mat;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
@@ -208,11 +217,39 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
 
+        JPanel panelVision = new JPanel();
+        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
+        contentPanel.add(panelVision);
+        panelVision.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
         lblUseVision = new JLabel("Use Vision?");
-        panelTapeSettings.add(lblUseVision, "2, 8");
+        panelVision.add(lblUseVision, "2, 2");
 
         chckbxUseVision = new JCheckBox("");
-        panelTapeSettings.add(chckbxUseVision, "4, 8");
+        panelVision.add(chckbxUseVision, "4, 2");
+
+        JButton btnEditPipeline = new JButton("Edit Pipeline");
+        btnEditPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    editPipeline();
+                });
+            }
+        });
+        panelVision.add(btnEditPipeline, "2, 4");
+
+        JButton btnResetPipeline = new JButton("Reset Pipeline");
+        btnResetPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetPipeline();
+            }
+        });
+        panelVision.add(btnResetPipeline, "4, 4");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -358,7 +395,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             cameraView.setCameraViewFilter(new CameraViewFilter() {
                 @Override
                 public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                    return showHoles(camera, image, showDetails);
+                    try {
+                        return showHoles(camera, image, showDetails);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                    }
+
+                    return null;
                 }
             });
         }
@@ -393,6 +437,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  cameraView.setText("Checking first part...");
                                  autoSetupCamera.moveTo(action.getLocation());
                                  part1HoleLocations = findHoles(autoSetupCamera);
+                                 if (part1HoleLocations.size() < 1) {
+                                     throw new Exception("No hole found at selected location");
+                                 }
 
                                  cameraView.setText(
                                          "Now click on the center of the second part in the tape.");
@@ -434,6 +481,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  cameraView.setText("Checking second part...");
                                  autoSetupCamera.moveTo(action.getLocation());
                                  List<Location> part2HoleLocations = findHoles(autoSetupCamera);
+                                 if (part2HoleLocations.size() < 1) {
+                                     throw new Exception("No hole found at selected location");
+                                 }
 
                                  List<Location> referenceHoles = deriveReferenceHoles(
                                          part1HoleLocations, part2HoleLocations);
@@ -492,12 +542,20 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
     };
 
-    private List<Location> findHoles(Camera camera) {
+    private List<Location> findHoles(Camera camera) throws Exception {
+        // Process the pipeline to clean up the image
+        CvPipeline pipeline = feeder.getPipeline();
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("feeder", feeder);
+        pipeline.process();
+        // Grab the results
+        Mat mat = pipeline.getResult("results").image;
+        BufferedImage pipelineResult = OpenCvUtils.toBufferedImage(mat);
+        mat.release();
+
         List<Location> holeLocations = new ArrayList<>();
         new FluentCv().setCamera(camera)
-                      .settleAndCapture()
-                      .toGray()
-                      .blurGaussian(feeder.getHoleBlurKernelSize())
+                      .toMat(pipelineResult, "original")
                       .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
                               feeder.getHolePitchMin())
                       .filterCirclesByDistance(feeder.getHoleDistanceMin(),
@@ -515,12 +573,23 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
      * @param image
      * @return
      */
-    private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) {
+    private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) throws Exception {
+        // BufferedCameraImage is used as we want to run the pipeline on an existing image
+        BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
+
+        // Process the pipeline to clean up the image
+        CvPipeline pipeline = feeder.getPipeline();
+        pipeline.setProperty("camera", bufferedImageCamera);
+        pipeline.setProperty("feeder", feeder);
+        pipeline.process();
+        // Grab the results
+        Mat mat = pipeline.getResult("results").image;
+        BufferedImage pipelineResult = OpenCvUtils.toBufferedImage(mat);
+        mat.release();
+
         if (showDetails) {
             return new FluentCv().setCamera(camera)
-                                 .toMat(image, "original")
-                                 .toGray()
-                                 .blurGaussian(feeder.getHoleBlurKernelSize())
+                                 .toMat(pipelineResult, "original")
                                  .findCirclesHough(feeder.getHoleDiameterMin(),
                                          feeder.getHoleDiameterMax(), feeder.getHolePitchMin(),
                                          "houghUnfiltered")
@@ -536,9 +605,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
         else {
             return new FluentCv().setCamera(camera)
-                                 .toMat(image, "original")
-                                 .toGray()
-                                 .blurGaussian(feeder.getHoleBlurKernelSize())
+                                 .toMat(pipelineResult, "original")
                                  .findCirclesHough(feeder.getHoleDiameterMin(),
                                          feeder.getHoleDiameterMax(), feeder.getHolePitchMin())
                                  .filterCirclesByDistance(feeder.getHoleDistanceMin(),
@@ -568,6 +635,22 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         referenceHoles.add(part1ReferenceHole);
         referenceHoles.add(part2ReferenceHole);
         return referenceHoles;
+    }
+
+    private void editPipeline() throws Exception {
+        CvPipeline pipeline = feeder.getPipeline();
+        pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+        pipeline.setProperty("feeder", feeder);
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
+        dialog.getContentPane().setLayout(new BorderLayout());
+        dialog.getContentPane().add(editor);
+        dialog.setSize(1024, 768);
+        dialog.setVisible(true);
+    }
+
+    private void resetPipeline() {
+        feeder.resetPipeline();
     }
 
     private JCheckBox chckbxUseVision;

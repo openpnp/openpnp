@@ -22,11 +22,14 @@ package org.openpnp.machine.reference.feeder;
 
 
 import java.awt.image.BufferedImage;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Action;
 
+import org.apache.commons.io.IOUtils;
+import org.opencv.core.Mat;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -39,8 +42,10 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -102,6 +107,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private boolean visionEnabled = true;
 
+    @Element(required = false)
+    private CvPipeline pipeline = createDefaultPipeline();
+
     @Attribute
     private int feedCount = 0;
 
@@ -136,10 +144,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public Length getHoleLineDistanceMax() {
         return new Length(0.5, LengthUnit.Millimeters);
-    }
-
-    public int getHoleBlurKernelSize() {
-        return 9;
     }
 
     @Override
@@ -254,13 +258,19 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     private Location findClosestHole(Camera camera) {
+        // Process the pipeline to clean up the image
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("feeder", this);
+        pipeline.process();
+        // Grab the results
+        Mat mat = pipeline.getResult("results").image;
+        BufferedImage pipelineResult = OpenCvUtils.toBufferedImage(mat);
+        mat.release();
+
         List<Location> holeLocations = new ArrayList<>();
         BufferedImage image = new FluentCv()
                 .setCamera(camera)
-                .settleAndCapture("original")
-                .saveDebugImage(ReferenceStripFeeder.class, "findClosestHole", "original")
-                .toGray()
-                .blurGaussian(getHoleBlurKernelSize())
+                .toMat(pipelineResult, "original")
                 .findCirclesHough(getHoleDiameterMin(), getHoleDiameterMax(), getHolePitchMin(), "circles")
                 .convertCirclesToLocations(holeLocations)
                 .drawCircles("original")
@@ -276,6 +286,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // if we aren't running in the UI this will fail, and that's okay
         }
         return holeLocations.get(0);
+    }
+
+    public CvPipeline getPipeline() {
+        return pipeline;
+    }
+
+    public void resetPipeline() {
+        pipeline = createDefaultPipeline();
     }
 
     private Length getHoleToPartLateral() {
@@ -391,6 +409,17 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Override
     public Action[] getPropertySheetHolderActions() {
         return null;
+    }
+
+    private static CvPipeline createDefaultPipeline() {
+        try {
+            String xml = IOUtils.toString(ReferenceStripFeeder.class
+                    .getResource("ReferenceStripFeeder-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
     }
 }
 
