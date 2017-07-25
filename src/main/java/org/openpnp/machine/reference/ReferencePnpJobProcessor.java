@@ -46,6 +46,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
@@ -172,8 +173,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Stopped, Message.Reset, State.Uninitialized, this::doReset);
     }
 
+
+	Actuator resetC = null;
     public synchronized void initialize(Job job) throws Exception {
         this.job = job;
+		resetC = Configuration.get().getMachine().getActuatorByName("resetC");
         fsm.send(Message.Initialize);
     }
 
@@ -580,8 +584,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Get the feeder that was used to feed
             Feeder feeder = plannedPlacement.feeder;
 
+            if(resetC!=null) {
+				resetC.actuate(false);
+			}
+
             // Move to the pick location
-            MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+            MovableUtils.moveToLocationAtSafeZ(nozzle, resetC==null?feeder.getPickLocation():feeder.getPickLocation().derive(null,null,null,0.0));
 
             fireTextStatus("Picking %s from %s for %s.", part.getId(), feeder.getName(),
                     placement.getId());
@@ -593,6 +601,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Retract
             nozzle.moveToSafeZ();
+			if(resetC!=null) {
+				nozzle.moveTo(feeder.getPickLocation().multiply(1.,1.,Double.NaN,-1.),1.);
+				resetC.actuate(true);
+			}
 
             Logger.debug("Pick {} from {} with {}", part, feeder, nozzle);
 
