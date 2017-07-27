@@ -23,14 +23,14 @@ OpenPnP includes a Named CSV importer (File -> Import -> Named CSV) which can im
 six valid field are required in order to successful import centeroid data.
 
 The fields the Named CSV importer looks for are: (case sensitive)
-Refs: "Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"
-Vals: "Value", "value", "Val", "val", "Comment", "comment"
-Packs: "Footprint", "footprint", "Package", "package", "Pattern", "pattern"
-Xs: "X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX", "Ref-X(mm)", "Ref-X(mil)"
-Ys: "Y", "y", "Y (mm)", "y (mm)", "Ref Y", "ref y", "PosY", "Ref-Y(mm)", "Ref-Y(mil)"
-Rots: "Rotation", "rotation", "Rot", "rot", "Rotate"
-TBs: "Layer", "layer", "Side", "side", "TB", "tb"
-Heights: "Height", "height", "Height(mil)", "Height(mm)"
+* Refs: "Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"
+* Vals: "Value", "value", "Val", "val", "Comment", "comment"
+* Packs: "Footprint", "footprint", "Package", "package", "Pattern", "pattern"
+* Xs: "X", "x", "X (mm)", "x (mm)", "Ref X", "ref x", "PosX", "Ref-X(mm)", "Ref-X(mil)"
+* Ys: "Y", "y", "Y (mm)", "y (mm)", "Ref Y", "ref y", "PosY", "Ref-Y(mm)", "Ref-Y(mil)"
+* Rots: "Rotation", "rotation", "Rot", "rot", "Rotate"
+* TBs: "Layer", "layer", "Side", "side", "TB", "tb"
+* Heights: "Height", "height", "Height(mil)", "Height(mm)"
 
 Example:
 
