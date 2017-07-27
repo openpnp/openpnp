@@ -22,7 +22,7 @@ Others
 OpenPnP includes a Named CSV importer (File -> Import -> Named CSV) which can import many types of CSV files. Coordinate data must be in Millimeters. Format specifications need to be inside the first 10 lines from file,
 six valid field are required in order to successful import centeroid data.
 
-The fields the Named CSV importer looks for are: (case sensitive)
+The fields that the Named CSV importer will look for are: (case sensitive)
 * Refs: "Designator", "designator", "Part", "part", "Component", "component", "RefDes", "Ref"
 * Vals: "Value", "value", "Val", "val", "Comment", "comment"
 * Packs: "Footprint", "footprint", "Package", "package", "Pattern", "pattern"
