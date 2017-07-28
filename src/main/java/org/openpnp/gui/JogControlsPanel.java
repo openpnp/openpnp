@@ -543,6 +543,40 @@ public class JogControlsPanel extends JPanel {
                     Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
+	
+    @SuppressWarnings("serial")
+    public Action setIncrementHundredthAction = new AbstractAction("0.01mm Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(1);
+		}
+    };
+    @SuppressWarnings("serial")
+    public Action setIncrementTenthAction = new AbstractAction("0.1mm Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(2);
+		}
+    };
+    public Action setIncrementOnesAction = new AbstractAction("1mm Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(3);
+		}
+    };
+    public Action setIncrementTensAction = new AbstractAction("10mm Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(4);
+		}
+    };
+    public Action setIncrementHundredsAction = new AbstractAction("100mm Jog Increment") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            sliderIncrements.setValue(5);
+		}
+    };
+
 
     private void addActuator(Actuator actuator) {
         String name = actuator.getHead() == null ? actuator.getName()
