@@ -1,7 +1,16 @@
 <cv-pipeline>
    <stages>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="9" enabled="true" settle-first="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="1" enabled="true" settle-first="true"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="2" enabled="true" conversion="Bgr2Gray"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="results" enabled="true" kernel-size="9"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="predetect" enabled="true" kernel-size="9"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCirclesHough" name="results" enabled="true">
+         <min-diameter value="1.35" units="Millimeters"/>
+         <max-diameter value="1.65" units="Millimeters"/>
+         <min-distance value="3.6" units="Millimeters"/>
+      </cv-stage>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="5" enabled="true" conversion="Gray2Bgr"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="6" enabled="true" circles-stage-name="results" thickness="1">
+         <color r="255" g="0" b="0" a="255"/>
+      </cv-stage>
    </stages>
 </cv-pipeline>

@@ -42,6 +42,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.opencv.core.Core;
+import org.opencv.core.Point;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewActionEvent;
@@ -66,11 +68,14 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.Ransac;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.opencv.core.Mat;
 
@@ -80,6 +85,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+
+import static org.openpnp.vision.FluentCv.pointToLineDistance;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurationWizard {
@@ -435,7 +442,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                          .submit(new Callable<Void>() {
                              public Void call() throws Exception {
                                  cameraView.setText("Checking first part...");
-                                 autoSetupCamera.moveTo(action.getLocation());
+                                 autoSetupCamera.moveTo(firstPartLocation);
                                  part1HoleLocations = findHoles(autoSetupCamera);
                                  if (part1HoleLocations.size() < 1) {
                                      throw new Exception("No hole found at selected location");
@@ -479,7 +486,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                          .submit(new Callable<Void>() {
                              public Void call() throws Exception {
                                  cameraView.setText("Checking second part...");
-                                 autoSetupCamera.moveTo(action.getLocation());
+                                 autoSetupCamera.moveTo(secondPartLocation);
                                  List<Location> part2HoleLocations = findHoles(autoSetupCamera);
                                  if (part2HoleLocations.size() < 1) {
                                      throw new Exception("No hole found at selected location");
@@ -548,26 +555,60 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("feeder", feeder);
         pipeline.process();
+
         // Grab the results
-        Mat mat = pipeline.getResult("results").image;
-        BufferedImage pipelineResult = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
+        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
+        if (results.isEmpty()) {
+            throw new Exception("Feeder " + getName() + ": No tape holes found.");
+        }
+
+        // Sort by the distance to the camera center (which is over the part, not the hole)
+        results.sort((a, b) -> {
+            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            return da.compareTo(db);
+        });
 
         List<Location> holeLocations = new ArrayList<>();
-        new FluentCv().setCamera(camera)
-                      .toMat(pipelineResult, "original")
-                      .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
-                              feeder.getHolePitchMin())
-                      .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                              feeder.getHoleDistanceMax())
-                      .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                      .convertCirclesToLocations(holeLocations);
+        double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
+        double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
+        for (int i=0; i<results.size(); i++) {
+            CvStage.Result.Circle result = results.get(i);
+            Double distance = VisionUtils.getPixelLocation(camera, result.x, result.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
+            // Min distance is because we're centered at the part, not the hole - so we need to ignore
+            // circles found in the part
+            if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
+                Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
+                holeLocations.add(location);
+            }
+        }
+
         return holeLocations;
     }
 
+    private void drawCircles(Mat mat, List<CvStage.Result.Circle> circles, int numToDraw, Color color) {
+        Color centerColor = new HslColor(color).getComplementary();
+
+        numToDraw = (numToDraw <= circles.size()) ? numToDraw : circles.size();
+        for (int i=0; i<numToDraw; i++) {
+            CvStage.Result.Circle circle = circles.get(i);
+
+            double x = circle.x;
+            double y = circle.y;
+            double radius = circle.diameter / 2.0;
+            Core.circle(mat, new Point(x, y), (int) radius, FluentCv.colorToScalar(color), 2);
+            Core.circle(mat, new Point(x, y), 1, FluentCv.colorToScalar(centerColor), 2);
+        }
+    }
+
     /**
-     * Show candidate holes in the image. Red are any holes that are found. Blue is holes that
-     * passed the distance check but failed the line check. Green passed all checks and are good.
+     * Show candidate holes in the image. Red are any holes that are found. Orange are holes that
+     * passed the distance check but failed the line check. Blue are holes that passed the line
+     * check but are considered superfluous. Green passed all checks and are considered good.
      * 
      * @param camera
      * @param image
@@ -583,37 +624,74 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         pipeline.setProperty("feeder", feeder);
         pipeline.process();
         // Grab the results
-        Mat mat = pipeline.getResult("results").image;
-        BufferedImage pipelineResult = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
+        Mat resultMat = pipeline.getWorkingImage().clone();
+        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
 
-        if (showDetails) {
-            return new FluentCv().setCamera(camera)
-                                 .toMat(pipelineResult, "original")
-                                 .findCirclesHough(feeder.getHoleDiameterMin(),
-                                         feeder.getHoleDiameterMax(), feeder.getHolePitchMin(),
-                                         "houghUnfiltered")
-                                 .drawCircles("original", Color.red, "unfiltered")
-                                 .recall("houghUnfiltered")
-                                 .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                                         feeder.getHoleDistanceMax(), "houghDistanceFiltered")
-                                 .drawCircles("unfiltered", Color.blue, "distanceFiltered")
-                                 .recall("houghDistanceFiltered")
-                                 .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                                 .drawCircles("distanceFiltered", Color.green)
-                                 .toBufferedImage();
+        // Sort by the distance to the camera center (which is over the part, not the hole)
+        results.sort((a, b) -> {
+            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            return da.compareTo(db);
+        });
+
+        List<CvStage.Result.Circle> withinDistance = new ArrayList<CvStage.Result.Circle>();
+        double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
+        double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
+        for (int i=0; i<results.size(); i++) {
+            CvStage.Result.Circle result = results.get(i);
+            Double distance = VisionUtils.getPixelLocation(camera, result.x, result.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
+            // Min distance is because we're centered at the part, not the hole - so we need to ignore
+            // circles found in the part
+            if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
+                withinDistance.add(result);
+            }
+        }
+
+        List<CvStage.Result.Circle> inLine = new ArrayList<CvStage.Result.Circle>();
+        if (withinDistance.size() <= 2) {
+            inLine.addAll(withinDistance);
         }
         else {
-            return new FluentCv().setCamera(camera)
-                                 .toMat(pipelineResult, "original")
-                                 .findCirclesHough(feeder.getHoleDiameterMin(),
-                                         feeder.getHoleDiameterMax(), feeder.getHolePitchMin())
-                                 .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                                         feeder.getHoleDistanceMax())
-                                 .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                                 .drawCircles("original", Color.green)
-                                 .toBufferedImage();
+            double maxDistanceToLine = VisionUtils.toPixels(feeder.getHoleLineDistanceMax(), camera);
+
+            List<Point> points = new ArrayList<>();
+            // collect the circles into a list of points
+            for (int i = 0; i < withinDistance.size(); i++) {
+                CvStage.Result.Circle circle = withinDistance.get(i);
+                points.add(new Point(circle.x, circle.y));
+            }
+
+            Point[] line = Ransac.ransac(points, 100, maxDistanceToLine);
+            Point a = line[0];
+            Point b = line[1];
+
+            // filter the circles by distance from the resulting line
+            for (int i = 0; i < withinDistance.size(); i++) {
+                CvStage.Result.Circle circle = withinDistance.get(i);
+
+                Point p = new Point(circle.x, circle.y);
+                if (pointToLineDistance(a, b, p) <= maxDistanceToLine) {
+                    inLine.add(circle);
+                }
+            }
         }
+
+        if (showDetails) {
+            drawCircles(resultMat, withinDistance, withinDistance.size(), Color.orange);
+            drawCircles(resultMat, inLine, inLine.size(), Color.blue);
+            drawCircles(resultMat, inLine, 2, Color.green);
+        }
+        else {
+            drawCircles(resultMat, inLine, 2, Color.green);
+        }
+
+        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+        resultMat.release();
+        return showResult;
     }
 
     private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations,

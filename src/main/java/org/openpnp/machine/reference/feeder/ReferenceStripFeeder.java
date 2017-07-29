@@ -44,8 +44,10 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -257,35 +259,38 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         visionLocation = actualLocation;
     }
 
-    private Location findClosestHole(Camera camera) {
+    private Location findClosestHole(Camera camera) throws Exception {
         // Process the pipeline to clean up the image
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("feeder", this);
         pipeline.process();
-        // Grab the results
-        Mat mat = pipeline.getResult("results").image;
-        BufferedImage pipelineResult = OpenCvUtils.toBufferedImage(mat);
-        mat.release();
 
-        List<Location> holeLocations = new ArrayList<>();
-        BufferedImage image = new FluentCv()
-                .setCamera(camera)
-                .toMat(pipelineResult, "original")
-                .findCirclesHough(getHoleDiameterMin(), getHoleDiameterMax(), getHolePitchMin(), "circles")
-                .convertCirclesToLocations(holeLocations)
-                .drawCircles("original")
-                .saveDebugImage(ReferenceStripFeeder.class, "findClosestHole", "debug")
-                .toBufferedImage();
-        if (holeLocations.isEmpty()) {
-            return null;
-        }
         try {
-            MainFrame.get().getCameraViews().getCameraView(camera).showFilteredImage(image, 500);
+            MainFrame.get().getCameraViews().getCameraView(camera)
+                    .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
         }
         catch (Exception e) {
             // if we aren't running in the UI this will fail, and that's okay
         }
-        return holeLocations.get(0);
+
+        // Grab the results
+        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
+        if (results.isEmpty()) {
+            throw new Exception("Feeder " + getName() + ": No tape holes found.");
+        }
+
+        // Find the closest result
+        results.sort((a, b) -> {
+            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            return da.compareTo(db);
+        });
+
+        CvStage.Result.Circle closestResult = results.get(0);
+        Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
+        return holeLocation;
     }
 
     public CvPipeline getPipeline() {
