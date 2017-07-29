@@ -38,10 +38,13 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Length;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.ui.converters.LengthPropertySheetConverter;
+import org.openpnp.vision.pipeline.ui.editors.LengthEditor;
 
-import com.l2fprod.common.propertysheet.Property;
-import com.l2fprod.common.propertysheet.PropertySheetPanel;
+import com.l2fprod.common.propertysheet.*;
+import com.l2fprod.common.util.converter.ConverterRegistry;
 
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -49,11 +52,21 @@ public class PipelinePanel extends JPanel {
     private JTable stagesTable;
     private StagesTableModel stagesTableModel;
     private PropertySheetPanel propertySheetPanel;
+    private PipelinePropertySheetTable pipelinePropertySheetTable;
+    private LengthPropertySheetConverter lengthPropertySheetConverter = new LengthPropertySheetConverter();
 
     public PipelinePanel(CvPipelineEditor editor) {
         this.editor = editor;
 
-        propertySheetPanel = new PropertySheetPanel();
+        // Converters for using custom types in the property sheet editor
+        lengthPropertySheetConverter.register(ConverterRegistry.instance());
+
+        // Editors for custom types in the property sheet editor
+        PropertyEditorRegistry propertyEditorRegistry = PropertyEditorRegistry.Instance;
+        propertyEditorRegistry.registerEditor(Length.class, LengthEditor.class);
+
+        pipelinePropertySheetTable = new PipelinePropertySheetTable(this);
+        propertySheetPanel = new PropertySheetPanel(pipelinePropertySheetTable);
         propertySheetPanel.setDescriptionVisible(true);
 
         setLayout(new BorderLayout(0, 0));
@@ -153,24 +166,20 @@ public class PipelinePanel extends JPanel {
         
         splitPaneMain.setResizeWeight(0.5);
         splitPaneStages.setResizeWeight(0.80);
+    }
 
-        // Listen for editing events in the properties and process the pipeline to update the
-        // results.
-        propertySheetPanel.getTable().addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent e) {
-                if ("tableCellEditor".equals(e.getPropertyName())) {
-                    if (!propertySheetPanel.getTable().isEditing()) {
-                        // editing has ended for a cell, save the values
+    public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
+        // editing has ended for a cell, save the values
+        refreshDescription();
 
-                        refreshDescription();
-                        
-                        propertySheetPanel.writeToObject(getSelectedStage());
-                        editor.process();
-                    }
-                }
-            }
-        });
+        // Don't use propertySheetPanel.writeToObject(stage) as it will cause infinitely recursive setValueAt() calls
+        // due to it calling getTable().commitEditing() (which is what called this function originally)
+        PropertySheetTableModel propertySheetTableModel = propertySheetPanel.getTable().getSheetModel();
+        PropertySheetTableModel.Item propertySheetElement = propertySheetTableModel.getPropertySheetElement(row);
+        Property property = propertySheetElement.getProperty();
+        property.writeToObject(getSelectedStage());
+
+        editor.process();
     }
     
     private void refreshProperties() {
