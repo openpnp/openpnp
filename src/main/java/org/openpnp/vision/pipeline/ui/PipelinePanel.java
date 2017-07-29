@@ -40,8 +40,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.vision.pipeline.CvStage;
 
-import com.l2fprod.common.propertysheet.Property;
-import com.l2fprod.common.propertysheet.PropertySheetPanel;
+import com.l2fprod.common.propertysheet.*;
 
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
