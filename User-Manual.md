@@ -136,6 +136,17 @@ There are a few important keyboard shortcuts that are critical to know to use Op
 * Ctrl+<, Ctrl+>: Rotate the currently selected Nozzle counter-clockwise and clockwise.
 * Ctrl+Plus, Ctrl+Minus: Change the jog distance slider. This changes how far each jog key will move the Nozzle.
 * Shift+Left Mouse Click: Hold Shift and left click the mouse anywhere in the camera view to move the camera to that position.
+* Ctrl-Shift-R: Starts a job
+* Ctrl-Shift-S: Steps through the job
+* Ctrl-Shift-A: Stops the job
+* Ctrl-Shift-P: Parks head (Z retract then XY park)
+* Ctrl-Shift-Z: Moves head to safe Z
+* Ctrl-Shift-D: Discard component
+* Ctrl-Shift-F1: 0.01mm / 0.001" jog increment
+* Ctrl-Shift-F2: 0.1mm / 0.01" jog increment
+* Ctrl-Shift-F3: 1mm / 0.1" jog increment
+* Ctrl-Shift-F4: 10mm / 1" jog increment
+* Ctrl-Shift-F5: 100mm / 10" jog increment
 
 The below shortcuts are bound to your system command modifier key. On Windows and Linux this is Ctrl, and on Mac it's Cmd:
 * Modifier+O: Open a Job.
