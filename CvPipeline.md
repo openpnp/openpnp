@@ -24,9 +24,9 @@ The pipeline editor is split into two halves, with the pipeline displayed on the
 
 ## Pipeline
 
-The left side of the pipeline editor is further split into top (pipeline) and bottom (current stages properties) halves. You can add, remove, and re-order the pipeline stages in the top half, and edit the properties for the selected stage in the bottom half.
+The left side of the pipeline editor is further split into top (pipeline stages) and bottom (properties for the selected pipeline stage) halves. You can add, remove, and re-order the pipeline stages in the top half, and edit the properties for the selected pipeline stage in the bottom half.
 
-Each stage has a name which should be unique for each pipeline, which allows subsequent stages to use the results of earlier stages.
+Each pipeline stage has a Name which should be unique for each CvPipeline, which allows subsequent pipeline stages to use the results of earlier pipeline stages.
 
 ## Results
 
