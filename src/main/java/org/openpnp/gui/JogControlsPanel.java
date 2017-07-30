@@ -545,32 +545,35 @@ public class JogControlsPanel extends JPanel {
     };
 	
     @SuppressWarnings("serial")
-    public Action setIncrementHundredthAction = new AbstractAction("0.01mm Jog Increment") {
+    public Action setIncrement1Action = new AbstractAction("First Jog Increment") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(1);
 		}
     };
     @SuppressWarnings("serial")
-    public Action setIncrementTenthAction = new AbstractAction("0.1mm Jog Increment") {
+    public Action setIncrement2Action = new AbstractAction("Second Jog Increment") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(2);
 		}
     };
-    public Action setIncrementOnesAction = new AbstractAction("1mm Jog Increment") {
+    @SuppressWarnings("serial")
+    public Action setIncrement3Action = new AbstractAction("Third Jog Increment") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(3);
 		}
     };
-    public Action setIncrementTensAction = new AbstractAction("10mm Jog Increment") {
+    @SuppressWarnings("serial")
+    public Action setIncrement4Action = new AbstractAction("Fourth Jog Increment") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(4);
 		}
     };
-    public Action setIncrementHundredsAction = new AbstractAction("100mm Jog Increment") {
+    @SuppressWarnings("serial")
+    public Action setIncrement5Action = new AbstractAction("Fifth Jog Increment") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(5);

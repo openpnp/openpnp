@@ -467,15 +467,15 @@ public class MainFrame extends JFrame {
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 machineControlsPanel.getJogControlsPanel().discardAction); // Ctrl-Shift-D for discard
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F1, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
-                machineControlsPanel.getJogControlsPanel().setIncrementHundredthAction);
+                machineControlsPanel.getJogControlsPanel().setIncrement1Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F2, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
-                machineControlsPanel.getJogControlsPanel().setIncrementTenthAction);
+                machineControlsPanel.getJogControlsPanel().setIncrement2Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
-                machineControlsPanel.getJogControlsPanel().setIncrementOnesAction);
+                machineControlsPanel.getJogControlsPanel().setIncrement3Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
-                machineControlsPanel.getJogControlsPanel().setIncrementTensAction);
+                machineControlsPanel.getJogControlsPanel().setIncrement4Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
-                machineControlsPanel.getJogControlsPanel().setIncrementHundredsAction);
+                machineControlsPanel.getJogControlsPanel().setIncrement5Action);
 				
         tabs = new JTabbedPane(JTabbedPane.TOP);
         splitPaneMachineAndTabs.setRightComponent(tabs);
