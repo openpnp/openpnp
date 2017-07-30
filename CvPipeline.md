@@ -30,7 +30,7 @@ Each stage has a name which should be unique for each pipeline, which allows sub
 
 ## Results
 
-You can view the resulting image and any additional data that was produced on the right side of the pipeline editor. Mousing over the image will display the pixel coordinates of the mouse cursor and the pixel colors in RGB and HSV.
+You can view the resulting image and any additional data that was produced on the right side of the pipeline editor. Mousing over the image will display the pixel coordinates of the mouse cursor and the pixel colors in RGB and HSB.
 
 # Running the Editor
 
