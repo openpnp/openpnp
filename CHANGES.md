@@ -3,6 +3,18 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2017-07-30
 
+* Additional Keyboard Shortcut Support
+
+	Several new keyboard shortcuts have been added in an effort to support external control of
+	OpenPnP. The new hot keys allow you to start, step and stop jobs, adjust jog increments and
+	several other useful functions. For full details see the user manual:
+	
+	https://github.com/openpnp/openpnp/wiki/User-Manual#keyboard-shortcuts
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/609
+	
+	Thank you to @yaddatrance for this helpful improvement!
+
 * CvPipeline Editor Result Pinning
 
 	Pipeline editor now supports pinning a stage's output so you can see how changes in
