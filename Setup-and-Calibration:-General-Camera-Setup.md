@@ -22,6 +22,10 @@
 [[OpenCVCamera]] - USB cameras  
 [[OnvifIPCamera]] - IP (network) cameras
 
+## Lens Calibration
+
+Lens calibration can be used to remove lens distortion from your camera. It can also remove the fisheye effect from short lenses. An easy way to tell if you need lens calibration is to hold a piece of graph paper in front of it and see if the lines look curved in the image. If they do, check out [[Camera Lens Calibration]] to learn how to correct it and then come back to this page to continue the rest of the setup.
+
 ## Set Rotation and Transforms
 
 When you look at the camera image in OpenPnP it should be right side up. Depending on how your camera is mounted, this might not be the case. By setting transformations in the camera configuration you can adjust the image so it appears correct.
@@ -63,8 +67,4 @@ Settle time is the amount of time it takes for your camera to adjust to what it'
 
 1. With the camera selected in the Machine Setup tab, select the General Configuration tab from the right.
 2. In the configuration panel, look for Settle Time (ms) and change the value to the number of milliseconds required. The easiest way to determine the value is to start high (2000ms) and then lower it until you stop getting good results and use a slightly higher value.
-
-## Lens Calibration
-
-Lens calibration can be used to remove lens distortion from your camera. It can also remove the fisheye effect from short lenses. An easy way to tell if you need lens calibration is to hold a piece of graph paper in front of it and see if the lines look curved in the image. If they do, check out [[Camera Lens Calibration]] to learn how to correct it.
 
