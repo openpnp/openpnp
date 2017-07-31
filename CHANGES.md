@@ -1,6 +1,41 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-07-30
+
+* Additional Keyboard Shortcut Support
+
+	Several new keyboard shortcuts have been added in an effort to support external control of
+	OpenPnP. The new hot keys allow you to start, step and stop jobs, adjust jog increments and
+	several other useful functions. For full details see the user manual:
+	
+	https://github.com/openpnp/openpnp/wiki/User-Manual#keyboard-shortcuts
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/609
+	
+	Thank you to @yaddatrance for this helpful improvement!
+
+* CvPipeline Editor Result Pinning
+
+	Pipeline editor now supports pinning a stage's output so you can see how changes in
+	other stages affect the pinned one. Select any stage and then click the Pin icon in the
+	results panel to pin that stage. Selecting any other stage will let you edit that stage
+	while seeing the results of the one you pinned. Click the pin icon again to turn it off.
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/612
+	
+	Thank you to @richard-sim for this awesome improvement!
+	
+* CvPipeline Editor Null Value Fix
+
+	Fixes issue #597 which caused the pipeline editor to sometimes set values to null when
+	changing stages. This bug often caused corrupt stage data and made it impossible to save
+	stages.
+	
+	Fixed in PR https://github.com/openpnp/openpnp/pull/611
+	
+	Many thanks to @richard-sim for tracking down and fixing this bug!
+
 # 2017-07-15
 
 * Code Cleanup: Potential Breaking Change
