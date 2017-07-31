@@ -11,6 +11,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Property;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -18,14 +19,33 @@ import org.simpleframework.xml.Element;
  * Finds circles in the working image and stores the results as a List<Circle> on the model. 
  */
 public class DetectCirclesHough extends CvStage {
-    @Element
-    private Length minDistance = new Length(1.0, LengthUnit.Millimeters);
+    @Attribute
+    @Property(description = "Use unit measurements (requires a camera to be set on the pipeline), otherwise use pixels.")
+    private boolean useUnitMeasurements = false;
 
-    @Element
-    private Length minDiameter = new Length(1.0, LengthUnit.Millimeters);
+    @Attribute(required = false)
+    @Property(description = "Minimum distance between circles, in pixels.")
+    private int minDistance = 10;
 
-    @Element
-    private Length maxDiameter = new Length(10.0, LengthUnit.Millimeters);
+    @Attribute(required = false)
+    @Property(description = "Minimum diameter of circles, in pixels.")
+    private int minDiameter = 10;
+
+    @Attribute(required = false)
+    @Property(description = "Maximum diameter of circles, in pixels.")
+    private int maxDiameter = 100;
+
+    @Element(required = false)
+    @Property(description = "Minimum distance between circles, in units from the camera.")
+    private Length unitMinDistance = new Length(1.0, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    @Property(description = "Minimum diameter of circles, in units from the camera.")
+    private Length unitMinDiameter = new Length(1.0, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    @Property(description = "Maximum diameter of circles, in units from the camera.")
+    private Length unitMaxDiameter = new Length(10.0, LengthUnit.Millimeters);
 
     /**
      * Inverse ratio of the accumulator resolution to the image resolution. For example, if dp=1 ,
@@ -51,28 +71,60 @@ public class DetectCirclesHough extends CvStage {
     @Attribute(required = false)
     private double param2 = 10;
 
-    public Length getMinDistance() {
+    public boolean isUseUnitMeasurements() {
+        return useUnitMeasurements;
+    }
+
+    public void setUseUnitMeasurements(boolean useUnitMeasurements) {
+        this.useUnitMeasurements = useUnitMeasurements;
+    }
+
+    public int getMinDistance() {
         return minDistance;
     }
 
-    public void setMinDistance(Length minDistance) {
+    public void setMinDistance(int minDistance) {
         this.minDistance = minDistance;
     }
 
-    public Length getMinDiameter() {
+    public int getMinDiameter() {
         return minDiameter;
     }
 
-    public void setMinDiameter(Length minDiameter) {
+    public void setMinDiameter(int minDiameter) {
         this.minDiameter = minDiameter;
     }
 
-    public Length getMaxDiameter() {
+    public int getMaxDiameter() {
         return maxDiameter;
     }
 
-    public void setMaxDiameter(Length maxDiameter) {
+    public void setMaxDiameter(int maxDiameter) {
         this.maxDiameter = maxDiameter;
+    }
+
+    public Length getUnitMinDistance() {
+        return unitMinDistance;
+    }
+
+    public void setUnitMinDistance(Length unitMinDistance) {
+        this.unitMinDistance = unitMinDistance;
+    }
+
+    public Length getUnitMinDiameter() {
+        return unitMinDiameter;
+    }
+
+    public void setUnitMinDiameter(Length unitMinDiameter) {
+        this.unitMinDiameter = unitMinDiameter;
+    }
+
+    public Length getUnitMaxDiameter() {
+        return unitMaxDiameter;
+    }
+
+    public void setUnitMaxDiameter(Length unitMaxDiameter) {
+        this.unitMaxDiameter = unitMaxDiameter;
     }
 
     public double getDp() {
@@ -102,17 +154,26 @@ public class DetectCirclesHough extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
-        if (camera == null) {
+        if ((camera == null) && useUnitMeasurements) {
             throw new Exception("No Camera set on pipeline.");
+        }
+
+        int pxMinDistance = minDistance;
+        int pxMinDiameter = minDiameter;
+        int pxMaxDiameter = maxDiameter;
+        if (useUnitMeasurements) {
+            pxMinDistance = (int) VisionUtils.toPixels(unitMinDistance, camera);
+            pxMinDiameter = (int) VisionUtils.toPixels(unitMinDiameter, camera);
+            pxMaxDiameter = (int) VisionUtils.toPixels(unitMaxDiameter, camera);
         }
 
         Mat mat = pipeline.getWorkingImage();
         Mat output = new Mat();
         Imgproc.HoughCircles(mat, output, Imgproc.CV_HOUGH_GRADIENT, dp,
-                (int) VisionUtils.toPixels(minDistance, camera),
+                pxMinDistance,
                 param1, param2,
-                (int) VisionUtils.toPixels(minDiameter, camera) / 2,
-                (int) VisionUtils.toPixels(maxDiameter, camera) / 2);
+                pxMinDiameter / 2,
+                pxMaxDiameter / 2);
         List<Result.Circle> circles = new ArrayList<>();
         for (int i = 0; i < output.cols(); i++) {
             double[] circle = output.get(0, i);
