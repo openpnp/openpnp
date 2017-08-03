@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JOptionPane;
 
 import org.openpnp.machine.reference.ReferencePasteDispenseJobProcessor.JobDispense.Status;
 import org.openpnp.model.BoardLocation;
@@ -47,6 +48,8 @@ import org.simpleframework.xml.Root;
 import org.openpnp.model.Pad;
 import org.openpnp.model.Point;
 import org.openpnp.model.Line;
+
+
 
 
 
@@ -275,7 +278,10 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     }
 
     protected void doDispense() throws Exception {
+        double lastNozzleSize = -1;
         for(JobDispense jobDispense : jobDispenses) {
+
+
             /* if (jobDispense.stepComplete) {
                 continue;
             }*/
@@ -283,6 +289,13 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             BoardLocation boardLocation = jobDispense.boardLocation;
             BoardPad boardPad = jobDispense.boardPad;
 
+            if(lastNozzleSize!=boardPad.getNozzleSize())
+            {
+
+                JOptionPane.showMessageDialog(null, "Dispenser requires nozzle "+boardPad.getNozzleSize()+" please attach it and press ok to continue. ");
+
+                lastNozzleSize = boardPad.getNozzleSize();
+            }
             // Check if there is a fiducial override for the board location and if so, use it.
             if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
                 BoardLocation boardLocation2 = new BoardLocation(boardLocation.getBoard());
