@@ -130,7 +130,7 @@ Finally, note the color and the icon of the buttons. These colors and icons are 
 Keyboard Shortcuts
 ------------------
 There are a few important keyboard shortcuts that are critical to know to use OpenPnP. They are:
-
+* Ctrl+H: Home the machine.
 * Ctrl+Arrow Key: Jog the currently selected Nozzle in X and Y. Up and Down arrows jog in Y and Left and Right arrows jog in X.
 * Ctrl+/, Ctrl+': Jog the currently selected Nozzle down and up in Z.
 * Ctrl+<, Ctrl+>: Rotate the currently selected Nozzle counter-clockwise and clockwise.
