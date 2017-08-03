@@ -15,6 +15,9 @@ public class BoardPad extends AbstractModelObject {
     @Attribute
     protected Side side = Side.Top;
 
+    @Attribute(required = false)
+    protected Double nozzleSize = 0d;
+
     @Element
     protected Location location = new Location(LengthUnit.Millimeters);
 
@@ -51,6 +54,15 @@ public class BoardPad extends AbstractModelObject {
         Object oldValue = this.side;
         this.side = side;
         firePropertyChange("side", oldValue, side);
+    }
+
+    public double getNozzleSize() { return nozzleSize; }
+    public void setNozzleSize(double nsize)
+    {
+        Object oldValue = this.nozzleSize;
+        this.nozzleSize = nsize;
+        firePropertyChange("nozzleSize", oldValue, type);
+
     }
 
     public Type getType() {

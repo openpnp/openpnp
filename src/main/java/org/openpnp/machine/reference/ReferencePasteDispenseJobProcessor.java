@@ -49,6 +49,7 @@ import org.openpnp.model.Point;
 import org.openpnp.model.Line;
 
 
+
 @Root
 public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {
     enum State {
@@ -238,6 +239,11 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         Collections.sort(jobDispenses, new Comparator<JobDispense>() {
             @Override
             public int compare(JobDispense c1, JobDispense c2) {
+                int nozzleSizeCmp = new Double(c1.boardPad.getNozzleSize()).compareTo(new Double(c2.boardPad.getNozzleSize()));
+                if(nozzleSizeCmp!=0)
+                {
+                    return nozzleSizeCmp;
+                }
                 return new Double(c1.getDistance()).compareTo(new Double(c2.getDistance()));
             }
         });
