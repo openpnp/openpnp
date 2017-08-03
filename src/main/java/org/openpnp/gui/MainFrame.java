@@ -454,6 +454,8 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
                 machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
+        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, mask),
+                machineControlsPanel.homeAction);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 jobPanel.startPauseResumeJobAction); // Ctrl-Shift-R for Start
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
