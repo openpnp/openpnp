@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JOptionPane;
 
 import org.openpnp.machine.reference.ReferencePasteDispenseJobProcessor.JobDispense.Status;
 import org.openpnp.model.BoardLocation;
@@ -44,6 +45,13 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
+import org.openpnp.model.Pad;
+import org.openpnp.model.Point;
+import org.openpnp.model.Line;
+
+
+
+
 
 @Root
 public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJobProcessor {
@@ -234,6 +242,11 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         Collections.sort(jobDispenses, new Comparator<JobDispense>() {
             @Override
             public int compare(JobDispense c1, JobDispense c2) {
+                int nozzleSizeCmp = new Double(c1.boardPad.getNozzleSize()).compareTo(new Double(c2.boardPad.getNozzleSize()));
+                if(nozzleSizeCmp!=0)
+                {
+                    return nozzleSizeCmp;
+                }
                 return new Double(c1.getDistance()).compareTo(new Double(c2.getDistance()));
             }
         });
@@ -265,7 +278,10 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
     }
 
     protected void doDispense() throws Exception {
+        double lastNozzleSize = -1;
         for(JobDispense jobDispense : jobDispenses) {
+
+
             /* if (jobDispense.stepComplete) {
                 continue;
             }*/
@@ -273,6 +289,13 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
             BoardLocation boardLocation = jobDispense.boardLocation;
             BoardPad boardPad = jobDispense.boardPad;
 
+            if(lastNozzleSize!=boardPad.getNozzleSize())
+            {
+
+                JOptionPane.showMessageDialog(null, "Dispenser requires nozzle "+boardPad.getNozzleSize()+" please attach it and press ok to continue. ");
+
+                lastNozzleSize = boardPad.getNozzleSize();
+            }
             // Check if there is a fiducial override for the board location and if so, use it.
             if (boardLocationFiducialOverrides.containsKey(boardLocation)) {
                 BoardLocation boardLocation2 = new BoardLocation(boardLocation.getBoard());
@@ -281,23 +304,94 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
                 boardLocation = boardLocation2;
             }
 
-            Location dispenseLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, boardPad.getLocation());
-            
+            Pad pad = boardPad.getPad();
+            java.awt.Rectangle bounds = pad.getShape().getBounds();
+
+            boolean vertical = false  ;
+            if((boardPad.getLocation().getRotation() >=90 &&  boardPad.getLocation().getRotation() >=180)  || boardPad.getLocation().getRotation() == 0 )
+            {
+                vertical = true;
+            }
+
+            double needleDiameter = 0.3;
+
+            double passes = 0;
+
+            if(vertical) {
+                passes = Math.max(1, bounds.getHeight() / (needleDiameter * 2));
+            }
+            else
+            {
+                passes = Math.max(1, bounds.getWidth() / (needleDiameter * 2));
+
+            }
+
+            Location padLocation = boardPad.getLocation();
+
+            List<Line> toolpaths = new ArrayList<>();
+
+            for (int i = 0; i < Math.round(passes); i++)
+            {
+                Line toolpath;
+                if (vertical)
+                {
+                    double x = (padLocation.getX() - bounds.getWidth() / 2 + (double) bounds.getWidth() / (passes + 1) * (i + 1));
+                    double y = (padLocation.getY() - bounds.getHeight() / 2 + needleDiameter);
+
+                    Point startPoint = new Point(x,y);
+                    Point endPoint = new Point(x, padLocation.getY() + (bounds.getHeight() / 2) - needleDiameter);
+
+                    toolpath = new Line(startPoint, endPoint);
+                }
+                else
+                {
+                    double x = (padLocation.getX() - bounds.getWidth() / 2 + needleDiameter);
+                    double y = (padLocation.getY() - bounds.getHeight() / 2 + (double) bounds.getHeight() / (passes + 1) * (i + 1));
+
+                    Point startPoint = new Point(x,y);
+                    Point endPoint = new Point(padLocation.getX() + (bounds.getWidth() / 2) - needleDiameter, y);
+
+                    toolpath = new Line(startPoint, endPoint);
+                }
+                toolpaths.add(toolpath);
+            }
+
+
             PasteDispenser pasteDispenser = head.getDefaultPasteDispenser();
 
-            MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
+            for(int iIndex=0;iIndex<toolpaths.size();iIndex++)
+            {
+                Line line = toolpaths.get(iIndex);
+
+                Location startLoc = padLocation.derive(line.getFrom().getX(),line.getFrom().getY(),Double.NaN,Double.NaN);
+                Location endLoc = padLocation.derive(line.getTo().getX(),line.getTo().getY(),Double.NaN,Double.NaN);
+
+                Location dispenseStartLocation =
+                        Utils2D.calculateBoardPlacementLocation(boardLocation, startLoc);
+                Location dispenseEndLocation =
+                        Utils2D.calculateBoardPlacementLocation(boardLocation, endLoc);
+
+                MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseStartLocation);
+
+                pasteDispenser.dispense(dispenseStartLocation,dispenseEndLocation,0);
+                MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseEndLocation);
+
+            }
+
+
+/*            MovableUtils.moveToLocationAtSafeZ(pasteDispenser, dispenseLocation);
 
             pasteDispenser.dispense(null,null,0);
 
             pasteDispenser.moveToSafeZ();
-
+*/
             // Mark the dispense as finished
             jobDispense.status = Status.Complete;
 
-            Logger.debug("Dispensed {} ", dispenseLocation);
+            // Logger.debug("Dispensed {} ", dispenseLocation);
         }
     }
+
 
 
     protected void doCleanup() throws Exception {

@@ -32,13 +32,49 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
+/*
+Needle lengths:
+6mm, 1/4"
+12mm, 1/2"
+24mm, 1"
+37mm, 1.5"
+
+Needle gauges:
+Spec.      Inner Diameter    Outer Diameter       Colour
+14gauge       1.55mm             2.10mm                Olive
+15gauge       1.36mm             1.80mm                Amber
+16gauge       1.32mm             1.60mm                Clear
+16gauge      ---      ---         ---
+18gauge       0.84mm             1.27mm                Green
+19gauge       0.75mm             1.06mm                Black
+20gauge       0.60mm             0.91mm                Pink
+21gauge       0.51mm             0.82mm                Dark Purple
+22gauge       0.41mm             0.72mm                Blue
+23gauge       0.34mm             0.64mm                Orange
+24gauge       0.30mm             0.55mm                Purple
+25gauge       0.26mm             0.51mm                Red
+26gauge       0.23mm             0.45mm               Light Brown
+27gauge       0.21mm             0.41mm                Clear
+
+http://www.mectronics.in/pdf/heraeus-adhesive-print/heareus-adhesive-print-DispensingglueBenchmarking.pdf
+
+ Generally, 0.4mm
+(16mil) ID double needle tips for 0603, 0805 and SOT 23 components,
+Normally  0.7  to 0.8mm diameter dots for 0805, 0603 and SOT23 are recommended by using 0.4mm ID double needles.
+
+0.5mm (20mil) ID double needle
+for 1206 and 0.6mm (24mil) ID single needle for IC's are used.
+For  bigger  components  (1206),  1mm  to  1.2mm  diameter  dots  are  recommended  by  using  0.6mm  ID
+single or double needles.  Dot diameter and height should be consistent.
+
+ */
 public class PadsTableModel extends AbstractTableModel {
     final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Name", "Side", "X", "Y", "Rot.", "Type"};
+    private String[] columnNames = new String[] {"Name", "Side", "X", "Y", "Rot.", "Type", "NozzleSize"};
 
     private Class[] columnTypes = new Class[] {String.class, Side.class, LengthCellValue.class,
-            LengthCellValue.class, String.class, Type.class};
+            LengthCellValue.class, String.class, Type.class, Double.class };
 
     private Board board;
 
@@ -109,6 +145,10 @@ public class PadsTableModel extends AbstractTableModel {
             else if (columnIndex == 5) {
                 pad.setType((Type) aValue);
             }
+            else if (columnIndex == 6) {
+                pad.setNozzleSize((Double) aValue);
+            }
+
         }
         catch (Exception e) {
             // TODO: dialog, bad input
@@ -132,6 +172,8 @@ public class PadsTableModel extends AbstractTableModel {
                         loc.getRotation());
             case 5:
                 return pad.getType();
+            case 6:
+                return pad.getNozzleSize();
             default:
                 return null;
         }
