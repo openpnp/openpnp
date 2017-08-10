@@ -4,11 +4,11 @@ Axis Mapping requires editing the `machine.xml` configuration file directly. Sin
 
 Note that when editing `machine.xml` by hand, you should make sure OpenPnP is not running. When you exit OpenPnP it saves the file so your changes might be overwritten if you leave it running.
 
-In this document, there is some terminology that may be new as well. Here are some terms that will help you understand this document:
+In this document, there is some terminology that may be new as well. Here are some terms that will help you understand:
 
-* Head Mountable: In OpenPnP a Head Mountable is a general term for a device that can be mounted to a head. This includes nozzles, cameras, actuators, and dispensers.
-* ID or id: Every Head Mountable has a unique ID that identifies it in the configuration file. For example, a Nozzle definition may look like this: `<nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" name="N1">`. This Nozzle's ID is shown as `id="N1"`, so this Nozzle's ID is N1.
-* head-mountable-id: Another name for ID. This tells you that this is a place where you can put the ID of a Head Mountable like a Nozzle or Camera.
+* **Head Mountable**: In OpenPnP a Head Mountable is a general term for a device that can be mounted to a head. This includes nozzles, cameras, actuators, and dispensers.
+* **ID** or **id**: Every Head Mountable has a unique ID that identifies it in the configuration file. For example, a Nozzle definition may look like this: `<nozzle class="org.openpnp.machine.reference.ReferenceNozzle" id="N1" name="N1">`. This Nozzle's ID is shown as `id="N1"`, so this Nozzle's ID is N1.
+* **head-mountable-id**: Another name for ID. This tells you that this is a place where you can put the ID of a Head Mountable like a Nozzle or Camera.
 
 # Defining Axes
 
