@@ -89,7 +89,8 @@ public class KicadPosImporter implements BoardImporter {
         return board;
     }
 
-    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts)
+    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts, 
+    		boolean useOnlyValueAsPartId)
             throws Exception {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file)));
@@ -134,7 +135,12 @@ public class KicadPosImporter implements BoardImporter {
                     placementRotation));
             Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
-                String partId = pkgName + "-" + partValue;
+                String partId;
+                if(useOnlyValueAsPartId == true) {
+                	partId = partValue;
+                }else {
+                	partId = pkgName + "-" + partValue;
+                }
                 Part part = cfg.getPart(partId);
                 if (part == null) {
                     part = new Part(partId);
@@ -166,6 +172,7 @@ public class KicadPosImporter implements BoardImporter {
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
+        private JCheckBox chckbxUseValueOnlyAsPartId;
 
         public Dlg(Frame parent) {
             super(parent, DESCRIPTION, true);
@@ -213,8 +220,14 @@ public class KicadPosImporter implements BoardImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
-            chckbxCreateMissingParts.setSelected(true);
-            panel_1.add(chckbxCreateMissingParts, "2, 2");
+            chckbxCreateMissingParts.setSelected(false);
+            chckbxCreateMissingParts.setToolTipText("PartId = 'Package'-'Value'");
+            panel_1.add(chckbxCreateMissingParts, "2, 1");
+
+            chckbxUseValueOnlyAsPartId = new JCheckBox("Use only Value as PartId");
+            chckbxUseValueOnlyAsPartId.setSelected(false);
+            chckbxUseValueOnlyAsPartId.setToolTipText("Check this, if Value is unique (e.g. company internal part number)");
+            panel_1.add(chckbxUseValueOnlyAsPartId, "2, 2");
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -302,11 +315,13 @@ public class KicadPosImporter implements BoardImporter {
                 try {
                     if (topFile.exists()) {
                         placements.addAll(parseFile(topFile, Side.Top,
-                                chckbxCreateMissingParts.isSelected()));
+                                chckbxCreateMissingParts.isSelected(), 
+                                chckbxUseValueOnlyAsPartId.isSelected()));
                     }
                     if (bottomFile.exists()) {
                         placements.addAll(parseFile(bottomFile, Side.Bottom,
-                                chckbxCreateMissingParts.isSelected()));
+                                chckbxCreateMissingParts.isSelected(), 
+                                chckbxUseValueOnlyAsPartId.isSelected()));
                     }
                 }
                 catch (Exception e1) {
