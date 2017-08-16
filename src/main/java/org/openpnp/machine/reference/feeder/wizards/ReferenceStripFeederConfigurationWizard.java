@@ -550,10 +550,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     };
 
     private List<Location> findHoles(Camera camera) throws Exception {
-        // Process the pipeline to clean up the image
-        CvPipeline pipeline = feeder.getPipeline();
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("feeder", feeder);
+        // Process the pipeline to clean up the image and detect the tape holes
+        CvPipeline pipeline = getCvPipeline(camera);
         pipeline.process();
 
         // Grab the results
@@ -618,10 +616,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         // BufferedCameraImage is used as we want to run the pipeline on an existing image
         BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
 
-        // Process the pipeline to clean up the image
-        CvPipeline pipeline = feeder.getPipeline();
-        pipeline.setProperty("camera", bufferedImageCamera);
-        pipeline.setProperty("feeder", feeder);
+        // Process the pipeline to clean up the image and detect the tape holes
+        CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
         pipeline.process();
         // Grab the results
         Mat resultMat = pipeline.getWorkingImage().clone();
@@ -716,9 +712,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     }
 
     private void editPipeline() throws Exception {
-        CvPipeline pipeline = feeder.getPipeline();
-        pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
-        pipeline.setProperty("feeder", feeder);
+        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+        CvPipeline pipeline = getCvPipeline(camera);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
@@ -729,6 +724,20 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
     private void resetPipeline() {
         feeder.resetPipeline();
+    }
+
+    private CvPipeline getCvPipeline(Camera camera) {
+        Integer pxMinDistance = (int) VisionUtils.toPixels(feeder.getHolePitchMin(), camera);
+        Integer pxMinDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMin(), camera);
+        Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
+
+        CvPipeline pipeline = feeder.getPipeline();
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("feeder", feeder);
+        pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
+        pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
+        pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+        return pipeline;
     }
 
     private JCheckBox chckbxUseVision;

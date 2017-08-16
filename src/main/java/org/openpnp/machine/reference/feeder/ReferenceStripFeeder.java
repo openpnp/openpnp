@@ -260,9 +260,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
-        // Process the pipeline to clean up the image
+        Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
+        Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
+        Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
+
+        // Process the pipeline to clean up the image and detect the tape holes
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("feeder", this);
+        pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
+        pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
+        pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
         pipeline.process();
 
         try {

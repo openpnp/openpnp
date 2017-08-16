@@ -58,6 +58,7 @@ import org.openpnp.vision.pipeline.stages.Rotate;
 import org.openpnp.vision.pipeline.stages.ScriptRun;
 import org.openpnp.vision.pipeline.stages.SetColor;
 import org.openpnp.vision.pipeline.stages.SimpleBlobDetector;
+import org.openpnp.vision.pipeline.stages.DetectFixedCirclesHough;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
@@ -123,6 +124,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
+        registerStageClass(DetectFixedCirclesHough.class);
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
         registerStageClass(WritePartTemplateImage.class);
