@@ -38,13 +38,10 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.model.Length;
 import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.ui.converters.LengthPropertySheetConverter;
-import org.openpnp.vision.pipeline.ui.editors.LengthEditor;
 
-import com.l2fprod.common.propertysheet.*;
-import com.l2fprod.common.util.converter.ConverterRegistry;
+import com.l2fprod.common.propertysheet.Property;
+import com.l2fprod.common.propertysheet.PropertySheetPanel;
 
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -52,18 +49,10 @@ public class PipelinePanel extends JPanel {
     private JTable stagesTable;
     private StagesTableModel stagesTableModel;
     private PropertySheetPanel propertySheetPanel;
-    private LengthPropertySheetConverter lengthPropertySheetConverter = new LengthPropertySheetConverter();
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
     public PipelinePanel(CvPipelineEditor editor) {
         this.editor = editor;
-
-        // Converters for using custom types in the property sheet editor
-        lengthPropertySheetConverter.register(ConverterRegistry.instance());
-
-        // Editors for custom types in the property sheet editor
-        PropertyEditorRegistry propertyEditorRegistry = PropertyEditorRegistry.Instance;
-        propertyEditorRegistry.registerEditor(Length.class, LengthEditor.class);
 
         pipelinePropertySheetTable = new PipelinePropertySheetTable(this);
         propertySheetPanel = new PropertySheetPanel(pipelinePropertySheetTable);
