@@ -91,6 +91,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DetectEdgesCanny.class);
         registerStageClass(DetectEdgesRobertsCross.class);
         registerStageClass(DetectEdgesLaplacian.class);
+        registerStageClass(DetectFixedCirclesHough.class);
         registerStageClass(DilateModel.class);
         registerStageClass(DrawCircles.class);
         registerStageClass(DrawContours.class);
@@ -124,7 +125,6 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(SetColor.class);
         registerStageClass(ScriptRun.class);
         registerStageClass(SimpleBlobDetector.class);
-        registerStageClass(DetectFixedCirclesHough.class);
         registerStageClass(Threshold.class);
         registerStageClass(ThresholdAdaptive.class);
         registerStageClass(WritePartTemplateImage.class);
