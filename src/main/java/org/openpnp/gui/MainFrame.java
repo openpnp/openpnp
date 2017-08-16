@@ -209,7 +209,7 @@ public class MainFrame extends JFrame {
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
-        jobPanel = new JobPanel(configuration, this, machineControlsPanel);
+        jobPanel = new JobPanel(configuration, this);
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
@@ -428,7 +428,7 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
-        machineControlsPanel = new MachineControlsPanel(configuration);
+        machineControlsPanel = new MachineControlsPanel(configuration, jobPanel);
         panelMachine.add(machineControlsPanel, BorderLayout.SOUTH);
 
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
