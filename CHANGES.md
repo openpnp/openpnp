@@ -1,6 +1,27 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-08-15
+
+* Board Jog Crash Protection
+
+	A new tab called Safety has been added, with a checkbox that allows you to enable/disable
+	board crash protection. This feature will throw an error if you try to jog a nozzle into
+	a board.
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/598
+	
+	Thank you to @machinekoder for this helpful improvement!
+
+* Kicad Importer Improved Part Creation
+
+	A new checkbox in the Kicad importer allows you to specify that only the value should
+	be used when creating part names.
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/620
+	
+	Thank you to @KarlZeilhofer for this new feature!
+
 # 2017-07-30
 
 * Additional Keyboard Shortcut Support
