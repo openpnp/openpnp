@@ -18,6 +18,7 @@ During the feeder setup wizard, the strip feeder hole debug colors are as follow
 * Orange are holes that passed the distance check but failed the line check. **
 * Blue are holes that passed the line check but are considered superfluous. **
 * Green passed all checks and are considered good.
+
 ** - only displayed when Alt/Option is held down when the setup wizard is started.
 
 ## Z and Pick Height
