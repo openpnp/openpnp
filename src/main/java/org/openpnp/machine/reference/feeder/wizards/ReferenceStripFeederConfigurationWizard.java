@@ -19,8 +19,10 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +36,14 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.opencv.core.Core;
+import org.opencv.core.Point;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewActionEvent;
@@ -55,6 +60,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Configuration;
@@ -62,8 +68,16 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.HslColor;
+import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.Ransac;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.opencv.core.Mat;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
@@ -71,6 +85,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+
+import static org.openpnp.vision.FluentCv.pointToLineDistance;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurationWizard {
@@ -208,11 +224,39 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
 
+        JPanel panelVision = new JPanel();
+        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
+        contentPanel.add(panelVision);
+        panelVision.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
         lblUseVision = new JLabel("Use Vision?");
-        panelTapeSettings.add(lblUseVision, "2, 8");
+        panelVision.add(lblUseVision, "2, 2");
 
         chckbxUseVision = new JCheckBox("");
-        panelTapeSettings.add(chckbxUseVision, "4, 8");
+        panelVision.add(chckbxUseVision, "4, 2");
+
+        JButton btnEditPipeline = new JButton("Edit Pipeline");
+        btnEditPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    editPipeline();
+                });
+            }
+        });
+        panelVision.add(btnEditPipeline, "2, 4");
+
+        JButton btnResetPipeline = new JButton("Reset Pipeline");
+        btnResetPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetPipeline();
+            }
+        });
+        panelVision.add(btnResetPipeline, "4, 4");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -358,7 +402,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             cameraView.setCameraViewFilter(new CameraViewFilter() {
                 @Override
                 public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                    return showHoles(camera, image, showDetails);
+                    try {
+                        return showHoles(camera, image, showDetails);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                    }
+
+                    return null;
                 }
             });
         }
@@ -391,8 +442,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                          .submit(new Callable<Void>() {
                              public Void call() throws Exception {
                                  cameraView.setText("Checking first part...");
-                                 autoSetupCamera.moveTo(action.getLocation());
+                                 autoSetupCamera.moveTo(firstPartLocation);
                                  part1HoleLocations = findHoles(autoSetupCamera);
+                                 if (part1HoleLocations.size() < 1) {
+                                     throw new Exception("No hole found at selected location");
+                                 }
 
                                  cameraView.setText(
                                          "Now click on the center of the second part in the tape.");
@@ -432,8 +486,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                          .submit(new Callable<Void>() {
                              public Void call() throws Exception {
                                  cameraView.setText("Checking second part...");
-                                 autoSetupCamera.moveTo(action.getLocation());
+                                 autoSetupCamera.moveTo(secondPartLocation);
                                  List<Location> part2HoleLocations = findHoles(autoSetupCamera);
+                                 if (part2HoleLocations.size() < 1) {
+                                     throw new Exception("No hole found at selected location");
+                                 }
 
                                  List<Location> referenceHoles = deriveReferenceHoles(
                                          part1HoleLocations, part2HoleLocations);
@@ -492,61 +549,145 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
     };
 
-    private List<Location> findHoles(Camera camera) {
+    private List<Location> findHoles(Camera camera) throws Exception {
+        // Process the pipeline to clean up the image and detect the tape holes
+        CvPipeline pipeline = getCvPipeline(camera);
+        pipeline.process();
+
+        // Grab the results
+        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
+        if (results.isEmpty()) {
+            throw new Exception("Feeder " + getName() + ": No tape holes found.");
+        }
+
+        // Sort by the distance to the camera center (which is over the part, not the hole)
+        results.sort((a, b) -> {
+            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            return da.compareTo(db);
+        });
+
         List<Location> holeLocations = new ArrayList<>();
-        new FluentCv().setCamera(camera)
-                      .settleAndCapture()
-                      .toGray()
-                      .blurGaussian(feeder.getHoleBlurKernelSize())
-                      .findCirclesHough(feeder.getHoleDiameterMin(), feeder.getHoleDiameterMax(),
-                              feeder.getHolePitchMin())
-                      .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                              feeder.getHoleDistanceMax())
-                      .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                      .convertCirclesToLocations(holeLocations);
+        double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
+        double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
+        for (int i=0; i<results.size(); i++) {
+            CvStage.Result.Circle result = results.get(i);
+            Double distance = VisionUtils.getPixelLocation(camera, result.x, result.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
+            // Min distance is because we're centered at the part, not the hole - so we need to ignore
+            // circles found in the part
+            if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
+                Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
+                holeLocations.add(location);
+            }
+        }
+
         return holeLocations;
     }
 
+    private void drawCircles(Mat mat, List<CvStage.Result.Circle> circles, int numToDraw, Color color) {
+        Color centerColor = new HslColor(color).getComplementary();
+
+        numToDraw = (numToDraw <= circles.size()) ? numToDraw : circles.size();
+        for (int i=0; i<numToDraw; i++) {
+            CvStage.Result.Circle circle = circles.get(i);
+
+            double x = circle.x;
+            double y = circle.y;
+            double radius = circle.diameter / 2.0;
+            Core.circle(mat, new Point(x, y), (int) radius, FluentCv.colorToScalar(color), 2);
+            Core.circle(mat, new Point(x, y), 1, FluentCv.colorToScalar(centerColor), 2);
+        }
+    }
+
     /**
-     * Show candidate holes in the image. Red are any holes that are found. Blue is holes that
-     * passed the distance check but failed the line check. Green passed all checks and are good.
+     * Show candidate holes in the image. Red are any holes that are found. Orange are holes that
+     * passed the distance check but failed the line check. Blue are holes that passed the line
+     * check but are considered superfluous. Green passed all checks and are considered good.
      * 
      * @param camera
      * @param image
      * @return
      */
-    private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) {
-        if (showDetails) {
-            return new FluentCv().setCamera(camera)
-                                 .toMat(image, "original")
-                                 .toGray()
-                                 .blurGaussian(feeder.getHoleBlurKernelSize())
-                                 .findCirclesHough(feeder.getHoleDiameterMin(),
-                                         feeder.getHoleDiameterMax(), feeder.getHolePitchMin(),
-                                         "houghUnfiltered")
-                                 .drawCircles("original", Color.red, "unfiltered")
-                                 .recall("houghUnfiltered")
-                                 .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                                         feeder.getHoleDistanceMax(), "houghDistanceFiltered")
-                                 .drawCircles("unfiltered", Color.blue, "distanceFiltered")
-                                 .recall("houghDistanceFiltered")
-                                 .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                                 .drawCircles("distanceFiltered", Color.green)
-                                 .toBufferedImage();
+    private BufferedImage showHoles(Camera camera, BufferedImage image, boolean showDetails) throws Exception {
+        // BufferedCameraImage is used as we want to run the pipeline on an existing image
+        BufferedImageCamera bufferedImageCamera = new BufferedImageCamera(camera, image);
+
+        // Process the pipeline to clean up the image and detect the tape holes
+        CvPipeline pipeline = getCvPipeline(bufferedImageCamera);
+        pipeline.process();
+        // Grab the results
+        Mat resultMat = pipeline.getWorkingImage().clone();
+        List<CvStage.Result.Circle> results = (List<CvStage.Result.Circle>)pipeline.getResult("results").model;
+
+        // Sort by the distance to the camera center (which is over the part, not the hole)
+        results.sort((a, b) -> {
+            Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            return da.compareTo(db);
+        });
+
+        List<CvStage.Result.Circle> withinDistance = new ArrayList<CvStage.Result.Circle>();
+        double minDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMin(), camera);
+        double maxDistancePx = VisionUtils.toPixels(feeder.getHoleDistanceMax(), camera);
+        for (int i=0; i<results.size(); i++) {
+            CvStage.Result.Circle result = results.get(i);
+            Double distance = VisionUtils.getPixelLocation(camera, result.x, result.y)
+                    .getLinearDistanceTo(camera.getLocation());
+            Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
+            // Min distance is because we're centered at the part, not the hole - so we need to ignore
+            // circles found in the part
+            if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
+                withinDistance.add(result);
+            }
+        }
+
+        List<CvStage.Result.Circle> inLine = new ArrayList<CvStage.Result.Circle>();
+        if (withinDistance.size() <= 2) {
+            inLine.addAll(withinDistance);
         }
         else {
-            return new FluentCv().setCamera(camera)
-                                 .toMat(image, "original")
-                                 .toGray()
-                                 .blurGaussian(feeder.getHoleBlurKernelSize())
-                                 .findCirclesHough(feeder.getHoleDiameterMin(),
-                                         feeder.getHoleDiameterMax(), feeder.getHolePitchMin())
-                                 .filterCirclesByDistance(feeder.getHoleDistanceMin(),
-                                         feeder.getHoleDistanceMax())
-                                 .filterCirclesToLine(feeder.getHoleLineDistanceMax())
-                                 .drawCircles("original", Color.green)
-                                 .toBufferedImage();
+            double maxDistanceToLine = VisionUtils.toPixels(feeder.getHoleLineDistanceMax(), camera);
+
+            List<Point> points = new ArrayList<>();
+            // collect the circles into a list of points
+            for (int i = 0; i < withinDistance.size(); i++) {
+                CvStage.Result.Circle circle = withinDistance.get(i);
+                points.add(new Point(circle.x, circle.y));
+            }
+
+            Point[] line = Ransac.ransac(points, 100, maxDistanceToLine);
+            Point a = line[0];
+            Point b = line[1];
+
+            // filter the circles by distance from the resulting line
+            for (int i = 0; i < withinDistance.size(); i++) {
+                CvStage.Result.Circle circle = withinDistance.get(i);
+
+                Point p = new Point(circle.x, circle.y);
+                if (pointToLineDistance(a, b, p) <= maxDistanceToLine) {
+                    inLine.add(circle);
+                }
+            }
         }
+
+        if (showDetails) {
+            drawCircles(resultMat, withinDistance, withinDistance.size(), Color.orange);
+            drawCircles(resultMat, inLine, inLine.size(), Color.blue);
+            drawCircles(resultMat, inLine, 2, Color.green);
+        }
+        else {
+            drawCircles(resultMat, inLine, 2, Color.green);
+        }
+
+        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+        resultMat.release();
+        return showResult;
     }
 
     private List<Location> deriveReferenceHoles(List<Location> part1HoleLocations,
@@ -568,6 +709,35 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         referenceHoles.add(part1ReferenceHole);
         referenceHoles.add(part2ReferenceHole);
         return referenceHoles;
+    }
+
+    private void editPipeline() throws Exception {
+        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+        CvPipeline pipeline = getCvPipeline(camera);
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), feeder.getPart().getId() + " Pipeline");
+        dialog.getContentPane().setLayout(new BorderLayout());
+        dialog.getContentPane().add(editor);
+        dialog.setSize(1024, 768);
+        dialog.setVisible(true);
+    }
+
+    private void resetPipeline() {
+        feeder.resetPipeline();
+    }
+
+    private CvPipeline getCvPipeline(Camera camera) {
+        Integer pxMinDistance = (int) VisionUtils.toPixels(feeder.getHolePitchMin(), camera);
+        Integer pxMinDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMin(), camera);
+        Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
+
+        CvPipeline pipeline = feeder.getPipeline();
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("feeder", feeder);
+        pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
+        pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
+        pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+        return pipeline;
     }
 
     private JCheckBox chckbxUseVision;
