@@ -1,4 +1,6 @@
-# Tape Strip Orientation
+# Setup
+
+## Tape Strip Orientation
 
 When setting the reference hole and second hole on ReferenceStripFeeder either manually or using Auto Setup, you have to choose your reference and second hole or part according to the standards used in SMT tape. Primarily this means that the reference hole should be the first hole 2mm from the first part in the direction of travel.
 
@@ -6,11 +8,23 @@ The direction of travel is fixed, and is always north to south with the holes on
 
 ![strip feeder orientation](https://cloud.githubusercontent.com/assets/1182323/12517177/6108c344-c0e6-11e5-9228-874a35a3fa5c.png)
 
-# Z and Pick Height
+## CvPipeline
+
+A CvPipeline can be customized to clean up the camera image for improved recognition. The pipeline can be configured by clicking Edit Pipeline in the feeders configuration. The final pipeline stage (with detected circles) should have the name 'results' (plural, lower-case, no quotes).
+
+During the feeder setup wizard, the strip feeder hole debug colors are as follows:
+
+* Red are any holes that are found.
+* Orange are holes that passed the distance check but failed the line check. **
+* Blue are holes that passed the line check but are considered superfluous. **
+* Green passed all checks and are considered good.
+** - only displayed when Alt/Option is held down when the setup wizard is started.
+
+## Z and Pick Height
 
 When picking from the strip feeder, OpenPnP will lower the nozzle to the Z value specified on the first reference hole. The Z value for the second reference hole is ignored.
 
-# Video Tutorials
+## Video Tutorials
 
 * Strip Feeder Auto Setup: https://www.youtube.com/watch?v=Fs-SwSq5AZw
 
@@ -20,7 +34,7 @@ When picking from the strip feeder, OpenPnP will lower the nozzle to the Z value
 
 This error usually occurs when the strip feeder vision system cannot find the next tape hole. The most common causes of this problem are incorrect units per pixel settings on the camera and poor lighting.
 
-See https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel to set and verify the units per pixel settings and make sure your camera is getting enough light. There should be strong contrast between the tape itself and the holes.
+See https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel to set and verify the units per pixel settings and make sure your camera is getting enough light. There should be strong contrast between the tape itself and the holes. The feeders CvPipeline can be adjusted to help address issues with your particular setup of camera and lighting, however in general it's best to start with a good hardware setup.
 
 A good way to check that your units per pixel settings are correct is to right click the camera view and turn on the following options:
 * Reticle -> Fiducial
