@@ -1,6 +1,19 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-08-16
+
+* ReferenceStripFeeder Converted to CvPipeline
+
+	The vision operations for ReferenceStripFeeder have been converted from hard coded
+	algorithms to use the CvPipeline system, as bottom vision and fiducial finding do. This
+	makes it possible for you to easily customize the pipeline used for feeder vision to
+	better match the conditions on your system.
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/610
+	
+	Many thanks to @richard-sim for taking on this complex and important conversion! 
+
 # 2017-08-15
 
 * Board Jog Crash Protection
