@@ -69,6 +69,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
+    private final JobPanel jobPanel;
 
     private static final String PREF_JOG_CONTROLS_EXPANDED =
             "MachineControlsPanel.jogControlsExpanded";
@@ -85,14 +86,15 @@ public class MachineControlsPanel extends JPanel {
 
     private Color droNormalColor = new Color(0xBDFFBE);
     private Color droSavedColor = new Color(0x90cce0);
-
+    
     /**
      * Create the panel.
      */
-    public MachineControlsPanel(Configuration configuration) {
+    public MachineControlsPanel(Configuration configuration, JobPanel jobPanel) {
         setBorder(new TitledBorder(null, "Machine Controls", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         this.configuration = configuration;
+        this.jobPanel = jobPanel;
 
         createUi();
 
@@ -103,7 +105,6 @@ public class MachineControlsPanel extends JPanel {
         if (selectedTool instanceof Nozzle) {
             return (Nozzle) selectedTool;
         }
-
         try {
             return configuration.getMachine().getDefaultHead().getDefaultNozzle();
         }
@@ -114,9 +115,10 @@ public class MachineControlsPanel extends JPanel {
 
 
     public PasteDispenser getSelectedPasteDispenser() {
+        if (selectedTool instanceof PasteDispenser) {
+            return (PasteDispenser) selectedTool;
+        }
         try {
-            // TODO: We don't actually have a way to select a dispenser yet, so
-            // until we do we just return the first one.
             return Configuration.get().getMachine().getDefaultHead().getDefaultPasteDispenser();
         }
         catch (Exception e) {
@@ -148,6 +150,10 @@ public class MachineControlsPanel extends JPanel {
 
     public JogControlsPanel getJogControlsPanel() {
         return jogControlsPanel;
+    }
+    
+    public JobPanel getJobPanel() {
+    	return jobPanel;
     }
 
     @Override
@@ -287,7 +293,7 @@ public class MachineControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 selectedTool.getHead().home();
-                startStopMachineAction.putValue(Action.SMALL_ICON, Icons.powerOff);
+                homeAction.putValue(Action.SMALL_ICON, Icons.home);
             });
         }
     };
@@ -319,7 +325,8 @@ public class MachineControlsPanel extends JPanel {
     private void updateStartStopButton(boolean enabled) {
         startStopMachineAction.putValue(Action.NAME, enabled ? "Stop" : "Start");
         startStopMachineAction.putValue(Action.SMALL_ICON,
-                enabled ? Icons.powerOffNoHome : Icons.powerOn);
+                enabled ? Icons.powerOff : Icons.powerOn);
+        homeAction.putValue(Action.SMALL_ICON, enabled ? Icons.homeWarning : Icons.home);
     }
 
     private MachineListener machineListener = new MachineListener.Adapter() {

@@ -57,6 +57,7 @@ public class Icons {
     public static Icon arrowLeft = getIcon("/icons/arrow-left.svg");
     public static Icon arrowRight = getIcon("/icons/arrow-right.svg");
     public static Icon home = getIcon("/icons/home.svg");
+    public static Icon homeWarning = getIcon("/icons/home_warning.svg");
     public static Icon refresh = getIcon("/icons/refresh.svg");
     public static Icon rotateClockwise = getIcon("/icons/rotate-clockwise.svg");
     public static Icon rotateCounterclockwise = getIcon("/icons/rotate-counterclockwise.svg");
@@ -67,9 +68,11 @@ public class Icons {
     public static Icon navigatePrevious = getIcon("/icons/nav-previous.svg");
     public static Icon navigateNext = getIcon("/icons/nav-next.svg");
 
+    public static Icon pinDisabled = getIcon("/icons/pin_disabled.svg");
+    public static Icon pinEnabled = getIcon("/icons/pin_enabled.svg");
+
     public static Icon powerOn = getIcon("/icons/power_button_on.svg");
     public static Icon powerOff = getIcon("/icons/power_button_off.svg");
-    public static Icon powerOffNoHome = getIcon("/icons/power_button_off_nohome.svg");
 
     public static Icon park = getIcon("/icons/park.svg");
 

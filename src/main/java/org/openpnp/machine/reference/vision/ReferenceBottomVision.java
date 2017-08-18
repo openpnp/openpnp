@@ -133,12 +133,17 @@ public class ReferenceBottomVision implements PartAlignment {
             Location offsets =
                     VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y)
                                .derive(null, null, null, Double.NaN);
-            String s = "Align offset for " + part.getName() + ": " + offsets.toString() + "     ";
-            MainFrame.get()
-                     .getCameraViews()
-                     .getCameraView(camera)
-                     .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
-                             1500);
+            try {
+                String s = String.format("%s : %s", part.getId(), offsets.toString());
+                MainFrame.get()
+                         .getCameraViews()
+                         .getCameraView(camera)
+                         .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
+                                 s, 1500);
+            }
+            catch (Exception e) {
+                // Throw away, just means we're running outside of the UI.
+            }
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
 
@@ -192,16 +197,22 @@ public class ReferenceBottomVision implements PartAlignment {
         OpenCvUtils.saveDebugImage(ReferenceBottomVision.class, "findOffsets", "result",
                 pipeline.getWorkingImage());
 
-        CameraView cameraView = MainFrame.get()
-                                         .getCameraViews()
-                                         .getCameraView(camera);
-        String s = rect.size.toString() + " " + rect.angle + "°";
-        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
-                1500);
+        offsets = offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle);
 
+        try {
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(camera);
+            String s = String.format("%s : %s", part.getId(), offsets.toString());
+            cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
+                    1500);
 
-        return new PartAlignmentOffset(
-                offsets.derive(null, null, null, offsets.getRotation() + preRotateAngle), false);
+        }
+        catch (Exception e) {
+            // Throw away, just means we're running outside of the UI.
+        }
+
+        return new PartAlignmentOffset(offsets, false);
     }
 
     @Override
@@ -227,19 +238,16 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public String getId() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void setName(String name) {
-        // TODO Auto-generated method stub
 
     }
 
@@ -274,7 +282,6 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -286,13 +293,11 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 

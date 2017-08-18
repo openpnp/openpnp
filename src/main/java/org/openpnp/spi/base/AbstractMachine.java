@@ -274,7 +274,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 

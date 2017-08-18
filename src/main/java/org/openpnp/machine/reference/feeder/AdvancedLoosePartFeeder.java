@@ -133,7 +133,6 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -144,7 +143,6 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 

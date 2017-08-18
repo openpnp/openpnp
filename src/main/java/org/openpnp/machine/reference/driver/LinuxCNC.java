@@ -84,9 +84,6 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-/**
- * TODO: Consider adding some type of heartbeat to the firmware.
- */
 public class LinuxCNC implements ReferenceDriver, Runnable {
 
     private static final double minimumRequiredVersion = 0.81;
@@ -207,7 +204,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        // TODO Auto-generated method stub
 
     }
 
@@ -428,7 +424,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public Wizard getConfigurationWizard() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -439,7 +434,6 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -450,20 +444,17 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Icon getPropertySheetHolderIcon() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
             Location endLocation, long dispenseTimeMilliseconds) throws Exception {
-        // TODO Auto-generated method stub
 
     }
 }

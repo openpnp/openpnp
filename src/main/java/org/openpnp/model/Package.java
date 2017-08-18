@@ -21,16 +21,17 @@ package org.openpnp.model;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Version;
 
 public class Package implements Identifiable {
+    @Version(revision=1.1)
+    private double version;    
+    
     @Attribute
     private String id;
 
     @Attribute(required = false)
     private String description;
-
-    @Element(required = false)
-    private Outline outline;
 
     @Element(required = false)
     private Footprint footprint;
@@ -41,7 +42,6 @@ public class Package implements Identifiable {
 
     public Package(String id) {
         this.id = id;
-        outline = new Outline();
         footprint = new Footprint();
     }
 
@@ -66,14 +66,6 @@ public class Package implements Identifiable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Outline getOutline() {
-        return outline;
-    }
-
-    public void setOutline(Outline outline) {
-        this.outline = outline;
     }
 
     public Footprint getFootprint() {
