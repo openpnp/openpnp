@@ -204,6 +204,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         if (camera == null) {
             throw new Exception("No vision capable camera found on head.");
         }
+        
+        if (vision.getTemplateImage() == null) {
+            throw new Exception("Template image is required when vision is enabled.");
+        }
+        
+        if (vision.getAreaOfInterest().getWidth() == 0 || vision.getAreaOfInterest().getHeight() == 0) {
+            throw new Exception("Area of Interest is required when vision is enabled.");
+        }
 
         head.moveToSafeZ();
 
