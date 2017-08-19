@@ -1,6 +1,15 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2017-08-19
+
+* New Scripting Event: Job.Placement.Complete
+
+	New Scripting Event fired when a placement is complete, i.e. a part has been placed.
+	
+	See https://github.com/openpnp/openpnp/wiki/Scripting#jobplacementcomplete for usage.
+	
+	
 # 2017-08-16
 
 * ReferenceStripFeeder Converted to CvPipeline
