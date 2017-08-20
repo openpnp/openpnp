@@ -25,6 +25,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.Action;
@@ -161,8 +162,37 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // Move the actuator to the feed start location.
         actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
+        String dragPinUp = "1";
+        String dragPinDown = "0";
+        
+        // debug learn
+        String learning = actuator.read();
+        Logger.debug("before value of pin is = " + learning);
+        
         // extend the pin
         actuator.actuate(true);
+        
+        long t = System.currentTimeMillis();
+        long timeout = 1000;
+        
+        String after = actuator.read();
+        
+        // Loop until we've timed out
+        while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinDown)) {
+            // Wait to see if a response came in. We wait up until the number of millis remaining
+            // in the timeout.
+            
+        	Logger.debug("******* waiting for pin to move **************");
+        	after = actuator.read();
+        }
+        if (!after.equals(dragPinDown)) {
+        	actuator.actuate(false); // raise drag pin, ie: a safe place
+        	throw new Exception("Drag pin did not lower.");
+        }
+        
+        
+        
+        Logger.debug("after value of pin is = " + after);
 
         // insert the pin
         actuator.moveTo(feedStartLocation);
@@ -180,6 +210,23 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
         // retract the pin
         actuator.actuate(false);
+        
+        t = System.currentTimeMillis();
+        
+        // Loop until we've timed out
+        while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinUp)) {
+            // Wait to see if a response came in. We wait up until the number of millis remaining
+            // in the timeout.
+        	Logger.debug("******* waiting for pin to move **************");
+            
+        	after = actuator.read();
+        }
+        if (!after.equals(dragPinUp)) {
+        	actuator.actuate(false); // raise drag pin, ie: a safe place
+        	throw new Exception("Drag pin did not raise.");
+        }
+        
+        
 
         if (vision.isEnabled()) {
             visionOffset = getVisionOffsets(head, location);
