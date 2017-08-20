@@ -165,10 +165,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         String dragPinUp = "1";
         String dragPinDown = "0";
         
-        // debug learn
-        String learning = actuator.read();
-        Logger.debug("before value of pin is = " + learning);
-        
         // extend the pin
         actuator.actuate(true);
         
@@ -176,18 +172,21 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         long timeout = 1000;
         
         String after = actuator.read();
+        int waitCount = 0;
         
         // Loop until we've timed out
         while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinDown)) {
             // Wait to see if a response came in. We wait up until the number of millis remaining
             // in the timeout.
-            
+            waitCount++;
         	Logger.debug("******* waiting for pin to move **************");
         	after = actuator.read();
         }
         if (!after.equals(dragPinDown)) {
         	actuator.actuate(false); // raise drag pin, ie: a safe place
         	throw new Exception("Drag pin did not lower.");
+        } else {
+        	Logger.debug("############# time for pin to drop=" + String.valueOf(System.currentTimeMillis() - t) + "ms or " + waitCount);
         }
         
         
@@ -201,8 +200,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
         
         // backoff to release tension from the pin
+        Location backoffLocation = null;
         if (backoffDistance.getValue() != 0) {
-            Location backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
+            backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
             actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
         }
         
@@ -212,18 +212,39 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         actuator.actuate(false);
         
         t = System.currentTimeMillis();
+        waitCount =0;
         
         // Loop until we've timed out
         while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinUp)) {
             // Wait to see if a response came in. We wait up until the number of millis remaining
             // in the timeout.
         	Logger.debug("******* waiting for pin to move **************");
-            
+            waitCount++;
         	after = actuator.read();
         }
         if (!after.equals(dragPinUp)) {
+        	// pin failed to rise within specified time
+        	// before declaring failure, attempt a back and forth motion 
+        	if (backoffLocation != null) {
+        		timeout = 2000;
+        		// will move back and forth from current backoffLocation to a little farther back to feedEndLocation, and back to backoffLocation
+        		Location backoffLocation2 = Utils2D.getPointAlongLine(backoffLocation, feedStartLocation, backoffDistance);
+        		t = System.currentTimeMillis();
+        		while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinUp)) {
+	        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
+	        		actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+	        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
+        		
+	        		Logger.debug("**************************** waiting for pin to and jiggling **************");
+	                
+	            	after = actuator.read();
+        		}
+        	}
+        	
         	actuator.actuate(false); // raise drag pin, ie: a safe place
         	throw new Exception("Drag pin did not raise.");
+        } else {
+        	Logger.debug("############# time for pin to raise=" + String.valueOf(System.currentTimeMillis() - t) + "ms or " + waitCount);
         }
         
         
