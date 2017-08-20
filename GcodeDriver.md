@@ -27,6 +27,8 @@ See [[GcodeDriver: Command Reference]] for the full list of commands, variables 
 
 The driver uses this regex to look for responses from the controller. After sending a command it will wait for a line that matches this regex before considering the command complete. For many controllers this is simply `ok`, although since some controllers send additional information with command results it's better to use `^ok.*`.
 
+If your controller does not return an OK following the value returned from the ACTUATOR_READ_COMMAND, then it will be necessary to include this response here as well. For example:  "^(ok)|(Read:).*".
+
 ### COMMAND_ERROR_REGEX
 
 The driver uses this regex to check for errors in responses from the controller. If the regex is set, and it matches one of the responses an error will be thrown and the response message included. If your controller is able to send errors for invalid or improper commands, you can use this regex to make sure OpenPnP will stop when an error is received.
