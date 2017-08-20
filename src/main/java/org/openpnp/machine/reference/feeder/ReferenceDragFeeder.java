@@ -162,36 +162,38 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // Move the actuator to the feed start location.
         actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
+        // TODO: make this a parameter that gets provisioned
         String dragPinUp = "1";
         String dragPinDown = "0";
         
         // extend the pin
         actuator.actuate(true);
         
-        long t = System.currentTimeMillis();
-        long timeout = 1000;
+        // TODO, need logic to determine if actuator read is implemented. Do not want to timeout on reads
+        boolean actuatorReadImplemented = true;
         
-        String after = actuator.read();
-        int waitCount = 0;
-        
-        // Loop until we've timed out
-        while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinDown)) {
-            // Wait to see if a response came in. We wait up until the number of millis remaining
-            // in the timeout.
-            waitCount++;
-        	Logger.debug("******* waiting for pin to move **************");
-        	after = actuator.read();
-        }
-        if (!after.equals(dragPinDown)) {
-        	actuator.actuate(false); // raise drag pin, ie: a safe place
-        	throw new Exception("Drag pin did not lower.");
+        if(actuatorReadImplemented == true) {
+	        long timeWeStartedWaiting = System.currentTimeMillis();
+	        long timeout = 1000; // TODO, how to read this from provisioned parameters
+	        
+	        String pinSensorResult = actuator.read();
+	        int waitCount = 0; // used for diagnostics
+	        
+	        // Loop until we've timed out or pin is confirmed down
+	        while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinDown)) {
+	            waitCount++; // count number of time we entered this delay loop. Useful in calibrating non sensor drag implementation
+	        	pinSensorResult = actuator.read();
+	        }
+	        if (!pinSensorResult.equals(dragPinDown)) {
+	        	actuator.actuate(false); // raise drag pin, ie: a safe place before giving up
+	        	throw new Exception("Sensor indicates Drag Pin did not lower.");
+	        } else {
+	        	Logger.debug("Time for pin to drop=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
+	        }
         } else {
-        	Logger.debug("############# time for pin to drop=" + String.valueOf(System.currentTimeMillis() - t) + "ms or " + waitCount);
+        	// if there is no sensor for the Drag Pin, need to give some time for the pin to mechanically drop before proceeding
+        	// user expected to put delay in Gcode.  like G4 P1000
         }
-        
-        
-        
-        Logger.debug("after value of pin is = " + after);
 
         // insert the pin
         actuator.moveTo(feedStartLocation);
@@ -211,40 +213,44 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         // retract the pin
         actuator.actuate(false);
         
-        t = System.currentTimeMillis();
-        waitCount =0;
-        
-        // Loop until we've timed out
-        while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinUp)) {
-            // Wait to see if a response came in. We wait up until the number of millis remaining
-            // in the timeout.
-        	Logger.debug("******* waiting for pin to move **************");
-            waitCount++;
-        	after = actuator.read();
-        }
-        if (!after.equals(dragPinUp)) {
-        	// pin failed to rise within specified time
-        	// before declaring failure, attempt a back and forth motion 
-        	if (backoffLocation != null) {
-        		timeout = 2000;
-        		// will move back and forth from current backoffLocation to a little farther back to feedEndLocation, and back to backoffLocation
-        		Location backoffLocation2 = Utils2D.getPointAlongLine(backoffLocation, feedStartLocation, backoffDistance);
-        		t = System.currentTimeMillis();
-        		while (System.currentTimeMillis() - t < timeout && !after.equals(dragPinUp)) {
-	        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
-	        		actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
-	        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
-        		
-	        		Logger.debug("**************************** waiting for pin to and jiggling **************");
-	                
-	            	after = actuator.read();
-        		}
-        	}
-        	
-        	actuator.actuate(false); // raise drag pin, ie: a safe place
-        	throw new Exception("Drag pin did not raise.");
+        if(actuatorReadImplemented == true) {
+	        long timeWeStartedWaiting = System.currentTimeMillis();
+	        long timeout = 1000;
+	        int waitCount =0;
+	        String pinSensorResult= "";
+	        
+	        // Loop until we've timed out or pin sensor reports pin is up
+	        while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinUp)) {
+	            waitCount++; // diagnostic useful for dragFeeder without pin sensor
+	        	pinSensorResult = actuator.read();
+	        }
+	        if (!pinSensorResult.equals(dragPinUp)) {
+	        	// pin failed to rise within specified time
+	        	// before declaring failure, attempt a back and forth motion 
+	        	if (backoffLocation != null) {
+	        		timeout = 2000; // extend timeout
+	        		// will move back and forth from current backoffLocation to a little farther back to feedEndLocation, and back to backoffLocation
+	        		Location backoffLocation2 = Utils2D.getPointAlongLine(backoffLocation, feedStartLocation, backoffDistance);
+	        		timeWeStartedWaiting = System.currentTimeMillis();
+	        		while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinUp)) {
+		        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
+		        		actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+		        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
+	        		
+		        		Logger.debug("jiggling dragPin");
+		                
+		            	pinSensorResult = actuator.read();
+	        		}
+	        	}
+	        	
+	        	actuator.actuate(false); // raise drag pin, ie: a safe place
+	        	throw new Exception("Drag pin did not raise.");
+	        } else {
+	        	Logger.debug("time for pin to raise=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
+	        }
         } else {
-        	Logger.debug("############# time for pin to raise=" + String.valueOf(System.currentTimeMillis() - t) + "ms or " + waitCount);
+        	// a delay is needed before moving forward.
+        	// user expected to have delay in gcode like G4 P1000
         }
         
         
