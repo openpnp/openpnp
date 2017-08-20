@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.feeder.AdvancedLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceDragFeeder;
+import org.openpnp.machine.reference.feeder.ReferenceDragFeederWithPinSensor;
 import org.openpnp.machine.reference.feeder.ReferenceLoosePartFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
