@@ -71,18 +71,17 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         // TODO: make this a parameter that gets provisioned
         String dragPinUp = "1";
         String dragPinDown = "0";
+        String pinSensorResult = actuator.read();
         
         // extend the pin
         actuator.actuate(true);
-        
-        // TODO, need logic to determine if actuator read is implemented. Do not want to timeout on reads
-        boolean actuatorReadImplemented = true;
-        
-        if(actuatorReadImplemented == true) {
+                
+        if(pinSensorResult != null) {
+        	// a sensor is available for reading the pin up/down state
+        	
 	        long timeWeStartedWaiting = System.currentTimeMillis();
 	        long timeout = 1000; // TODO, how to read this from provisioned parameters
 	        
-	        String pinSensorResult = actuator.read();
 	        int waitCount = 0; // used for diagnostics
 	        
 	        // Loop until we've timed out or pin is confirmed down
@@ -119,11 +118,15 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         // retract the pin
         actuator.actuate(false);
         
-        if(actuatorReadImplemented == true) {
+        // validate the pin is down
+        pinSensorResult = actuator.read();
+        
+        if(pinSensorResult != null) {
+        	// we have a pin sensor
+        	
 	        long timeWeStartedWaiting = System.currentTimeMillis();
 	        long timeout = 1000;
 	        int waitCount =0;
-	        String pinSensorResult= "";
 	        
 	        // Loop until we've timed out or pin sensor reports pin is up
 	        while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinUp)) {
