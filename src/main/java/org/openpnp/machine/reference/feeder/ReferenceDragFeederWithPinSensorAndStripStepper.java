@@ -9,6 +9,11 @@ import org.pmw.tinylog.Logger;
 
 public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDragFeeder {
 
+    // TODO: make this a parameter that gets provisioned
+    String dragPinUp = "1";
+    String dragPinDown = "0";
+    
+    
 	@Override
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("feed({})", nozzle);
@@ -68,37 +73,14 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         // Move the actuator to the feed start location.
         actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
-        // TODO: make this a parameter that gets provisioned
-        String dragPinUp = "1";
-        String dragPinDown = "0";
-        String pinSensorResult = actuator.read();
+
         
         // extend the pin
         actuator.actuate(true);
-                
-        if(pinSensorResult != null) {
-        	// a sensor is available for reading the pin up/down state
-        	
-	        long timeWeStartedWaiting = System.currentTimeMillis();
-	        long timeout = 1000; // TODO, how to read this from provisioned parameters
-	        
-	        int waitCount = 0; // used for diagnostics
-	        
-	        // Loop until we've timed out or pin is confirmed down
-	        while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinDown)) {
-	            waitCount++; // count number of time we entered this delay loop. Useful in calibrating non sensor drag implementation
-	        	pinSensorResult = actuator.read();
-	        }
-	        if (!pinSensorResult.equals(dragPinDown)) {
-	        	actuator.actuate(false); // raise drag pin, ie: a safe place before giving up
-	        	throw new Exception("Sensor indicates Drag Pin did not lower.");
-	        } else {
-	        	Logger.debug("Time for pin to drop=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
-	        }
-        } else {
-        	// if there is no sensor for the Drag Pin, need to give some time for the pin to mechanically drop before proceeding
-        	// user expected to put delay in Gcode.  like G4 P1000
-        }
+        
+
+        // for machines with pin sensor
+		validatePinDown(actuator);
 
         // insert the pin
         actuator.moveTo(feedStartLocation);
@@ -118,8 +100,32 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         // retract the pin
         actuator.actuate(false);
         
-        // validate the pin is down
-        pinSensorResult = actuator.read();
+        // for machines with pin sensor
+        validatePinUp(actuator, feedStartLocation, feedEndLocation, backoffLocation);
+        
+        
+
+        if (vision.isEnabled()) {
+            visionOffset = getVisionOffsets(head, location);
+
+            Logger.debug("final visionOffsets " + visionOffset);
+        }
+
+        Logger.debug("Modified pickLocation {}", pickLocation);
+    }
+
+
+	/**
+	 * @param actuator
+	 * @param feedStartLocation
+	 * @param feedEndLocation
+	 * @param backoffLocation
+	 * @throws Exception
+	 */
+	private void validatePinUp(Actuator actuator, Location feedStartLocation, Location feedEndLocation,
+			Location backoffLocation) throws Exception {
+		// validate the pin is down
+        String pinSensorResult = actuator.read();
         
         if(pinSensorResult != null) {
         	// we have a pin sensor
@@ -161,15 +167,35 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         	// a delay is needed before moving forward.
         	// user expected to have delay in gcode like G4 P1000
         }
+	}
+
+
+	/**
+	 * @param actuator
+	 * @throws Exception
+	 */
+	private void validatePinDown(Actuator actuator) throws Exception {
+		String pinSensorResult = actuator.read();
         
-        
-
-        if (vision.isEnabled()) {
-            visionOffset = getVisionOffsets(head, location);
-
-            Logger.debug("final visionOffsets " + visionOffset);
-        }
-
-        Logger.debug("Modified pickLocation {}", pickLocation);
-    }
+        if(pinSensorResult != null) {
+        	// a sensor is available for reading the pin up/down state
+        	
+	        long timeWeStartedWaiting = System.currentTimeMillis();
+	        long timeout = 1000; // TODO, how to read this from provisioned parameters
+	        
+	        int waitCount = 0; // used for diagnostics
+	        
+	        // Loop until we've timed out or pin is confirmed down
+	        while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinDown)) {
+	            waitCount++; // count number of time we entered this delay loop. Useful in calibrating non sensor drag implementation
+	        	pinSensorResult = actuator.read();
+	        }
+	        if (!pinSensorResult.equals(dragPinDown)) {
+	        	actuator.actuate(false); // raise drag pin, ie: a safe place before giving up
+	        	throw new Exception("Sensor indicates Drag Pin did not lower.");
+	        } else {
+	        	Logger.debug("Time for pin to drop=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
+	        }
+        } 
+	}
 }
