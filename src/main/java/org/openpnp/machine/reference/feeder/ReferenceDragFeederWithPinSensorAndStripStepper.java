@@ -106,7 +106,8 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         pinActuator.moveTo(feedStartLocation);
 
         // start stripping the tape
-        pinActuator.advanceTape(location, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+        peelActuator.moveTo(feedEndLocation.subtract(feedStartLocation), feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+        //pinActuator.advanceTape(location, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
         
         // drag the tape
         pinActuator.moveTo(feedEndLocation, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
