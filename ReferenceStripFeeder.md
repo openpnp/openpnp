@@ -10,7 +10,9 @@ The direction of travel is fixed, and is always north to south with the holes on
 
 ## CvPipeline
 
-A CvPipeline can be customized to clean up the camera image for improved recognition. The pipeline can be configured by clicking Edit Pipeline in the feeders configuration. The final pipeline stage (with detected circles) should have the name 'results' (plural, lower-case, no quotes). For detecting the feeding circles in the tape, DetectFixedCirclesHough should be used - if it isn't finding the correct circles either your camera's units-per-pixel is set incorrectly or you need to do further clean up of the camera image first.
+A CvPipeline can be customized to clean up the camera image for improved recognition. The pipeline can be configured by clicking Edit Pipeline in the feeders configuration.
+
+The final pipeline stage (with detected circles) should have the name 'results' (plural, lower-case, no quotes). For detecting the feeding circles in the tape, DetectFixedCirclesHough should be used - if it isn't finding the correct circles either your camera's units-per-pixel is set incorrectly or you need to do further clean up of the camera image first.
 
 During the feeder setup wizard, the strip feeder hole debug colors are as follows:
 
