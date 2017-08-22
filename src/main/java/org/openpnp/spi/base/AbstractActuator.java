@@ -68,4 +68,8 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
     public String read() throws Exception {
         return null;
     }
+    
+    @Override
+    public void advanceTape(Location location, double speed) throws Exception{};
+    
 }

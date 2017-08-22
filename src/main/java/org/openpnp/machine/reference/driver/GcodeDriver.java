@@ -73,7 +73,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         ACTUATOR_READ_REGEX(true),
         PRE_DISPENSE_COMMAND(false, "DispenseTime"),
         DISPENSE_COMMAND(false, "DispenseTime"),
-        POST_DISPENSE_COMMAND(false, "DispenseTime");
+        POST_DISPENSE_COMMAND(false, "DispenseTime"),
+        TAPE_ADVANCE_COMMAND(false, "X", "Y", "FeedRate");
 
         final boolean headMountable;
         final String[] variableNames;
@@ -416,6 +417,31 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return location;
     }
 
+    @Override
+    public void advanceTape(Location location, double speed)
+    		throws Exception {
+    	
+    	// keep copy for calling subdrivers as to not add offset on offset
+        Location locationOriginal = location;
+        
+    	location = location.convertToUnits(units);
+    	
+    	String command = getCommand(null, CommandType.TAPE_ADVANCE_COMMAND);
+    	command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
+        command = substituteVariable(command, "X", location.getLengthX());
+        command = substituteVariable(command, "Y", location.getLengthY());
+        
+        //List<String> responses = sendGcode(command);
+        sendGcode(command);
+        
+        
+        // regardless of any action above the subdriver needs its actions based on original input
+        for (ReferenceDriver driver : subDrivers) {
+            driver.advanceTape(locationOriginal, speed);
+        }
+    }
+
+    
     @Override
     public void moveTo(ReferenceHeadMountable hm, Location location, double speed)
             throws Exception {

@@ -19,6 +19,8 @@
 
 package org.openpnp.spi;
 
+import org.openpnp.model.Location;
+
 /**
  * Defines a simple interface to some type of device that can be actuated on the machine or on a
  * head. This is a minimal interface and it is expected that concrete implementations may have many
@@ -44,4 +46,9 @@ public interface Actuator
     public void actuate(double value) throws Exception;
     
     public String read() throws Exception;
+
+	public void advanceTape(Location location, double d) throws Exception;
+    
+    //TODO feels like kludge to put this here
+    //public void advanceTape(Location location, double speed) throws Exception;
 }

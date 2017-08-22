@@ -139,6 +139,13 @@ public abstract class AbstractSerialPortDriver extends AbstractModelObject imple
         // without breaking every driver in the wild.
     }
 
+    @Override
+    public void advanceTape(Location location, double speed)
+    		throws Exception {
+        // Do nothing. This is just stubbed in so that it can be released
+        // without breaking every driver in the wild.
+    };
+    
     public String[] getPortNames() {
 		if (SerialNativeInterface.getOsType () == SerialNativeInterface.OS_LINUX) {
 			ArrayList<String> linuxPortNames = new ArrayList<String>();

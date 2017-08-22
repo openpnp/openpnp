@@ -31,6 +31,14 @@ public class TestDriver implements ReferenceDriver {
     public void setDelegate(ReferenceDriver delegate) {
         this.delegate = delegate;
     }
+    
+    @Override
+    public void advanceTape(Location location, double speed)
+    		throws Exception {
+        // Do nothing. This is just stubbed in so that it can be released
+        // without breaking every driver in the wild.
+    };
+    
 
     @Override
     public Wizard getConfigurationWizard() {
@@ -128,6 +136,13 @@ public class TestDriver implements ReferenceDriver {
                 throws Exception {
 
         }
+        
+        @Override
+        public void advanceTape(Location location, double speed)
+        		throws Exception {
+            // Do nothing. This is just stubbed in so that it can be released
+            // without breaking every driver in the wild.
+        };
 
         @Override
         public Location getLocation(ReferenceHeadMountable hm) {

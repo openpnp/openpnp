@@ -46,6 +46,9 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
      */
     public void home(ReferenceHead head) throws Exception;
 
+    
+    public void advanceTape(Location location, double speed) throws Exception ;
+    		
     /**
      * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed
      * rate * speed) where speed is greater than 0 and typically less than or equal to 1. A speed of
@@ -127,5 +130,6 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void dispense(ReferencePasteDispenser dispenser, Location startLocation,
             Location endLocation, long dispenseTimeMilliseconds) throws Exception;
 
+    
     public default void createDefaults() {};
 }
