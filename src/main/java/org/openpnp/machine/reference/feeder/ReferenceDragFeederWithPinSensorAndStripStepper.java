@@ -9,7 +9,7 @@ import org.pmw.tinylog.Logger;
 
 public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDragFeeder {
 
-    // TODO: make this a parameter that gets provisioned
+    // TODO: make this a parameter that gets provisioned in wizard
     String dragPinUp = "1";
     String dragPinDown = "0";
     
@@ -31,14 +31,32 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
          * probably no reason to Safe Z after extracting the pin since if the tool was going to hit
          * it would have already hit.
          */
+        
+        String pinSensorName = "pinSensor";
+        String peelActuatorName = "peelActuator";
 
-        Actuator actuator = head.getActuatorByName(actuatorName);
-
-        if (actuator == null) {
+        Actuator pinActuator = head.getActuatorByName(actuatorName); // pin that does the dragging
+        Actuator pinSensorActuator = head.getActuatorByName(pinSensorName); // sensor to detect pin stuck in tape
+        Actuator peelActuator = head.getActuatorByName(peelActuatorName);  // peel the cover tape
+        
+        // Error check, a pin is required
+        if (pinActuator == null) {
             throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
                     actuatorName, head.getName()));
         }
-
+        
+        // Error check, a pinSensor is optional, but if one is specified, then one needs to be found
+        if ((pinSensorName != null) && (pinSensorActuator == null)) {
+        	throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
+        			pinSensorName, head.getName()));
+        }
+        
+        // Error check, a pinSensor is optional, but if one is specified, then one needs to be found
+        if ((peelActuatorName != null) && (peelActuator == null)) {
+        	throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
+        			peelActuatorName, head.getName()));
+        }
+        
         head.moveToSafeZ();
 
         if (vision.isEnabled()) {
@@ -71,40 +89,44 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         }
 
         // Move the actuator to the feed start location.
-        actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+        pinActuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
 
         
         // extend the pin
-        actuator.actuate(true);
+        pinActuator.actuate(true);
         
 
         // for machines with pin sensor
-		validatePinDown(actuator);
+        if(pinSensorActuator != null) {
+        	validatePinDown(pinSensorActuator);
+        }
 
         // insert the pin
-        actuator.moveTo(feedStartLocation);
+        pinActuator.moveTo(feedStartLocation);
 
         // start stripping the tape
-        actuator.advanceTape(location, feedSpeed * actuator.getHead().getMachine().getSpeed());
+        pinActuator.advanceTape(location, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
         
         // drag the tape
-        actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+        pinActuator.moveTo(feedEndLocation, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
         
         // backoff to release tension from the pin
         Location backoffLocation = null;
         if (backoffDistance.getValue() != 0) {
             backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
-            actuator.moveTo(backoffLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
+            pinActuator.moveTo(backoffLocation, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
         }
         
         head.moveToSafeZ();
 
         // retract the pin
-        actuator.actuate(false);
+        pinActuator.actuate(false);
         
         // for machines with pin sensor
-        validatePinUp(actuator, feedStartLocation, feedEndLocation, backoffLocation);
+        if(pinSensorActuator != null) {
+        	validatePinUp(pinSensorActuator, feedStartLocation, feedEndLocation, backoffLocation);
+        }
         
         
 
@@ -167,8 +189,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	        	Logger.debug("time for pin to raise=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
 	        }
         } else {
-        	// a delay is needed before moving forward.
-        	// user expected to have delay in gcode like G4 P1000
+        	throw new Exception("failed to read pin sensor");
         }
 	}
 
@@ -199,6 +220,9 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	        } else {
 	        	Logger.debug("Time for pin to drop=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
 	        }
-        } 
+        } else
+        {
+        	throw new Exception("failed to read pin sensor") ;
+        }
 	}
 }
