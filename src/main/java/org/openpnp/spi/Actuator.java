@@ -47,8 +47,4 @@ public interface Actuator
     
     public String read() throws Exception;
 
-	public void advanceTape(Location location, double d) throws Exception;
-    
-    //TODO feels like kludge to put this here
-    //public void advanceTape(Location location, double speed) throws Exception;
 }

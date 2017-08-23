@@ -69,7 +69,5 @@ public abstract class AbstractActuator extends AbstractModelObject implements Ac
         return null;
     }
     
-    @Override
-    public void advanceTape(Location location, double speed) throws Exception{};
     
 }

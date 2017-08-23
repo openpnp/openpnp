@@ -458,10 +458,4 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
 
     }
     
-    @Override
-    public void advanceTape(Location location, double speed)
-    		throws Exception {
-        // Do nothing. This is just stubbed in so that it can be released
-        // without breaking every driver in the wild.
-    };
 }

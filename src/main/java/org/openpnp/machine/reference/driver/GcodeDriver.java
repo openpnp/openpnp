@@ -73,8 +73,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         ACTUATOR_READ_REGEX(true),
         PRE_DISPENSE_COMMAND(false, "DispenseTime"),
         DISPENSE_COMMAND(false, "DispenseTime"),
-        POST_DISPENSE_COMMAND(false, "DispenseTime"),
-        TAPE_ADVANCE_COMMAND(false, "X", "Y", "FeedRate");
+        POST_DISPENSE_COMMAND(false, "DispenseTime");
 
         final boolean headMountable;
         final String[] variableNames;
@@ -349,7 +348,11 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // If not, see if we can find a match for the command type with a
         // null or * HeadMountable ID.
         for (Command c : commands) {
+        	Logger.debug(" command {} {}", c.type.name(), c.headMountableId);
             if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
+            	if(hm != null) {
+            			Logger.debug("******************n({} {})...", type, hm.getName());
+            	}
                 return c;
             }
         }
@@ -417,29 +420,6 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         return location;
     }
 
-    @Override
-    public void advanceTape(Location location, double speed)
-    		throws Exception {
-    	
-    	// keep copy for calling subdrivers as to not add offset on offset
-        Location locationOriginal = location;
-        
-    	location = location.convertToUnits(units);
-    	
-    	String command = getCommand(null, CommandType.TAPE_ADVANCE_COMMAND);
-    	command = substituteVariable(command, "FeedRate", maxFeedRate * speed);
-        command = substituteVariable(command, "X", location.getLengthX());
-        command = substituteVariable(command, "Y", location.getLengthY());
-        
-        //List<String> responses = sendGcode(command);
-        sendGcode(command);
-        
-        
-        // regardless of any action above the subdriver needs its actions based on original input
-        for (ReferenceDriver driver : subDrivers) {
-            driver.advanceTape(locationOriginal, speed);
-        }
-    }
 
     
     @Override

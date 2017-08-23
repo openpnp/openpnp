@@ -47,7 +47,6 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void home(ReferenceHead head) throws Exception;
 
     
-    public void advanceTape(Location location, double speed) throws Exception ;
     		
     /**
      * Moves the specified HeadMountable to the given location at a speed defined by (maximum feed

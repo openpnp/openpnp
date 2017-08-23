@@ -100,13 +100,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         return value;
     }
     
-    //TODO feels like kludge to put this here
-    //@Override
-    public void advanceTape(Location location, double speed) throws Exception{
-    	 Logger.debug("{}.advanceTape ({}, {})", getName(), location, speed);
-         getDriver().advanceTape(location, speed);
-         getMachine().fireMachineHeadActivity(head);
-    }
 
     @Override
     public void moveTo(Location location, double speed) throws Exception {
