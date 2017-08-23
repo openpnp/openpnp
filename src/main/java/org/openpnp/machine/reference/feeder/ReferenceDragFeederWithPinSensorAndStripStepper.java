@@ -8,9 +8,62 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 
 public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDragFeeder {
 
+	//******************************************************
+	//**  Wizard will bind to pinSensorName.  See createBindings() in wizard.
+	//**  
+	
+    @Attribute(required = false)
+    protected String pinSensorName;
+    
+    public String getPinSensorName() {
+        return pinSensorName;
+    }
+
+    // how is this called ???
+    public void setPinSensorName(String pinSensorName) {
+        String oldValue = this.pinSensorName;
+        this.pinSensorName = pinSensorName;
+        propertyChangeSupport.firePropertyChange("pinSensorName", oldValue, pinSensorName);
+    }
+    
+    //**
+	//**  Wizard will bind to sensorActuatorName 
+    //***************************************************
+    
+    
+	//******************************************************
+	//**  Wizard will bind to peelActuatorName. See createBindings() in wizard.
+	//**  
+    
+    @Attribute(required = false)
+    protected String peelActuatorName;
+    
+    
+    public String getPeelActuatorName() {
+        return peelActuatorName;
+    }
+
+    // how is this called ???
+    public void setPeelActuatorName(String peelActuatorName) {
+        String oldValue = this.peelActuatorName;
+        this.peelActuatorName = peelActuatorName;
+        propertyChangeSupport.firePropertyChange("peelActuatorName", oldValue, peelActuatorName);
+    }
+    
+    //**
+	//**  Wizard will bind to peelActuatorName 
+	//****************************************************** 
+    
+    @Attribute(required = false)
+    protected String x2;
+    
+    @Attribute(required = false)
+    protected String x3;
+    
     // TODO: make this a parameter that gets provisioned in wizard
     String dragPinUp = "1";
     String dragPinDown = "0";
@@ -33,9 +86,6 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
          * probably no reason to Safe Z after extracting the pin since if the tool was going to hit
          * it would have already hit.
          */
-        
-        String pinSensorName = "pinSensor";
-        String peelActuatorName = "peelActuator";
 
         Actuator pinActuator = head.getActuatorByName(actuatorName); // pin that does the dragging
         Actuator pinSensorActuator = head.getActuatorByName(pinSensorName); // sensor to detect pin stuck in tape
@@ -48,13 +98,13 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         }
         
         // Error check, a pinSensor is optional, but if one is specified, then one needs to be found
-        if ((pinSensorName != null) && (pinSensorActuator == null)) {
+        if ((!pinSensorName.equals("")) && (pinSensorActuator == null)) {
         	throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
         			pinSensorName, head.getName()));
         }
         
         // Error check, a pinSensor is optional, but if one is specified, then one needs to be found
-        if ((peelActuatorName != null) && (peelActuator == null)) {
+        if ((!peelActuatorName.equals("")) && (peelActuator == null)) {
         	throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
         			peelActuatorName, head.getName()));
         }
@@ -108,8 +158,9 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         pinActuator.moveTo(feedStartLocation);
 
         // start peeling of the tape
-        peelActuator.moveTo(feedEndLocation.subtract(feedStartLocation), feedSpeed * pinActuator.getHead().getMachine().getSpeed());
-        //pinActuator.advanceTape(location, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+        if (peelActuator != null) {
+        	peelActuator.moveTo(feedEndLocation.subtract(feedStartLocation), feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+        }
         
         // drag the tape
         pinActuator.moveTo(feedEndLocation, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
@@ -128,7 +179,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         
         // for machines with pin sensor
         if(pinSensorActuator != null) {
-        	validatePinUp(pinSensorActuator, feedStartLocation, feedEndLocation, backoffLocation);
+        	validatePinUp(pinActuator, pinSensorActuator, feedStartLocation, feedEndLocation, backoffLocation);
         }
         
         
@@ -148,51 +199,64 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
     }
 
 	/**
-	 * @param actuator
+	 * @param pinSensorActuator
 	 * @param feedStartLocation
 	 * @param feedEndLocation
 	 * @param backoffLocation
 	 * @throws Exception
 	 */
-	private void validatePinUp(Actuator actuator, Location feedStartLocation, Location feedEndLocation,
+	private void validatePinUp(Actuator pinActuator, Actuator pinSensorActuator, Location feedStartLocation, Location feedEndLocation,
 			Location backoffLocation) throws Exception {
 		// validate the pin is down
-        String pinSensorResult = actuator.read();
+        String pinSensorResult = pinSensorActuator.read();
+        //pinSensorResult = dragPinDown.toString(); // TODO debug
         
         if(pinSensorResult != null) {
         	// we have a pin sensor
         	
 	        long timeWeStartedWaiting = System.currentTimeMillis();
-	        long timeout = 1000;
+	        long timeout = 1000; // TODO parameter too
 	        int waitCount =0;
 	        
 	        // Loop until we've timed out or pin sensor reports pin is up
 	        while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinUp)) {
 	            waitCount++; // diagnostic useful for dragFeeder without pin sensor
-	        	pinSensorResult = actuator.read();
+	        	pinSensorResult = pinSensorActuator.read();
+	        	//pinSensorResult = dragPinDown.toString(); // TODO debug
 	        }
 	        if (!pinSensorResult.equals(dragPinUp)) {
 	        	// pin failed to rise within specified time
 	        	// before declaring failure, attempt a back and forth motion 
 	        	if (backoffLocation != null) {
-	        		timeout = 2000; // extend timeout
+	        		timeout = 2000; // TODO parameter too ... extend timeout
 	        		// will move back and forth from current backoffLocation to a little farther back to feedEndLocation, and back to backoffLocation
-	        		Location backoffLocation2 = Utils2D.getPointAlongLine(backoffLocation, feedStartLocation, backoffDistance);
+	        		Location backoffLocation2 = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance.multiply(2));
 	        		timeWeStartedWaiting = System.currentTimeMillis();
+	        		int waitcount2 = 0;
 	        		while (System.currentTimeMillis() - timeWeStartedWaiting < timeout && !pinSensorResult.equals(dragPinUp)) {
-		        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
-		        		actuator.moveTo(feedEndLocation, feedSpeed * actuator.getHead().getMachine().getSpeed());
-		        		actuator.moveTo(backoffLocation2, feedSpeed * actuator.getHead().getMachine().getSpeed());
+		        		waitcount2++; // diagnostic useful for dragFeeder without pin sensor
+	        			pinActuator.moveTo(backoffLocation2, feedSpeed * pinSensorActuator.getHead().getMachine().getSpeed());
+		        		pinActuator.moveTo(feedEndLocation, feedSpeed * pinSensorActuator.getHead().getMachine().getSpeed());
+		        		pinActuator.moveTo(backoffLocation, feedSpeed * pinSensorActuator.getHead().getMachine().getSpeed());
 	        		
-		        		Logger.debug("jiggling dragPin");
+		        		Logger.debug("secondary recovery to free pin");
 		                
-		            	pinSensorResult = actuator.read();
+		            	pinSensorResult = pinSensorActuator.read();
 	        		}
+	        		if (pinSensorResult.equals(dragPinUp)) {
+	        			// giggling was successful in freeing the pin
+	        			Logger.debug("time for pin to raise=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount + "/" + waitcount2);
+	        			return;
+	        		} else {
+	        			throw new Exception("Drag pin did not raise, even after secondary recovery");
+	        		}
+	        	} else {
+	        		// pin did not raise in time and no backoff, so giggling not possible
+
+	        		throw new Exception("Drag pin did not raise.");
 	        	}
-	        	
-	        	actuator.actuate(false); // raise drag pin, ie: a safe place
-	        	throw new Exception("Drag pin did not raise.");
 	        } else {
+	        	// normal path
 	        	Logger.debug("time for pin to raise=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
 	        }
         } else {

@@ -348,10 +348,10 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // If not, see if we can find a match for the command type with a
         // null or * HeadMountable ID.
         for (Command c : commands) {
-        	Logger.debug(" command {} {}", c.type.name(), c.headMountableId);
+        	//Logger.debug(" command {} {}", c.type.name(), c.headMountableId);
             if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
             	if(hm != null) {
-            			Logger.debug("******************n({} {})...", type, hm.getName());
+            			Logger.debug("using command ({}) on default rather then ({})...", type, hm.getName());
             	}
                 return c;
             }

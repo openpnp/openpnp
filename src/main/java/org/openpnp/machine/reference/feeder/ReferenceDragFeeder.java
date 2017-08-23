@@ -69,7 +69,7 @@ import org.simpleframework.xml.core.Persist;
 public class ReferenceDragFeeder extends ReferenceFeeder {
 
 
-    private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+    public final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
@@ -312,6 +312,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         return actuatorName;
     }
 
+    // how is this called ???
     public void setActuatorName(String actuatorName) {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;

@@ -390,6 +390,7 @@ contentPanel.add(panelFields);
 
 	@Override
 	public void createBindings() {
+		//TODO JJG ... add my new attributes
 		super.createBindings();
 		LengthConverter lengthConverter = new LengthConverter();
 		IntegerConverter intConverter = new IntegerConverter();
@@ -399,6 +400,8 @@ contentPanel.add(panelFields);
 
 		addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
 		addWrappedBinding(feeder, "actuatorName", textFieldPinActuatorId, "text");
+		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text"); // TODO this is not connected on other side
+		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text"); // TODO this is not connected on other side
 
 		MutableLocationProxy feedStartLocation = new MutableLocationProxy();
 		bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
