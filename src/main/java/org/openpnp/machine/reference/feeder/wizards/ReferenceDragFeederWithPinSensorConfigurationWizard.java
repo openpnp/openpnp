@@ -78,8 +78,17 @@ public class ReferenceDragFeederWithPinSensorConfigurationWizard extends Abstrac
 	private JTextField textFieldFeedEndY;
 	private JTextField textFieldFeedEndZ;
 	private JTextField textFieldFeedRate;
-	private JLabel lblActuatorId;
-	private JTextField textFieldActuatorId;
+	
+	private JLabel lblPinActuatorId;
+	private JTextField textFieldPinActuatorId;
+	
+	
+	private JLabel lblPinSensorActuatorId;
+	private JTextField textFieldPinSensorActuatorId;
+	
+	private JLabel lblPeelActuatorId;
+	private JTextField textFieldPeelActuatorId;
+	
 	private JPanel panelGeneral;
 	private JPanel panelVision;
 	private JPanel panelLocations;
@@ -119,25 +128,78 @@ panelGeneral.setBorder(new TitledBorder(null, "General Settings", TitledBorder.L
 
 panelFields.add(panelGeneral);
 panelGeneral.setLayout(new FormLayout(
-        new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-        new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+		new ColumnSpec[] {
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        ColumnSpec.decode("left:default:grow"),},
+		    new RowSpec[] {
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,}));
+
+//*********************
 
 JLabel lblFeedRate = new JLabel("Feed Speed %");
-panelGeneral.add(lblFeedRate, "2, 2");
+panelGeneral.add(lblFeedRate, "4, 4, right, default");
 
 textFieldFeedRate = new JTextField();
-panelGeneral.add(textFieldFeedRate, "4, 2");
-textFieldFeedRate.setColumns(5);
+panelGeneral.add(textFieldFeedRate, "6, 4");
+textFieldFeedRate.setColumns(8);
 
-lblActuatorId = new JLabel("Actuator Name");
-panelGeneral.add(lblActuatorId, "2, 4, right, default");
+JLabel lblFeedRateComment = new JLabel("Limit speed to avoid components falling out of tape");
+panelGeneral.add(lblFeedRateComment, "8, 4");
 
-textFieldActuatorId = new JTextField();
-panelGeneral.add(textFieldActuatorId, "4, 4");
-textFieldActuatorId.setColumns(5);
+// *********************
 
+lblPinActuatorId = new JLabel("Pin Actuator Name");
+panelGeneral.add(lblPinActuatorId, "4, 6, right, default");
+
+textFieldPinActuatorId = new JTextField();
+panelGeneral.add(textFieldPinActuatorId, "6, 6");
+textFieldPinActuatorId.setColumns(8);
+
+JLabel lblPinActuatorIdComment = new JLabel("Pin that will drag the tape. Actuator must implement ACTUATE_BOOLEAN_COMMAND.");
+panelGeneral.add(lblPinActuatorIdComment, "8, 6");
+
+//****************
+
+lblPinSensorActuatorId = new JLabel("Pin Sensor Name");
+panelGeneral.add(lblPinSensorActuatorId, "4, 8, right, default");
+
+textFieldPinSensorActuatorId = new JTextField();
+panelGeneral.add(textFieldPinSensorActuatorId, "6, 8");
+textFieldPinSensorActuatorId.setColumns(8);
+
+JLabel lblPinSensorActuatorIdComment = new JLabel("Optional Switch to detect a stuck drag pin. Actuator must implement ACTUATOR_READ_COMMAND.");
+panelGeneral.add(lblPinSensorActuatorIdComment, "8, 8");
+
+//******** 
+
+lblPeelActuatorId = new JLabel("Peel Actuator Name");
+panelGeneral.add(lblPeelActuatorId, "4, 10, right, default");
+
+textFieldPeelActuatorId = new JTextField();
+panelGeneral.add(textFieldPeelActuatorId, "6, 10");
+textFieldPeelActuatorId.setColumns(8);
+
+JLabel lblPeelActuatorIdComment = new JLabel("Optional Actuator to peel the tape.  Actuator must implementing MOVE_TO_COMMAND.");
+panelGeneral.add(lblPeelActuatorIdComment, "8, 10");
+
+//************************
 panelLocations = new JPanel();
 panelFields.add(panelLocations);
 panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -336,7 +398,7 @@ contentPanel.add(panelFields);
 		PercentConverter percentConverter = new PercentConverter();
 
 		addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
-		addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
+		addWrappedBinding(feeder, "actuatorName", textFieldPinActuatorId, "text");
 
 		MutableLocationProxy feedStartLocation = new MutableLocationProxy();
 		bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
@@ -362,7 +424,7 @@ contentPanel.add(panelFields);
 		addWrappedBinding(feeder, "backoffDistance", backoffDistTf, "text", lengthConverter);
 
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedRate);
-		ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
+		ComponentDecorators.decorateWithAutoSelect(textFieldPinActuatorId);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartY);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);

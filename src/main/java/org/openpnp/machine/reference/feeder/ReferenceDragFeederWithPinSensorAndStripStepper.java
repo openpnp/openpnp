@@ -1,5 +1,7 @@
 package org.openpnp.machine.reference.feeder;
 
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederWithPinSensorConfigurationWizard;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
@@ -140,6 +142,10 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         Logger.debug("Modified pickLocation {}", pickLocation);
     }
 
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceDragFeederWithPinSensorConfigurationWizard(this);
+    }
 
 	/**
 	 * @param actuator
