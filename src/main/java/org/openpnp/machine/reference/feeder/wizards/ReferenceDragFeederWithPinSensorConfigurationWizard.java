@@ -467,8 +467,13 @@ contentPanel.add(panelFields);
 
 		addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
 		addWrappedBinding(feeder, "actuatorName", textFieldPinActuatorId, "text");
-		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text"); // TODO this is not connected on other side
-		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text"); // TODO this is not connected on other side
+		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text");
+
+		addWrappedBinding(feeder, "pinUpTimeoutMs", textFeildPinUpTimeoutMsId, "text"); // this binds xxxxxx 
+		addWrappedBinding(feeder, "pinUpRecoveryTimeoutMs", textFeildPinUpRecoveryTimeoutMsId, "text");
+		addWrappedBinding(feeder, "pinDownTimeoutMs", textFeildPinDownTimeoutMsId, "text");
+		
+		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text"); // TODO xxxxxx
 
 		MutableLocationProxy feedStartLocation = new MutableLocationProxy();
 		bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
