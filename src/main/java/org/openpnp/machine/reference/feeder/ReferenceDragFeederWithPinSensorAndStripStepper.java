@@ -23,18 +23,13 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         return pinSensorName;
     }
 
-    // how is this called ???
     public void setPinSensorName(String pinSensorName) {
         String oldValue = this.pinSensorName;
         this.pinSensorName = pinSensorName;
         propertyChangeSupport.firePropertyChange("pinSensorName", oldValue, pinSensorName);
     }
     
-    //**
-	//**  Wizard will bind to sensorActuatorName 
-    //***************************************************
-    
-    
+
 	//******************************************************
 	//**  Wizard will bind to peelActuatorName. See createBindings() in wizard.
 	//**  
@@ -47,16 +42,12 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         return peelActuatorName;
     }
 
-    // how is this called ???
     public void setPeelActuatorName(String peelActuatorName) {
         String oldValue = this.peelActuatorName;
         this.peelActuatorName = peelActuatorName;
         propertyChangeSupport.firePropertyChange("peelActuatorName", oldValue, peelActuatorName);
     }
     
-    //**
-	//**  Wizard will bind to peelActuatorName 
-	//****************************************************** 
     
 	//******************************************************
 	//**  Wizard will bind to pinUpTimeoutMs. See createBindings() in wizard.
@@ -70,16 +61,12 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         return Long.toString(pinUpTimeoutMs);
     }
 
-    // how is this called ???
     public void setPinUpTimeoutMs(String value) {
         Long oldValue = this.pinUpTimeoutMs;
         this.pinUpTimeoutMs = Long.parseLong(value);
         propertyChangeSupport.firePropertyChange("pinUpTimeoutMs", oldValue, value);
     }
     
-    //**
-	//**  Wizard will bind to peelActuatorName 
-	//****************************************************** 
     
 	//******************************************************
 	//**  Wizard will bind to pinDownTimeoutMs. See createBindings() in wizard.
@@ -93,16 +80,12 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         return Long.toString(pinDownTimeoutMs);
     }
 
-    // how is this called ???
     public void setPinDownTimeoutMs(String value) {
         Long oldValue = this.pinDownTimeoutMs;
         this.pinDownTimeoutMs = Long.parseLong(value);
         propertyChangeSupport.firePropertyChange("pinDownTimeoutMs", oldValue, value);
     }
     
-    //**
-	//**  Wizard will bind to peelActuatorName 
-	//****************************************************** 
     
     
 	//******************************************************
@@ -125,15 +108,9 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
     }
     
     //**
-	//**  Wizard will bind to peelActuatorName 
+	//**  done with all the bindings
 	//****************************************************** 
     
-    
-    @Attribute(required = false)
-    protected String x2;
-    
-    @Attribute(required = false)
-    protected String x3;
     
     // TODO: make this a parameter that gets provisioned in wizard
     String dragPinUp = "1";
