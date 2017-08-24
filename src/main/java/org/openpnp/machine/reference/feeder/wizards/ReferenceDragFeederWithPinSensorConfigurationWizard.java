@@ -86,6 +86,11 @@ public class ReferenceDragFeederWithPinSensorConfigurationWizard extends Abstrac
 	private JLabel lblPinSensorActuatorId;
 	private JTextField textFieldPinSensorActuatorId;
 	
+	private JLabel lblPinUpValueId;
+	private JTextField textFieldPinUpValueId;
+	private JLabel lblPinDownValueId;
+	private JTextField textFieldPinDownValueId;
+	
 	private JLabel lblPinDownTimeoutMsId;
 	private JTextField textFeildPinDownTimeoutMsId;
 	
@@ -213,58 +218,80 @@ panelGeneral.add(lblPinSensorActuatorIdComment, "8, 8");
 
 //******** 
 
+lblPinUpValueId = new JLabel("Pin Up Value");
+panelGeneral.add(lblPinUpValueId, "4, 10, right, default");
+
+textFieldPinUpValueId = new JTextField();
+panelGeneral.add(textFieldPinUpValueId, "6, 10");
+textFieldPinUpValueId.setColumns(8);
+
+JLabel lblUpValueComment = new JLabel("Expected result of ACTUATOR_READ_COMMAND when drag pin is Up.");
+panelGeneral.add(lblUpValueComment, "8, 10");
+
+// *********
+
+lblPinDownValueId = new JLabel("Pin Down Value");
+panelGeneral.add(lblPinDownValueId, "4, 12, right, default");
+
+textFieldPinDownValueId = new JTextField();
+panelGeneral.add(textFieldPinDownValueId, "6, 12");
+textFieldPinDownValueId.setColumns(8);
+
+JLabel lblDownValueComment = new JLabel("Expected result of ACTUATOR_READ_COMMAND when drag pin is Down.");
+panelGeneral.add(lblDownValueComment, "8, 12");
+
 //****************
 
 lblPinDownTimeoutMsId = new JLabel("Pin Down Timeout (ms)");
-panelGeneral.add(lblPinDownTimeoutMsId, "4, 10, right, default");
+panelGeneral.add(lblPinDownTimeoutMsId, "4, 14, right, default");
 
 textFeildPinDownTimeoutMsId = new JTextField();
-panelGeneral.add(textFeildPinDownTimeoutMsId, "6, 10");
+panelGeneral.add(textFeildPinDownTimeoutMsId, "6, 14");
 textFeildPinDownTimeoutMsId.setColumns(8);
 
 JLabel PinDownTimeoutIdComment = new JLabel("Timeout for waiting for Pin Down detection. Required if PinSensor is used.");
-panelGeneral.add(PinDownTimeoutIdComment, "8, 10");
+panelGeneral.add(PinDownTimeoutIdComment, "8, 14");
 
 //******** 
 
 //****************
 
 lblPinUpTimeoutMsId = new JLabel("Pin Up Timeout (ms)");
-panelGeneral.add(lblPinUpTimeoutMsId, "4, 12, right, default");
+panelGeneral.add(lblPinUpTimeoutMsId, "4, 16, right, default");
 
 textFeildPinUpTimeoutMsId = new JTextField();
-panelGeneral.add(textFeildPinUpTimeoutMsId, "6, 12");
+panelGeneral.add(textFeildPinUpTimeoutMsId, "6, 16");
 textFeildPinUpTimeoutMsId.setColumns(8);
 
 JLabel PinUpTimeoutIdComment = new JLabel("Timeout for waiting for Pin Up detection. Required if PinSensor is used.");
-panelGeneral.add(PinUpTimeoutIdComment, "8, 12");
+panelGeneral.add(PinUpTimeoutIdComment, "8, 16");
 
 //******** 
 
 //****************
 
 lblPinUpRecoveryTimeoutMsId = new JLabel("Pin Up Recovery Timeout (ms)");
-panelGeneral.add(lblPinUpRecoveryTimeoutMsId, "4, 14, right, default");
+panelGeneral.add(lblPinUpRecoveryTimeoutMsId, "4, 18, right, default");
 
 textFeildPinUpRecoveryTimeoutMsId = new JTextField();
-panelGeneral.add(textFeildPinUpRecoveryTimeoutMsId, "6, 14");
+panelGeneral.add(textFeildPinUpRecoveryTimeoutMsId, "6, 18");
 textFeildPinUpRecoveryTimeoutMsId.setColumns(8);
 
 JLabel PinUpRecoveryTimeoutIdComment = new JLabel("Amount of time (ms) to attempt recovery of pin stuck in down position before declaring an error. Required if PinSensor is used.");
-panelGeneral.add(PinUpRecoveryTimeoutIdComment, "8, 14");
+panelGeneral.add(PinUpRecoveryTimeoutIdComment, "8, 18");
 
 //******** 
 
 
 lblPeelActuatorId = new JLabel("Peel Actuator Name");
-panelGeneral.add(lblPeelActuatorId, "4, 16, right, default");
+panelGeneral.add(lblPeelActuatorId, "4, 20, right, default");
 
 textFieldPeelActuatorId = new JTextField();
-panelGeneral.add(textFieldPeelActuatorId, "6, 16");
+panelGeneral.add(textFieldPeelActuatorId, "6, 20");
 textFieldPeelActuatorId.setColumns(8);
 
 JLabel lblPeelActuatorIdComment = new JLabel("Optional Actuator to peel the tape.  Actuator must implementing MOVE_TO_COMMAND.");
-panelGeneral.add(lblPeelActuatorIdComment, "8, 16");
+panelGeneral.add(lblPeelActuatorIdComment, "8, 20");
 
 //************************
 panelLocations = new JPanel();
@@ -470,7 +497,9 @@ contentPanel.add(panelFields);
 		addWrappedBinding(feeder, "actuatorName", textFieldPinActuatorId, "text");                      
 		
 		// these bound in ReferenceDragFeederWithPinSensorAndStripStepper with propertyChangeSupport.firePropertyChange
-		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text");               
+		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text");   
+		addWrappedBinding(feeder, "pinUpValue", textFieldPinUpValueId, "text");
+		addWrappedBinding(feeder, "pinDownValue", textFieldPinDownValueId, "text");
 		addWrappedBinding(feeder, "pinUpTimeoutMs", textFeildPinUpTimeoutMsId, "text");                  
 		addWrappedBinding(feeder, "pinUpRecoveryTimeoutMs", textFeildPinUpRecoveryTimeoutMsId, "text"); 
 		addWrappedBinding(feeder, "pinDownTimeoutMs", textFeildPinDownTimeoutMsId, "text");             

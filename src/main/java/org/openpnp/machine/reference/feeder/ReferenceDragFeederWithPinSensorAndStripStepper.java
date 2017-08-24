@@ -100,21 +100,53 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         return Long.toString(pinDownTimeoutMs);
     }
 
-    // how is this called ???
     public void setPinUpRecoveryTimeoutMs(String value) {
         Long oldValue = this.pinDownTimeoutMs;
         this.pinUpRecoveryTimeoutMs = Long.parseLong(value);
         propertyChangeSupport.firePropertyChange("pinUpRecoveryTimeoutMs", oldValue, value);
     }
     
+	//******************************************************
+	//**  Wizard will bind to pinUpValue. See createBindings() in wizard.
+	//**  
+    
+    @Attribute(required = false)
+    protected String pinUpValue = "1";
+    
+    
+    public String getPinUpValue() {
+        return pinUpValue;
+    }
+
+    public void setPinUpValue(String value) {
+        String oldValue = this.pinUpValue;
+        this.pinUpValue = value;
+        propertyChangeSupport.firePropertyChange("pinUpValue", oldValue, value);
+    }
+    
+	//******************************************************
+	//**  Wizard will bind to pinDownValue. See createBindings() in wizard.
+	//**  
+    
+    @Attribute(required = false)
+    protected String pinDownValue = "0";
+    
+    
+    public String getPinDownValue() {
+        return pinDownValue;
+    }
+
+    // how is this called ???
+    public void setPinDownValue(String value) {
+        String oldValue = this.pinDownValue;
+        this.pinDownValue = value;
+        propertyChangeSupport.firePropertyChange("pinDownValue", oldValue, value);
+    }
+    
     //**
 	//**  done with the bindings
 	//****************************************************** 
     
-    
-    // TODO: make this a parameter that gets provisioned in wizard
-    String dragPinUp = "1";
-    String dragPinDown = "0";
     
     
 	@Override
@@ -266,12 +298,12 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	        int waitCount =0;
 	        
 	        // Loop until we've timed out or pin sensor reports pin is up
-	        while (System.currentTimeMillis() - timeWeStartedWaiting < pinUpTimeoutMs && !pinSensorResult.equals(dragPinUp)) {
+	        while (System.currentTimeMillis() - timeWeStartedWaiting < pinUpTimeoutMs && !pinSensorResult.equals(pinUpValue)) {
 	            waitCount++; // diagnostic useful for dragFeeder without pin sensor
 	        	pinSensorResult = pinSensorActuator.read();
 	        	//pinSensorResult = dragPinDown.toString(); // TODO debug
 	        }
-	        if (!pinSensorResult.equals(dragPinUp)) {
+	        if (!pinSensorResult.equals(pinUpValue)) {
 	        	// pin failed to rise within specified time
 	        	// before declaring failure, attempt a back and forth motion 
 	        	if (backoffLocation != null) {
@@ -280,7 +312,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	        		Location backoffLocation2 = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance.multiply(2));
 	        		timeWeStartedWaiting = System.currentTimeMillis();
 	        		int waitcount2 = 0;
-	        		while (System.currentTimeMillis() - timeWeStartedWaiting < pinUpRecoveryTimeoutMs && !pinSensorResult.equals(dragPinUp)) {
+	        		while (System.currentTimeMillis() - timeWeStartedWaiting < pinUpRecoveryTimeoutMs && !pinSensorResult.equals(pinUpValue)) {
 		        		waitcount2++; // diagnostic useful for dragFeeder without pin sensor
 	        			pinActuator.moveTo(backoffLocation2, feedSpeed * pinSensorActuator.getHead().getMachine().getSpeed());
 		        		pinActuator.moveTo(feedEndLocation, feedSpeed * pinSensorActuator.getHead().getMachine().getSpeed());
@@ -290,7 +322,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 		                
 		            	pinSensorResult = pinSensorActuator.read();
 	        		}
-	        		if (pinSensorResult.equals(dragPinUp)) {
+	        		if (pinSensorResult.equals(pinUpValue)) {
 	        			// giggling was successful in freeing the pin
 	        			Logger.debug("time for pin to raise=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount + "/" + waitcount2);
 	        			return;
@@ -327,11 +359,11 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	        int waitCount = 0; // used for diagnostics
 	        
 	        // Loop until we've timed out or pin is confirmed down
-	        while (System.currentTimeMillis() - timeWeStartedWaiting < pinDownTimeoutMs && !pinSensorResult.equals(dragPinDown)) {
+	        while (System.currentTimeMillis() - timeWeStartedWaiting < pinDownTimeoutMs && !pinSensorResult.equals(pinDownValue)) {
 	            waitCount++; // count number of time we entered this delay loop. Useful in calibrating non sensor drag implementation
 	        	pinSensorResult = actuator.read();
 	        }
-	        if (!pinSensorResult.equals(dragPinDown)) {
+	        if (!pinSensorResult.equals(pinDownValue)) {
 	        	actuator.actuate(false); // raise drag pin, ie: a safe place before giving up
 	        	throw new Exception("Sensor indicates Drag Pin did not lower.");
 	        } else {
