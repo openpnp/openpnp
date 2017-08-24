@@ -54,7 +54,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	//**  
     
     @Attribute(required = false)
-    protected long pinUpTimeoutMs;
+    protected long pinUpTimeoutMs = 200;
     
     
     public String getPinUpTimeoutMs() {
@@ -73,7 +73,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	//**  
     
     @Attribute(required = false)
-    protected long pinDownTimeoutMs;
+    protected long pinDownTimeoutMs = 500;
     
     
     public String getPinDownTimeoutMs() {
@@ -93,7 +93,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	//**  
     
     @Attribute(required = false)
-    protected long pinUpRecoveryTimeoutMs;
+    protected long pinUpRecoveryTimeoutMs = 1000;
     
     
     public String getPinUpRecoveryTimeoutMs() {
@@ -108,7 +108,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
     }
     
     //**
-	//**  done with all the bindings
+	//**  done with the bindings
 	//****************************************************** 
     
     

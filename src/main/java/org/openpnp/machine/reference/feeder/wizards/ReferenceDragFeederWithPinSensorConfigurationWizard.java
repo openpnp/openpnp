@@ -465,15 +465,16 @@ contentPanel.add(panelFields);
 		BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
 		PercentConverter percentConverter = new PercentConverter();
 
-		addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);
-		addWrappedBinding(feeder, "actuatorName", textFieldPinActuatorId, "text");
-		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text");
-
-		addWrappedBinding(feeder, "pinUpTimeoutMs", textFeildPinUpTimeoutMsId, "text"); // this binds xxxxxx 
-		addWrappedBinding(feeder, "pinUpRecoveryTimeoutMs", textFeildPinUpRecoveryTimeoutMsId, "text");
-		addWrappedBinding(feeder, "pinDownTimeoutMs", textFeildPinDownTimeoutMsId, "text");
+		// these are bound in ReferenceDragFeeder with propertyChangeSupport.firePropertyChange
+		addWrappedBinding(feeder, "feedSpeed", textFieldFeedRate, "text", percentConverter);            
+		addWrappedBinding(feeder, "actuatorName", textFieldPinActuatorId, "text");                      
 		
-		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text"); // TODO xxxxxx
+		// these bound in ReferenceDragFeederWithPinSensorAndStripStepper with propertyChangeSupport.firePropertyChange
+		addWrappedBinding(feeder, "pinSensorName", textFieldPinSensorActuatorId, "text");               
+		addWrappedBinding(feeder, "pinUpTimeoutMs", textFeildPinUpTimeoutMsId, "text");                  
+		addWrappedBinding(feeder, "pinUpRecoveryTimeoutMs", textFeildPinUpRecoveryTimeoutMsId, "text"); 
+		addWrappedBinding(feeder, "pinDownTimeoutMs", textFeildPinDownTimeoutMsId, "text");             
+		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text");                 
 
 		MutableLocationProxy feedStartLocation = new MutableLocationProxy();
 		bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");
