@@ -283,6 +283,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (placement.getType() != Placement.Type.Place) {
                     continue;
                 }
+                
+                // Ignore placements that are placed already
+                if (placement.getPlaced()) {
+                    continue;
+                }
 
                 // Ignore placements that aren't on the side of the board we're processing.
                 if (placement.getSide() != boardLocation.getSide()) {
@@ -721,6 +726,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Mark the placement as finished
             jobPlacement.status = Status.Complete;
+            
+            // Mark the placement as "placed"
+            jobPlacement.placement.setPlaced(true);
 
             plannedPlacement.stepComplete = true;
 
@@ -756,6 +764,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         params.put("job", job);
         params.put("jobProcessor", this);
         Configuration.get().getScripting().on("Job.Finished", params);
+        
+        fireTextStatus("Job finished - placed %s parts in %s sec. (%s CPH)", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)));
     }
 
     protected void doReset() throws Exception {
