@@ -64,7 +64,7 @@ public class Placement extends AbstractModelObject implements Identifiable {
     @Attribute
     private boolean checkFids;
     
-    @Attribute
+    @Attribute(required = false)
     private boolean placed;
 
     @SuppressWarnings("unused")
