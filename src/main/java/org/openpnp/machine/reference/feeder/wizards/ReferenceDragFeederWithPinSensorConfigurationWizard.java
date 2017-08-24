@@ -86,6 +86,16 @@ public class ReferenceDragFeederWithPinSensorConfigurationWizard extends Abstrac
 	private JLabel lblPinSensorActuatorId;
 	private JTextField textFieldPinSensorActuatorId;
 	
+	private JLabel lblPinDownTimeoutMsId;
+	private JTextField textFeildPinDownTimeoutMsId;
+	
+	private JLabel lblPinUpTimeoutMsId;
+	private JTextField textFeildPinUpTimeoutMsId;
+	
+	private JLabel lblPinUpRecoveryTimeoutMsId;
+	private JTextField textFeildPinUpRecoveryTimeoutMsId;
+	
+	
 	private JLabel lblPeelActuatorId;
 	private JTextField textFieldPeelActuatorId;
 	
@@ -138,8 +148,22 @@ panelGeneral.setLayout(new FormLayout(
 		        FormSpecs.RELATED_GAP_COLSPEC,
 		        FormSpecs.DEFAULT_COLSPEC,
 		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
+		        FormSpecs.DEFAULT_COLSPEC,
+		        FormSpecs.RELATED_GAP_COLSPEC,
 		        ColumnSpec.decode("left:default:grow"),},
 		    new RowSpec[] {
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
@@ -189,15 +213,58 @@ panelGeneral.add(lblPinSensorActuatorIdComment, "8, 8");
 
 //******** 
 
+//****************
+
+lblPinDownTimeoutMsId = new JLabel("Pin Down Timeout (ms)");
+panelGeneral.add(lblPinDownTimeoutMsId, "4, 10, right, default");
+
+textFeildPinDownTimeoutMsId = new JTextField();
+panelGeneral.add(textFeildPinDownTimeoutMsId, "6, 10");
+textFeildPinDownTimeoutMsId.setColumns(8);
+
+JLabel PinDownTimeoutIdComment = new JLabel("Timeout for waiting for Pin Down detection. Required if PinSensor is used.");
+panelGeneral.add(PinDownTimeoutIdComment, "8, 10");
+
+//******** 
+
+//****************
+
+lblPinUpTimeoutMsId = new JLabel("Pin Up Timeout (ms)");
+panelGeneral.add(lblPinUpTimeoutMsId, "4, 12, right, default");
+
+textFeildPinUpTimeoutMsId = new JTextField();
+panelGeneral.add(textFeildPinUpTimeoutMsId, "6, 12");
+textFeildPinUpTimeoutMsId.setColumns(8);
+
+JLabel PinUpTimeoutIdComment = new JLabel("Timeout for waiting for Pin Up detection. Required if PinSensor is used.");
+panelGeneral.add(PinUpTimeoutIdComment, "8, 12");
+
+//******** 
+
+//****************
+
+lblPinUpRecoveryTimeoutMsId = new JLabel("Pin Up Recovery Timeout (ms)");
+panelGeneral.add(lblPinUpRecoveryTimeoutMsId, "4, 14, right, default");
+
+textFeildPinUpRecoveryTimeoutMsId = new JTextField();
+panelGeneral.add(textFeildPinUpRecoveryTimeoutMsId, "6, 14");
+textFeildPinUpRecoveryTimeoutMsId.setColumns(8);
+
+JLabel PinUpRecoveryTimeoutIdComment = new JLabel("Amount of time (ms) to attempt recovery of pin stuck in down position before declaring an error. Required if PinSensor is used.");
+panelGeneral.add(PinUpRecoveryTimeoutIdComment, "8, 14");
+
+//******** 
+
+
 lblPeelActuatorId = new JLabel("Peel Actuator Name");
-panelGeneral.add(lblPeelActuatorId, "4, 10, right, default");
+panelGeneral.add(lblPeelActuatorId, "4, 16, right, default");
 
 textFieldPeelActuatorId = new JTextField();
-panelGeneral.add(textFieldPeelActuatorId, "6, 10");
+panelGeneral.add(textFieldPeelActuatorId, "6, 16");
 textFieldPeelActuatorId.setColumns(8);
 
 JLabel lblPeelActuatorIdComment = new JLabel("Optional Actuator to peel the tape.  Actuator must implementing MOVE_TO_COMMAND.");
-panelGeneral.add(lblPeelActuatorIdComment, "8, 10");
+panelGeneral.add(lblPeelActuatorIdComment, "8, 16");
 
 //************************
 panelLocations = new JPanel();
