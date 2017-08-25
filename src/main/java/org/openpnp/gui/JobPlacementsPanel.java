@@ -222,6 +222,11 @@ public class JobPlacementsPanel extends JPanel {
             setSideMenu.add(new SetSideAction(side));
         }
         popupMenu.add(setSideMenu);
+        
+        JMenu setPlacedMenu = new JMenu(setPlacedAction);
+        setPlacedMenu.add(new SetPlacedAction(true));
+        setPlacedMenu.add(new SetPlacedAction(false));
+        popupMenu.add(setPlacedMenu);
 
         table.setComponentPopupMenu(popupMenu);
 
@@ -464,6 +469,7 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setType(type);
+                tableModel.fireTableDataChanged();
             }
         }
     };
@@ -491,6 +497,35 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setSide(side);
+                tableModel.fireTableDataChanged();
+            }
+        }
+    };
+    
+    public final Action setPlacedAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Placed");
+            putValue(SHORT_DESCRIPTION, "Set placement status to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetPlacedAction extends AbstractAction {
+        final Boolean placed;
+
+        public SetPlacedAction(Boolean placed) {
+            this.placed = placed;
+            putValue(NAME, placed.toString());
+            putValue(SHORT_DESCRIPTION, "Set placement status to " + placed.toString());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (Placement placement : getSelections()) {
+                placement.setPlaced(placed);
+                tableModel.fireTableDataChanged();   
             }
         }
     };
