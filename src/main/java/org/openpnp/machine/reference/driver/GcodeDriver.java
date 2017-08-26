@@ -69,6 +69,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         PLACE_COMMAND(true, "Id", "Name"),
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
+        EXTRUDE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
         ACTUATOR_READ_REGEX(true),
         PRE_DISPENSE_COMMAND(false, "DispenseTime"),
@@ -687,6 +688,22 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
 
         for (ReferenceDriver driver : subDrivers) {
             driver.actuate(actuator, value);
+        }
+    }
+    
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
+        String command = getCommand(actuator, CommandType.EXTRUDE_COMMAND);
+        command = substituteVariable(command, "Id", actuator.getId());
+        command = substituteVariable(command, "Name", actuator.getName());
+        command = substituteVariable(command, "Index", actuator.getIndex());
+        command = substituteVariable(command, "Distance", distance);
+        command = substituteVariable(command, "FeedRate", maxFeedRate * rate);
+
+        sendGcode(command);
+
+        for (ReferenceDriver driver : subDrivers) {
+            driver.extrude(actuator, distance, rate);
         }
     }
     

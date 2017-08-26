@@ -169,7 +169,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 
         Actuator pinActuator = head.getActuatorByName(actuatorName); // pin that does the dragging
         Actuator pinSensorActuator = head.getActuatorByName(pinSensorName); // sensor to detect pin stuck in tape
-        Actuator peelActuator = head.getActuatorByName(peelActuatorName);  // peel the cover tape
+        Actuator peelActuator = head.getMachine().getActuatorByName(peelActuatorName);  // peel the cover tape
         
         // Error check, a pin is required
         if (pinActuator == null) {
@@ -237,13 +237,20 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         // insert the pin
         pinActuator.moveTo(feedStartLocation);
 
+        // same speed for the peel action and the drag function
+        double dragSpeed = feedSpeed * pinActuator.getHead().getMachine().getSpeed();
+        
         // start peeling of the tape
         if (peelActuator != null) {
-        	peelActuator.moveTo(feedEndLocation.subtract(feedStartLocation), feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+        	
+        	Location l = feedEndLocation.subtract(feedStartLocation).multiply(2, 2, 0, 0);
+        	double extrude_distance = Math.max(l.getX(), l.getY());
+        	
+        	peelActuator.extrude(extrude_distance, dragSpeed);
         }
         
         // drag the tape
-        pinActuator.moveTo(feedEndLocation, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+        pinActuator.moveTo(feedEndLocation, dragSpeed);
         
         // backoff to release tension from the pin
         Location backoffLocation = null;

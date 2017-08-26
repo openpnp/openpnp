@@ -181,6 +181,15 @@ public class SimulatorDriver implements ReferenceDriver {
             Thread.sleep(500);
         }
     }
+    
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
+        Logger.debug("extrude({}, {} {})", actuator, distance, rate);
+        checkEnabled();
+        if (feedRateMmPerMinute > 0) {
+            Thread.sleep(500);
+        }
+    }
 
     @Override
     public void actuate(ReferenceActuator actuator, boolean on) throws Exception {

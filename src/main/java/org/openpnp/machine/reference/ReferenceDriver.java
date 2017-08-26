@@ -108,6 +108,15 @@ public interface ReferenceDriver extends WizardConfigurable, PropertySheetHolder
     public void actuate(ReferenceActuator actuator, double value) throws Exception;
 
     /**
+     * Actuates a machine defined object with a double value.
+     * 
+     * @param actuator
+     * @param on
+     * @throws Exception
+     */
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception;
+    
+    /**
      * Read a String value from the given Actuator.
      * 
      * @param actuator

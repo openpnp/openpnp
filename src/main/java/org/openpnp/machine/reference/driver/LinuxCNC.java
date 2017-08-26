@@ -206,6 +206,11 @@ public class LinuxCNC implements ReferenceDriver, Runnable {
     public void actuate(ReferenceActuator actuator, double value) throws Exception {
 
     }
+    
+    @Override
+    public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
+
+    }
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {

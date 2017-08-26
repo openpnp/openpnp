@@ -45,6 +45,16 @@ public interface Actuator
      */
     public void actuate(double value) throws Exception;
     
+    /**
+     * Provides the actuator with 2 double value to which it can respond in an implementation
+     * dependent manner.
+     * 
+     * @param distance
+     * @param rate
+     * @throws Exception
+     */
+    public void extrude(double distance, double rate) throws Exception;
+    
     public String read() throws Exception;
 
 }

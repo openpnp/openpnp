@@ -92,6 +92,13 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         getMachine().fireMachineHeadActivity(head);
     }
     
+    //@Override
+    public void extrude(double distance, double rate) throws Exception {
+        Logger.debug("{}.extrude distance {}, rate {})", getName(), distance, rate);
+        getDriver().extrude(this, distance, rate);
+        getMachine().fireMachineHeadActivity(head);
+    }
+    
     @Override
     public String read() throws Exception {
         String value = getDriver().actuatorRead(this);
