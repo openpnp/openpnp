@@ -312,7 +312,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         return actuatorName;
     }
 
-    // how is this called ???
+
     public void setActuatorName(String actuatorName) {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;

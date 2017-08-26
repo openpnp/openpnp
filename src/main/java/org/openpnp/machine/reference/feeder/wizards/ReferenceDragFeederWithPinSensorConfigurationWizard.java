@@ -104,6 +104,9 @@ public class ReferenceDragFeederWithPinSensorConfigurationWizard extends Abstrac
 	private JLabel lblPeelActuatorId;
 	private JTextField textFieldPeelActuatorId;
 	
+	private JLabel lblPeelMultiplierId;
+	private JTextField textFieldPeelMultiplierId;
+	
 	private JPanel panelGeneral;
 	private JPanel panelVision;
 	private JPanel panelLocations;
@@ -159,6 +162,8 @@ panelGeneral.setLayout(new FormLayout(
 		        FormSpecs.RELATED_GAP_COLSPEC,
 		        ColumnSpec.decode("left:default:grow"),},
 		    new RowSpec[] {
+		        FormSpecs.RELATED_GAP_ROWSPEC,
+		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
 		        FormSpecs.RELATED_GAP_ROWSPEC,
@@ -293,6 +298,21 @@ textFieldPeelActuatorId.setColumns(8);
 JLabel lblPeelActuatorIdComment = new JLabel("Optional Actuator to peel the tape.  Actuator must implementing MOVE_TO_COMMAND.");
 panelGeneral.add(lblPeelActuatorIdComment, "8, 20");
 
+
+//******** 
+
+
+lblPeelMultiplierId = new JLabel("Peel Multiplier");
+panelGeneral.add(lblPeelMultiplierId, "4, 22, right, default");
+
+textFieldPeelMultiplierId = new JTextField();
+panelGeneral.add(textFieldPeelMultiplierId, "6, 22");
+textFieldPeelMultiplierId.setColumns(8);
+
+JLabel lblPeelMultiplierComment = new JLabel("Required if Optional Actuator to peel the tape is specified.  Peel distance = drag distance * this value.");
+panelGeneral.add(lblPeelMultiplierComment, "8, 22");
+
+
 //************************
 panelLocations = new JPanel();
 panelFields.add(panelLocations);
@@ -310,6 +330,8 @@ panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
         FormSpecs.RELATED_GAP_COLSPEC,
         ColumnSpec.decode("left:default:grow"),},
     new RowSpec[] {
+        FormSpecs.RELATED_GAP_ROWSPEC,
+        FormSpecs.DEFAULT_ROWSPEC,
         FormSpecs.RELATED_GAP_ROWSPEC,
         FormSpecs.DEFAULT_ROWSPEC,
         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -503,7 +525,8 @@ contentPanel.add(panelFields);
 		addWrappedBinding(feeder, "pinUpTimeoutMs", textFeildPinUpTimeoutMsId, "text");                  
 		addWrappedBinding(feeder, "pinUpRecoveryTimeoutMs", textFeildPinUpRecoveryTimeoutMsId, "text"); 
 		addWrappedBinding(feeder, "pinDownTimeoutMs", textFeildPinDownTimeoutMsId, "text");             
-		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text");                 
+		addWrappedBinding(feeder, "peelActuatorName", textFieldPeelActuatorId, "text");  
+		addWrappedBinding(feeder, "peelMultiplier", textFieldPeelMultiplierId, "text"); 
 
 		MutableLocationProxy feedStartLocation = new MutableLocationProxy();
 		bind(UpdateStrategy.READ_WRITE, feeder, "feedStartLocation", feedStartLocation, "location");

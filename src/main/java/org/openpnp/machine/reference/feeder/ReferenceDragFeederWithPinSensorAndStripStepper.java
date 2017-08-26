@@ -136,11 +136,29 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         return pinDownValue;
     }
 
-    // how is this called ???
     public void setPinDownValue(String value) {
         String oldValue = this.pinDownValue;
         this.pinDownValue = value;
         propertyChangeSupport.firePropertyChange("pinDownValue", oldValue, value);
+    }
+    
+    
+	//******************************************************
+	//**  Wizard will bind to peelMultiplier. See createBindings() in wizard.
+	//**  
+    
+    @Attribute(required = false)
+    protected double peelMultiplier = 1.2;
+    
+    
+    public String getPeelMultiplier() {
+        return Double.toString(peelMultiplier);
+    }
+
+    public void setPeelMultiplier(String value) {
+        double oldValue = this.peelMultiplier;
+        this.peelMultiplier = Long.parseLong(value);
+        propertyChangeSupport.firePropertyChange("peelMultiplier", oldValue, value);
     }
     
     //**
@@ -243,7 +261,10 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         // start peeling of the tape
         if (peelActuator != null) {
         	
-        	Location l = feedEndLocation.subtract(feedStartLocation).multiply(2, 2, 0, 0);
+        	// the peel stepper needs to run a little longer than the drag pin
+        	// since we start the peel first, do the drag.
+        	// if peel was same distance, then a portion of tap cover may remain loose
+        	Location l = feedEndLocation.subtract(feedStartLocation).multiply(peelMultiplier, peelMultiplier, 0, 0);
         	double extrude_distance = Math.max(l.getX(), l.getY());
         	
         	peelActuator.extrude(extrude_distance, dragSpeed);
