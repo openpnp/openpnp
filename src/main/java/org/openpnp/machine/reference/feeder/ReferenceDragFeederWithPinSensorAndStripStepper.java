@@ -1,5 +1,7 @@
 package org.openpnp.machine.reference.feeder;
 
+import java.util.concurrent.TimeUnit;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceDragFeederWithPinSensorConfigurationWizard;
 import org.openpnp.model.Location;
@@ -185,18 +187,18 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
          * it would have already hit.
          */
 
-        Actuator pinActuator = head.getActuatorByName(actuatorName); // pin that does the dragging
-        Actuator pinSensorActuator = head.getActuatorByName(pinSensorName); // sensor to detect pin stuck in tape
+        Actuator dragPinSolenoid = head.getActuatorByName(actuatorName); // pin that does the dragging
+        Actuator pinSensor = head.getActuatorByName(pinSensorName); // sensor to detect pin stuck in tape
         Actuator peelActuator = head.getMachine().getActuatorByName(peelActuatorName);  // peel the cover tape
         
         // Error check, a pin is required
-        if (pinActuator == null) {
+        if (dragPinSolenoid == null) {
             throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
                     actuatorName, head.getName()));
         }
         
         // Error check, a pinSensor is optional, but if one is specified, then one needs to be found
-        if ((!pinSensorName.equals("")) && (pinSensorActuator == null)) {
+        if ((!pinSensorName.equals("")) && (pinSensor == null)) {
         	throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
         			pinSensorName, head.getName()));
         }
@@ -239,24 +241,24 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         }
 
         // Move the actuator to the feed start location.
-        pinActuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+        dragPinSolenoid.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
 
 
         
         // extend the pin
-        pinActuator.actuate(true);
+        dragPinSolenoid.actuate(true);
         
 
         // for machines with pin sensor
-        if(pinSensorActuator != null) {
-        	validatePinDown(pinSensorActuator);
+        if(pinSensor != null) {
+        	validatePinDown(pinSensor, dragPinSolenoid);
         }
 
         // insert the pin
-        pinActuator.moveTo(feedStartLocation);
+        dragPinSolenoid.moveTo(feedStartLocation);
 
         // same speed for the peel action and the drag function
-        double dragSpeed = feedSpeed * pinActuator.getHead().getMachine().getSpeed();
+        double dragSpeed = feedSpeed * dragPinSolenoid.getHead().getMachine().getSpeed();
         
         // start peeling of the tape
         if (peelActuator != null) {
@@ -271,23 +273,23 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
         }
         
         // drag the tape
-        pinActuator.moveTo(feedEndLocation, dragSpeed);
+        dragPinSolenoid.moveTo(feedEndLocation, dragSpeed);
         
         // backoff to release tension from the pin
         Location backoffLocation = null;
         if (backoffDistance.getValue() != 0) {
             backoffLocation = Utils2D.getPointAlongLine(feedEndLocation, feedStartLocation, backoffDistance);
-            pinActuator.moveTo(backoffLocation, feedSpeed * pinActuator.getHead().getMachine().getSpeed());
+            dragPinSolenoid.moveTo(backoffLocation, feedSpeed * dragPinSolenoid.getHead().getMachine().getSpeed());
         }
         
         head.moveToSafeZ();
 
         // retract the pin
-        pinActuator.actuate(false);
+        dragPinSolenoid.actuate(false);
         
         // for machines with pin sensor
-        if(pinSensorActuator != null) {
-        	validatePinUp(pinActuator, pinSensorActuator, feedStartLocation, feedEndLocation, backoffLocation);
+        if(pinSensor != null) {
+        	validatePinUp(dragPinSolenoid, pinSensor, feedStartLocation, feedEndLocation, backoffLocation);
         }
         
         
@@ -373,11 +375,11 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 
 
 	/**
-	 * @param actuator
+	 * @param pinSensor
 	 * @throws Exception
 	 */
-	private void validatePinDown(Actuator actuator) throws Exception {
-		String pinSensorResult = actuator.read();
+	private void validatePinDown(Actuator pinSensor, Actuator dragPin) throws Exception {
+		String pinSensorResult = pinSensor.read();
         
         if(pinSensorResult != null) {
         	// a sensor is available for reading the pin up/down state
@@ -389,10 +391,10 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 	        // Loop until we've timed out or pin is confirmed down
 	        while (System.currentTimeMillis() - timeWeStartedWaiting < pinDownTimeoutMs && !pinSensorResult.equals(pinDownValue)) {
 	            waitCount++; // count number of time we entered this delay loop. Useful in calibrating non sensor drag implementation
-	        	pinSensorResult = actuator.read();
+	        	pinSensorResult = pinSensor.read();
 	        }
 	        if (!pinSensorResult.equals(pinDownValue)) {
-	        	actuator.actuate(false); // raise drag pin, ie: a safe place before giving up
+	        	dragPin.actuate(false); // raise drag pin, ie: a safe place before giving up
 	        	throw new Exception("Sensor indicates Drag Pin did not lower.");
 	        } else {
 	        	Logger.debug("Time for pin to drop=" + String.valueOf(System.currentTimeMillis() - timeWeStartedWaiting) + "ms or " + waitCount);
