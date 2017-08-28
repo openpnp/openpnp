@@ -132,7 +132,7 @@ public class ReferenceDragFeederConfigurationWizard
         panelGeneral.add(textFieldFeedRate, "4, 2");
         textFieldFeedRate.setColumns(5);
 
-        lblActuatorId = new JLabel("Pin* Actuator Name");
+        lblActuatorId = new JLabel("Actuator Name");
         panelGeneral.add(lblActuatorId, "2, 4, right, default");
 
         textFieldActuatorId = new JTextField();

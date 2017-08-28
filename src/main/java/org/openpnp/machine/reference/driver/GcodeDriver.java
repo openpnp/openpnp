@@ -61,8 +61,8 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         DISABLE_COMMAND,
         POST_VISION_HOME_COMMAND,
         HOME_COMMAND("Id", "Name"),
-        PUMP_ON_COMMAND(true),
-        PUMP_OFF_COMMAND(true),
+        PUMP_ON_COMMAND(true), // Permitted on head so can have 2 pumps, one for each nozzle
+        PUMP_OFF_COMMAND(true), // Permitted on head so can have 2 pumps, one for each nozzle
         MOVE_TO_COMMAND(true, "Id", "Name", "FeedRate", "X", "Y", "Z", "Rotation"),
         MOVE_TO_COMPLETE_REGEX(true),
         PICK_COMMAND(true, "Id", "Name", "VacuumLevelPartOn", "VacuumLevelPartOff"),
@@ -349,11 +349,7 @@ public class GcodeDriver extends AbstractSerialPortDriver implements Runnable {
         // If not, see if we can find a match for the command type with a
         // null or * HeadMountable ID.
         for (Command c : commands) {
-        	//Logger.debug(" command {} {}", c.type.name(), c.headMountableId);
             if ((c.headMountableId == null || c.headMountableId.equals("*")) && type == c.type) {
-            	if(hm != null) {
-            			Logger.debug("using command ({}) on default rather then ({})...", type, hm.getName());
-            	}
                 return c;
             }
         }

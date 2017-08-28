@@ -250,7 +250,7 @@ public class NullDriver implements ReferenceDriver {
     
     @Override
     public void extrude(ReferenceActuator actuator, double distance, double rate) throws Exception {
-        Logger.debug("actuate({}, {} {})", actuator, distance, rate);
+        Logger.debug("extrude({}, {} {})", actuator, distance, rate);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(500);
