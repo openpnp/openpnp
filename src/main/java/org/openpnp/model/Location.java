@@ -119,6 +119,18 @@ public class Location {
                 + Math.pow(this.y - location.getY(), 2) + Math.pow(this.z - location.getZ(), 2)));
     }
 
+    /**
+     * Returns the distance between this Location and the line defined by the Locations a and b,
+     * in the units of this Location.
+     * @return
+     */
+    public double getLinearDistanceToLine(Location A, Location B) {
+        A = A.convertToUnits(getUnits());
+        B = B.convertToUnits(getUnits());
+        double normalLength = Math.sqrt((B.x - A.x) * (B.x - A.x) + (B.y - A.y) * (B.y - A.y));
+        return Math.abs((this.x - A.x) * (B.y - A.y) - (this.y - A.y) * (B.x - A.x)) / normalLength;
+    }
+
     public Length getLengthX() {
         return new Length(x, units);
     }
