@@ -159,7 +159,7 @@ public class ReferenceDragFeederWithPinSensorAndStripStepper extends ReferenceDr
 
     public void setPeelMultiplier(String value) {
         double oldValue = this.peelMultiplier;
-        this.peelMultiplier = Long.parseLong(value);
+        this.peelMultiplier = Double.parseDouble(value);
         propertyChangeSupport.firePropertyChange("peelMultiplier", oldValue, value);
     }
     
