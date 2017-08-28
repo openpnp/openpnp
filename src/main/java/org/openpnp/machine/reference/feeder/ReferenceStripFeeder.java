@@ -141,13 +141,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public Length getHoleDistanceMax() {
-        // 2.5mm = 1.5mm holes are 1mm from the edge of the tape (it's standardized)
-        Length tapeEdgeToFeedHoleInnerEdge = new Length(2.5, LengthUnit.Millimeters);
-        // ((tape_w - 2.5) / 2 + 2.5; the distance from the centre of the component to the edge of the tape. Gives
-        // a bit of leeway for not clicking exactly in the centre of the component, that the space between the
-        // hole and the component-edge varies from 0.375mm (8mm tape) to 0.55mm (16mm ad 24mm tape), and that the
-        // distance from the component-edge to the tape-edge on the non-hole side is only specified as min 0.6mm.
-        return (getTapeWidth().subtract(tapeEdgeToFeedHoleInnerEdge)).multiply(0.5).add(tapeEdgeToFeedHoleInnerEdge);
+        // 1.75mm = 1.5mm holes are 1mm from the edge of the tape (as per EIA-481)
+        Length tapeEdgeToFeedHoleCenter = new Length(1.75, LengthUnit.Millimeters);
+        // The distance from the centre of the component to the edge of the tape. Gives a bit of leeway for not
+        // clicking exactly in the centre of the component, but is close enough to eliminate most false-positives.
+        return tapeEdgeToFeedHoleCenter.add(getHoleToPartLateral());
     }
 
     public Length getHoleLineDistanceMax() {
