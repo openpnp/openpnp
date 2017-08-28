@@ -31,6 +31,7 @@ import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -99,4 +100,27 @@ public class ReferenceHead extends AbstractHead {
     public String toString() {
         return getName();
     }
+    
+	// returns true if any nozzles on this head has a part
+	public boolean hasMountedPart() {
+		for (Nozzle nozzle : getNozzles()) {
+			if (nozzle.getPart() != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// returns the speed limit of any mounted part
+	public double minSpeedOfMountedPart() {
+		double speed = 1;
+
+		for (Nozzle nozzle : getNozzles()) {
+			if (nozzle.getPart() != null) {
+				speed = Math.min(nozzle.getPart().getSpeed(), speed);
+			}
+		}
+
+		return speed;
+	}
 }

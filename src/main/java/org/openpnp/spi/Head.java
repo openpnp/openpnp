@@ -117,4 +117,10 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Machine getMachine();
     
     public Location getParkLocation();
+    
+    // returns true if any nozzles on this head has a part
+    public boolean hasMountedPart(); 
+	
+    // returns the speed limit % of any mounted part
+	public double minSpeedOfMountedPart(); 
 }

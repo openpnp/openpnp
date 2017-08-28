@@ -220,12 +220,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nozzleTip.getCalibration().calibrate(nozzleTip);
         }
 
-        // If there is a part on the nozzle we take the incoming speed value
-        // to be a percentage of the part's speed instead of a percentage of
+        // If there is a part on any nozzle of this head, we take the incoming speed value
+        // to be a percentage of the part with the lowest speed instead of a percentage of
         // the max speed.
-        if (getPart() != null) {
-            speed = part.getSpeed() * speed;
+        if (getHead().hasMountedPart()) {
+            speed = getHead().minSpeedOfMountedPart() * speed;
         }
+        
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         if (limitRotation && !Double.isNaN(location.getRotation())
                 && Math.abs(location.getRotation()) > 180) {
