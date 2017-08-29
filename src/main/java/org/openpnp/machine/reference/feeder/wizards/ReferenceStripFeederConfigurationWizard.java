@@ -19,12 +19,13 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
+import static org.openpnp.vision.FluentCv.pointToLineDistance;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -35,16 +36,17 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
@@ -65,7 +67,11 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
-import org.openpnp.model.*;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.OpenCvUtils;
@@ -76,7 +82,7 @@ import org.openpnp.vision.Ransac;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.opencv.core.Mat;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
@@ -84,9 +90,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.pmw.tinylog.Logger;
-
-import static org.openpnp.vision.FluentCv.pointToLineDistance;
 
 @SuppressWarnings("serial")
 public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurationWizard {
@@ -645,8 +648,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         public FindHoles invoke() throws Exception {
             List<CvStage.Result.Circle> results = null;
-            Object result = pipeline.getResult("results").model;
+            Object result = null;
             try {
+                result = pipeline.getResult("results").model;
                 results = (List<CvStage.Result.Circle>) result;
             }
             catch (ClassCastException e) {

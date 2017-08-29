@@ -42,6 +42,33 @@ a complete change list, only those that may directly interest or affect users.
 	
 	Thank you to @johngrabner for this nice improvement!
 	 
+# 2017-08-28
+
+* ReferenceStripFeeder Improvements
+
+	* Added auto-thresholding to the default CvPipeline for ReferenceStripFeeder to better
+	detect tape holes and eliminate false-positives in noisy camera images. Users should
+	reset their feeder vision pipelines to the default to get this change, then re-apply
+	any pipeline changes if still necessary.
+	* Auto Setup for ReferenceStripFeeder is now a lot smarter, more accurate, and is able
+	to catch common setup issues.
+	* Fixed issue where strips with 2mm part pitch could result in the reference holes being
+	detected flipped depending on where on the two parts the user clicked.
+	* Fixed issue where part pitch was calculated in the units of the camera, not
+	necessarily millimeters.
+	* User is notified if they selected parts in the wrong order for the orientation of the
+	strip.
+	* Tightened the max distance from a component center to the feed hole centers to
+	accurately reflect the spacing as defined in the EIA-481 standard and thus reduce
+	false-positives for adjacent strips.
+	* Multiple, full lines of strip holes are detected and grouped appropriately, and only
+	the correct line of holes are used for the selected parts/strip (some spacing is still
+	required between adjacent strips, but it is much reduced and more reliable).
+	
+	Implemented in PR https://github.com/openpnp/openpnp/pull/628
+	
+	Thanks to @richard-sim for these improvements!
+
 # 2017-08-19
 
 * New Scripting Event: Job.Placement.Complete

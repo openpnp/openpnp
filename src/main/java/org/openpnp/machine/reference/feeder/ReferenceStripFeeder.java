@@ -21,15 +21,11 @@ package org.openpnp.machine.reference.feeder;
 
 
 
-import java.awt.image.BufferedImage;
-import java.nio.Buffer;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
-import org.opencv.core.Mat;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -45,7 +41,6 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -73,8 +68,6 @@ import org.simpleframework.xml.Element;
  * hole to part lateral is tape width / 2 - 0.5mm
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
-
-
     public enum TapeType {
         WhitePaper("White Paper"),
         BlackPlastic("Black Plastic"),
@@ -285,9 +278,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
 
         // Grab the results
+        Object result = null;
         List<CvStage.Result.Circle> results = null;
-        Object result = pipeline.getResult("results").model;
         try {
+            result = pipeline.getResult("results").model;            
             results = (List<CvStage.Result.Circle>) result;
         }
         catch (ClassCastException e) {
